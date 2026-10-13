@@ -25,7 +25,8 @@ The owner sees members with their role and can remove someone or change their ro
 
 ## Requirements
 
-- **FR-001**: Sign-in MUST support email magic link, Sign in with Apple and Sign in with Google.
+- **FR-001**: Sign-in MUST support email magic link and Sign in with Google. No passwords. Sign in with Apple is added with the iPhone app (V2), where App Store rules require it alongside Google; keep the auth code provider-agnostic so it's a config addition.
+- **FR-001b**: People stay signed in on each device until they sign out, are removed from the family, or don't open the app for 90 days. Sessions refresh silently in the background (short-lived access token, rotating refresh token, stored by the Supabase client on the device). Set the inactivity timeout in the Supabase Auth config; magic links expire after 1 hour and work once.
 - **FR-002**: A family has one Owner and any number of members with role "Can edit". There is no read-only role in V1: every member can edit.
 - **FR-003**: A user belongs to exactly one family in V1.
 - **FR-004**: Invites are single-use links valid for 7 days, shared through the system share sheet.
@@ -44,7 +45,7 @@ The owner sees members with their role and can remove someone or change their ro
 ## Tracking (PostHog)
 | Event | Properties |
 | --- | --- |
-| `signed_up` | method (email, apple, google) |
+| `signed_up` | method (email, google) |
 | `signed_in` | method |
 | `family_created` | — |
 | `invite_sent` | — |
@@ -61,3 +62,5 @@ Your brief mentions an app-wide Admin with access to all families. V1 has no in-
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-13: Stay signed in for 90 days of inactivity.
+- 2026-10-13: Sign in with Apple moved to V2 (iPhone app); V1 is magic link + Google.

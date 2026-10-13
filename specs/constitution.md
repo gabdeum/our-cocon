@@ -59,7 +59,7 @@ These rules apply to every spec in `specs/`. Specs reference them instead of rep
 
 - **Language:** English only in V1. Every string lives in the strings file, so French can be added later.
 - **Backend:** self-hosted Supabase on Hetzner, one stack each for staging and prod; move to Supabase Cloud if running it gets too heavy (see spec 001).
-- **Hosts:** `app.`, `mcp.` and `api.ourcocon.com` (Supabase) in prod; the same with a `staging.` prefix for staging. Development is local.
+- **Hosts:** `app.`, `mcp.` and `api.ourcocon.com` (Supabase) in prod; `app-staging.`, `mcp-staging.` and `api-staging.ourcocon.com` for staging (one subdomain level, so Cloudflare's free certificate covers them). Development is local.
 - **Layout:** the web uses the centred mobile layout (max 720 px) in V1. iPad and desktop layouts come later.
 - **Theme:** light only in V1.
 - **Accessibility:** WCAG 2.2 AA.

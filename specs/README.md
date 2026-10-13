@@ -80,11 +80,11 @@ All 34 open questions are answered. The specs, UI specs and screens already refl
 | 1 | Language | English only in V1; all copy in one strings file so French can come later |
 | 2 | Backend | Self-hosted Supabase on Hetzner to start (staging, prod); portable to Supabase Cloud |
 | 3 | Layout | Centred mobile layout on web (max 720 px); iPad and desktop later |
-| 4 | Hosts | `app.`, `mcp.`, `api.ourcocon.com`; `staging.` prefix; development is local |
+| 4 | Hosts | `app.`, `mcp.`, `api.ourcocon.com`; `-staging` suffix (`app-staging.`); development is local |
 | 5 | CI | GitHub Actions: lint, type check, tests, dependency audit and secret scan on every push and PR |
 | 6 | Theme | Light only |
 | 7 | Accessibility | WCAG 2.2 AA |
-| 8 | Sign-in | Email magic link, Apple and Google |
+| 8 | Sign-in | Email magic link and Google in V1; Apple added with the iPhone app (V2) |
 | 9 | Roles | Everyone in the family can edit |
 | 10 | Families | One family per person |
 | 11 | Offline | Read-only banner; no queued edits |
