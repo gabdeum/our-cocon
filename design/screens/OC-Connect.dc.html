@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · AI assistants</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; padding: 50px 20px 28px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+  <a href="OC-Settings.dc.html" style="height: 44px; align-self: flex-start; display: flex; align-items: center; gap: 4px; text-decoration: none; font-size: 16px; font-weight: 800"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>Settings</a>
+  <div>
+    <h1 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px">AI assistants</h1>
+    <p style="margin: 4px 0 0; font-size: 15px; font-weight: 600; line-height: 1.45; color: #5A503A">Let your AI save recipes and fill the grocery list for you. Each person connects their own.</p>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 22px; padding: 4px 14px">
+    <div style="display: flex; align-items: center; gap: 12px; min-height: 64px; border-bottom: 1.5px solid #F2E6C4">
+      <span style="width: 40px; height: 40px; border-radius: 12px; background: #F5D9A8; display: flex; align-items: center; justify-content: center; font-weight: 900">C</span>
+      <span style="flex: 1"><span style="display: block; font-size: 16px; font-weight: 800">Claude</span><span style="display: block; font-size: 13px; font-weight: 700; color: #424D17">Connected · used 2 h ago</span></span>
+      <button style="height: 44px; padding: 0 8px; border: none; background: none; color: #5A503A; font-size: 15px; font-weight: 800">Manage</button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; min-height: 64px; border-bottom: 1.5px solid #F2E6C4">
+      <span style="width: 40px; height: 40px; border-radius: 12px; background: #D9E3A8; display: flex; align-items: center; justify-content: center; font-weight: 900">G</span>
+      <span style="flex: 1"><span style="display: block; font-size: 16px; font-weight: 800">ChatGPT</span><span style="display: block; font-size: 13px; font-weight: 700; color: #424D17">Connected · used 1 h ago</span></span>
+      <button style="height: 44px; padding: 0 8px; border: none; background: none; color: #5A503A; font-size: 15px; font-weight: 800">Manage</button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; min-height: 64px">
+      <span style="width: 40px; height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-weight: 900">Ge</span>
+      <span style="flex: 1"><span style="display: block; font-size: 16px; font-weight: 800">Gemini</span><span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A">Not connected</span></span>
+      <button style="height: 44px; padding: 0 16px; border-radius: 999px; border: none; background: #5A6820; color: #FFFFFF; font-size: 15px; font-weight: 900">Connect</button>
+    </div>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 8px">
+    <h2 style="margin: 0; font-size: 18px; font-weight: 900">What AI can do</h2>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 4px 16px">
+      <div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px; border-bottom: 1.5px solid #F2E6C4"><span style="font-size: 16px; font-weight: 700">Create &amp; edit recipes</span><span style="font-size: 14px; font-weight: 900; color: #424D17">Allowed</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px; border-bottom: 1.5px solid #F2E6C4"><span style="font-size: 16px; font-weight: 700">Change the grocery list</span><span style="font-size: 14px; font-weight: 900; color: #424D17">Allowed</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px"><span style="font-size: 16px; font-weight: 700">Delete recipes</span><span style="font-size: 14px; font-weight: 900; color: #424D17">Allowed</span></div>
+    </div>
+  </section>
+
+  <div style="background: #D9E3A8; border-radius: 20px; padding: 14px 16px">
+    <div style="font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px; color: #424D17">Try saying</div>
+    <div style="font-size: 16px; font-weight: 800; line-height: 1.45; margin-top: 4px">“Save my mum's ratatouille to Our Cocon. It serves 4.”</div>
+    <div style="font-size: 16px; font-weight: 800; line-height: 1.45; margin-top: 4px">“Add what I need for the quiche to our groceries.”</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

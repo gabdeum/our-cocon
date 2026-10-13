@@ -1,0 +1,29 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Our Cocon cover</title><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: var(--surface-page); }
+  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; background: var(--surface-page); }
+  .cover svg { position: absolute; inset: 0; }
+  .honey { fill: var(--honey); } .olive { fill: var(--olive); } .ink { fill: var(--ink); } .sage { fill: var(--sage); } .peach { fill: var(--peach); } .dot { fill: var(--olive); }
+  .text { position: absolute; left: 40px; bottom: 36px; max-width: 440px; }
+  .name { margin: 0; font-family: var(--font-sans); font-size: 80px; font-weight: 900; line-height: .95; letter-spacing: -1.5px; color: var(--ink); }
+  .tag { margin: 12px 0 0; font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--ink-muted); }
+</style></head>
+<body>
+<div class="cover">
+  <svg viewBox="0 0 960 288" width="960" height="288" aria-hidden="true">
+    <!-- blocks: honey slab 260x128 (radius-pill = half the short side), olive disc r64, ink pill 120x92, sage slab 200x92, peach disc r46 -->
+    <!-- arrangement: two staggered rows right of x=480, slab with satellite discs -->
+    <!-- pattern: discs and pills from radius-pill, because the README says soft and round, nothing sharp; a row of olive dots on sage -->
+    <!-- steps: gaps of space-20 between blocks, dot pitch 24 (space-24), dot radius 6 (radius-xs) -->
+    <rect class="honey" x="500" y="24" width="260" height="128" rx="64"/>
+    <circle class="olive" cx="846" cy="88" r="64"/>
+    <rect class="ink" x="500" y="172" width="120" height="92" rx="46"/>
+    <rect class="sage" x="640" y="172" width="200" height="92" rx="46"/>
+    <circle class="peach" cx="896" cy="218" r="46"/>
+    <circle class="dot" cx="680" cy="218" r="6"/><circle class="dot" cx="704" cy="218" r="6"/><circle class="dot" cx="728" cy="218" r="6"/><circle class="dot" cx="752" cy="218" r="6"/><circle class="dot" cx="776" cy="218" r="6"/><circle class="dot" cx="800" cy="218" r="6"/>
+  </svg>
+  <div class="text"><h1 class="name">Our Cocon</h1><p class="tag">Warm, clear recipes and groceries for the whole family.</p></div>
+</div>
+</body></html>

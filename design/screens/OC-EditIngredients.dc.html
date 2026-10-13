@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Edit ingredients</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 1050px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; display: flex; flex-direction: column">
+  <header style="flex: none; padding: 50px 16px 12px; display: flex; align-items: center; justify-content: space-between">
+    <a href="OC-Recipe.dc.html" style="height: 44px; display: flex; align-items: center; padding: 0 6px; font-size: 16px; font-weight: 800; color: #5A503A; text-decoration: none">Cancel</a>
+    <span style="font-size: 17px; font-weight: 900">Edit recipe</span>
+    <button style="height: 44px; padding: 0 18px; border-radius: 999px; border: none; background: #5A6820; color: #FFFFFF; font-size: 15px; font-weight: 900">Save</button>
+  </header>
+  <nav aria-label="Form sections" style="flex: none; padding: 0 16px 14px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+    <a href="OC-EditBasics.dc.html" style="text-decoration: none; color: #5A503A; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"><span style="height: 6px; border-radius: 3px; background: #A9B46A"></span>Details</a>
+    <a href="OC-EditIngredients.dc.html" aria-current="step" style="text-decoration: none; color: #2A2414; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 900"><span style="height: 6px; border-radius: 3px; background: #5A6820"></span>Ingredients</a>
+    <a href="OC-EditSteps.dc.html" style="text-decoration: none; color: #5A503A; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"><span style="height: 6px; border-radius: 3px; background: #EEDFB5"></span>Steps</a>
+    <a href="OC-EditVariants.dc.html" style="text-decoration: none; color: #5A503A; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"><span style="height: 6px; border-radius: 3px; background: #EEDFB5"></span>Variants</a>
+  </nav>
+
+  <div style="padding: 4px 20px 30px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <h1 style="margin: 0; font-size: 24px; font-weight: 900">Ingredients</h1>
+      <span style="font-size: 14px; font-weight: 700; color: #5A503A">For 6 servings</span>
+    </div>
+    <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A; line-height: 1.45">For things you count (eggs, leeks), add the weight of one too. Then steps can show both: “2 leeks (300 g)”.</p>
+
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; gap: 8px; align-items: center">
+        <span aria-hidden="true" style="color: #A89C78; font-size: 18px; font-weight: 900; width: 14px">⋮⋮</span>
+        <input aria-label="Ingredient name" value="Leeks" style="flex: 1; min-width: 0; height: 46px; box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 0 12px; font-size: 16px; font-weight: 700; color: #2A2414">
+        <button aria-label="Remove Leeks" style="width: 44px; height: 44px; border-radius: 12px; border: none; background: #FFF0C9; color: #5A503A; font-size: 18px; font-weight: 800">×</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr 1.4fr; gap: 8px; padding-left: 22px">
+        <input aria-label="Quantity" value="2" style="height: 46px; box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 0 12px; font-size: 16px; font-weight: 800; color: #2A2414; min-width: 0">
+        <button style="height: 46px; border-radius: 12px; border: 2px solid #EEDFB5; background: #FFFFFF; color: #2A2414; font-size: 15px; font-weight: 800">pieces ▾</button>
+        <div style="height: 46px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; padding: 0 10px; font-size: 14px; font-weight: 700; gap: 4px">each ≈ <b style="font-size: 16px">150</b> g</div>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; gap: 8px; align-items: center">
+        <span aria-hidden="true" style="color: #A89C78; font-size: 18px; font-weight: 900; width: 14px">⋮⋮</span>
+        <input aria-label="Ingredient name" value="Bacon lardons" style="flex: 1; min-width: 0; height: 46px; box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 0 12px; font-size: 16px; font-weight: 700; color: #2A2414">
+        <button aria-label="Remove Bacon lardons" style="width: 44px; height: 44px; border-radius: 12px; border: none; background: #FFF0C9; color: #5A503A; font-size: 18px; font-weight: 800">×</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr 1.4fr; gap: 8px; padding-left: 22px">
+        <input aria-label="Quantity" value="200" style="height: 46px; box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 0 12px; font-size: 16px; font-weight: 800; color: #2A2414; min-width: 0">
+        <button style="height: 46px; border-radius: 12px; border: 2px solid #EEDFB5; background: #FFFFFF; color: #2A2414; font-size: 15px; font-weight: 800">g ▾</button>
+        <span></span>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px; border: 2px solid #E8A04A">
+      <div style="display: flex; gap: 8px; align-items: center">
+        <span aria-hidden="true" style="color: #A89C78; font-size: 18px; font-weight: 900; width: 14px">⋮⋮</span>
+        <input aria-label="Ingredient name" value="Heavy cream" style="flex: 1; min-width: 0; height: 46px; box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 0 12px; font-size: 16px; font-weight: 700; color: #2A2414">
+        <button aria-label="Remove Heavy cream" style="width: 44px; height: 44px; border-radius: 12px; border: none; background: #FFF0C9; color: #5A503A; font-size: 18px; font-weight: 800">×</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr 1.4fr; gap: 8px; padding-left: 22px">
+        <input aria-label="Quantity" value="300" style="height: 46px; box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 0 12px; font-size: 16px; font-weight: 800; color: #2A2414; min-width: 0">
+        <button style="height: 46px; border-radius: 12px; border: 2px solid #E8A04A; background: #FFE3C2; color: #8A4B00; font-size: 15px; font-weight: 800">Unit? ▾</button>
+        <span></span>
+      </div>
+      <div role="alert" style="display: flex; gap: 8px; align-items: center; padding-left: 22px; font-size: 14px; font-weight: 700; color: #8A4B00">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>Pick a unit so we can convert and scale it.
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <button style="height: 54px; border-radius: 18px; border: 2px dashed #CDBF95; background: transparent; color: #424D17; font-size: 15px; font-weight: 800">+ Add ingredient</button>
+      <button style="height: 54px; border-radius: 18px; border: none; background: #FFF0C9; color: #2A2414; font-size: 15px; font-weight: 800">Paste a list</button>
+    </div>
+    <span style="font-size: 13px; font-weight: 600; color: #5A503A">Tip: paste “200 g lardons, 3 eggs…” and we'll split it into rows.</span>
+
+    <a href="OC-EditSteps.dc.html" style="margin-top: 6px; height: 58px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900">Next: Steps</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1050}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

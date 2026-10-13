@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Recipes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div style="padding: 54px 20px 180px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px">Recipes</h1>
+      <a href="OC-EditBasics.dc.html" style="height: 44px; padding: 0 16px; border-radius: 999px; background: #5A6820; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 800">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New
+      </a>
+    </div>
+
+    <div>
+      <label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search recipes</label>
+      <div style="display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; border-radius: 18px; background: #FFFFFF; border: 2px solid #EEDFB5">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A503A" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" placeholder="Search recipes or ingredients" style="flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 16px; color: #2A2414">
+      </div>
+      <div style="font-size: 13px; font-weight: 600; color: #5A503A; margin: 6px 4px 0">Try “leek”, “quick” or “Mia's”</div>
+    </div>
+
+    <div style="display: flex; gap: 8px; overflow: hidden">
+      <a href="OC-Filters.dc.html" style="height: 40px; padding: 0 14px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; flex: none">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filters · 1
+      </a>
+      <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFCF5C; display: flex; align-items: center; font-size: 14px; font-weight: 800; flex: none">In season</span>
+      <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700; flex: none">Under 30 min</span>
+      <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700; flex: none">Vegetarian</span>
+    </div>
+
+    <div style="font-size: 14px; font-weight: 800; color: #5A503A; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 4px">In season in October · 12</div>
+
+    <a href="OC-Recipe.dc.html" style="text-decoration: none; color: #2A2414; display: flex; gap: 14px; align-items: center; background: #FFFFFF; border-radius: 22px; padding: 10px">
+      <div style="width: 84px; height: 84px; flex: none; border-radius: 16px; background: #F5D9A8; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #6B4E1E">[Photo]</div>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 17px; font-weight: 900">Leek &amp; bacon quiche</div>
+        <div style="font-size: 14px; font-weight: 600; color: #5A503A; margin-top: 2px">1 h 10 · Serves 6 · 2 variants</div>
+        <div style="font-size: 13px; font-weight: 700; color: #5A6820; margin-top: 6px">Gabriel · via Claude</div>
+      </div>
+    </a>
+    <a href="#" style="text-decoration: none; color: #2A2414; display: flex; gap: 14px; align-items: center; background: #FFFFFF; border-radius: 22px; padding: 10px">
+      <div style="width: 84px; height: 84px; flex: none; border-radius: 16px; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #6B4E1E">[Photo]</div>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 17px; font-weight: 900">Pumpkin soup</div>
+        <div style="font-size: 14px; font-weight: 600; color: #5A503A; margin-top: 2px">40 min · Serves 4 · Vegetarian</div>
+        <div style="font-size: 13px; font-weight: 700; color: #5A6820; margin-top: 6px">Alex · via ChatGPT</div>
+      </div>
+    </a>
+    <a href="#" style="text-decoration: none; color: #2A2414; display: flex; gap: 14px; align-items: center; background: #FFFFFF; border-radius: 22px; padding: 10px">
+      <div style="width: 84px; height: 84px; flex: none; border-radius: 16px; background: #D9E3A8; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #4A5520">[Photo]</div>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 17px; font-weight: 900">Grandma's apple tart</div>
+        <div style="font-size: 14px; font-weight: 600; color: #5A503A; margin-top: 2px">1 h 30 · Serves 8</div>
+        <div style="font-size: 13px; font-weight: 700; color: #5A6820; margin-top: 6px">Mia</div>
+      </div>
+    </a>
+  </div>
+  <div style="position: absolute; left: 0; bottom: 0; width: 390px; height: 160px">
+    <dc-import name="TabBar" active="recipes" hint-size="390px,160px"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

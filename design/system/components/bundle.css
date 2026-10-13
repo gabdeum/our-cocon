@@ -1,0 +1,233 @@
+/* Our Cocon — reference component styles.
+   Source of truth for every size, colour and state. Uses only tokens (tokens.css).
+   Port 1:1 to React Native StyleSheets: px stay px, var(--x) becomes theme.x. */
+
+body { margin: 0; font-family: var(--font-sans); color: var(--ink); background: var(--surface-page); -webkit-font-smoothing: antialiased; }
+.oc-preview { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.oc-row-wrap { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.oc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.oc-icon { width: 20px; height: 20px; flex: none; }
+.oc-icon--md { width: 24px; height: 24px; }
+
+/* ---------- Button ---------- */
+.oc-btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 58px; padding: 0 24px; border: none; border-radius: var(--radius-pill); font-family: var(--font-sans); font-size: 17px; font-weight: 900; line-height: 1; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.oc-btn--block { display: flex; width: 100%; }
+.oc-btn--sm { height: 44px; padding: 0 18px; font-size: 15px; }
+.oc-btn--lg { height: 60px; font-size: 18px; }
+.oc-btn--ink { background: var(--ink); color: var(--on-olive); }
+.oc-btn--olive { background: var(--olive); color: var(--on-olive); }
+.oc-btn--honey { background: var(--honey); color: var(--ink); }
+.oc-btn--soft { background: var(--surface-soft); color: var(--ink); font-weight: 800; }
+.oc-btn--outline { height: 54px; background: var(--surface-card); color: var(--olive-deep); border: 2px solid var(--olive); font-size: 16px; font-weight: 800; }
+.oc-btn--dashed { height: 54px; border-radius: 18px; background: transparent; color: var(--olive-deep); border: 2px dashed var(--line-dashed); font-size: 15px; font-weight: 800; }
+.oc-btn--danger { background: var(--danger); color: var(--on-olive); }
+.oc-btn:disabled, .oc-btn[aria-disabled="true"] { background: var(--on-ink); color: var(--ink-muted); cursor: default; }
+.oc-btn:focus-visible, .oc-icon-btn:focus-visible, .oc-pill:focus-visible { outline: 3px solid var(--olive); outline-offset: 2px; }
+.oc-link { color: var(--olive); font-size: 15px; font-weight: 800; text-decoration: none; padding: 10px 0; }
+.oc-link:hover { color: var(--olive-deep); }
+.oc-link--danger { color: var(--danger); }
+.oc-link--quiet { color: var(--ink-muted); }
+
+/* ---------- IconButton ---------- */
+.oc-icon-btn { box-sizing: border-box; width: 48px; height: 48px; flex: none; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 50%; background: var(--surface-card); color: var(--ink); cursor: pointer; }
+.oc-icon-btn--soft { width: 44px; height: 44px; background: var(--surface-soft); }
+.oc-icon-btn--olive { width: 44px; height: 44px; background: var(--olive); color: var(--on-olive); }
+.oc-icon-btn--square { width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--surface-soft); }
+.oc-icon-btn--square[aria-expanded="true"] { background: var(--honey); }
+.oc-icon-btn--olive-square { width: 54px; height: 54px; border-radius: 18px; background: var(--olive); color: var(--on-olive); }
+
+/* ---------- Pill (filters and choices) ---------- */
+.oc-pill { box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border: none; border-radius: var(--radius-pill); background: var(--surface-soft); color: var(--ink); font-family: var(--font-sans); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; text-decoration: none; }
+.oc-pill[aria-pressed="true"], .oc-pill.is-selected { background: var(--honey); font-weight: 800; }
+.oc-pill--ink { background: var(--ink); color: var(--on-olive); font-weight: 800; }
+.oc-choice { box-sizing: border-box; height: 44px; padding: 0 18px; border: none; border-radius: var(--radius-pill); background: var(--surface-soft); color: var(--ink); font-family: var(--font-sans); font-size: 15px; font-weight: 800; cursor: pointer; }
+.oc-choice[aria-pressed="true"] { background: var(--olive); color: var(--on-olive); }
+.oc-person { box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px 0 6px; border-radius: var(--radius-pill); background: var(--surface-soft); font-size: 14px; font-weight: 700; }
+
+/* ---------- Tag ---------- */
+.oc-tag { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 800; line-height: 1.3; white-space: nowrap; }
+.oc-tag--sage { background: var(--sage); color: var(--olive-deep); }
+.oc-tag--warn { background: var(--warn-soft); color: var(--warn); }
+.oc-tag--honey { background: var(--honey); color: var(--ink); font-weight: 900; }
+.oc-tag--white { background: var(--surface-card); color: var(--ink); }
+.oc-meta { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: var(--radius-pill); background: var(--surface-soft); font-size: 14px; font-weight: 700; color: var(--ink); }
+.oc-meta--white { background: var(--surface-card); }
+.oc-meta--sage { background: var(--sage); }
+.oc-meta--warn { background: var(--warn-soft); color: var(--warn); font-weight: 800; }
+
+/* ---------- Switch ---------- */
+.oc-switch { box-sizing: border-box; width: 52px; height: 32px; flex: none; padding: 3px; border: none; border-radius: 16px; background: var(--line-handle); display: inline-flex; justify-content: flex-start; cursor: pointer; }
+.oc-switch::after { content: ""; width: 26px; height: 26px; border-radius: 50%; background: var(--surface-card); }
+.oc-switch[aria-checked="true"] { background: var(--olive); justify-content: flex-end; }
+.oc-switch--on-ink[aria-checked="true"] { background: var(--honey); }
+.oc-setting { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid var(--line); }
+.oc-setting:last-child { border-bottom: none; }
+.oc-setting__text { flex: 1; min-width: 0; }
+.oc-setting__label { font-size: 16px; font-weight: 800; }
+.oc-setting__hint { font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-top: 2px; }
+.oc-setting__hint--changed { color: var(--warn); }
+
+/* ---------- SegmentedControl ---------- */
+.oc-seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; border-radius: var(--radius-md); background: var(--surface-soft); }
+.oc-seg__item { height: 44px; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--ink-muted); font-family: var(--font-sans); font-size: 14px; font-weight: 700; cursor: pointer; }
+.oc-seg__item[aria-pressed="true"], .oc-seg__item[aria-selected="true"] { background: var(--surface-card); color: var(--ink); font-weight: 900; box-shadow: var(--shadow-segment); }
+.oc-seg--pill { display: inline-grid; border-radius: var(--radius-pill); }
+.oc-seg--pill .oc-seg__item { height: 36px; padding: 0 14px; border-radius: var(--radius-pill); }
+.oc-seg--tabs { gap: 4px; padding: 5px; border-radius: 20px; background: var(--ink); }
+.oc-seg--tabs .oc-seg__item { height: 48px; border-radius: var(--radius-lg); color: var(--on-ink); font-size: 16px; }
+.oc-seg--tabs .oc-seg__item[aria-selected="true"] { background: var(--honey); color: var(--ink); box-shadow: none; }
+
+/* ---------- Stepper ---------- */
+.oc-stepper { display: inline-flex; align-items: center; gap: 8px; }
+.oc-stepper__value { width: 28px; text-align: center; font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; }
+
+/* ---------- TextField ---------- */
+.oc-field { display: flex; flex-direction: column; gap: 6px; }
+.oc-field__label { font-size: 15px; font-weight: 900; }
+.oc-field__optional { font-weight: 600; color: var(--ink-muted); }
+.oc-input { box-sizing: border-box; width: 100%; height: 54px; padding: 0 16px; border: 2px solid var(--line-strong); border-radius: var(--radius-lg); background: var(--surface-card); color: var(--ink); font-family: var(--font-sans); font-size: 17px; font-weight: 700; outline: none; }
+.oc-input::placeholder { color: var(--ink-muted); font-weight: 600; }
+.oc-input:focus { border-color: var(--olive); }
+.oc-input--sm { height: 46px; padding: 0 12px; border-radius: 12px; font-size: 16px; }
+textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-size: 16px; font-weight: 600; line-height: 1.45; resize: none; }
+.oc-field__hint { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.oc-field--warn .oc-input { border-color: var(--warn-border); background: var(--warn-soft); color: var(--warn); }
+.oc-field__warn { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--warn); }
+.oc-search { box-sizing: border-box; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; border: 2px solid var(--line-strong); border-radius: 18px; background: var(--surface-card); }
+.oc-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; font-family: var(--font-sans); font-size: 16px; color: var(--ink); }
+
+/* ---------- ListGroup and ListRow ---------- */
+.oc-list { background: var(--surface-card); border-radius: var(--radius-xl); overflow: hidden; }
+.oc-list--inset { padding: 4px 16px; }
+.oc-listrow { box-sizing: border-box; display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border-bottom: 1.5px solid var(--line); text-decoration: none; color: var(--ink); }
+.oc-listrow:last-child { border-bottom: none; }
+.oc-listrow input[type="checkbox"], .oc-listrow input[type="radio"] { width: 26px; height: 26px; flex: none; margin: 0; accent-color: var(--olive); }
+.oc-listrow__main { flex: 1; min-width: 0; }
+.oc-listrow__title { display: block; font-size: 16px; font-weight: 800; }
+.oc-listrow__title--done { text-decoration: line-through; color: var(--ink-faint); }
+.oc-listrow__sub { display: block; font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-top: 1px; }
+.oc-listrow__sub--warn { color: var(--warn); font-weight: 700; }
+.oc-listrow__trail { flex: none; text-align: right; max-width: 140px; }
+.oc-listrow__buy { display: block; font-size: 15px; font-weight: 900; }
+.oc-listrow__need { display: block; font-size: 12px; font-weight: 700; color: var(--ink-muted); }
+.oc-listrow__value { font-size: 15px; font-weight: 800; color: var(--ink-muted); }
+.oc-overline { margin: 0; font-size: 13px; font-weight: 900; line-height: 1.3; letter-spacing: 0.7px; text-transform: uppercase; color: var(--ink-muted); }
+.oc-ingredient { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1.5px solid var(--line); }
+.oc-ingredient__amt { width: 104px; flex: none; font-size: 17px; font-weight: 900; }
+.oc-ingredient__name { font-size: 16px; font-weight: 700; }
+.oc-ingredient__sub { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+
+/* ---------- Card ---------- */
+.oc-card { box-sizing: border-box; background: var(--surface-card); border-radius: var(--radius-xl); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.oc-card--soft { background: var(--surface-soft); }
+.oc-card--selected { border: 2px solid var(--olive); }
+.oc-card--attention { border: 2px solid var(--warn-border); }
+.oc-hero { display: block; border-radius: var(--radius-2xl); overflow: hidden; background: var(--surface-soft); color: var(--ink); text-decoration: none; }
+.oc-hero__media { position: relative; height: 170px; }
+.oc-hero__badge { position: absolute; top: 14px; left: 14px; }
+.oc-hero__body { padding: 14px 18px 16px; }
+.oc-hero__title { font-size: 22px; font-weight: 900; letter-spacing: -0.3px; line-height: 1.2; }
+.oc-hero__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.oc-photo { display: flex; align-items: center; justify-content: center; background: var(--peach); color: var(--peach-ink); font-size: 14px; font-weight: 700; }
+.oc-recipe-item { display: flex; gap: 14px; align-items: center; padding: 10px; border-radius: var(--radius-xl); background: var(--surface-card); color: var(--ink); text-decoration: none; }
+.oc-recipe-item__thumb { width: 84px; height: 84px; flex: none; border-radius: var(--radius-lg); }
+.oc-recipe-item__title { font-size: 17px; font-weight: 900; }
+.oc-recipe-item__meta { font-size: 14px; font-weight: 600; color: var(--ink-muted); margin-top: 2px; }
+.oc-recipe-item__by { font-size: 13px; font-weight: 700; color: var(--olive); margin-top: 6px; }
+
+/* ---------- StatTile ---------- */
+.oc-stat { box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; padding: 16px 18px; border-radius: 24px; color: var(--ink); text-decoration: none; }
+.oc-stat--honey { background: var(--honey); }
+.oc-stat--sage { background: var(--sage); }
+.oc-stat__num { font-size: 28px; font-weight: 900; line-height: 1; }
+.oc-stat__label { font-size: 15px; font-weight: 700; }
+
+/* ---------- Callout ---------- */
+.oc-callout { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-lg); font-size: 15px; font-weight: 700; line-height: 1.4; }
+.oc-callout--tip { flex-direction: column; gap: 2px; background: var(--surface-soft); font-weight: 600; }
+.oc-callout__label { font-size: 12px; font-weight: 900; letter-spacing: 0.7px; text-transform: uppercase; color: var(--warn); }
+.oc-callout--temp, .oc-callout--ai, .oc-callout--info { background: var(--sage); }
+.oc-callout--warn { background: var(--warn-soft); color: var(--warn); }
+.oc-callout__ai { flex: none; padding: 3px 7px; border-radius: 8px; background: var(--surface-card); font-size: 12px; font-weight: 900; }
+
+/* ---------- StepCard ---------- */
+.oc-step { background: var(--surface-card); border-radius: var(--radius-xl); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.oc-step__head { display: flex; align-items: center; gap: 10px; }
+.oc-step__num { width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--honey); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; }
+.oc-step__name { margin: 0; flex: 1; font-size: 18px; font-weight: 900; }
+.oc-step__text { margin: 0; font-size: 17px; line-height: 1.55; }
+.oc-amount { font-weight: 900; background: var(--surface-soft); border-radius: var(--radius-xs); padding: 1px 4px; }
+.oc-amount--cook { background: var(--honey); padding: 0 4px; }
+.oc-timer-row { display: flex; gap: 6px; }
+.oc-timer-btn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 14px; border: none; border-radius: var(--radius-lg); background: var(--honey); color: var(--ink); font-family: var(--font-sans); font-size: 15px; font-weight: 800; cursor: pointer; }
+.oc-timer-btn[aria-pressed="true"] { background: var(--olive); color: var(--on-olive); }
+.oc-timer-btn__clock { font-size: 17px; font-variant-numeric: tabular-nums; }
+.oc-timer-adj { width: 52px; flex: none; border: none; border-radius: var(--radius-lg); background: var(--surface-soft); color: var(--ink); font-family: var(--font-sans); font-size: 15px; font-weight: 900; cursor: pointer; }
+
+/* ---------- TimerCard (dark) ---------- */
+.oc-timer-card { background: var(--ink); color: var(--surface-page); border-radius: 26px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.oc-timer-card__label { font-size: 14px; font-weight: 700; color: var(--on-ink); }
+.oc-timer-card__row { display: flex; align-items: center; gap: 8px; }
+.oc-timer-card__clock { flex: 1; text-align: center; font-size: 46px; font-weight: 900; letter-spacing: -1px; line-height: 1; font-variant-numeric: tabular-nums; }
+.oc-timer-card__adj { width: 48px; height: 48px; flex: none; border: none; border-radius: 50%; background: var(--ink-raised); color: var(--surface-page); font-family: var(--font-sans); font-size: 15px; font-weight: 900; cursor: pointer; }
+
+/* ---------- TimerPill ---------- */
+.oc-timer-pill { box-sizing: border-box; display: inline-flex; align-items: center; gap: 10px; height: 50px; padding: 0 8px 0 14px; border: 2px solid var(--honey); border-radius: var(--radius-pill); background: var(--surface-card); color: var(--ink); text-decoration: none; box-shadow: var(--shadow-float); }
+.oc-timer-pill__name { font-size: 15px; font-weight: 800; white-space: nowrap; }
+.oc-timer-pill__clock { font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.oc-timer-pill__more { padding: 6px 10px; border-radius: var(--radius-pill); background: var(--honey); font-size: 13px; font-weight: 900; }
+
+/* ---------- TabBar ---------- */
+.oc-tabbar { box-sizing: border-box; display: flex; gap: 4px; height: 68px; padding: 8px; border-radius: 34px; background: var(--ink); box-shadow: var(--shadow-nav); }
+.oc-tabbar__item { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 26px; color: var(--on-ink); text-decoration: none; font-size: 15px; font-weight: 800; }
+.oc-tabbar__item[aria-current="page"] { flex: 2.2; background: var(--honey); color: var(--ink); }
+
+/* ---------- BottomSheet and Dialog ---------- */
+.oc-scrim { position: relative; background: var(--scrim); }
+.oc-sheet { box-sizing: border-box; background: var(--surface-page); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; padding: 12px 20px 28px; display: flex; flex-direction: column; gap: 16px; }
+.oc-sheet__handle { width: 44px; height: 5px; border-radius: 3px; background: var(--line-handle); align-self: center; }
+.oc-sheet__title { margin: 0; font-size: 24px; font-weight: 900; }
+.oc-sheet__lead { margin: 4px 0 0; font-size: 15px; font-weight: 600; line-height: 1.45; color: var(--ink-muted); }
+.oc-dialog { box-sizing: border-box; background: var(--surface-page); border-radius: 30px; padding: 24px 20px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.oc-dialog__icon { width: 60px; height: 60px; border-radius: 50%; background: var(--warn-soft); color: var(--danger); display: flex; align-items: center; justify-content: center; }
+.oc-dialog__title { margin: 0; font-size: 22px; font-weight: 900; }
+.oc-dialog__body { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.45; color: var(--ink-muted); }
+
+/* ---------- MonthPicker ---------- */
+.oc-months { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.oc-month { height: 40px; border: none; border-radius: 12px; background: var(--surface-soft); color: var(--ink); font-family: var(--font-sans); font-size: 14px; font-weight: 700; cursor: pointer; }
+.oc-month[aria-pressed="true"] { background: var(--olive); color: var(--on-olive); font-weight: 900; }
+
+/* ---------- Avatar ---------- */
+.oc-avatar { box-sizing: border-box; width: 36px; height: 36px; flex: none; border-radius: 50%; border: 2px solid var(--surface-page); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: var(--ink); background: var(--honey); }
+.oc-avatar--sage { background: var(--sage); }
+.oc-avatar--peach { background: var(--peach); }
+.oc-avatar--lg { width: 40px; height: 40px; border: none; font-size: 16px; }
+.oc-avatar--sm { width: 32px; height: 32px; border: none; }
+.oc-avatars { display: inline-flex; }
+.oc-avatars .oc-avatar + .oc-avatar { margin-left: -10px; }
+
+/* ---------- Progress ---------- */
+.oc-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; }
+.oc-progress__seg { height: 6px; border-radius: 3px; background: var(--line-strong); }
+.oc-progress__seg--done { background: var(--olive-muted); }
+.oc-progress__seg--current { background: var(--olive); }
+.oc-progress--cook .oc-progress__seg { height: 8px; border-radius: 4px; }
+.oc-formnav__item { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-muted); text-decoration: none; }
+.oc-formnav__item[aria-current="step"] { color: var(--ink); font-weight: 900; }
+
+/* ---------- Status ---------- */
+.oc-status { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 54px; padding: 0 8px 0 16px; border-radius: 18px; background: var(--sage); font-size: 15px; font-weight: 800; }
+.oc-status__undo { height: 44px; padding: 0 12px; border: none; background: none; color: var(--ink); font-family: var(--font-sans); font-size: 15px; font-weight: 900; text-decoration: underline; cursor: pointer; }
+.oc-presence { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: var(--radius-pill); background: var(--sage); font-size: 13px; font-weight: 800; }
+.oc-presence::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--olive); }
+.oc-awake { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: var(--radius-pill); background: var(--sage); color: var(--olive-deep); font-size: 13px; font-weight: 800; }
+
+/* ---------- ScreenHeader ---------- */
+.oc-back { display: inline-flex; align-items: center; gap: 4px; height: 44px; color: var(--olive); font-size: 16px; font-weight: 800; text-decoration: none; }
+.oc-screen-title { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px; line-height: 1.1; }
+.oc-screen-sub { font-size: 15px; font-weight: 700; color: var(--ink-muted); }
+.oc-formbar { display: flex; align-items: center; justify-content: space-between; }
+.oc-formbar__title { font-size: 17px; font-weight: 900; }
+.oc-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 900; letter-spacing: -0.3px; }
+.oc-brand__mark { width: 34px; height: 34px; border-radius: 11px; background: var(--honey); display: inline-flex; align-items: center; justify-content: center; }

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Add to groceries</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8C8268; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div role="dialog" aria-label="Choose items to add to groceries" style="position: absolute; left: 0; right: 0; bottom: 0; height: 790px; background: #FFF8E3; border-radius: 32px 32px 0 0; padding: 12px 20px 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+    <div style="width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4; align-self: center; flex: none"></div>
+    <div style="flex: none">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 900">Add to groceries</h2>
+      <p style="margin: 4px 0 0; font-size: 15px; font-weight: 600; color: #5A503A; line-height: 1.4">Leek &amp; bacon quiche · serves 6. Untick what you already have at home.</p>
+    </div>
+
+    <sc-if value="{{notDone}}" hint-placeholder-val="{{true}}">
+      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin: 0 -4px; padding: 0 4px">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+          <section style="display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline">
+              <h3 style="margin: 0; font-size: 13px; font-weight: 900; color: #5A503A; text-transform: uppercase; letter-spacing: 0.7px">{{g.name}}</h3>
+              <span style="font-size: 12px; font-weight: 700; color: #5A503A">{{g.hint}}</span>
+            </div>
+            <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden">
+              <sc-for list="{{g.items}}" as="it" hint-placeholder-count="3">
+                <label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 58px; box-sizing: border-box; border-bottom: 1.5px solid #F7EED6; cursor: pointer">
+                  <input type="checkbox" checked="{{it.on}}" onChange="{{it.toggle}}" style="width: 26px; height: 26px; accent-color: #5A6820; flex: none; margin: 0">
+                  <span style="flex: 1; min-width: 0">
+                    <span style="{{it.nameStyle}}">{{it.name}}</span>
+                    <sc-if value="{{it.hasNote}}" hint-placeholder-val="{{false}}"><span style="display: block; font-size: 13px; font-weight: 700; color: #8A4B00">{{it.note}}</span></sc-if>
+                  </span>
+                  <span style="font-size: 15px; font-weight: 800; color: #5A503A">{{it.qty}}</span>
+                </label>
+              </sc-for>
+            </div>
+          </section>
+        </sc-for>
+      </div>
+      <div style="flex: none; display: flex; gap: 10px">
+        <a href="OC-Recipe.dc.html" style="width: 110px; height: 58px; border-radius: 999px; background: #FFF0C9; color: #2A2414; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800">Cancel</a>
+        <button onClick="{{add}}" style="{{addStyle}}">{{addLabel}}</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{done}}" hint-placeholder-val="{{false}}">
+      <div role="status" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: #D9E3A8; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
+        <div style="font-size: 22px; font-weight: 900">{{doneTitle}}</div>
+        <div style="font-size: 15px; font-weight: 600; color: #5A503A; max-width: 280px; line-height: 1.45">The whole family can see them now.</div>
+        <button onClick="{{undo}}" style="height: 44px; padding: 0 16px; border: none; background: none; color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; text-decoration: underline; cursor: pointer">Undo</button>
+      </div>
+      <div style="flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <a href="OC-Recipe.dc.html" style="height: 58px; border-radius: 999px; background: #FFF0C9; color: #2A2414; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800">Back to recipe</a>
+        <a href="OC-Groceries.dc.html" style="height: 58px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900">See the list</a>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.data = [
+      { name: 'From this recipe', hint: 'All ticked to start', items: [
+        { id: 'pastry', name: 'Shortcrust pastry', qty: '1 sheet' },
+        { id: 'butter', name: 'Butter', qty: '20 g' },
+        { id: 'leek', name: 'Leeks', qty: '2 · 300 g' },
+        { id: 'lardons', name: 'Bacon lardons', qty: '200 g' },
+        { id: 'eggs', name: 'Large eggs', qty: '3' },
+        { id: 'cream', name: 'Heavy cream', qty: '300 ml', note: 'Already on the list (100 ml) → will be 400 ml' },
+        { id: 'cheese', name: 'Gruyère', qty: '100 g' },
+        { id: 'nutmeg', name: 'Nutmeg', qty: '1 pinch' }
+      ]}
+    ];
+    this.state = { on: { pastry: true, butter: true, leek: true, lardons: true, eggs: true, cream: true, cheese: true, nutmeg: true }, done: false };
+  }
+  renderVals() {
+    var self = this, s = this.state, count = 0;
+    var groups = this.data.map(function (g) {
+      return { name: g.name, hint: g.hint, items: g.items.map(function (it) {
+        var on = !!s.on[it.id];
+        if (on) count++;
+        return {
+          name: it.name, qty: it.qty, on: on, hasNote: !!it.note && on, note: it.note || '',
+          nameStyle: 'display: block; font-size: 16px; font-weight: 800; color: ' + (on ? '#2A2414' : '#8F866C'),
+          toggle: function () { var n = Object.assign({}, self.state.on); n[it.id] = !on; self.setState({ on: n }); }
+        };
+      })};
+    });
+    return {
+      groups: groups, done: s.done, notDone: !s.done,
+      addLabel: count === 0 ? 'Nothing selected' : 'Add ' + count + (count === 1 ? ' item' : ' items'),
+      addStyle: 'flex: 1; height: 58px; border-radius: 999px; border: none; font-family: Nunito, sans-serif; font-size: 17px; font-weight: 900; cursor: pointer; ' + (count ? 'background: #2A2414; color: #FFFFFF' : 'background: #E6DFC9; color: #5A503A'),
+      doneTitle: 'Added ' + count + (count === 1 ? ' item' : ' items') + ' to groceries',
+      add: function () { if (count) self.setState({ done: true }); },
+      undo: function () { self.setState({ done: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

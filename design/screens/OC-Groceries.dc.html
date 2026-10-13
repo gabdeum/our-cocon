@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Groceries</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 1150px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div style="padding: 54px 20px 180px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end">
+      <div>
+        <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px">Groceries</h1>
+        <div style="font-size: 15px; font-weight: 700; color: #5A503A">{{remaining}} to buy · shared with family</div>
+      </div>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; background: #D9E3A8; padding: 7px 12px; border-radius: 999px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #5A6820"></span>Mia is shopping</span>
+    </div>
+
+    <div style="display: flex; gap: 8px">
+      <label for="add" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Add an item</label>
+      <input id="add" placeholder="Add an item, e.g. 2 lemons" style="flex: 1; min-width: 0; height: 54px; box-sizing: border-box; border-radius: 18px; border: 2px solid #EEDFB5; background: #FFFFFF; padding: 0 16px; font-size: 16px; color: #2A2414">
+      <button aria-label="Add item" style="width: 54px; height: 54px; flex: none; border-radius: 18px; border: none; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+      <span style="font-size: 14px; font-weight: 700; color: #5A503A">Store sizes:</span>
+      <div style="display: flex; gap: 4px; background: #FFF0C9; border-radius: 999px; padding: 4px">
+        <button onClick="{{setUS}}" aria-pressed="{{usAria}}" style="{{usStyle}}">US</button>
+        <button onClick="{{setEU}}" aria-pressed="{{euAria}}" style="{{euStyle}}">Europe</button>
+      </div>
+      <a href="OC-Settings.dc.html" style="font-size: 13px; font-weight: 800; padding: 6px 0">Set in Settings</a>
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center; background: #FFF0C9; border-radius: 18px; padding: 10px 12px">
+      <div style="width: 40px; height: 40px; flex: none; border-radius: 12px; background: #F5D9A8"></div>
+      <div style="flex: 1; min-width: 0"><div style="font-size: 15px; font-weight: 800">For Leek &amp; bacon quiche</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">2 items · serves 6</div></div>
+      <a href="OC-Recipe.dc.html" style="font-size: 14px; font-weight: 800; padding: 8px 4px">Open</a>
+    </div>
+
+    <sc-for list="{{aisles}}" as="a" hint-placeholder-count="3">
+      <section style="display: flex; flex-direction: column; gap: 6px">
+        <h2 style="margin: 4px 0 0; font-size: 13px; font-weight: 900; color: #5A503A; text-transform: uppercase; letter-spacing: 0.7px">{{a.name}}</h2>
+        <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden">
+          <sc-for list="{{a.items}}" as="it" hint-placeholder-count="2">
+            <label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 64px; box-sizing: border-box; border-bottom: 1.5px solid #F7EED6; cursor: pointer">
+              <input type="checkbox" checked="{{it.done}}" onChange="{{it.toggle}}" style="width: 26px; height: 26px; accent-color: #5A6820; flex: none; margin: 0">
+              <span style="flex: 1; min-width: 0">
+                <span style="{{it.nameStyle}}">{{it.name}}</span>
+                <span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A">{{it.source}}</span>
+              </span>
+              <span style="text-align: right; flex: none; max-width: 138px">
+                <span style="display: block; font-size: 15px; font-weight: 900; color: #2A2414">{{it.buy}}</span>
+                <span style="display: block; font-size: 12px; font-weight: 700; color: #5A503A">{{it.need}}</span>
+              </span>
+            </label>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+    <div style="font-size: 14px; font-weight: 600; color: #5A503A; text-align: center; line-height: 1.4"><b>Buy</b> is what to pick up at the store. <b>Need</b> is what your recipes call for.</div>
+  </div>
+  <div style="position: absolute; left: 0; bottom: 0; width: 390px; height: 160px">
+    <dc-import name="TabBar" active="groceries" hint-size="390px,160px"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"store":{"editor":"enum","options":["us","eu"],"default":"us"},"$preview":{"width":390,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { done: { bread: true }, store: props.store || 'us' };
+    this.data = [
+      { name: 'Dairy & eggs', items: [
+        { id: 'cream', name: 'Heavy cream', source: 'For Leek & bacon quiche', need: '300 ml', us: '1 pint carton', usLeft: '~170 ml left over', eu: '2 × 20 cl', euLeft: '100 ml left over' },
+        { id: 'cheese', name: 'Gruyère', source: 'For Leek & bacon quiche', need: '100 g', us: '1 block · 8 oz', usLeft: '~125 g left over', eu: '1 pack · 200 g', euLeft: '100 g left over' },
+        { id: 'milk', name: 'Milk', source: 'Alex via ChatGPT', need: '2 L', us: '½ gallon', usLeft: '', eu: '2 × 1 L', euLeft: '' }
+      ]},
+      { name: 'Produce', items: [
+        { id: 'pumpkin', name: 'Pumpkin', source: 'For Pumpkin soup', need: '1 kg', us: '1 small pumpkin', usLeft: 'about 2 lb', eu: '1 kg loose', euLeft: '' },
+        { id: 'apples', name: 'Apples', source: 'Added by Mia', need: '6', us: '1 bag · 3 lb', usLeft: 'about 8 apples', eu: '1 bag · 1 kg', euLeft: 'about 7 apples' }
+      ]},
+      { name: 'Bakery', items: [
+        { id: 'bread', name: 'Sourdough loaf', source: 'Added by Gabriel', need: '1', us: '1 loaf', usLeft: '', eu: '1 loaf', euLeft: '' },
+        { id: 'croissant', name: 'Croissants', source: 'Added by Mia', need: '4', us: '1 pack of 4', usLeft: '', eu: '4', euLeft: '' }
+      ]}
+    ];
+  }
+  renderVals() {
+    var self = this, s = this.state, done = s.done, remaining = 0, us = s.store === 'us';
+    var aisles = this.data.map(function (a) {
+      return { name: a.name, items: a.items.map(function (it) {
+        var d = !!done[it.id];
+        if (!d) remaining++;
+        var left = us ? it.usLeft : it.euLeft;
+        return {
+          name: it.name, source: it.source, done: d,
+          buy: 'Buy ' + (us ? it.us : it.eu),
+          need: 'Need ' + it.need + (left ? ' · ' + left : ''),
+          nameStyle: 'display: block; font-size: 16px; font-weight: 800; ' + (d ? 'text-decoration: line-through; color: #8F866C' : 'color: #2A2414'),
+          toggle: function () { var n = Object.assign({}, self.state.done); n[it.id] = !d; self.setState({ done: n }); }
+        };
+      })};
+    });
+    var on = 'height: 36px; padding: 0 14px; border-radius: 999px; border: none; background: #FFFFFF; color: #2A2414; font-family: Nunito, sans-serif; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 1px 3px rgba(42,36,20,0.15)';
+    var off = 'height: 36px; padding: 0 14px; border-radius: 999px; border: none; background: transparent; color: #5A503A; font-family: Nunito, sans-serif; font-size: 14px; font-weight: 700; cursor: pointer';
+    return {
+      aisles: aisles, remaining: remaining + (remaining === 1 ? ' item' : ' items'),
+      usStyle: us ? on : off, euStyle: us ? off : on,
+      usAria: us ? 'true' : 'false', euAria: us ? 'false' : 'true',
+      setUS: function () { self.setState({ store: 'us' }); },
+      setEU: function () { self.setState({ store: 'eu' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

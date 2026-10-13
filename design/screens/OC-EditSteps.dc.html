@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Edit steps</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 1350px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; display: flex; flex-direction: column">
+  <header style="flex: none; padding: 50px 16px 12px; display: flex; align-items: center; justify-content: space-between">
+    <a href="OC-Recipe.dc.html" style="height: 44px; display: flex; align-items: center; padding: 0 6px; font-size: 16px; font-weight: 800; color: #5A503A; text-decoration: none">Cancel</a>
+    <span style="font-size: 17px; font-weight: 900">Edit recipe</span>
+    <button style="height: 44px; padding: 0 18px; border-radius: 999px; border: none; background: #5A6820; color: #FFFFFF; font-size: 15px; font-weight: 900">Save</button>
+  </header>
+  <nav aria-label="Form sections" style="flex: none; padding: 0 16px 14px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+    <a href="OC-EditBasics.dc.html" style="text-decoration: none; color: #5A503A; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"><span style="height: 6px; border-radius: 3px; background: #A9B46A"></span>Details</a>
+    <a href="OC-EditIngredients.dc.html" style="text-decoration: none; color: #5A503A; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"><span style="height: 6px; border-radius: 3px; background: #A9B46A"></span>Ingredients</a>
+    <a href="OC-EditSteps.dc.html" aria-current="step" style="text-decoration: none; color: #2A2414; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 900"><span style="height: 6px; border-radius: 3px; background: #5A6820"></span>Steps</a>
+    <a href="OC-EditVariants.dc.html" style="text-decoration: none; color: #5A503A; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"><span style="height: 6px; border-radius: 3px; background: #EEDFB5"></span>Variants</a>
+  </nav>
+
+  <div style="padding: 4px 20px 30px; display: flex; flex-direction: column; gap: 12px">
+    <h1 style="margin: 0; font-size: 24px; font-weight: 900">Steps</h1>
+
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="width: 30px; height: 30px; flex: none; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900">1</span>
+      <span style="flex: 1; font-size: 16px; font-weight: 800">Preheat and line</span>
+      <span style="font-size: 12px; font-weight: 800; background: #FFF0C9; padding: 4px 8px; border-radius: 999px">Tip</span>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="width: 30px; height: 30px; flex: none; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900">2</span>
+      <span style="flex: 1; font-size: 16px; font-weight: 800">Blind bake</span>
+      <span style="font-size: 12px; font-weight: 800; background: #FFF0C9; padding: 4px 8px; border-radius: 999px">12 min</span>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 12px; border: 2px solid #5A6820">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span style="width: 30px; height: 30px; flex: none; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900">3</span>
+        <input aria-label="Step name" value="Cook the filling" style="flex: 1; min-width: 0; height: 46px; box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 0 12px; font-size: 16px; font-weight: 800; color: #2A2414">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 14px; font-weight: 900">Instructions</span>
+        <div style="border-radius: 14px; border: 2px solid #EEDFB5; padding: 12px; font-size: 16px; line-height: 1.8">In a large pan, melt <span style="background: #D9E3A8; border-radius: 8px; padding: 2px 8px; font-weight: 800">Butter</span> over medium heat. Add <span style="background: #D9E3A8; border-radius: 8px; padding: 2px 8px; font-weight: 800">Leeks</span> finely sliced and cook 6–8 minutes until soft. Add <span style="background: #D9E3A8; border-radius: 8px; padding: 2px 8px; font-weight: 800">Bacon lardons</span>…</div>
+        <span style="font-size: 13px; font-weight: 600; color: #5A503A">Type @ or tap below to insert an ingredient. Its amount fills in and scales by itself.</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap">
+          <button style="height: 36px; padding: 0 12px; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-size: 14px; font-weight: 700">+ Eggs</button>
+          <button style="height: 36px; padding: 0 12px; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-size: 14px; font-weight: 700">+ Cream</button>
+          <button style="height: 36px; padding: 0 12px; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-size: 14px; font-weight: 700">+ Gruyère</button>
+        </div>
+      </div>
+      <div style="background: #FFF8E3; border-radius: 14px; padding: 10px 12px">
+        <div style="font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px; color: #5A503A">Preview</div>
+        <div style="font-size: 14px; font-weight: 600; line-height: 1.5; margin-top: 2px">…melt <b>20 g butter</b> over medium heat. Add <b>2 leeks (300 g)</b> finely sliced…</div>
+      </div>
+
+      <div style="font-size: 14px; font-weight: 900">Add to this step</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button aria-pressed="true" style="height: 48px; border-radius: 14px; border: none; background: #5A6820; color: #FFFFFF; font-size: 14px; font-weight: 800">Timer ✓</button>
+        <button style="height: 48px; border-radius: 14px; border: 2px solid #EEDFB5; background: #FFFFFF; color: #2A2414; font-size: 14px; font-weight: 800">Temperature check</button>
+        <button aria-pressed="true" style="height: 48px; border-radius: 14px; border: none; background: #5A6820; color: #FFFFFF; font-size: 14px; font-weight: 800">Chef's tip ✓</button>
+        <button style="height: 48px; border-radius: 14px; border: 2px solid #EEDFB5; background: #FFFFFF; color: #2A2414; font-size: 14px; font-weight: 800">Photo</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 8px">
+        <div style="display: flex; flex-direction: column; gap: 4px"><label for="tmin" style="font-size: 13px; font-weight: 800">Timer</label><input id="tmin" value="8 min" style="height: 46px; box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 0 12px; font-size: 16px; font-weight: 800; color: #2A2414; min-width: 0"></div>
+        <div style="display: flex; flex-direction: column; gap: 4px"><label for="tlab" style="font-size: 13px; font-weight: 800">Timer label</label><input id="tlab" value="Soften the leeks" style="height: 46px; box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 0 12px; font-size: 16px; font-weight: 700; color: #2A2414; min-width: 0"></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <label for="tip" style="font-size: 13px; font-weight: 800">Chef's tip</label>
+        <textarea id="tip" rows="2" placeholder="Something you wish you'd known the first time" style="box-sizing: border-box; border-radius: 12px; border: 2px solid #EEDFB5; padding: 10px 12px; font-size: 15px; font-weight: 600; color: #2A2414; resize: none"></textarea>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="width: 30px; height: 30px; flex: none; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900">4</span>
+      <span style="flex: 1; font-size: 16px; font-weight: 800">Mix the custard</span>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span style="width: 30px; height: 30px; flex: none; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900">5</span>
+        <span style="flex: 1; font-size: 16px; font-weight: 800">Bake</span>
+        <span style="font-size: 12px; font-weight: 800; background: #FFF0C9; padding: 4px 8px; border-radius: 999px">35 min</span>
+      </div>
+      <div style="margin-left: 40px; font-size: 14px; font-weight: 700; background: #D9E3A8; border-radius: 12px; padding: 8px 10px">Temperature check: center reaches 71 °C <span style="color: #424D17">→ shows (160 °F) automatically</span></div>
+    </div>
+
+    <button style="height: 54px; border-radius: 18px; border: 2px dashed #CDBF95; background: transparent; color: #424D17; font-size: 15px; font-weight: 800">+ Add a step</button>
+    <a href="OC-EditVariants.dc.html" style="height: 58px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900">Next: Variants</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1350}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

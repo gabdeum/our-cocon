@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 1420px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div style="padding: 54px 20px 180px; display: flex; flex-direction: column; gap: 16px">
+    <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px">Settings</h1>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 900">Cooking defaults</h2>
+      <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A">Used for every recipe. Each recipe can change them in its own settings.</p>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 4px 16px">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid #F2E6C4">
+          <div style="flex: 1"><div style="font-size: 16px; font-weight: 800">Keep screen on while cooking</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">So it doesn't lock with floury hands</div></div>
+          <span role="switch" aria-checked="true" aria-label="Keep screen on" style="width: 52px; height: 32px; flex: none; border-radius: 16px; background: #5A6820; padding: 3px; box-sizing: border-box; display: flex; justify-content: flex-end"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid #F2E6C4">
+          <div style="flex: 1"><div style="font-size: 16px; font-weight: 800">I have a kitchen scale</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">Off: shows cups and spoons instead of grams</div></div>
+          <span role="switch" aria-checked="true" aria-label="I have a kitchen scale" style="width: 52px; height: 32px; flex: none; border-radius: 16px; background: #5A6820; padding: 3px; box-sizing: border-box; display: flex; justify-content: flex-end"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid #F2E6C4">
+          <div style="flex: 1"><div style="font-size: 16px; font-weight: 800">I have a thermometer</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">Off: hides temperature checks in steps</div></div>
+          <span role="switch" aria-checked="false" aria-label="I have a thermometer" style="width: 52px; height: 32px; flex: none; border-radius: 16px; background: #D8CBA4; padding: 3px; box-sizing: border-box; display: flex; justify-content: flex-start"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span>
+        </div>
+        <div style="padding: 14px 0; display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 16px; font-weight: 800">Units</div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #FFF0C9; border-radius: 14px; padding: 4px">
+            <button aria-pressed="true" style="height: 44px; border-radius: 11px; border: none; background: #FFFFFF; color: #2A2414; font-size: 14px; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)">Metric · g, ml, °C</button>
+            <button style="height: 44px; border-radius: 11px; border: none; background: transparent; color: #5A503A; font-size: 14px; font-weight: 700">Imperial · oz, °F</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 900">Groceries</h2>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 4px 16px">
+        <div style="padding: 14px 0; display: flex; flex-direction: column; gap: 10px; border-bottom: 1.5px solid #F2E6C4">
+          <div><div style="font-size: 16px; font-weight: 800">Where do you shop?</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">So the list shows packs you can actually buy</div></div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #FFF0C9; border-radius: 14px; padding: 4px">
+            <button aria-pressed="true" style="height: 44px; border-radius: 11px; border: none; background: #FFFFFF; color: #2A2414; font-size: 14px; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)">US stores</button>
+            <button style="height: 44px; border-radius: 11px; border: none; background: transparent; color: #5A503A; font-size: 14px; font-weight: 700">European stores</button>
+          </div>
+          <div style="background: #FFF8E3; border-radius: 14px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px">
+            <span style="font-size: 14px; font-weight: 700">Recipe needs <b>300 ml cream</b></span>
+            <span style="font-size: 14px; font-weight: 900; color: #424D17; white-space: nowrap">Buy 1 pint</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0">
+          <div style="flex: 1"><div style="font-size: 16px; font-weight: 800">Round up to store sizes</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">Off: the list shows only what recipes need</div></div>
+          <span role="switch" aria-checked="true" aria-label="Round up to store sizes" style="width: 52px; height: 32px; flex: none; border-radius: 16px; background: #5A6820; padding: 3px; box-sizing: border-box; display: flex; justify-content: flex-end"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 900">Family</h2>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 6px 16px">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1.5px solid #F2E6C4"><span style="width: 40px; height: 40px; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-weight: 900">G</span><span style="flex: 1; font-size: 16px; font-weight: 800">Gabriel</span><span style="font-size: 13px; font-weight: 700; color: #5A503A">Owner</span></div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1.5px solid #F2E6C4"><span style="width: 40px; height: 40px; border-radius: 50%; background: #D9E3A8; display: flex; align-items: center; justify-content: center; font-weight: 900">A</span><span style="flex: 1; font-size: 16px; font-weight: 800">Alex</span><span style="font-size: 13px; font-weight: 700; color: #5A503A">Can edit</span></div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0"><span style="width: 40px; height: 40px; border-radius: 50%; background: #F5D9A8; display: flex; align-items: center; justify-content: center; font-weight: 900">M</span><span style="flex: 1; font-size: 16px; font-weight: 800">Mia</span><span style="font-size: 13px; font-weight: 700; color: #5A503A">Can edit</span></div>
+      </div>
+      <button style="height: 52px; border-radius: 18px; border: 2px dashed #CDBF95; background: transparent; color: #424D17; font-size: 15px; font-weight: 800">+ Invite someone</button>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 900">More</h2>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 4px 16px">
+        <a href="OC-Connect.dc.html" style="text-decoration: none; color: #2A2414; display: flex; align-items: center; gap: 12px; min-height: 56px; border-bottom: 1.5px solid #F2E6C4"><span style="flex: 1; font-size: 16px; font-weight: 800">AI assistants</span><span style="font-size: 13px; font-weight: 700; color: #424D17">2 connected</span><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A503A" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></a>
+        <a href="#" style="text-decoration: none; color: #2A2414; display: flex; align-items: center; gap: 12px; min-height: 56px"><span style="flex: 1; font-size: 16px; font-weight: 800">Recently deleted</span><span style="font-size: 13px; font-weight: 700; color: #5A503A">1 recipe</span><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A503A" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></a>
+      </div>
+    </section>
+  </div>
+  <div style="position: absolute; left: 0; bottom: 0; width: 390px; height: 160px">
+    <dc-import name="TabBar" active="settings" hint-size="390px,160px"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1420}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Delete recipe</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8C8268; color: #2A2414; font-family: 'Nunito', sans-serif; display: flex; align-items: center; justify-content: center; padding: 20px">
+  <div role="alertdialog" aria-labelledby="dt" aria-describedby="dd" style="width: 100%; background: #FFF8E3; border-radius: 30px; padding: 24px 20px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center">
+    <div style="width: 60px; height: 60px; border-radius: 50%; background: #FFE3C2; color: #9A3412; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+    </div>
+    <h2 id="dt" style="margin: 0; font-size: 22px; font-weight: 900">Delete “Leek &amp; bacon quiche”?</h2>
+    <p id="dd" style="margin: 0; font-size: 16px; font-weight: 600; line-height: 1.45; color: #5A503A">It will disappear for the whole family, along with its 2 variants. You can bring it back from <b style="color: #2A2414">Recently deleted</b> for 30 days.</p>
+    <button style="width: 100%; height: 56px; border-radius: 999px; border: none; background: #9A3412; color: #FFFFFF; font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 900; margin-top: 6px">Delete recipe</button>
+    <a href="OC-EditVariants.dc.html" style="width: 100%; height: 56px; border-radius: 999px; background: #FFF0C9; color: #2A2414; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800">Keep it</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

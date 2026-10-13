@@ -1,0 +1,3 @@
+# Icons
+
+Line icons on a 24 × 24 grid: stroke 2.2 (2.4–2.6 for back, chevron, close and plus), round caps and joins, drawn in ink `#2A2414`. Recolour in code (on-ink in the tab bar, olive in the timer pill, white on olive). Names say what they mean: home, recipes, groceries, settings (tab bar); back, chevron-right, close, plus, search, filter, share, more; timer, thermometer, screen-on (cooking); check, trash, camera, message, mail, swap (variant change), view-only, warning, play.

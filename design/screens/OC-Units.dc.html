@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Unit converter</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8C8268; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div role="dialog" aria-label="Unit converter" style="position: absolute; left: 0; right: 0; bottom: 0; height: 740px; background: #FFF8E3; border-radius: 32px 32px 0 0; padding: 12px 20px 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+    <div style="width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4; align-self: center"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 900">Unit converter</h2>
+      <a href="OC-Recipe.dc.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 50%; background: #FFF0C9; color: #2A2414; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; background: #FFF0C9; border-radius: 16px; padding: 4px">
+      <button style="height: 44px; border-radius: 12px; border: none; background: transparent; color: #5A503A; font-size: 15px; font-weight: 700">Weight</button>
+      <button aria-pressed="true" style="height: 44px; border-radius: 12px; border: none; background: #FFFFFF; color: #2A2414; font-size: 15px; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)">Volume</button>
+      <button style="height: 44px; border-radius: 12px; border: none; background: transparent; color: #5A503A; font-size: 15px; font-weight: 700">Oven temp</button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="amt" style="font-size: 15px; font-weight: 900">Convert</label>
+      <div style="display: flex; gap: 8px">
+        <input id="amt" value="300" inputmode="decimal" style="flex: 1; min-width: 0; height: 60px; box-sizing: border-box; border-radius: 18px; border: 2px solid #EEDFB5; background: #FFFFFF; padding: 0 16px; font-size: 26px; font-weight: 900; color: #2A2414">
+        <button style="width: 100px; height: 60px; border-radius: 18px; border: 2px solid #EEDFB5; background: #FFFFFF; color: #2A2414; font-size: 18px; font-weight: 800">ml ▾</button>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div style="background: #FFCF5C; border-radius: 20px; padding: 14px 16px"><div style="font-size: 26px; font-weight: 900">1¼</div><div style="font-size: 15px; font-weight: 700">cups</div></div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 14px 16px"><div style="font-size: 26px; font-weight: 900">20</div><div style="font-size: 15px; font-weight: 700">tablespoons</div></div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 14px 16px"><div style="font-size: 26px; font-weight: 900">61</div><div style="font-size: 15px; font-weight: 700">teaspoons</div></div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 14px 16px"><div style="font-size: 26px; font-weight: 900">10.1</div><div style="font-size: 15px; font-weight: 700">fl oz (US)</div></div>
+    </div>
+
+    <div style="background: #D9E3A8; border-radius: 20px; padding: 14px 16px">
+      <div style="font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px; color: #424D17">For this recipe</div>
+      <div style="font-size: 15px; font-weight: 700; line-height: 1.45; margin-top: 4px">300 ml heavy cream weighs about 300 g. Handy if you'd rather weigh it on your scale.</div>
+    </div>
+
+    <div style="font-size: 13px; font-weight: 600; color: #5A503A; line-height: 1.4">Cups and spoons use US measures. You can change this in Settings.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

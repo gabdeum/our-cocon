@@ -1,0 +1,22 @@
+# Secrets (template is env.example)
+.env
+.env.*
+!env.example
+*.pem
+*.key
+
+# Dependencies and build output
+node_modules/
+dist/
+.expo/
+web-build/
+*.tsbuildinfo
+
+# Supabase local state
+supabase/.temp/
+supabase/.branches/
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+.DS_Store

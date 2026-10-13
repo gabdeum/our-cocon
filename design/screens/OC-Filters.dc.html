@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Filters</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8C8268; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div role="dialog" aria-label="Filter recipes" style="position: absolute; left: 0; right: 0; bottom: 0; height: 730px; background: #FFF8E3; border-radius: 32px 32px 0 0; padding: 12px 20px 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+    <div style="width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4; align-self: center"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 900">Filters</h2>
+      <a href="OC-Recipes.dc.html" style="font-size: 15px; font-weight: 800; padding: 10px 0">Clear all</a>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 900">Best months</h3>
+      <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px">
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Jan</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Feb</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Mar</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Apr</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">May</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Jun</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Jul</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Aug</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Sep</span>
+        <span style="height: 40px; border-radius: 12px; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900">Oct</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Nov</span>
+        <span style="height: 40px; border-radius: 12px; background: #FFF0C9; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700">Dec</span>
+      </div>
+      <div style="font-size: 13px; font-weight: 600; color: #5A503A">Shows recipes that are best this time of year.</div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 900">Total time</h3>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700">Under 30 min</span>
+        <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700">30–60 min</span>
+        <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700">Over 1 hour</span>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 900">Diet</h3>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700">Vegetarian</span>
+        <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700">Has a vegetarian variant</span>
+        <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700">Dairy-free</span>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 900">Added by</h3>
+      <div style="display: flex; gap: 8px">
+        <span style="height: 44px; padding: 0 14px 0 6px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700"><span style="width: 32px; height: 32px; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-weight: 900">G</span>Gabriel</span>
+        <span style="height: 44px; padding: 0 14px 0 6px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700"><span style="width: 32px; height: 32px; border-radius: 50%; background: #D9E3A8; display: flex; align-items: center; justify-content: center; font-weight: 900">A</span>Alex</span>
+        <span style="height: 44px; padding: 0 14px 0 6px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700"><span style="width: 32px; height: 32px; border-radius: 50%; background: #F5D9A8; display: flex; align-items: center; justify-content: center; font-weight: 900">M</span>Mia</span>
+      </div>
+    </section>
+
+    <a href="OC-Recipes.dc.html" style="margin-top: auto; height: 58px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900">Show 12 recipes</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
