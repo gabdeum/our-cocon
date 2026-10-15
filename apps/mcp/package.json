@@ -1,0 +1,25 @@
+{
+  "name": "@cocon/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --sourcemap --external:@opentelemetry/api --outfile=dist/main.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\"",
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@cocon/schemas": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "posthog-node": "^5.56.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "esbuild": "0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.4"
+  }
+}
