@@ -4,7 +4,8 @@ WORKDIR /repo
 RUN npm install -g pnpm@12.3.4
 COPY . .
 RUN pnpm install --frozen-lockfile --filter our-cocon \
- && pnpm exec esbuild scripts/migrate.ts --bundle --platform=node --target=node24 --format=esm --outfile=/out/migrate.mjs
+ && pnpm exec esbuild scripts/migrate.ts --bundle --platform=node --target=node24 --format=esm --outfile=/out/migrate.mjs \
+      --banner:js="import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);"
 
 FROM node:24.11-slim
 WORKDIR /app

@@ -1,0 +1,7 @@
+# Started by OnFailure= of other cocon units: emails which unit failed, with its last log lines.
+[Unit]
+Description=Our Cocon alert for %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/cocon-healthcheck alert %i

@@ -1,0 +1,76 @@
+# The server's front door. Cloudflare connects here over HTTPS (Full strict) with the Cloudflare
+# origin certificate; Caddy passes each hostname to the right container on that environment's cocon-edge-<env> network.
+# COCON_DOMAIN and CLOUDFLARE_IPS come from compose.yml (CLOUDFLARE_IPS is written by provision.sh).
+{
+	admin off
+	auto_https disable_certs
+	servers {
+		trusted_proxies static {$CLOUDFLARE_IPS}
+		client_ip_headers CF-Connecting-IP
+	}
+}
+
+(site) {
+	# Only Cloudflare may connect (the Hetzner firewall does the same one level earlier).
+	@outside not remote_ip {$CLOUDFLARE_IPS}
+	abort @outside
+
+	tls /certs/origin.pem /certs/origin.key
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		Permissions-Policy "geolocation=(), microphone=(), payment=()"
+		-Server
+	}
+}
+
+# Supabase's public API only. Studio, /pg/ (database admin) and Supabase's own /mcp stay private.
+# (Plain respond/reverse_proxy, not handle blocks: Caddy runs handle before the abort above.)
+(api) {
+	@private not path /auth/v1/* /rest/v1/* /realtime/v1/* /storage/v1/* /graphql/v1 /graphql/v1/* /.well-known/oauth-authorization-server*
+	respond @private 404
+	reverse_proxy {args[0]}-api:8000
+}
+
+app.{$COCON_DOMAIN} {
+	import site
+	reverse_proxy prod-web:8080
+}
+
+mcp.{$COCON_DOMAIN} {
+	import site
+	reverse_proxy prod-mcp:8787
+}
+
+api.{$COCON_DOMAIN} {
+	import site
+	import api prod
+}
+
+# Behind Cloudflare Access (email PIN), then Supabase's dashboard password.
+studio.{$COCON_DOMAIN} {
+	import site
+	reverse_proxy prod-api:8000
+}
+
+app-staging.{$COCON_DOMAIN} {
+	import site
+	reverse_proxy staging-web:8080
+}
+
+mcp-staging.{$COCON_DOMAIN} {
+	import site
+	reverse_proxy staging-mcp:8787
+}
+
+api-staging.{$COCON_DOMAIN} {
+	import site
+	import api staging
+}
+
+studio-staging.{$COCON_DOMAIN} {
+	import site
+	reverse_proxy staging-api:8000
+}

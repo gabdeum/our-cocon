@@ -1,0 +1,8 @@
+# Disk, memory, swap and container health; emails ALERT_EMAIL on problems.
+[Unit]
+Description=Our Cocon server health check
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/cocon-healthcheck

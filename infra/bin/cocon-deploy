@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Installs one commit on one environment. CI runs it over SSH as `deploy` (through sudo):
+#
+#   cocon-deploy <staging|prod> <40-character commit>
+#
+# 1. Pull the web, mcp and migrate images for the commit.  Fails → nothing changed.
+# 2. Apply pending database migrations (all or none).     Fails → nothing changed.
+# 3. Start the new web and MCP containers.
+# 4. Wait until both report the new commit. If they don't within COCON_HEALTH_TIMEOUT seconds,
+#    start the previous commit again and fail.
+[ -z "${SUDO_USER:-}" ] || unset COCON_HOME
+. "${COCON_HOME:-/opt/cocon/infra}/lib/common.sh"
+
+env=${1:-}
+sha=${2:-}
+check_env "$env"
+check_sha "$sha"
+[ $# -eq 2 ] || die "usage: cocon-deploy <env> <commit>"
+
+timeout=${COCON_HEALTH_TIMEOUT:-60}
+state="$COCON_SRV/$env"
+prefix=$COCON_IMAGE_PREFIX
+
+trap release_env EXIT
+use_env "$env"
+mkdir -p "$state"
+previous=$(cat "$state/current" 2>/dev/null || true)
+
+log "deploying ${sha:0:7} to $env"
+
+for image in web mcp migrate; do
+  docker pull -q "$prefix-$image:$sha" >/dev/null || die "could not pull $image:$sha; $env is unchanged"
+done
+
+password=$(env_value "$COCON_RUN/$env/supabase.env" POSTGRES_PASSWORD)
+[ -n "$password" ] || die "POSTGRES_PASSWORD is missing from $env's Supabase settings"
+printf 'DATABASE_URL=postgres://postgres:%s@db:5432/postgres\n' "$password" >"$COCON_RUN/$env/migrate.env"
+
+stack_container "$env" db >/dev/null
+docker run --rm --network "cocon-${env}_default" --env-file "$COCON_RUN/$env/migrate.env" \
+  "$prefix-migrate:$sha" || die "migrations failed and were rolled back; $env is unchanged"
+
+app() {
+  COCON_ENV=$env COCON_SHA=$1 COCON_RUN=$COCON_RUN COCON_IMAGE_PREFIX=$prefix \
+    docker compose -p "cocon-$env-app" -f "$COCON_HOME/app/compose.yml" up -d --quiet-pull --remove-orphans
+}
+
+# serves <commit>: both containers report it.
+serves() {
+  docker exec "$env-web" wget -qO- http://127.0.0.1:8080/version.json 2>/dev/null | grep -q "\"$1\"" &&
+    docker exec "$env-mcp" node -e "fetch('http://127.0.0.1:8787/health').then(r=>r.text()).then(t=>console.log(t))" \
+      2>/dev/null | grep -q "\"$1\""
+}
+
+app "$sha" || true
+deadline=$((SECONDS + timeout))
+until serves "$sha"; do
+  if [ $SECONDS -ge $deadline ]; then
+    if [ -n "$previous" ]; then
+      log "${sha:0:7} did not come up in ${timeout}s; going back to ${previous:0:7}"
+      app "$previous" || log "could not restart ${previous:0:7}; check: docker ps -a"
+    else
+      log "${sha:0:7} did not come up in ${timeout}s; stopping it (no earlier version to go back to)"
+      docker compose -p "cocon-$env-app" -f "$COCON_HOME/app/compose.yml" down || true
+    fi
+    die "deploy of ${sha:0:7} to $env failed"
+  fi
+  sleep 2
+done
+
+[ -n "$previous" ] && [ "$previous" != "$sha" ] && echo "$previous" >"$state/previous"
+echo "$sha" >"$state/current"
+
+# Images not used by any container for a week (old releases) go, to keep the disk free.
+docker image prune -af --filter "until=168h" >/dev/null 2>&1 || true
+
+log "${sha:0:7} is live on $env"

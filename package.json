@@ -7,12 +7,12 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "supabase start >/dev/null && dotenv -e .env.local -- concurrently -n app,mcp -c yellow,cyan \"pnpm --filter @cocon/app web\" \"pnpm --filter @cocon/mcp dev\"",
+    "dev": "node scripts/dev.mjs",
     "check": "node scripts/check.mjs",
     "test": "vitest run --reporter=./scripts/vitest-quiet-reporter.ts",
     "test:all": "vitest run --reporter=./scripts/vitest-quiet-reporter.ts",
     "lint": "eslint --quiet .",
-    "typecheck": "pnpm -r --silent typecheck",
+    "typecheck": "pnpm -r --silent typecheck && tsc --noEmit --pretty false -p scripts && tsc --noEmit --pretty false -p infra",
     "db:new": "supabase migration new",
     "db:types": "supabase gen types typescript --local > packages/schemas/database.types.ts",
     "theme": "node scripts/theme.mjs"

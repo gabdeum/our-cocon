@@ -1,0 +1,33 @@
+# Once a month (and on demand): restore the latest prod backup into staging and check that every
+# table and photo is there. A failed run emails you through GitHub's notifications.
+name: Restore test
+
+on:
+  schedule:
+    - cron: '0 6 3 * *' # the 3rd of each month, 06:00 UTC, after the night's backups
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  restore:
+    name: Restore prod backup into staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: staging
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Restore and compare
+        run: .github/scripts/server.sh restore-test
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST || vars.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER || vars.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS || vars.SSH_KNOWN_HOSTS }}

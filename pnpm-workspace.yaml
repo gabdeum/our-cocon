@@ -3,3 +3,9 @@ packages:
   - 'packages/*'
 allowBuilds:
   esbuild: true
+# High advisories with no fixed release yet, only in Expo's build tooling (not shipped in the app
+# bundle or run on the server). Review when Expo updates; remove each once a fix exists.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-86w9-cpqp-85rv # node-forge, via @expo/cli code signing (iOS builds)
+    - GHSA-vfj7-8cjw-p6xm # braces, via Metro's file watcher

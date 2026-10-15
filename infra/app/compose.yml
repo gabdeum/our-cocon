@@ -1,0 +1,33 @@
+# The web app and MCP server for one environment, started by cocon-deploy as project
+# cocon-<env>-app. Images come from CI; settings from the sealed <env>-app.env.
+
+services:
+  web:
+    image: ${COCON_IMAGE_PREFIX}-web:${COCON_SHA:?}
+    container_name: ${COCON_ENV:?}-web
+    restart: unless-stopped
+    env_file: ${COCON_RUN}/${COCON_ENV}/app.env
+    environment:
+      COCON_ENV: ${COCON_ENV}
+    networks: [edge]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 128m
+
+  mcp:
+    image: ${COCON_IMAGE_PREFIX}-mcp:${COCON_SHA:?}
+    container_name: ${COCON_ENV:?}-mcp
+    restart: unless-stopped
+    env_file: ${COCON_RUN}/${COCON_ENV}/app.env
+    environment:
+      COCON_ENV: ${COCON_ENV}
+    networks: [edge]
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 256m
+
+networks:
+  edge:
+    name: cocon-edge-${COCON_ENV}
+    external: true
