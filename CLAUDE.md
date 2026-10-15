@@ -39,4 +39,5 @@ A household app for families, run from the app or from any AI assistant through 
 - Changes touching auth, RLS, share links, the MCP server or user data: run the `security-reviewer` subagent before finishing.
 - Use subagents (Explore, `reviewer`) for broad searches and reviews to keep this session small.
 - Product questions are decided (specs/README.md). Ask only if something truly isn't covered.
+- Infra (server, DNS, CI, secrets): Gabriel is new to it. Explain each step in plain words, guide anything he does himself click by click, verify results yourself, and keep `docs/infrastructure.md` current.
 - Keep instructions current: when you repeat a workflow or I correct the same thing twice, propose a CLAUDE.md line or a skill in `.claude/skills/` and tell me.
