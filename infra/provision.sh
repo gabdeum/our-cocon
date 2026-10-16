@@ -232,22 +232,38 @@ ask() { # ask <name> <question>
   if [ $dry = 1 ]; then note "would ask for $2"; return; fi
   cocon-secrets ask "$1" "   $2"
 }
-ask_pem() { # ask_pem <name> <question> <openssl check>
+# pem_tidy <file> <label>: keeps the "-----BEGIN <label>-----" block and rebuilds its line breaks,
+# which password managers often turn into spaces. Fails if there is no such block.
+pem_tidy() {
+  local raw body
+  raw=$(tr '\r\n\t' '   ' <"$1" | tr -s ' ')
+  case $raw in *"-----BEGIN $2-----"*"-----END $2-----"*) ;; *) return 1 ;; esac
+  body=${raw#*"-----BEGIN $2-----"}
+  body=${body%%"-----END $2-----"*}
+  {
+    echo "-----BEGIN $2-----"
+    printf '%s' "$body" | tr -d ' \t' | fold -w 64
+    echo
+    echo "-----END $2-----"
+  } >"$1"
+}
+ask_pem() { # ask_pem <name> <question> <PEM label> <openssl command>
   if has_secret "$1"; then note "$1: already set"; return; fi
   if [ $dry = 1 ]; then note "would ask for $2"; return; fi
   local tmp
   tmp=$(mktemp)
-  note "$2: paste it (from -----BEGIN to -----END), then press Enter"
+  note "$2: paste all of it, from -----BEGIN $3----- to -----END $3-----, then press Enter"
   stty -echo </dev/tty
-  sed '/^-----END /q' </dev/tty >"$tmp"
+  sed '/-----END /q' </dev/tty >"$tmp"
   stty echo </dev/tty
-  $3 -noout -in "$tmp" 2>/dev/null || { rm -f "$tmp"; die "that doesn't look like a valid $2"; }
+  pem_tidy "$tmp" "$3" || { rm -f "$tmp"; die "that isn't the $2: it starts with -----BEGIN $3-----. Run the setup again."; }
+  $4 -noout -in "$tmp" 2>/dev/null || { rm -f "$tmp"; die "the $2 looks incomplete. Copy all of it and run the setup again."; }
   cocon-secrets seal "$1" "$tmp"
 }
 
 ask resend-api-key "Resend API key (sign-in emails and alerts)"
-ask_pem origin.pem "Cloudflare origin certificate" "openssl x509"
-ask_pem origin.key "Cloudflare origin certificate's private key" "openssl pkey"
+ask_pem origin.pem "Cloudflare origin certificate" CERTIFICATE "openssl x509"
+ask_pem origin.key "Cloudflare origin private key" "PRIVATE KEY" "openssl pkey"
 
 if ! has_secret rclone.conf; then
   if [ $dry = 1 ]; then note "would ask for the R2 access key, secret, endpoint and photo backup passphrase"; else
