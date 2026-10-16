@@ -43,6 +43,17 @@ describe('createTracker', () => {
     expect(() => createTracker(fakeTransport()).identify('gabriel@example.com', null)).toThrow();
   });
 
+  it('sends tab_selected with the tab only', () => {
+    const t = fakeTransport();
+    createTracker(t).track('tab_selected', { tab: 'groceries' });
+    expect(t.capture).toHaveBeenCalledWith('tab_selected', { tab: 'groceries' });
+  });
+
+  it('rejects an unknown tab', () => {
+    const props = { tab: 'timers' } as never;
+    expect(() => createTracker(fakeTransport()).track('tab_selected', props)).toThrow();
+  });
+
   it('does nothing without a transport', () => {
     expect(() => createTracker(null).track('app_opened', { platform: 'ios', app_version: '1' })).not.toThrow();
   });

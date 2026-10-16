@@ -10,6 +10,10 @@ export const events = {
     platform: z.enum(['web', 'ios']),
     app_version: z.string().min(1),
   }),
+  // Spec 002: a tab in the floating tab bar was tapped (sent only when it changes the tab).
+  tab_selected: z.strictObject({
+    tab: z.enum(['home', 'recipes', 'groceries', 'settings']),
+  }),
 } as const;
 
 export type EventName = keyof typeof events;
