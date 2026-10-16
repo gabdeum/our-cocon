@@ -59,11 +59,11 @@ Last, it checks you can log in as `gabriel`, and only then turns off root and pa
 Afterwards, delete the key files from `~/Downloads` (`rm ~/Downloads/cocon-deploy-*`) and save each Studio password (Supabase's admin screens):
 
 ```sh
-ssh gabriel@<server-ip> sudo cocon-secrets get staging DASHBOARD_PASSWORD
-ssh gabriel@<server-ip> sudo cocon-secrets get prod DASHBOARD_PASSWORD
+ssh -t gabriel@<server-ip> sudo cocon-secrets get staging DASHBOARD_PASSWORD
+ssh -t gabriel@<server-ip> sudo cocon-secrets get prod DASHBOARD_PASSWORD
 ```
 
-The Studio user name is `supabase`.
+`-t` gives sudo a terminal to ask for your server password. Run them one at a time. The Studio user name is `supabase`.
 
 **How you know it worked:** `https://api-staging.ourcocon.com/auth/v1/health` answers (a 401 "no API key" error is fine: it means Supabase is up) and `https://studio-staging.ourcocon.com` asks for the Cloudflare PIN, then the Studio password. The app addresses answer 502 until the first deploy.
 
