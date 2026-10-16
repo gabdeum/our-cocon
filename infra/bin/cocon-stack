@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Runs `docker compose` for one environment's Supabase stack, with our overrides and its
+# unlocked settings. Anything after <env> goes to docker compose.
+#
+#   cocon-stack staging ps
+#   cocon-stack prod logs --tail 50 auth
+#   cocon-stack staging up -d --wait
+[ -z "${SUDO_USER:-}" ] || unset COCON_HOME
+. "${COCON_HOME:-/opt/cocon/infra}/lib/common.sh"
+
+env=${1:-}
+check_env "$env"
+shift
+[ $# -gt 0 ] || die "usage: cocon-stack <env> <docker compose arguments>"
+
+trap release_env EXIT
+use_env "$env"
+
+dir=$(supabase_dir "$env")
+files=(-f docker-compose.yml -f "$COCON_HOME/supabase/cocon.override.yml")
+[ "$env" = staging ] && files+=(-f "$COCON_HOME/supabase/cocon.staging.yml")
+
+cd "$dir"
+COCON_ENV=$env docker compose -p "cocon-$env" --env-file "$COCON_RUN/$env/supabase.env" "${files[@]}" "$@"

@@ -1,0 +1,40 @@
+# Caddy, the only container with public ports. Started by cocon-edge.service, which first
+# unlocks the Cloudflare origin certificate into /run/cocon/edge.
+
+name: cocon-edge
+
+services:
+  caddy:
+    image: caddy:2.10.2-alpine
+    container_name: cocon-edge
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    env_file: /etc/cocon/edge/cloudflare.env
+    environment:
+      COCON_DOMAIN: ${COCON_DOMAIN:?}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${COCON_RUN:-/run/cocon}/edge:/certs:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [staging, prod]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    mem_limit: 128m
+
+volumes:
+  caddy-data:
+  caddy-config:
+
+networks:
+  staging:
+    name: cocon-edge-staging
+    external: true
+  prod:
+    name: cocon-edge-prod
+    external: true

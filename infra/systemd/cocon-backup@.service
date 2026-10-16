@@ -1,0 +1,12 @@
+# Nightly backup of one environment (%i) to Cloudflare R2. Emails if it fails.
+[Unit]
+Description=Our Cocon backup of %i
+Requires=docker.service
+After=docker.service
+OnFailure=cocon-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/cocon-backup %i
+Nice=10
+IOSchedulingClass=idle

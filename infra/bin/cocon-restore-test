@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Restores the latest prod backup into staging and checks it is complete (spec 001 SC-004).
+# Run monthly by CI (.github/workflows/restore-test.yml) as `deploy` through sudo. No arguments.
+#
+# Staging's own data is replaced. The previous copy stays in volumes/db/data.before-restore and
+# volumes/storage.before-restore until the next test.
+#
+# 1. Download and decrypt the latest prod backup (server key).
+# 2. Start staging on an empty database once, so every Supabase service sets itself up.
+# 3. Stop the services, restore the dump in one transaction, then the photos and their metadata.
+# 4. Start staging, compare every table's row count with the backup's manifest, check photos.
+# 5. Deploy staging's current commit again, so migrations newer than prod are applied on top.
+[ -z "${SUDO_USER:-}" ] || unset COCON_HOME
+. "${COCON_HOME:-/opt/cocon/infra}/lib/common.sh"
+. "$COCON_HOME/lib/backup.sh"
+
+[ $# -eq 0 ] || die "cocon-restore-test takes no arguments"
+env=staging
+work=$(mktemp -d /var/tmp/cocon-restore.XXXXXX) # encrypted downloads only
+plain=$(mktemp -d "$COCON_RUN/restore.XXXXXX")   # small decrypted files, in memory
+trap 'rm -rf "$work" "$plain"; rm -f "$COCON_RUN/rclone.conf" "$COCON_RUN/backup-identity"; release_env' EXIT
+use_env "$env"
+backup_rclone_unlock
+cocon-secrets open backup-identity "$COCON_RUN/backup-identity"
+dir=$(supabase_dir "$env")
+
+latest=$(rclone_ lsf --dirs-only "r2:$R2_BUCKET/prod/db" | tr -d / | sort | tail -n 1)
+[ -n "$latest" ] || die "no prod backup found in R2"
+log "restoring prod backup $latest into staging"
+rclone_ copy "r2:$R2_BUCKET/prod/db/$latest" "$work"
+for f in manifest.tsv xattrs.txt; do
+  age -d -i "$COCON_RUN/backup-identity" -o "$plain/$f" "$work/$f.age"
+done
+
+services=$(cocon-stack "$env" config --services | grep -vx db | tr '\n' ' ')
+
+log "starting staging on an empty database"
+cocon-stack "$env" down
+rm -rf "$dir/volumes/db/data.before-restore" "$dir/volumes/storage.before-restore"
+mv "$dir/volumes/db/data" "$dir/volumes/db/data.before-restore"
+[ -d "$dir/volumes/storage" ] && mv "$dir/volumes/storage" "$dir/volumes/storage.before-restore"
+mkdir -p "$dir/volumes/storage"
+cocon-stack "$env" up -d --wait --quiet-pull
+# shellcheck disable=SC2086
+cocon-stack "$env" stop $services
+
+log "restoring the database"
+db=$(stack_container "$env" db)
+# Decrypted as it streams in; the plain dump never touches the disk.
+age -d -i "$COCON_RUN/backup-identity" "$work/db.dump.age" |
+  docker exec -i "$db" pg_restore -U supabase_admin -d postgres --clean --if-exists --single-transaction --exit-on-error
+
+log "restoring photos"
+rclone_ copy "crypt:prod/storage" "$dir/volumes/storage"
+(cd "$dir/volumes/storage" && setfattr --restore="$plain/xattrs.txt")
+
+cocon-stack "$env" up -d --wait
+
+log "checking the restore against the backup's manifest"
+docker exec -i "$db" psql -U supabase_admin -d postgres -qtAF $'\t' -v ON_ERROR_STOP=1 <<<"$COUNT_SQL" \
+  >"$plain/restored.tsv"
+grep -v '^photos	' "$plain/manifest.tsv" >"$plain/expected.tsv"
+if ! diff -u "$plain/expected.tsv" "$plain/restored.tsv" >"$plain/diff.txt"; then
+  cat "$plain/diff.txt" >&2
+  die "restored row counts differ from the backup (lines with - are the backup, + the restore)"
+fi
+objects=$(awk -F '\t' '$1 == "storage.objects" { print $2 }' "$plain/manifest.tsv")
+photos=$(count_files "$dir/volumes/storage")
+[ "$photos" -ge "${objects:-0}" ] || die "only $photos photo files restored for $objects stored objects"
+
+current=$(cat "$COCON_SRV/$env/current" 2>/dev/null || true)
+if [ -n "$current" ]; then
+  log "deploying staging's current commit ${current:0:7} on top"
+  cocon-deploy "$env" "$current"
+fi
+
+log "restore test passed: $(wc -l <"$plain/expected.tsv" | tr -d ' ') tables and $photos photos match backup $latest"

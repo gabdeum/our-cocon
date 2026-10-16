@@ -1,0 +1,17 @@
+# Caddy, the front door. Unlocks the Cloudflare origin certificate into /run (memory) first.
+[Unit]
+Description=Our Cocon front door (Caddy)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/local/bin/cocon-secrets open origin.pem /run/cocon/edge/origin.pem
+ExecStartPre=/usr/local/bin/cocon-secrets open origin.key /run/cocon/edge/origin.key
+ExecStart=/usr/bin/docker compose --env-file /opt/cocon/infra/config.env -f /opt/cocon/infra/edge/compose.yml up -d --wait --force-recreate
+ExecStop=/usr/bin/docker compose --env-file /opt/cocon/infra/config.env -f /opt/cocon/infra/edge/compose.yml down
+
+[Install]
+WantedBy=multi-user.target

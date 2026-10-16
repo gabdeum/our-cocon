@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Updates one environment's Supabase to a newer self-hosted release, with Supabase's own
+# update.sh (a 3-way merge that keeps our settings). Staging first, then prod.
+# Run by you on the server: sudo cocon-supabase-update <staging|prod> <tag>
+#
+#   sudo cocon-supabase-update staging self-hosted/v0.9.0
+#
+# update.sh needs a real .env file, so the settings are unlocked into the Supabase folder for the
+# update only, sealed again (with any keys the new release adds), and removed.
+[ -z "${SUDO_USER:-}" ] || unset COCON_HOME
+. "${COCON_HOME:-/opt/cocon/infra}/lib/common.sh"
+
+env=${1:-}
+tag=${2:-}
+check_env "$env"
+[[ $tag =~ ^self-hosted/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "the tag looks like self-hosted/v0.9.0"
+
+dir=$(supabase_dir "$env")
+trap 'rm -f "$dir/.env"; release_env' EXIT
+use_env "$env"
+
+cocon-stack "$env" config --quiet || die "$env's current setup doesn't validate; fix that first"
+cp "$COCON_RUN/$env/supabase.env" "$dir/.env"
+(cd "$dir" && sh update.sh --to "$tag")
+cocon-secrets seal "$env-supabase.env" "$dir/.env"
+cocon-secrets unlock "$env"
+
+log "checking our overrides against $tag"
+cocon-stack "$env" config --quiet || die "cocon.override.yml no longer fits $tag; containers were not changed"
+cocon-stack "$env" pull --quiet
+cocon-stack "$env" up -d --wait --remove-orphans
+log "$env runs Supabase $tag. Update SUPABASE_REF in infra/config.env once prod is on it too"

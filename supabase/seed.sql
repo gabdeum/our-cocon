@@ -1,0 +1,1 @@
+-- Local development data, loaded by `supabase start` and `supabase db reset`. Specs add to it.

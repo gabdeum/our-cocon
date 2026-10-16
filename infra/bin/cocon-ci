@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# The only thing GitHub's SSH keys can run on the server. Each key is pinned to one environment
+# in ~deploy/.ssh/authorized_keys (command="/usr/local/bin/cocon-ci <env>"), so the staging key
+# can never deploy to prod, and neither key gets a shell. SSH passes the requested command in
+# SSH_ORIGINAL_COMMAND:
+#
+#   deploy <env> <40-character commit>   that key's environment only
+#   restore-test                         staging key only
+set -euo pipefail
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+key_env=${1:-}
+read -r -a request <<<"${SSH_ORIGINAL_COMMAND:-}"
+
+refuse() {
+  echo "cocon-ci: refused: $*" >&2
+  exit 1
+}
+
+case $key_env in staging | prod) ;; *) refuse "this key has no environment" ;; esac
+
+case "${request[0]:-}" in
+  deploy)
+    [ ${#request[@]} -eq 3 ] || refuse "usage: deploy <env> <commit>"
+    [ "${request[1]}" = "$key_env" ] || refuse "this key can only deploy to $key_env"
+    [[ ${request[2]} =~ ^[0-9a-f]{40}$ ]] || refuse "the commit must be 40 lowercase hex characters"
+    exec sudo -n /usr/local/bin/cocon-deploy "$key_env" "${request[2]}"
+    ;;
+  restore-test)
+    [ ${#request[@]} -eq 1 ] || refuse "restore-test takes no arguments"
+    [ "$key_env" = staging ] || refuse "only the staging key can run the restore test"
+    exec sudo -n /usr/local/bin/cocon-restore-test
+    ;;
+  *) refuse "unknown command" ;;
+esac

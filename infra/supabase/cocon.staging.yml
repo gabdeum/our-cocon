@@ -1,0 +1,16 @@
+# Staging only, after cocon.override.yml: no image transforms, to save memory on the 8 GB server
+# (spec 001 FR-002d). Photos still upload and download; resized variants only work on prod.
+
+services:
+  imgproxy:
+    profiles:
+      - disabled
+
+  storage:
+    depends_on: !override
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    environment:
+      ENABLE_IMAGE_TRANSFORMATION: "false"

@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Nightly backup of one environment to Cloudflare R2 (systemd timer cocon-backup@<env>).
+#
+#   cocon-backup <staging|prod>
+#
+# R2 layout, under the bucket:
+#   <env>/db/<stamp>/db.dump.age        the whole `postgres` database, accounts included
+#   <env>/db/<stamp>/manifest.tsv.age   row counts per table and the photo count, to check restores
+#   <env>/db/<stamp>/xattrs.txt.age     photo metadata (content type) kept outside the files
+#   <env>/storage/                      the photos, encrypted by rclone (crypt remote)
+#   <env>/storage-old/<stamp>/          photos changed or deleted that night
+#
+# .age files are encrypted to two keys: Gabriel's (disaster recovery) and the server's own
+# (the monthly restore test). Anything older than BACKUP_KEEP_DAYS is deleted.
+[ -z "${SUDO_USER:-}" ] || unset COCON_HOME
+. "${COCON_HOME:-/opt/cocon/infra}/lib/common.sh"
+. "$COCON_HOME/lib/backup.sh"
+
+env=${1:-}
+check_env "$env"
+
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+work=$(mktemp -d /var/tmp/cocon-backup.XXXXXX)
+trap 'rm -rf "$work"; rm -f "$COCON_RUN/rclone.conf"; release_env' EXIT
+use_env "$env"
+backup_rclone_unlock
+
+db=$(stack_container "$env" db)
+storage="$(supabase_dir "$env")/volumes/storage"
+
+log "backing up $env ($stamp)"
+# One open transaction exports its snapshot, so the dump and the row counts see the same data.
+coproc PSQL { docker exec -i "$db" psql -U supabase_admin -d postgres -qtAF $'\t' -v ON_ERROR_STOP=1; }
+echo "begin isolation level repeatable read; select pg_export_snapshot();" >&"${PSQL[1]}"
+read -r snapshot <&"${PSQL[0]}"
+[ -n "$snapshot" ] || die "could not open a database snapshot"
+docker exec "$db" pg_dump -U supabase_admin -d postgres -Fc --snapshot="$snapshot" "${DUMP_EXCLUDE[@]}" |
+  age_encrypt >"$work/db.dump.age"
+# shellcheck disable=SC2016
+printf '%s\nselect $$end$$;\n' "$COUNT_SQL" >&"${PSQL[1]}"
+# Nothing decrypted touches the disk: the manifest goes straight into age.
+{
+  while read -r line <&"${PSQL[0]}" && [ "$line" != end ]; do echo "$line"; done
+  printf 'photos\t%s\n' "$(count_files "$storage")"
+} | age_encrypt >"$work/manifest.tsv.age"
+echo "commit;" >&"${PSQL[1]}"
+psql_in=${PSQL[1]}
+exec {psql_in}>&-
+wait "$PSQL_PID" || die "the database snapshot session failed"
+(cd "$storage" && getfattr -R -d -m '^user\.supabase\.' .) | age_encrypt >"$work/xattrs.txt.age"
+
+rclone_ copy "$work" "r2:$R2_BUCKET/$env/db/$stamp"
+rclone_ sync "$storage" "crypt:$env/storage" --backup-dir "crypt:$env/storage-old/$stamp"
+
+# Retention by the date in the folder name (moved photos keep their old file dates).
+cutoff=$(date -u -d "$BACKUP_KEEP_DAYS days ago" +%Y%m%dT%H%M%SZ)
+prune() {
+  rclone_ lsf --dirs-only "$1" 2>/dev/null | tr -d / | while read -r old; do
+    if [[ $old < $cutoff ]]; then rclone_ purge "$1/$old"; fi
+  done
+}
+prune "r2:$R2_BUCKET/$env/db"
+prune "crypt:$env/storage-old"
+
+log "backup of $env done"

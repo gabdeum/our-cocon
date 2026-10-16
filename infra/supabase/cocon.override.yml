@@ -1,0 +1,61 @@
+# Applied on top of Supabase's docker-compose.yml (self-hosted/v0.8.2) in staging and prod,
+# through `cocon-stack <env>`. Lets two stacks share one server and keeps them off the internet.
+#
+# Left out on purpose (spec 001 Changelog, 2026-10-15):
+#   - Log analytics (Logflare + Vector): docker-compose.logs.yml is never added.
+#   - The connection pooler (Supavisor): disabled below. Nothing outside the server talks to
+#     Postgres; the app goes through the API and migrations connect to `db` directly.
+
+services:
+  studio:
+    container_name: !reset null
+
+  # Envoy, the Supabase API gateway. No host port: Caddy reaches it on this environment's
+  # cocon-edge-<env> network as `<env>-api`.
+  api-gw:
+    container_name: !reset null
+    ports: !reset []
+    networks:
+      edge:
+        aliases:
+          - ${COCON_ENV:?COCON_ENV must be staging or prod}-api
+
+  auth:
+    container_name: !reset null
+
+  rest:
+    container_name: !reset null
+
+  # Envoy's cds.yaml addresses Realtime by its upstream container name; keep it as an alias.
+  realtime:
+    container_name: !reset null
+    networks:
+      default:
+        aliases:
+          - realtime-dev.supabase-realtime
+
+  storage:
+    container_name: !reset null
+
+  imgproxy:
+    container_name: !reset null
+
+  meta:
+    container_name: !reset null
+
+  functions:
+    container_name: !reset null
+
+  db:
+    container_name: !reset null
+
+  supavisor:
+    container_name: !reset null
+    ports: !reset []
+    profiles:
+      - disabled
+
+networks:
+  edge:
+    name: cocon-edge-${COCON_ENV}
+    external: true
