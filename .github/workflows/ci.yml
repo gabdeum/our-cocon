@@ -34,6 +34,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Lint
         run: pnpm lint
+      # tokens.json changed without `pnpm theme`? Fail before anything else is checked.
+      - name: Theme up to date
+        run: pnpm theme --check
       - name: Type check
         run: pnpm typecheck
       - name: Shell scripts

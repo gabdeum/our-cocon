@@ -1,0 +1,420 @@
+// /dev/gallery (spec 002): every packages/ui component in the states its design/system preview.html
+// shows, with the same sample content, so the two can be compared side by side at 390 px.
+// Developer-only page: the sample text here is demo content, not app copy (strings/en.ts).
+import { useState, type ReactNode } from 'react';
+import { View } from 'react-native';
+import {
+  AvatarStack,
+  Avatar,
+  AwakeChip,
+  BackHeader,
+  BottomSheet,
+  BrandHeader,
+  Button,
+  Callout,
+  Card,
+  Choice,
+  CookProgress,
+  CookTimerCard,
+  Dialog,
+  FilterButton,
+  FormBar,
+  FormProgress,
+  HeroCard,
+  Icon,
+  IconButton,
+  IngredientRow,
+  Link,
+  ListGroup,
+  ListRow,
+  Meta,
+  MonthPicker,
+  Overline,
+  PersonPill,
+  Pill,
+  PillRow,
+  Presence,
+  PushedScreen,
+  RecipeItem,
+  SearchField,
+  SegmentedControl,
+  SettingRow,
+  SheetFooter,
+  StatTile,
+  StatusBanner,
+  StepCard,
+  StepFootnote,
+  Stepper,
+  TabBar,
+  TabHeader,
+  Tag,
+  Text,
+  TextField,
+  TimerCard,
+  TimerPill,
+  TimerRow,
+  theme,
+  type IconName,
+  type TextVariant,
+} from '@cocon/ui';
+import { iconShapes } from '@cocon/ui/icons.generated';
+
+const noop = () => undefined;
+
+function Section({ title, group, children }: { title: string; group: string; children: ReactNode }) {
+  return (
+    <View className="gap-12">
+      <View>
+        <Overline>{group}</Overline>
+        <Text variant="titleLg" role="heading">
+          {title}
+        </Text>
+      </View>
+      {children}
+    </View>
+  );
+}
+
+const family = [
+  { initial: 'G', tone: 'honey' },
+  { initial: 'A', tone: 'sage' },
+  { initial: 'M', tone: 'peach' },
+] as const;
+
+const tabs = [
+  { key: 'home', label: 'Home', icon: 'home' },
+  { key: 'recipes', label: 'Recipes', icon: 'recipes' },
+  { key: 'groceries', label: 'Groceries', icon: 'groceries' },
+  { key: 'settings', label: 'Settings', icon: 'settings' },
+] as const;
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack: () => void; onOpenSheetRoute: () => void; onOpenModalRoute: () => void }) {
+  const [screenOn, setScreenOn] = useState(true);
+  const [thermometer, setThermometer] = useState(false);
+  const [checks, setChecks] = useState(true);
+  const [units, setUnits] = useState('metric');
+  const [store, setStore] = useState('us');
+  const [view, setView] = useState('ingredients');
+  const [servings, setServings] = useState(6);
+  const [best, setBest] = useState([0, 1, 2, 9, 10, 11]);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [sheet, setSheet] = useState(false);
+  const [dialog, setDialog] = useState(false);
+  const [tab, setTab] = useState<(typeof tabs)[number]['key']>('recipes');
+  const [cookStep, setCookStep] = useState(2);
+  const [section, setSection] = useState('steps');
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <PushedScreen>
+      <BackHeader backLabel="Home" onBack={onBack} title="Gallery" lead="Every component in every state, next to design/system previews." />
+
+      <Section group="Foundations" title="Text styles">
+        {(Object.keys(theme.text) as TextVariant[]).map((v) => (
+          <Text key={v} variant={v} uppercase={v === 'overline'}>
+            {`${v} · ${theme.text[v].fontSize}/${theme.text[v].fontWeight}`}
+          </Text>
+        ))}
+      </Section>
+
+      <Section group="Foundations" title="Icons">
+        <PillRow>
+          {(Object.keys(iconShapes) as IconName[]).map((name) => (
+            <View key={name} className="items-center gap-4">
+              <Icon name={name} size="md" />
+              <Text variant="tag">{name}</Text>
+            </View>
+          ))}
+        </PillRow>
+      </Section>
+
+      <Section group="Actions" title="Button">
+        <Button label="Start cooking" icon="play" block />
+        <PillRow>
+          <Button label="Next step" variant="olive" />
+          <Button label="Start timer" variant="honey" />
+          <Button label="Cancel" variant="soft" />
+          <Button label="Save" variant="olive" size="sm" />
+        </PillRow>
+        <PillRow>
+          <Button label="Add to groceries…" variant="outline" />
+          <Button label="+ Add a step" variant="dashed" />
+          <Button label="Delete recipe" variant="danger" />
+        </PillRow>
+        <PillRow>
+          <Button label="Nothing selected" disabled />
+          <Link label="Clear all" />
+          <Link label="Delete this recipe" tone="danger" />
+        </PillRow>
+        <PillRow>
+          <Button label="Start cooking" size="lg" />
+          <Button label="Save recipe" busy busyLabel="Saving…" />
+        </PillRow>
+      </Section>
+
+      <Section group="Actions" title="IconButton">
+        <View className="rounded-xl bg-peach p-16">
+          <PillRow>
+            <IconButton icon="back" label="Back" />
+            <IconButton icon="share" label="Share recipe" />
+            <IconButton icon="close" label="Close" variant="soft" />
+            <IconButton icon="plus" label="More servings" variant="olive" />
+            <IconButton icon="more" label="More options" variant="square" expanded={false} />
+            <IconButton icon="more" label="More options" variant="square" expanded />
+            <IconButton icon="plus" label="Add item" variant="olive-square" />
+          </PillRow>
+        </View>
+      </Section>
+
+      <Section group="Actions" title="Pill">
+        <PillRow>
+          <FilterButton label="Filters · 1" />
+          <Pill label="In season" selected />
+          <Pill label="Under 30 min" />
+        </PillRow>
+        <PillRow>
+          <Choice label="Classic" selected />
+          <Choice label="Vegetarian" />
+          <PersonPill label="Gabriel" initial="G" tone="honey" />
+        </PillRow>
+      </Section>
+
+      <Section group="Display" title="Tag">
+        <PillRow>
+          <Tag label="Variant" tone="sage" />
+          <Tag label="To buy" tone="warn" />
+          <Tag label="+1" tone="honey" />
+          <Tag label="Latest recipe" tone="white" />
+        </PillRow>
+        <PillRow>
+          <Meta label="1 h 10" />
+          <Meta label="Best Oct – Mar" />
+          <Meta label="Gabriel · via Claude" tone="sage" />
+          <Meta label="2 to buy" tone="warn" />
+        </PillRow>
+      </Section>
+
+      <Section group="Display" title="StatTile">
+        <View className="flex-row gap-12">
+          <StatTile icon="groceries" value={7} label="to buy" tone="honey" onPress={noop} className="flex-1" />
+          <StatTile icon="recipes" value={32} label="family recipes" tone="sage" onPress={noop} className="flex-1" />
+        </View>
+      </Section>
+
+      <Section group="Display" title="Callout">
+        <Callout variant="tip" label="Chef's tip" text="Chill the lined pan for 10 minutes so the edges don't shrink." />
+        <Callout variant="temp" label="Temperature check:" text="the center should reach 71 °C (160 °F) and barely wobble." />
+        <Callout variant="ai" label="AI" text="Faster: tell your AI assistant “Save Grandma's quiche to Our Cocon”." />
+        <Callout variant="info" icon="view-only" text="View only. Anyone with the link can read this recipe." />
+        <Callout variant="warn" text="You're offline. You can read, but changes need a connection." />
+      </Section>
+
+      <Section group="Display" title="Avatar">
+        <PillRow>
+          <AvatarStack members={[...family]} moreLabel={(n) => `+${n}`} label="Gabriel, Alex and Mia" />
+          <Avatar initial="G" tone="honey" size="lg" />
+          <Avatar initial="A" tone="sage" size="lg" />
+          <Avatar initial="M" tone="peach" size="sm" />
+        </PillRow>
+      </Section>
+
+      <Section group="Display" title="StatusBanner">
+        <StatusBanner message="Added to the family list" undoLabel="Undo" onUndo={noop} />
+        <PillRow>
+          <Presence label="Mia is shopping" />
+          <AwakeChip label="Screen stays on" />
+        </PillRow>
+      </Section>
+
+      <Section group="Inputs" title="Switch">
+        <ListGroup inset>
+          <SettingRow label="Keep screen on while cooking" hint="So it doesn't lock with floury hands" value={screenOn} onValueChange={setScreenOn} />
+          <SettingRow label="I have a thermometer" hint="Off: hides temperature checks in steps" value={thermometer} onValueChange={setThermometer} />
+          <SettingRow label="Thermometer checks" changedHint="Changed for this recipe" resetLabel="Reset" onReset={noop} value={checks} onValueChange={setChecks} last />
+        </ListGroup>
+      </Section>
+
+      <Section group="Inputs" title="SegmentedControl">
+        <SegmentedControl label="Units" segments={[{ key: 'metric', label: 'Metric · g, ml, °C' }, { key: 'imperial', label: 'Imperial · oz, °F' }]} value={units} onChange={setUnits} />
+        <SegmentedControl label="Store" variant="pill" segments={[{ key: 'us', label: 'US' }, { key: 'eu', label: 'Europe' }]} value={store} onChange={setStore} />
+        <SegmentedControl label="Recipe" variant="tabs" segments={[{ key: 'ingredients', label: 'Ingredients · 9' }, { key: 'steps', label: 'Steps · 6' }]} value={view} onChange={setView} />
+      </Section>
+
+      <Section group="Inputs" title="Stepper">
+        <Card className="flex-row items-center gap-8 py-12 pl-16 pr-12">
+          <Text variant="labelLg" className="flex-1">
+            Servings
+          </Text>
+          <Stepper value={servings} onChange={setServings} decreaseLabel="Fewer servings" increaseLabel="More servings" />
+          <IconButton icon="more" label="More options" variant="square" expanded={moreOpen} onPress={() => setMoreOpen(!moreOpen)} className="ml-4" />
+        </Card>
+      </Section>
+
+      <Section group="Inputs" title="TextField">
+        <SearchField label="Search recipes" placeholder="Search recipes or ingredients" />
+        <TextField label="Recipe name" defaultValue="Leek & bacon quiche" />
+        <TextField label="Short description" multiline defaultValue="Silky custard, sweet leeks and a crisp, buttery crust." hint="One sentence that makes people hungry." counter="54 / 140" />
+        <TextField label="Unit" size="sm" placeholder="Unit?" warning="Pick a unit so we can convert and scale it." />
+      </Section>
+
+      <Section group="Inputs" title="MonthPicker">
+        <MonthPicker label="Best months" monthLabels={months} value={best} onChange={setBest} hint="Leave empty if it's good all year." />
+      </Section>
+
+      <Section group="Lists and cards" title="ListRow">
+        <ListGroup title="Dairy & eggs">
+          <ListRow title="Heavy cream" sub="For Leek & bacon quiche" leading={{ kind: 'checkbox', checked: false }} trailing={{ kind: 'buy', buy: 'Buy 1 pint carton', need: 'Need 300 ml · ~170 ml left over' }} onPress={noop} />
+          <ListRow title="Sourdough loaf" sub="Added by Gabriel" done leading={{ kind: 'checkbox', checked: true }} trailing={{ kind: 'buy', buy: 'Buy 1 loaf', need: 'Need 1' }} onPress={noop} />
+          <ListRow title="Heavy cream" sub="Already on the list (100 ml) → will be 400 ml" subTone="warn" leading={{ kind: 'checkbox', checked: true }} trailing={{ kind: 'value', text: '300 ml' }} onPress={noop} last />
+        </ListGroup>
+        <View>
+          <IngredientRow amount="2" name="Leeks" sub="300 g" />
+          <IngredientRow amount="250 g" name="Mushrooms, sliced" tag={{ label: 'Variant', tone: 'sage' }} />
+        </View>
+        <ListGroup>
+          <ListRow title="AI assistants" leading={{ kind: 'avatar', initial: 'G', tone: 'honey' }} trailing={{ kind: 'chevron' }} onPress={noop} last />
+        </ListGroup>
+      </Section>
+
+      <Section group="Lists and cards" title="Card">
+        <HeroCard title="Leek & bacon quiche" badge="Latest recipe" photoLabel="[Quiche photo]" chips={[{ label: '1 h 10' }, { label: 'Serves 6' }, { label: '2 to buy', tone: 'warn' }]} onPress={noop} />
+        <Card tone="soft" className="flex-row items-center">
+          <View className="flex-1">
+            <Text size={15} weight="800">
+              For Leek & bacon quiche
+            </Text>
+            <Text variant="caption" color="ink-muted">
+              2 items · serves 6
+            </Text>
+          </View>
+          <Link label="Open" />
+        </Card>
+        <Card selected>
+          <Text>Selected</Text>
+        </Card>
+        <Card attention>
+          <Text>Needs attention</Text>
+        </Card>
+      </Section>
+
+      <Section group="Lists and cards" title="RecipeItem">
+        <RecipeItem name="Leek & bacon quiche" meta="1 h 10 · Serves 6 · 2 variants" author="Gabriel · via Claude" onPress={noop} />
+        <RecipeItem name="Grandma's apple tart" meta="1 h 30 · Serves 8" author="Mia" placeholderTone="sage" onPress={noop} />
+      </Section>
+
+      <Section group="Cooking" title="StepCard">
+        <StepCard number={3} name="Cook the filling" parts={['In a large pan, melt ', { amount: '20 g butter' }, ' over medium heat. Add ', { amount: '2 leeks (300 g)' }, ' finely sliced and cook 6–8 minutes until soft.']}>
+          <TimerRow state="running" label="Pause" clock="06:12" onPress={noop} minusLabel="−1" plusLabel="+1" minusA11y="One minute less" plusA11y="One minute more" onMinus={noop} onPlus={noop} />
+          <Callout variant="tip" label="Chef's tip" text="Slice the leeks thinly so they melt into the custard." />
+        </StepCard>
+        <StepCard number={5} name="Bake" parts={[]} variantTag="Variant">
+          <Callout variant="temp" label="Temperature check:" text="center reaches 71 °C (160 °F)." />
+          <TimerRow state="idle" label="Start timer" clock="35:00" onPress={noop} minusLabel="−1" plusLabel="+1" minusA11y="One minute less" plusA11y="One minute more" onMinus={noop} onPlus={noop} />
+        </StepCard>
+        <StepFootnote text="−1 / +1 changes a timer by a minute, even while it runs." />
+      </Section>
+
+      <Section group="Cooking" title="TimerCard">
+        <CookTimerCard label="Blind bake timer" clock="11:42" actionLabel="Pause" onAction={noop} minusLabel="−1" plusLabel="+1" minusA11y="One minute less" plusA11y="One minute more" onMinus={noop} onPlus={noop} />
+        {(['running', 'paused', 'done'] as const).map((state) => (
+          <TimerCard
+            key={state}
+            name="Blind bake"
+            sub={`Leek & bacon quiche · ${state === 'running' ? 'Running' : state === 'paused' ? 'Paused' : 'Done'}`}
+            state={state}
+            clock={state === 'done' ? '00:00' : '11:42'}
+            progress={state === 'done' ? 1 : 0.4}
+            actionLabel={state === 'running' ? 'Pause' : state === 'paused' ? 'Resume' : 'Add 1 more minute'}
+            onAction={noop}
+            secondaryLabel={state === 'done' ? 'Dismiss' : 'Stop'}
+            onSecondary={noop}
+            editLabel="Edit"
+            editing={state === 'running' && editing}
+            onEdit={() => setEditing(!editing)}
+            presets={['5 min', '10 min', '15 min', '30 min'].map((label) => ({ label, onPress: noop }))}
+            minusLabel="−1"
+            plusLabel="+1"
+            minusA11y="One minute less"
+            plusA11y="One minute more"
+            onMinus={noop}
+            onPlus={noop}
+          />
+        ))}
+      </Section>
+
+      <Section group="Cooking" title="TimerPill">
+        <TimerPill name="Blind bake" clock="11:42" more="+1" label="2 timers running. Open timers" onPress={noop} />
+      </Section>
+
+      <Section group="Overlays" title="BottomSheet">
+        <PillRow>
+          <Button label="Open sheet" variant="soft" onPress={() => setSheet(true)} />
+          <Button label="Sheet route" variant="soft" onPress={onOpenSheetRoute} />
+          <Button label="Full-screen modal" variant="soft" onPress={onOpenModalRoute} />
+        </PillRow>
+        <BottomSheet
+          visible={sheet}
+          onClose={() => setSheet(false)}
+          title="Add to groceries"
+          lead="Leek & bacon quiche · serves 6. Untick anything you already have."
+          closeLabel="Close"
+          footer={<SheetFooter cancel={{ label: 'Cancel', onPress: () => setSheet(false) }} primary={{ label: 'Add 3 items', onPress: () => setSheet(false) }} />}
+        >
+          <ListGroup>
+            <ListRow title="Gruyère" leading={{ kind: 'checkbox', checked: true }} trailing={{ kind: 'value', text: '100 g' }} onPress={noop} last />
+          </ListGroup>
+        </BottomSheet>
+      </Section>
+
+      <Section group="Overlays" title="Dialog">
+        <Button label="Open dialog" variant="soft" onPress={() => setDialog(true)} />
+        <Dialog
+          visible={dialog}
+          title="Delete “Leek & bacon quiche”?"
+          body="It will disappear for the whole family, along with its 2 variants. You can bring it back from Recently deleted for 30 days."
+          confirmLabel="Delete recipe"
+          onConfirm={() => setDialog(false)}
+          cancelLabel="Keep it"
+          onCancel={() => setDialog(false)}
+        />
+      </Section>
+
+      <Section group="Navigation" title="TabBar">
+        {[false, true].map((withPill) => (
+          <View key={String(withPill)} className={withPill ? 'h-[160px]' : 'h-[100px]'}>
+            <TabBar
+              label="Main"
+              items={[...tabs]}
+              active={tab}
+              onSelect={setTab}
+              timerPill={withPill ? <TimerPill name="Blind bake" clock="11:42" more="+1" label="2 timers running. Open timers" onPress={noop} /> : undefined}
+            />
+          </View>
+        ))}
+      </Section>
+
+      <Section group="Navigation" title="Progress">
+        <FormProgress
+          sections={[
+            { key: 'details', label: 'Details' },
+            { key: 'ingredients', label: 'Ingredients' },
+            { key: 'steps', label: 'Steps' },
+            { key: 'variants', label: 'Variants' },
+          ]}
+          current={section}
+          onSelect={setSection}
+        />
+        <CookProgress count={6} current={cookStep} onSelect={setCookStep} stepLabel={`Step ${cookStep + 1} of 6`} hint="Swipe or tap" segmentLabel={(i) => `Go to step ${i + 1}`} />
+      </Section>
+
+      <Section group="Navigation" title="ScreenHeader">
+        <BrandHeader brand="Our Cocon" avatars={<AvatarStack members={[...family]} moreLabel={(n) => `+${n}`} label="Gabriel, Alex and Mia" />} date="Thursday 16 October" greeting="Good evening, Gabriel" />
+        <TabHeader title="Groceries" sub="7 items to buy · shared with family" action={<Presence label="Mia is shopping" />} />
+        <BackHeader backLabel="Settings" onBack={noop} title="AI assistants" lead="Use Our Cocon from the assistant you already talk to." />
+        <FormBar cancelLabel="Cancel" onCancel={noop} title="New recipe" saveLabel="Save" onSave={noop} />
+      </Section>
+    </PushedScreen>
+  );
+}

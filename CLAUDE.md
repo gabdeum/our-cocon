@@ -31,6 +31,7 @@ A household app for families, run from the app or from any AI assistant through 
 - Every tracked user action is a typed event in `packages/schemas/analytics.ts`, listed in its spec. Never send user content (names, recipe text, emails) to PostHog.
 - Keep changes small and scoped to the spec. Don't touch unrelated files.
 - Secrets live only in `.env.local` (never read or print it). The committed template is `env.example`.
+- After `pnpm add` in a workspace package, if a module can't be found, run `pnpm install --fix-lockfile` (pnpm can leave broken links).
 
 ## Workflow
 
