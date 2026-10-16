@@ -80,7 +80,7 @@ The script is safe to run again at any time (`infra/bootstrap-from-laptop.sh <se
 ## 2. Deploying and releasing
 
 - **Staging:** merge a pull request into `main`. CI tests, builds and deploys in about 10 minutes. The footer of `app-staging.ourcocon.com` shows **Build** and the first 7 characters of the commit.
-- **Prod:** on GitHub → Releases → Draft a new release → new tag like `v1.0.0` on `main` → Publish. The Release workflow waits for your approval (GitHub emails you), then installs the exact images staging got.
+- **Prod:** open github.com/gabdeum/our-cocon/releases/new (later also: Releases → Draft a new release). Choose a tag → type a new version such as `v0.1.0` → Create new tag on publish, target `main`, Generate release notes, Publish release. The Release workflow waits for your approval (GitHub emails you; Actions → Review deployments → Approve), then installs the exact images staging got. Versions: `v0.2.0` for new features, `v0.2.1` for fixes only, `v1.0.0` when families start using it. Only tag a commit that has already deployed to staging.
 - **If a deploy fails** the previous version keeps running: images that don't download or migrations that fail stop the deploy before anything changes, and an app that doesn't answer within a minute is replaced by the previous one. The error is in the GitHub Actions log.
 - **Going back** to an older version: release its commit again (tag it `v1.0.1`). Database migrations only go forward, so a migration must never break the version before it.
 
