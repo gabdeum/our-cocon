@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sets up, or repairs, the Our Cocon server (Ubuntu 24.04). Started by
+# Sets up, or repairs, the Our Cocon server (Ubuntu 26.04 LTS; 24.04 also works). Started by
 # infra/bootstrap-from-laptop.sh as root, from a copy of infra/ on the server.
 # Safe to run again: every step checks what is already there and only does what's missing,
 # so it can also rebuild a new server from scratch.
@@ -57,7 +57,12 @@ hidden() { # hidden <question> → stdout
 }
 
 [ "$(id -u)" = 0 ] || die "run as root (bootstrap-from-laptop.sh does this for you)"
-grep -q 'VERSION_ID="24.04"' /etc/os-release || die "this script expects Ubuntu 24.04"
+# shellcheck source=/dev/null
+. /etc/os-release
+case "${ID:-}-${VERSION_ID:-}" in
+  ubuntu-24.04 | ubuntu-26.04) ;;
+  *) die "this script expects Ubuntu 26.04 or 24.04 LTS" ;;
+esac
 # Temporary files (some hold secrets before they are sealed) stay in memory.
 install -d -m 700 /run/cocon
 export TMPDIR=/run/cocon
@@ -100,7 +105,7 @@ if ! command -v docker >/dev/null; then
   run install -m 0755 -d /etc/apt/keyrings
   run curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
   write /etc/apt/sources.list.d/docker.list 644 <<EOF || true
-deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable
+deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $VERSION_CODENAME stable
 EOF
   run apt-get update -q
   run env DEBIAN_FRONTEND=noninteractive apt-get install -y -q docker-ce docker-ce-cli containerd.io docker-compose-plugin

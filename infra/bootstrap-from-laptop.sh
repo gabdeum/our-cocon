@@ -35,6 +35,13 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# The checks below can't ask for your key's passphrase, so the key goes into the SSH agent first
+# (asks for the passphrase once; on a Mac, remembered in the Keychain).
+if ! ssh-add -l >/dev/null 2>&1; then
+  echo "Unlocking your SSH key for this session:"
+  if [ "$(uname)" = Darwin ]; then ssh-add --apple-use-keychain; else ssh-add; fi
+fi
+
 if ssh -o BatchMode=yes -o ConnectTimeout=10 "root@$host" true 2>/dev/null; then
   login=root@$host sudo=
 else

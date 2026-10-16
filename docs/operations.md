@@ -27,7 +27,7 @@ Save each result in your password manager. Nothing here goes into a chat.
 1. **Backup key.** On your Mac: `brew install age`, then `age-keygen`. It prints a private key (`AGE-SECRET-KEY-…`) and its public key (`age1…`). Save both in your password manager, then clear the terminal (`clear`). The private key is the only way to open a backup.
 2. **Photo backup passphrase.** Generate a long random password in your password manager, named "Our Cocon photo backup passphrase". Photos are encrypted with it.
 3. **PostHog.** Create two projects, "Our Cocon staging" and "Our Cocon prod", in the EU region. Copy each project's API key (`phc_…`).
-4. **SSH.** Check your Mac can log in as root: `ssh root@<server-ip> true` prints nothing when it works.
+4. **SSH.** Check your Mac can log in as root: `ssh root@<server-ip> true` prints nothing when it works. If the login message says "System restart required", restart once first: `ssh root@<server-ip> reboot`, wait a minute. The setup asks for your SSH key's passphrase once, then remembers it in the Keychain.
 5. **CI keys, one per environment.** GitHub logs into the server with an SSH key; staging and prod each get their own, so the staging key can never touch prod.
    - Staging: the key you already have. Download its public half, `cocon-deploy.pub`, from your password manager to `~/Downloads/cocon-deploy-staging.pub`.
    - Prod: make a new one on your Mac: `ssh-keygen -t ed25519 -N "" -C cocon-deploy-prod -f ~/Downloads/cocon-deploy-prod`. Save both files in your password manager. Paste the private one (`cocon-deploy-prod`, no `.pub`) into GitHub → Settings → Environments → **production** → `SSH_PRIVATE_KEY`, replacing the old value. Staging keeps the old key.
@@ -113,7 +113,7 @@ Anything older than 30 days is deleted. Backups are encrypted to two keys: yours
 
 ### If the server is lost
 
-1. In Hetzner, restore the server from its daily backup (Server → Backups). That's the quickest way. If that isn't possible, create a new Ubuntu 24.04 server, point the 8 Cloudflare DNS records at it, and update `SSH_HOST` and `SSH_KNOWN_HOSTS` in both GitHub environments.
+1. In Hetzner, restore the server from its daily backup (Server → Backups). That's the quickest way. If that isn't possible, create a new Ubuntu 26.04 LTS server, point the 8 Cloudflare DNS records at it, and update `SSH_HOST` and `SSH_KNOWN_HOSTS` in both GitHub environments.
 2. On a new server, run the setup (section 1) with the **same** photo passphrase and age public key.
 3. Ask Claude Code to walk you through restoring prod from R2 with your age private key. The steps are those of `infra/bin/cocon-restore-test`, applied to prod and using your key.
 4. Release the last version again. Members sign in again.
