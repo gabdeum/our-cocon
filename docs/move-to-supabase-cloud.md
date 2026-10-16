@@ -61,7 +61,9 @@ psql "<Cloud database URL>" --single-transaction -v ON_ERROR_STOP=1 \
 
 In the Cloud dashboard → Authentication:
 
-- URL Configuration: Site URL `https://app.ourcocon.com`, plus the redirect URLs the app uses (see spec 003).
+- URL Configuration: Site URL `https://app.ourcocon.com`, redirect URL `https://app.ourcocon.com/**` (the app's `/auth/callback?next=…`, spec 003).
+- Sessions: inactivity timeout 90 days (`2160h`, spec 003 FR-001b). On Cloud this setting needs the Pro plan; on the Free plan people would stay signed in until they sign out.
+- Emails → Templates: Magic link and Confirm signup both use the subject "Your Our Cocon sign-in link" and the body of `apps/app/public/email/sign-in.html`. Email OTP expiry: 3600 seconds.
 - Emails → SMTP: host `smtp.resend.com`, port 465, user `resend`, password your Resend API key, sender `no-reply@ourcocon.com`, name "Our Cocon".
 - Sign In / Providers: Google (spec 003), with the same Google client; add the Cloud project's callback URL to the Google client.
 

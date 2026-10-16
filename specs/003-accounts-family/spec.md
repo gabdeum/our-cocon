@@ -55,12 +55,31 @@ The owner sees members with their role and can remove someone or change their ro
 | `family_deleted` | member_count |
 
 ## Warnings and errors
-All copy is in the States tables of the UI specs for: OC-Settings. New messages go there and in `strings/en.ts` first.
+All copy is in the States tables of the UI specs for: OC-Settings, OC-Welcome. New messages go there and in `strings/en.ts` first.
 
 ## Needs your attention
 Your brief mentions an app-wide Admin with access to all families. V1 has no in-app super-admin: operating the service happens in the Supabase dashboard, so no app or AI token can bypass family security. Families have one Owner plus members who can edit; view access is share links (019).
+
+From the build (2026-10-16):
+- **Google sign-in credentials.** Create the OAuth client in Google Cloud Console and give it to `provision.sh` (docs/operations.md › First-time setup, step 5). Until then only the email link works.
+- **Invite preview rate limit.** `invite_status` (callable signed out) has no request limit. Guessing is not a risk (256-bit tokens, every miss reads "expired"), but constitution VI asks for one. The front door (Caddy) needs a rate-limit plugin for it; decide whether to add it now or with spec 019's share links, which need the same.
+- **Invite tokens in Auth logs.** A signed-out invitee's sign-in link carries `next=/join/<token>`, so the token shows in Supabase Auth's access logs (server only) until it is used or expires (7 days). Acceptable for V1, or keep the token on the device instead.
+- **Deleting an account needs no fresh sign-in.** Someone holding a stolen, still-valid session (up to 1 hour) could delete a member's account. A Dialog guards the app. Asking for a new magic link first is possible later.
+- **Supabase Cloud:** the 90-day inactivity timeout needs the Pro plan there (docs/move-to-supabase-cloud.md).
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
 - 2026-10-13: Stay signed in for 90 days of inactivity.
 - 2026-10-13: Sign in with Apple moved to V2 (iPhone app); V1 is magic link + Google.
+- 2026-10-16: Built. Magic link (PKCE) and Google sign-in, 90-day sessions, families, 7-day single-use invites through the share sheet, member management, delete family and delete my account. RLS and pgTAP tests prove a non-member and a signed-out visitor get no rows from any table, and functions added by later migrations start uncallable (each spec grants its own API). Deviations, agreed while planning:
+  - The owner sees "Delete family" and other members see "Delete my account"; the UI spec had only "Delete my account".
+  - An invitee alone in their own family can replace it after a Dialog; with other members they are told to leave first.
+  - Every member can invite.
+  - Settings shows only Family and Account. 021, 025, 027, 018 and 029 add the rest.
+  - Home stays a placeholder until 028; the test proves sign-up lands on `/` with the family created.
+  - The member sheet and "Your name" are in-screen sheets, not routes. "Check your email" is a state of `/welcome`, which keeps the email out of the URL.
+  - "+ Invite someone" uses the plus icon with the label "Invite someone".
+  - Sign-in, set up a family and join are described in the new `design/ui/OC-Welcome.md`.
+  - Google's "G" was added as a design-system brand mark (Button `brand`).
+  - Removed members lose their data access and sessions at once; spec 025 must also revoke their AI connections.
+

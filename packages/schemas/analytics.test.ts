@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createTracker, type AnalyticsTransport } from './analytics';
 
 function fakeTransport() {
-  return { capture: vi.fn(), identify: vi.fn(), group: vi.fn() } satisfies AnalyticsTransport;
+  return { capture: vi.fn(), identify: vi.fn(), group: vi.fn(), reset: vi.fn() } satisfies AnalyticsTransport;
 }
 
 describe('createTracker', () => {
@@ -56,5 +56,33 @@ describe('createTracker', () => {
 
   it('does nothing without a transport', () => {
     expect(() => createTracker(null).track('app_opened', { platform: 'ios', app_version: '1' })).not.toThrow();
+  });
+
+  it('sends the spec 003 events with only their typed props', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('signed_up', { method: 'google' });
+    tracker.track('invite_accepted', { days_since_sent: 2 });
+    tracker.track('family_deleted', { member_count: 3 });
+    tracker.track('family_created', {});
+    expect(t.capture.mock.calls).toEqual([
+      ['signed_up', { method: 'google' }],
+      ['invite_accepted', { days_since_sent: 2 }],
+      ['family_deleted', { member_count: 3 }],
+      ['family_created', {}],
+    ]);
+  });
+
+  it('refuses names or emails on the spec 003 events', () => {
+    const tracker = createTracker(fakeTransport());
+    expect(() => tracker.track('family_created', { name: 'The Demanges' } as never)).toThrow();
+    expect(() => tracker.track('signed_in', { method: 'apple' } as never)).toThrow();
+    expect(() => tracker.track('invite_accepted', { days_since_sent: 1.5 })).toThrow();
+  });
+
+  it('resets on sign-out', () => {
+    const t = fakeTransport();
+    createTracker(t).reset();
+    expect(t.reset).toHaveBeenCalled();
   });
 });

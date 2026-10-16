@@ -4,7 +4,9 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-const start = spawnSync('pnpm', ['exec', 'supabase', 'start'], { stdio: ['ignore', 'ignore', 'inherit'] });
+// Supabase reads its Google sign-in credentials from .env.local when it exists (spec 003).
+const supabaseStart = existsSync('.env.local') ? ['exec', 'dotenv', '-e', '.env.local', '--', 'supabase', 'start'] : ['exec', 'supabase', 'start'];
+const start = spawnSync('pnpm', supabaseStart, { stdio: ['ignore', 'ignore', 'inherit'] });
 if (start.status !== 0) {
   console.error('Local Supabase did not start. Is Docker running?');
   process.exit(1);

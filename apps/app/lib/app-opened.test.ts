@@ -2,7 +2,7 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import { createTracker } from '@cocon/schemas';
 import { resetAppOpenedForTests, trackAppOpened } from './app-opened';
 
-const transport = () => ({ capture: vi.fn(), identify: vi.fn(), group: vi.fn() });
+const transport = () => ({ capture: vi.fn(), identify: vi.fn(), group: vi.fn(), reset: vi.fn() });
 
 beforeEach(resetAppOpenedForTests);
 

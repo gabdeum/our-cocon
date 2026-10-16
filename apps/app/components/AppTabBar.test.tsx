@@ -24,7 +24,7 @@ function Harness({ transport, emitPrevented = false }: { transport: AnalyticsTra
   );
 }
 
-const transport = () => ({ capture: vi.fn(), identify: vi.fn(), group: vi.fn() });
+const transport = () => ({ capture: vi.fn(), identify: vi.fn(), group: vi.fn(), reset: vi.fn() });
 
 describe('AppTabBar', () => {
   it('opens the tapped tab, expands it with its label and sends tab_selected', () => {
