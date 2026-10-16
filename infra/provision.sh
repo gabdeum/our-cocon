@@ -233,10 +233,13 @@ ask() { # ask <name> <question>
   cocon-secrets ask "$1" "   $2"
 }
 # pem_tidy <file> <label>: keeps the "-----BEGIN <label>-----" block and rebuilds its line breaks,
-# which password managers often turn into spaces. Fails if there is no such block.
+# which password managers often turn into spaces. Also undoes look-alike characters that text
+# fields substitute (smart dashes, non-breaking spaces) and terminal paste markers.
+# Fails if there is no such block.
 pem_tidy() {
   local raw body
-  raw=$(tr '\r\n\t' '   ' <"$1" | tr -s ' ')
+  raw=$(LC_ALL=C sed -e 's/\xe2\x80[\x90-\x95]/-/g' -e 's/\xc2\xa0/ /g' -e 's/\xe2\x80[\xaf\x8b]/ /g' \
+    -e 's/\x1b\[20[01]~//g' "$1" | tr '\r\n\t' '   ' | tr -s ' ')
   case $raw in *"-----BEGIN $2-----"*"-----END $2-----"*) ;; *) return 1 ;; esac
   body=${raw#*"-----BEGIN $2-----"}
   body=${body%%"-----END $2-----"*}
@@ -256,7 +259,13 @@ ask_pem() { # ask_pem <name> <question> <PEM label> <openssl command>
   stty -echo </dev/tty
   sed '/-----END /q' </dev/tty >"$tmp"
   stty echo </dev/tty
-  pem_tidy "$tmp" "$3" || { rm -f "$tmp"; die "that isn't the $2: it starts with -----BEGIN $3-----. Run the setup again."; }
+  if ! pem_tidy "$tmp" "$3"; then
+    # The first characters only: the BEGIN line, never the secret part.
+    note "Expected the paste to start with: -----BEGIN $3-----"
+    note "It started with:                  $(head -c 32 "$tmp" | LC_ALL=C cat -v)"
+    rm -f "$tmp"
+    die "no '-----BEGIN $3-----' block found in what was pasted. Run the setup again."
+  fi
   $4 -noout -in "$tmp" 2>/dev/null || { rm -f "$tmp"; die "the $2 looks incomplete. Copy all of it and run the setup again."; }
   cocon-secrets seal "$1" "$tmp"
 }
