@@ -3,6 +3,14 @@ export const strings = {
   app: {
     name: 'Our Cocon',
   },
+  // design/ui/TabBar.md
+  tabBar: {
+    label: 'Main',
+    home: 'Home',
+    recipes: 'Recipes',
+    groceries: 'Groceries',
+    settings: 'Settings',
+  },
   debug: {
     build: (commit: string) => `Build ${commit}`,
   },
