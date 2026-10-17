@@ -28,7 +28,11 @@ Save each result in your password manager. Nothing here goes into a chat.
 2. **Photo backup passphrase.** Generate a long random password in your password manager, named "Our Cocon photo backup passphrase". Photos are encrypted with it.
 3. **PostHog.** Create two projects, "Our Cocon staging" and "Our Cocon prod", in the EU region. Copy each project's API key (`phc_…`).
 4. **SSH.** Check your Mac can log in as root: `ssh root@<server-ip> true` prints nothing when it works. If the login message says "System restart required", restart once first: `ssh root@<server-ip> reboot`, wait a minute. The setup asks for your SSH key's passphrase once, then remembers it in the Keychain.
-5. **CI keys, one per environment.** GitHub logs into the server with an SSH key; staging and prod each get their own, so the staging key can never touch prod.
+5. **Google sign-in** (spec 003, about 15 minutes). Google Cloud Console (console.cloud.google.com) is Google's admin site, where you register Our Cocon so people can tap "Continue with Google". You register one **OAuth client**: an ID and a secret that prove the sign-in request comes from Our Cocon.
+   - Create a project "Our Cocon". In APIs & Services → OAuth consent screen: type External, app name "Our Cocon", your email as support and developer contact, scopes `email`, `profile` and `openid` only. Then Publish the app (no Google review is needed for these scopes).
+   - APIs & Services → Credentials → Create credentials → OAuth client ID → Web application, named "Our Cocon". Authorized JavaScript origins: `https://app.ourcocon.com`, `https://app-staging.ourcocon.com`, `http://localhost:8081`. Authorized redirect URIs: `https://api.ourcocon.com/auth/v1/callback`, `https://api-staging.ourcocon.com/auth/v1/callback`, `http://127.0.0.1:54321/auth/v1/callback`.
+   - Save the client ID and secret in your password manager. The setup asks for them for each environment (paste the same pair, or `-` to skip Google there). For your Mac, paste them into `.env.local` as `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`, then `pnpm exec supabase stop` and `pnpm dev`.
+6. **CI keys, one per environment.** GitHub logs into the server with an SSH key; staging and prod each get their own, so the staging key can never touch prod.
    - Staging: the key you already have. Download its public half, `cocon-deploy.pub`, from your password manager to `~/Downloads/cocon-deploy-staging.pub`.
    - Prod: make a new one on your Mac: `ssh-keygen -t ed25519 -N "" -C cocon-deploy-prod -f ~/Downloads/cocon-deploy-prod`. Save both files in your password manager. Paste the private one (`cocon-deploy-prod`, no `.pub`) into GitHub → Settings → Environments → **production** → `SSH_PRIVATE_KEY`, replacing the old value. Staging keeps the old key.
 
@@ -92,6 +96,7 @@ All secrets are sealed in `/etc/cocon/creds` on the server. To change one, log i
 | --- | --- | --- |
 | A Supabase setting (SMTP, URLs, …) | `sudo cocon-secrets edit staging-supabase.env` | `sudo cocon-stack staging up -d` |
 | App settings (PostHog key, …) | `sudo cocon-secrets edit prod-app.env` | Redeploy (re-run the last workflow) |
+| Google sign-in (`GOOGLE_SIGN_IN`, `GOOGLE_CLIENT_ID`, `GOOGLE_SECRET`) | `sudo cocon-secrets edit prod-supabase.env` | `sudo cocon-stack prod up -d` |
 | Resend key | `sudo rm /etc/cocon/creds/resend-api-key.cred` and re-run the setup | Also update `SMTP_PASS` in both Supabase settings |
 | Origin certificate | `sudo rm /etc/cocon/creds/origin.*.cred` and re-run the setup | |
 

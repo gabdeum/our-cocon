@@ -1,9 +1,9 @@
 import { View } from 'react-native';
-import { iconShapes, LogoShape, type IconName } from '../icons.generated';
+import { brandShapes, iconShapes, LogoShape, type BrandName, type IconName } from '../icons.generated';
 import { useThemeColors } from '../ThemeProvider';
 import { theme, type ColorName } from '../theme';
 
-export type { IconName };
+export type { BrandName, IconName };
 
 const sizes = { sm: theme.size.iconSm, md: theme.size.iconMd } as const;
 
@@ -32,6 +32,16 @@ export function Logo({ size = 34 }: { size?: number }) {
   return (
     <View aria-hidden style={{ width: size, height: size }}>
       <LogoShape size={size} honey={colors.honey} ink={colors.ink} />
+    </View>
+  );
+}
+
+/** A sign-in provider's mark ("Continue with Google"), in its own colours. Decorative. */
+export function BrandMark({ name, size = theme.size.iconSm }: { name: BrandName; size?: number }) {
+  const Shape = brandShapes[name];
+  return (
+    <View aria-hidden style={{ width: size, height: size }}>
+      <Shape size={size} />
     </View>
   );
 }

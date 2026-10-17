@@ -1,0 +1,125 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import type { Database, Tracker } from '@cocon/schemas';
+import type { Client } from './supabase';
+import { familyApi, type FamilyApi } from './family';
+import { suggestedName } from './auth';
+
+export type Member = Database['public']['Tables']['members']['Row'];
+export type Family = Database['public']['Tables']['families']['Row'];
+
+export type SessionState =
+  | { status: 'loading' }
+  | { status: 'signedOut' }
+  | { status: 'noFamily'; userId: string; suggestedName: string }
+  | { status: 'ready'; userId: string; me: Member; family: Family; members: Member[] };
+
+interface SessionContextValue {
+  state: SessionState;
+  client: Pick<Client, 'auth' | 'from' | 'rpc'>;
+  api: FamilyApi;
+  tracker: Tracker;
+  /** Reloads the family after a change (create, join, remove…). */
+  refresh: () => Promise<void>;
+  signOut: () => Promise<void>;
+}
+
+const SessionContext = createContext<SessionContextValue | null>(null);
+
+/** Members in join order, so rows and avatar tones read the same everywhere. */
+function byJoined(a: Member, b: Member) {
+  return a.joined_at.localeCompare(b.joined_at);
+}
+
+async function loadFamily(client: SessionContextValue['client'], session: Session): Promise<SessionState> {
+  const userId = session.user.id;
+  // RLS returns only the caller's family and its members.
+  const [members, families] = await Promise.all([client.from('members').select('*'), client.from('families').select('*')]);
+  if (members.error || families.error) throw members.error ?? families.error;
+  const me = members.data.find((m) => m.user_id === userId);
+  const family = families.data[0];
+  if (!me || !family) return { status: 'noFamily', userId, suggestedName: suggestedName(session.user) };
+  return { status: 'ready', userId, me, family, members: [...members.data].sort(byJoined) };
+}
+
+/** Who is signed in and their family (spec 003). Everything signed-in reads it through useSession(). */
+export function SessionProvider({ client, tracker, children }: { client: SessionContextValue['client']; tracker: Tracker; children: ReactNode }) {
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [loaded, setLoaded] = useState<{ userId: string; state: SessionState } | null>(null);
+  const sessionRef = useRef<Session | null>(null);
+
+  useEffect(() => {
+    const take = (next: Session | null) => {
+      sessionRef.current = next;
+      setSession(next);
+    };
+    void client.auth.getSession().then(({ data }) => take(data.session));
+    const { data } = client.auth.onAuthStateChange((_event, next) => take(next));
+    return () => data.subscription.unsubscribe();
+  }, [client]);
+
+  const refresh = useCallback(async () => {
+    const current = sessionRef.current;
+    if (!current) return;
+    let next: SessionState;
+    try {
+      next = await loadFamily(client, current);
+    } catch {
+      // Offline or a removed member whose session is ending: treat as no family for now.
+      next = { status: 'noFamily', userId: current.user.id, suggestedName: suggestedName(current.user) };
+    }
+    setLoaded({ userId: current.user.id, state: next });
+  }, [client]);
+
+  // Reload only when the person changes, not on every token refresh.
+  const userId = session?.user.id;
+  useEffect(() => {
+    if (userId) void refresh();
+  }, [userId, refresh]);
+
+  const state: SessionState =
+    session === undefined ? { status: 'loading' } : session === null ? { status: 'signedOut' } : loaded && loaded.userId === userId ? loaded.state : { status: 'loading' };
+
+  const familyId = state.status === 'ready' ? state.family.id : null;
+  useEffect(() => {
+    if (userId) tracker.identify(userId, familyId);
+  }, [tracker, userId, familyId]);
+
+  const signOut = useCallback(async () => {
+    await client.auth.signOut();
+    tracker.reset();
+  }, [client, tracker]);
+
+  const api = useMemo(() => familyApi(client), [client]);
+  const value = useMemo(() => ({ state, client, api, tracker, refresh, signOut }), [state, client, api, tracker, refresh, signOut]);
+  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
+}
+
+export function useSession(): SessionContextValue {
+  const value = useContext(SessionContext);
+  if (!value) throw new Error('useSession needs a SessionProvider');
+  return value;
+}
+
+/** Routes anyone can open; the rest need a signed-in member (design/flows.md). */
+const PUBLIC = new Set(['welcome', 'auth', 'join']);
+
+/**
+ * Where the gate sends someone, or null to stay. `segments` are Expo Router's route segments
+ * ("welcome", "family" for /welcome/family; "(tabs)" for the tabs).
+ */
+export function gateRedirect(status: SessionState['status'], segments: readonly string[]): '/' | '/welcome' | '/welcome/family' | null {
+  const [first = '', second] = segments;
+  const isPublic = PUBLIC.has(first);
+  switch (status) {
+    case 'loading':
+      return null;
+    case 'signedOut':
+      return isPublic && !(first === 'welcome' && second === 'family') ? null : '/welcome';
+    case 'noFamily':
+      if (first === 'join' || first === 'auth') return null;
+      return first === 'welcome' && second === 'family' ? null : '/welcome/family';
+    case 'ready':
+      return first === 'welcome' ? '/' : null;
+  }
+}

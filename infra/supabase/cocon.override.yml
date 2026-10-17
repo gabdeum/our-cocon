@@ -20,8 +20,21 @@ services:
         aliases:
           - ${COCON_ENV:?COCON_ENV must be staging or prod}-api
 
+  # Spec 003: Google sign-in (set by provision.sh), 90-day sessions, 1-hour single-use links and
+  # the sign-in email, which the web app serves (apps/app/public/email/sign-in.html).
   auth:
     container_name: !reset null
+    environment:
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_SIGN_IN:-false}
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_SECRET:-}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${API_EXTERNAL_URL}/callback
+      GOTRUE_SESSIONS_INACTIVITY_TIMEOUT: 2160h
+      GOTRUE_MAILER_OTP_EXP: "3600"
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Our Cocon sign-in link
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: Your Our Cocon sign-in link
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${SITE_URL}/email/sign-in.html
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: ${SITE_URL}/email/sign-in.html
 
   rest:
     container_name: !reset null

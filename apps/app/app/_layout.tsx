@@ -1,7 +1,7 @@
 import '../global.css';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -17,6 +17,19 @@ import { AppFrame, ThemeProvider } from '@cocon/ui';
 import { tracker } from '../lib/tracker';
 import { trackAppOpened } from '../lib/app-opened';
 import { presentation } from '../lib/navigation';
+import { supabase } from '../lib/supabase';
+import { gateRedirect, SessionProvider, useSession } from '../lib/session';
+
+/** Sends people where their sign-in state allows (spec 003): sign in, set up a family, or the app. */
+function SessionGate() {
+  const { state } = useSession();
+  const segments = useSegments();
+  const target = gateRedirect(state.status, segments);
+  useEffect(() => {
+    if (target) router.replace(target);
+  }, [target]);
+  return null;
+}
 
 // Nothing is drawn until Nunito is loaded, so the first paint is already in Nunito (FR-003).
 void SplashScreen.preventAutoHideAsync();
@@ -44,14 +57,21 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <AppFrame>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="dev/gallery" options={presentation.stack} />
-          <Stack.Screen name="dev/sheet" options={presentation.sheet} />
-          <Stack.Screen name="dev/modal" options={presentation.fullScreen} />
-        </Stack>
-      </AppFrame>
+      <SessionProvider client={supabase} tracker={tracker}>
+        <AppFrame>
+          <SessionGate />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="welcome/index" />
+            <Stack.Screen name="welcome/family" options={presentation.stack} />
+            <Stack.Screen name="auth/callback" />
+            <Stack.Screen name="join/[token]" />
+            <Stack.Screen name="dev/gallery" options={presentation.stack} />
+            <Stack.Screen name="dev/sheet" options={presentation.sheet} />
+            <Stack.Screen name="dev/modal" options={presentation.fullScreen} />
+          </Stack>
+        </AppFrame>
+      </SessionProvider>
     </ThemeProvider>
   );
 }

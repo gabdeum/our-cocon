@@ -140,6 +140,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         </PillRow>
         <PillRow>
           <Button label="Add to groceries…" variant="outline" />
+          <Button label="Continue with Google" variant="outline" brand="google" />
           <Button label="+ Add a step" variant="dashed" />
           <Button label="Delete recipe" variant="danger" />
         </PillRow>

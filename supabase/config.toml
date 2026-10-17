@@ -161,7 +161,8 @@ site_url = "http://localhost:8081"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["http://localhost:8081", "http://127.0.0.1:8081"]
+# /auth/callback carries ?next=… (spec 003), so whole paths are allowed on the local app.
+additional_redirect_urls = ["http://localhost:8081/**", "http://127.0.0.1:8081/**"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -244,10 +245,15 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# Spec 003: one friendly sign-in email for new and returning people. Staging and prod load the
+# same file from the web app (infra/supabase/cocon.override.yml).
+[auth.email.template.magic_link]
+subject = "Your Our Cocon sign-in link"
+content_path = "./apps/app/public/email/sign-in.html"
+
+[auth.email.template.confirmation]
+subject = "Your Our Cocon sign-in link"
+content_path = "./apps/app/public/email/sign-in.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
@@ -270,11 +276,11 @@ max_frequency = "5s"
 # 4152127777 = "123456"
 
 # Configure logged in session timeouts.
-# [auth.sessions]
+[auth.sessions]
 # Force log out after the specified duration.
 # timebox = "24h"
-# Force log out if the user has been inactive longer than the specified duration.
-# inactivity_timeout = "8h"
+# Spec 003 FR-001b: signed in until 90 days without opening the app.
+inactivity_timeout = "2160h"
 
 # This hook runs before a new user is created and allows developers to reject the request based on the incoming user object.
 # [auth.hook.before_user_created]
@@ -316,6 +322,15 @@ max_frequency = "5s"
 # [auth.mfa.web_authn]
 # enroll_enabled = true
 # verify_enabled = true
+
+# Spec 003 FR-001: Sign in with Google. Credentials come from .env.local (docs/operations.md).
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+redirect_uri = ""
+url = ""
+skip_nonce_check = false
 
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,

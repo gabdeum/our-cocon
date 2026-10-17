@@ -1,7 +1,7 @@
 import { Pressable, type PressableProps } from 'react-native';
 import { cn, focusRing } from '../cn';
 import type { ColorName } from '../theme';
-import { Icon, type IconName } from './Icon';
+import { BrandMark, Icon, type BrandName, type IconName } from './Icon';
 import { Text, type TextColor, type Weight } from './Text';
 
 export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'danger';
@@ -61,6 +61,8 @@ export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> 
   /** Full width. */
   block?: boolean;
   icon?: IconName;
+  /** A sign-in provider's mark in place of the icon: "Continue with Google" (outline). */
+  brand?: BrandName;
   /** Keeps the width and shows `busyLabel` ("Saving…") while work runs. */
   busy?: boolean;
   busyLabel?: string;
@@ -74,6 +76,7 @@ export function Button({
   size = 'md',
   block,
   icon,
+  brand,
   disabled,
   busy,
   busyLabel,
@@ -100,7 +103,7 @@ export function Button({
       )}
       {...props}
     >
-      {icon ? <Icon name={icon} color={off ? 'inkMuted' : look.icon} /> : null}
+      {brand ? <BrandMark name={brand} /> : icon ? <Icon name={icon} color={off ? 'inkMuted' : look.icon} /> : null}
       <Text size={look.fontSize ?? s.fontSize} weight={look.weight} color={off ? 'ink-muted' : look.text} numberOfLines={1}>
         {busy && busyLabel ? busyLabel : label}
       </Text>

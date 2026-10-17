@@ -14,6 +14,15 @@ export const events = {
   tab_selected: z.strictObject({
     tab: z.enum(['home', 'recipes', 'groceries', 'settings']),
   }),
+  // Spec 003: accounts and family.
+  signed_up: z.strictObject({ method: z.enum(['email', 'google']) }),
+  signed_in: z.strictObject({ method: z.enum(['email', 'google']) }),
+  family_created: z.strictObject({}),
+  invite_sent: z.strictObject({}),
+  invite_accepted: z.strictObject({ days_since_sent: z.int().min(0) }),
+  invite_expired_seen: z.strictObject({}),
+  member_removed: z.strictObject({}),
+  family_deleted: z.strictObject({ member_count: z.int().min(1) }),
 } as const;
 
 export type EventName = keyof typeof events;
@@ -24,18 +33,22 @@ export interface AnalyticsTransport {
   capture(event: string, props: Record<string, unknown>): void;
   identify(userId: string): void;
   group(type: 'family', id: string): void;
+  reset(): void;
 }
 
 export interface Tracker {
   track<E extends EventName>(event: E, props: EventProps<E>): void;
   /** Signed-in users are identified by user id only, with their family as a group. */
   identify(userId: string, familyId: string | null): void;
+  /** On sign-out, so the next person on this device starts fresh. */
+  reset(): void;
 }
 
 const noopTransport: AnalyticsTransport = {
   capture: () => undefined,
   identify: () => undefined,
   group: () => undefined,
+  reset: () => undefined,
 };
 
 export function createTracker(transport: AnalyticsTransport | null): Tracker {
@@ -49,6 +62,9 @@ export function createTracker(transport: AnalyticsTransport | null): Tracker {
     identify(userId, familyId) {
       out.identify(z.uuid().parse(userId));
       if (familyId) out.group('family', z.uuid().parse(familyId));
+    },
+    reset() {
+      out.reset();
     },
   };
 }

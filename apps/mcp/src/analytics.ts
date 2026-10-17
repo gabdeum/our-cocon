@@ -17,6 +17,10 @@ export function createMcpTracker(config: McpConfig): { tracker: Tracker; shutdow
     group: (_type, id) => {
       familyId = id;
     },
+    reset: () => {
+      distinctId = 'anonymous';
+      familyId = undefined;
+    },
   });
   return { tracker, shutdown: () => posthog.shutdown() };
 }

@@ -197,7 +197,8 @@ export function svgToJsx(svg, colorExpr = 'color') {
 }
 
 /** `files` maps an icon name (file name without .svg) to its SVG source. */
-export function iconsTsx(files, logo) {
+/** `brands` maps a sign-in provider to its own mark, kept in the provider's colours (Logos/README.md). */
+export function iconsTsx(files, logo, brands = {}) {
   const names = Object.keys(files).sort();
   const used = new Set();
   const entries = names.map((name) => {
@@ -207,6 +208,11 @@ export function iconsTsx(files, logo) {
   });
   const mark = svgToJsx(logo, 'ink').children.replace('fill="#FFCF5C"', 'fill={honey}');
   for (const m of mark.matchAll(/<(Path|Circle|Rect|G)\b/g)) used.add(m[1]);
+  const brandEntries = Object.keys(brands).sort().map((name) => {
+    const { rootProps, children } = svgToJsx(brands[name]);
+    for (const m of children.matchAll(/<(Path|Circle|Rect|G)\b/g)) used.add(m[1]);
+    return `  ${JSON.stringify(name)}: ({ size }: { size: number }) => (\n    <Svg width={size} height={size} ${rootProps}>${children}</Svg>\n  ),`;
+  });
   const imports = ['Svg', ...[...used].sort()].join(', ');
   return `// ${HEADER}
 // Icons are the design system's SVGs (design/system/assets), copied path for path, never redrawn.
@@ -227,5 +233,12 @@ export function LogoShape({ size, honey, ink }: { size: number; honey: string; i
     <Svg width={size} height={size} viewBox="0 0 34 34">${mark}</Svg>
   );
 }
+
+/** Sign-in provider marks, in the provider's own colours (design/system/assets/Logos/README.md). */
+export const brandShapes = {
+${brandEntries.join('\n')}
+};
+
+export type BrandName = keyof typeof brandShapes;
 `;
 }

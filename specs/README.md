@@ -115,4 +115,4 @@ All 34 open questions are answered. The specs, UI specs and screens already refl
 Also settled: no pantry (every ingredient starts ticked in "Add to groceries"; untick what you have), and aisles, densities, piece sizes and pack sizes come from the ingredient catalog with family corrections (031).
 
 ### Screens described in words only
-These have no drawn screen; their UI spec is the source of truth: Account section (OC-Settings.md), Recently deleted (flows.md), Connect and Manage sheets (OC-Connect.md).
+These have no drawn screen; their UI spec is the source of truth: Account section (OC-Settings.md), sign-in, set up a family and join (OC-Welcome.md), Recently deleted (flows.md), Connect and Manage sheets (OC-Connect.md).

@@ -17,10 +17,11 @@ export function generate() {
       .map((f) => [f.slice(0, -4), readFileSync(join(iconDir, f), 'utf8')]),
   );
   const logo = readFileSync(join(system, 'assets/Logos/our-cocon-mark.svg'), 'utf8');
+  const brands = { google: readFileSync(join(system, 'assets/Logos/google.svg'), 'utf8') };
   return {
     'packages/ui/theme.ts': themeTs(tokens),
     'packages/ui/tailwind.theme.cjs': tailwindTheme(tokens),
-    'packages/ui/icons.generated.tsx': iconsTsx(icons, logo),
+    'packages/ui/icons.generated.tsx': iconsTsx(icons, logo, brands),
   };
 }
 

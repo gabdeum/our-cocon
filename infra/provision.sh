@@ -378,6 +378,27 @@ EOF
     cocon-secrets seal "$env-app.env" "$tmp"
   else note "app settings: already set"; fi
 
+  # Spec 003: Sign in with Google and the app's sign-in redirects, asked once per environment
+  # (docs/operations.md › Google sign-in). Change them later with `cocon-secrets edit <env>-supabase.env`.
+  settings=$(mktemp)
+  if [ $dry = 1 ] && ! has_secret "$env-supabase.env"; then :
+  elif cocon-secrets open "$env-supabase.env" "$settings" && grep -q '^GOOGLE_SIGN_IN=' "$settings"; then
+    note "Google sign-in: already set"
+  elif [ $dry = 1 ]; then note "would ask for the Google sign-in client of $env"
+  else
+    google_id=$(hidden "Google OAuth client ID for $env (ends in .apps.googleusercontent.com, or - to skip)")
+    if [ "$google_id" = - ]; then
+      set_env "$settings" GOOGLE_SIGN_IN false
+    else
+      set_env "$settings" GOOGLE_SIGN_IN true
+      set_env "$settings" GOOGLE_CLIENT_ID "$google_id"
+      set_env "$settings" GOOGLE_SECRET "$(hidden "Google OAuth client secret for $env")"
+    fi
+    set_env "$settings" ADDITIONAL_REDIRECT_URLS "https://$(host_for app "$env")/**"
+    cocon-secrets seal "$env-supabase.env" "$settings"
+  fi
+  rm -f "$settings"
+
   run cocon-stack "$env" up -d --wait --quiet-pull
 done
 

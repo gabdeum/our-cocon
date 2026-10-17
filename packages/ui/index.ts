@@ -5,7 +5,7 @@ export { ThemeProvider, useThemeColors } from './ThemeProvider';
 export { cn } from './cn';
 
 export { Text, type TextProps, type TextVariant, type TextColor, type Weight } from './components/Text';
-export { Icon, Logo, type IconName, type IconProps } from './components/Icon';
+export { BrandMark, Icon, Logo, type BrandName, type IconName, type IconProps } from './components/Icon';
 export { AppFrame, TabScreen, PushedScreen } from './components/Layout';
 
 export { Button, Link, type ButtonProps, type ButtonVariant, type ButtonSize, type LinkProps } from './components/Button';
