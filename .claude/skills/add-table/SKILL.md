@@ -7,3 +7,4 @@ description: Add a database table or column the Our Cocon way (migration, RLS, t
 3. Tests in `supabase/tests`: member can read and write, non-member gets zero rows, signed-out gets zero rows.
 4. `pnpm db:types`, then add or update the Zod schema in `packages/schemas`.
 5. Add the table to realtime only if a spec says so (spec 004 lists them).
+6. Functions start uncallable (spec 003 revokes the default EXECUTE). In the same migration, `grant execute on function public.<name>(<arg types>) to authenticated` for each function the app or a policy calls; `to anon` only if the spec says signed-out people use it. Internal helpers (`_name`) and trigger functions get no grant. Policies reuse `public.my_family_id()`. Test the grants with `has_function_privilege`; pgTAP helpers in `pg_temp` need `grant execute … to public`.
