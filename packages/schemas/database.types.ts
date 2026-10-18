@@ -23,19 +23,65 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "families": {
+            "activity": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"id": string,"joined_count": number,"name": string,"owner_id": string,"source": string,"updated_at": string
+                    "action": string,"actor_id": string | null,"created_at": string,"family_id": string,"id": string,"payload": NonNullable<Json>,"source": string,"target_id": string | null,"target_kind": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"joined_count"?: number,"name": string,"owner_id": string,"source"?: string,"updated_at"?: string
+                    "action": string,"actor_id"?: string | null,"created_at"?: string,"family_id": string,"id"?: string,"payload"?: NonNullable<Json>,"source"?: string,"target_id"?: string | null,"target_kind": string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"joined_count"?: number,"name"?: string,"owner_id"?: string,"source"?: string,"updated_at"?: string
+                    "action"?: string,"actor_id"?: string | null,"created_at"?: string,"family_id"?: string,"id"?: string,"payload"?: NonNullable<Json>,"source"?: string,"target_id"?: string | null,"target_kind"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "activity_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"families": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"id": string,"joined_count": number,"name": string,"owner_id": string,"source": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"joined_count"?: number,"name": string,"owner_id": string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"joined_count"?: number,"name"?: string,"owner_id"?: string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     
+                  ]
+                },"grocery_items": {
+                  Row: {
+                    "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"checked": boolean,"checked_at": string | null,"checked_by": string | null,"created_at": string,"created_by": string | null,"family_id": string,"id": string,"name": string,"quantity": number | null,"recipe_id": string | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"name": string,"quantity"?: number | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"name"?: string,"quantity"?: number | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "grocery_items_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "grocery_items_recipe_id_family_id_fkey"
+      columns: ["recipe_id","family_id"]
+isOneToOne: false
+      referencedRelation: "recipes"
+      referencedColumns: ["id","family_id"]
+    }
                   ]
                 },"invites": {
                   Row: {
@@ -59,18 +105,116 @@ isOneToOne: false
                   ]
                 },"members": {
                   Row: {
-                    "avatar_tone": Database["public"]['Enums']["avatar_tone"],"created_at": string,"created_by": string | null,"display_name": string,"family_id": string,"joined_at": string,"role": Database["public"]['Enums']["member_role"],"source": string,"updated_at": string,"user_id": string
+                    "avatar_tone": Database["public"]['Enums']["avatar_tone"],"created_at": string,"created_by": string | null,"display_name": string,"family_id": string,"joined_at": string,"role": Database["public"]['Enums']["member_role"],"source": string,"updated_at": string,"updated_by": string | null,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "avatar_tone": Database["public"]['Enums']["avatar_tone"],"created_at"?: string,"created_by"?: string | null,"display_name": string,"family_id": string,"joined_at"?: string,"role": Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"user_id": string
+                    "avatar_tone": Database["public"]['Enums']["avatar_tone"],"created_at"?: string,"created_by"?: string | null,"display_name": string,"family_id": string,"joined_at"?: string,"role": Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id": string
                   }
                   Update: {
-                    "avatar_tone"?: Database["public"]['Enums']["avatar_tone"],"created_at"?: string,"created_by"?: string | null,"display_name"?: string,"family_id"?: string,"joined_at"?: string,"role"?: Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"user_id"?: string
+                    "avatar_tone"?: Database["public"]['Enums']["avatar_tone"],"created_at"?: string,"created_by"?: string | null,"display_name"?: string,"family_id"?: string,"joined_at"?: string,"role"?: Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     {
       foreignKeyName: "members_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"recipe_ingredients": {
+                  Row: {
+                    "catalog_key": string | null,"created_at": string,"created_by": string | null,"family_id": string,"id": string,"name": string,"piece_noun_plural": string | null,"piece_noun_singular": string | null,"position": number,"prep_note": string | null,"quantity": number | null,"recipe_id": string,"size_word": Database["public"]['Enums']["size_word"] | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null,"weight_per_piece_g": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "catalog_key"?: string | null,"created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"name": string,"piece_noun_plural"?: string | null,"piece_noun_singular"?: string | null,"position": number,"prep_note"?: string | null,"quantity"?: number | null,"recipe_id": string,"size_word"?: Database["public"]['Enums']["size_word"] | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null,"weight_per_piece_g"?: number | null
+                  }
+                  Update: {
+                    "catalog_key"?: string | null,"created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"name"?: string,"piece_noun_plural"?: string | null,"piece_noun_singular"?: string | null,"position"?: number,"prep_note"?: string | null,"quantity"?: number | null,"recipe_id"?: string,"size_word"?: Database["public"]['Enums']["size_word"] | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null,"weight_per_piece_g"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "recipe_ingredients_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recipe_ingredients_recipe_id_family_id_fkey"
+      columns: ["recipe_id","family_id"]
+isOneToOne: false
+      referencedRelation: "recipes"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
+                },"recipe_steps": {
+                  Row: {
+                    "body": string,"created_at": string,"created_by": string | null,"family_id": string,"id": string,"name": string | null,"photo_path": string | null,"position": number,"recipe_id": string,"source": string,"temp_check_c": number | null,"temp_check_text": string | null,"timer_label": string | null,"timer_seconds": number | null,"tip": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"name"?: string | null,"photo_path"?: string | null,"position": number,"recipe_id": string,"source"?: string,"temp_check_c"?: number | null,"temp_check_text"?: string | null,"timer_label"?: string | null,"timer_seconds"?: number | null,"tip"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"name"?: string | null,"photo_path"?: string | null,"position"?: number,"recipe_id"?: string,"source"?: string,"temp_check_c"?: number | null,"temp_check_text"?: string | null,"timer_label"?: string | null,"timer_seconds"?: number | null,"tip"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "recipe_steps_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recipe_steps_recipe_id_family_id_fkey"
+      columns: ["recipe_id","family_id"]
+isOneToOne: false
+      referencedRelation: "recipes"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
+                },"recipe_variants": {
+                  Row: {
+                    "changes": NonNullable<Json>,"created_at": string,"created_by": string | null,"family_id": string,"id": string,"kind": Database["public"]['Enums']["variant_kind"],"name": string,"position": number,"recipe_id": string,"source": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "changes"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"kind": Database["public"]['Enums']["variant_kind"],"name": string,"position": number,"recipe_id": string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "changes"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["variant_kind"],"name"?: string,"position"?: number,"recipe_id"?: string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "recipe_variants_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recipe_variants_recipe_id_family_id_fkey"
+      columns: ["recipe_id","family_id"]
+isOneToOne: false
+      referencedRelation: "recipes"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
+                },"recipes": {
+                  Row: {
+                    "best_months": (number)[],"created_at": string,"created_by": string | null,"cuisine": string | null,"deleted_at": string | null,"deleted_by": string | null,"description": string | null,"family_id": string,"id": string,"name": string,"photo_path": string | null,"prep_minutes": number | null,"serves": number,"source": string,"source_text": string | null,"total_minutes": number | null,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "best_months"?: (number)[],"created_at"?: string,"created_by"?: string | null,"cuisine"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"description"?: string | null,"family_id": string,"id"?: string,"name": string,"photo_path"?: string | null,"prep_minutes"?: number | null,"serves"?: number,"source"?: string,"source_text"?: string | null,"total_minutes"?: number | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "best_months"?: (number)[],"created_at"?: string,"created_by"?: string | null,"cuisine"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"description"?: string | null,"family_id"?: string,"id"?: string,"name"?: string,"photo_path"?: string | null,"prep_minutes"?: number | null,"serves"?: number,"source"?: string,"source_text"?: string | null,"total_minutes"?: number | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "recipes_family_id_fkey"
       columns: ["family_id"]
 isOneToOne: false
       referencedRelation: "families"
@@ -83,7 +227,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "_open_invite":
+            "_family_table":
+{ Args: { "live": boolean,"t": unknown }; Returns: undefined
+                           },
+"_open_invite":
 { Args: { "lock"?: boolean,"token": string }; Returns: {
               "created_at": string,
 "created_by": string,
@@ -101,6 +248,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"_request_source":
+{ Args: { "requested": string }; Returns: string
+                           },
 "_require_owner":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -145,7 +295,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "avatar_tone": "honey"|"sage"|"peach","member_role": "owner"|"editor"
+            "aisle": "produce"|"bakery"|"dairy_eggs"|"meat_fish"|"dry_goods"|"spices_baking"|"frozen"|"drinks"|"household"|"other","avatar_tone": "honey"|"sage"|"peach","member_role": "owner"|"editor","size_word": "small"|"medium"|"large","unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"oz"|"lb"|"piece"|"pinch","variant_kind": "option"|"version"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -265,7 +415,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "avatar_tone": ["honey", "sage", "peach"],"member_role": ["owner", "editor"]
+            "aisle": ["produce", "bakery", "dairy_eggs", "meat_fish", "dry_goods", "spices_baking", "frozen", "drinks", "household", "other"],"avatar_tone": ["honey", "sage", "peach"],"member_role": ["owner", "editor"],"size_word": ["small", "medium", "large"],"unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "oz", "lb", "piece", "pinch"],"variant_kind": ["option", "version"]
           }
         }
 } as const

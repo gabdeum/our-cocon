@@ -219,6 +219,8 @@ textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-siz
 /* ---------- Status ---------- */
 .oc-status { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 54px; padding: 0 8px 0 16px; border-radius: 18px; background: var(--sage); font-size: 15px; font-weight: 800; }
 .oc-status__undo { height: 44px; padding: 0 12px; border: none; background: none; color: var(--ink); font-family: var(--font-sans); font-size: 15px; font-weight: 900; text-decoration: underline; cursor: pointer; }
+.oc-status--warn { background: var(--warn-soft); color: var(--warn); }
+.oc-status--warn .oc-status__undo { color: var(--warn); }
 .oc-presence { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: var(--radius-pill); background: var(--sage); font-size: 13px; font-weight: 800; }
 .oc-presence::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--olive); }
 .oc-awake { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: var(--radius-pill); background: var(--sage); color: var(--olive-deep); font-size: 13px; font-weight: 800; }

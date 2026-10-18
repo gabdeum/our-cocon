@@ -47,7 +47,35 @@ When Alex ticks a grocery item or edits a recipe, Mia's open app shows it within
 Offline: StatusBanner "You're offline. You can read, but changes need a connection." (design system Patterns.md). A failed write reverts and shows "Couldn't save. Try again."
 
 ## Needs your attention
-None.
+From the build (2026-10-18):
+- **Assistant names need filling in (spec 023/025).** A write through an AI connection gets its name ("claude") from the server-managed table `oauth_client_sources`, never from the request. Until 023/025 add a row for each connected assistant, such writes are recorded as `mcp`.
+- **Realtime speed is measured locally only.** The integration test measured a p95 of about 10 ms on a laptop (the target is 1 s). Staging isn't measured. Check it once 006 or 020 has a real screen on staging.
+- **Optional hardening: private-only Realtime.** The app only uses private, members-only channels. The self-hosted Realtime service (the part of Supabase that pushes live changes) could also refuse public channels altogether, in `infra/supabase/cocon.override.yml`. Nothing leaks today; this is a second lock on the door.
+- **A removed member keeps hearing change ids until their token expires (up to 1 hour).** Messages carry ids only, never content, and every read still goes through RLS.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-18: Built.
+  - **Tables.** `recipes`, `recipe_ingredients`, `recipe_steps`, `recipe_variants`, `grocery_items` and `activity`, from three migrations (shared, recipes, groceries). `_family_table()` sets up any later module's table the same way.
+  - **Security.**
+    - Every table has family RLS for read, insert, update and delete, with pgTAP tests for a member, another family's member and a signed-out visitor.
+    - Triggers set the family, the author and the source, so the app can't pose as an assistant and nobody can attribute a write to someone else.
+    - Recipes can be removed for good only after a soft delete, and the deletion time can't be backdated.
+  - **Live updates.**
+    - A private channel per family, `family:<id>`, carries ids only. The app refetches what changed.
+    - An integration test proves another member hears each write in well under 1 s, and another family can't join the channel.
+  - **App.**
+    - Offline: data is cached on the device and stays readable. The `warn` banner shows on the tabs and Settings, and Settings' editing controls are disabled.
+    - The cache is tied to its owner and wiped for anyone else.
+    - `optimisticWrite` reverts a failed save.
+  - **Seed.** The quiche with its 2 variants, and the sample grocery list, for a local demo family (`gabriel@cocon.local`).
+  - **Deviations:**
+    - Grocery `added_by` is `created_by`.
+    - Invites keep `used_by`/`used_at` instead of an `updated_by`.
+    - Realtime uses private broadcast channels instead of `postgres_changes`, whose deletes would reach every family.
+    - Ingredient and variant edits reach others through their recipe's event, not their own.
+    - `source` is how a row was created. Each live message carries the current writer's source, and AI changes are in the activity log.
+    - "Alex just changed this recipe" is built (`useRecipeChangedBy`, `RecipeChangedBanner`). The recipe screens (008, 014) show it.
+    - StatusBanner gained a `warn` tone (`warn` text on `warn-soft`), and its button props are now `actionLabel`/`onAction`. Disabled links use `ink-muted`.
+    - The demo variant is named "Make my own dough", as on the canvas.
+    - A spec 003 test now finds its family by owner, not by name, so the seeded family doesn't clash.

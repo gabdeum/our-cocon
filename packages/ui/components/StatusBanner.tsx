@@ -8,22 +8,30 @@ import { Text } from './Text';
 export interface StatusBannerProps {
   /** "Recipe deleted". */
   message: string;
-  undoLabel?: string;
-  onUndo?: () => void;
+  /** `warn` for offline (Patterns.md › Offline). */
+  tone?: 'sage' | 'warn';
+  /** The trailing button: "Undo", or "Reload" when someone else just changed what you're looking at. */
+  actionLabel?: string;
+  onAction?: () => void;
   className?: string;
 }
 
 /** Confirmation with Undo (StatusBanner README › oc-status). Never stack two; a new one replaces the old. */
-export function StatusBanner({ message, undoLabel, onUndo, className }: StatusBannerProps) {
+export function StatusBanner({ message, tone = 'sage', actionLabel, onAction, className }: StatusBannerProps) {
+  const color = tone === 'warn' ? 'warn' : 'ink';
   return (
-    <View role="status" aria-live="polite" className={cn('min-h-control-lg flex-row items-center justify-between gap-8 rounded-[18px] bg-sage pl-16 pr-8', className)}>
-      <Text size={15} weight="800" className="flex-1">
+    <View
+      role="status"
+      aria-live="polite"
+      className={cn('min-h-control-lg flex-row items-center justify-between gap-8 rounded-[18px] pl-16 pr-8', tone === 'warn' ? 'bg-warn-soft' : 'bg-sage', className)}
+    >
+      <Text size={15} weight="800" color={color} className="flex-1">
         {message}
       </Text>
-      {undoLabel && onUndo ? (
-        <Pressable role="button" onPress={onUndo} className={cn('h-control-md justify-center px-12', focusRing)}>
-          <Text size={15} weight="900" underline>
-            {undoLabel}
+      {actionLabel && onAction ? (
+        <Pressable role="button" onPress={onAction} className={cn('h-control-md justify-center px-12', focusRing)}>
+          <Text size={15} weight="900" color={color} underline>
+            {actionLabel}
           </Text>
         </Pressable>
       ) : null}
