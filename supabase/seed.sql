@@ -111,3 +111,24 @@ from (values
   ('Sourdough loaf', 1, 'piece', 'bakery', null, true, 'c0c0a000-0000-4000-8000-00000000000a', 'app'),
   ('Croissants', 4, 'piece', 'bakery', null, false, 'c0c0a000-0000-4000-8000-00000000000c', 'app')
 ) as g (name, quantity, unit, aisle, recipe, checked, by, source);
+
+-- Spec 031: the sample ingredients and groceries point at their catalog entries.
+update public.recipe_ingredients i set catalog_key = k.key
+from (values
+  ('c0c01000-0000-4000-8000-000000000001', 'shortcrust_pastry'),
+  ('c0c01000-0000-4000-8000-000000000002', 'butter'),
+  ('c0c01000-0000-4000-8000-000000000003', 'leek'),
+  ('c0c01000-0000-4000-8000-000000000004', 'lardons'),
+  ('c0c01000-0000-4000-8000-000000000005', 'egg'),
+  ('c0c01000-0000-4000-8000-000000000006', 'heavy_cream'),
+  ('c0c01000-0000-4000-8000-000000000007', 'gruyere'),
+  ('c0c01000-0000-4000-8000-000000000008', 'nutmeg')
+) as k (id, key)
+where i.id = k.id::uuid;
+
+update public.grocery_items g set catalog_key = k.key
+from (values
+  ('Heavy cream', 'heavy_cream'), ('Gruyère', 'gruyere'), ('Milk', 'milk'), ('Pumpkin', 'pumpkin'),
+  ('Apples', 'apple'), ('Sourdough loaf', 'sourdough'), ('Croissants', 'croissant')
+) as k (name, key)
+where g.name = k.name and g.family_id = 'c0c0f000-0000-4000-8000-000000000001';

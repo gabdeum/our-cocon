@@ -25,6 +25,12 @@ export const events = {
   family_deleted: z.strictObject({ member_count: z.int().min(1) }),
   // Spec 004: the offline banner appeared on a screen (once per offline spell). Later screens join the enum.
   offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'recipes', 'groceries', 'settings']) }),
+  // Spec 031: an ingredient that matched nothing in the catalog was saved. One event each, never
+  // its text: the count tells us where the catalog needs to grow.
+  ingredient_unmatched: z.strictObject({}),
+  // Spec 031: a family saved its own correction to an ingredient (Move to…, a piece weight, packs),
+  // or a custom ingredient.
+  catalog_override_saved: z.strictObject({ field: z.enum(['aisle', 'piece_weight', 'packs', 'custom']) }),
 } as const;
 
 export type EventName = keyof typeof events;

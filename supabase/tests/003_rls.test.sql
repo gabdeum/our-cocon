@@ -16,14 +16,15 @@ begin
 end;
 $$;
 
--- Rows visible in every public table the current role can select from.
+-- Rows visible in every public table the current role can select from, except the global
+-- ingredient catalog (spec 031), which every signed-in person reads (031_catalog tests it).
 create function pg_temp.visible_rows() returns bigint language plpgsql as $$
 declare
   t record;
   n bigint;
   total bigint := 0;
 begin
-  for t in select tablename from pg_tables where schemaname = 'public' loop
+  for t in select tablename from pg_tables where schemaname = 'public' and tablename not in ('catalog_ingredients', 'catalog_packs', 'catalog_names') loop
     if has_table_privilege(format('public.%I', t.tablename), 'select') then
       execute format('select count(*) from public.%I', t.tablename) into n;
       total := total + n;

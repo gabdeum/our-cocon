@@ -1,0 +1,25 @@
+{
+  "about": "Spec 031 SC-001: ingredient names as people write them in 20 common home recipes (amounts and units are separate fields). At least 95% must match a catalog entry.",
+  "recipes": [
+    { "recipe": "Leek & bacon quiche", "lines": ["Shortcrust pastry", "Butter", "Leeks, finely sliced", "Bacon lardons", "Large eggs", "Heavy cream", "Gruyère, grated", "Nutmeg", "Salt", "Freshly ground black pepper"] },
+    { "recipe": "Spaghetti bolognese", "lines": ["Olive oil", "Onion, finely chopped", "Carrot, diced", "Celery stalk, diced", "Garlic cloves, minced", "Ground beef", "Tomato paste", "Dry red wine", "Canned crushed tomatoes", "Spaghetti"] },
+    { "recipe": "Chocolate chip cookies", "lines": ["All-purpose flour", "Baking soda", "Fine salt", "Unsalted butter, softened", "Granulated sugar", "Packed light brown sugar", "Pure vanilla extract", "Eggs, room temperature", "Semisweet chocolate chips", "Flaky sea salt"] },
+    { "recipe": "Chicken curry", "lines": ["Boneless skinless chicken thighs", "Vegetable oil", "Yellow onion, chopped", "Fresh ginger, grated", "Garlic, crushed", "Curry powder", "Ground turmeric", "Canned coconut milk", "Fresh cilantro", "Basmati rice"] },
+    { "recipe": "Pancakes", "lines": ["Plain flour", "Baking powder", "Caster sugar", "Milk", "Egg", "Melted butter", "Maple syrup", "Blueberries", "Pinch of salt", "Vanilla"] },
+    { "recipe": "Guacamole and tacos", "lines": ["Ripe avocados", "Lime juice", "Red onion, finely diced", "Jalapeño, seeded and minced", "Roma tomatoes", "Corn tortillas", "Ground beef", "Chili powder", "Ground cumin", "Shredded cheddar cheese"] },
+    { "recipe": "Caesar salad", "lines": ["Romaine lettuce", "Crusty bread, cubed", "Extra virgin olive oil", "Anchovy fillets", "Garlic clove", "Dijon mustard", "Lemon juice", "Worcestershire sauce", "Mayonnaise", "Parmesan cheese, finely grated"] },
+    { "recipe": "Banana bread", "lines": ["Very ripe bananas, mashed", "Melted unsalted butter", "Light brown sugar", "Large egg, beaten", "Vanilla extract", "Bicarbonate of soda", "Salt", "All purpose flour", "Ground cinnamon", "Chopped walnuts"] },
+    { "recipe": "Tomato soup", "lines": ["Butter", "Brown onion", "Garlic", "Ripe tomatoes, quartered", "Tinned chopped tomatoes", "Vegetable stock", "Sugar", "Fresh basil leaves", "Double cream", "Sourdough bread, to serve"] },
+    { "recipe": "Roast chicken and vegetables", "lines": ["Whole chicken", "Lemon, halved", "Fresh thyme sprigs", "Rosemary", "Baby potatoes", "Carrots, peeled", "Red onions, cut into wedges", "Head of garlic", "Olive oil", "Chicken broth"] },
+    { "recipe": "Mushroom risotto", "lines": ["Arborio rice", "Chestnut mushrooms, sliced", "Shallots, finely chopped", "Dry white wine", "Hot chicken stock", "Butter", "Parmigiano Reggiano", "Flat-leaf parsley", "Dried porcini mushrooms", "Olive oil"] },
+    { "recipe": "Beef stew", "lines": ["Beef chuck, cut into cubes", "Flour, for dusting", "Vegetable oil", "Onions", "Carrots", "Celery", "Tomato paste", "Beef broth", "Bay leaves", "Potatoes, peeled and cubed"] },
+    { "recipe": "Pesto pasta", "lines": ["Fresh basil", "Pine nuts, toasted", "Garlic cloves", "Grated parmesan", "Extra-virgin olive oil", "Fusilli", "Cherry tomatoes, halved", "Baby spinach", "Lemon zest", "Kosher salt"] },
+    { "recipe": "Stir-fry", "lines": ["Chicken breast, thinly sliced", "Soy sauce", "Sesame oil", "Cornstarch", "Broccoli florets", "Red bell pepper, sliced", "Spring onions", "Fresh ginger", "Honey", "Rice noodles"] },
+    { "recipe": "Lentil soup", "lines": ["Red lentils, rinsed", "Onion", "Carrots, diced", "Garlic", "Ground cumin", "Smoked paprika", "Vegetable broth", "Canned diced tomatoes", "Fresh lemon juice", "Chopped fresh parsley"] },
+    { "recipe": "Apple crumble", "lines": ["Cooking apples, peeled, cored and sliced", "Lemon juice", "Caster sugar", "Ground cinnamon", "Plain flour", "Cold butter, cubed", "Demerara sugar", "Rolled oats", "Vanilla ice cream", "Custard"] },
+    { "recipe": "Greek salad and tzatziki", "lines": ["Cucumber", "Tomatoes", "Red onion, thinly sliced", "Kalamata olives", "Feta cheese", "Dried oregano", "Greek yogurt", "Fresh dill", "Red wine vinegar", "Pita bread"] },
+    { "recipe": "Salmon with green beans", "lines": ["Salmon fillets, skin on", "Green beans, trimmed", "Unsalted butter", "Garlic, thinly sliced", "Lemon", "Capers, drained", "Fresh dill", "Olive oil", "Sea salt", "Ground black pepper"] },
+    { "recipe": "Pizza margherita", "lines": ["Bread flour", "Instant yeast", "Warm water", "Salt", "Olive oil", "Tomato passata", "Fresh mozzarella, torn", "Basil leaves", "Dried oregano", "Grana Padano"] },
+    { "recipe": "Lasagna", "lines": ["Lasagna noodles", "Ground pork", "Italian sausage", "Ricotta cheese", "Shredded mozzarella", "Marinara sauce", "Eggs", "Fresh parsley", "Garlic powder", "Onion powder"] }
+  ]
+}

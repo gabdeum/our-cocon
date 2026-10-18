@@ -15,7 +15,8 @@
     "typecheck": "pnpm -r --silent typecheck && tsc --noEmit --pretty false -p scripts && tsc --noEmit --pretty false -p infra",
     "db:new": "supabase migration new",
     "db:types": "supabase gen types typescript --local > packages/schemas/database.types.ts",
-    "theme": "node scripts/theme.mjs"
+    "theme": "node scripts/theme.mjs",
+    "catalog": "tsx scripts/catalog.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
@@ -29,6 +30,7 @@
     "globals": "^16.0.0",
     "pg": "^8.23.1",
     "supabase": "2.120.0",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.2",
     "vitest": "^5.0.4"

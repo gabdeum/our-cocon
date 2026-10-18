@@ -43,6 +43,60 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"catalog_ingredients": {
+                  Row: {
+                    "aisle": Database["public"]['Enums']["aisle"],"default_size": Database["public"]['Enums']["size_word"] | null,"density_g_per_ml": number | null,"diet": (string)[],"key": string,"names": NonNullable<Json>,"noun_plural": string | null,"noun_singular": string | null,"size_large_g": number | null,"size_medium_g": number | null,"size_small_g": number | null,"synonyms": NonNullable<Json>,"updated_at": string,"whole_only": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "aisle": Database["public"]['Enums']["aisle"],"default_size"?: Database["public"]['Enums']["size_word"] | null,"density_g_per_ml"?: number | null,"diet"?: (string)[],"key": string,"names": NonNullable<Json>,"noun_plural"?: string | null,"noun_singular"?: string | null,"size_large_g"?: number | null,"size_medium_g"?: number | null,"size_small_g"?: number | null,"synonyms"?: NonNullable<Json>,"updated_at"?: string,"whole_only"?: boolean
+                  }
+                  Update: {
+                    "aisle"?: Database["public"]['Enums']["aisle"],"default_size"?: Database["public"]['Enums']["size_word"] | null,"density_g_per_ml"?: number | null,"diet"?: (string)[],"key"?: string,"names"?: NonNullable<Json>,"noun_plural"?: string | null,"noun_singular"?: string | null,"size_large_g"?: number | null,"size_medium_g"?: number | null,"size_small_g"?: number | null,"synonyms"?: NonNullable<Json>,"updated_at"?: string,"whole_only"?: boolean
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"catalog_names": {
+                  Row: {
+                    "ingredient_key": string,"kind": string,"lang": string,"name_norm": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ingredient_key": string,"kind": string,"lang": string,"name_norm": string
+                  }
+                  Update: {
+                    "ingredient_key"?: string,"kind"?: string,"lang"?: string,"name_norm"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "catalog_names_ingredient_key_fkey"
+      columns: ["ingredient_key"]
+isOneToOne: false
+      referencedRelation: "catalog_ingredients"
+      referencedColumns: ["key"]
+    }
+                  ]
+                },"catalog_packs": {
+                  Row: {
+                    "ingredient_key": string,"label": string,"loose": boolean,"position": number,"profile": Database["public"]['Enums']["store_profile"],"size": number,"unit": Database["public"]['Enums']["unit"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ingredient_key": string,"label": string,"loose": boolean,"position": number,"profile": Database["public"]['Enums']["store_profile"],"size": number,"unit": Database["public"]['Enums']["unit"]
+                  }
+                  Update: {
+                    "ingredient_key"?: string,"label"?: string,"loose"?: boolean,"position"?: number,"profile"?: Database["public"]['Enums']["store_profile"],"size"?: number,"unit"?: Database["public"]['Enums']["unit"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "catalog_packs_ingredient_key_fkey"
+      columns: ["ingredient_key"]
+isOneToOne: false
+      referencedRelation: "catalog_ingredients"
+      referencedColumns: ["key"]
+    }
+                  ]
                 },"families": {
                   Row: {
                     "created_at": string,"created_by": string | null,"id": string,"joined_count": number,"name": string,"owner_id": string,"source": string,"updated_at": string,"updated_by": string | null
@@ -57,6 +111,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"family_ingredients": {
+                  Row: {
+                    "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"created_at": string,"created_by": string | null,"custom_name": string | null,"family_id": string,"id": string,"name_norm": string | null,"packs": Json | null,"size_large_g": number | null,"size_medium_g": number | null,"size_small_g": number | null,"source": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"created_at"?: string,"created_by"?: string | null,"custom_name"?: string | null,"family_id": string,"id"?: string,"name_norm"?: string | null,"packs"?: Json | null,"size_large_g"?: number | null,"size_medium_g"?: number | null,"size_small_g"?: number | null,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"created_at"?: string,"created_by"?: string | null,"custom_name"?: string | null,"family_id"?: string,"id"?: string,"name_norm"?: string | null,"packs"?: Json | null,"size_large_g"?: number | null,"size_medium_g"?: number | null,"size_small_g"?: number | null,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "family_ingredients_catalog_key_fkey"
+      columns: ["catalog_key"]
+isOneToOne: false
+      referencedRelation: "catalog_ingredients"
+      referencedColumns: ["key"]
+    },{
+      foreignKeyName: "family_ingredients_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"grocery_items": {
                   Row: {
                     "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"checked": boolean,"checked_at": string | null,"checked_by": string | null,"created_at": string,"created_by": string | null,"family_id": string,"id": string,"name": string,"quantity": number | null,"recipe_id": string | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null
@@ -70,6 +150,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "grocery_items_catalog_key_fkey"
+      columns: ["catalog_key"]
+isOneToOne: false
+      referencedRelation: "catalog_ingredients"
+      referencedColumns: ["key"]
+    },{
       foreignKeyName: "grocery_items_family_id_fkey"
       columns: ["family_id"]
 isOneToOne: false
@@ -123,6 +209,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"oauth_client_sources": {
+                  Row: {
+                    "client_id": string,"created_at": string,"source": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_id": string,"created_at"?: string,"source": string
+                  }
+                  Update: {
+                    "client_id"?: string,"created_at"?: string,"source"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"recipe_ingredients": {
                   Row: {
                     "catalog_key": string | null,"created_at": string,"created_by": string | null,"family_id": string,"id": string,"name": string,"piece_noun_plural": string | null,"piece_noun_singular": string | null,"position": number,"prep_note": string | null,"quantity": number | null,"recipe_id": string,"size_word": Database["public"]['Enums']["size_word"] | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null,"weight_per_piece_g": number | null
@@ -136,6 +236,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "recipe_ingredients_catalog_key_fkey"
+      columns: ["catalog_key"]
+isOneToOne: false
+      referencedRelation: "catalog_ingredients"
+      referencedColumns: ["key"]
+    },{
       foreignKeyName: "recipe_ingredients_family_id_fkey"
       columns: ["family_id"]
 isOneToOne: false
@@ -224,11 +330,30 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "ingredient_facts": {
+                  Row: {
+                    "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"default_size": Database["public"]['Enums']["size_word"] | null,"density_g_per_ml": number | null,"diet": (string)[] | null,"family_ingredient_id": string | null,"name": string | null,"noun_plural": string | null,"noun_singular": string | null,"plural": string | null,"size_large_g": number | null,"size_medium_g": number | null,"size_small_g": number | null,"whole_only": boolean | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                },"ingredient_packs": {
+                  Row: {
+                    "catalog_key": string | null,"family_ingredient_id": string | null,"label": string | null,"loose": boolean | null,"position": number | null,"profile": Database["public"]['Enums']["store_profile"] | null,"size": number | null,"unit": Database["public"]['Enums']["unit"] | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                }
           }
           Functions: {
             "_family_table":
 { Args: { "live": boolean,"t": unknown }; Returns: undefined
+                           },
+"_load_catalog":
+{ Args: { "data": Json }; Returns: undefined
                            },
 "_open_invite":
 { Args: { "lock"?: boolean,"token": string }; Returns: {
@@ -249,7 +374,7 @@ isOneToOne: false
         isSetofReturn: false
       } },
 "_request_source":
-{ Args: { "requested": string }; Returns: string
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "_require_owner":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -262,6 +387,9 @@ isOneToOne: false
                            },
 "_tone_for":
 { Args: { "joined": number }; Returns: Database["public"]['Enums']["avatar_tone"]
+                           },
+"_valid_packs":
+{ Args: { "p": Json }; Returns: boolean
                            },
 "accept_invite":
 { Args: { "display_name": string,"replace_own_family"?: boolean,"token": string }; Returns: number
@@ -284,6 +412,11 @@ isOneToOne: false
 "make_owner":
 { Args: { "member_id": string }; Returns: undefined
                            },
+"match_ingredients":
+{ Args: { "queries": Json }; Returns: {
+              "aisle": Database["public"]['Enums']["aisle"],"catalog_key": string,"default_size": Database["public"]['Enums']["size_word"],"density_g_per_ml": number,"diet": (string)[],"family_ingredient_id": string,"how": string,"idx": number,"name": string,"noun_plural": string,"noun_singular": string,"plural": string,"size_large_g": number,"size_medium_g": number,"size_small_g": number,"whole_only": boolean
+            }[]
+                           },
 "my_family_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -292,10 +425,33 @@ isOneToOne: false
                            },
 "set_display_name":
 { Args: { "display_name": string }; Returns: undefined
-                           }
+                           },
+"suggest_ingredients":
+{ Args: { "lim"?: number,"q": string }; Returns: {
+              "aisle": Database["public"]['Enums']["aisle"] | null,
+"catalog_key": string | null,
+"default_size": Database["public"]['Enums']["size_word"] | null,
+"density_g_per_ml": number | null,
+"diet": (string)[] | null,
+"family_ingredient_id": string | null,
+"name": string | null,
+"noun_plural": string | null,
+"noun_singular": string | null,
+"plural": string | null,
+"size_large_g": number | null,
+"size_medium_g": number | null,
+"size_small_g": number | null,
+"whole_only": boolean | null
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "ingredient_facts"
+        isOneToOne: false
+        isSetofReturn: true
+      } }
           }
           Enums: {
-            "aisle": "produce"|"bakery"|"dairy_eggs"|"meat_fish"|"dry_goods"|"spices_baking"|"frozen"|"drinks"|"household"|"other","avatar_tone": "honey"|"sage"|"peach","member_role": "owner"|"editor","size_word": "small"|"medium"|"large","unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"oz"|"lb"|"piece"|"pinch","variant_kind": "option"|"version"
+            "aisle": "produce"|"bakery"|"dairy_eggs"|"meat_fish"|"dry_goods"|"spices_baking"|"frozen"|"drinks"|"household"|"other","avatar_tone": "honey"|"sage"|"peach","member_role": "owner"|"editor","size_word": "small"|"medium"|"large","store_profile": "us"|"eu","unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"oz"|"lb"|"piece"|"pinch","variant_kind": "option"|"version"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -415,7 +571,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "aisle": ["produce", "bakery", "dairy_eggs", "meat_fish", "dry_goods", "spices_baking", "frozen", "drinks", "household", "other"],"avatar_tone": ["honey", "sage", "peach"],"member_role": ["owner", "editor"],"size_word": ["small", "medium", "large"],"unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "oz", "lb", "piece", "pinch"],"variant_kind": ["option", "version"]
+            "aisle": ["produce", "bakery", "dairy_eggs", "meat_fish", "dry_goods", "spices_baking", "frozen", "drinks", "household", "other"],"avatar_tone": ["honey", "sage", "peach"],"member_role": ["owner", "editor"],"size_word": ["small", "medium", "large"],"store_profile": ["us", "eu"],"unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "oz", "lb", "piece", "pinch"],"variant_kind": ["option", "version"]
           }
         }
 } as const
