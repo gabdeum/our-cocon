@@ -5,20 +5,30 @@
 -- 'app', or the assistant's name ('claude', 'chatgpt', 'gemini', any other MCP client).
 create domain public.write_source as text check (value ~ '^[a-z0-9-]{1,40}$');
 
--- What a write came through. Tokens issued by Supabase's OAuth server carry a `client_id` claim
--- (MCP connections, spec 023); the app's own sessions don't, so the app can never pose as an
--- assistant. The MCP server names the assistant; spec 023 maps clients to names.
-create function public._request_source(requested text) returns text
-language sql stable set search_path = '' as $$
+-- Which assistant each OAuth client is (spec 023/025 fill it when an assistant connects). Server
+-- managed: no grants, so nobody can name their own client "claude".
+create table public.oauth_client_sources (
+  client_id text primary key,
+  source public.write_source not null check (source <> 'app'),
+  created_at timestamptz not null default now()
+);
+alter table public.oauth_client_sources enable row level security;
+revoke all on public.oauth_client_sources from anon, authenticated;
+
+-- What the current write came through, from the token alone. Tokens issued by Supabase's OAuth
+-- server carry a `client_id` claim (MCP connections, spec 023); the app's own sessions don't, so
+-- the app can never pose as an assistant, and no client can choose its own name.
+create function public._request_source() returns text
+language sql stable security definer set search_path = '' as $$
   select case
     when auth.jwt() ->> 'client_id' is null then 'app'
-    when requested is null or requested = 'app' or requested !~ '^[a-z0-9-]{1,40}$' then 'mcp'
-    else requested
+    else coalesce((select source from public.oauth_client_sources where client_id = auth.jwt() ->> 'client_id'), 'mcp')
   end;
 $$;
 
 -- Before insert or update on a family table. The caller can't choose the family, the author or
--- the timestamps; `source` is the source of the write that created the row. Writes without a
+-- the timestamps; `source` is how the row was created (who changed it since is in `updated_by`,
+-- and AI changes are in the activity log). Writes without a
 -- signed-in person (seed, service jobs) keep the values they give.
 create function public._stamp_row() returns trigger
 language plpgsql security definer set search_path = '' as $$
@@ -30,7 +40,7 @@ begin
       new.family_id := public.my_family_id();
       new.created_by := me;
       new.updated_by := me;
-      new.source := public._request_source(new.source);
+      new.source := public._request_source();
       new.created_at := now();
     end if;
   else
@@ -61,7 +71,8 @@ begin
       'id', r ->> 'id',
       'recipe_id', r ->> 'recipe_id',
       'by', coalesce(auth.uid()::text, r ->> 'updated_by', r ->> 'actor_id'),
-      'source', r ->> 'source'
+      -- How this write came, not how the row was first made.
+      'source', case when auth.uid() is null then r ->> 'source' else public._request_source() end
     )),
     'change',
     'family:' || (r ->> 'family_id'),
@@ -104,7 +115,7 @@ create table public.activity (
   action text not null check (action ~ '^[a-z][a-z_]{0,39}$'),
   target_kind text not null check (target_kind ~ '^[a-z][a-z_]{0,39}$'),
   target_id uuid,
-  payload jsonb not null default '{}' check (jsonb_typeof(payload) = 'object'),
+  payload jsonb not null default '{}' check (jsonb_typeof(payload) = 'object' and pg_column_size(payload) <= 65536),
   created_at timestamptz not null default now()
 );
 create index activity_family_created on public.activity (family_id, created_at desc);
@@ -117,7 +128,7 @@ begin
   if me is not null then
     new.family_id := public.my_family_id();
     new.actor_id := me;
-    new.source := public._request_source(new.source);
+    new.source := public._request_source();
     new.created_at := now();
   end if;
   return new;

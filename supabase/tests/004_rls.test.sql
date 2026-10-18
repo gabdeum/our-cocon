@@ -1,7 +1,7 @@
 -- Spec 004: family tables. US2 / SC-002: for every table, read, insert, update and delete as a
 -- member, as another family's member and signed out. FR-003 stamps, FR-002 live changes.
 begin;
-select plan(71);
+select plan(77);
 
 -- As a signed-in person (or signed out with null), until the next call. `client` adds the
 -- OAuth client_id claim an MCP connection's token carries (spec 023).
@@ -77,12 +77,18 @@ select is((select family_id from public.recipe_ingredients), pg_temp.id('famA'),
 select is((select family_id from public.grocery_items), pg_temp.id('famA'), 'grocery item is in my family');
 select is((select actor_id from public.activity), '00000000-0000-0000-0000-00000000000a'::uuid, 'activity actor is me, whatever actor_id says');
 
--- Through an MCP connection (OAuth client_id claim), the assistant's name is recorded.
+-- Through an MCP connection (OAuth client_id claim), the assistant's name comes from the server's
+-- list of clients, never from the row; an unknown client is just 'mcp'.
+reset role;
+insert into public.oauth_client_sources values ('c0ffee00-0000-4000-8000-000000000001', 'claude');
 select pg_temp.login('00000000-0000-0000-0000-00000000000a', 'c0ffee00-0000-4000-8000-000000000001');
-with r as (insert into public.recipes (name, source) values ('Soup', 'claude') returning id) insert into ids select 'ai_recipe', id from r;
-select is((select source::text from public.recipes where id = pg_temp.id('ai_recipe')), 'claude', 'an MCP write records the assistant');
+with r as (insert into public.recipes (name, source) values ('Soup', 'chatgpt') returning id) insert into ids select 'ai_recipe', id from r;
+select is((select source::text from public.recipes where id = pg_temp.id('ai_recipe')), 'claude', 'an MCP write records its assistant, whatever source says');
+select pg_temp.login('00000000-0000-0000-0000-00000000000a', 'c0ffee00-0000-4000-8000-000000000002');
 with r as (insert into public.recipes (name, source) values ('Stew', 'app') returning id) insert into ids select 'ai_recipe2', id from r;
-select is((select source::text from public.recipes where id = pg_temp.id('ai_recipe2')), 'mcp', 'an MCP write cannot claim to be the app');
+select is((select source::text from public.recipes where id = pg_temp.id('ai_recipe2')), 'mcp', 'an unknown client is recorded as mcp, never as the app');
+select throws_ok($$ select * from public.oauth_client_sources $$, '42501', null, 'members cannot read the client list');
+select throws_ok($$ insert into public.oauth_client_sources values ('mine', 'claude') $$, '42501', null, 'members cannot name their own client');
 
 -- Alex (same family) sees and changes everything; who changed it is recorded.
 select pg_temp.login('00000000-0000-0000-0000-00000000000b');
@@ -102,6 +108,9 @@ select pg_temp.login('00000000-0000-0000-0000-00000000000b');
 update public.recipe_ingredients set quantity = 3 where id = pg_temp.id('ingredient');
 select is((select updated_by from public.recipes where id = pg_temp.id('recipe')), '00000000-0000-0000-0000-00000000000b'::uuid, 'ingredient edit stamps the recipe');
 
+select is(pg_temp.affected(format('update public.recipe_steps set tip = %L where id = %L', 'Use a deep pan', pg_temp.id('step'))), 1, 'Alex updates a step');
+select is((select updated_by from public.recipe_steps where id = pg_temp.id('step')), '00000000-0000-0000-0000-00000000000b'::uuid, 'step updated_by is Alex');
+
 -- Ticking records who and when; unticking clears it.
 update public.grocery_items set checked = true, checked_by = '00000000-0000-0000-0000-00000000000f' where id = pg_temp.id('grocery');
 select is((select checked_by from public.grocery_items), '00000000-0000-0000-0000-00000000000b'::uuid, 'checked_by is who ticked it');
@@ -110,7 +119,8 @@ update public.grocery_items set checked = false where id = pg_temp.id('grocery')
 select is((select checked_by from public.grocery_items), null, 'unticking clears checked_by');
 
 -- Soft delete (FR-004).
-update public.recipes set deleted_at = now() where id = pg_temp.id('ai_recipe2');
+update public.recipes set deleted_at = now() - interval '60 days' where id = pg_temp.id('ai_recipe2');
+select is((select deleted_at from public.recipes where id = pg_temp.id('ai_recipe2')), now(), 'the deletion time is the database''s, not backdated');
 select is((select deleted_by from public.recipes where id = pg_temp.id('ai_recipe2')), '00000000-0000-0000-0000-00000000000b'::uuid, 'deleted_by is who deleted it');
 update public.recipes set deleted_at = null where id = pg_temp.id('ai_recipe2');
 select is((select deleted_by from public.recipes where id = pg_temp.id('ai_recipe2')), null, 'restoring clears deleted_by');
@@ -170,7 +180,9 @@ select is(pg_temp.affected(format('delete from public.recipe_ingredients where i
 select is(pg_temp.affected(format('delete from public.recipe_steps where id = %L', pg_temp.id('step'))), 1, 'member deletes a step');
 select is(pg_temp.affected(format('delete from public.recipe_variants where id = %L', pg_temp.id('variant'))), 1, 'member deletes a variant');
 select is(pg_temp.affected(format('delete from public.grocery_items where id = %L', pg_temp.id('grocery'))), 1, 'member deletes a grocery item');
-select is(pg_temp.affected(format('delete from public.recipes where id = %L', pg_temp.id('ai_recipe'))), 1, 'member deletes a recipe');
+select is(pg_temp.affected(format('delete from public.recipes where id = %L', pg_temp.id('ai_recipe'))), 0, 'a recipe cannot be removed for good before it is deleted');
+update public.recipes set deleted_at = now() where id = pg_temp.id('ai_recipe');
+select is(pg_temp.affected(format('delete from public.recipes where id = %L', pg_temp.id('ai_recipe'))), 1, 'a deleted recipe can be removed for good (Delete now)');
 select is((select count(*)::int from public.recipe_ingredients), 0, 'a recipe''s rows go with it');
 
 -- Live changes (FR-002): only recipes, steps, grocery items and activity send, on the family's

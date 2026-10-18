@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database, Tracker } from '@cocon/schemas';
@@ -46,23 +46,43 @@ async function loadFamily(client: SessionContextValue['client'], session: Sessio
 /** The cache key of a person's family (spec 004: saved on the device, so it stays readable offline). */
 export const familyKey = (userId: string | undefined) => ['family', userId] as const;
 
+/** Whose data the cache holds; saved with it, so it is never shown to anyone else. */
+const cacheOwnerKey = ['cache-owner'] as const;
+
 /** Who is signed in and their family (spec 003). Everything signed-in reads it through useSession(). */
-export function SessionProvider({ client, tracker, children }: { client: SessionContextValue['client']; tracker: Tracker; children: ReactNode }) {
+export function SessionProvider({
+  client,
+  tracker,
+  persister,
+  restored = Promise.resolve(),
+  children,
+}: {
+  client: SessionContextValue['client'];
+  tracker: Tracker;
+  /** The saved copy of the cache (lib/query.ts), deleted on sign-out. */
+  persister?: { removeClient: () => PromiseLike<void> | void };
+  /** Resolves once the saved cache is loaded back (PersistQueryClientProvider onSuccess). */
+  restored?: Promise<void>;
+  children: ReactNode;
+}) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null | undefined>(undefined);
-  const hadSession = useRef(false);
 
   useEffect(() => {
-    const take = (next: Session | null) => {
-      // Signed out (here or elsewhere): the next person on this device starts with an empty cache.
-      if (!next && hadSession.current) queryClient.clear();
-      hadSession.current = next !== null;
+    // Before anyone's data is read: if the cache belongs to someone else, or nobody is signed in
+    // (signed out here, elsewhere, or while the app was closed), it is emptied.
+    const take = async (next: Session | null) => {
+      await restored;
+      const person = next?.user.id ?? null;
+      const owner = queryClient.getQueryData<string>(cacheOwnerKey);
+      if (owner !== undefined && owner !== person) queryClient.clear();
+      if (person) queryClient.setQueryData(cacheOwnerKey, person);
       setSession(next);
     };
     void client.auth.getSession().then(({ data }) => take(data.session));
-    const { data } = client.auth.onAuthStateChange((_event, next) => take(next));
+    const { data } = client.auth.onAuthStateChange((_event, next) => void take(next));
     return () => data.subscription.unsubscribe();
-  }, [client, queryClient]);
+  }, [client, queryClient, restored]);
 
   // Loaded once per person (not on every token refresh), and kept from the cache while offline:
   // an offline reload keeps the family instead of asking to set one up.
@@ -96,8 +116,10 @@ export function SessionProvider({ client, tracker, children }: { client: Session
   const signOut = useCallback(async () => {
     await client.auth.signOut();
     queryClient.clear();
+    // The saved copy too, now: the cache is only written to the device every second or so.
+    await persister?.removeClient();
     tracker.reset();
-  }, [client, queryClient, tracker]);
+  }, [client, queryClient, persister, tracker]);
 
   const api = useMemo(() => familyApi(client), [client]);
   const value = useMemo(() => ({ state, client, api, tracker, refresh, signOut }), [state, client, api, tracker, refresh, signOut]);

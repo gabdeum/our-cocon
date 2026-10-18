@@ -154,7 +154,8 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
           })}
         </ListGroup>
         <Button label={f.invite} variant="dashed" icon="plus" block busy={inviting} busyLabel={f.inviting} disabled={readOnly} onPress={() => void invite()} />
-        {banner ? <StatusBanner message={banner} /> : null}
+        {/* Never stack two banners: offline, the offline banner replaces this one. */}
+        {banner && !readOnly ? <StatusBanner message={banner} /> : null}
       </View>
 
       <View className="gap-8">

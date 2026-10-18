@@ -108,7 +108,14 @@ select public._family_table('public.recipe_ingredients', live => false);
 select public._family_table('public.recipe_steps', live => true);
 select public._family_table('public.recipe_variants', live => false);
 
--- Who deleted it, for Recently deleted (spec 018); cleared on restore.
+-- Deletes are soft (FR-004): a recipe can only be removed for good once it is in Recently deleted
+-- ("Delete now", spec 018; the 30-day purge runs as a server job).
+drop policy "members remove their family's rows" on public.recipes;
+create policy "members remove their family's deleted recipes" on public.recipes
+  for delete to authenticated using (family_id = public.my_family_id() and deleted_at is not null);
+
+-- When and by whom it was deleted, for Recently deleted (spec 018); cleared on restore. The time is
+-- the database's, so the 30 days can't be shortened.
 create function public._stamp_recipe_deleted() returns trigger
 language plpgsql set search_path = '' as $$
 begin
@@ -116,8 +123,12 @@ begin
     new.deleted_by := null;
   elsif tg_op = 'INSERT' or old.deleted_at is null then
     new.deleted_by := coalesce(auth.uid(), new.deleted_by);
+    if auth.uid() is not null then
+      new.deleted_at := now();
+    end if;
   else
     new.deleted_by := old.deleted_by;
+    new.deleted_at := old.deleted_at;
   end if;
   return new;
 end;

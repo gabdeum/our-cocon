@@ -111,7 +111,6 @@ export const strings = {
     offline: "You're offline. You can read, but changes need a connection.",
     recipeChanged: (name: string) => `${name} just changed this recipe`,
     reload: 'Reload',
-    saveFailed: "Couldn't save. Try again.",
   },
   debug: {
     build: (commit: string) => `Build ${commit}`,

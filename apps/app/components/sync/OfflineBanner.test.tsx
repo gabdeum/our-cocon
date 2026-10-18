@@ -34,6 +34,19 @@ describe('OfflineBanner', () => {
   });
 });
 
+describe('OfflineBanner remounts', () => {
+  it('counts a screen once per spell even when it remounts', () => {
+    const tracker = fakeTracker();
+    act(() => onlineManager.setOnline(false));
+    const first = render(<OfflineBanner screen="recipes" tracker={tracker} />);
+    first.unmount();
+    render(<OfflineBanner screen="recipes" tracker={tracker} />);
+    render(<OfflineBanner screen="settings" tracker={tracker} />);
+    expect(tracker.track).toHaveBeenCalledTimes(2);
+    expect(tracker.track).toHaveBeenCalledWith('offline_banner_shown', { screen: 'settings' });
+  });
+});
+
 describe('RecipeChangedBanner', () => {
   it('names who changed the recipe, with Reload', () => {
     let reloaded = false;

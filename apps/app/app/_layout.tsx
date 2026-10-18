@@ -46,6 +46,9 @@ function FamilySync({ children }: { children: ReactNode }) {
 }
 
 const queryClient = createQueryClient();
+// Resolves once the saved cache is back, so the session can check whose it is first.
+let cacheRestored: () => void = () => undefined;
+const restored = new Promise<void>((resolve) => (cacheRestored = resolve));
 
 // Nothing is drawn until Nunito is loaded, so the first paint is already in Nunito (FR-003).
 void SplashScreen.preventAutoHideAsync();
@@ -75,8 +78,13 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister, maxAge: persistMaxAge }}>
-        <SessionProvider client={supabase} tracker={tracker}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister: queryPersister, maxAge: persistMaxAge }}
+        onSuccess={() => cacheRestored()}
+        onError={() => cacheRestored()}
+      >
+        <SessionProvider client={supabase} tracker={tracker} persister={queryPersister} restored={restored}>
           <FamilySync>
             <AppFrame>
               <SessionGate />

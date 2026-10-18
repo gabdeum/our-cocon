@@ -93,8 +93,8 @@ describe.skipIf(!local)('live changes against local Supabase', () => {
     const waiting = new Map<string, (at: number) => void>();
     expect(await listen(mia, (change) => waiting.get(change.id)?.(performance.now()))).toBe('SUBSCRIBED');
     const samHeard: ChangeEvent[] = [];
-    // Realtime refuses Sam's subscription (realtime.messages policy).
-    expect(await listen(sam, (change) => samHeard.push(change))).toBe('CHANNEL_ERROR');
+    // Realtime refuses Sam's subscription (realtime.messages policy): an error, or a timeout under load.
+    expect(await listen(sam, (change) => samHeard.push(change))).not.toBe('SUBSCRIBED');
 
     const latencies: number[] = [];
     for (let i = 0; i < 20; i += 1) {

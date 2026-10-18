@@ -2,7 +2,7 @@ import type { QueryClient, QueryKey } from '@tanstack/react-query';
 
 /**
  * A change shown at once, then saved (spec 004: a failed write reverts). Returns 'failed' so the
- * screen can show "Couldn't save. Try again." (strings.sync.saveFailed). Either way the data is
+ * screen can show its "Couldn't save. Try again." message. Either way the data is
  * refetched afterwards, so it matches the database.
  */
 export async function optimisticWrite<T>(
