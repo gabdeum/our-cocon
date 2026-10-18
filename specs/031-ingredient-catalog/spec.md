@@ -57,7 +57,6 @@ No user-facing copy; unmatched ingredients fall back to aisle Other.
 ## Needs your attention
 - Review `data/catalog/ingredients.json` before merge (FR-003): 247 entries drafted by Claude Code. Piece weights and densities cite USDA FoodData Central and the King Arthur weight chart per entry. Pack sizes are typical US and EU supermarket listings, not individually sourced. Judgement calls to check: shortcrust pastry in Dairy & eggs (chilled), puff pastry in Frozen, tofu in Produce, lemon medium = 100 g whole.
 - SC-001 runs on 200 ingredient lines from 20 common recipes (`data/catalog/test-lines.json`), written with the catalog, not 200 independent real recipes. 197/200 match today. A larger set from real recipes would be a stronger check.
-- Spec 005's example says "1 small onion (120 g)"; this catalog uses 70 g for small, as US1 here says.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
