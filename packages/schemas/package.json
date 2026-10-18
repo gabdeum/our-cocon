@@ -7,8 +7,13 @@
   "types": "index.ts",
   "exports": {
     ".": "./index.ts",
+    "./activity": "./activity.ts",
     "./analytics": "./analytics.ts",
-    "./family": "./family.ts"
+    "./family": "./family.ts",
+    "./groceries": "./groceries.ts",
+    "./recipes": "./recipes.ts",
+    "./sources": "./sources.ts",
+    "./sync": "./sync.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false"

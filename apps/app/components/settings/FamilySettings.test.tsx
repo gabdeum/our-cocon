@@ -175,3 +175,20 @@ describe('when something fails', () => {
     expect(api.setDisplayName).not.toHaveBeenCalled();
   });
 });
+
+describe('Offline (spec 004)', () => {
+  it('stays readable but disables every change; sign out still works', () => {
+    const { api, onSignOut } = setup({ readOnly: true });
+    expect(screen.getByText('Alex')).toBeTruthy();
+    const invite = screen.getByRole('button', { name: 'Invite someone' });
+    expect(invite.getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(invite);
+    expect(api.createInvite).not.toHaveBeenCalled();
+    // Member rows and "Your name" can't be opened.
+    expect(screen.queryByRole('button', { name: 'Alex, Can edit' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Your name/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Delete family' }).getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
+    expect(onSignOut).toHaveBeenCalled();
+  });
+});

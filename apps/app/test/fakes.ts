@@ -34,13 +34,14 @@ export const family: Family = {
   owner_id: 'u-gabriel',
   joined_count: 3,
   created_by: 'u-gabriel',
+  updated_by: 'u-gabriel',
   source: 'app',
   created_at: '2026-10-01T10:00:00Z',
   updated_at: '2026-10-01T10:00:00Z',
 };
 
 function member(user_id: string, display_name: string, role: Member['role'], avatar_tone: Member['avatar_tone'], joined_at: string): Member {
-  return { user_id, display_name, role, avatar_tone, joined_at, family_id: family.id, created_by: user_id, source: 'app', created_at: joined_at, updated_at: joined_at };
+  return { user_id, display_name, role, avatar_tone, joined_at, family_id: family.id, created_by: user_id, updated_by: user_id, source: 'app', created_at: joined_at, updated_at: joined_at };
 }
 
 export const gabriel = member('u-gabriel', 'Gabriel', 'owner', 'honey', '2026-10-01T10:00:00Z');

@@ -132,7 +132,7 @@ select pg_temp.login('00000000-0000-0000-0000-00000000000b');
 select throws_ok($$ select public.delete_my_account() $$, 'owner_must_delete_family', 'the owner deletes the family instead');
 select is(public.delete_family(), 2, 'Alex deletes the family of 2');
 reset role;
-select is((select count(*)::int from public.families where name = 'The Demanges') + (select count(*)::int from public.invites where created_by = '00000000-0000-0000-0000-00000000000a') + (select count(*)::int from public.members where user_id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b')), 0, 'family, members and invites are gone');
+select is((select count(*)::int from public.families where owner_id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b')) + (select count(*)::int from public.invites where created_by = '00000000-0000-0000-0000-00000000000a') + (select count(*)::int from public.members where user_id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b')), 0, 'family, members and invites are gone');
 
 select * from finish();
 rollback;

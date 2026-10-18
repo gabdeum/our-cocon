@@ -222,7 +222,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
       </Section>
 
       <Section group="Display" title="StatusBanner">
-        <StatusBanner message="Added to the family list" undoLabel="Undo" onUndo={noop} />
+        <StatusBanner message="Added to the family list" actionLabel="Undo" onAction={noop} />
+        <StatusBanner tone="warn" message="You're offline. You can read, but changes need a connection." />
         <PillRow>
           <Presence label="Mia is shopping" />
           <AwakeChip label="Screen stays on" />

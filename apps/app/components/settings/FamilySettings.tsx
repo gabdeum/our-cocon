@@ -20,6 +20,8 @@ export interface FamilySettingsProps {
   onChanged: () => void | Promise<void>;
   onSignOut: () => void | Promise<void>;
   shareDeps?: ShareDeps;
+  /** Offline (spec 004): everything stays readable, changes are disabled. Sign out still works. */
+  readOnly?: boolean;
 }
 
 type Confirm = { kind: 'remove' | 'owner'; member: Member } | { kind: 'deleteFamily' } | { kind: 'deleteAccount' } | null;
@@ -37,7 +39,7 @@ function initial(name: string) {
 }
 
 /** Settings › Family and Account (spec 003; design/ui/OC-Settings.md). */
-export function FamilySettings({ me, family, members, api, tracker, onChanged, onSignOut, shareDeps }: FamilySettingsProps) {
+export function FamilySettings({ me, family, members, api, tracker, onChanged, onSignOut, shareDeps, readOnly = false }: FamilySettingsProps) {
   const isOwner = me.role === 'owner';
   const [banner, setBanner] = useState<string | null>(null);
   const [inviting, setInviting] = useState(false);
@@ -137,7 +139,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
         <ListGroup>
           {members.map((m, i) => {
             // Only the owner manages members, and never their own row (edge case: hand over first).
-            const manageable = isOwner && m.user_id !== me.user_id;
+            const manageable = !readOnly && isOwner && m.user_id !== me.user_id;
             return (
               <ListRow
                 key={m.user_id}
@@ -151,7 +153,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
             );
           })}
         </ListGroup>
-        <Button label={f.invite} variant="dashed" icon="plus" block busy={inviting} busyLabel={f.inviting} onPress={() => void invite()} />
+        <Button label={f.invite} variant="dashed" icon="plus" block busy={inviting} busyLabel={f.inviting} disabled={readOnly} onPress={() => void invite()} />
         {banner ? <StatusBanner message={banner} /> : null}
       </View>
 
@@ -161,10 +163,14 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
           <ListRow
             title={a.yourName}
             trailing={{ kind: 'value', text: me.display_name }}
-            onPress={() => {
-              setNameWarning(undefined);
-              setEditingName(me.display_name);
-            }}
+            onPress={
+              readOnly
+                ? undefined
+                : () => {
+                    setNameWarning(undefined);
+                    setEditingName(me.display_name);
+                  }
+            }
             last
           />
         </ListGroup>
@@ -172,6 +178,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
         <Link
           label={isOwner ? a.deleteFamily : a.deleteAccount}
           tone="danger"
+          disabled={readOnly}
           onPress={() => setConfirm({ kind: isOwner ? 'deleteFamily' : 'deleteAccount' })}
         />
       </View>

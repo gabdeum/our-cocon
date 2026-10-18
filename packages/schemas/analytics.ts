@@ -23,6 +23,8 @@ export const events = {
   invite_expired_seen: z.strictObject({}),
   member_removed: z.strictObject({}),
   family_deleted: z.strictObject({ member_count: z.int().min(1) }),
+  // Spec 004: the offline banner appeared on a screen (once per offline spell). Later screens join the enum.
+  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'recipes', 'groceries', 'settings']) }),
 } as const;
 
 export type EventName = keyof typeof events;
