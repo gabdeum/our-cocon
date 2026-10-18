@@ -128,7 +128,7 @@ export interface LinkProps extends Omit<PressableProps, 'children' | 'style'> {
 export function Link({ label, tone = 'olive', size = 15, underline, weight = '800', className, ...props }: LinkProps) {
   return (
     <Pressable role="button" className={cn('min-h-touch-min justify-center self-start', focusRing, className)} {...props}>
-      <Text size={size} weight={weight} color={linkColor[tone]} underline={underline}>
+      <Text size={size} weight={weight} color={props.disabled ? 'ink-muted' : linkColor[tone]} underline={underline}>
         {label}
       </Text>
     </Pressable>
