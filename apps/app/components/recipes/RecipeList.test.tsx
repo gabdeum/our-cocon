@@ -1,8 +1,10 @@
-// Spec 006: the Recipes tab. US1 (search by name or ingredient, no match), US2 (a recipe added
+// Specs 006 and 007: the Recipes tab. US1 (search by name or ingredient, no match), US2 (a recipe added
 // through ChatGPT shows at the top), FR-005 to FR-008 and the edge cases.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useState } from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { onlineManager } from '@tanstack/react-query';
+import { emptyFilters, type RecipeFilters } from '@cocon/schemas';
 import { RecipeList, SEARCH_DEBOUNCE_MS, type RecipeListProps } from './RecipeList';
 import type { RecipeListItem } from '../../lib/recipes';
 import { alex, fakeTracker, gabriel, mia } from '../../test/fakes';
@@ -211,14 +213,74 @@ describe('states', () => {
   });
 });
 
-describe('quick pills (FR-006; filtering comes with 007)', () => {
-  it('toggles honey on and off', () => {
-    setup();
-    const pill = screen.getByRole('button', { name: 'In season' });
-    expect(pill.getAttribute('aria-pressed')).toBe('false');
-    fireEvent.click(pill);
-    expect(screen.getByRole('button', { name: 'In season' }).getAttribute('aria-pressed')).toBe('true');
+describe('filters (spec 007)', () => {
+  // The route keeps filters in the session store; here a parent's state stands in for it.
+  function Filterable(props: Partial<RecipeListProps> & { tracker: RecipeListProps['tracker']; initial?: RecipeFilters }) {
+    const [filters, setFilters] = useState(props.initial ?? emptyFilters);
+    return <RecipeList recipes={all} members={[gabriel, alex, mia]} onOpen={vi.fn()} onNew={vi.fn()} now={october} {...props} filters={filters} onFiltersChange={setFilters} />;
+  }
+  const quickSetup = (props: Partial<RecipeListProps> & { initial?: RecipeFilters } = {}) => {
+    const tracker = fakeTracker();
+    render(<Filterable tracker={tracker} {...props} />);
+    return { tracker };
+  };
+  const pressed = (name: string) => screen.getByRole('button', { name }).getAttribute('aria-pressed');
+
+  it('"In season" shows only recipes best this month or all year (US1)', () => {
+    const { tracker } = quickSetup({ recipes: [quiche, tart, recipe('Summer salad', { best_months: [7] })] });
     fireEvent.click(screen.getByRole('button', { name: 'In season' }));
-    expect(screen.getByRole('button', { name: 'In season' }).getAttribute('aria-pressed')).toBe('false');
+    expect(pressed('In season')).toBe('true');
+    expect(screen.queryByRole('link', { name: /Summer salad/ })).toBeNull();
+    expect(names()).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Filters · 1' })).toBeTruthy();
+    expect(tracker.track).toHaveBeenLastCalledWith('recipe_filters_applied', { filter_keys: ['months'], result_count: 2 });
+    fireEvent.click(screen.getByRole('button', { name: 'In season' }));
+    expect(pressed('In season')).toBe('false');
+    expect(names()).toHaveLength(3);
+    expect(screen.getByRole('button', { name: 'Filters' })).toBeTruthy();
+  });
+
+  it('shows "Filters · 3" and mirrors the sheet\'s choices on the quick pills (US2.2, FR-003)', () => {
+    quickSetup({ initial: { months: [10], time: 'under_30', cuisines: [], addedBy: [alex.user_id] } });
+    expect(screen.getByRole('button', { name: 'Filters · 3' })).toBeTruthy();
+    expect(pressed('In season')).toBe('true');
+    expect(pressed('Under 30 min')).toBe('true');
+  });
+
+  it('"In season" stays off when the sheet picked other months', () => {
+    quickSetup({ initial: { ...emptyFilters, months: [6] } });
+    expect(pressed('In season')).toBe('false');
+    fireEvent.click(screen.getByRole('button', { name: 'In season' }));
+    // June and October now; one group still.
+    expect(screen.getByRole('button', { name: 'Filters · 1' })).toBeTruthy();
+  });
+
+  it('opens the sheet with the current search', () => {
+    const onOpenFilters = vi.fn();
+    quickSetup({ onOpenFilters });
+    type('leek');
+    settle();
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+    expect(onOpenFilters).toHaveBeenCalledWith('leek');
+  });
+
+  it('says when no recipe matches the filters, and Clear filters brings the list back', () => {
+    quickSetup({ recipes: [quiche, tart] });
+    fireEvent.click(screen.getByRole('button', { name: 'Under 30 min' }));
+    expect(screen.getByRole('heading', { name: 'No recipes match these filters.' })).toBeTruthy();
+    expect(screen.getByText('Try removing a filter.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(names()).toHaveLength(2);
+    expect(pressed('Under 30 min')).toBe('false');
+  });
+
+  it('with a search too, shows the search no-match state with Clear filters', () => {
+    quickSetup({ recipes: [quiche, tart], initial: { ...emptyFilters, time: 'under_30' } });
+    type('quiche');
+    settle();
+    expect(screen.getByText('No recipes match “quiche”.')).toBeTruthy();
+    // Filters are on too, so they can be cleared from here.
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(names()).toEqual([expect.stringContaining('Quiche Lorraine')]);
   });
 });

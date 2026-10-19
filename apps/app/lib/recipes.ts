@@ -1,4 +1,4 @@
-import { recipeMatches, searchWords } from '@cocon/schemas';
+import { filterRecipes, recipeMatches, searchWords, type RecipeFilters } from '@cocon/schemas';
 import type { Client } from './supabase';
 
 /**
@@ -42,6 +42,11 @@ export async function loadRecipeList(client: Pick<Client, 'from'>): Promise<Reci
 export function searchRecipes<T extends Pick<RecipeListItem, 'name' | 'description' | 'ingredientNames'>>(recipes: readonly T[], query: string): T[] {
   const words = searchWords(query);
   return words.length === 0 ? [...recipes] : recipes.filter((r) => recipeMatches(r, words));
+}
+
+/** What the list shows: the search (spec 006), then the filters (spec 007). The sheet counts the same. */
+export function visibleRecipes<T extends RecipeListItem>(recipes: readonly T[], query: string, filters: RecipeFilters): T[] {
+  return filterRecipes(searchRecipes(recipes, query), filters);
 }
 
 /**

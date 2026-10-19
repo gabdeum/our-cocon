@@ -113,7 +113,7 @@ export const strings = {
     searchLabel: 'Search recipes',
     searchPlaceholder: 'Search recipes or ingredients',
     searchHint: 'Try “leek” or “quick”',
-    filters: 'Filters',
+    filters: (active: number) => (active === 0 ? 'Filters' : `Filters · ${active}`),
     inSeason: 'In season',
     under30: 'Under 30 min',
     inSeasonGroup: (month: string, n: number) => `In season in ${month} · ${n}`,
@@ -126,9 +126,31 @@ export const strings = {
     noMatchTitle: (query: string) => `No recipes match “${query}”.`,
     noMatchBody: 'Try another word, or add it as a new recipe.',
     clearSearch: 'Clear search',
+    noFilterMatchTitle: 'No recipes match these filters.',
+    noFilterMatchBody: 'Try removing a filter.',
+    clearFilters: 'Clear filters',
     loading: 'Loading recipes',
     loadFailed: "Couldn't load your recipes. Check your connection and try again.",
     retry: 'Try again',
+  },
+  // design/ui/OC-Filters.md (spec 007)
+  filters: {
+    title: 'Filters',
+    clearAll: 'Clear all',
+    close: 'Close',
+    months: 'Best months',
+    monthsHint: 'Shows recipes that are best this time of year.',
+    time: 'Total time',
+    under30: 'Under 30 min',
+    from30to60: '30–60 min',
+    over60: 'Over 1 hour',
+    cuisine: 'Cuisine',
+    showMore: (n: number) => `Show ${n} more`,
+    other: 'Other',
+    addedBy: 'Added by',
+    show: (n: number) => (n === 1 ? 'Show 1 recipe' : `Show ${n} recipes`),
+    noMatch: 'No recipes match',
+    noMatchHint: 'Try removing a filter',
   },
   // A recipe's facts, wherever it is shown (specs 006, 008, 028).
   recipe: {
@@ -144,6 +166,7 @@ export const strings = {
     hours: (h: number) => `${h} h`,
     hoursMinutes: (h: number, mm: string) => `${h} h ${mm}`,
   },
+  monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   // Spec 006 FR-003: one label per key of Cuisine (packages/schemas/recipes.ts).
   cuisines: {
