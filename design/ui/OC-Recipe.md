@@ -5,7 +5,7 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
 ## Layout
 1. Photo header 240: IconButtons "Back to recipes" (left); "Share recipe", "Recipe settings" (right).
 2. TimerPill, sticky at the top centre, only when a timer exists.
-3. Content sheet: title, description, chips "{time}", "Best {Mon} – {Mon}" (hidden if all year), sage "{author} · via {assistant}".
+3. Content sheet: title, description, chips "{time}" (`total_minutes`, hidden when empty), "{cuisine}" (hidden when Other), "Best {Mon} – {Mon}" (hidden if all year), sage "{author} · via {assistant}".
 4. "Version": choice pills ("Classic" + each version variant); then a switch row per option variant: title (e.g. "Make my own dough"), hint describing its changes (e.g. "Adds 3 ingredients and 1 step").
 5. Servings card: "Servings", Stepper, "More options" square button (…). When open, the panel shows, in order:
    - Switch "I'm using a kitchen scale" with hint "Showing exact weights, like 100 g" / "Showing cups and spoons, like about ¾ cup"

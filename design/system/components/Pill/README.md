@@ -6,7 +6,7 @@ Rounded toggles for filters, mutually exclusive choices (variants) and people.
 
 | Variant | Height | Fill / text | Use |
 | --- | --- | --- | --- |
-| filter (`oc-pill`) | 40 | surface-soft / ink 14/700; selected honey, 800 | Quick filters, diet and time filters |
+| filter (`oc-pill`) | 40 | surface-soft / ink 14/700; selected honey, 800 | Quick filters, cuisine and time filters |
 | filter button (`--ink`) | 40 | ink / white 14/800 + filter icon + count | "Filters · 1" opens the filter sheet |
 | choice (`oc-choice`) | 44 | surface-soft / ink 15/800; selected olive / white | Recipe version: Classic · Vegetarian |
 | person (`oc-person`) | 44 | surface-soft; 32 avatar + name 14/700 | Filter by who added a recipe |

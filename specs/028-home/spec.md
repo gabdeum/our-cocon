@@ -7,7 +7,7 @@
 ## User Scenarios & Testing
 
 ### User Story 1 — See the newest recipe (P1)
-**Acceptance**: **Given** the family has recipes, **Then** the hero card shows the most recently added one with the tag "Latest recipe", its photo, name, time, servings and "N to buy" (its ingredients not on the grocery list yet). Tapping it opens the recipe.
+**Acceptance**: **Given** the family has recipes, **Then** the hero card shows the most recently added one with the tag "Latest recipe", its photo, name, time (`total_minutes`, hidden when empty), servings and "N to buy" (its ingredients not on the grocery list yet). Tapping it opens the recipe.
 
 ### User Story 2 — Jump to what matters (P1)
 **Given** Home, **Then** the tiles show "7 to buy" (groceries) and "32 family recipes", each opening its tab, and both update live.
@@ -41,3 +41,4 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-19: Hero time chip is `total_minutes`, hidden when empty.

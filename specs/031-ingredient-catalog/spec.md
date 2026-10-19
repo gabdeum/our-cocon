@@ -27,7 +27,7 @@
 ## Requirements
 
 - **FR-001**: The catalog is versioned in the repo (`data/catalog/ingredients.json`), validated by a schema, and loaded by a migration into a read-only global table.
-- **FR-002**: Each entry has: `key`, display names (singular and plural) and synonyms, `aisle`, optional `density_g_per_ml`, optional piece sizes `{small, medium, large}` in grams with a default size and piece nouns, `whole_only` (round to whole numbers when scaling, e.g. eggs), diet flags (`meat`, `fish`, `dairy`, `gluten`, used by spec 007), and `packs` per store profile (size, unit, label, loose flag).
+- **FR-002**: Each entry has: `key`, display names (singular and plural) and synonyms, `aisle`, optional `density_g_per_ml`, optional piece sizes `{small, medium, large}` in grams with a default size and piece nouns, `whole_only` (round to whole numbers when scaling, e.g. eggs), diet flags (`meat`, `fish`, `dairy`, `gluten`; stored, not used in V1 since diet filters were dropped), and `packs` per store profile (size, unit, label, loose flag).
 - **FR-003**: V1 ships about 200 of the most common home-cooking ingredients. Claude Code drafts the data with sources in comments; a person reviews it before merge.
 - **FR-004**: A family override table can change, for this family only: aisle, piece weight, pack sizes, and custom ingredients not in the catalog.
 - **FR-005**: The matcher normalises text (lower case, no accents, singular, descriptors stripped into a `prep` note), tries exact name or synonym, then fuzzy matching (pg_trgm similarity ≥ 0.6). Anything else becomes a custom family ingredient in Other.
@@ -71,3 +71,4 @@ No user-facing copy; unmatched ingredients fall back to aisle Other.
 - 2026-10-18 (from spec 005): Piece nouns for 19 entries now name the ingredient ("clove of garlic", "salmon fillet", "bay leaf"), so steps read "2 cloves of garlic (10 g)". Catalog version 2, loaded by a new data migration.
 - 2026-10-18 (from spec 005): Piece packs now count the pieces recipes use (a garlic head is 10 cloves, not 1): garlic, celery, spring onion, beetroot and radish fixed, with a test that a pack label's count matches its size. Catalog version 3, new data migration.
 - 2026-10-18 (from spec 005): Parsley and cilantro (55, 70, 100 g) and kale (225, 350, 450 g) are counted in bunches, with Gabriel's weights; medium is the default. "40 g parsley" now reads "½ bunch of parsley (40 g)", and the existing bunch packs match. Catalog version 4, new data migration.
+- 2026-10-19: Diet flags kept in the data but no longer used (diet filters removed from 007).

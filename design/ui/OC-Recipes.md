@@ -5,9 +5,9 @@ Source `screens/OC-Recipes.dc.html` · Route `/recipes` · Specs 006, 007
 ## Layout
 1. ScreenHeader: "Recipes"; right: olive sm Button with plus icon "New".
 2. Search field: hidden label "Search recipes", placeholder "Search recipes or ingredients"; hint under it "Try “leek”, “quick” or “Mia's”" (hidden once typing).
-3. Pills row (horizontal scroll): ink pill with filter icon "Filters · {activeCount}" (just "Filters" when 0), then quick pills "In season", "Under 30 min", "Vegetarian".
+3. Pills row (horizontal scroll): ink pill with filter icon "Filters · {activeCount}" (just "Filters" when 0), then quick pills "In season", "Under 30 min".
 4. Overline "In season in {Month} · {n}", then RecipeItems; then overline "All recipes · {n}" and the rest. Within each group, most recently added first.
-5. RecipeItem: thumb, name, meta "{time} · Serves {n}" + " · {k} variants" or " · Vegetarian", author line "{name}" or "{name} · via {assistant}".
+5. RecipeItem: thumb, name, meta "{time} · Serves {n} · {cuisine} · {k} variants" (each part left out when it has no value: no total time, cuisine Other, no variants; "1 variant" when one), author line "{name}" or "{name} · via {assistant}". Time is `total_minutes` ("40 min", "1 h 10").
 6. TabBar (Recipes active).
 
 ## States not drawn

@@ -23,7 +23,7 @@ Tabs "Ingredients · 9" and "Steps · 6" switch the view; steps are spec 009.
 
 ## Requirements
 
-- **FR-001**: Header: photo 240 tall; back, share (spec 019) and settings (spec 027) buttons; title, description, meta chips (time, best months as "Best Oct – Mar", author with "via <assistant>").
+- **FR-001**: Header: photo 240 tall; back, share (spec 019) and settings (spec 027) buttons; title, description, meta chips: time (`total_minutes`, format from spec 006 FR-002; hidden when empty), cuisine label (hidden when Other), best months as "Best Oct – Mar" (hidden if all year), author with "via <assistant>".
 - **FR-002**: Variants of kind `version` render as choice pills (one selected); variants of kind `option` render as switches with a one-line hint of what they change ("Adds 3 ingredients and 1 step").
 - **FR-003**: The servings card shows only Servings and a "More options" (…) button; the options panel is spec 013. Units are not shown here; they come from settings (spec 027).
 - **FR-004**: The ingredient list uses `@cocon/quantity` with the active servings, variants, unit system and scale mode. The amount column is 104 px; pieces show their weight as a sub-line.
@@ -48,3 +48,4 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-19: Cuisine chip added; time chip is `total_minutes` and hidden when empty.
