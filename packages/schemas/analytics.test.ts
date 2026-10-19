@@ -94,4 +94,13 @@ describe('createTracker', () => {
     expect(t.capture).toHaveBeenCalledWith('recipes_searched', { query_length: 4, result_count: 1 });
     expect(() => tracker.track('recipes_searched', { query_length: 4, result_count: 1, query: 'leek' } as never)).toThrow();
   });
+
+  it('sends recipe_filters_applied with group keys only (spec 007)', () => {
+    const t = fakeTransport();
+    createTracker(t).track('recipe_filters_applied', { filter_keys: ['months', 'time', 'added_by'], result_count: 4 });
+    expect(t.capture).toHaveBeenCalledWith('recipe_filters_applied', { filter_keys: ['months', 'time', 'added_by'], result_count: 4 });
+    const tracker = createTracker(fakeTransport());
+    expect(() => tracker.track('recipe_filters_applied', { filter_keys: ['french'], result_count: 1 } as never)).toThrow();
+    expect(() => tracker.track('recipe_filters_applied', { filter_keys: [], result_count: 1, cuisines: ['french'] } as never)).toThrow();
+  });
 });

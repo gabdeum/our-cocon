@@ -4,6 +4,7 @@ export * from './catalog';
 export * from './family';
 export * from './groceries';
 export * from './ingredient-text';
+export * from './recipe-filters';
 export * from './recipes';
 export * from './search';
 export * from './sources';

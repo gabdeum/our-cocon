@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FilterKey } from './recipe-filters';
 
 /**
  * Every tracked user action. Each spec's Tracking table lists its events; add them here.
@@ -35,6 +36,11 @@ export const events = {
   recipes_searched: z.strictObject({ query_length: z.int().min(1), result_count: z.int().min(0) }),
   // Spec 006: a recipe page was opened, and from where.
   recipe_opened: z.strictObject({ from: z.enum(['list', 'search', 'home', 'link']) }),
+  // Spec 007: filters were applied ("Show N recipes" or a quick pill). Which groups, never their values.
+  recipe_filters_applied: z.strictObject({
+    filter_keys: z.array(FilterKey).max(4).refine((keys) => new Set(keys).size === keys.length, 'Each key once'),
+    result_count: z.int().min(0),
+  }),
 } as const;
 
 export type EventName = keyof typeof events;

@@ -1,13 +1,14 @@
 // @vitest-environment node
 // Spec 006 US2 against local Supabase: a recipe Alex saves through ChatGPT comes back first in
 // Mia's list, credited to ChatGPT, with its ingredient names (for search) and variant count.
-// Another family's recipes and deleted ones never appear. Skipped locally when Supabase isn't running.
+// Another family's recipes and deleted ones never appear. Spec 007: the same list, filtered. Skipped locally when Supabase isn't running.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@cocon/schemas';
 import { clientOptions, localSupabase, signInPerson, type Client } from '../test/local-supabase';
-import { loadRecipeList, searchRecipes } from './recipes';
+import { emptyFilters } from '@cocon/schemas';
+import { loadRecipeList, searchRecipes, visibleRecipes } from './recipes';
 
 const local = localSupabase();
 if (!local && process.env.CI) throw new Error('Local Supabase must be running in CI for the recipes integration test');
@@ -93,5 +94,24 @@ describe.skipIf(!local)('the recipe list against local Supabase', () => {
     const samList = await loadRecipeList(sam);
     expect(samList.map((r) => r.name)).toEqual(['Leek soup']);
     expect(samList.flatMap((r) => r.ingredientNames)).toEqual([]);
+  });
+
+  it('filters the loaded list: in season in October, then quick and by Alex (spec 007)', async () => {
+    const summer = await admin.from('recipes').insert({
+      family_id: familyId,
+      name: 'Summer salad',
+      serves: 2,
+      total_minutes: 15,
+      best_months: [7],
+      created_by: alexId,
+      updated_by: alexId,
+    });
+    expect(summer.error).toBeNull();
+    const list = await loadRecipeList(mia);
+    const october = { ...emptyFilters, months: [10] };
+    // The quiche is best in October and the tart has no months (good all year); the salad is July.
+    expect(visibleRecipes(list, '', october).map((r) => r.name)).toEqual(['Leek quiche', 'Apple tart']);
+    expect(visibleRecipes(list, '', { ...emptyFilters, time: 'under_30', addedBy: [alexId] }).map((r) => r.name)).toEqual(['Summer salad']);
+    expect(visibleRecipes(list, 'leek', { ...october, cuisines: ['french'] }).map((r) => r.name)).toEqual(['Leek quiche']);
   });
 });

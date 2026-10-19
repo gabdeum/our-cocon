@@ -4,16 +4,19 @@ import { RecipeList } from '../../components/recipes/RecipeList';
 import { DebugFooter } from '../../components/DebugFooter';
 import { config } from '../../lib/tracker';
 import { loadRecipeList, recipeListKey } from '../../lib/recipes';
+import { filterScope, setRecipeFilters, setSheetSearch, useRecipeFilters } from '../../lib/recipe-filters';
 import { useSession } from '../../lib/session';
 
 // The recipe page (008) and the create form (014) aren't built yet; typed routes learn them then.
 const recipePage = (id: string) => `/recipes/${id}` as Href;
 const newRecipe = '/recipes/new' as Href;
 
-/** /recipes (spec 006): the family's recipes, live, searchable. */
+/** /recipes (specs 006, 007): the family's recipes, live, searchable and filterable. */
 export default function RecipesTab() {
   const { state, client, tracker } = useSession();
   const familyId = state.status === 'ready' ? state.family.id : null;
+  const scope = filterScope(state);
+  const filters = useRecipeFilters(scope);
   const list = useQuery({
     queryKey: recipeListKey(familyId ?? ''),
     queryFn: () => loadRecipeList(client),
@@ -28,6 +31,12 @@ export default function RecipesTab() {
       onRetry={() => void list.refetch()}
       onOpen={(id) => router.push(recipePage(id))}
       onNew={() => router.push(newRecipe)}
+      filters={filters}
+      onFiltersChange={(next) => setRecipeFilters(scope, next)}
+      onOpenFilters={(query) => {
+        setSheetSearch(scope, query);
+        router.push('/recipes/filters');
+      }}
       footer={<DebugFooter config={config} />}
     />
   );
