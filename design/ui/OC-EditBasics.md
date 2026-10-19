@@ -14,8 +14,12 @@ Source `screens/OC-EditBasics.dc.html` · Route `/recipes/new` · `/recipes/[id]
 4. "Short description" textarea; hint "One sentence that makes people hungry. {count} / 140".
 5. Row: "Serves" | "Total time" inputs.
 6. "Best months to make it": MonthPicker; hint "Leave empty if it's good all year."
-7. Ink switch card "Advanced mode", hint "Show every field: prep time, cuisine, tags, source".
-8. Advanced only: "Prep time" | "Cuisine"; "Diet" pills ("Vegetarian", "Dairy-free"); "Source (optional)" with placeholder "A book, a website or “Grandma”".
+7. Ink switch card "Advanced mode", hint "Show every field: prep time, cuisine, source".
+8. Advanced only: "Prep time" | "Cuisine"; "Source (optional)" with placeholder "A book, a website or “Grandma”".
+
+## Cuisine picker
+- The Cuisine field looks like an input with a chevron, showing the label ("French") or the placeholder "Pick one".
+- Tapping it opens a BottomSheet titled "Cuisine" with choice pills (wrapping) for every cuisine in the list (spec 006 FR-003), alphabetical, then "Other". Tapping one selects it and closes the sheet. "Other" leaves the field empty.
 
 ## Validation copy
 | Field | Message (warn style) |

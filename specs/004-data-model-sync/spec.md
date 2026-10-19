@@ -25,7 +25,7 @@ When Alex ticks a grocery item or edits a recipe, Mia's open app shows it within
 - **FR-005**: A seed script loads the reference data: the leek & bacon quiche with its 2 variants (classic/vegetarian, homemade dough) and the sample grocery list from the canvas.
 
 ## Key Entities
-- **Recipe**: family_id, name, description, serves, total_minutes, prep_minutes, cuisine, source_text, best_months (int[]), photo_path, settings overrides (see 027).
+- **Recipe**: family_id, name, description, serves, total_minutes (the time shown everywhere), prep_minutes, cuisine (text holding a key from the list in spec 006 FR-003; empty = Other), source_text, best_months (int[]), photo_path, settings overrides (see 027).
 - **Ingredient**: recipe_id, position, name, catalog_key (nullable, spec 031), quantity, unit (g, kg, ml, l, tsp, tbsp, cup, oz, lb, piece, pinch), size_word (small | medium | large, pieces only), weight_per_piece_g (snapshot taken on save), piece_noun singular/plural, prep_note ("finely chopped").
 - **Step**: recipe_id, position, name, body (rich text with ingredient tokens, see 016), timer_seconds, timer_label, temp_check_c, temp_check_text, tip, photo_path.
 - **Variant**: recipe_id, name, kind (option | version), changes[] (see 017).
@@ -79,3 +79,4 @@ From the build (2026-10-18):
     - StatusBanner gained a `warn` tone (`warn` text on `warn-soft`), and its button props are now `actionLabel`/`onAction`. Disabled links use `ink-muted`.
     - The demo variant is named "Make my own dough", as on the canvas.
     - A spec 003 test now finds its family by owner, not by name, so the seeded family doesn't clash.
+- 2026-10-19: Clarified: the time shown is `total_minutes`; `cuisine` holds a key from the list in spec 006 (no schema change).
