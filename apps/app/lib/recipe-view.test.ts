@@ -38,6 +38,9 @@ describe('recipeView (FR-004)', () => {
     expect(find('Leeks')).toMatchObject({ amount: '2½', sub: '350 g' });
     expect(find('Eggs')).toMatchObject({ amount: '3½', sub: '175 g' });
     expect(find('Heavy cream')).toMatchObject({ amount: '350 ml', sub: '350 g' });
+    // A variant's ingredient gets its facts too.
+    const dough = recipeView({ ...linked, facts: { ...linked.facts, water: { density_g_per_ml: 1 } } }, 6, { version: null, options: [quicheIds.dough] }).ingredients;
+    expect(dough.find((i) => i.name === 'Ice water')).toMatchObject({ amount: '50 ml', sub: '50 g' });
   });
 
   it('US1: for 9, every amount is the engine output for 9', () => {

@@ -60,7 +60,7 @@ export const quicheVariants: RecipeVariant[] = [
         with: [
           { id: 'c0c04000-0000-4000-8000-000000000002', name: 'Flour', quantity: 200, unit: 'g' },
           { id: 'c0c04000-0000-4000-8000-000000000003', name: 'Cold butter', quantity: 100, unit: 'g', prep_note: 'cubed' },
-          { id: 'c0c04000-0000-4000-8000-000000000004', name: 'Ice water', quantity: 50, unit: 'ml' },
+          { id: 'c0c04000-0000-4000-8000-000000000004', name: 'Ice water', catalog_key: 'water', quantity: 50, unit: 'ml' },
         ],
       },
       {
