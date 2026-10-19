@@ -23,7 +23,7 @@
 - **FR-001**: A remote MCP server over streamable HTTP at `mcp.ourcocon.com`, authenticated per family member through Supabase's OAuth 2.1 server with dynamic client registration; calls run with the member's token so RLS applies; tokens are revocable from the app (spec 025). Tools are registered per module (`tools/recipes`, `tools/groceries`) so later modules add their own.
 - **FR-002**: Tools: `search_recipes(query, filters)`, `get_recipe(id, servings?, variants?, units?)`, `create_recipe(recipe)`, `update_recipe(id, patch)`, `delete_recipe(id)` (subject to spec 024 permissions), `list_variants(id)`, `upsert_variant(recipe_id, variant)`.
 - **FR-003**: Inputs are validated with the shared Zod schemas, and outputs include rendered amounts from `@cocon/quantity`, so assistants never compute quantities themselves.
-- **FR-004**: Steps sent as plain text are converted to tokens by matching ingredient names; unmatched mentions stay as text.
+- **FR-004**: Steps sent as plain text are converted to tokens by matching ingredient names; unmatched mentions stay as text. Written temperatures ("180 °C", "350 °F") become `{temp:<°C>}` tokens the same way as spec 016 FR-006; the tool description tells assistants to send `{temp:<°C>:food}` for thermometer readings. Tool results render steps with `renderStep`, so assistants see both scales.
 - **FR-005**: Every write records `source` as the client's name and appears in the activity log.
 - **FR-006**: Tool descriptions are written so assistants ask for missing servings and units rather than guessing.
 
@@ -44,3 +44,4 @@ First task, before any tool is built: prove on the self-hosted staging stack tha
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-18: FR-004 now converts written temperatures to `{temp:…}` tokens (spec 005).

@@ -26,6 +26,7 @@
 - **FR-003**: Optional add-ons per step: Timer (minutes plus label), Temperature check (°C or °F input, stored in °C, plus text), Chef's tip (max 200), Photo.
 - **FR-004**: Steps reorder by drag (and Move up/down) and are added with "+ Add a step".
 - **FR-005**: Temperature input accepts either scale and converts on save.
+- **FR-006**: Temperatures typed in the step body ("180 °C", "350°F", "180C") become temperature tokens on save (spec 005: `{temp:<°C>}`, built with `temperatureToken`), with °F converted to °C, so every reader sees both scales. They show as chips like ingredient tokens. They are oven temperatures (nearest 25 °F) unless marked as a thermometer reading (`{temp:<°C>:food}`, nearest 5 °F), e.g. sugar at 115 °C.
 
 ## Success Criteria
 - **SC-001**: Every token renders identically in the form preview and on the recipe page.
@@ -39,7 +40,8 @@
 All copy is in the States tables of the UI specs for: OC-EditSteps. New messages go there and in `strings/en.ts` first.
 
 ## Needs your attention
-None.
+- FR-006 (added by spec 005): the drawn screen has no temperature chip, and no way yet to mark a typed temperature as a thermometer reading. Claude will add both to `design/ui/OC-EditSteps.md` while building this spec.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-18: FR-006 added from spec 005: temperatures in the step body are stored as `{temp:…}` tokens.

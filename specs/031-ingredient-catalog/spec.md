@@ -68,3 +68,4 @@ No user-facing copy; unmatched ingredients fall back to aisle Other.
   - Corrections are deleted for good, like grocery items ("reset to catalog").
   - US1's "1 small onion (70 g)" text is spec 005's formatting; this spec tests the stored snapshot.
   - The 003 RLS test now skips the three catalog tables, which every signed-in person reads.
+- 2026-10-18 (from spec 005): Piece nouns for 19 entries now name the ingredient ("clove of garlic", "salmon fillet", "bay leaf"), so steps read "2 cloves of garlic (10 g)". Catalog version 2, loaded by a new data migration.

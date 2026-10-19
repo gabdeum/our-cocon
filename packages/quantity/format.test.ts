@@ -96,7 +96,14 @@ describe('US4: pieces read the way you cut them', () => {
     [onion(140), metric, '2 small onions (140 g)'],
     [onion(115), metric, '1 medium onion (115 g)'],
     [onion(180), metric, '1½ medium onions (180 g)'],
-    [onion(400), metric, '2 large onions (400 g)'],
+    // The default size wins within 10%: 3½ medium (420 g) over 2 large (400 g), 4 medium over 7 small.
+    [onion(400), metric, '3½ medium onions (400 g)'],
+    [onion(500), metric, '4 medium onions (500 g)'],
+    [onion(66), metric, '½ onion (66 g)'],
+    // Exactly 10% still goes to the default; more than 10% off, the closer size wins.
+    [onion(200), metric, '1½ medium onions (200 g)'],
+    [onion(205), metric, '1 large onion (205 g)'],
+    [onion(210), metric, '3 small onions (210 g)'],
     [onion(7), metric, '2 tsp of onions (7 g)'],
     [onion(95), imperial, '¾ onion (3.4 oz)'],
     [onion(95), noScale, '¾ onion'],
@@ -123,7 +130,7 @@ describe('US4: pieces read the way you cut them', () => {
   });
 
   it('uses the piece nouns', () => {
-    expect(phrase(ing('Garlic', 2.5, 'piece', { weight_per_piece_g: 5, facts: facts('garlic') }))).toBe('2½ medium cloves (13 g)');
+    expect(phrase(ing('Garlic', 2.5, 'piece', { weight_per_piece_g: 5, facts: facts('garlic') }))).toBe('2½ medium cloves of garlic (13 g)');
   });
 
   it('never cuts whole-only items', () => {

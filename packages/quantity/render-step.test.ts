@@ -1,6 +1,6 @@
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { facts } from './catalog.fixture';
-import { renderStep } from './render-step';
+import { ingredientToken, renderStep, temperatureToken } from './render-step';
 import type { QuantityIngredient } from './types';
 
 const leek: QuantityIngredient = {
@@ -54,4 +54,28 @@ it('marks a token whose ingredient was deleted', () => {
 it('follows the units and the kitchen scale', () => {
   expect(plain(renderStep(`Add {ing:${leek.id}}`, [leek], { system: 'imperial', scale: true }))).toBe('Add 2 leeks (10.6 oz)');
   expect(plain(renderStep(`Add {ing:${leek.id}}`, [leek], { system: 'metric', scale: false }))).toBe('Add 2 leeks');
+});
+
+describe('temperature tokens', () => {
+  it('shows oven temperatures in both scales, the person\'s first', () => {
+    const body = `Preheat the oven to ${temperatureToken(180)}. Line the pan with ${ingredientToken(leek.id)}.`;
+    expect(body).toBe(`Preheat the oven to {temp:180}. Line the pan with {ing:${leek.id}}.`);
+    expect(renderStep(body, [leek], options)).toEqual([
+      { type: 'text', text: 'Preheat the oven to 180 °C (350 °F). Line the pan with ' },
+      { type: 'amount', text: '2 leeks (300 g)', ingredientId: leek.id },
+      { type: 'text', text: '.' },
+    ]);
+    expect(plain(renderStep('Bake at {temp:200}', [], { system: 'imperial', scale: true }))).toBe('Bake at 400 °F (200 °C)');
+  });
+
+  it('rounds thermometer readings to 5 °F', () => {
+    expect(temperatureToken(71, 'food')).toBe('{temp:71:food}');
+    expect(plain(renderStep('Cook until it reaches {temp:71:food}.', [], options))).toBe('Cook until it reaches 71 °C (160 °F).');
+    expect(plain(renderStep('Heat the sugar to {temp:115:food}', [], { system: 'imperial', scale: true }))).toBe('Heat the sugar to 240 °F (115 °C)');
+  });
+
+  it('keeps a decimal and leaves a broken token as written', () => {
+    expect(temperatureToken(176.6667)).toBe('{temp:176.7}');
+    expect(plain(renderStep('Oven at {temp:hot}', [], options))).toBe('Oven at {temp:hot}');
+  });
 });

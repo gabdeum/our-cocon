@@ -86,6 +86,9 @@ function nouns(ing: QuantityIngredient, facts: IngredientFactsInput): Nouns {
   return { one, many: ing.piece_noun_plural ?? facts.noun_plural ?? lowerFirst(facts.plural ?? ing.name) };
 }
 
+/** How far the default size may be from the amount and still be chosen over a closer size. */
+const DEFAULT_MARGIN = 0.1;
+
 interface Candidate {
   count: number;
   size: SizeWord;
@@ -95,7 +98,8 @@ interface Candidate {
 /**
  * FR-009: `grams` as the piece amount closest to it. Tiny amounts become spoons; below one piece
  * of the default size, ¼, ½ or ¾ of it or one whole piece of any size; from there on, whole and
- * half default pieces or whole pieces of the other sizes. The brackets keep the actual weight.
+ * half default pieces or whole pieces of the other sizes. The default size is preferred whenever
+ * it is within 10% of the amount. The brackets keep the actual weight.
  */
 function pieceFit(grams: number, ing: QuantityIngredient, facts: IngredientFactsInput, sizes: Sizes, options: FormatOptions): FormattedIngredient {
   const { grams: g, fallback } = sizes;
@@ -124,12 +128,18 @@ function pieceFit(grams: number, ing: QuantityIngredient, facts: IngredientFacts
     const more = others.map((size) => ({ count: Math.max(1, Math.round(grams / (g[size] as number))), size, word: true }));
     candidates = [{ count: Math.max(1, toStep(grams / def, 0.5)), size: fallback, word: true }, ...more.sort((a, b) => a.count - b.count)];
   }
-  let best = candidates[0] as Candidate;
-  let bestOff = Infinity;
-  for (const c of candidates) {
-    const off = Math.abs(c.count * (g[c.size] as number) - grams);
-    if (off < bestOff - 1e-9) [best, bestOff] = [c, off];
-  }
+  const closest = (list: Candidate[]) => {
+    let best = list[0] as Candidate;
+    let bestOff = Infinity;
+    for (const c of list) {
+      const off = Math.abs(c.count * (g[c.size] as number) - grams);
+      if (off < bestOff - 1e-9) [best, bestOff] = [c, off];
+    }
+    return { best, off: bestOff };
+  };
+  // The default size wins whenever it is within 10% of the amount, even if another size is closer.
+  const byDefault = closest(candidates.filter((c) => c.size === fallback));
+  const best = byDefault.off <= DEFAULT_MARGIN * grams + 1e-9 ? byDefault.best : closest(candidates).best;
 
   const n = nouns(ing, facts);
   const amount = fractionText(best.count);
