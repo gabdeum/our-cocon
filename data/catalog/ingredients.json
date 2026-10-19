@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 4,
   "ingredients": [
     {
       "key": "onion",
@@ -189,13 +189,13 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "clove",
-        "plural": "cloves"
+        "singular": "clove of garlic",
+        "plural": "cloves of garlic"
       },
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 10,
             "unit": "piece",
             "label": "head (about 10 cloves)",
             "loose": true
@@ -203,15 +203,15 @@
         ],
         "eu": [
           {
-            "size": 1,
+            "size": 10,
             "unit": "piece",
             "label": "bulb (about 10 cloves)",
             "loose": true
           },
           {
-            "size": 3,
+            "size": 30,
             "unit": "piece",
-            "label": "net of 3 bulbs",
+            "label": "net of 3 bulbs (about 30 cloves)",
             "loose": false
           }
         ]
@@ -284,7 +284,7 @@
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 6,
             "unit": "piece",
             "label": "bunch of 6",
             "loose": true
@@ -292,7 +292,7 @@
         ],
         "eu": [
           {
-            "size": 1,
+            "size": 8,
             "unit": "piece",
             "label": "bunch of 8",
             "loose": true
@@ -384,23 +384,23 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "stalk",
-        "plural": "stalks"
+        "singular": "stalk of celery",
+        "plural": "stalks of celery"
       },
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 8,
             "unit": "piece",
-            "label": "bunch",
+            "label": "bunch (about 8 stalks)",
             "loose": true
           }
         ],
         "eu": [
           {
-            "size": 1,
+            "size": 8,
             "unit": "piece",
-            "label": "head",
+            "label": "head (about 8 stalks)",
             "loose": true
           }
         ]
@@ -1035,8 +1035,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "head",
-        "plural": "heads"
+        "singular": "head of lettuce",
+        "plural": "heads of lettuce"
       },
       "packs": {
         "us": [
@@ -1110,6 +1110,16 @@
         ]
       },
       "aisle": "produce",
+      "sizes": {
+        "small": 225,
+        "medium": 350,
+        "large": 450
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "bunch of kale",
+        "plural": "bunches of kale"
+      },
       "packs": {
         "us": [
           {
@@ -1134,7 +1144,7 @@
           }
         ]
       },
-      "source": "Packs: typical US and EU supermarket listings."
+      "source": "Bunch weights: Gabriel (225–450 g a bunch). Packs: typical US and EU supermarket listings."
     },
     {
       "key": "cabbage",
@@ -1161,8 +1171,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "head",
-        "plural": "heads"
+        "singular": "head of cabbage",
+        "plural": "heads of cabbage"
       },
       "packs": {
         "us": [
@@ -1205,8 +1215,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "head",
-        "plural": "heads"
+        "singular": "head of red cabbage",
+        "plural": "heads of red cabbage"
       },
       "packs": {
         "us": [
@@ -1251,8 +1261,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "head",
-        "plural": "heads"
+        "singular": "head of broccoli",
+        "plural": "heads of broccoli"
       },
       "packs": {
         "us": [
@@ -1301,8 +1311,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "head",
-        "plural": "heads"
+        "singular": "head of cauliflower",
+        "plural": "heads of cauliflower"
       },
       "packs": {
         "us": [
@@ -1437,8 +1447,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "ear",
-        "plural": "ears"
+        "singular": "ear of corn",
+        "plural": "ears of corn"
       },
       "packs": {
         "us": [
@@ -1575,7 +1585,7 @@
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 3,
             "unit": "piece",
             "label": "bunch of 3",
             "loose": true
@@ -1615,9 +1625,9 @@
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 10,
             "unit": "piece",
-            "label": "bunch",
+            "label": "bunch (about 10)",
             "loose": true
           },
           {
@@ -1629,9 +1639,9 @@
         ],
         "eu": [
           {
-            "size": 1,
+            "size": 10,
             "unit": "piece",
-            "label": "bunch",
+            "label": "bunch (about 10)",
             "loose": true
           }
         ]
@@ -1660,8 +1670,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "bulb",
-        "plural": "bulbs"
+        "singular": "bulb of fennel",
+        "plural": "bulbs of fennel"
       },
       "packs": {
         "us": [
@@ -2395,6 +2405,16 @@
         ]
       },
       "aisle": "produce",
+      "sizes": {
+        "small": 55,
+        "medium": 70,
+        "large": 100
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "bunch of parsley",
+        "plural": "bunches of parsley"
+      },
       "packs": {
         "us": [
           {
@@ -2419,7 +2439,7 @@
           }
         ]
       },
-      "source": "Packs: typical US and EU supermarket listings."
+      "source": "Bunch weights: Gabriel (55–100 g a bunch). Packs: typical US and EU supermarket listings."
     },
     {
       "key": "cilantro",
@@ -2438,6 +2458,16 @@
         ]
       },
       "aisle": "produce",
+      "sizes": {
+        "small": 55,
+        "medium": 70,
+        "large": 100
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "bunch of cilantro",
+        "plural": "bunches of cilantro"
+      },
       "packs": {
         "us": [
           {
@@ -2462,7 +2492,7 @@
           }
         ]
       },
-      "source": "Packs: typical US and EU supermarket listings."
+      "source": "Bunch weights: Gabriel (55–100 g a bunch). Packs: typical US and EU supermarket listings."
     },
     {
       "key": "basil",
@@ -2828,8 +2858,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "slice",
-        "plural": "slices"
+        "singular": "slice of bread",
+        "plural": "slices of bread"
       },
       "diet": [
         "gluten"
@@ -2877,8 +2907,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "loaf",
-        "plural": "loaves"
+        "singular": "loaf of sourdough",
+        "plural": "loaves of sourdough"
       },
       "diet": [
         "gluten"
@@ -4042,8 +4072,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "ball",
-        "plural": "balls"
+        "singular": "ball of mozzarella",
+        "plural": "balls of mozzarella"
       },
       "diet": [
         "dairy"
@@ -5100,8 +5130,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "slice",
-        "plural": "slices"
+        "singular": "slice of bacon",
+        "plural": "slices of bacon"
       },
       "diet": [
         "meat"
@@ -5243,8 +5273,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "slice",
-        "plural": "slices"
+        "singular": "slice of ham",
+        "plural": "slices of ham"
       },
       "diet": [
         "meat"
@@ -5339,8 +5369,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "fillet",
-        "plural": "fillets"
+        "singular": "salmon fillet",
+        "plural": "salmon fillets"
       },
       "diet": [
         "fish"
@@ -5398,8 +5428,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "fillet",
-        "plural": "fillets"
+        "singular": "cod fillet",
+        "plural": "cod fillets"
       },
       "diet": [
         "fish"
@@ -6550,8 +6580,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "cube",
-        "plural": "cubes"
+        "singular": "stock cube",
+        "plural": "stock cubes"
       },
       "packs": {
         "us": [
@@ -7961,8 +7991,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "fillet",
-        "plural": "fillets"
+        "singular": "anchovy fillet",
+        "plural": "anchovy fillets"
       },
       "diet": [
         "fish"
@@ -9938,8 +9968,8 @@
       },
       "default_size": "medium",
       "nouns": {
-        "singular": "leaf",
-        "plural": "leaves"
+        "singular": "bay leaf",
+        "plural": "bay leaves"
       },
       "packs": {
         "us": [

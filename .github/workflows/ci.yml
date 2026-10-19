@@ -50,6 +50,9 @@ jobs:
         run: pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
       - name: Tests
         run: pnpm test:all
+      # Spec 005 SC-001: the quantity engine keeps over 95% line coverage.
+      - name: Quantity coverage
+        run: pnpm --filter @cocon/quantity coverage
       - name: Database tests
         run: pnpm exec supabase test db
       - name: Dependency audit

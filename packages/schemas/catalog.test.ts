@@ -23,6 +23,27 @@ describe('data/catalog/ingredients.json', () => {
   it('has the sizes US1 names for onions', () => {
     expect(onion.sizes).toEqual({ small: 70, medium: 120, large: 200 });
   });
+
+  // Groceries sum recipe pieces before picking packs (spec 021), so a piece pack's size is how many
+  // of the recipe's pieces it holds: a head of garlic is about 10 cloves, not 1.
+  it('counts piece packs in the pieces recipes use', () => {
+    const counted = (label: string) => {
+      const notWeight = String.raw`\b(?!\s*(?:g|kg|ml|cl|l|oz|lb)\b)`;
+      const about = new RegExp(String.raw`about (\d+)${notWeight}`).exec(label);
+      const of = new RegExp(String.raw`(?:of (\d+)|^(\d+)-pack)${notWeight}`).exec(label);
+      return Number(about?.[1] ?? of?.[1] ?? of?.[2] ?? Number.NaN);
+    };
+    const wrong = CatalogFile.parse(file).ingredients.flatMap((e) =>
+      Object.values(e.packs ?? {})
+        .flat()
+        .filter((p) => p.unit === 'piece' && Number.isFinite(counted(p.label)) && counted(p.label) !== p.size)
+        .map((p) => `${e.key}: "${p.label}" has size ${p.size}`),
+    );
+    expect(wrong).toEqual([]);
+    expect(counted('net of 3 bulbs (about 30 cloves)')).toBe(30);
+    expect(counted('pack of 2 fillets (about 250 g)')).toBe(2);
+    expect(counted('18-pack')).toBe(18);
+  });
 });
 
 describe('CatalogFile', () => {

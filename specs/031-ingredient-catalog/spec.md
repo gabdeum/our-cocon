@@ -68,3 +68,6 @@ No user-facing copy; unmatched ingredients fall back to aisle Other.
   - Corrections are deleted for good, like grocery items ("reset to catalog").
   - US1's "1 small onion (70 g)" text is spec 005's formatting; this spec tests the stored snapshot.
   - The 003 RLS test now skips the three catalog tables, which every signed-in person reads.
+- 2026-10-18 (from spec 005): Piece nouns for 19 entries now name the ingredient ("clove of garlic", "salmon fillet", "bay leaf"), so steps read "2 cloves of garlic (10 g)". Catalog version 2, loaded by a new data migration.
+- 2026-10-18 (from spec 005): Piece packs now count the pieces recipes use (a garlic head is 10 cloves, not 1): garlic, celery, spring onion, beetroot and radish fixed, with a test that a pack label's count matches its size. Catalog version 3, new data migration.
+- 2026-10-18 (from spec 005): Parsley and cilantro (55, 70, 100 g) and kale (225, 350, 450 g) are counted in bunches, with Gabriel's weights; medium is the default. "40 g parsley" now reads "½ bunch of parsley (40 g)", and the existing bunch packs match. Catalog version 4, new data migration.
