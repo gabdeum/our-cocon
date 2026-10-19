@@ -19,7 +19,7 @@ export { TextField, SearchField, type TextFieldProps } from './components/TextFi
 export { MonthPicker, type MonthPickerProps } from './components/MonthPicker';
 export { ListGroup, ListRow, Overline, IngredientRow, type ListRowProps } from './components/ListRow';
 export { Card, HeroCard, PhotoPlaceholder, type CardProps } from './components/Card';
-export { RecipeItem, type RecipeItemProps } from './components/RecipeItem';
+export { RecipeItem, RecipeItemSkeleton, type RecipeItemProps } from './components/RecipeItem';
 export { StatTile, type StatTileProps } from './components/StatTile';
 export { Callout, type CalloutProps, type CalloutVariant } from './components/Callout';
 export { Avatar, AvatarStack, avatarTone, type AvatarTone } from './components/Avatar';

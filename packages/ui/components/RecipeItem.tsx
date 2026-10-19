@@ -16,6 +16,24 @@ export interface RecipeItemProps {
   onPress: () => void;
 }
 
+/**
+ * Loading state (RecipeItem README › States; Patterns.md › Loading): surface-soft blocks at the size
+ * of the thumbnail, name, meta and author, no spinner. Hidden from screen readers; the list says
+ * it is loading.
+ */
+export function RecipeItemSkeleton() {
+  return (
+    <View aria-hidden testID="recipe-item-skeleton" className="flex-row items-center gap-14 rounded-xl bg-surface-card p-10">
+      <View className="h-[84px] w-[84px] rounded-lg bg-surface-soft" />
+      <View className="min-w-0 flex-1 gap-8">
+        <View className="h-[18px] w-3/4 rounded-xs bg-surface-soft" />
+        <View className="h-[14px] w-1/2 rounded-xs bg-surface-soft" />
+        <View className="h-[13px] w-1/3 rounded-xs bg-surface-soft" />
+      </View>
+    </View>
+  );
+}
+
 /** A recipe in a list (RecipeItem README): 84 thumbnail, name (2 lines), meta, author. */
 export function RecipeItem({ name, meta, author, photoUri, placeholderTone = 'peach', onPress }: RecipeItemProps) {
   return (

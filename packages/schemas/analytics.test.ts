@@ -85,4 +85,13 @@ describe('createTracker', () => {
     createTracker(t).reset();
     expect(t.reset).toHaveBeenCalled();
   });
+
+  it('sends spec 006 search and open events without the query text', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('recipes_searched', { query_length: 4, result_count: 1 });
+    tracker.track('recipe_opened', { from: 'search' });
+    expect(t.capture).toHaveBeenCalledWith('recipes_searched', { query_length: 4, result_count: 1 });
+    expect(() => tracker.track('recipes_searched', { query_length: 4, result_count: 1, query: 'leek' } as never)).toThrow();
+  });
 });

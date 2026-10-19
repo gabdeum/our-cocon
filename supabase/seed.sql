@@ -30,9 +30,9 @@ insert into public.members (user_id, family_id, role, display_name, avatar_tone,
   ('c0c0a000-0000-4000-8000-00000000000c', 'c0c0f000-0000-4000-8000-000000000001', 'editor', 'Mia', 'peach', now() - interval '1 day', 'c0c0a000-0000-4000-8000-00000000000c');
 
 -- Leek & bacon quiche (OC-Recipe): saved by Gabriel through Claude, serves 6.
-insert into public.recipes (id, family_id, name, description, serves, total_minutes, best_months, created_by, updated_by, source)
+insert into public.recipes (id, family_id, name, description, serves, total_minutes, cuisine, best_months, created_by, updated_by, source)
 values ('c0c0e000-0000-4000-8000-000000000001', 'c0c0f000-0000-4000-8000-000000000001', 'Leek & bacon quiche',
-  'Silky custard, sweet leeks and a crisp, buttery crust.', 6, 70, '{10,11,12,1,2,3}',
+  'Silky custard, sweet leeks and a crisp, buttery crust.', 6, 70, 'french', '{10,11,12,1,2,3}',
   'c0c0a000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a', 'claude');
 
 insert into public.recipe_ingredients (id, family_id, recipe_id, position, name, quantity, unit, size_word, weight_per_piece_g,

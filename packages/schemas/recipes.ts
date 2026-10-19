@@ -18,13 +18,49 @@ const Position = z.int().min(0);
 const PhotoPath = z.string().min(1).max(300);
 const Text = (max: number) => z.string().trim().min(1).max(max);
 
+/**
+ * Spec 006 FR-003: the V1 cuisines, stored as their key in `recipes.cuisine` (text). Labels live in
+ * the app's strings file. Anything else (empty, or a key from an older or newer list) is Other.
+ */
+export const Cuisine = z.enum([
+  'american',
+  'british',
+  'caribbean',
+  'chinese',
+  'french',
+  'german',
+  'greek',
+  'indian',
+  'italian',
+  'japanese',
+  'korean',
+  'latin_american',
+  'mexican',
+  'middle_eastern',
+  'moroccan',
+  'portuguese',
+  'scandinavian',
+  'spanish',
+  'thai',
+  'turkish',
+  'vietnamese',
+  'west_african',
+]);
+export type Cuisine = z.infer<typeof Cuisine>;
+
+/** A stored cuisine as a known key, or null for Other. Never throws, so reading a row never fails. */
+export function cuisineOf(value: string | null | undefined): Cuisine | null {
+  const parsed = Cuisine.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
 export const RecipeInput = z.strictObject({
   name: Text(80),
   description: z.string().trim().max(140).nullish(),
   serves: z.int().min(1).max(50),
   total_minutes: Minutes.nullish(),
   prep_minutes: Minutes.nullish(),
-  cuisine: Text(40).nullish(),
+  cuisine: Cuisine.nullish(),
   source_text: z.string().trim().max(200).nullish(),
   best_months: z
     .array(z.int().min(1).max(12))

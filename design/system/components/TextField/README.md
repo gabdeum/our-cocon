@@ -13,7 +13,7 @@ Labelled inputs for forms and search, with a hint line and a friendly warning st
 | Textarea | min 76 tall, padding 12 16, 16/600, line-height 1.45 |
 | Hint | 13/600 ink-muted under the input; can include a counter "54 / 140" |
 | Warning | border `warn-border`, fill `warn-soft`, text `warn`; message 14/700 `warn` with a 18 px warning icon |
-| Search | 52 tall, radius 18, 20 px search icon in ink-muted, 10 gap, borderless input, hint below: "Try “leek”, “quick” or “Mia's”" |
+| Search | 52 tall, radius 18, 20 px search icon in ink-muted, 10 gap, borderless input, hint below: "Try “leek” or “quick”" |
 
 ## Rules
 

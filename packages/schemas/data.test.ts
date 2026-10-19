@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { Database } from './database.types';
 import { ActivityInput } from './activity';
 import { AISLE_ORDER, Aisle, GroceryItemInput } from './groceries';
-import { IngredientInput, RecipeInput, SizeWord, StepInput, Unit, VariantChange, VariantInput, VariantKind } from './recipes';
+import { Cuisine, IngredientInput, RecipeInput, cuisineOf, SizeWord, StepInput, Unit, VariantChange, VariantInput, VariantKind } from './recipes';
 import { WriteSource } from './sources';
 import { ChangeEvent, familyChannel } from './sync';
 
@@ -72,6 +72,28 @@ describe('variant changes', () => {
   it('rejects unknown changes and empty swaps', () => {
     expect(VariantChange.safeParse({ type: 'change_servings', serves: 2 }).success).toBe(false);
     expect(VariantChange.safeParse({ type: 'swap_ingredient', ingredient_id: id, with: [] }).success).toBe(false);
+  });
+});
+
+describe('cuisine (spec 006 FR-003)', () => {
+  it('has the 22 V1 keys', () => {
+    expect(Cuisine.options).toHaveLength(22);
+    expect(Cuisine.options).toContain('west_african');
+  });
+
+  it('reads an empty or unknown value as Other, without failing', () => {
+    expect(cuisineOf('french')).toBe('french');
+    expect(cuisineOf(null)).toBeNull();
+    expect(cuisineOf('')).toBeNull();
+    expect(cuisineOf('French')).toBeNull();
+    expect(cuisineOf('vegetarian')).toBeNull();
+  });
+
+  it('only saves a key from the list', () => {
+    const recipe = { name: 'Quiche', serves: 6, best_months: [] };
+    expect(RecipeInput.safeParse({ ...recipe, cuisine: 'french' }).success).toBe(true);
+    expect(RecipeInput.safeParse({ ...recipe, cuisine: null }).success).toBe(true);
+    expect(RecipeInput.safeParse({ ...recipe, cuisine: 'Vegetarian' }).success).toBe(false);
   });
 });
 
