@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "ingredients": [
     {
       "key": "onion",
@@ -195,7 +195,7 @@
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 10,
             "unit": "piece",
             "label": "head (about 10 cloves)",
             "loose": true
@@ -203,15 +203,15 @@
         ],
         "eu": [
           {
-            "size": 1,
+            "size": 10,
             "unit": "piece",
             "label": "bulb (about 10 cloves)",
             "loose": true
           },
           {
-            "size": 3,
+            "size": 30,
             "unit": "piece",
-            "label": "net of 3 bulbs",
+            "label": "net of 3 bulbs (about 30 cloves)",
             "loose": false
           }
         ]
@@ -284,7 +284,7 @@
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 6,
             "unit": "piece",
             "label": "bunch of 6",
             "loose": true
@@ -292,7 +292,7 @@
         ],
         "eu": [
           {
-            "size": 1,
+            "size": 8,
             "unit": "piece",
             "label": "bunch of 8",
             "loose": true
@@ -390,17 +390,17 @@
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 8,
             "unit": "piece",
-            "label": "bunch",
+            "label": "bunch (about 8 stalks)",
             "loose": true
           }
         ],
         "eu": [
           {
-            "size": 1,
+            "size": 8,
             "unit": "piece",
-            "label": "head",
+            "label": "head (about 8 stalks)",
             "loose": true
           }
         ]
@@ -1575,7 +1575,7 @@
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 3,
             "unit": "piece",
             "label": "bunch of 3",
             "loose": true
@@ -1615,9 +1615,9 @@
       "packs": {
         "us": [
           {
-            "size": 1,
+            "size": 10,
             "unit": "piece",
-            "label": "bunch",
+            "label": "bunch (about 10)",
             "loose": true
           },
           {
@@ -1629,9 +1629,9 @@
         ],
         "eu": [
           {
-            "size": 1,
+            "size": 10,
             "unit": "piece",
-            "label": "bunch",
+            "label": "bunch (about 10)",
             "loose": true
           }
         ]
