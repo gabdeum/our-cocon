@@ -23,6 +23,23 @@ describe('recipeView (FR-004)', () => {
     ]);
   });
 
+  it('with catalog facts: no size word for the default size, and grams under volumes', () => {
+    const linked = {
+      ...recipe,
+      ingredients: quiche.ingredients.map((i) => ({ ...i, catalog_key: ({ Leeks: 'leek', Eggs: 'egg', 'Heavy cream': 'heavy_cream' } as Record<string, string>)[i.name] ?? null })),
+      facts: {
+        leek: { default_size: 'medium' as const, size_small_g: 100, size_medium_g: 150, size_large_g: 250 },
+        egg: { default_size: 'large' as const, size_small_g: 38, size_medium_g: 44, size_large_g: 50, whole_only: true },
+        heavy_cream: { density_g_per_ml: 1 },
+      },
+    };
+    const at7 = recipeView(linked, 7, noVariants).ingredients;
+    const find = (name: string) => at7.find((i) => i.name === name);
+    expect(find('Leeks')).toMatchObject({ amount: '2½', sub: '350 g' });
+    expect(find('Eggs')).toMatchObject({ amount: '3½', sub: '175 g' });
+    expect(find('Heavy cream')).toMatchObject({ amount: '350 ml', sub: '350 g' });
+  });
+
   it('US1: for 9, every amount is the engine output for 9', () => {
     const scaled = scale({ serves: 6, ingredients: quiche.ingredients }, { servings: 9 }).ingredients.map((i) => format(i, defaultFormat));
     const rows = recipeView(recipe, 9, noVariants).ingredients;

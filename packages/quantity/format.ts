@@ -143,7 +143,8 @@ function pieceFit(grams: number, ing: QuantityIngredient, facts: IngredientFacts
 
   const n = nouns(ing, facts);
   const amount = fractionText(best.count);
-  const unit = best.word ? best.size : '';
+  // The default size goes unsaid ("2½ leeks"); only another size is named ("1 large onion").
+  const unit = best.word && best.size !== fallback ? best.size : '';
   return { amount, unit, sub, phrase: `${amount}${unit ? ` ${unit}` : ''} ${best.count > 1 ? n.many : n.one}${bracket}` };
 }
 
@@ -176,8 +177,11 @@ export function format(ing: QuantityIngredient, options: FormatOptions): Formatt
 
   if (kind === 'volume') {
     const ml = toBase(q, unit);
-    if (options.system === 'imperial') return measured(usVolume(ml), noun);
-    return measured(unit === 'tsp' || unit === 'tbsp' ? metricSpoons(ml) : metricVolume(ml), noun);
+    const m = options.system === 'imperial' ? usVolume(ml) : unit === 'tsp' || unit === 'tbsp' ? metricSpoons(ml) : metricVolume(ml);
+    // A volume shows its weight as the sub-line when the density is known, like pieces do.
+    const density = facts.density_g_per_ml;
+    const w = m && options.scale && density ? weight(ml * density, options.system) : null;
+    return { ...measured(m, noun), sub: w ? text(w) : null };
   }
 
   if (kind === 'weight') {
@@ -197,7 +201,8 @@ export function format(ing: QuantityIngredient, options: FormatOptions): Formatt
   const count = Math.max(0.5, toStep(q, 0.5));
   const n = nouns(ing, facts);
   const amount = fractionText(count);
-  const size = ing.size_word ?? '';
+  // As in pieceFit: the catalog's default size goes unsaid.
+  const size = ing.size_word && ing.size_word !== facts.default_size ? ing.size_word : '';
   const w = options.scale && perPiece ? weight(q * perPiece, options.system) : null;
   const sub = w ? text(w) : null;
   return {

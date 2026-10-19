@@ -22,7 +22,8 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
 - When scaled by an ingredient: a chip under Servings, "Scaled by {ingredient} · Reset".
 - Best months: "Best Oct – Mar" for one run (it may wrap round the new year), "Best Apr" for a single month, "Best Jan, May – Jun" for several runs.
 - Option hint: "Adds {n} ingredient(s) and {n} step(s)", then ". Removes …" and ". Changes {n} step(s)" when the option does those. A swap counts what it brings in as added.
-- A size word moves from the amount into the name: "3" · "Large eggs". A prep note follows the name: "Mushrooms, sliced".
+- The default size is never named ("2½" · "Leeks"); another size moves from the amount into the name: "2" · "Small eggs".
+- A volume shows its weight as the sub-line when the density is known: "350 ml" · "Heavy cream" · "350 g". A prep note follows the name: "Mushrooms, sliced".
 
 ## States not drawn
 | State | Copy |
