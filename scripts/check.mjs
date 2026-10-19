@@ -37,6 +37,8 @@ if (!changed || changed.some((file) => ROOT_CONFIG.includes(file))) {
   selected = new Set(units);
 } else {
   selected = new Set(units.filter((unit) => changed.some((file) => file.startsWith(`${unit}/`))));
+  // The ingredient catalog's data is tested by the schemas and the catalog generator (spec 031).
+  if (changed.some((file) => file.startsWith('data/catalog/'))) ['packages/schemas', 'scripts'].forEach((unit) => selected.add(unit));
   // Packages that use a changed package are checked too.
   const manifest = (dir) => JSON.parse(readFileSync(`${dir}/package.json`, 'utf8'));
   const nameToDir = new Map(packages.map((dir) => [manifest(dir).name, dir]));

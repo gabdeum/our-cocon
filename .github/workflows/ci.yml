@@ -37,6 +37,9 @@ jobs:
       # tokens.json changed without `pnpm theme`? Fail before anything else is checked.
       - name: Theme up to date
         run: pnpm theme --check
+      # ingredients.json invalid, or changed without `pnpm catalog` writing its migration (spec 031)?
+      - name: Catalog up to date
+        run: pnpm catalog --check
       - name: Type check
         run: pnpm typecheck
       - name: Shell scripts

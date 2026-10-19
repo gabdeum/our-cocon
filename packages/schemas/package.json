@@ -9,8 +9,10 @@
     ".": "./index.ts",
     "./activity": "./activity.ts",
     "./analytics": "./analytics.ts",
+    "./catalog": "./catalog.ts",
     "./family": "./family.ts",
     "./groceries": "./groceries.ts",
+    "./ingredient-text": "./ingredient-text.ts",
     "./recipes": "./recipes.ts",
     "./sources": "./sources.ts",
     "./sync": "./sync.ts"
