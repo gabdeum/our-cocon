@@ -31,6 +31,10 @@ export const events = {
   // Spec 031: a family saved its own correction to an ingredient (Move to…, a piece weight, packs),
   // or a custom ingredient.
   catalog_override_saved: z.strictObject({ field: z.enum(['aisle', 'piece_weight', 'packs', 'custom']) }),
+  // Spec 006: a search on the recipe list settled (after the 150 ms pause). Never the query text.
+  recipes_searched: z.strictObject({ query_length: z.int().min(1), result_count: z.int().min(0) }),
+  // Spec 006: a recipe page was opened, and from where.
+  recipe_opened: z.strictObject({ from: z.enum(['list', 'search', 'home', 'link']) }),
 } as const;
 
 export type EventName = keyof typeof events;

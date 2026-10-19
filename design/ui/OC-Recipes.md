@@ -15,7 +15,11 @@ Source `screens/OC-Recipes.dc.html` · Route `/recipes` · Specs 006, 007
 | --- | --- |
 | No recipes yet | Title 18/900 "Your family's recipes will live here." · body "Add one yourself, or ask your AI assistant to save one." · ink button "New recipe" · AI Callout "Try: “Save my mum's ratatouille to Our Cocon”" |
 | No search match | "No recipes match “{query}”." · "Try another word, or add it as a new recipe." · soft button "Clear search" |
-| Loading | 3 RecipeItem skeletons |
+| Loading | 3 RecipeItem skeletons; screen-reader label "Loading recipes" |
+| Load failed (nothing cached) | warn Callout "Couldn't load your recipes. Check your connection and try again." · soft sm button "Try again" |
+| Author left the family | author line "Former member" (with " · via {assistant}" when AI-made) |
+| Unknown assistant | "{name} · via an AI assistant" |
+| Offline | StatusBanner (Patterns.md); "New" and "New recipe" disabled, list readable |
 
 ## Interactions
 | Element | Result |

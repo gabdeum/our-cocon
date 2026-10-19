@@ -5,6 +5,7 @@ export * from './family';
 export * from './groceries';
 export * from './ingredient-text';
 export * from './recipes';
+export * from './search';
 export * from './sources';
 export * from './sync';
 export type { Database } from './database.types';

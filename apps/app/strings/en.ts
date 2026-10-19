@@ -106,6 +106,78 @@ export const strings = {
       failed: "Couldn't save. Try again.",
     },
   },
+  // design/ui/OC-Recipes.md (spec 006; the filter logic comes with 007)
+  recipes: {
+    title: 'Recipes',
+    new: 'New',
+    searchLabel: 'Search recipes',
+    searchPlaceholder: 'Search recipes or ingredients',
+    searchHint: "Try “leek”, “quick” or “Mia's”",
+    filters: 'Filters',
+    inSeason: 'In season',
+    under30: 'Under 30 min',
+    inSeasonGroup: (month: string, n: number) => `In season in ${month} · ${n}`,
+    allGroup: (n: number) => `All recipes · ${n}`,
+    emptyTitle: "Your family's recipes will live here.",
+    emptyBody: 'Add one yourself, or ask your AI assistant to save one.',
+    emptyNew: 'New recipe',
+    emptyAiLabel: 'AI',
+    emptyAiHint: "Try: “Save my mum's ratatouille to Our Cocon”",
+    noMatchTitle: (query: string) => `No recipes match “${query}”.`,
+    noMatchBody: 'Try another word, or add it as a new recipe.',
+    clearSearch: 'Clear search',
+    loading: 'Loading recipes',
+    loadFailed: "Couldn't load your recipes. Check your connection and try again.",
+    retry: 'Try again',
+  },
+  // A recipe's facts, wherever it is shown (specs 006, 008, 028).
+  recipe: {
+    serves: (n: number) => `Serves ${n}`,
+    variants: (n: number) => (n === 1 ? '1 variant' : `${n} variants`),
+    via: (name: string, assistant: string) => `${name} · via ${assistant}`,
+    /** The author left the family or deleted their account. */
+    formerMember: 'Former member',
+  },
+  // Total time (spec 006 FR-002): "40 min", "2 h", "1 h 05".
+  time: {
+    minutes: (m: number) => `${m} min`,
+    hours: (h: number) => `${h} h`,
+    hoursMinutes: (h: number, mm: string) => `${h} h ${mm}`,
+  },
+  months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  // Spec 006 FR-003: one label per key of Cuisine (packages/schemas/recipes.ts).
+  cuisines: {
+    american: 'American',
+    british: 'British',
+    caribbean: 'Caribbean',
+    chinese: 'Chinese',
+    french: 'French',
+    german: 'German',
+    greek: 'Greek',
+    indian: 'Indian',
+    italian: 'Italian',
+    japanese: 'Japanese',
+    korean: 'Korean',
+    latin_american: 'Latin American',
+    mexican: 'Mexican',
+    middle_eastern: 'Middle Eastern',
+    moroccan: 'Moroccan',
+    portuguese: 'Portuguese',
+    scandinavian: 'Scandinavian',
+    spanish: 'Spanish',
+    thai: 'Thai',
+    turkish: 'Turkish',
+    vietnamese: 'Vietnamese',
+    west_african: 'West African',
+  },
+  // Assistant names for "via …", by write source (packages/schemas/sources.ts).
+  assistants: {
+    claude: 'Claude',
+    chatgpt: 'ChatGPT',
+    gemini: 'Gemini',
+    /** An MCP client we don't know by name. */
+    other: 'an AI assistant',
+  },
   // Spec 004: shared by every screen that shows family data (design/system/Patterns.md › Offline).
   sync: {
     offline: "You're offline. You can read, but changes need a connection.",

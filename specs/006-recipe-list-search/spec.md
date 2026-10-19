@@ -44,8 +44,10 @@
 All copy is in the States tables of the UI specs for: OC-Recipes. New messages go there and in `strings/en.ts` first.
 
 ## Needs your attention
-None.
+- The search hint says "Try “leek”, “quick” or “Mia's”", but FR-004 searches only name, description and ingredients: "Mia's" finds a recipe named "Mia's …", not recipes Mia added, and "quick" finds only recipes that say "quick". Either widen FR-004 (author name, a time word) or change the hint.
+- `recipes.cuisine` is checked against the Cuisine list by the shared schema (app, MCP), not by the database, which still accepts any text up to 40 characters. Reading is safe (unknown = Other). A `check (cuisine in (…))` constraint could ride along with the next recipes migration (014 or 023).
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
 - 2026-10-19: Diet removed everywhere (meta line, "Vegetarian" quick pill); cuisine from a fixed key list replaces it (FR-003), "Other" when empty. Time is `total_minutes` with one shared format (FR-002) and is hidden when empty. Meta line order fixed (FR-001). Search runs in the app, accent- and case-insensitive, shared with MCP (FR-004). No-match copy aligned with OC-Recipes; "All recipes · N" count and the In season group rule made explicit (FR-007).
+- 2026-10-19: Built. List, search (shared `recipeMatches` in `@cocon/schemas`, 150 ms debounce), In season / All recipes groups, meta and author lines (one `formatTotalTime` in `apps/app/lib/recipe-format.ts` for 008 and 028), `Cuisine` key list (`RecipeInput.cuisine` now only accepts its keys), empty, no-match, loading, load-failed and offline states, events `recipes_searched` and `recipe_opened`. RecipeItem gained a Loading state (`RecipeItemSkeleton`). Until later specs: the quick pills toggle but don't filter and Filters does nothing (007); "New" and recipe taps go to routes built in 014 and 008; photos show the placeholder (014). Copy added to OC-Recipes.md: load failed, "Former member", "via an AI assistant", screen-reader "Loading recipes". Seed quiche gets cuisine `french`.

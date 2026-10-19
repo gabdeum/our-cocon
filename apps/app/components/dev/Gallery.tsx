@@ -36,6 +36,7 @@ import {
   Presence,
   PushedScreen,
   RecipeItem,
+  RecipeItemSkeleton,
   SearchField,
   SegmentedControl,
   SettingRow,
@@ -304,6 +305,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
       <Section group="Lists and cards" title="RecipeItem">
         <RecipeItem name="Leek & bacon quiche" meta="1 h 10 · Serves 6 · 2 variants" author="Gabriel · via Claude" onPress={noop} />
         <RecipeItem name="Grandma's apple tart" meta="1 h 30 · Serves 8" author="Mia" placeholderTone="sage" onPress={noop} />
+        <RecipeItemSkeleton />
       </Section>
 
       <Section group="Cooking" title="StepCard">
