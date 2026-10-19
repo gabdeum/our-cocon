@@ -36,7 +36,7 @@ A household app for families, run from the app or from any AI assistant through 
 ## Workflow
 
 - One spec per session: run `/build-spec NNN` in plan mode, wait for approval, then build.
-- Done means `pnpm check` passes, the spec's Changelog is updated and the PR lists new events.
+- Done means `pnpm check` passes, the spec's Changelog is updated, the PR lists new events, and the PR and final message end with "How to test on dev" (any restart, migration or reset needed first, then the steps; see the `build-spec` skill).
 - Changes touching auth, RLS, share links, the MCP server or user data: run the `security-reviewer` subagent before finishing.
 - Use subagents (Explore, `reviewer`) for broad searches and reviews to keep this session small.
 - Product questions are decided (specs/README.md). Ask only if something truly isn't covered.
