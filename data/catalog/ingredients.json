@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "ingredients": [
     {
       "key": "onion",
@@ -1110,6 +1110,16 @@
         ]
       },
       "aisle": "produce",
+      "sizes": {
+        "small": 225,
+        "medium": 350,
+        "large": 450
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "bunch of kale",
+        "plural": "bunches of kale"
+      },
       "packs": {
         "us": [
           {
@@ -1134,7 +1144,7 @@
           }
         ]
       },
-      "source": "Packs: typical US and EU supermarket listings."
+      "source": "Bunch weights: Gabriel (225–450 g a bunch). Packs: typical US and EU supermarket listings."
     },
     {
       "key": "cabbage",
@@ -2395,6 +2405,16 @@
         ]
       },
       "aisle": "produce",
+      "sizes": {
+        "small": 55,
+        "medium": 70,
+        "large": 100
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "bunch of parsley",
+        "plural": "bunches of parsley"
+      },
       "packs": {
         "us": [
           {
@@ -2419,7 +2439,7 @@
           }
         ]
       },
-      "source": "Packs: typical US and EU supermarket listings."
+      "source": "Bunch weights: Gabriel (55–100 g a bunch). Packs: typical US and EU supermarket listings."
     },
     {
       "key": "cilantro",
@@ -2438,6 +2458,16 @@
         ]
       },
       "aisle": "produce",
+      "sizes": {
+        "small": 55,
+        "medium": 70,
+        "large": 100
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "bunch of cilantro",
+        "plural": "bunches of cilantro"
+      },
       "packs": {
         "us": [
           {
@@ -2462,7 +2492,7 @@
           }
         ]
       },
-      "source": "Packs: typical US and EU supermarket listings."
+      "source": "Bunch weights: Gabriel (55–100 g a bunch). Packs: typical US and EU supermarket listings."
     },
     {
       "key": "basil",

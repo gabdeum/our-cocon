@@ -133,6 +133,13 @@ describe('US4: pieces read the way you cut them', () => {
     expect(phrase(ing('Garlic', 2.5, 'piece', { weight_per_piece_g: 5, facts: facts('garlic') }))).toBe('2½ medium cloves of garlic (13 g)');
   });
 
+  it('counts herbs and kale in bunches', () => {
+    expect(phrase(ing('Parsley', 30, 'g', { facts: facts('parsley') }))).toBe('½ bunch of parsley (30 g)');
+    expect(phrase(ing('Cilantro', 70, 'g', { facts: facts('cilantro') }))).toBe('1 medium bunch of cilantro (70 g)');
+    expect(phrase(ing('Parsley', 10, 'g', { facts: facts('parsley') }))).toBe('2 tsp of parsley (10 g)');
+    expect(phrase(ing('Kale', 700, 'g', { facts: facts('kale') }))).toBe('2 medium bunches of kale (700 g)');
+  });
+
   it('never cuts whole-only items', () => {
     expect(phrase(ing('Eggs', 100, 'g', { facts: facts('egg') }))).toBe('100 g eggs');
     expect(phrase(ing('Egg', 0.5, 'piece', { weight_per_piece_g: 50, piece_noun_singular: 'egg', piece_noun_plural: 'eggs', facts: facts('egg') }))).toBe('½ egg (25 g)');

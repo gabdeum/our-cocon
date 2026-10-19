@@ -55,7 +55,6 @@
 No user-facing copy; unmatched ingredients fall back to aisle Other.
 
 ## Needs your attention
-- Kale, parsley and cilantro are sold by the bunch (packs in pieces) but have no piece sizes, so recipes give them in grams or spoons and spec 021 can't compare the two. Give each a bunch weight (a pack in g) or a piece size before 021 is built.
 - Review `data/catalog/ingredients.json` before merge (FR-003): 247 entries drafted by Claude Code. Piece weights and densities cite USDA FoodData Central and the King Arthur weight chart per entry. Pack sizes are typical US and EU supermarket listings, not individually sourced. Judgement calls to check: shortcrust pastry in Dairy & eggs (chilled), puff pastry in Frozen, tofu in Produce, lemon medium = 100 g whole.
 - SC-001 runs on 200 ingredient lines from 20 common recipes (`data/catalog/test-lines.json`), written with the catalog, not 200 independent real recipes. 197/200 match today. A larger set from real recipes would be a stronger check.
 
@@ -71,3 +70,4 @@ No user-facing copy; unmatched ingredients fall back to aisle Other.
   - The 003 RLS test now skips the three catalog tables, which every signed-in person reads.
 - 2026-10-18 (from spec 005): Piece nouns for 19 entries now name the ingredient ("clove of garlic", "salmon fillet", "bay leaf"), so steps read "2 cloves of garlic (10 g)". Catalog version 2, loaded by a new data migration.
 - 2026-10-18 (from spec 005): Piece packs now count the pieces recipes use (a garlic head is 10 cloves, not 1): garlic, celery, spring onion, beetroot and radish fixed, with a test that a pack label's count matches its size. Catalog version 3, new data migration.
+- 2026-10-18 (from spec 005): Parsley and cilantro (55, 70, 100 g) and kale (225, 350, 450 g) are counted in bunches, with Gabriel's weights; medium is the default. "40 g parsley" now reads "½ bunch of parsley (40 g)", and the existing bunch packs match. Catalog version 4, new data migration.
