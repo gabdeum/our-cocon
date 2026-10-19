@@ -1,6 +1,6 @@
 # Our Cocon — V1 specs
 
-Our Cocon is a household app; V1 builds its first two modules, recipes and groceries, plus the shared foundation (accounts, family, sync, MCP, Home, Settings). There are 31 specs. Shared rules (stack, design system, accessibility, quantities, security, project-wide decisions) live once in `specs/constitution.md`; the specs reference it instead of repeating it. Every spec is Ready: there are no open questions.
+Our Cocon is a household app; V1 builds its first two modules, recipes and groceries, plus the shared foundation (accounts, family, sync, MCP, Home, Settings). There are 31 specs, plus `032-later`, the living list of deferred tasks. Shared rules (stack, design system, accessibility, quantities, security, project-wide decisions) live once in `specs/constitution.md`; the specs reference it instead of repeating it. Every spec is Ready: there are no open questions.
 
 ## What Claude Code reads for each spec
 
@@ -70,6 +70,9 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 29 | 028 Home | 020, 026 | OC-Home |
 | 30 | 029 Settings screen | 021, 025, 027 | OC-Settings |
 | 31 | 030 Accessibility and hints pass | all | all |
+| — | 032 Later: deferred tasks, by priority | — | — |
+
+032 is a living list, not built in one go: each task names the spec that does it (its plan picks it up), and every build adds, edits or removes its rows.
 
 ## Decisions
 

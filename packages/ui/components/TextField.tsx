@@ -93,7 +93,7 @@ export function TextField({ label, optionalLabel, hint, counter, warning, size =
 export interface SearchFieldProps extends Omit<TextInputProps, 'style' | 'placeholderTextColor'> {
   /** Visually hidden label (read by screen readers). */
   label: string;
-  /** "Try “leek”, “quick” or “Mia's”". */
+  /** "Try “leek” or “quick”". */
   hint?: string;
   className?: string;
 }

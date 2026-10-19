@@ -112,7 +112,7 @@ export const strings = {
     new: 'New',
     searchLabel: 'Search recipes',
     searchPlaceholder: 'Search recipes or ingredients',
-    searchHint: "Try “leek”, “quick” or “Mia's”",
+    searchHint: 'Try “leek” or “quick”',
     filters: 'Filters',
     inSeason: 'In season',
     under30: 'Under 30 min',

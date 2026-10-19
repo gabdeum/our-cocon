@@ -1,0 +1,27 @@
+# Later: tasks deferred from other specs
+
+**Status**: Living list · **Depends on**: the spec named in each row
+**Input**: Work a build found but left for later: hardening, follow-ups, checks that need a later spec.
+
+This spec is never built in one go. Each task is done by the spec in its **Do with** column (its `/build-spec` plan picks it up), or on its own when it has none. Every spec build adds, edits or removes rows here (see `.claude/skills/build-spec`).
+
+## Priority
+- **P1**: before the public launch.
+- **P2**: soon; ideally with the spec in **Do with**.
+- **P3**: when there's time, or only if it becomes a problem.
+
+## Tasks
+
+| # | Priority | Task | From | Do with |
+| --- | --- | --- | --- | --- |
+| L1 | P1 | **Name the assistants.** Add a row to `oauth_client_sources` for each assistant that connects, so its writes read "via Claude" or "via ChatGPT" instead of "via an AI assistant" (`mcp`). | 004 | 023, 025 |
+| L2 | P1 | **Rate-limit the invite preview.** `invite_status` can be called signed out with no request limit (constitution VI). It needs a rate-limit plugin in Caddy, the web server in front of everything; share links need the same. | 003 | 019 |
+| L3 | P1 | **Google sign-in credentials.** Create the OAuth client in Google Cloud Console and pass it to `provision.sh` (docs/operations.md › First-time setup, step 5). Until then only the email link works. Gabriel does this. | 003 | none |
+| L4 | P2 | **Measure realtime speed on staging.** Locally a change reaches other members in about 10 ms (target: 1 s). Check it on staging now that the Recipes list updates live. | 004 | none (006 makes it testable) |
+| L5 | P2 | **Check cuisine in the database.** Only the shared schema checks `recipes.cuisine` against the Cuisine list; the database accepts any text up to 40 characters. Add `check (cuisine in (…))` and a `supabase/tests` test that compares it with `Cuisine.options`. | 006 | the next recipes migration (014 or 023) |
+| L6 | P3 | **Private-only Realtime.** Make the self-hosted Realtime service refuse public channels (`infra/supabase/cocon.override.yml`). The app uses only private channels, so this is a second lock, not a fix. | 004 | none |
+| L7 | P3 | **Keep invite tokens out of Auth logs.** A signed-out invitee's sign-in link carries `next=/join/<token>`, which shows in Supabase Auth's server logs until it's used or expires (7 days). Option: keep the token on the device instead. | 003 | none |
+| L8 | P3 | **Cut off removed members' live updates sooner.** A removed member keeps receiving change ids (never content; reads still go through RLS) until their token expires, up to 1 hour. | 004 | none |
+
+## Changelog
+- 2026-10-19: Created. Seeded with the open items from the Needs your attention sections of 003, 004 and 006.

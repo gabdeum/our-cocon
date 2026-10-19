@@ -75,7 +75,7 @@ describe('the list (FR-001, FR-005 to FR-007)', () => {
     expect(screen.getByRole('heading', { name: 'Recipes' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'New' })).toBeTruthy();
     expect(search().getAttribute('placeholder')).toBe('Search recipes or ingredients');
-    expect(screen.getByText("Try “leek”, “quick” or “Mia's”")).toBeTruthy();
+    expect(screen.getByText('Try “leek” or “quick”')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Filters' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'In season' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Under 30 min' })).toBeTruthy();
@@ -114,7 +114,7 @@ describe('search (US1, FR-004)', () => {
   it('finds the quiche by its leeks, and updates as I type', () => {
     const { tracker } = setup();
     type('le');
-    expect(screen.queryByText("Try “leek”, “quick” or “Mia's”")).toBeNull();
+    expect(screen.queryByText('Try “leek” or “quick”')).toBeNull();
     settle();
     type('leek');
     // Not yet: the list still shows what "le" found until typing pauses.
