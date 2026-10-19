@@ -36,11 +36,18 @@ export function Card({ children, tone = 'default', selected, attention, onPress,
   );
 }
 
-/** Peach photo placeholder with a peach-ink label (Card README › oc-photo). */
-export function PhotoPlaceholder({ label, className }: { label?: string; className?: string }) {
+/**
+ * Peach photo placeholder with a peach-ink label (Card README › oc-photo), or, for a recipe with no
+ * photo, its first letter at 32/900 (OC-Recipe › No photo).
+ */
+export function PhotoPlaceholder({ label, initial, className }: { label?: string; initial?: string; className?: string }) {
   return (
-    <View className={cn('items-center justify-center bg-peach', className)}>
-      {label ? (
+    <View className={cn('items-center justify-center bg-peach', className)} aria-hidden={initial ? true : undefined}>
+      {initial ? (
+        <Text size={32} weight="900" color="peach-ink">
+          {initial}
+        </Text>
+      ) : label ? (
         <Text size={14} weight="700" color="peach-ink">
           {label}
         </Text>

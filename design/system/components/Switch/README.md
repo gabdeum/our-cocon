@@ -9,6 +9,7 @@ An on/off toggle, always inside a setting row that explains what it does.
 | Track | 52 × 32, radius 16, padding 3; off `line-handle`, on `olive` (on an ink card: `honey`) |
 | Knob | 26 circle, white; left when off, right when on |
 | Setting row | padding 14 0, 1.5 px `line` divider; label 16/800, hint 13/600 ink-muted, 12 gap to the switch |
+| Boxed row | for a recipe's option variants (OC-Recipe › Version): `surface-soft`, radius 18, min height 52, padding 8 × 14, label 15/800, hint 13/600 ink-muted; no divider (`SettingRow boxed`) |
 | Override hint | "Changed for this recipe · Reset" in `warn` when a recipe overrides a family default |
 
 ## Rules

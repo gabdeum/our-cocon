@@ -6,7 +6,7 @@ export { cn } from './cn';
 
 export { Text, type TextProps, type TextVariant, type TextColor, type Weight } from './components/Text';
 export { BrandMark, Icon, Logo, type BrandName, type IconName, type IconProps } from './components/Icon';
-export { AppFrame, TabScreen, PushedScreen } from './components/Layout';
+export { AppFrame, TabScreen, PushedScreen, PhotoScreen, type PhotoScreenProps } from './components/Layout';
 
 export { Button, Link, type ButtonProps, type ButtonVariant, type ButtonSize, type LinkProps } from './components/Button';
 export { IconButton, type IconButtonProps, type IconButtonVariant } from './components/IconButton';

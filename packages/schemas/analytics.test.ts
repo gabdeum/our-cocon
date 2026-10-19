@@ -103,4 +103,15 @@ describe('createTracker', () => {
     expect(() => tracker.track('recipe_filters_applied', { filter_keys: ['french'], result_count: 1 } as never)).toThrow();
     expect(() => tracker.track('recipe_filters_applied', { filter_keys: [], result_count: 1, cuisines: ['french'] } as never)).toThrow();
   });
+
+  it('sends servings_changed and variant_selected with numbers only (spec 008)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('servings_changed', { from: 6, to: 9 });
+    tracker.track('variant_selected', { variant_count: 2 });
+    expect(t.capture).toHaveBeenCalledWith('servings_changed', { from: 6, to: 9 });
+    expect(t.capture).toHaveBeenCalledWith('variant_selected', { variant_count: 2 });
+    expect(() => tracker.track('servings_changed', { from: 6, to: 0 })).toThrow();
+    expect(() => tracker.track('variant_selected', { variant_count: 1, name: 'Vegetarian' } as never)).toThrow();
+  });
 });

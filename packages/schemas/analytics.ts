@@ -25,7 +25,7 @@ export const events = {
   member_removed: z.strictObject({}),
   family_deleted: z.strictObject({ member_count: z.int().min(1) }),
   // Spec 004: the offline banner appeared on a screen (once per offline spell). Later screens join the enum.
-  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'recipes', 'groceries', 'settings']) }),
+  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'recipes', 'recipe', 'groceries', 'settings']) }),
   // Spec 031: an ingredient that matched nothing in the catalog was saved. One event each, never
   // its text: the count tells us where the catalog needs to grow.
   ingredient_unmatched: z.strictObject({}),
@@ -41,6 +41,10 @@ export const events = {
     filter_keys: z.array(FilterKey).max(4).refine((keys) => new Set(keys).size === keys.length, 'Each key once'),
     result_count: z.int().min(0),
   }),
+  // Spec 008: servings on a recipe page, once the stepper settles (three quick taps are one change).
+  servings_changed: z.strictObject({ from: z.int().min(1).max(50), to: z.int().min(1).max(50) }),
+  // Spec 008: a version pill or option switch was tapped; how many variants are now on (0 = Classic).
+  variant_selected: z.strictObject({ variant_count: z.int().min(0).max(50) }),
 } as const;
 
 export type EventName = keyof typeof events;

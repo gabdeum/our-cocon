@@ -82,6 +82,8 @@ const IngredientFields = z.strictObject({
 });
 
 type IngredientShape = z.infer<typeof IngredientFields>;
+/** A recipe ingredient, base or brought in by a variant (spec 008: what `applyVariants` works on). */
+export type IngredientRow = IngredientShape & { id: string };
 const ingredientRules = (i: IngredientShape) =>
   (i.unit == null || i.quantity != null) && ((i.size_word == null && i.weight_per_piece_g == null) || i.unit === 'piece');
 const ingredientRulesMessage = 'A unit needs an amount; a size or piece weight needs the unit "piece"';
@@ -101,6 +103,8 @@ const StepFields = z.strictObject({
   tip: Text(200).nullish(),
   photo_path: PhotoPath.nullish(),
 });
+/** A recipe step, base or added by a variant. */
+export type StepRow = z.infer<typeof StepFields> & { id: string };
 const stepRules = (s: z.infer<typeof StepFields>) => s.timer_label == null || s.timer_seconds != null;
 
 export const StepInput = StepFields.extend({ position: Position }).refine(stepRules, 'A timer label needs a timer');

@@ -95,6 +95,7 @@ export default function RootLayout() {
                 <Stack.Screen name="auth/callback" />
                 <Stack.Screen name="join/[token]" />
                 <Stack.Screen name="recipes/filters" options={presentation.sheet} />
+                <Stack.Screen name="recipes/[id]" options={presentation.stack} />
                 <Stack.Screen name="dev/gallery" options={presentation.stack} />
                 <Stack.Screen name="dev/sheet" options={presentation.sheet} />
                 <Stack.Screen name="dev/modal" options={presentation.fullScreen} />

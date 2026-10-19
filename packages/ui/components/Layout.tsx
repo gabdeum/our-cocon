@@ -34,3 +34,34 @@ export function PushedScreen({ children, className }: { children: ReactNode; cla
     </ScrollView>
   );
 }
+
+export interface PhotoScreenProps {
+  /** The photo, or a PhotoPlaceholder, filling the 240 header. */
+  photo: ReactNode;
+  /** Round IconButtons on the photo: back on the left, actions on the right (8 apart). */
+  left?: ReactNode;
+  right?: ReactNode;
+  /** Above the content, e.g. a StatusBanner. */
+  banner?: ReactNode;
+  children: ReactNode;
+}
+
+/**
+ * Pushed screen with photo header (Patterns.md): photo 240 edge to edge, buttons 52 from the top and
+ * 16 from the sides, and the content sheet overlapping it by 30 with a top radius of 30.
+ */
+export function PhotoScreen({ photo, left, right, banner, children }: PhotoScreenProps) {
+  return (
+    <ScrollView className="flex-1 bg-surface-page">
+      <View className="h-[240px] overflow-hidden">
+        {photo}
+        {left ? <View className="absolute left-16 top-[52px]">{left}</View> : null}
+        {right ? <View className="absolute right-16 top-[52px] flex-row gap-8">{right}</View> : null}
+      </View>
+      <View className="-mt-[30px] gap-18 rounded-t-[30px] bg-surface-page px-20 pb-[40px] pt-24">
+        {banner}
+        {children}
+      </View>
+    </ScrollView>
+  );
+}

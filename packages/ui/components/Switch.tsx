@@ -41,16 +41,24 @@ export interface SettingRowProps {
   onReset?: () => void;
   onInk?: boolean;
   last?: boolean;
+  /** On a soft tile instead of a divider row: a recipe's option variants (OC-Recipe › Version). */
+  boxed?: boolean;
 }
 
 /** A setting with its switch (Switch README › setting row). The whole row toggles. */
-export function SettingRow({ label, hint, value, onValueChange, changedHint, resetLabel, onReset, onInk, last }: SettingRowProps) {
+export function SettingRow({ label, hint, value, onValueChange, changedHint, resetLabel, onReset, onInk, last, boxed }: SettingRowProps) {
   const toggle = () => onValueChange(!value);
   return (
-    <View className={cn('flex-row items-center gap-12 py-14', !last && 'border-b-[1.5px] border-line')}>
+    <View
+      className={cn(
+        'flex-row items-center gap-12',
+        boxed ? 'min-h-[52px] rounded-[18px] bg-surface-soft px-14 py-8' : 'py-14',
+        !boxed && !last && 'border-b-[1.5px] border-line',
+      )}
+    >
       <View className="min-w-0 flex-1">
         <Pressable role="switch" aria-checked={value} aria-label={label} onPress={toggle} className={focusRing}>
-          <Text size={16} weight="800" color={onInk ? 'on-olive' : 'ink'}>
+          <Text size={boxed ? 15 : 16} weight="800" color={onInk ? 'on-olive' : 'ink'}>
             {label}
           </Text>
           {hint && !changedHint ? (

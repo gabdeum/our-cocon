@@ -14,6 +14,7 @@ These are the layouts every Our Cocon screen is built from. Compose new screens 
 - Photo 240 tall, edge to edge. Round white `IconButton`s (48) sit 52 from the top and 16 from the sides: back on the left, actions on the right, 8 apart.
 - The content sheet overlaps the photo by 30 with top radius 30, `surface-page`, padding 24 × 20.
 - The main CTA (ink, 60, "Start cooking") ends the content. The `TimerPill` sticks centred 108 from the top while timers exist.
+- In the app: `PhotoScreen` (packages/ui Layout), with the photo, the left and right buttons and the content.
 
 ## Pushed screen without photo (settings sub-pages, timers)
 

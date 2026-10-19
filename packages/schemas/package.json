@@ -15,7 +15,9 @@
     "./ingredient-text": "./ingredient-text.ts",
     "./recipes": "./recipes.ts",
     "./sources": "./sources.ts",
-    "./sync": "./sync.ts"
+    "./quiche.fixture": "./quiche.fixture.ts",
+    "./sync": "./sync.ts",
+    "./variants": "./variants.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false"

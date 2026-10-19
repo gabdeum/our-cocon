@@ -20,13 +20,17 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
 ## Dynamic copy
 - The amount format comes from spec 005 ("2", "300 ml", "about ¾ cup", "1 pinch"), with sub-line weights like "300 g".
 - When scaled by an ingredient: a chip under Servings, "Scaled by {ingredient} · Reset".
+- Best months: "Best Oct – Mar" for one run (it may wrap round the new year), "Best Apr" for a single month, "Best Jan, May – Jun" for several runs.
+- Option hint: "Adds {n} ingredient(s) and {n} step(s)", then ". Removes …" and ". Changes {n} step(s)" when the option does those. A swap counts what it brings in as added.
+- A size word moves from the amount into the name: "3" · "Large eggs". A prep note follows the name: "Mushrooms, sliced".
 
 ## States not drawn
 | State | Copy |
 | --- | --- |
 | No photo | peach block with the recipe's first letter (32/900, peach-ink) |
 | Recipe deleted while open | Dialog-less banner: "This recipe was deleted by {name}." with link "Back to recipes" |
-| Loading | photo and three-row skeleton |
+| Loading | photo and three-row skeleton (screen reader: "Loading recipe") |
+| Couldn't load (nothing cached) or not found | "We couldn't open this recipe." / "It may have been deleted, or you're offline." with soft button "Try again" |
 
 ## Interactions
 | Element | Result |
