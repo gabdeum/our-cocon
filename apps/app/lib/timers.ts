@@ -128,9 +128,10 @@ export function mostUrgent(timers: readonly Timer[], now: number): Timer | null 
   return least('running') ?? least('paused');
 }
 
-/** The pill (spec 011): the most urgent timer; once none is counting, a done one, so it shows while any exists. */
+/** The pill (spec 011): the running timer with the least time left; none (no pill) when nothing is running. */
 export function pillTimer(timers: readonly Timer[], now: number): Timer | null {
-  return mostUrgent(timers, now) ?? timers.find((t) => t.state === 'done') ?? null;
+  const first = mostUrgent(timers, now);
+  return first?.state === 'running' ? first : null;
 }
 
 /** The pill's label stops at 14 characters with an ellipsis (spec 011 › Edge cases); the clock never does. */

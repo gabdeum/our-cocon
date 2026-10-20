@@ -1,5 +1,5 @@
 // Spec 011 US1: the pill shows the most urgent timer's name and clock, live, "+N" for other running ones,
-// truncates long names, hides with no timers, and opens Timers (`timer_pill_tapped`).
+// truncates long names, hides while no timer is running, and opens Timers (`timer_pill_tapped`).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { createTimerStore, TimersContext, type TimerStore } from '../../lib/timer-store';
@@ -64,9 +64,8 @@ describe('TimerPill (spec 011 US1)', () => {
     act(() => store.pause(leeks));
     store.start('Simmer', 60, 'step');
     act(() => vi.advanceTimersByTime(60 * 1000));
-    // Only a paused and a done timer: the pill shows the paused one, with no count.
-    expect(pill().textContent).toBe('Soften leeks08:00');
-    expect(pill().getAttribute('aria-label')).toBe('Open timers');
+    // Only a paused and a done timer: no pill.
+    expect(screen.queryByRole('link')).toBeNull();
     act(() => void store.start('Blind bake', 12 * 60, 'step'));
     expect(pill().textContent).toBe('Blind bake12:00');
     expect(pill().getAttribute('aria-label')).toBe('1 timer running. Open timers');
@@ -81,13 +80,16 @@ describe('TimerPill (spec 011 US1)', () => {
     expect(pill().textContent).toBe('Caramelise the…45:00');
   });
 
-  it('stays while only a done timer is left, until it is dismissed', () => {
+  it('goes away when the last running timer ends or is paused, and comes back on Resume', () => {
     setup();
-    const id = store.start('Simmer', 60, 'step');
+    store.start('Simmer', 60, 'step');
+    const leeks = store.start('Soften leeks', 8 * 60, 'step');
     act(() => vi.advanceTimersByTime(60 * 1000));
-    expect(pill().textContent).toBe('Simmer00:00');
-    act(() => store.dismiss(id));
+    expect(pill().textContent).toBe('Soften leeks07:00');
+    act(() => store.pause(leeks));
     expect(screen.queryByRole('link')).toBeNull();
+    act(() => store.resume(leeks));
+    expect(pill().textContent).toBe('Soften leeks07:00');
   });
 
   it('opens Timers and sends timer_pill_tapped with the count only', () => {

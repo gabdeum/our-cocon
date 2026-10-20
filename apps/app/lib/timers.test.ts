@@ -125,10 +125,11 @@ describe('timer pill and Timers screen (spec 011)', () => {
     expect(pillName('Caramelise the onions')).toBe('Caramelise the…');
   });
 
-  it('the pill falls back to a done timer, and hides only when there are none', () => {
+  it('the pill shows only a running timer: none while every timer is paused or done', () => {
     const done = settle(start([], 'd', 'Simmer', 1, T0), T0 + sec(2)).timers;
-    expect(pillTimer(done, T0 + sec(2))?.id).toBe('d');
-    expect(pillTimer(start(done, 'r', 'Rest', 60, T0), T0)?.id).toBe('r');
+    const pausedToo = pause(start(done, 'p', 'Soften leeks', 480, T0), 'p', T0);
+    expect(pillTimer(pausedToo, T0 + sec(2))).toBeNull();
+    expect(pillTimer(start(pausedToo, 'r', 'Rest', 60, T0), T0)?.id).toBe('r');
     expect(pillTimer([], T0)).toBeNull();
   });
 

@@ -238,8 +238,8 @@ export function useStepTimer(recipeId: string, stepId: string): { timer: Timer |
 }
 
 /**
- * FR-004, for the TimerPill (spec 011): falls back to a done timer, so the pill shows while any
- * exists. `running` counts only the timers counting down: the pill's "+N" and label use it.
+ * FR-004, for the TimerPill (spec 011): only running timers count. `timer` is null, and the pill
+ * hidden, when nothing is running; `running` gives its "+N" and label.
  */
 export function useMostUrgent(): { timer: Timer | null; left: number; count: number; running: number } {
   const { timers, now } = useTimers();

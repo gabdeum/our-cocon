@@ -1,6 +1,6 @@
 # TimerPill
 
-An always-visible pill showing the most urgent running timer; tapping it opens the Timers screen.
+A pill, visible while any timer is running, showing the one with the least time left; tapping it opens the Timers screen.
 
 ## Specs
 
@@ -20,6 +20,6 @@ An always-visible pill showing the most urgent running timer; tapping it opens t
 
 ## Rules
 
-- Show the running timer with the least time left; if none is running, the paused one with the least time left; if only done timers are left, one of them at 00:00. Hide the pill when no timers exist.
+- Show the running timer with the least time left. Hide the pill while no timer is running (none yet, or all paused or done).
 - The name stops at 14 characters with an ellipsis; the clock never truncates.
-- `aria-label`: "2 timers running. Open timers", counting running timers only; "Open timers" when none is running.
+- `aria-label`: "2 timers running. Open timers", counting running timers only.

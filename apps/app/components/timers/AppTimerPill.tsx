@@ -15,9 +15,9 @@ export interface AppTimerPillProps {
 }
 
 /**
- * The most urgent timer, live, on tab screens and the recipe page (spec 011 US1), "+N" for the
- * other running ones (paused and done timers aren't counted). Nothing while there are no timers.
- * Tapping it opens Timers and sends `timer_pill_tapped`.
+ * The running timer with the least time left, live, on tab screens and the recipe page (spec 011
+ * US1), "+N" for the other running ones. Nothing while no timer is running (paused and done ones
+ * don't count). Tapping it opens Timers and sends `timer_pill_tapped`.
  */
 export function AppTimerPill({ onOpen, tracker, compact }: AppTimerPillProps) {
   const { timer, left, count, running } = useMostUrgent();
@@ -26,13 +26,13 @@ export function AppTimerPill({ onOpen, tracker, compact }: AppTimerPillProps) {
     tracker.track('timer_pill_tapped', { timer_count: count });
     onOpen();
   };
-  const others = running - (timer.state === 'running' ? 1 : 0);
+  const others = running - 1;
   return (
     <TimerPill
       name={pillName(timer.label)}
       clock={clock(left)}
       more={others > 0 ? copy.more(others) : undefined}
-      label={running > 0 ? copy.label(running) : strings.timers.openTimers}
+      label={copy.label(running)}
       onPress={open}
       compact={compact}
     />
@@ -41,5 +41,5 @@ export function AppTimerPill({ onOpen, tracker, compact }: AppTimerPillProps) {
 
 /** Whether a pill is showing, so the TabBar can reserve its height (160 rather than 100). */
 export function useHasTimers(): boolean {
-  return useMostUrgent().count > 0;
+  return useMostUrgent().running > 0;
 }
