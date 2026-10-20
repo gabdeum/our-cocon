@@ -11,7 +11,7 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
    - Switch "I'm using a kitchen scale" with hint "Showing exact weights, like 100 g" / "Showing cups and spoons, like about ¾ cup"
    - Row "Scale by an ingredient ›"
    - Row "Unit converter ›"
-   - Row "Units: {Metric|Imperial}" with sub-line "Change in recipe settings ›"
+   - Row "Units" with a pill SegmentedControl "Metric" · "Imperial"
 6. Dark tabs: "Ingredients · {n}" | "Steps · {n}".
 7. Ingredient rows: amount (17/900), name, optional weight sub-line, optional sage tag "Variant".
 8. Outline button with cart icon "Add to groceries…".
@@ -19,7 +19,8 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
 
 ## Dynamic copy
 - The amount format comes from spec 005 ("2", "300 ml", "about ¾ cup", "1 pinch"), with sub-line weights like "300 g".
-- When scaled by an ingredient: a chip under Servings, "Scaled by {ingredient} · Reset".
+- When scaled by an ingredient: Servings shows the scaled number to the nearest ½ ("7½"), and a sage chip under Servings reads "Scaled by {ingredient}" (name in lower case, "bacon lardons") with a "Reset" link beside it (screen reader: "Reset the scale by {ingredient}").
+- The kitchen scale and units are quick toggles for this recipe on this device. Until one is toggled, the recipe's or family's setting applies (spec 027); toggling it overrides that setting on this device only. Units change amounts, weights and temperatures at once, in the list, the steps and cooking mode.
 - Best months: "Best Oct – Mar" for one run (it may wrap round the new year), "Best Apr" for a single month, "Best Jan, May – Jun" for several runs.
 - Option hint: "Adds {n} ingredient(s) and {n} step(s)", then ". Removes …" and ". Changes {n} step(s)" when the option does those. A swap counts what it brings in as added.
 - The default size is never named ("2½" · "Leeks"); another size moves from the amount into the name: "2" · "Small eggs".
@@ -44,7 +45,10 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
 | … | toggles the panel (button turns honey) |
 | Scale by an ingredient | → scale sheet |
 | Unit converter | → convert sheet |
-| Units row | → recipe settings |
+| Kitchen scale switch | weights ↔ cups and spoons at once, on this device |
+| Metric · Imperial | switches units at once, on this device |
+| Reset (scaled chip) | back to the servings from before the scale |
+| − / + while scaled | from 7½: − to 7, + to 8; the scale ends |
 | Tabs | switch Ingredients / Steps in place, keeping scroll |
 | Add to groceries… | → add-to-groceries sheet |
 | Start cooking | → `/recipes/[id]/cook` |

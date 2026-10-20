@@ -120,6 +120,7 @@ textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-siz
 /* ---------- Card ---------- */
 .oc-card { box-sizing: border-box; background: var(--surface-card); border-radius: var(--radius-xl); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .oc-card--soft { background: var(--surface-soft); }
+.oc-card--sage { background: var(--sage); border-radius: 20px; padding: 14px 16px; gap: 6px; }
 .oc-card--selected { border: 2px solid var(--olive); }
 .oc-card--attention { border: 2px solid var(--warn-border); }
 .oc-hero { display: block; border-radius: var(--radius-2xl); overflow: hidden; background: var(--surface-soft); color: var(--ink); text-decoration: none; }
@@ -244,3 +245,24 @@ textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-siz
 .oc-formbar__title { font-size: 17px; font-weight: 900; }
 .oc-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 900; letter-spacing: -0.3px; }
 .oc-brand__mark { width: 34px; height: 34px; border-radius: 11px; background: var(--honey); display: inline-flex; align-items: center; justify-content: center; }
+
+/* ---------- AmountField ---------- */
+.oc-amount { display: flex; flex-direction: column; gap: 6px; }
+.oc-amount__row { display: flex; gap: 8px; }
+.oc-amount__input { flex: 1; min-width: 0; height: 56px; box-sizing: border-box; border-radius: 16px; border: 2px solid var(--line-strong); background: var(--surface-card); padding: 0 16px; font-family: var(--font-sans); font-size: 22px; font-weight: 900; color: var(--ink); }
+.oc-amount__input:focus { border-color: var(--olive); outline: none; }
+.oc-amount__unit { width: 96px; height: 56px; border-radius: 16px; border: 2px solid var(--line-strong); background: var(--surface-card); color: var(--ink); font-family: var(--font-sans); font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; }
+.oc-amount--xl .oc-amount__input { height: 60px; border-radius: 18px; font-size: 26px; }
+.oc-amount--xl .oc-amount__unit { width: 100px; height: 60px; border-radius: 18px; font-size: 18px; }
+.oc-amount__menu { border-radius: 16px; background: var(--surface-card); overflow: hidden; }
+
+/* ---------- RadioCard ---------- */
+.oc-radiocard { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 14px; border-radius: 16px; border: 2px solid transparent; background: var(--surface-card); font-size: 16px; font-weight: 700; }
+.oc-radiocard[aria-checked="true"] { border-color: var(--olive); font-weight: 800; }
+.oc-radiocard__value { color: var(--ink-muted); font-weight: 600; }
+
+/* ---------- ResultTile ---------- */
+.oc-result { border-radius: 20px; padding: 14px 16px; background: var(--surface-card); }
+.oc-result--main { background: var(--honey); }
+.oc-result__value { font-size: 26px; font-weight: 900; }
+.oc-result__unit { font-size: 15px; font-weight: 700; }

@@ -1,17 +1,27 @@
 import { applyVariants, cuisineOf, variantEffect, type Applied, type IngredientRow, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
-import { format, renderStep, renderTemperatureCheck, scale, type FormatOptions, type QuantityIngredient } from '@cocon/quantity';
+import { format, fractionText, QuantityError, renderStep, renderTemperatureCheck, scale, toStep, type FormatOptions, type QuantityIngredient, type Scaled } from '@cocon/quantity';
 import { strings } from '../strings/en';
 import type { Member } from './session';
 import type { RecipeDetail } from './recipe';
 import { formatTotalTime, recipeAuthor } from './recipe-format';
+import type { RecipeChoices, ScaledBy } from './recipe-choices';
 
 const p = strings.recipePage;
 
-/**
- * Units and the kitchen scale for the recipe page. Until the recipe and family settings exist
- * (spec 027) and the "…" panel's scale switch (013), every recipe uses the screen's defaults.
- */
+/** Metric with a kitchen scale: the settings until spec 027 lets recipes and families set them. */
 export const defaultFormat: FormatOptions = { system: 'metric', scale: true };
+
+/**
+ * Units and the kitchen scale as the quantity engine takes them: the "…" panel's quick toggles on
+ * this device (spec 013), else the settings (`settings`, spec 027 passes the recipe's or family's).
+ */
+export const formatOf = (choices: Pick<RecipeChoices, 'system' | 'kitchenScale'>, settings: FormatOptions = defaultFormat): FormatOptions => ({
+  system: choices.system ?? settings.system,
+  scale: choices.kitchenScale ?? settings.scale,
+});
+
+/** Servings after a scale by an ingredient, to the nearest ½: "7½". */
+export const servingsText = (servings: number) => fractionText(Math.max(0.5, toStep(servings, 0.5)));
 
 /** FR-001 / edge cases: 1–16 servings, or up to what the recipe serves when it's more. */
 export const SERVINGS_MIN = 1;
@@ -23,6 +33,8 @@ export interface IngredientLine {
   amount: string;
   /** "Mushrooms, sliced", "Large eggs". */
   name: string;
+  /** The name without its prep note: "Mushrooms", "Large eggs". */
+  baseName: string;
   /** Pieces' weight: "300 g". */
   sub: string | null;
   variant: boolean;
@@ -40,7 +52,7 @@ export function ingredientLine(ing: Applied<IngredientRow> & QuantityIngredient,
   const size = sizeWords.has(f.unit) ? f.unit : null;
   const amount = size ? f.amount : [f.amount, f.unit].filter(Boolean).join(' ');
   const base = size ? `${upperFirst(size)} ${ing.name.charAt(0).toLowerCase()}${ing.name.slice(1)}` : ing.name;
-  return { id: ing.id, amount, name: ing.prep_note ? `${base}, ${ing.prep_note}` : base, sub: f.sub, variant: ing.fromVariant };
+  return { id: ing.id, amount, name: ing.prep_note ? `${base}, ${ing.prep_note}` : base, baseName: base, sub: f.sub, variant: ing.fromVariant };
 }
 
 /** Step text for StepCard: plain text, a highlighted amount, or the name of an ingredient that's gone. */
@@ -64,6 +76,36 @@ export interface RecipeView {
   ingredients: IngredientLine[];
   steps: StepLine[];
   stepCount: number;
+  /** Servings shown: the stepper's, or unrounded after a scale by an ingredient (7.5). */
+  servings: number;
+  /** The ingredient the recipe is scaled by (013), when that scale still applies. */
+  scaledBy: IngredientLine | null;
+}
+
+/** The page's scale: the stepper's servings, or a scale by an ingredient (spec 013). */
+export type PageScale = Pick<RecipeChoices, 'servings' | 'scaledBy'>;
+
+/**
+ * Scales by the ingredient when it's still in the recipe and its unit still fits (a variant or an
+ * edit may have changed it); otherwise by the stepper's servings.
+ */
+export function scaleRecipe<I extends QuantityIngredient>(serves: number, ingredients: I[], page: PageScale): Scaled<I> & { by: ScaledBy | null } {
+  const { scaledBy } = page;
+  if (scaledBy && ingredients.some((i) => i.id === scaledBy.ingredientId)) {
+    try {
+      return { ...scale({ serves, ingredients }, scaledBy), by: scaledBy };
+    } catch (e) {
+      if (!(e instanceof QuantityError)) throw e;
+    }
+  }
+  return { ...scale({ serves, ingredients }, { servings: page.servings }), by: null };
+}
+
+const withFacts = (recipe: Pick<RecipeDetail, 'facts'>, applied: Applied<IngredientRow>[]) => applied.map((i) => ({ ...i, facts: i.catalog_key ? recipe.facts[i.catalog_key] : null }));
+
+/** The recipe's ingredients after variants, each with its catalog facts. */
+export function appliedIngredients(recipe: Pick<RecipeDetail, 'ingredients' | 'steps' | 'variants' | 'facts'>, choice: VariantChoice) {
+  return withFacts(recipe, applyVariants(recipe, recipe.variants, choice).ingredients);
 }
 
 /** A timer's clock: "12:00", "05:30" (also the running clock, lib/timers.ts). */
@@ -87,14 +129,13 @@ export const defaultCooking: CookingSettings = { thermometer: true, keepAwake: t
  */
 export function recipeView(
   recipe: Pick<RecipeDetail, 'serves' | 'ingredients' | 'steps' | 'variants' | 'facts'>,
-  servings: number,
+  servings: number | PageScale,
   choice: VariantChoice,
   options: FormatOptions = defaultFormat,
   cooking: Pick<CookingSettings, 'thermometer'> = defaultCooking,
 ): RecipeView {
   const applied = applyVariants(recipe, recipe.variants, choice);
-  const withFacts = applied.ingredients.map((i) => ({ ...i, facts: i.catalog_key ? recipe.facts[i.catalog_key] : null }));
-  const scaled = scale({ serves: recipe.serves, ingredients: withFacts }, { servings });
+  const scaled = scaleRecipe(recipe.serves, withFacts(recipe, applied.ingredients), typeof servings === 'number' ? { servings, scaledBy: null } : servings);
   const knownNames = ingredientNames(recipe);
   const steps = applied.steps.map((step, i): StepLine => ({
     id: step.id,
@@ -108,7 +149,9 @@ export function recipeView(
     timer: step.timer_seconds ? { seconds: step.timer_seconds, label: step.timer_label ?? step.name ?? '', clock: timerClock(step.timer_seconds) } : null,
     tip: step.tip ?? null,
   }));
-  return { ingredients: scaled.ingredients.map((i) => ingredientLine(i, options)), steps, stepCount: steps.length };
+  const ingredients = scaled.ingredients.map((i) => ingredientLine(i, options));
+  const scaledBy = scaled.by ? (ingredients.find((i) => i.id === scaled.by?.ingredientId) ?? null) : null;
+  return { ingredients, steps, stepCount: steps.length, servings: scaled.servings, scaledBy };
 }
 
 /** Every ingredient name the recipe has known, base and variants, for tokens whose ingredient is gone. */

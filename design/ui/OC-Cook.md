@@ -8,7 +8,7 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Spec 012
    - Right: TimerPill when timers exist, otherwise the sage chip "Screen stays on".
    - Cooking Progress bar (one segment per step, tappable).
    - "Step {n} of {m}" (left, olive 14/900 uppercase) and "Serves {n} · swipe up for next" (right, muted).
-2. Scrolling body, one section per step: overline "Step {n}", title 28/900, body 21/600 with honey amount highlights, then optionally the dark TimerCard (label "{timer label} timer", −1, clock, +1, honey button), the temperature callout and the chef's tip.
+2. Scrolling body, one section per step (no "Step {n}" overline: the header's "Step {n} of {m}" already says it): title 28/900, body 21/600 with honey amount highlights, then optionally the dark TimerCard (label "{timer label} timer", −1, clock, +1, honey button), the temperature callout and the chef's tip.
 3. End of list: "Bon appétit!" (olive 18/900, centred).
 4. Fixed footer: soft "Back" (⅓) and olive "Next step" (⅔); on the last step the label is "Finish".
 

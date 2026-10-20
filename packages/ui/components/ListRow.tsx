@@ -27,8 +27,8 @@ export function ListGroup({ title, inset, children, className }: { title?: strin
   );
 }
 
-/** 26 × 26 olive checkbox or radio (the row is the tap target). */
-function Mark({ kind, checked }: { kind: 'checkbox' | 'radio'; checked: boolean }) {
+/** 26 × 26 olive checkbox or radio (the row is the tap target). Also RadioCard's. */
+export function Mark({ kind, checked }: { kind: 'checkbox' | 'radio'; checked: boolean }) {
   return (
     <View
       aria-hidden
@@ -67,10 +67,12 @@ export interface ListRowProps {
   /** Overrides the row's spoken name (defaults to title and sub). */
   accessibilityLabel?: string;
   last?: boolean;
+  /** Inside a card's padding: no side padding, 52 tall (OC-Recipe's "…" panel). */
+  flush?: boolean;
 }
 
 /** A row inside a ListGroup (ListRow README). Min 60 tall; the whole row is the tap target. */
-export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing, onPress, accessibilityLabel, last }: ListRowProps) {
+export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing, onPress, accessibilityLabel, last, flush }: ListRowProps) {
   const isCheck = leading?.kind === 'checkbox' || leading?.kind === 'radio';
   const content = (
     <>
@@ -89,7 +91,7 @@ export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing
       {trailing ? <Trailing trailing={trailing} /> : null}
     </>
   );
-  const box = cn('min-h-[60px] flex-row items-center gap-12 px-14 py-10', !last && 'border-b-[1.5px] border-line');
+  const box = cn('flex-row items-center gap-12 py-10', flush ? 'min-h-[52px]' : 'min-h-[60px] px-14', !last && 'border-b-[1.5px] border-line');
   if (!onPress) {
     return (
       <View role="listitem" className={box}>

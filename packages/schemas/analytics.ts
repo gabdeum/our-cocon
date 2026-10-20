@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { FilterKey } from './recipe-filters';
 
+// The converter's units (spec 013, `@cocon/quantity` CONVERTER_UNITS), and its result tiles' units.
+const converterUnits = ['g', 'kg', 'oz', 'lb', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'fl_oz', 'c', 'f', 'gas_mark'] as const;
+const ConverterUnitEvent = z.enum(converterUnits);
+const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 'fan_f']);
+
 /**
  * Every tracked user action. Each spec's Tracking table lists its events; add them here.
  * Props are closed (`strict`) so no user content (names, emails, recipe or grocery text)
@@ -60,6 +65,13 @@ export const events = {
   cooking_started: z.strictObject({ step_count: z.int().min(1).max(200) }),
   cooking_finished: z.strictObject({ step_count: z.int().min(1).max(200), minutes: z.int().min(0).max(1440) }),
   cooking_exited: z.strictObject({ at_step: z.int().min(1).max(200), step_count: z.int().min(1).max(200) }),
+  // Spec 013: the "…" panel's quick toggles, per recipe on this device.
+  kitchen_scale_toggled: z.strictObject({ on: z.boolean() }),
+  units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
+  // Spec 013: "Apply to recipe" in Scale by an ingredient. Never which ingredient or how much.
+  scaled_by_ingredient: z.strictObject({}),
+  // Spec 013: the converter settled on a value; the unit typed in and the main (honey) result.
+  unit_converter_used: z.strictObject({ from_unit: ConverterUnitEvent, to_unit: ConverterResultUnitEvent }),
 } as const;
 
 export type EventName = keyof typeof events;

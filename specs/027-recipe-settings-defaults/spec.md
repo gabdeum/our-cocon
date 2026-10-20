@@ -19,7 +19,7 @@
 
 - **FR-001**: Settings: keep screen on (bool), kitchen scale (bool), thermometer (bool), units (metric | imperial). The family stores the defaults; a recipe stores overrides (null = use the default).
 - **FR-002**: The recipe settings screen shows each setting with "Same as default" or "Changed for this recipe · Reset"; units use a three-way control: Default · Metric · Imperial.
-- **FR-003**: The kitchen-scale switch in the "…" panel (spec 013) is a per-device quick override on top of these. It never changes the setting for anyone else.
+- **FR-003**: The kitchen-scale switch and the Metric · Imperial toggle in the "…" panel (spec 013) are per-device quick overrides on top of these. They never change the setting for anyone else. They're saved only once tapped (`RecipeChoices.kitchenScale` / `system`, null = follow the setting); pass the recipe's or family's setting as `formatOf(choices, settings)` in the recipe page and cooking mode.
 - **FR-004**: The recipe settings screen also lists variants with "Edit" and "Add a variant" (spec 017).
 - **FR-005**: Defaults are per family, and a recipe can override them, including units. There are no per-member settings in V1.
 

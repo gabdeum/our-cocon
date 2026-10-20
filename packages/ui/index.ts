@@ -17,6 +17,9 @@ export { SegmentedControl, type SegmentedControlProps, type Segment } from './co
 export { Stepper, type StepperProps } from './components/Stepper';
 export { TextField, SearchField, type TextFieldProps } from './components/TextField';
 export { MonthPicker, type MonthPickerProps } from './components/MonthPicker';
+export { AmountField, type AmountFieldProps } from './components/AmountField';
+export { RadioCard, type RadioCardProps } from './components/RadioCard';
+export { ResultTile, type ResultTileProps } from './components/ResultTile';
 export { ListGroup, ListRow, Overline, IngredientRow, type ListRowProps } from './components/ListRow';
 export { Card, HeroCard, PhotoPlaceholder, type CardProps } from './components/Card';
 export { RecipeItem, RecipeItemSkeleton, type RecipeItemProps } from './components/RecipeItem';

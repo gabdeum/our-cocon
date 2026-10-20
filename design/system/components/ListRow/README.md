@@ -8,6 +8,7 @@ A row inside a white list group: grocery items, picker items, settings links and
 | --- | --- |
 | List group | surface-card, radius 22, overflow hidden; preceded by an `oc-overline` group label (13/900 uppercase ink-muted, 6 gap) |
 | Row | min 60 tall, padding 10 14, gap 12, 1.5 px `line` divider (none on the last row) |
+| Flush (`--flush`) | inside a card's padding: no side padding, min 52 tall (the recipe page's "…" panel) |
 | Leading | checkbox or radio 26 × 26 (olive), an avatar 40, or nothing |
 | Title | 16/800 ink; done: line-through + `ink-faint` |
 | Sub-line | 13/600 ink-muted (source: "For Leek & bacon quiche", "Alex via ChatGPT"); warn 700 for merge notes ("Already on the list (100 ml) → will be 400 ml") |

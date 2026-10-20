@@ -15,8 +15,14 @@ export const iconShapes = {
   "check": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><Path d="m5 12 5 5 9-10" /></Svg>
   ),
+  "chevron-down": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="m6 9 6 6 6-6" /></Svg>
+  ),
   "chevron-right": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="m9 6 6 6-6 6" /></Svg>
+  ),
+  "chevron-up": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="m6 15 6-6 6 6" /></Svg>
   ),
   "close": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="M18 6 6 18M6 6l12 12" /></Svg>

@@ -10,13 +10,15 @@ export interface StepperProps {
   /** "Fewer servings" / "More servings". */
   decreaseLabel: string;
   increaseLabel: string;
+  /** What to show instead of `value`: "7½" after a scale by an ingredient (spec 013). */
+  display?: string;
 }
 
 /**
  * Minus / value / plus (Stepper README). At a limit the button stays visible, does nothing and is
  * announced as dimmed (disabled).
  */
-export function Stepper({ value, onChange, min = 1, max = 16, decreaseLabel, increaseLabel }: StepperProps) {
+export function Stepper({ value, onChange, min = 1, max = 16, decreaseLabel, increaseLabel, display }: StepperProps) {
   const atMin = value <= min;
   const atMax = value >= max;
   return (
@@ -32,8 +34,8 @@ export function Stepper({ value, onChange, min = 1, max = 16, decreaseLabel, inc
           −
         </Text>
       </Pressable>
-      <Text size={22} weight="900" tabular align="center" className="w-[28px]" aria-live="polite">
-        {value}
+      <Text size={22} weight="900" tabular align="center" className="min-w-[28px]" aria-live="polite">
+        {display ?? value}
       </Text>
       <Pressable
         role="button"

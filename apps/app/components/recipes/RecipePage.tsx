@@ -7,6 +7,8 @@ import {
   Choice,
   IconButton,
   IngredientRow,
+  Link,
+  ListRow,
   Meta,
   PhotoPlaceholder,
   PhotoScreen,
@@ -21,16 +23,18 @@ import {
   TimerRow,
 } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
+import type { FormatOptions } from '@cocon/quantity';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
-import { defaultCooking, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, SERVINGS_MIN, variantCount, type StepLine } from '../../lib/recipe-view';
+import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type StepLine } from '../../lib/recipe-view';
 import type { Member } from '../../lib/session';
 import { AppTimerPill } from '../timers/AppTimerPill';
 import { useStepTimerControl, type StepTimerInput } from './step-timer';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const p = strings.recipePage;
+const more = strings.recipePage.more;
 const stepCopy = strings.recipePage.steps;
 /** `servings_changed` waits for the stepper to settle, so 6 → 9 in three taps is one change. */
 export const SERVINGS_SETTLE_MS = 800;
@@ -58,6 +62,11 @@ export interface RecipePageProps {
   onOpenTimers: () => void;
   /** "I have a thermometer" (spec 027 wires the setting); on until then. */
   thermometer?: boolean;
+  /** The "…" panel's sheets (spec 013): Scale by an ingredient and Unit converter. */
+  onScaleByIngredient: () => void;
+  onConvert: () => void;
+  /** Changes when the page is shown again, so choices a sheet saved are read back. */
+  visit?: number;
 }
 
 /** The recipe page (spec 008, design/ui/OC-Recipe.md) and its Steps tab (spec 009, OC-RecipeSteps.md). */
@@ -107,6 +116,9 @@ function LoadedRecipe({
   onStartCooking,
   onOpenTimers,
   thermometer = defaultCooking.thermometer,
+  onScaleByIngredient,
+  onConvert,
+  visit = 0,
 }: RecipePageProps & { recipe: RecipeDetail }) {
   const max = servingsMax(recipe.serves);
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
@@ -121,14 +133,14 @@ function LoadedRecipe({
     return () => {
       live = false;
     };
-    // Only when another recipe or person opens; live edits are re-validated below.
+    // When another recipe or person opens, or a sheet saved a scale; live edits are re-validated below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storage, userId, recipe.id]);
+  }, [storage, userId, recipe.id, visit]);
 
   // A variant deleted while the page is open no longer counts.
   const current = useMemo(() => (choices ? startingChoices(choices, recipe, max) : null), [choices, recipe, max]);
   const view = useMemo(
-    () => (current ? recipeView(recipe, current.servings, current, defaultFormat, { thermometer }) : null),
+    () => (current ? recipeView(recipe, current, current, formatOf(current), { thermometer }) : null),
     [recipe, current, thermometer],
   );
   const chips = recipeChips(recipe, members);
@@ -151,13 +163,17 @@ function LoadedRecipe({
     if (b.from !== b.to) tracker.track('servings_changed', { from: b.from, to: b.to });
   }, [tracker]);
   useEffect(() => sendServings, [sendServings]);
-  const changeServings = (to: number) => {
+  // Scaled by an ingredient (013), servings can be 7½: − goes to 7 and + to 8, and the scale ends.
+  const shown = view?.servings ?? current?.servings ?? recipe.serves;
+  const changeServings = (stepped: number) => {
     if (!current) return;
-    const from = burst.current?.from ?? current.servings;
+    const to = Math.min(max, Math.max(SERVINGS_MIN, stepped > shown ? Math.floor(shown) + 1 : Math.ceil(shown) - 1));
+    const from = burst.current?.from ?? Math.min(max, Math.max(SERVINGS_MIN, Math.round(shown)));
     clearTimeout(burst.current?.timer);
     burst.current = { from, to, timer: setTimeout(() => sendServings(), SERVINGS_SETTLE_MS) };
-    update({ ...current, servings: to });
+    update({ ...current, servings: to, scaledBy: null });
   };
+  const scaledName = view?.scaledBy ? `${view.scaledBy.baseName.charAt(0).toLowerCase()}${view.scaledBy.baseName.slice(1)}` : null;
 
   const pickVariants = (next: RecipeChoices) => {
     if (!current || (next.version === current.version && next.options.length === current.options.length && next.options.every((id) => current.options.includes(id)))) return;
@@ -237,11 +253,40 @@ function LoadedRecipe({
             {p.servings}
           </Text>
           {current ? (
-            <Stepper value={current.servings} onChange={changeServings} min={SERVINGS_MIN} max={max} decreaseLabel={p.fewerServings} increaseLabel={p.moreServings} />
+            <Stepper
+              value={shown}
+              display={scaledName ? servingsText(shown) : undefined}
+              onChange={changeServings}
+              min={SERVINGS_MIN}
+              max={max}
+              decreaseLabel={p.fewerServings}
+              increaseLabel={p.moreServings}
+            />
           ) : null}
-          {/* The panel under it is spec 013. */}
           <IconButton icon="more" label={p.moreOptions} variant="square" iconSize={22} expanded={moreOpen} onPress={() => setMoreOpen((o) => !o)} className="ml-4" />
         </View>
+        {scaledName && current ? (
+          <View className="flex-row flex-wrap items-center gap-8">
+            <Meta label={more.scaledBy(scaledName)} tone="sage" />
+            <Link label={more.reset} aria-label={more.resetA11y(scaledName)} onPress={() => update({ ...current, scaledBy: null })} />
+          </View>
+        ) : null}
+        {moreOpen && current ? (
+          <MorePanel
+            choices={current}
+            format={formatOf(current)}
+            onChange={(next) => {
+              // Tapping what's already in force changes nothing, and keeps following the settings.
+              const now = formatOf(current);
+              if (next.kitchenScale !== null && next.kitchenScale !== now.scale) tracker.track('kitchen_scale_toggled', { on: next.kitchenScale });
+              else if (next.system !== null && next.system !== now.system) tracker.track('units_toggled', { system: next.system });
+              else return;
+              update(next);
+            }}
+            onScaleByIngredient={onScaleByIngredient}
+            onConvert={onConvert}
+          />
+        ) : null}
       </Card>
 
       {view ? (
@@ -289,6 +334,58 @@ function LoadedRecipe({
 
       <Button label={p.startCooking} variant="ink" size="lg" icon="play" block onPress={onStartCooking} />
     </PhotoScreen>
+  );
+}
+
+/**
+ * The "…" panel under Servings (spec 013, OC-Recipe): the kitchen scale and units are quick
+ * toggles for this recipe on this device; the two sheets sit between them, as drawn.
+ */
+function MorePanel({
+  choices,
+  format,
+  onChange,
+  onScaleByIngredient,
+  onConvert,
+}: {
+  choices: RecipeChoices;
+  /** What's in force: the toggles, else the settings. */
+  format: FormatOptions;
+  onChange: (next: RecipeChoices) => void;
+  onScaleByIngredient: () => void;
+  onConvert: () => void;
+}) {
+  return (
+    <View>
+      <SettingRow
+        label={more.kitchenScale}
+        hint={format.scale ? more.scaleOnHint : more.scaleOffHint}
+        value={format.scale}
+        onValueChange={(on) => onChange({ ...choices, kitchenScale: on })}
+      />
+      <ListRow flush title={more.scaleByIngredient} trailing={{ kind: 'chevron' }} onPress={onScaleByIngredient} />
+      <ListRow flush title={more.converter} trailing={{ kind: 'chevron' }} onPress={onConvert} />
+      <ListRow
+        flush
+        last
+        title={more.units}
+        trailing={{
+          kind: 'node',
+          node: (
+            <SegmentedControl
+              variant="pill"
+              label={more.units}
+              value={format.system}
+              onChange={(system) => onChange({ ...choices, system })}
+              segments={[
+                { key: 'metric', label: more.metric },
+                { key: 'imperial', label: more.imperial },
+              ]}
+            />
+          ),
+        }}
+      />
+    </View>
   );
 }
 
