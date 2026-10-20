@@ -40,6 +40,7 @@
 | `timer_started` | from (step, quick) |
 | `timer_adjusted` | delta_min |
 | `timer_finished` | — |
+| `step_timer_started` | step_index (from spec 009: a step's "Start timer") |
 
 ## Warnings and errors
 No copy; Timers screen and TimerPill (spec 011) own the messages.
@@ -49,3 +50,4 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-19: From spec 009: wire the recipe page's step timer rows (`TimerRow` in `RecipePage`, inactive until now) to the store and send `step_timer_started`; 009 US3 is tested here.

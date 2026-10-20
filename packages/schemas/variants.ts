@@ -47,6 +47,9 @@ export function validChoice(variants: readonly RecipeVariant[], choice: VariantC
  * The recipe's ingredients and steps with the chosen variants applied in their saved order. A
  * change pointing at a row that isn't there (removed by an earlier change, or edited away) is
  * skipped, so a recipe always opens. An added step gets the id `<variant id>:<change index>`.
+ * When a swap brings in exactly one ingredient under a new id, the steps' tokens for the old one
+ * follow it ("Add {ing:lardons}" reads "Add 250 g mushrooms", spec 009). A swap to several
+ * ingredients leaves the token alone: the variant rewrites that step, or it reads as missing.
  */
 export function applyVariants(
   base: { ingredients: readonly IngredientRow[]; steps: readonly StepRow[] },
@@ -55,6 +58,7 @@ export function applyVariants(
 ): AppliedRecipe {
   let ingredients: Applied<IngredientRow>[] = base.ingredients.map((i) => ({ ...i, fromVariant: false }));
   let steps: Applied<StepRow>[] = base.steps.map((s) => ({ ...s, fromVariant: false }));
+  const renamed = new Map<string, string>();
 
   for (const variant of activeVariants(variants, choice)) {
     variant.changes.forEach((change, index) => {
@@ -63,6 +67,8 @@ export function applyVariants(
           const at = ingredients.findIndex((i) => i.id === change.ingredient_id);
           if (at < 0) return;
           ingredients = [...ingredients.slice(0, at), ...change.with.map((i) => ({ ...i, fromVariant: true })), ...ingredients.slice(at + 1)];
+          const only = change.with.length === 1 ? change.with[0] : undefined;
+          if (only && only.id !== change.ingredient_id) renamed.set(change.ingredient_id, only.id);
           return;
         }
         case 'add_ingredient':
@@ -90,7 +96,15 @@ export function applyVariants(
       }
     });
   }
-  return { ingredients, steps };
+  if (renamed.size === 0) return { ingredients, steps };
+  // Follow chains (a swapped-in ingredient swapped again by a later variant) to the last id.
+  const target = (id: string) => {
+    let to = id;
+    for (let hops = 0; renamed.has(to) && hops < renamed.size; hops++) to = renamed.get(to) as string;
+    return to;
+  };
+  const retoken = (body: string) => body.replace(/\{ing:([^{}\s:]+)\}/g, (token, id: string) => (renamed.has(id) ? `{ing:${target(id)}}` : token));
+  return { ingredients, steps: steps.map((s) => ({ ...s, body: retoken(s.body) })) };
 }
 
 export interface VariantEffect {

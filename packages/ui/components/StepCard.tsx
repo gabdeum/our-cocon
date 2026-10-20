@@ -5,8 +5,11 @@ import { Icon } from './Icon';
 import { Tag } from './Tag';
 import { Text } from './Text';
 
-/** Step text split into plain text and amounts from @cocon/quantity ("20 g butter"). */
-export type StepTextPart = string | { amount: string };
+/**
+ * Step text split into plain text, amounts from @cocon/quantity ("20 g butter"), and names of
+ * ingredients that are gone (`missing`: plain weight, muted, no highlight).
+ */
+export type StepTextPart = string | { amount: string } | { missing: string };
 
 /** Step text with highlighted amounts (bundle.css › oc-amount). `cook`: honey highlight, 21 px text. */
 export function StepText({ parts, cook }: { parts: StepTextPart[]; cook?: boolean }) {
@@ -15,6 +18,10 @@ export function StepText({ parts, cook }: { parts: StepTextPart[]; cook?: boolea
       {parts.map((p, i) =>
         typeof p === 'string' ? (
           p
+        ) : 'missing' in p ? (
+          <Text key={i} variant={cook ? 'bodyCook' : 'bodyLg'} color="ink-muted">
+            {p.missing}
+          </Text>
         ) : (
           <Text
             key={i}
@@ -47,16 +54,20 @@ export interface TimerRowProps {
   plusA11y: string;
   onMinus: () => void;
   onPlus: () => void;
+  /** Drawn but not working yet: screen readers hear the buttons as unavailable; the look doesn't change. */
+  disabled?: boolean;
 }
 
 /** Timer row inside a step (StepCard README): honey button (olive while running) and −1 / +1. */
-export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, minusA11y, plusA11y, onMinus, onPlus }: TimerRowProps) {
+export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, minusA11y, plusA11y, onMinus, onPlus, disabled }: TimerRowProps) {
   const running = state === 'running';
   return (
     <View className="flex-row gap-6">
       <Pressable
         role="button"
         aria-pressed={running}
+        aria-disabled={disabled}
+        disabled={disabled}
         onPress={onPress}
         className={cn('min-h-[52px] min-w-0 flex-1 flex-row items-center gap-10 rounded-lg px-14', running ? 'bg-olive' : 'bg-honey active:bg-honey-pressed', focusRing)}
       >
@@ -76,6 +87,8 @@ export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, 
           key={b.text}
           role="button"
           aria-label={b.a11y}
+          aria-disabled={disabled}
+          disabled={disabled}
           onPress={b.onPress}
           className={cn('w-[52px] items-center justify-center rounded-lg bg-surface-soft active:bg-surface-soft-pressed', focusRing)}
         >
@@ -90,7 +103,8 @@ export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, 
 
 export interface StepCardProps {
   number: number;
-  name: string;
+  /** Optional: a step can be just its text. */
+  name?: string;
   /** "Variant" when a variant added the step. */
   variantTag?: string;
   parts: StepTextPart[];
@@ -108,9 +122,13 @@ export function StepCard({ number, name, variantTag, parts, children }: StepCard
             {number}
           </Text>
         </View>
-        <Text variant="titleSm" role="heading" className="flex-1">
-          {name}
-        </Text>
+        {name ? (
+          <Text variant="titleSm" role="heading" aria-level={3} className="flex-1">
+            {name}
+          </Text>
+        ) : (
+          <View className="flex-1" />
+        )}
         {variantTag ? <Tag label={variantTag} tone="sage" /> : null}
       </View>
       {parts.length > 0 ? <StepText parts={parts} /> : null}

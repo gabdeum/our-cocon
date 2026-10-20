@@ -22,3 +22,11 @@ After the list: the footnote "−1 / +1 changes a timer by a minute, even while 
 
 ## Accessibility labels
 "−1": "One minute less" · "+1": "One minute more" · the clock is announced politely at 1 minute left and at zero.
+
+## States not drawn
+| State | Copy |
+| --- | --- |
+| A step mentions an ingredient that was deleted | the ingredient's last known name in muted text, no highlight; "an ingredient" when the name is gone too (the form warns, spec 016) |
+| Thermometer setting off (spec 027) | the temperature check callout is hidden |
+| Temperature check text | `{temp}` in the saved text marks where the reading goes ("the center should reach {temp} and barely wobble." → "…reach 71 °C (160 °F) and…"); without it, the reading follows the text |
+| A step with no name | the number badge and text only |

@@ -175,6 +175,23 @@ export const strings = {
     variantTag: 'Variant',
     addToGroceries: 'Add to groceries…',
     startCooking: 'Start cooking',
+    stepsLabel: 'Steps',
+    // The Steps tab (spec 009, OC-RecipeSteps).
+    steps: {
+      tempLabel: 'Temperature check:',
+      tipLabel: "Chef's tip",
+      startTimer: 'Start timer',
+      pause: 'Pause',
+      resume: 'Resume',
+      done: 'Done!',
+      minus: '−1',
+      plus: '+1',
+      minusA11y: 'One minute less',
+      plusA11y: 'One minute more',
+      footnote: '−1 / +1 changes a timer by a minute, even while it runs.',
+      /** A token whose ingredient is gone and whose name isn't known either. */
+      missingIngredient: 'an ingredient',
+    },
     // What an option variant changes (FR-002): "Adds 3 ingredients and 1 step".
     effect: {
       adds: (what: string) => `Adds ${what}`,
