@@ -23,7 +23,7 @@
 
 - **FR-001**: Each step renders as a StepCard: number, name, body via `renderStep` (spec 005), then optional temperature Callout, timer row and tip Callout, in that order.
 - **FR-002**: The timer row is a Start/Pause/Resume/Done button with a live clock, plus −1 and +1 buttons; the footnote under the list explains −1/+1.
-- **FR-003**: The temperature check text is stored in °C and displayed in both scales (constitution V).
+- **FR-003**: The temperature check text is stored in °C and displayed in both scales (constitution V). `{temp}` in `temp_check_text` marks where the reading goes ("the center should reach {temp} and barely wobble."); without it, the reading follows the text. Rendered by `renderTemperatureCheck` (`@cocon/quantity`).
 - **FR-004**: Step photos, when present, show full-width at radius 16 above the text.
 
 ## Success Criteria
@@ -32,13 +32,14 @@
 ## Tracking (PostHog)
 | Event | Properties |
 | --- | --- |
-| `step_timer_started` | step_index |
+| `step_timer_started` | step_index (sent from spec 010, when the timer works) |
 
 ## Warnings and errors
 All copy is in the States tables of the UI specs for: OC-RecipeSteps. New messages go there and in `strings/en.ts` first.
 
 ## Needs your attention
-None.
+- Until spec 010, the timer buttons are drawn but do nothing when tapped (agreed while planning).
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-19: Shipped the Steps tab: StepCards with amounts from the same scaled ingredients as the list (SC-001 checked for 1–16 servings, every variant choice, metric, imperial and scale off), temperature check, timer row and tip, the footnote. Agreed deviations: the timer row is drawn but inactive (disabled for screen readers) and `step_timer_started` moves to spec 010 (US3 with it); step photos (FR-004) wait for spec 014's bucket (032 L10); the thermometer setting is a `RecipePage` prop, on until spec 027. US1's "1 oz butter" reads "1.1 oz" (30 g at the engine's 0.1 oz, like "15.9 oz" in the same sentence). Also: `{temp}` placeholder in temperature check text (FR-003); a variant swap to one ingredient carries the steps' tokens to it; a token whose ingredient is gone shows its last known name, muted, or "an ingredient". Seed: temperature checks reworded with `{temp}`, the quiche's oven temperature is a `{temp:180}` token, and "Make my own dough" rewrites "Preheat and line" ("…with the rolled-out dough…"), so its hint now reads "Adds 3 ingredients and 1 step. Changes 1 step".

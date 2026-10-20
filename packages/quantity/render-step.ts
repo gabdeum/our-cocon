@@ -50,3 +50,20 @@ export function renderStep(body: string, ingredients: QuantityIngredient[], opti
   addText(body.slice(last));
   return segments;
 }
+
+/** Where the reading goes in a step's temperature check text (spec 009 FR-003). */
+export const TEMPERATURE_CHECK_SLOT = '{temp}';
+
+/**
+ * FR-003 (spec 009): a step's temperature check, stored as °C plus text, in both scales with
+ * thermometer rounding. `{temp}` in the text marks where the reading goes ("the center should
+ * reach {temp} and barely wobble."); without it the reading follows the text ("center reaches
+ * 71 °C (160 °F)", spec 016). Null when the step has no check.
+ */
+export function renderTemperatureCheck(text: string | null, celsius: number | null, system: TemperatureOptions['system']): string | null {
+  const words = text?.trim() || null;
+  if (celsius == null) return words;
+  const reading = formatTemperature(celsius, { system, kind: 'food' });
+  if (!words) return reading;
+  return words.includes(TEMPERATURE_CHECK_SLOT) ? words.replaceAll(TEMPERATURE_CHECK_SLOT, reading) : `${words} ${reading}`;
+}

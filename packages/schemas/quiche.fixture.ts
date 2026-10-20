@@ -5,6 +5,7 @@ import type { RecipeVariant } from './variants';
 export const quicheIds = {
   pastry: 'c0c01000-0000-4000-8000-000000000001',
   lardons: 'c0c01000-0000-4000-8000-000000000004',
+  mushrooms: 'c0c04000-0000-4000-8000-000000000001',
   preheat: 'c0c02000-0000-4000-8000-000000000001',
   vegetarian: 'c0c03000-0000-4000-8000-000000000001',
   dough: 'c0c03000-0000-4000-8000-000000000002',
@@ -24,14 +25,26 @@ export const quicheIngredients: IngredientRow[] = [
   ing(8, { name: 'Nutmeg', quantity: 1, unit: 'pinch' }),
 ];
 
-const step = (n: number, name: string, body: string): StepRow => ({ id: `c0c02000-0000-4000-8000-00000000000${n}`, name, body });
+const step = (n: number, name: string, body: string, extra: Partial<StepRow> = {}): StepRow => ({ id: `c0c02000-0000-4000-8000-00000000000${n}`, name, body, ...extra });
+const t = (n: number) => `{ing:c0c01000-0000-4000-8000-00000000000${n}}`;
 export const quicheSteps: StepRow[] = [
-  step(1, 'Preheat and line', `Line a tart pan with {ing:${quicheIds.pastry}}.`),
-  step(2, 'Blind bake', 'Bake the empty crust for 12 minutes until pale golden.'),
-  step(3, 'Cook the filling', 'Cook the leeks, then the lardons.'),
-  step(4, 'Mix the custard', 'Whisk the eggs with the cream.'),
-  step(5, 'Bake', 'Bake for 35 minutes.'),
-  step(6, 'Rest', 'Let it rest for 10 minutes before slicing.'),
+  step(1, 'Preheat and line', `Preheat the oven to {temp:180}. Line a 23 cm (9 in) tart pan with ${t(1)} and prick the base with a fork.`, {
+    tip: 'Chill the lined pan for 10 minutes so the edges don’t shrink.',
+  }),
+  step(2, 'Blind bake', 'Bake the empty crust for 12 minutes until pale golden.', { timer_seconds: 720, timer_label: 'Blind bake' }),
+  step(3, 'Cook the filling', `In a large pan, melt ${t(2)} over medium heat. Add ${t(3)} finely sliced and cook 6–8 minutes until soft. Add ${t(4)} and cook 5 minutes until golden.`, {
+    timer_seconds: 480,
+    timer_label: 'Soften leeks',
+  }),
+  step(4, 'Mix the custard', `Whisk ${t(5)} with ${t(6)} and ${t(8)}. Season with salt and pepper, then stir in half of the ${t(7)}.`),
+  step(5, 'Bake', 'Spread the filling in the crust, pour over the custard and top with the rest of the cheese. Bake for 35 minutes.', {
+    timer_seconds: 2100,
+    timer_label: 'Bake',
+    temp_check_c: 71,
+    temp_check_text: 'the center should reach {temp} and barely wobble.',
+    tip: 'If the top browns too fast, cover it loosely with foil.',
+  }),
+  step(6, 'Rest', 'Let it rest for 10 minutes before slicing, so it holds together.', { timer_seconds: 600, timer_label: 'Rest' }),
 ];
 
 export const quicheVariants: RecipeVariant[] = [
@@ -44,7 +57,7 @@ export const quicheVariants: RecipeVariant[] = [
       {
         type: 'swap_ingredient',
         ingredient_id: quicheIds.lardons,
-        with: [{ id: 'c0c04000-0000-4000-8000-000000000001', name: 'Mushrooms', quantity: 250, unit: 'g', prep_note: 'sliced' }],
+        with: [{ id: quicheIds.mushrooms, name: 'Mushrooms', quantity: 250, unit: 'g', prep_note: 'sliced' }],
       },
     ],
   },
@@ -67,7 +80,18 @@ export const quicheVariants: RecipeVariant[] = [
         type: 'add_step',
         step_id: quicheIds.preheat,
         place: 'before',
-        step: { name: 'Make the dough', body: 'Rub the flour and butter together.', timer_seconds: 1800, timer_label: 'Chill dough' },
+        step: {
+          name: 'Make the dough',
+          body: 'Rub {ing:c0c04000-0000-4000-8000-000000000002} and {ing:c0c04000-0000-4000-8000-000000000003} together with your fingertips until sandy. Add {ing:c0c04000-0000-4000-8000-000000000004}, bring into a ball, wrap and chill.',
+          timer_seconds: 1800,
+          timer_label: 'Chill dough',
+          tip: 'Cold hands and cold butter make a flakier crust.',
+        },
+      },
+      {
+        type: 'change_step',
+        step_id: quicheIds.preheat,
+        body: 'Preheat the oven to {temp:180}. Line a 23 cm (9 in) tart pan with the rolled-out dough and prick the base with a fork.',
       },
     ],
   },

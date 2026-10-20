@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { facts } from './catalog.fixture';
-import { ingredientToken, renderStep, temperatureToken } from './render-step';
+import { ingredientToken, renderStep, renderTemperatureCheck, temperatureToken } from './render-step';
 import type { QuantityIngredient } from './types';
 
 const leek: QuantityIngredient = {
@@ -77,5 +77,23 @@ describe('temperature tokens', () => {
   it('keeps a decimal and leaves a broken token as written', () => {
     expect(temperatureToken(176.6667)).toBe('{temp:176.7}');
     expect(plain(renderStep('Oven at {temp:hot}', [], options))).toBe('Oven at {temp:hot}');
+  });
+});
+
+describe('renderTemperatureCheck (spec 009 FR-003)', () => {
+  it('US2: puts the reading where {temp} is, in both scales', () => {
+    expect(renderTemperatureCheck('the center should reach {temp} and barely wobble.', 71, 'metric')).toBe('the center should reach 71 °C (160 °F) and barely wobble.');
+    expect(renderTemperatureCheck('the center should reach {temp} and barely wobble.', 71, 'imperial')).toBe('the center should reach 160 °F (71 °C) and barely wobble.');
+  });
+
+  it('puts the reading after the text when there is no {temp}', () => {
+    expect(renderTemperatureCheck('center reaches', 71, 'metric')).toBe('center reaches 71 °C (160 °F)');
+  });
+
+  it('shows whichever half the step has, or nothing', () => {
+    expect(renderTemperatureCheck(null, 71, 'metric')).toBe('71 °C (160 °F)');
+    expect(renderTemperatureCheck('  ', 71, 'metric')).toBe('71 °C (160 °F)');
+    expect(renderTemperatureCheck('Until golden.', null, 'metric')).toBe('Until golden.');
+    expect(renderTemperatureCheck(null, null, 'metric')).toBeNull();
   });
 });

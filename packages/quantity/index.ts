@@ -1,7 +1,7 @@
 // Units and amounts (spec 005). Every amount shown anywhere comes from here.
 export { QuantityError, type QuantityErrorCode } from './errors';
 export { format } from './format';
-export { ingredientToken, renderStep, temperatureToken, type StepSegment } from './render-step';
+export { TEMPERATURE_CHECK_SLOT, ingredientToken, renderStep, renderTemperatureCheck, temperatureToken, type StepSegment } from './render-step';
 export { decimalText, fractionText, toStep } from './round';
 export { scale, type ScaleBy, type ScalableRecipe, type Scaled } from './scale';
 export { formatTemperature, type TemperatureOptions } from './temperature';

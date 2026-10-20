@@ -1,5 +1,5 @@
 import { applyVariants, cuisineOf, variantEffect, type Applied, type IngredientRow, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
-import { format, scale, type FormatOptions, type QuantityIngredient } from '@cocon/quantity';
+import { format, renderStep, renderTemperatureCheck, scale, type FormatOptions, type QuantityIngredient } from '@cocon/quantity';
 import { strings } from '../strings/en';
 import type { Member } from './session';
 import type { RecipeDetail } from './recipe';
@@ -43,17 +43,81 @@ export function ingredientLine(ing: Applied<IngredientRow> & QuantityIngredient,
   return { id: ing.id, amount, name: ing.prep_note ? `${base}, ${ing.prep_note}` : base, sub: f.sub, variant: ing.fromVariant };
 }
 
+/** Step text for StepCard: plain text, a highlighted amount, or the name of an ingredient that's gone. */
+export type StepPart = string | { amount: string } | { missing: string };
+
+export interface StepLine {
+  /** The step's id; a variant's added step is `<variant id>:<change index>`. */
+  id: string;
+  /** 1…n after variants are applied, so numbering never skips. */
+  number: number;
+  name: string | null;
+  variant: boolean;
+  parts: StepPart[];
+  /** "the center should reach 71 °C (160 °F) and barely wobble." Null when there's none or the thermometer setting is off. */
+  tempCheck: string | null;
+  timer: { seconds: number; label: string; clock: string } | null;
+  tip: string | null;
+}
+
 export interface RecipeView {
   ingredients: IngredientLine[];
+  steps: StepLine[];
   stepCount: number;
 }
 
-/** What the page shows for the chosen servings and variants (FR-004, SC-002). */
-export function recipeView(recipe: Pick<RecipeDetail, 'serves' | 'ingredients' | 'steps' | 'variants' | 'facts'>, servings: number, choice: VariantChoice, options: FormatOptions = defaultFormat): RecipeView {
+/** A timer's clock before it starts: "12:00", "05:30". Running clocks are spec 010's. */
+export function timerClock(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds));
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+export interface CookingSettings {
+  /** "I have a thermometer" (spec 027). Until that setting exists, it's on. */
+  thermometer: boolean;
+}
+export const defaultCooking: CookingSettings = { thermometer: true };
+
+/**
+ * What the page shows for the chosen servings and variants (spec 008 FR-004, SC-002; spec 009
+ * FR-001). Steps are filled from the same scaled ingredients as the list, so their amounts always
+ * match it (009 SC-001).
+ */
+export function recipeView(
+  recipe: Pick<RecipeDetail, 'serves' | 'ingredients' | 'steps' | 'variants' | 'facts'>,
+  servings: number,
+  choice: VariantChoice,
+  options: FormatOptions = defaultFormat,
+  cooking: CookingSettings = defaultCooking,
+): RecipeView {
   const applied = applyVariants(recipe, recipe.variants, choice);
   const withFacts = applied.ingredients.map((i) => ({ ...i, facts: i.catalog_key ? recipe.facts[i.catalog_key] : null }));
   const scaled = scale({ serves: recipe.serves, ingredients: withFacts }, { servings });
-  return { ingredients: scaled.ingredients.map((i) => ingredientLine(i, options)), stepCount: applied.steps.length };
+  const knownNames = ingredientNames(recipe);
+  const steps = applied.steps.map((step, i): StepLine => ({
+    id: step.id,
+    number: i + 1,
+    name: step.name ?? null,
+    variant: step.fromVariant,
+    parts: renderStep(step.body, scaled.ingredients, options).map((seg) =>
+      seg.type === 'text' ? seg.text : seg.type === 'amount' ? { amount: seg.text } : { missing: knownNames.get(seg.ingredientId) ?? p.steps.missingIngredient },
+    ),
+    tempCheck: cooking.thermometer ? renderTemperatureCheck(step.temp_check_text ?? null, step.temp_check_c ?? null, options.system) : null,
+    timer: step.timer_seconds ? { seconds: step.timer_seconds, label: step.timer_label ?? step.name ?? '', clock: timerClock(step.timer_seconds) } : null,
+    tip: step.tip ?? null,
+  }));
+  return { ingredients: scaled.ingredients.map((i) => ingredientLine(i, options)), steps, stepCount: steps.length };
+}
+
+/** Every ingredient name the recipe has known, base and variants, for tokens whose ingredient is gone. */
+function ingredientNames(recipe: Pick<RecipeDetail, 'ingredients' | 'variants'>): Map<string, string> {
+  const names = new Map(recipe.ingredients.map((i) => [i.id, i.name]));
+  for (const v of recipe.variants)
+    for (const c of v.changes) {
+      if (c.type === 'swap_ingredient') for (const i of c.with) names.set(i.id, i.name);
+      else if (c.type === 'add_ingredient') names.set(c.ingredient.id, c.ingredient.name);
+    }
+  return names;
 }
 
 /** How many variants are on, for `variant_selected`. */

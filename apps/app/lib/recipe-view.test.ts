@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { quiche, quicheIds } from '@cocon/schemas/quiche.fixture';
 import { format, scale } from '@cocon/quantity';
 import { applyVariants, noVariants, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
-import { bestMonthsLabel, defaultFormat, optionHint, recipeChips, recipeView, servingsMax } from './recipe-view';
+import { bestMonthsLabel, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, timerClock, type StepPart } from './recipe-view';
 
 const recipe = { ...quiche, facts: {} };
 const dough = quiche.variants.find((v) => v.id === quicheIds.dough) as RecipeVariant;
@@ -121,11 +121,86 @@ describe('recipeChips (FR-001)', () => {
 
 describe('optionHint (FR-002)', () => {
   it('says what an option changes', () => {
-    expect(optionHint(dough)).toBe('Adds 3 ingredients and 1 step');
+    expect(optionHint(dough)).toBe('Adds 3 ingredients and 1 step. Changes 1 step');
     expect(optionHint({ changes: [{ type: 'remove_ingredient', ingredient_id: 'x' }] })).toBe('Removes 1 ingredient');
     expect(optionHint({ changes: [{ type: 'add_ingredient', ingredient: { id: 'c', name: 'Chives' } }, { type: 'change_step', step_id: 's', body: 'x' }] })).toBe(
       'Adds 1 ingredient. Changes 1 step',
     );
     expect(optionHint({ changes: [] })).toBeNull();
+  });
+});
+
+const imperial = { system: 'imperial', scale: true } as const;
+const amounts = (parts: StepPart[]) => parts.flatMap((p) => (typeof p === 'object' && 'amount' in p ? [p.amount] : []));
+const text = (parts: StepPart[]) => parts.map((p) => (typeof p === 'string' ? p : 'amount' in p ? p.amount : p.missing)).join('');
+
+describe('steps (spec 009)', () => {
+  it('US1: at 9 servings, imperial, step 3 says "melt 1.1 oz butter… Add 3 leeks (15.9 oz)…" (30 g at 0.1 oz, like 15.9 oz)', () => {
+    const step = recipeView(recipe, 9, noVariants, imperial).steps[2];
+    expect(step).toMatchObject({ number: 3, name: 'Cook the filling', variant: false });
+    expect(amounts(step?.parts ?? [])).toEqual(['1.1 oz butter', '3 leeks (15.9 oz)', '10.6 oz bacon lardons']);
+    expect(text(step?.parts ?? [])).toContain('melt 1.1 oz butter over medium heat. Add 3 leeks (15.9 oz) finely sliced');
+  });
+
+  it('FR-001: temperatures in the body show both scales; temperature check, timer and tip come with the step', () => {
+    const steps = recipeView(recipe, 6, noVariants).steps;
+    expect(text(steps[0]?.parts ?? [])).toMatch(/^Preheat the oven to 180 °C \(350 °F\)\./);
+    expect(steps[0]).toMatchObject({ timer: null, tip: 'Chill the lined pan for 10 minutes so the edges don’t shrink.' });
+    expect(steps[1]?.timer).toEqual({ seconds: 720, label: 'Blind bake', clock: '12:00' });
+    expect(steps[4]?.tempCheck).toBe('the center should reach 71 °C (160 °F) and barely wobble.');
+    expect(recipeView(recipe, 6, noVariants, imperial).steps[4]?.tempCheck).toBe('the center should reach 160 °F (71 °C) and barely wobble.');
+  });
+
+  it('US2: the thermometer setting off hides the temperature check', () => {
+    expect(recipeView(recipe, 6, noVariants, defaultFormat, { thermometer: false }).steps[4]?.tempCheck).toBeNull();
+  });
+
+  it('edge: a variant step carries the Variant tag and numbering stays continuous; Vegetarian fills the swapped token', () => {
+    const steps = recipeView(recipe, 6, { version: quicheIds.vegetarian, options: [quicheIds.dough] }).steps;
+    expect(steps.map((s) => s.number)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(steps[0]).toMatchObject({ name: 'Make the dough', variant: true, timer: { clock: '30:00' }, tip: 'Cold hands and cold butter make a flakier crust.' });
+    expect(amounts(steps[0]?.parts ?? [])).toEqual(['200 g flour', '100 g cold butter', '50 ml ice water']);
+    expect(text(steps[1]?.parts ?? [])).toContain('with the rolled-out dough');
+    expect(amounts(steps[3]?.parts ?? [])).toContain('250 g mushrooms');
+  });
+
+  it('edge: a removed step disappears and the rest renumber', () => {
+    const skipRest: RecipeVariant = { id: 'r', position: 2, name: 'No rest', kind: 'option', changes: [{ type: 'remove_step', step_id: 'c0c02000-0000-4000-8000-000000000002' }] };
+    const steps = recipeView({ ...recipe, variants: [...quiche.variants, skipRest] }, 6, { version: null, options: ['r'] }).steps;
+    expect(steps.map((s) => `${s.number} ${s.name}`)).toEqual(['1 Preheat and line', '2 Cook the filling', '3 Mix the custard', '4 Bake', '5 Rest']);
+  });
+
+  it('edge: a token whose ingredient is gone shows its last known name, or "an ingredient"', () => {
+    const gone = { ...recipe, ingredients: quiche.ingredients.filter((i) => i.name !== 'Butter') };
+    expect(recipeView(gone, 6, noVariants).steps[2]?.parts).toContainEqual({ missing: 'an ingredient' });
+    const removed: RecipeVariant = { id: 'x', position: 2, name: 'No butter', kind: 'option', changes: [{ type: 'remove_ingredient', ingredient_id: 'c0c01000-0000-4000-8000-000000000002' }] };
+    expect(recipeView({ ...recipe, variants: [removed] }, 6, { version: null, options: ['x'] }).steps[2]?.parts).toContainEqual({ missing: 'Butter' });
+  });
+
+  it('SC-001: for 1–16 servings, every variant choice and both systems, step amounts equal the ingredient tab', () => {
+    const choices: VariantChoice[] = [noVariants, { version: quicheIds.vegetarian, options: [] }, { version: null, options: [quicheIds.dough] }, { version: quicheIds.vegetarian, options: [quicheIds.dough] }];
+    for (const options of [defaultFormat, imperial, { system: 'metric', scale: false } as const])
+      for (const choice of choices)
+        for (let servings = 1; servings <= 16; servings++) {
+          const view = recipeView(recipe, servings, choice, options);
+          const applied = applyVariants(recipe, recipe.variants, choice);
+          const phrases = new Map(
+            scale({ serves: 6, ingredients: applied.ingredients }, { servings }).ingredients.map((i) => [i.id, format(i, options)] as const),
+          );
+          const lines = new Map(view.ingredients.map((l) => [l.id, l]));
+          applied.steps.forEach((step, n) => {
+            const ids = [...step.body.matchAll(/\{ing:([^}]+)\}/g)].map((m) => m[1] as string).filter((id) => phrases.has(id));
+            expect(amounts(view.steps[n]?.parts ?? [])).toEqual(ids.map((id) => phrases.get(id)?.phrase));
+            // The list line for each of those ingredients shows the same amount the step does.
+            ids.forEach((id) => expect(phrases.get(id)?.phrase.startsWith(phrases.get(id)?.amount ?? '')).toBe(true));
+            ids.forEach((id) => expect(lines.get(id)?.amount.startsWith(phrases.get(id)?.amount ?? '')).toBe(true));
+          });
+        }
+  });
+
+  it('timerClock pads minutes and seconds', () => {
+    expect(timerClock(720)).toBe('12:00');
+    expect(timerClock(330)).toBe('05:30');
+    expect(timerClock(3600)).toBe('60:00');
   });
 });

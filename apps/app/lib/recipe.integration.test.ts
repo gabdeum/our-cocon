@@ -1,5 +1,5 @@
 // @vitest-environment node
-// Spec 008 against local Supabase: the recipe page's data. Mia opens Alex's quiche and gets its
+// Specs 008 and 009 against local Supabase: the recipe page's data. Mia opens Alex's quiche and gets its
 // rows in order, its variants (a bad change dropped, the rest kept) and the catalog facts of every
 // ingredient, variant ones included. Sam, in another family, gets nothing. Skipped locally when
 // Supabase isn't running.
@@ -24,6 +24,7 @@ describe.skipIf(!local)('the recipe page against local Supabase', () => {
   let sam: Client;
   const recipeId = randomUUID();
   const lardons = randomUUID();
+  const leeks = randomUUID();
   const preheat = randomUUID();
   const veg = randomUUID();
   const extra = randomUUID();
@@ -48,12 +49,24 @@ describe.skipIf(!local)('the recipe page against local Supabase', () => {
     // Inserted out of order: the page sorts by position.
     const ing = await alex.from('recipe_ingredients').insert([
       { family_id, recipe_id: recipeId, position: 1, id: lardons, name: 'Bacon lardons', catalog_key: null, quantity: 200, unit: 'g', weight_per_piece_g: null },
-      { family_id, recipe_id: recipeId, position: 0, id: randomUUID(), name: 'Leeks', catalog_key: 'leek', quantity: 2, unit: 'piece', weight_per_piece_g: 150 },
+      { family_id, recipe_id: recipeId, position: 0, id: leeks, name: 'Leeks', catalog_key: 'leek', quantity: 2, unit: 'piece', weight_per_piece_g: 150 },
     ]);
     if (ing.error) throw ing.error;
     const steps = await alex.from('recipe_steps').insert([
-      { family_id, recipe_id: recipeId, position: 1, id: randomUUID(), name: 'Bake', body: 'Bake for 35 minutes.' },
-      { family_id, recipe_id: recipeId, position: 0, id: preheat, name: 'Preheat', body: 'Preheat the oven.' },
+      {
+        family_id,
+        recipe_id: recipeId,
+        position: 1,
+        id: randomUUID(),
+        name: 'Bake',
+        body: `Add {ing:${leeks}} finely sliced, then {ing:${lardons}}. Bake for 35 minutes.`,
+        timer_seconds: 2100,
+        timer_label: 'Bake',
+        temp_check_c: 71,
+        temp_check_text: 'the center should reach {temp} and barely wobble.',
+        tip: 'If the top browns too fast, cover it loosely with foil.',
+      },
+      { family_id, recipe_id: recipeId, position: 0, id: preheat, name: 'Preheat', body: 'Preheat the oven to {temp:180}.' },
     ]);
     if (steps.error) throw steps.error;
     const variants = await alex.from('recipe_variants').insert([
@@ -102,6 +115,19 @@ describe.skipIf(!local)('the recipe page against local Supabase', () => {
     const view = recipeView(recipe, 6, { version: veg, options: [extra] });
     expect(view.ingredients.map((i) => i.name)).toEqual(['Leeks', 'Leeks']);
     expect(view.stepCount).toBe(3);
+  });
+
+  it('spec 009 US1/US2: fills the steps from the saved rows, for 9 servings in imperial', async () => {
+    const recipe = await loadRecipe(mia, recipeId);
+    if (!recipe) throw new Error('no recipe');
+    const imperial = { system: 'imperial', scale: true } as const;
+    const [preheatStep, bake] = recipeView(recipe, 9, { version: null, options: [] }, imperial).steps;
+    expect(preheatStep?.parts).toEqual(['Preheat the oven to 350 °F (180 °C).']);
+    expect(bake?.parts).toEqual(['Add ', { amount: '3 leeks (15.9 oz)' }, ' finely sliced, then ', { amount: '10.6 oz bacon lardons' }, '. Bake for 35 minutes.']);
+    expect(bake).toMatchObject({ number: 2, timer: { clock: '35:00' }, tempCheck: 'the center should reach 160 °F (71 °C) and barely wobble.' });
+    // Vegetarian swaps the lardons for one leek: the step's token follows it.
+    const veg9 = recipeView(recipe, 9, { version: veg, options: [] }, imperial).steps[1];
+    expect(veg9?.parts).toContainEqual({ amount: '1½ leeks (7.9 oz)' });
   });
 
   it('gives Sam, in another family, nothing (RLS)', async () => {

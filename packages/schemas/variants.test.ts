@@ -72,6 +72,32 @@ describe('applyVariants (spec 008 US2)', () => {
     expect(r.steps[4]).toMatchObject({ name: 'Bake', body: 'Bake for 25 minutes.', timer_seconds: 1500, fromVariant: false });
   });
 
+  it('a swap to one ingredient carries the step tokens over (spec 009)', () => {
+    const r = applyVariants(quiche, quiche.variants, { version: quicheIds.vegetarian, options: [] });
+    expect(r.steps[2]?.body).toContain(`{ing:${quicheIds.mushrooms}}`);
+    expect(r.steps[2]?.body).not.toContain(quicheIds.lardons);
+  });
+
+  it('follows a swapped-in ingredient swapped again, and leaves a swap to several ingredients alone', () => {
+    const again: RecipeVariant = {
+      id: 'again',
+      position: 2,
+      name: 'Tofu',
+      kind: 'option',
+      changes: [{ type: 'swap_ingredient', ingredient_id: quicheIds.mushrooms, with: [{ id: 'c0c04000-0000-4000-8000-0000000000ff', name: 'Tofu' }] }],
+    };
+    const r = applyVariants(quiche, [...quiche.variants, again], { version: quicheIds.vegetarian, options: ['again'] });
+    expect(r.steps[2]?.body).toContain('{ing:c0c04000-0000-4000-8000-0000000000ff}');
+    const split: RecipeVariant = {
+      id: 'split',
+      position: 0,
+      name: 'Two',
+      kind: 'option',
+      changes: [{ type: 'swap_ingredient', ingredient_id: quicheIds.pastry, with: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }] }],
+    };
+    expect(applyVariants(quiche, [split], { version: null, options: ['split'] }).steps[0]?.body).toContain(`{ing:${quicheIds.pastry}}`);
+  });
+
   it("doesn't change the recipe it was given", () => {
     const before = JSON.stringify(quiche);
     applyVariants(quiche, quiche.variants, { version: quicheIds.vegetarian, options: [quicheIds.dough] });
@@ -90,6 +116,6 @@ describe('validChoice (FR-006)', () => {
 
 describe('variantEffect (FR-002)', () => {
   it('counts what a swap brings in as added', () => {
-    expect(variantEffect(dough.changes)).toEqual({ ingredientsAdded: 3, ingredientsRemoved: 0, stepsAdded: 1, stepsChanged: 0, stepsRemoved: 0 });
+    expect(variantEffect(dough.changes)).toEqual({ ingredientsAdded: 3, ingredientsRemoved: 0, stepsAdded: 1, stepsChanged: 1, stepsRemoved: 0 });
   });
 });

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import {
   Button,
+  Callout,
   Card,
   Choice,
   IconButton,
@@ -13,18 +14,22 @@ import {
   SegmentedControl,
   SettingRow,
   StatusBanner,
+  StepCard,
+  StepFootnote,
   Stepper,
   Text,
+  TimerRow,
 } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
-import { optionHint, recipeChips, recipeView, servingsMax, SERVINGS_MIN, variantCount } from '../../lib/recipe-view';
+import { defaultCooking, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, SERVINGS_MIN, variantCount, type StepLine } from '../../lib/recipe-view';
 import type { Member } from '../../lib/session';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const p = strings.recipePage;
+const stepCopy = strings.recipePage.steps;
 /** `servings_changed` waits for the stepper to settle, so 6 → 9 in three taps is one change. */
 export const SERVINGS_SETTLE_MS = 800;
 
@@ -47,9 +52,11 @@ export interface RecipePageProps {
   onSettings: () => void;
   onAddToGroceries: () => void;
   onStartCooking: () => void;
+  /** "I have a thermometer" (spec 027 wires the setting); on until then. */
+  thermometer?: boolean;
 }
 
-/** The recipe page, Ingredients tab (spec 008; design/ui/OC-Recipe.md). Steps are spec 009. */
+/** The recipe page (spec 008, design/ui/OC-Recipe.md) and its Steps tab (spec 009, OC-RecipeSteps.md). */
 export function RecipePage(props: RecipePageProps) {
   const { recipe, failed, onRetry, tracker, onBack } = props;
   const back = <IconButton icon="back" label={p.back} onPress={onBack} />;
@@ -94,6 +101,7 @@ function LoadedRecipe({
   onSettings,
   onAddToGroceries,
   onStartCooking,
+  thermometer = defaultCooking.thermometer,
 }: RecipePageProps & { recipe: RecipeDetail }) {
   const max = servingsMax(recipe.serves);
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
@@ -114,7 +122,10 @@ function LoadedRecipe({
 
   // A variant deleted while the page is open no longer counts.
   const current = useMemo(() => (choices ? startingChoices(choices, recipe, max) : null), [choices, recipe, max]);
-  const view = useMemo(() => (current ? recipeView(recipe, current.servings, current) : null), [recipe, current]);
+  const view = useMemo(
+    () => (current ? recipeView(recipe, current.servings, current, defaultFormat, { thermometer }) : null),
+    [recipe, current, thermometer],
+  );
   const chips = recipeChips(recipe, members);
   const versions = recipe.variants.filter((v) => v.kind === 'version');
   const options = recipe.variants.filter((v) => v.kind === 'option');
@@ -255,11 +266,50 @@ function LoadedRecipe({
               </View>
               <Button label={p.addToGroceries} variant="outline" icon="groceries" block onPress={onAddToGroceries} className="mt-16" />
             </View>
-          ) : null}
+          ) : (
+            <View className="gap-14">
+              <View role="list" aria-label={p.stepsLabel} className="gap-14">
+                {view.steps.map((step) => (
+                  <View key={step.id} role="listitem">
+                    <Step step={step} />
+                  </View>
+                ))}
+              </View>
+              <StepFootnote text={stepCopy.footnote} />
+            </View>
+          )}
         </>
       ) : null}
 
       <Button label={p.startCooking} variant="ink" size="lg" icon="play" block onPress={onStartCooking} />
     </PhotoScreen>
+  );
+}
+
+/** Timers start, pause and count from spec 010; until then the row shows each step's time. */
+const timerSoon = () => {};
+
+/** One step (FR-001): text, then the temperature check, the timer row and the tip, in that order. */
+function Step({ step }: { step: StepLine }) {
+  return (
+    <StepCard number={step.number} name={step.name ?? undefined} variantTag={step.variant ? p.variantTag : undefined} parts={step.parts}>
+      {step.tempCheck ? <Callout variant="temp" label={stepCopy.tempLabel} text={step.tempCheck} /> : null}
+      {step.timer ? (
+        <TimerRow
+          state="idle"
+          label={stepCopy.startTimer}
+          clock={step.timer.clock}
+          onPress={timerSoon}
+          minusLabel={stepCopy.minus}
+          plusLabel={stepCopy.plus}
+          minusA11y={stepCopy.minusA11y}
+          plusA11y={stepCopy.plusA11y}
+          onMinus={timerSoon}
+          onPlus={timerSoon}
+          disabled
+        />
+      ) : null}
+      {step.tip ? <Callout variant="tip" label={stepCopy.tipLabel} text={step.tip} /> : null}
+    </StepCard>
   );
 }
