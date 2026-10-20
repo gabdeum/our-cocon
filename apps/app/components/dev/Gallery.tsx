@@ -39,6 +39,7 @@ import {
   RecipeItemSkeleton,
   SearchField,
   SegmentedControl,
+  PhotoPlaceholder,
   SettingRow,
   SheetFooter,
   StatTile,
@@ -237,6 +238,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <SettingRow label="I have a thermometer" hint="Off: hides temperature checks in steps" value={thermometer} onValueChange={setThermometer} />
           <SettingRow label="Thermometer checks" changedHint="Changed for this recipe" resetLabel="Reset" onReset={noop} value={checks} onValueChange={setChecks} last />
         </ListGroup>
+        <SettingRow boxed label="Make my own dough" hint="Adds 3 ingredients and 1 step" value={screenOn} onValueChange={setScreenOn} />
       </Section>
 
       <Section group="Inputs" title="SegmentedControl">
@@ -282,6 +284,10 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
       </Section>
 
       <Section group="Lists and cards" title="Card">
+        <View className="flex-row gap-12">
+          <PhotoPlaceholder label="[Quiche photo]" className="flex-1 rounded-xl py-28" />
+          <PhotoPlaceholder initial="L" className="flex-1 rounded-xl py-28" />
+        </View>
         <HeroCard title="Leek & bacon quiche" badge="Latest recipe" photoLabel="[Quiche photo]" chips={[{ label: '1 h 10' }, { label: 'Serves 6' }, { label: '2 to buy', tone: 'warn' }]} onPress={noop} />
         <Card tone="soft" className="flex-row items-center">
           <View className="flex-1">

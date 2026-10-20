@@ -157,6 +157,9 @@ importers:
 
   apps/app:
     dependencies:
+      '@cocon/quantity':
+        specifier: workspace:*
+        version: link:../../packages/quantity
       '@cocon/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas

@@ -31,10 +31,12 @@ describe('US1: pieces at any serving size', () => {
     expect(format(leeks, metric)).toEqual({ amount: '3', unit: '', sub: '450 g', phrase: '3 leeks (450 g)' });
   });
 
-  it('rounds eggs to the nearest half and keeps their size', () => {
+  it('rounds eggs to the nearest half; the size is named only when it is not the default', () => {
     const eggs = ing('Large eggs', 1.25, 'piece', { size_word: 'large', weight_per_piece_g: 50, piece_noun_singular: 'egg', piece_noun_plural: 'eggs', facts: facts('egg') });
-    expect(format(eggs, metric)).toEqual({ amount: '1½', unit: 'large', sub: '63 g', phrase: '1½ large eggs (63 g)' });
-    expect(phrase(eggs, noScale)).toBe('1½ large eggs');
+    expect(format(eggs, metric)).toEqual({ amount: '1½', unit: '', sub: '63 g', phrase: '1½ eggs (63 g)' });
+    expect(phrase(eggs, noScale)).toBe('1½ eggs');
+    const small = ing('Small eggs', 2, 'piece', { size_word: 'small', weight_per_piece_g: 38, piece_noun_singular: 'egg', piece_noun_plural: 'eggs', facts: facts('egg') });
+    expect(format(small, metric)).toEqual({ amount: '2', unit: 'small', sub: '76 g', phrase: '2 small eggs (76 g)' });
   });
 
   it('shows singular up to one piece, never below ½', () => {
@@ -82,6 +84,15 @@ describe('US2: units follow the person', () => {
     expect(phrase(ing('Butter', 20, 'g', { facts: facts('butter') }), { system: 'imperial', scale: false })).toBe('about 1½ tbsp butter');
   });
 
+  it('shows the weight of a volume as the sub-line when the density is known (not in the phrase)', () => {
+    expect(format(ing('Heavy cream', 350, 'ml', { facts: facts('heavy_cream') }), metric)).toEqual({ amount: '350', unit: 'ml', sub: '350 g', phrase: '350 ml heavy cream' });
+    expect(format(ing('Butter', 1, 'tbsp', { facts: facts('butter') }), metric)).toMatchObject({ amount: '1', unit: 'tbsp', sub: '14 g' });
+    expect(format(ing('Heavy cream', 300, 'ml', { facts: facts('heavy_cream') }), imperial)).toMatchObject({ amount: '1¼', unit: 'cups', sub: '10.6 oz' });
+    // No density: no guess. No kitchen scale: no weights at all.
+    expect(format(ing('Stock', 500, 'ml'), metric).sub).toBeNull();
+    expect(format(ing('Heavy cream', 350, 'ml', { facts: facts('heavy_cream') }), noScale).sub).toBeNull();
+  });
+
   it('keeps the weight when there is no density', () => {
     expect(phrase(ing('Bacon lardons', 200, 'g'), noScale)).toBe('200 g bacon lardons');
   });
@@ -92,16 +103,16 @@ describe('US4: pieces read the way you cut them', () => {
     [onion(95), metric, '¾ onion (95 g)'],
     [onion(18), metric, '2 tbsp of onions (18 g)'],
     [ing('Onion', 0.5, 'piece', { size_word: 'small', weight_per_piece_g: 70, piece_noun_singular: 'onion', piece_noun_plural: 'onions', facts: facts('onion') }), metric, '¼ onion (35 g)'],
-    [onion(250), metric, '2 medium onions (250 g)'],
+    [onion(250), metric, '2 onions (250 g)'],
     [onion(140), metric, '2 small onions (140 g)'],
-    [onion(115), metric, '1 medium onion (115 g)'],
-    [onion(180), metric, '1½ medium onions (180 g)'],
+    [onion(115), metric, '1 onion (115 g)'],
+    [onion(180), metric, '1½ onions (180 g)'],
     // The default size wins within 10%: 3½ medium (420 g) over 2 large (400 g), 4 medium over 7 small.
-    [onion(400), metric, '3½ medium onions (400 g)'],
-    [onion(500), metric, '4 medium onions (500 g)'],
+    [onion(400), metric, '3½ onions (400 g)'],
+    [onion(500), metric, '4 onions (500 g)'],
     [onion(66), metric, '½ onion (66 g)'],
     // Exactly 10% still goes to the default; more than 10% off, the closer size wins.
-    [onion(200), metric, '1½ medium onions (200 g)'],
+    [onion(200), metric, '1½ onions (200 g)'],
     [onion(205), metric, '1 large onion (205 g)'],
     [onion(210), metric, '3 small onions (210 g)'],
     [onion(7), metric, '2 tsp of onions (7 g)'],
@@ -118,26 +129,27 @@ describe('US4: pieces read the way you cut them', () => {
     // No density: spoons as if it were water.
     [ing('Leeks', 20, 'g', { facts: facts('leek') }), metric, '1½ tbsp of leeks (20 g)'],
     // A fraction of a piece after scaling.
-    [ing('Leeks', 2.5, 'piece', { weight_per_piece_g: 150, piece_noun_singular: 'leek', piece_noun_plural: 'leeks', facts: facts('leek') }), metric, '2½ medium leeks (375 g)'],
+    [ing('Leeks', 2.5, 'piece', { weight_per_piece_g: 150, piece_noun_singular: 'leek', piece_noun_plural: 'leeks', facts: facts('leek') }), metric, '2½ leeks (375 g)'],
   ])('%o → %s', (i, o, expected) => {
     expect(phrase(i, o)).toBe(expected);
   });
 
-  it('fills the amount column with the count and the size word', () => {
+  it('fills the amount column with the count, and a size word only for a non-default size', () => {
     expect(format(onion(95), metric)).toEqual({ amount: '¾', unit: '', sub: '95 g', phrase: '¾ onion (95 g)' });
-    expect(format(onion(250), metric)).toEqual({ amount: '2', unit: 'medium', sub: '250 g', phrase: '2 medium onions (250 g)' });
+    expect(format(onion(250), metric)).toEqual({ amount: '2', unit: '', sub: '250 g', phrase: '2 onions (250 g)' });
+    expect(format(onion(205), metric)).toMatchObject({ amount: '1', unit: 'large', phrase: '1 large onion (205 g)' });
     expect(format(onion(7), metric)).toEqual({ amount: '2', unit: 'tsp', sub: '7 g', phrase: '2 tsp of onions (7 g)' });
   });
 
   it('uses the piece nouns', () => {
-    expect(phrase(ing('Garlic', 2.5, 'piece', { weight_per_piece_g: 5, facts: facts('garlic') }))).toBe('2½ medium cloves of garlic (13 g)');
+    expect(phrase(ing('Garlic', 2.5, 'piece', { weight_per_piece_g: 5, facts: facts('garlic') }))).toBe('2½ cloves of garlic (13 g)');
   });
 
   it('counts herbs and kale in bunches', () => {
     expect(phrase(ing('Parsley', 30, 'g', { facts: facts('parsley') }))).toBe('½ bunch of parsley (30 g)');
-    expect(phrase(ing('Cilantro', 70, 'g', { facts: facts('cilantro') }))).toBe('1 medium bunch of cilantro (70 g)');
+    expect(phrase(ing('Cilantro', 70, 'g', { facts: facts('cilantro') }))).toBe('1 bunch of cilantro (70 g)');
     expect(phrase(ing('Parsley', 10, 'g', { facts: facts('parsley') }))).toBe('2 tsp of parsley (10 g)');
-    expect(phrase(ing('Kale', 700, 'g', { facts: facts('kale') }))).toBe('2 medium bunches of kale (700 g)');
+    expect(phrase(ing('Kale', 700, 'g', { facts: facts('kale') }))).toBe('2 bunches of kale (700 g)');
   });
 
   it('never cuts whole-only items', () => {

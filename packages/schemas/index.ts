@@ -9,4 +9,5 @@ export * from './recipes';
 export * from './search';
 export * from './sources';
 export * from './sync';
+export * from './variants';
 export type { Database } from './database.types';

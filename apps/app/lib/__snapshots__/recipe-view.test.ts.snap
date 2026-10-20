@@ -1,0 +1,353 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 1`] = `
+{
+  "choice": {
+    "options": [],
+    "version": null,
+  },
+  "servings": 1,
+  "view": [
+    "½ | Shortcrust pastry (38 g)",
+    "3 g | Butter",
+    "½ | Leeks (50 g)",
+    "33 g | Bacon lardons",
+    "½ | Large eggs (25 g)",
+    "50 ml | Heavy cream",
+    "17 g | Gruyère, grated",
+    "1 pinch | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 2`] = `
+{
+  "choice": {
+    "options": [],
+    "version": null,
+  },
+  "servings": 6,
+  "view": [
+    "1 | Shortcrust pastry (230 g)",
+    "20 g | Butter",
+    "2 | Leeks (300 g)",
+    "200 g | Bacon lardons",
+    "3 | Large eggs (150 g)",
+    "300 ml | Heavy cream",
+    "100 g | Gruyère, grated",
+    "1 pinch | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 3`] = `
+{
+  "choice": {
+    "options": [],
+    "version": null,
+  },
+  "servings": 9,
+  "view": [
+    "1½ | Shortcrust pastry (345 g)",
+    "30 g | Butter",
+    "3 | Leeks (450 g)",
+    "300 g | Bacon lardons",
+    "4½ | Large eggs (225 g)",
+    "450 ml | Heavy cream",
+    "150 g | Gruyère, grated",
+    "2 pinches | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 4`] = `
+{
+  "choice": {
+    "options": [],
+    "version": null,
+  },
+  "servings": 16,
+  "view": [
+    "2½ | Shortcrust pastry (613 g)",
+    "53 g | Butter",
+    "5½ | Leeks (800 g)",
+    "533 g | Bacon lardons",
+    "8 | Large eggs (400 g)",
+    "800 ml | Heavy cream",
+    "267 g | Gruyère, grated",
+    "3 pinches | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 5`] = `
+{
+  "choice": {
+    "options": [],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "servings": 1,
+  "view": [
+    "½ | Shortcrust pastry (38 g)",
+    "3 g | Butter",
+    "½ | Leeks (50 g)",
+    "42 g | Mushrooms, sliced [Variant]",
+    "½ | Large eggs (25 g)",
+    "50 ml | Heavy cream",
+    "17 g | Gruyère, grated",
+    "1 pinch | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 6`] = `
+{
+  "choice": {
+    "options": [],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "servings": 6,
+  "view": [
+    "1 | Shortcrust pastry (230 g)",
+    "20 g | Butter",
+    "2 | Leeks (300 g)",
+    "250 g | Mushrooms, sliced [Variant]",
+    "3 | Large eggs (150 g)",
+    "300 ml | Heavy cream",
+    "100 g | Gruyère, grated",
+    "1 pinch | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 7`] = `
+{
+  "choice": {
+    "options": [],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "servings": 9,
+  "view": [
+    "1½ | Shortcrust pastry (345 g)",
+    "30 g | Butter",
+    "3 | Leeks (450 g)",
+    "375 g | Mushrooms, sliced [Variant]",
+    "4½ | Large eggs (225 g)",
+    "450 ml | Heavy cream",
+    "150 g | Gruyère, grated",
+    "2 pinches | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 8`] = `
+{
+  "choice": {
+    "options": [],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "servings": 16,
+  "view": [
+    "2½ | Shortcrust pastry (613 g)",
+    "53 g | Butter",
+    "5½ | Leeks (800 g)",
+    "667 g | Mushrooms, sliced [Variant]",
+    "8 | Large eggs (400 g)",
+    "800 ml | Heavy cream",
+    "267 g | Gruyère, grated",
+    "3 pinches | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 9`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": null,
+  },
+  "servings": 1,
+  "view": [
+    "33 g | Flour [Variant]",
+    "17 g | Cold butter, cubed [Variant]",
+    "8 ml | Ice water [Variant]",
+    "3 g | Butter",
+    "½ | Leeks (50 g)",
+    "33 g | Bacon lardons",
+    "½ | Large eggs (25 g)",
+    "50 ml | Heavy cream",
+    "17 g | Gruyère, grated",
+    "1 pinch | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 10`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": null,
+  },
+  "servings": 6,
+  "view": [
+    "200 g | Flour [Variant]",
+    "100 g | Cold butter, cubed [Variant]",
+    "50 ml | Ice water [Variant]",
+    "20 g | Butter",
+    "2 | Leeks (300 g)",
+    "200 g | Bacon lardons",
+    "3 | Large eggs (150 g)",
+    "300 ml | Heavy cream",
+    "100 g | Gruyère, grated",
+    "1 pinch | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 11`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": null,
+  },
+  "servings": 9,
+  "view": [
+    "300 g | Flour [Variant]",
+    "150 g | Cold butter, cubed [Variant]",
+    "75 ml | Ice water [Variant]",
+    "30 g | Butter",
+    "3 | Leeks (450 g)",
+    "300 g | Bacon lardons",
+    "4½ | Large eggs (225 g)",
+    "450 ml | Heavy cream",
+    "150 g | Gruyère, grated",
+    "2 pinches | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 12`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": null,
+  },
+  "servings": 16,
+  "view": [
+    "533 g | Flour [Variant]",
+    "267 g | Cold butter, cubed [Variant]",
+    "133 ml | Ice water [Variant]",
+    "53 g | Butter",
+    "5½ | Leeks (800 g)",
+    "533 g | Bacon lardons",
+    "8 | Large eggs (400 g)",
+    "800 ml | Heavy cream",
+    "267 g | Gruyère, grated",
+    "3 pinches | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 13`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "servings": 1,
+  "view": [
+    "33 g | Flour [Variant]",
+    "17 g | Cold butter, cubed [Variant]",
+    "8 ml | Ice water [Variant]",
+    "3 g | Butter",
+    "½ | Leeks (50 g)",
+    "42 g | Mushrooms, sliced [Variant]",
+    "½ | Large eggs (25 g)",
+    "50 ml | Heavy cream",
+    "17 g | Gruyère, grated",
+    "1 pinch | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 14`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "servings": 6,
+  "view": [
+    "200 g | Flour [Variant]",
+    "100 g | Cold butter, cubed [Variant]",
+    "50 ml | Ice water [Variant]",
+    "20 g | Butter",
+    "2 | Leeks (300 g)",
+    "250 g | Mushrooms, sliced [Variant]",
+    "3 | Large eggs (150 g)",
+    "300 ml | Heavy cream",
+    "100 g | Gruyère, grated",
+    "1 pinch | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 15`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "servings": 9,
+  "view": [
+    "300 g | Flour [Variant]",
+    "150 g | Cold butter, cubed [Variant]",
+    "75 ml | Ice water [Variant]",
+    "30 g | Butter",
+    "3 | Leeks (450 g)",
+    "375 g | Mushrooms, sliced [Variant]",
+    "4½ | Large eggs (225 g)",
+    "450 ml | Heavy cream",
+    "150 g | Gruyère, grated",
+    "2 pinches | Nutmeg",
+  ],
+}
+`;
+
+exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every variant combination 16`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "servings": 16,
+  "view": [
+    "533 g | Flour [Variant]",
+    "267 g | Cold butter, cubed [Variant]",
+    "133 ml | Ice water [Variant]",
+    "53 g | Butter",
+    "5½ | Leeks (800 g)",
+    "667 g | Mushrooms, sliced [Variant]",
+    "8 | Large eggs (400 g)",
+    "800 ml | Heavy cream",
+    "267 g | Gruyère, grated",
+    "3 pinches | Nutmeg",
+  ],
+}
+`;

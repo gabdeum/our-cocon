@@ -152,6 +152,46 @@ export const strings = {
     noMatch: 'No recipes match',
     noMatchHint: 'Try removing a filter',
   },
+  // design/ui/OC-Recipe.md (spec 008; the "…" panel is 013, the Steps tab 009)
+  recipePage: {
+    back: 'Back to recipes',
+    share: 'Share recipe',
+    settings: 'Recipe settings',
+    bestMonths: (from: string, to: string) => `Best ${from} – ${to}`,
+    bestMonth: (month: string) => `Best ${month}`,
+    /** Several separate runs of months: "Best Jan, May – Jun". */
+    bestRuns: (runs: string[]) => `Best ${runs.join(', ')}`,
+    monthRun: (from: string, to: string) => `${from} – ${to}`,
+    version: 'Version',
+    classic: 'Classic',
+    servings: 'Servings',
+    fewerServings: 'Fewer servings',
+    moreServings: 'More servings',
+    moreOptions: 'More options',
+    tabsLabel: 'Recipe view',
+    ingredientsTab: (n: number) => `Ingredients · ${n}`,
+    stepsTab: (n: number) => `Steps · ${n}`,
+    ingredientsLabel: 'Ingredients',
+    variantTag: 'Variant',
+    addToGroceries: 'Add to groceries…',
+    startCooking: 'Start cooking',
+    // What an option variant changes (FR-002): "Adds 3 ingredients and 1 step".
+    effect: {
+      adds: (what: string) => `Adds ${what}`,
+      removes: (what: string) => `Removes ${what}`,
+      changes: (what: string) => `Changes ${what}`,
+      ingredients: (n: number) => (n === 1 ? '1 ingredient' : `${n} ingredients`),
+      steps: (n: number) => (n === 1 ? '1 step' : `${n} steps`),
+      and: ' and ',
+      /** Between "Adds …", "Removes …" and "Changes …". */
+      list: '. ',
+    },
+    deleted: (name: string) => `This recipe was deleted by ${name}.`,
+    loading: 'Loading recipe',
+    loadFailedTitle: "We couldn't open this recipe.",
+    loadFailedBody: "It may have been deleted, or you're offline.",
+    retry: 'Try again',
+  },
   // A recipe's facts, wherever it is shown (specs 006, 008, 028).
   recipe: {
     serves: (n: number) => `Serves ${n}`,

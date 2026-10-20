@@ -30,7 +30,7 @@ describe('by servings', () => {
   it('US1: eggs ×1.25 read 1½, and items without an amount stay as they are', () => {
     const one = { serves: 4, ingredients: [{ ...at(quiche.ingredients, 2), quantity: 1 }, at(quiche.ingredients, 5)] };
     const r = scale(one, { servings: 5 });
-    expect(format(at(r.ingredients, 0), { system: 'metric', scale: false }).phrase).toBe('1½ large eggs');
+    expect(format(at(r.ingredients, 0), { system: 'metric', scale: false }).phrase).toBe('1½ eggs');
     expect(r.ingredients[1]).toBe(one.ingredients[1]);
   });
 

@@ -75,6 +75,8 @@ from (values
 ) as s (id, position, name, body, timer, label, temp, temp_text, tip);
 
 -- Variants (OC-Recipe, OC-EditVariants): changes follow VariantChange in packages/schemas/recipes.ts.
+-- Their ingredients point at the catalog too (ice water shows "50 g"), except the mushrooms: the
+-- catalog counts mushrooms in pieces, which would read "14 mushrooms" instead of OC-Recipe's 250 g.
 insert into public.recipe_variants (id, family_id, recipe_id, position, name, kind, changes, created_by, updated_by, source) values
   ('c0c03000-0000-4000-8000-000000000001', 'c0c0f000-0000-4000-8000-000000000001', 'c0c0e000-0000-4000-8000-000000000001', 0,
     'Vegetarian', 'version', '[
@@ -84,9 +86,9 @@ insert into public.recipe_variants (id, family_id, recipe_id, position, name, ki
   ('c0c03000-0000-4000-8000-000000000002', 'c0c0f000-0000-4000-8000-000000000001', 'c0c0e000-0000-4000-8000-000000000001', 1,
     'Make my own dough', 'option', '[
       {"type": "swap_ingredient", "ingredient_id": "c0c01000-0000-4000-8000-000000000001", "with": [
-        {"id": "c0c04000-0000-4000-8000-000000000002", "name": "Flour", "quantity": 200, "unit": "g"},
-        {"id": "c0c04000-0000-4000-8000-000000000003", "name": "Cold butter", "quantity": 100, "unit": "g", "prep_note": "cubed"},
-        {"id": "c0c04000-0000-4000-8000-000000000004", "name": "Ice water", "quantity": 50, "unit": "ml"}]},
+        {"id": "c0c04000-0000-4000-8000-000000000002", "name": "Flour", "catalog_key": "all_purpose_flour", "quantity": 200, "unit": "g"},
+        {"id": "c0c04000-0000-4000-8000-000000000003", "name": "Cold butter", "catalog_key": "butter", "quantity": 100, "unit": "g", "prep_note": "cubed"},
+        {"id": "c0c04000-0000-4000-8000-000000000004", "name": "Ice water", "catalog_key": "water", "quantity": 50, "unit": "ml"}]},
       {"type": "add_step", "step_id": "c0c02000-0000-4000-8000-000000000001", "place": "before", "step": {
         "name": "Make the dough",
         "body": "Rub {ing:c0c04000-0000-4000-8000-000000000002} and {ing:c0c04000-0000-4000-8000-000000000003} together with your fingertips until sandy. Add {ing:c0c04000-0000-4000-8000-000000000004}, bring into a ball, wrap and chill.",

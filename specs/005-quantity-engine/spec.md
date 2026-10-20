@@ -24,7 +24,7 @@
 1. **Given** a recipe needs 95 g onion, **Then** it shows "¾ onion (95 g)": ¾ of a medium (90 g) is the closest fit.
 2. **Given** 18 g onion, **Then** "2 tbsp of onions (18 g)": too little for a piece, so spoons.
 3. **Given** 1 small onion ×0.5, **Then** "¼ onion (35 g)".
-4. **Given** 250 g onion, **Then** "2 medium onions (250 g)"; 140 g shows "2 small onions (140 g)".
+4. **Given** 250 g onion, **Then** "2 onions (250 g)"; 140 g shows "2 small onions (140 g)".
 5. **Given** 7 g onion, **Then** "2 tsp of onions (7 g)".
 6. **Given** imperial, **Then** 95 g onion shows "¾ onion (3.4 oz)".
 
@@ -46,8 +46,8 @@
 - **FR-009**: Piece fit. When an ingredient has catalog piece sizes and a known weight (an amount in g, kg, oz or lb, or a piece amount that scaling made fractional), it is shown as the piece amount closest to that weight. D is the default size's weight:
   - Tiny: below the smaller of 90% of ¼ D and 90% of the small size, show cups or spoons (FR-004) with the weight: "2 tsp of onions (7 g)". The volume uses the density, or water's (1 g/ml) when there is none.
   - Below D: ¼, ½ or ¾ of the default size with no size word ("¾ onion"), or one whole piece of any size with its size word ("1 small onion"). On a tie, prefer the default size, then the whole piece.
-  - D or more: the default size in whole and half pieces, or the other sizes in whole pieces, always with the size word ("2 medium onions", "2 small onions"). On a tie, prefer the default size, then fewer pieces.
-  - The default size wins whenever its best fit is within 10% of the amount, even if another size is closer: 500 g onion is "4 medium onions" (480 g), not "7 small onions" (490 g).
+  - D or more: the default size in whole and half pieces, or the other sizes in whole pieces. Only a size other than the default is named ("2 onions", "2½ leeks", "2 small onions"); the same goes for a size saved with the recipe ("3 eggs" when large is the egg's default). On a tie, prefer the default size, then fewer pieces.
+  - The default size wins whenever its best fit is within 10% of the amount, even if another size is closer: 500 g onion is "4 onions" (480 g), not "7 small onions" (490 g).
   - The weight in brackets is the recipe's actual amount (rounded per FR-003, in the person's units), not the piece weight.
   - `whole_only` items (eggs) never get the fit; ingredients without sizes or a weight are unchanged. Without a fit, pieces round to the nearest ½ (FR-003).
   - Kitchen scale off (spec 013): the weight in brackets is dropped ("¾ onion").
@@ -71,3 +71,4 @@ None.
 - 2026-10-18: Added US4 and FR-009 (piece fit: closest ¼, ½ or whole piece of any size, with the actual weight), as Gabriel asked. US3's example now says 70 g, matching the catalog's small onion (spec 031).
 - 2026-10-18: Shipped `@cocon/quantity`: `scale`, `format`, `renderStep`, `formatTemperature`, `convert` and unit constants, with 223 tests and 100% line coverage (CI checks 95%). Changes agreed while planning: FR-005 now rounds ovens to 25 °F and thermometer checks to 5 °F (US2.3's 350 °F needed it). FR-009 and US4 rewritten to Gabriel's revised piece fit (fractions of the default size, whole pieces of other sizes, spoons for tiny amounts, no 25% rule). Other choices: tsp and tbsp stay spoons in metric up to ¼ cup, then ml (piece-fit spoon amounts too); spoon units are picked after rounding, so just under 1 tbsp reads "1 tbsp"; an amount that rounds to 0 shows "a pinch" in every unit (never "1 tsp"; in imperial that means weights under about 1.4 g); scaling by a piece ingredient accepts a weight through its piece weight (saved, else the catalog size). Fluid ounces and gas mark are left to spec 013's converter.
 - 2026-10-18: After review, as Gabriel asked: temperature tokens `{temp:…}` in step text (FR-006; specs 016 FR-006 and 023 FR-004 now create them); the default size wins the piece fit within 10% (FR-009); catalog piece nouns now name the ingredient ("cloves of garlic", "salmon fillets"; catalog version 2, new data migration).
+- 2026-10-19: As Gabriel asked while testing 008: the default size is never named ("2½ leeks", not "2½ medium leeks"), so whole and half pieces read alike; and a volume shows its weight as the sub-line when the catalog knows the density and the kitchen scale is on ("350 ml" · "350 g"; in oz for imperial). The step phrase stays without it.
