@@ -6,7 +6,7 @@ Source `screens/OC-Timers.dc.html` · Route `/timers` · Specs 010, 011
 1. Back link "Back" (returns to where you came from).
 2. Title "Timers"; right "{running} running · {total} total".
 3. One card per timer, newest first:
-   - name 17/900; sub-line "{recipe or No recipe} · {Running | Paused | Done!}"
+   - name 17/900; sub-line "{recipe or No recipe} · {Running | Paused | Done!}"; on a step timer, the olive link "Go to step" on the right, which opens cooking mode at that step (`/recipes/[id]/cook?step=<stepId>`). It's hidden for kitchen timers and when the recipe or the step is gone (deleted or edited).
    - "−1", clock 44/900, "+1"
    - progress bar
    - ink button "Pause" | "Resume" | "Add 1 more minute" (done) and soft "Stop" | "Dismiss" (done)
@@ -20,5 +20,7 @@ Source `screens/OC-Timers.dc.html` · Route `/timers` · Specs 010, 011
 | None | "No timers running. Start one from any recipe step." (above the quick timers) |
 | Paused or done for 3 hours | The timer is cleared from the list without a message (any change to a paused timer starts the 3 hours over) |
 | Timer ends anywhere in the app | StatusBanner at the top of any screen: "{name} is done" with "Open timers" |
+
+Screen reader: "Go to step: {timer name}" on a step timer's link.
 
 Timers are personal and live on this device only. The chime is a soft kitchen bell; there are no background/phone alerts in V1.

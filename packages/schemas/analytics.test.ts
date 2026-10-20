@@ -141,4 +141,19 @@ describe('createTracker', () => {
     expect(() => tracker.track('timer_pill_tapped', { timer_count: 0 })).toThrow();
     expect(() => tracker.track('timers_screen_opened', { timer_count: 1, label: 'Blind bake' } as never)).toThrow();
   });
+
+  it('validates the cooking-mode events (spec 012)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('cooking_started', { step_count: 6 });
+    tracker.track('cooking_finished', { step_count: 6, minutes: 42 });
+    tracker.track('cooking_exited', { at_step: 3, step_count: 6 });
+    expect(t.capture).toHaveBeenCalledWith('cooking_started', { step_count: 6 });
+    expect(t.capture).toHaveBeenCalledWith('cooking_finished', { step_count: 6, minutes: 42 });
+    expect(t.capture).toHaveBeenCalledWith('cooking_exited', { at_step: 3, step_count: 6 });
+    expect(() => tracker.track('cooking_started', { step_count: 0 })).toThrow();
+    expect(() => tracker.track('cooking_exited', { at_step: 0, step_count: 6 })).toThrow();
+    expect(() => tracker.track('cooking_finished', { step_count: 6, minutes: 1.5 })).toThrow();
+    expect(() => tracker.track('cooking_started', { step_count: 6, recipe: 'Quiche' } as never)).toThrow();
+  });
 });

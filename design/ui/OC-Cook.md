@@ -19,5 +19,16 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Spec 012
 - "Finish" closes cooking mode and returns to the recipe.
 - Exit returns to the recipe; timers keep running.
 
+## States
+| State | Copy |
+| --- | --- |
+| Loading | Exit, then skeleton blocks (screen reader: "Loading recipe") |
+| Couldn't load | Exit, "We couldn't open this recipe." · "It may have been deleted, or you're offline." · "Try again" (as OC-Recipe) |
+| No steps | Closes straight back to the recipe |
+| Screen can't stay on (a browser without Wake Lock) | In place of the chip, muted: "This browser may let the screen lock." |
+| "Keep screen on" off (spec 027) | No chip and no hint |
+| A timer paused or done | Not in the pill (TimerPill README), so the chip shows |
+| Opened at a step (Timers › "Go to step") | Starts at that step; a step that's gone starts at step 1. Exit and Finish then open the recipe page |
+
 ## Accessibility labels
-Segments: "Go to step {n}: {name}". Timer buttons as in OC-RecipeSteps.
+Segments: "Go to step {n}: {name}" ("Go to step {n}" for a step with no name). Timer buttons as in OC-RecipeSteps.

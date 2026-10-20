@@ -62,7 +62,7 @@ export interface TimerRowProps {
 }
 
 /** Read by screen readers, not drawn. */
-const srOnly = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 } as const;
+export const srOnly = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 } as const;
 
 /** Timer row inside a step (StepCard README): honey button (olive while running) and −1 / +1. */
 export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, minusA11y, plusA11y, onMinus, onPlus, announcement }: TimerRowProps) {

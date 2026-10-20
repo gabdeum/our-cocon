@@ -26,9 +26,8 @@ import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
 import { defaultCooking, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, SERVINGS_MIN, variantCount, type StepLine } from '../../lib/recipe-view';
 import type { Member } from '../../lib/session';
-import { useStepTimer, useTimerStore } from '../../lib/timer-store';
 import { AppTimerPill } from '../timers/AppTimerPill';
-import { adjusted, clock, MINUTE } from '../../lib/timers';
+import { useStepTimerControl, type StepTimerInput } from './step-timer';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const p = strings.recipePage;
@@ -304,63 +303,24 @@ function Step({ step, index, recipeId, recipeName, tracker }: { step: StepLine; 
   );
 }
 
-const rowLabel = { running: stepCopy.pause, paused: stepCopy.resume, done: stepCopy.done } as const;
+const rowLabel = { idle: stepCopy.startTimer, running: stepCopy.pause, paused: stepCopy.resume, done: stepCopy.done } as const;
 
-/**
- * A step's timer (spec 010, 009 US3): Start timer → Pause (olive, live clock) → Resume, and "Done!"
- * at 00:00, which dismisses it. −1 / +1 change it even while it runs; before it starts they change
- * only the time it will start with, on this row.
- */
-function StepTimer({
-  stepId,
-  index,
-  recipeId,
-  recipeName,
-  timer: planned,
-  tracker,
-}: {
-  stepId: string;
-  index: number;
-  recipeId: string;
-  recipeName: string;
-  timer: NonNullable<StepLine['timer']>;
-  tracker: Tracker;
-}) {
-  const store = useTimerStore();
-  const { timer, left } = useStepTimer(recipeId, stepId);
-  // A changed recipe (a variant, an edit) starts over from its own time.
-  const [chosen, setChosen] = useState({ planned: planned.seconds, seconds: planned.seconds });
-  const startWith = chosen.planned === planned.seconds ? chosen.seconds : planned.seconds;
-  const setStartWith = (seconds: number) => setChosen({ planned: planned.seconds, seconds });
-
-  const onPress = () => {
-    if (!timer) {
-      store.start(planned.label, startWith, 'step', { recipeId, stepId, recipeName });
-      tracker.track('step_timer_started', { step_index: index });
-      setStartWith(planned.seconds);
-    } else if (timer.state === 'running') store.pause(timer.id);
-    else if (timer.state === 'paused') store.resume(timer.id);
-    else store.dismiss(timer.id);
-  };
-  const adjust = (delta: number) => () => {
-    if (timer) store.add(timer.id, delta);
-    else setStartWith(adjusted(startWith, delta));
-  };
-  const announcement = !timer ? undefined : timer.state === 'done' ? strings.timers.done(timer.label) : timer.state === 'running' && left === MINUTE ? stepCopy.oneMinuteLeft : undefined;
-
+/** A step's timer row (spec 010, 009 US3); the rules are in `useStepTimerControl`. */
+function StepTimer(props: StepTimerInput) {
+  const t = useStepTimerControl(props);
   return (
     <TimerRow
-      state={timer ? timer.state : 'idle'}
-      label={timer ? rowLabel[timer.state] : stepCopy.startTimer}
-      clock={clock(timer ? left : startWith)}
-      onPress={onPress}
+      state={t.state}
+      label={rowLabel[t.state]}
+      clock={t.clock}
+      onPress={t.onPress}
       minusLabel={stepCopy.minus}
       plusLabel={stepCopy.plus}
       minusA11y={stepCopy.minusA11y}
       plusA11y={stepCopy.plusA11y}
-      onMinus={adjust(-MINUTE)}
-      onPlus={adjust(MINUTE)}
-      announcement={announcement}
+      onMinus={t.onMinus}
+      onPlus={t.onPlus}
+      announcement={t.announcement}
     />
   );
 }

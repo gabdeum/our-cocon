@@ -32,4 +32,5 @@ export { TabBar, TAB_LABEL_MIN_SCALE, type TabBarItem, type TabBarProps } from '
 export { BottomSheet, SheetFooter, type BottomSheetProps } from './components/BottomSheet';
 export { Dialog, type DialogProps } from './components/Dialog';
 export { FormProgress, CookProgress } from './components/Progress';
+export { CookLayout, CookSection, type CookLayoutProps, type CookSectionProps } from './components/CookLayout';
 export { TabHeader, BrandHeader, BackHeader, FormBar } from './components/ScreenHeader';
