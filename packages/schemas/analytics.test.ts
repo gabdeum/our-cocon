@@ -130,4 +130,15 @@ describe('createTracker', () => {
     expect(() => tracker.track('timer_finished', { label: 'Blind bake' } as never)).toThrow();
     expect(() => tracker.track('timer_adjusted', { delta_min: 0.5 })).toThrow();
   });
+
+  it('sends the pill and Timers screen events with a count only (spec 011)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('timer_pill_tapped', { timer_count: 2 });
+    tracker.track('timers_screen_opened', { timer_count: 0 });
+    expect(t.capture).toHaveBeenCalledWith('timer_pill_tapped', { timer_count: 2 });
+    expect(t.capture).toHaveBeenCalledWith('timers_screen_opened', { timer_count: 0 });
+    expect(() => tracker.track('timer_pill_tapped', { timer_count: 0 })).toThrow();
+    expect(() => tracker.track('timers_screen_opened', { timer_count: 1, label: 'Blind bake' } as never)).toThrow();
+  });
 });

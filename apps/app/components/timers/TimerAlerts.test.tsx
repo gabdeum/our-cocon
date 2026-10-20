@@ -2,7 +2,7 @@
 // screen. One that ended while the app was closed only shows "Done!" (no alert).
 import { useEffect, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TimersProvider, useTimerStore, type TimerStore } from '../../lib/timer-store';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
@@ -33,6 +33,7 @@ const flush = () =>
 async function setup(storage: ChoiceStorage = memoryStorage()) {
   const chime = vi.fn();
   const vibrate = vi.fn();
+  const onOpenTimers = vi.fn();
   const got: { store?: TimerStore } = {};
   function Grab() {
     const s = useTimerStore();
@@ -49,12 +50,12 @@ async function setup(storage: ChoiceStorage = memoryStorage()) {
   render(
     <Wrap>
       <Grab />
-      <TimerAlerts chime={chime} vibrate={vibrate} />
+      <TimerAlerts chime={chime} vibrate={vibrate} onOpenTimers={onOpenTimers} />
     </Wrap>,
   );
   await flush();
   if (!got.store) throw new Error('no store');
-  return { store: got.store, chime, vibrate };
+  return { store: got.store, chime, vibrate, onOpenTimers };
 }
 
 describe('TimerAlerts (spec 010 US3)', () => {
@@ -66,7 +67,7 @@ describe('TimerAlerts (spec 010 US3)', () => {
     expect(screen.queryByText('Blind bake is done')).toBeNull();
 
     act(() => vi.advanceTimersByTime(1000));
-    expect(screen.getByRole('status').textContent).toBe('Blind bake is done');
+    expect(screen.getByRole('status').textContent).toBe('Blind bake is doneOpen timers');
     expect(chime).toHaveBeenCalledTimes(1);
     expect(vibrate).toHaveBeenCalledTimes(1);
     act(() => vi.advanceTimersByTime(CHIME_GAP_MS));
@@ -101,5 +102,14 @@ describe('TimerAlerts (spec 010 US3)', () => {
     expect(chime).not.toHaveBeenCalled();
     expect(vibrate).not.toHaveBeenCalled();
     expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('spec 011 (L17): "Open timers" on the banner opens the Timers screen and closes the banner', async () => {
+    const { store, onOpenTimers } = await setup();
+    act(() => void store.start('Blind bake', 60, 'step'));
+    act(() => vi.advanceTimersByTime(60 * 1000));
+    fireEvent.click(screen.getByRole('button', { name: 'Open timers' }));
+    expect(onOpenTimers).toHaveBeenCalledOnce();
+    expect(screen.queryByText('Blind bake is done')).toBeNull();
   });
 });

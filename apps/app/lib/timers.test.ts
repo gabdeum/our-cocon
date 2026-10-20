@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { add, clock, dismiss, mostUrgent, parseStored, pause, remaining, resume, set, settle, start, stop, type Timer } from './timers';
+import { add, clock, dismiss, mostUrgent, parseStored, pillName, pillTimer, progress, pause, remaining, resume, set, settle, start, stop, type Timer } from './timers';
 
 const T0 = 1_760_000_000_000;
 const sec = (s: number) => s * 1000;
@@ -108,5 +108,34 @@ describe('timers (spec 010)', () => {
   it('a timer that ended while the app was closed comes back done', () => {
     const back = parseStored(JSON.parse(JSON.stringify(running(60))));
     expect(one(settle(back, T0 + sec(3600)).timers).state).toBe('done');
+  });
+
+  it('keeps the recipe name a timer started with, through pause and done (spec 011)', () => {
+    const ts = start([], 't1', 'Blind bake', 720, T0, { recipeId: 'r1', stepId: 's2', recipeName: 'Leek & bacon quiche' });
+    expect(one(pause(ts, 't1', T0)).recipeName).toBe('Leek & bacon quiche');
+    expect(one(settle(ts, T0 + sec(720)).timers).recipeName).toBe('Leek & bacon quiche');
+    expect(parseStored(JSON.parse(JSON.stringify(ts)))).toEqual(ts);
+  });
+});
+
+describe('timer pill and Timers screen (spec 011)', () => {
+  it('the pill name stops at 14 characters with an ellipsis', () => {
+    expect(pillName('Blind bake')).toBe('Blind bake');
+    expect(pillName('Exactly14chars')).toBe('Exactly14chars');
+    expect(pillName('Caramelise the onions')).toBe('Caramelise the…');
+  });
+
+  it('the pill falls back to a done timer, and hides only when there are none', () => {
+    const done = settle(start([], 'd', 'Simmer', 1, T0), T0 + sec(2)).timers;
+    expect(pillTimer(done, T0 + sec(2))?.id).toBe('d');
+    expect(pillTimer(start(done, 'r', 'Rest', 60, T0), T0)?.id).toBe('r');
+    expect(pillTimer([], T0)).toBeNull();
+  });
+
+  it('progress is the share of time gone', () => {
+    const ts = running(600);
+    expect(progress(one(ts), T0)).toBe(0);
+    expect(progress(one(ts), T0 + sec(150))).toBe(0.25);
+    expect(progress(one(settle(ts, T0 + sec(600)).timers), T0 + sec(600))).toBe(1);
   });
 });

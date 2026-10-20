@@ -44,6 +44,7 @@ export default function RecipeRoute() {
       onSettings={go('settings')}
       onAddToGroceries={go('add-to-groceries')}
       onStartCooking={go('cook')}
+      onOpenTimers={() => router.push('/timers')}
     />
   );
 }

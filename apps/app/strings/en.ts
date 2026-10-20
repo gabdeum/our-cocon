@@ -226,6 +226,38 @@ export const strings = {
     done: (name: string) => `${name} is done`,
     openTimers: 'Open timers',
   },
+  // design/ui/TabBar.md › Timers running, TimerPill README (spec 011)
+  timerPill: {
+    label: (count: number) => `${count} ${count === 1 ? 'timer' : 'timers'} running. Open timers`,
+    more: (others: number) => `+${others}`,
+  },
+  // design/ui/OC-Timers.md (spec 011)
+  timersScreen: {
+    back: 'Back',
+    title: 'Timers',
+    summary: (running: number, total: number) => `${running} running · ${total} total`,
+    sub: (recipe: string, state: string) => `${recipe} · ${state}`,
+    noRecipe: 'No recipe',
+    running: 'Running',
+    paused: 'Paused',
+    done: 'Done!',
+    edit: 'Edit',
+    close: 'Close',
+    setTo: 'Set to',
+    preset: (minutes: number) => `${minutes} min`,
+    minus: '−1',
+    plus: '+1',
+    minusA11y: 'One minute less',
+    plusA11y: 'One minute more',
+    pause: 'Pause',
+    resume: 'Resume',
+    addMinute: 'Add 1 more minute',
+    stop: 'Stop',
+    dismiss: 'Dismiss',
+    empty: 'No timers running. Start one from any recipe step.',
+    quick: '+ Quick kitchen timer (5 min)',
+    footnote: "Timers keep running when you leave the recipe. You'll hear a chime when one ends.",
+  },
   // Total time (spec 006 FR-002): "40 min", "2 h", "1 h 05".
   time: {
     minutes: (m: number) => `${m} min`,

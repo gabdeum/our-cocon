@@ -59,6 +59,7 @@ async function setup(props: Partial<RecipePageProps> = {}) {
   const tracker = fakeTracker();
   const storage = props.storage ?? memoryStorage();
   const onTabChange = vi.fn();
+  const onOpenTimers = vi.fn();
   const timerStorage = memoryStorage();
   // Timers are app-wide (spec 010); `wrapper` keeps them across rerenders.
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -80,12 +81,13 @@ async function setup(props: Partial<RecipePageProps> = {}) {
       onSettings={vi.fn()}
       onAddToGroceries={vi.fn()}
       onStartCooking={vi.fn()}
+      onOpenTimers={onOpenTimers}
       {...props}
     />,
     { wrapper },
   );
   await settle();
-  return { ...utils, tracker, storage, onTabChange };
+  return { ...utils, tracker, storage, onTabChange, onOpenTimers };
 }
 
 const rows = () => within(screen.getByRole('list', { name: 'Ingredients' })).getAllByRole('listitem');
@@ -190,6 +192,7 @@ describe('US3: tabs', () => {
         onSettings={vi.fn()}
         onAddToGroceries={vi.fn()}
         onStartCooking={vi.fn()}
+        onOpenTimers={vi.fn()}
       />,
     );
     await settle();
@@ -329,6 +332,18 @@ describe('Steps tab (spec 009)', () => {
     expect(button().textContent).toBe('Pause11:58');
     // Names never reach analytics.
     expect(JSON.stringify(tracker.track.mock.calls)).not.toContain('Blind bake');
+  });
+
+  it('spec 011 US1 (L13): the TimerPill shows the running timer on the recipe page and opens Timers', async () => {
+    const { tracker, onOpenTimers } = await setup({ tab: 'steps' });
+    expect(screen.queryByRole('link', { name: /Open timers/ })).toBeNull();
+    fireEvent.click(within(card('Blind bake')).getAllByRole('button')[0] as HTMLElement);
+    act(() => vi.advanceTimersByTime(1000));
+    const pill = screen.getByRole('link', { name: '1 timer running. Open timers' });
+    expect(pill.textContent).toBe('Blind bake11:59');
+    fireEvent.click(pill);
+    expect(tracker.track).toHaveBeenCalledWith('timer_pill_tapped', { timer_count: 1 });
+    expect(onOpenTimers).toHaveBeenCalledOnce();
   });
 
   it('spec 010: at zero the row reads "Done!" 00:00 and says so; tapping it puts the row back', async () => {

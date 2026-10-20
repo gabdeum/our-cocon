@@ -184,7 +184,8 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
   return store;
 }
 
-const TimersContext = createContext<TimerStore | null>(null);
+/** Exported for tests that hand a screen their own store. */
+export const TimersContext = createContext<TimerStore | null>(null);
 
 export interface TimersProviderProps {
   userId: string;
@@ -222,9 +223,9 @@ export function useStepTimer(recipeId: string, stepId: string): { timer: Timer |
   return { timer, left: timer ? T.remaining(timer, now) : 0 };
 }
 
-/** FR-004, for the TimerPill (spec 011). */
+/** FR-004, for the TimerPill (spec 011): falls back to a done timer, so the pill shows while any exists. */
 export function useMostUrgent(): { timer: Timer | null; left: number; count: number } {
   const { timers, now } = useTimers();
-  const timer = T.mostUrgent(timers, now);
+  const timer = T.pillTimer(timers, now);
   return { timer, left: timer ? T.remaining(timer, now) : 0, count: timers.length };
 }

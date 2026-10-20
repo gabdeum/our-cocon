@@ -14,6 +14,8 @@ export interface TimerAlertsProps {
   /** Plays the kitchen-bell chime once (lib/chime.ts). */
   chime: () => void;
   vibrate: () => void;
+  /** "Open timers" on the banner (spec 011): opens the Timers screen. */
+  onOpenTimers: () => void;
 }
 
 /**
@@ -21,7 +23,7 @@ export interface TimerAlertsProps {
  * StatusBanner "Blind bake is done" at the top. A newer banner replaces the old one.
  * "Open timers" joins the banner with the Timers screen (spec 011).
  */
-export function TimerAlerts({ chime, vibrate }: TimerAlertsProps) {
+export function TimerAlerts({ chime, vibrate, onOpenTimers }: TimerAlertsProps) {
   const store = useTimerStore();
   const insets = useSafeAreaInsets();
   const [banner, setBanner] = useState<{ message: string; key: number } | null>(null);
@@ -53,7 +55,14 @@ export function TimerAlerts({ chime, vibrate }: TimerAlertsProps) {
   return (
     // Below the status bar on any screen, over the content.
     <View pointerEvents="box-none" className="absolute left-16 right-16 top-12 z-10" style={{ marginTop: insets.top }}>
-      <StatusBanner message={banner.message} />
+      <StatusBanner
+        message={banner.message}
+        actionLabel={strings.timers.openTimers}
+        onAction={() => {
+          setBanner(null);
+          onOpenTimers();
+        }}
+      />
     </View>
   );
 }

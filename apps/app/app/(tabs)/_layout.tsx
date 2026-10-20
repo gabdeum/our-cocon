@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { AppTabBar } from '../../components/AppTabBar';
 import { TABS } from '../../lib/navigation';
 import { tracker } from '../../lib/tracker';
@@ -7,7 +7,7 @@ import { tracker } from '../../lib/tracker';
 export default function TabsLayout() {
   return (
     <Tabs
-      tabBar={(props) => <AppTabBar {...props} tracker={tracker} />}
+      tabBar={(props) => <AppTabBar {...props} tracker={tracker} onOpenTimers={() => router.push('/timers')} />}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: 'transparent' } }}
     >
       {TABS.map((t) => (

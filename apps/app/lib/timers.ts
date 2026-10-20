@@ -12,6 +12,8 @@ export const TimerSchema = z.object({
   label: z.string().max(200),
   recipeId: z.string().max(64).optional(),
   stepId: z.string().max(64).optional(),
+  /** The recipe's name when it started, for the Timers screen (spec 011). Stays on the device too. */
+  recipeName: z.string().max(200).optional(),
   totalSeconds: z.int().min(1).max(24 * 3600),
   state: z.enum(['running', 'paused', 'done']),
   /** Set while running. */
@@ -40,6 +42,7 @@ export function remaining(t: Timer, now: number): number {
 export interface TimerOrigin {
   recipeId?: string;
   stepId?: string;
+  recipeName?: string;
 }
 
 export function start(timers: readonly Timer[], id: string, label: string, seconds: number, now: number, origin: TimerOrigin = {}): Timer[] {
@@ -104,6 +107,24 @@ export function mostUrgent(timers: readonly Timer[], now: number): Timer | null 
   return least('running') ?? least('paused');
 }
 
+/** The pill (spec 011): the most urgent timer; once none is counting, a done one, so it shows while any exists. */
+export function pillTimer(timers: readonly Timer[], now: number): Timer | null {
+  return mostUrgent(timers, now) ?? timers.find((t) => t.state === 'done') ?? null;
+}
+
+/** The pill's label stops at 14 characters with an ellipsis (spec 011 › Edge cases); the clock never does. */
+export const PILL_NAME_MAX = 14;
+export function pillName(label: string): string {
+  const chars = [...label];
+  return chars.length > PILL_NAME_MAX ? `${chars.slice(0, PILL_NAME_MAX).join('').trimEnd()}…` : label;
+}
+
+/** 0–1 of the time gone, for the Timers screen's progress bar. */
+export function progress(t: Timer, now: number): number {
+  if (t.state === 'done') return 1;
+  return Math.min(1, Math.max(0, 1 - remaining(t, now) / t.totalSeconds));
+}
+
 /** What came back from device storage: valid timers only; anything else is dropped. */
 export function parseStored(raw: unknown): Timer[] {
   if (!Array.isArray(raw)) return [];
@@ -122,7 +143,11 @@ function update(timers: readonly Timer[], id: string, f: (t: Timer) => Timer): T
 }
 
 function origin(t: Timer): TimerOrigin {
-  return { ...(t.recipeId ? { recipeId: t.recipeId } : {}), ...(t.stepId ? { stepId: t.stepId } : {}) };
+  return {
+    ...(t.recipeId ? { recipeId: t.recipeId } : {}),
+    ...(t.stepId ? { stepId: t.stepId } : {}),
+    ...(t.recipeName ? { recipeName: t.recipeName } : {}),
+  };
 }
 
 function running(t: Timer, seconds: number, now: number): Timer {

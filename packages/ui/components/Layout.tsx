@@ -43,6 +43,8 @@ export interface PhotoScreenProps {
   right?: ReactNode;
   /** Above the content, e.g. a StatusBanner. */
   banner?: ReactNode;
+  /** Stays put while the page scrolls, centred 108 from the top: the TimerPill (spec 011). */
+  floating?: ReactNode;
   children: ReactNode;
 }
 
@@ -50,8 +52,8 @@ export interface PhotoScreenProps {
  * Pushed screen with photo header (Patterns.md): photo 240 edge to edge, buttons 52 from the top and
  * 16 from the sides, and the content sheet overlapping it by 30 with a top radius of 30.
  */
-export function PhotoScreen({ photo, left, right, banner, children }: PhotoScreenProps) {
-  return (
+export function PhotoScreen({ photo, left, right, banner, floating, children }: PhotoScreenProps) {
+  const page = (
     <ScrollView className="flex-1 bg-surface-page">
       <View className="h-[240px] overflow-hidden">
         {photo}
@@ -63,5 +65,14 @@ export function PhotoScreen({ photo, left, right, banner, children }: PhotoScree
         {children}
       </View>
     </ScrollView>
+  );
+  if (!floating) return page;
+  return (
+    <View className="flex-1">
+      {page}
+      <View pointerEvents="box-none" className="absolute left-0 right-0 top-[108px] items-center px-16">
+        {floating}
+      </View>
+    </View>
   );
 }

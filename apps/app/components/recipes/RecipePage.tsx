@@ -27,6 +27,7 @@ import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type Re
 import { defaultCooking, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, SERVINGS_MIN, variantCount, type StepLine } from '../../lib/recipe-view';
 import type { Member } from '../../lib/session';
 import { useStepTimer, useTimerStore } from '../../lib/timer-store';
+import { AppTimerPill } from '../timers/AppTimerPill';
 import { adjusted, clock, MINUTE } from '../../lib/timers';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
@@ -54,6 +55,8 @@ export interface RecipePageProps {
   onSettings: () => void;
   onAddToGroceries: () => void;
   onStartCooking: () => void;
+  /** The TimerPill opens the Timers screen (spec 011). */
+  onOpenTimers: () => void;
   /** "I have a thermometer" (spec 027 wires the setting); on until then. */
   thermometer?: boolean;
 }
@@ -103,6 +106,7 @@ function LoadedRecipe({
   onSettings,
   onAddToGroceries,
   onStartCooking,
+  onOpenTimers,
   thermometer = defaultCooking.thermometer,
 }: RecipePageProps & { recipe: RecipeDetail }) {
   const max = servingsMax(recipe.serves);
@@ -168,6 +172,7 @@ function LoadedRecipe({
     <PhotoScreen
       photo={<PhotoPlaceholder initial={recipe.name.charAt(0).toUpperCase()} className="h-full" />}
       left={<IconButton icon="back" label={p.back} onPress={onBack} />}
+      floating={<AppTimerPill onOpen={onOpenTimers} tracker={tracker} />}
       right={
         <>
           <IconButton icon="share" label={p.share} onPress={onShare} />
@@ -273,7 +278,7 @@ function LoadedRecipe({
               <View role="list" aria-label={p.stepsLabel} className="gap-14">
                 {view.steps.map((step, index) => (
                   <View key={step.id} role="listitem">
-                    <Step step={step} index={index} recipeId={recipe.id} tracker={tracker} />
+                    <Step step={step} index={index} recipeId={recipe.id} recipeName={recipe.name} tracker={tracker} />
                   </View>
                 ))}
               </View>
@@ -289,11 +294,11 @@ function LoadedRecipe({
 }
 
 /** One step (FR-001): text, then the temperature check, the timer row and the tip, in that order. */
-function Step({ step, index, recipeId, tracker }: { step: StepLine; index: number; recipeId: string; tracker: Tracker }) {
+function Step({ step, index, recipeId, recipeName, tracker }: { step: StepLine; index: number; recipeId: string; recipeName: string; tracker: Tracker }) {
   return (
     <StepCard number={step.number} name={step.name ?? undefined} variantTag={step.variant ? p.variantTag : undefined} parts={step.parts}>
       {step.tempCheck ? <Callout variant="temp" label={stepCopy.tempLabel} text={step.tempCheck} /> : null}
-      {step.timer ? <StepTimer stepId={step.id} index={index} recipeId={recipeId} timer={step.timer} tracker={tracker} /> : null}
+      {step.timer ? <StepTimer stepId={step.id} index={index} recipeId={recipeId} recipeName={recipeName} timer={step.timer} tracker={tracker} /> : null}
       {step.tip ? <Callout variant="tip" label={stepCopy.tipLabel} text={step.tip} /> : null}
     </StepCard>
   );
@@ -306,7 +311,21 @@ const rowLabel = { running: stepCopy.pause, paused: stepCopy.resume, done: stepC
  * at 00:00, which dismisses it. −1 / +1 change it even while it runs; before it starts they change
  * only the time it will start with, on this row.
  */
-function StepTimer({ stepId, index, recipeId, timer: planned, tracker }: { stepId: string; index: number; recipeId: string; timer: NonNullable<StepLine['timer']>; tracker: Tracker }) {
+function StepTimer({
+  stepId,
+  index,
+  recipeId,
+  recipeName,
+  timer: planned,
+  tracker,
+}: {
+  stepId: string;
+  index: number;
+  recipeId: string;
+  recipeName: string;
+  timer: NonNullable<StepLine['timer']>;
+  tracker: Tracker;
+}) {
   const store = useTimerStore();
   const { timer, left } = useStepTimer(recipeId, stepId);
   // A changed recipe (a variant, an edit) starts over from its own time.
@@ -316,7 +335,7 @@ function StepTimer({ stepId, index, recipeId, timer: planned, tracker }: { stepI
 
   const onPress = () => {
     if (!timer) {
-      store.start(planned.label, startWith, 'step', { recipeId, stepId });
+      store.start(planned.label, startWith, 'step', { recipeId, stepId, recipeName });
       tracker.track('step_timer_started', { step_index: index });
       setStartWith(planned.seconds);
     } else if (timer.state === 'running') store.pause(timer.id);

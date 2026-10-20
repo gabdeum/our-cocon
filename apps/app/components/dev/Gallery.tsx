@@ -343,6 +343,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             editLabel="Edit"
             editing={state === 'running' && editing}
             onEdit={() => setEditing(!editing)}
+            setToLabel="Set to"
             presets={['5 min', '10 min', '15 min', '30 min'].map((label) => ({ label, onPress: noop }))}
             minusLabel="−1"
             plusLabel="+1"

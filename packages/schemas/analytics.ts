@@ -52,6 +52,9 @@ export const events = {
   timer_finished: z.strictObject({}),
   // Spec 009/010: a step's "Start timer"; the step's position, from 0.
   step_timer_started: z.strictObject({ step_index: z.int().min(0).max(200) }),
+  // Spec 011: the TimerPill was tapped, and the Timers screen opened; how many timers exist.
+  timer_pill_tapped: z.strictObject({ timer_count: z.int().min(1).max(100) }),
+  timers_screen_opened: z.strictObject({ timer_count: z.int().min(0).max(100) }),
 } as const;
 
 export type EventName = keyof typeof events;

@@ -41,3 +41,4 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-19: Built. TimerPill above the tab bar and fixed 108 from the top of the recipe page (an overlay: React Native has no CSS sticky); Timers screen at `/timers`; "Open timers" on the done banner. Events `timer_pill_tapped`, `timers_screen_opened`. Deviations: timers now keep their recipe's name on the device (`recipeName`) for the card's sub-line; once only done timers are left, the pill shows one at 00:00, so it stays while any timer exists (SC-001); TimerCard aligned to `OC-Timers.dc.html` (Edit 13/900, "Set to" label, presets 15/900, Stop/Dismiss white 70%); the quick-timer button is the design-system dashed Button (54 tall, 15 px) instead of the screen's 56/16. The pill in the cooking-mode header comes with 012 (`AppTimerPill compact`).
