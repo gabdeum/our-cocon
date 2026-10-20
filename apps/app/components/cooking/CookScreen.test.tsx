@@ -199,6 +199,26 @@ describe('Cooking mode (spec 012)', () => {
     expect(within(section(0)).getByText(/300 g flour/i)).toBeTruthy();
   });
 
+  it("032-later L22: uses the recipe page's units, kitchen scale and scale by an ingredient too", async () => {
+    const storage = memoryStorage({
+      [`cocon.recipe.${gabriel.user_id}.${detail.id}`]: JSON.stringify({
+        servings: 6,
+        version: null,
+        options: [],
+        system: 'imperial',
+        kitchenScale: false,
+        scaledBy: { ingredientId: quicheIds.lardons, amount: 250, unit: 'g' },
+      }),
+    });
+    await setup({ storage });
+    expect(screen.getByText('Serves 7½ · swipe up for next')).toBeTruthy();
+    // Imperial and ×1.25: the oven reads °F first, and leeks drop their weight with no scale.
+    expect(within(section(0)).getByText(/350 °F \(180 °C\)/)).toBeTruthy();
+    expect(within(section(2)).getByText(/2½ leeks/)).toBeTruthy();
+    expect(within(section(2)).queryByText(/\(375 g\)/)).toBeNull();
+    expect(within(section(2)).getByText(/8.8 oz bacon lardons/)).toBeTruthy();
+  });
+
   it('opens at a given step (a step timer\'s "Go to step"), or step 1 when it is gone', async () => {
     await setup({ stepId: (quiche.steps[3]?.id ?? '') });
     expect(screen.getByText(`Step 4 of ${STEPS}`)).toBeTruthy();

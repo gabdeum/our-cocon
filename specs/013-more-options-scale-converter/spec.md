@@ -24,8 +24,8 @@
 
 ## Requirements
 
-- **FR-001**: The panel opens inline under Servings, with the "…" button in honey while open. Rows: kitchen-scale switch, "Scale by an ingredient ›", "Unit converter ›", "Units: Metric › Change in recipe settings".
-- **FR-002**: The kitchen-scale choice applies to this recipe on this device and starts from the recipe or family setting (spec 027).
+- **FR-001**: The panel opens inline under Servings, with the "…" button in honey while open. Rows: kitchen-scale switch, "Scale by an ingredient ›", "Unit converter ›", "Units" with a Metric · Imperial toggle.
+- **FR-002**: The kitchen-scale and units choices are quick toggles: they apply to this recipe on this device (the list, the steps and cooking mode) and start from the recipe or family setting (spec 027) until toggled.
 - **FR-003**: Scale by ingredient lists 3 ingredients plus "Show all N ingredients"; pinch ingredients are excluded.
 - **FR-004**: Converter tabs: Weight, Volume, Oven temp, with a unit dropdown and 4 result tiles (the first in honey).
 - **FR-005**: Converter results use `@cocon/quantity` only.
@@ -37,6 +37,7 @@
 | Event | Properties |
 | --- | --- |
 | `kitchen_scale_toggled` | on |
+| `units_toggled` | system |
 | `scaled_by_ingredient` | — |
 | `unit_converter_used` | from_unit, to_unit |
 
@@ -48,3 +49,4 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-20: Shipped. The "…" panel (kitchen scale, units, the two sheets), Scale by an ingredient (`/recipes/[id]/scale`) and the unit converter (`/recipes/[id]/convert`), with fluid ounces, gas mark and fan oven added to `@cocon/quantity` (`convertUnits`, `densityHint`). Cooking mode uses the same units, kitchen scale and scale (032-later L22). As Gabriel asked while planning: units are a Metric · Imperial quick toggle in the panel, in place of "Units: Metric › Change in recipe settings" (new event `units_toggled`). Both toggles are saved only once tapped, so spec 027's settings still apply until then. Other choices: the whole-items note reads "{Eggs} are rounded to whole numbers. Cooking times stay the same." (the design's "Bake time" was sample text); the scaled chip is a sage Meta "Scaled by {ingredient}" with a "Reset" link; − / + from 7½ go to 7 / 8 and end the scale; the converter always opens on Volume (amounts can't be tapped yet); the oven tab's 4 tiles are the two other scales plus fan oven °C and °F; counted items read "pieces" in the unit picker. New design-system pieces: AmountField, RadioCard, ResultTile, Card `--sage`, ListRow `--flush`, Stepper `display`, chevron-down and chevron-up icons.

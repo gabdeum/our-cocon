@@ -86,8 +86,6 @@ export function CookLayout(props: CookLayoutProps) {
 }
 
 export interface CookSectionProps {
-  /** "Step 3". */
-  overline: string;
   /** The step's name; left out when it has none. */
   title?: string;
   /** The current step is at full opacity; the others at `opacity-dimmed`. */
@@ -99,7 +97,7 @@ export interface CookSectionProps {
 }
 
 /** One step in cooking mode: at least 500 tall, a dashed divider under it, dimmed unless current (250 ms). */
-export function CookSection({ overline, title, current, onLayout, children, testID }: CookSectionProps) {
+export function CookSection({ title, current, onLayout, children, testID }: CookSectionProps) {
   return (
     <View
       testID={testID}
@@ -111,9 +109,6 @@ export function CookSection({ overline, title, current, onLayout, children, test
       )}
       style={snapStart}
     >
-      <Text size={13} weight="900" color="olive" uppercase style={{ letterSpacing: 0.8 }}>
-        {overline}
-      </Text>
       {title ? (
         <Text size={28} weight="900" role="heading" aria-level={2} style={{ letterSpacing: -0.5 }}>
           {title}

@@ -1,4 +1,5 @@
-import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { RecipePage, type RecipeTab } from '../../../components/recipes/RecipePage';
@@ -27,6 +28,9 @@ export default function RecipeRoute() {
   const go = (page: string) => () => {
     if (id) router.push(recipeRoute(id, page));
   };
+  // Back from the scale sheet (013), the page reads the choices it saved.
+  const [visit, setVisit] = useState(0);
+  useFocusEffect(useCallback(() => setVisit((v) => v + 1), []));
   const back = () => (router.canGoBack() ? router.back() : router.replace('/recipes'));
   return (
     <RecipePage
@@ -45,6 +49,9 @@ export default function RecipeRoute() {
       onAddToGroceries={go('add-to-groceries')}
       onStartCooking={go('cook')}
       onOpenTimers={() => router.push('/timers')}
+      onScaleByIngredient={go('scale')}
+      onConvert={go('convert')}
+      visit={visit}
     />
   );
 }

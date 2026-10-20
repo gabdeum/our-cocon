@@ -157,3 +157,17 @@ describe('createTracker', () => {
     expect(() => tracker.track('cooking_started', { step_count: 6, recipe: 'Quiche' } as never)).toThrow();
   });
 });
+
+describe('spec 013 events', () => {
+  it('sends the converter units, and nothing else', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('unit_converter_used', { from_unit: 'ml', to_unit: 'cup' });
+    tracker.track('kitchen_scale_toggled', { on: false });
+    tracker.track('units_toggled', { system: 'imperial' });
+    tracker.track('scaled_by_ingredient', {});
+    expect(t.capture).toHaveBeenCalledTimes(4);
+    expect(() => tracker.track('unit_converter_used', { from_unit: 'stone', to_unit: 'cup' } as never)).toThrow();
+    expect(() => tracker.track('scaled_by_ingredient', { ingredient: 'Bacon' } as never)).toThrow();
+  });
+});

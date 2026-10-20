@@ -82,6 +82,8 @@ async function setup(props: Partial<RecipePageProps> = {}) {
       onAddToGroceries={vi.fn()}
       onStartCooking={vi.fn()}
       onOpenTimers={onOpenTimers}
+      onScaleByIngredient={vi.fn()}
+      onConvert={vi.fn()}
       {...props}
     />,
     { wrapper },
@@ -193,6 +195,8 @@ describe('US3: tabs', () => {
         onAddToGroceries={vi.fn()}
         onStartCooking={vi.fn()}
         onOpenTimers={vi.fn()}
+        onScaleByIngredient={vi.fn()}
+        onConvert={vi.fn()}
       />,
     );
     await settle();
@@ -211,7 +215,9 @@ describe('FR-006: choices are remembered on this device', () => {
     await setup({ storage });
     expect(screen.getByText('7')).toBeTruthy();
     expect(row('Mushrooms, sliced')).toBeTruthy();
-    expect(storage.data.get(`cocon.recipe.${gabriel.user_id}.${detail.id}`)).toBe(JSON.stringify({ servings: 7, version: quicheIds.vegetarian, options: [] }));
+    expect(storage.data.get(`cocon.recipe.${gabriel.user_id}.${detail.id}`)).toBe(
+      JSON.stringify({ servings: 7, version: quicheIds.vegetarian, options: [], system: null, kitchenScale: null, scaledBy: null }),
+    );
   });
 
   it("starts from the recipe as saved for someone else, or when a remembered variant is gone", async () => {
@@ -253,6 +259,116 @@ describe('states', () => {
     await setup();
     tap('More options');
     expect(screen.getByRole('button', { name: 'More options' }).getAttribute('aria-expanded')).toBe('true');
+  });
+});
+
+// Spec 013: the "…" panel.
+describe('More options (spec 013)', () => {
+  const choiceKey = `cocon.recipe.${gabriel.user_id}.${detail.id}`;
+  /** Gruyère with a cup weight, so it can read in cups. */
+  const withDensity: RecipeDetail = {
+    ...detail,
+    ingredients: quiche.ingredients.map((i) => (i.name === 'Gruyère' ? { ...i, catalog_key: 'gruyere' } : i)),
+    facts: { gruyere: { density_g_per_ml: 0.55 } },
+  };
+  const saved = (storage: ReturnType<typeof memoryStorage>) => JSON.parse(storage.data.get(choiceKey) ?? '{}') as Record<string, unknown>;
+
+  it('FR-001: the panel lists the scale switch, units, and the two sheets, in order', async () => {
+    const onScaleByIngredient = vi.fn();
+    const onConvert = vi.fn();
+    await setup({ onScaleByIngredient, onConvert });
+    expect(screen.queryByRole('switch', { name: "I'm using a kitchen scale" })).toBeNull();
+    tap('More options');
+    expect(screen.getByRole('switch', { name: "I'm using a kitchen scale" }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByText('Showing exact weights, like 100 g')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Metric' }).getAttribute('aria-pressed')).toBe('true');
+    const order = ["I'm using a kitchen scale", 'Scale by an ingredient', 'Unit converter', 'Units'].map((t) => screen.getAllByText(t)[0] as Node);
+    for (let i = 1; i < order.length; i++) expect((order[i - 1] as Node).compareDocumentPosition(order[i] as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(screen.getByRole('link', { name: 'Scale by an ingredient' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Unit converter' }));
+    expect(onScaleByIngredient).toHaveBeenCalled();
+    expect(onConvert).toHaveBeenCalled();
+  });
+
+  it('US1: no scale shows cups and spoons, pieces drop their weight, and the hint changes', async () => {
+    const storage = memoryStorage();
+    const { tracker } = await setup({ recipe: withDensity, storage });
+    expect(row('Gruyère, grated')?.textContent).toContain('100 g');
+    expect(row('Leeks')?.textContent).toContain('300 g');
+    tap('More options');
+    fireEvent.click(screen.getByRole('switch', { name: "I'm using a kitchen scale" }));
+    expect(row('Gruyère, grated')?.textContent).toContain('about ¾ cup');
+    expect(row('Leeks')?.textContent).not.toContain('300 g');
+    expect(screen.getByText('Showing cups and spoons, like about ¾ cup')).toBeTruthy();
+    expect(tracker.track).toHaveBeenCalledWith('kitchen_scale_toggled', { on: false });
+    expect(saved(storage).kitchenScale).toBe(false);
+  });
+
+  it('units: Imperial at once, in the list and the steps, remembered for this recipe', async () => {
+    const storage = memoryStorage();
+    const { tracker } = await setup({ storage });
+    tap('More options');
+    tap('Imperial');
+    expect(row('Heavy cream')?.textContent).toContain('1¼ cups');
+    expect(row('Bacon lardons')?.textContent).toContain('7.1 oz');
+    expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial' });
+    expect(saved(storage).system).toBe('imperial');
+    cleanup();
+    await setup({ storage, tab: 'steps' });
+    expect(screen.getByText(/160 °F \(71 °C\)/)).toBeTruthy();
+  });
+
+  it('US2: scaled by lardons, servings read 7½ with a chip; Reset goes back to 6', async () => {
+    const storage = memoryStorage({ [choiceKey]: JSON.stringify({ servings: 6, version: null, options: [], scaledBy: { ingredientId: quicheIds.lardons, amount: 250, unit: 'g' } }) });
+    await setup({ storage });
+    expect(screen.getByText('7½')).toBeTruthy();
+    expect(row('Bacon lardons')?.textContent).toContain('250 g');
+    expect(screen.getByText('Scaled by bacon lardons')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset the scale by bacon lardons' }));
+    expect(screen.getByText('6')).toBeTruthy();
+    expect(screen.queryByText('Scaled by bacon lardons')).toBeNull();
+    expect(saved(storage).scaledBy).toBeNull();
+  });
+
+  it('US2: from 7½, + goes to 8 and − to 7, ending the scale', async () => {
+    const storage = memoryStorage({ [choiceKey]: JSON.stringify({ servings: 6, version: null, options: [], scaledBy: { ingredientId: quicheIds.lardons, amount: 250, unit: 'g' } }) });
+    const { tracker } = await setup({ storage });
+    tap('More servings');
+    expect(screen.getByText('8')).toBeTruthy();
+    expect(screen.queryByText(/Scaled by/)).toBeNull();
+    tap('Fewer servings');
+    expect(screen.getByText('7')).toBeTruthy();
+    // Events count whole servings: 7½ starts as 8.
+    act(() => vi.advanceTimersByTime(SERVINGS_SETTLE_MS));
+    expect(tracker.track).toHaveBeenCalledWith('servings_changed', { from: 8, to: 7 });
+  });
+
+  it('reads the choices again when the page is shown again (back from the scale sheet)', async () => {
+    const storage = memoryStorage();
+    const { rerender } = await setup({ storage });
+    storage.data.set(choiceKey, JSON.stringify({ servings: 6, version: null, options: [], scaledBy: { ingredientId: quicheIds.lardons, amount: 250, unit: 'g' } }));
+    rerender(
+      <RecipePage
+        recipe={detail}
+        members={[gabriel]}
+        userId={gabriel.user_id}
+        tracker={fakeTracker()}
+        tab="ingredients"
+        onTabChange={vi.fn()}
+        storage={storage}
+        onBack={vi.fn()}
+        onShare={vi.fn()}
+        onSettings={vi.fn()}
+        onAddToGroceries={vi.fn()}
+        onStartCooking={vi.fn()}
+        onOpenTimers={vi.fn()}
+        onScaleByIngredient={vi.fn()}
+        onConvert={vi.fn()}
+        visit={1}
+      />,
+    );
+    await settle();
+    expect(screen.getByText('7½')).toBeTruthy();
   });
 });
 

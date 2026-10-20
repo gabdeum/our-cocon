@@ -5,7 +5,7 @@ import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
-import { defaultCooking, defaultFormat, recipeView, servingsMax, type CookingSettings } from '../../lib/recipe-view';
+import { defaultCooking, formatOf, recipeView, servingsMax, servingsText, type CookingSettings } from '../../lib/recipe-view';
 import { cookingMinutes, startIndex } from '../../lib/cooking';
 import { useCookAwake, type AwakeStatus as Awake } from '../../lib/keep-awake';
 import { AppTimerPill, useHasTimers } from '../timers/AppTimerPill';
@@ -99,7 +99,8 @@ function WithChoices(props: LoadedProps) {
 }
 
 function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cooking = defaultCooking, now = Date.now }: LoadedProps & { choices: RecipeChoices }) {
-  const view = useMemo(() => recipeView(recipe, choices.servings, choices, defaultFormat, cooking), [recipe, choices, cooking]);
+  // The recipe page's units, kitchen scale and scale by an ingredient too (013, 032-later L22).
+  const view = useMemo(() => recipeView(recipe, choices, choices, formatOf(choices), cooking), [recipe, choices, cooking]);
   const steps = view.steps;
   const count = steps.length;
   // Events cap step counts at 200; recipes have no step limit yet (032-later L23).
@@ -173,7 +174,7 @@ function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cook
           current={at}
           onSelect={jump}
           stepLabel={c.stepOf(at + 1, count)}
-          hint={c.hint(choices.servings)}
+          hint={c.hint(servingsText(view.servings))}
           segmentLabel={(i) => c.segment(i + 1, steps[i]?.name ?? null)}
         />
       }
@@ -192,7 +193,6 @@ function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cook
         <CookSection
           key={step.id}
           testID={`cook-step-${i}`}
-          overline={c.overline(step.number)}
           title={step.name ?? undefined}
           current={i === at}
           onLayout={(e) => onStepLayout(i, e.nativeEvent.layout.y)}

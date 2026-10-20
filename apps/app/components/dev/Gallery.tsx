@@ -4,6 +4,7 @@
 import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import {
+  AmountField,
   AvatarStack,
   Avatar,
   AwakeChip,
@@ -36,6 +37,8 @@ import {
   PillRow,
   Presence,
   PushedScreen,
+  RadioCard,
+  ResultTile,
   RecipeItem,
   RecipeItemSkeleton,
   SearchField,
@@ -110,6 +113,9 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
   const [tab, setTab] = useState<(typeof tabs)[number]['key']>('recipes');
   const [cookStep, setCookStep] = useState(2);
   const [section, setSection] = useState('steps');
+  const [amount, setAmount] = useState('250');
+  const [unit, setUnit] = useState('g');
+  const [pick, setPick] = useState('lardons');
 
   return (
     <PushedScreen>
@@ -208,6 +214,18 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         </View>
       </Section>
 
+      <Section group="Display" title="ResultTile">
+        <View className="flex-row gap-10">
+          <ResultTile value="1¼" label="cups" main className="flex-1" />
+          <ResultTile value="20" label="tablespoons" className="flex-1" />
+        </View>
+        <Card tone="sage">
+          <Text size={16} weight="900">
+            Recipe × 1.25 → about 7½ servings
+          </Text>
+        </Card>
+      </Section>
+
       <Section group="Display" title="Callout">
         <Callout variant="tip" label="Chef's tip" text="Chill the lined pan for 10 minutes so the edges don't shrink." />
         <Callout variant="temp" label="Temperature check:" text="the center should reach 71 °C (160 °F) and barely wobble." />
@@ -264,6 +282,18 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <TextField label="Recipe name" defaultValue="Leek & bacon quiche" />
         <TextField label="Short description" multiline defaultValue="Silky custard, sweet leeks and a crisp, buttery crust." hint="One sentence that makes people hungry." counter="54 / 140" />
         <TextField label="Unit" size="sm" placeholder="Unit?" warning="Pick a unit so we can convert and scale it." />
+      </Section>
+
+      <Section group="Inputs" title="AmountField">
+        <AmountField label="2. How much do you have?" value={amount} onChangeText={setAmount} unit={unit} units={['g', 'kg', 'oz', 'lb']} onUnitChange={setUnit} unitLabel={(u) => u} unitA11y="Unit" />
+        <AmountField label="Convert" size="xl" value="" onChangeText={noop} unit="ml" units={['ml']} onUnitChange={noop} unitLabel={(u) => u} unitA11y="Unit" hint="Enter how much you have" />
+      </Section>
+
+      <Section group="Inputs" title="RadioCard">
+        <View role="radiogroup" aria-label="Which ingredient?" className="gap-8">
+          <RadioCard label="Leeks" value="2 (300 g)" selected={pick === 'leeks'} onPress={() => setPick('leeks')} />
+          <RadioCard label="Bacon lardons" value="200 g" selected={pick === 'lardons'} onPress={() => setPick('lardons')} />
+        </View>
       </Section>
 
       <Section group="Inputs" title="MonthPicker">
@@ -354,11 +384,11 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
 
       <Section group="Cooking" title="CookLayout">
         {/* The full frame (header, Back / Next) is cooking mode itself: /recipes/[id]/cook. */}
-        <CookSection overline="Step 2" title="Blind bake" current>
+        <CookSection title="Blind bake" current>
           <StepText parts={['Bake the empty crust for 12 minutes until pale golden.']} cook />
           <CookTimerCard label="Blind bake timer" clock="12:00" actionLabel="Start timer" onAction={noop} minusLabel="−1" plusLabel="+1" minusA11y="One minute less" plusA11y="One minute more" onMinus={noop} onPlus={noop} />
         </CookSection>
-        <CookSection overline="Step 3" title="Cook the filling" current={false}>
+        <CookSection title="Cook the filling" current={false}>
           <StepText parts={['Melt ', { amount: '20 g butter' }, ' over medium heat.']} cook />
           <Callout variant="tip" label="Chef's tip" text="Slice the leeks thinly so they melt into the custard." cook />
         </CookSection>

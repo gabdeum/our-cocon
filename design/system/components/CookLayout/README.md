@@ -14,7 +14,6 @@ The cooking-mode frame (Patterns.md › Cooking mode, OC-Cook): a fixed header, 
 | End | "Bon appétit!" olive 18/900, centred, 280 tall with 30 on top |
 | Footer | padding 12 20 28, gap 10, 1.5 px `line` top border; Button soft `--lg` (⅓) and olive `--lg` (⅔) |
 | `CookSection` | min height 500, padding 24 0 28, gap 16, 1.5 px dashed `line-strong` bottom border, snaps to its start |
-| Overline | "Step N" 13/900 olive uppercase, letter-spacing 0.8 |
 | Title | 28/900, letter-spacing −0.5; left out when the step has no name |
 
 ## Rules

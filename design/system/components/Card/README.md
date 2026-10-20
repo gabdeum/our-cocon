@@ -8,6 +8,7 @@ Flat rounded containers: the default white card, a soft card, and the photo hero
 | --- | --- |
 | `oc-card` | surface-card, radius 22, padding 16, gap 12 between blocks, no shadow |
 | `--soft` | surface-soft (recipe link cards, AI activity, info cards) |
+| `--sage` | sage, radius 20, padding 14 16, gap 6: calm results ("Recipe × 1.25 → about 7½ servings", the converter's "For this recipe") |
 | `--selected` | 2 px olive border (the step or variant being edited) |
 | `--attention` | 2 px warn-border (a row with a problem) |
 | Hero (`oc-hero`) | radius 28, surface-soft, overflow hidden; photo 170–190 tall with a white Tag "Latest recipe" at 14,14; body padding 14 18 16: title 22/900, meta chips row (white `oc-meta`, gap 8, 10 above) |
