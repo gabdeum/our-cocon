@@ -20,6 +20,8 @@ export const TimerSchema = z.object({
   endsAt: z.number().optional(),
   /** Set while paused. */
   remainingSeconds: z.int().min(0).max(24 * 3600).optional(),
+  /** When it was paused or ended (ms): after STALE_MS untouched, it is cleared (spec 011). */
+  stoppedAt: z.number().optional(),
 });
 export type Timer = z.infer<typeof TimerSchema>;
 
@@ -29,6 +31,8 @@ export const MINUTE = 60;
 /** The quick kitchen timer (FR-002). */
 export const QUICK_SECONDS = 5 * MINUTE;
 const MAX_SECONDS = 24 * 3600;
+/** A paused or done timer nobody touches for 3 hours is cleared from the list (spec 011). */
+export const STALE_MS = 3 * 3600 * 1000;
 
 export const clock = timerClock;
 
@@ -52,7 +56,7 @@ export function start(timers: readonly Timer[], id: string, label: string, secon
 }
 
 export function pause(timers: readonly Timer[], id: string, now: number): Timer[] {
-  return update(timers, id, (t) => (t.state === 'running' ? paused(t, remaining(t, now)) : t));
+  return update(timers, id, (t) => (t.state === 'running' ? paused(t, remaining(t, now), now) : t));
 }
 
 export function resume(timers: readonly Timer[], id: string, now: number): Timer[] {
@@ -83,7 +87,7 @@ export function adjusted(seconds: number, deltaSeconds: number): number {
 /** "Set to 15 min" (FR-002): starts over at that time with the same running state; done runs again. */
 export function set(timers: readonly Timer[], id: string, seconds: number, now: number): Timer[] {
   const s = clampSeconds(seconds);
-  return update(timers, id, (t) => (t.state === 'paused' ? paused({ ...t, totalSeconds: s }, s) : running({ ...t, totalSeconds: s }, s, now)));
+  return update(timers, id, (t) => (t.state === 'paused' ? paused({ ...t, totalSeconds: s }, s, now) : running({ ...t, totalSeconds: s }, s, now)));
 }
 
 /** Stop (while counting) and Dismiss (once done) both take the timer away. */
@@ -96,8 +100,22 @@ export const dismiss = remove;
 /** Running timers whose time is up become done; `finished` lists them, in end order. */
 export function settle(timers: readonly Timer[], now: number): { timers: Timer[]; finished: Timer[] } {
   const ended = timers.filter((t) => t.state === 'running' && remaining(t, now) === 0).sort((a, b) => (a.endsAt ?? 0) - (b.endsAt ?? 0));
-  const done = (t: Timer): Timer => ({ id: t.id, label: t.label, ...origin(t), totalSeconds: t.totalSeconds, state: 'done' });
+  // Stopped when it ended, not when we noticed: one that ended while the app was closed counts from then.
+  const done = (t: Timer): Timer => ({ id: t.id, label: t.label, ...origin(t), totalSeconds: t.totalSeconds, state: 'done', stoppedAt: t.endsAt ?? now });
   return { timers: timers.map((t) => (ended.includes(t) ? done(t) : t)), finished: ended.map(done) };
+}
+
+/** Paused and done timers untouched for STALE_MS are cleared; one without a time yet starts counting now. */
+export function expire(timers: readonly Timer[], now: number): Timer[] {
+  return timers
+    .map((t) => (t.state !== 'running' && t.stoppedAt === undefined ? { ...t, stoppedAt: now } : t))
+    .filter((t) => t.state === 'running' || now - (t.stoppedAt ?? now) < STALE_MS);
+}
+
+/** When the next paused or done timer is due to be cleared, if any. */
+export function nextExpiry(timers: readonly Timer[]): number | null {
+  const times = timers.flatMap((t) => (t.state !== 'running' && t.stoppedAt !== undefined ? [t.stoppedAt + STALE_MS] : []));
+  return times.length ? Math.min(...times) : null;
 }
 
 /** FR-004: the running timer with the least time left; otherwise the paused one with the least left. */
@@ -154,13 +172,13 @@ function running(t: Timer, seconds: number, now: number): Timer {
   return { id: t.id, label: t.label, ...origin(t), totalSeconds: t.totalSeconds, state: 'running', endsAt: now + seconds * 1000 };
 }
 
-function paused(t: Timer, seconds: number): Timer {
-  return { id: t.id, label: t.label, ...origin(t), totalSeconds: t.totalSeconds, state: 'paused', remainingSeconds: seconds };
+function paused(t: Timer, seconds: number, now: number): Timer {
+  return { id: t.id, label: t.label, ...origin(t), totalSeconds: t.totalSeconds, state: 'paused', remainingSeconds: seconds, stoppedAt: now };
 }
 
 /** Same state, new time left. */
 function withLeft(t: Timer, seconds: number, now: number): Timer {
-  return t.state === 'paused' ? paused(t, seconds) : running(t, seconds, now);
+  return t.state === 'paused' ? paused(t, seconds, now) : running(t, seconds, now);
 }
 
 function clampSeconds(s: number): number {

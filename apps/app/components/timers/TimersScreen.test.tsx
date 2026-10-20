@@ -1,6 +1,6 @@
-// Spec 011 US2: the Timers screen lists every timer, newest first, with progress, −1/+1, Edit
-// presets, Pause/Resume and Stop; done ones offer "Add 1 more minute" and Dismiss. Also the empty
-// state, the quick kitchen timer (FR-004), the footnote (FR-005) and `timers_screen_opened`.
+// Spec 011 US2: the Timers screen lists every timer, newest first, with progress, −1/+1,
+// Pause/Resume and Stop; done ones offer "Add 1 more minute" and Dismiss. Also the empty state, the
+// quick kitchen timers of 5 · 10 · 15 · 30 min (FR-004), the footnote (FR-005) and `timers_screen_opened`.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { createTimerStore, TimersContext, type TimerStore } from '../../lib/timer-store';
@@ -96,20 +96,11 @@ describe('Timers screen (spec 011 US2)', () => {
     expect(clockOf('Blind bake')).toBe('07:29');
   });
 
-  it('Edit opens 5 · 10 · 15 · 30 min; picking one sets it and closes', () => {
+  it('cards have no Edit button', () => {
     act(() => void store.start('Blind bake', 12 * 60, 'step', quiche));
     setup();
-    const c = () => within(card('Blind bake'));
-    expect(c().queryByText('Set to')).toBeNull();
-    fireEvent.click(c().getByRole('button', { name: 'Edit' }));
-    expect(c().getByText('Set to')).toBeTruthy();
-    expect(['5 min', '10 min', '15 min', '30 min'].every((l) => c().getByRole('button', { name: l }))).toBe(true);
-    expect(c().getByRole('button', { name: 'Close' }).getAttribute('aria-expanded')).toBe('true');
-
-    fireEvent.click(c().getByRole('button', { name: '15 min' }));
-    expect(clockOf('Blind bake')).toBe('15:00');
-    expect(c().queryByText('Set to')).toBeNull();
-    expect(c().getByRole('button', { name: 'Edit' })).toBeTruthy();
+    expect(within(card('Blind bake')).queryByRole('button', { name: 'Edit' })).toBeNull();
+    expect(within(card('Blind bake')).queryByRole('button', { name: /min$/ })).toBeNull();
   });
 
   it('Stop takes a timer away', () => {
@@ -135,14 +126,24 @@ describe('Timers screen (spec 011 US2)', () => {
     expect(screen.queryByText('Simmer')).toBeNull();
   });
 
-  it('no timers: the empty message above the quick timer, which adds a 5 min kitchen timer', () => {
+  it('no timers: the empty message above the quick timers; 5 min adds a running kitchen timer', () => {
     setup();
     expect(screen.getByText('0 running · 0 total')).toBeTruthy();
     expect(screen.getByText('No timers running. Start one from any recipe step.')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '+ Quick kitchen timer (5 min)' }));
+    const quick = within(screen.getByRole('group', { name: 'Quick kitchen timer' }));
+    expect(quick.getAllByRole('button').map((b) => b.textContent)).toEqual(['5 min', '10 min', '15 min', '30 min']);
+    fireEvent.click(quick.getByRole('button', { name: 'Start a 5 min kitchen timer' }));
     expect(screen.queryByText('No timers running. Start one from any recipe step.')).toBeNull();
     expect(clockOf('Kitchen timer')).toBe('05:00');
     expect(within(card('Kitchen timer')).getByText('No recipe · Running')).toBeTruthy();
+  });
+
+  it('each quick timer starts its own kitchen timer: 15 and 30 min', () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Start a 15 min kitchen timer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start a 30 min kitchen timer' }));
+    expect(screen.getAllByRole('timer').map((t) => t.textContent)).toEqual(['30:00', '15:00']);
+    expect(screen.getByText('2 running · 2 total')).toBeTruthy();
   });
 
   it('Back goes back', () => {

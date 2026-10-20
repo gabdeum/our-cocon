@@ -87,13 +87,6 @@ export interface TimerCardProps extends Adjust {
   /** "Stop" or "Dismiss". */
   secondaryLabel: string;
   onSecondary: () => void;
-  editLabel: string;
-  editing: boolean;
-  onEdit: () => void;
-  /** "Set to", above the presets. */
-  setToLabel: string;
-  /** "5 min" · "10 min" · "15 min" · "30 min". */
-  presets: { label: string; onPress: () => void }[];
 }
 
 const fills: Record<TimersScreenState, string> = {
@@ -104,25 +97,16 @@ const fills: Record<TimersScreenState, string> = {
 
 /** A timer on the Timers screen, tinted by state (TimerCard README › Timers screen, OC-Timers). */
 export function TimerCard(props: TimerCardProps) {
-  const { name, sub, state, clock, progress, actionLabel, onAction, secondaryLabel, onSecondary, editLabel, editing, onEdit, setToLabel, presets } = props;
+  const { name, sub, state, clock, progress, actionLabel, onAction, secondaryLabel, onSecondary } = props;
   return (
     <View className={cn('gap-12 rounded-[24px] px-16 py-14', fills[state])}>
-      <View className="flex-row items-start justify-between gap-8">
-        <View className="min-w-0 flex-1">
-          <Text size={17} weight="900">
-            {name}
-          </Text>
-          <Text size={13} weight="700" className="opacity-80">
-            {sub}
-          </Text>
-        </View>
-        <Pressable role="button" aria-expanded={editing} onPress={onEdit} className={cn('rounded-pill', focusRing)}>
-          <SoftWhite className="h-[36px] items-center justify-center rounded-pill px-12">
-            <Text size={13} weight="900">
-              {editLabel}
-            </Text>
-          </SoftWhite>
-        </Pressable>
+      <View>
+        <Text size={17} weight="900">
+          {name}
+        </Text>
+        <Text size={13} weight="700" className="opacity-80">
+          {sub}
+        </Text>
       </View>
       <View className="flex-row items-center gap-8">
         <AdjustButton text={props.minusLabel} a11y={props.minusA11y} onPress={props.onMinus} />
@@ -135,22 +119,6 @@ export function TimerCard(props: TimerCardProps) {
         <View aria-hidden className="absolute inset-0 bg-ink opacity-[0.12]" />
         <View className="h-full bg-ink" style={{ width: `${Math.min(1, Math.max(0, progress)) * 100}%` }} />
       </View>
-      {editing ? (
-        <View className="gap-6">
-          <Text size={13} weight="800">
-            {setToLabel}
-          </Text>
-          <View className="flex-row gap-6">
-            {presets.map((p) => (
-              <Pressable key={p.label} role="button" onPress={p.onPress} className={cn('h-control-md min-w-0 flex-1 items-center justify-center rounded-[12px] bg-surface-card', focusRing)}>
-                <Text size={15} weight="900">
-                  {p.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-      ) : null}
       <View className="flex-row gap-8">
         <Pressable role="button" onPress={onAction} className={cn('h-[50px] flex-1 items-center justify-center rounded-pill bg-ink active:bg-ink-pressed', focusRing)}>
           <Text size={16} weight="900" color="on-olive">

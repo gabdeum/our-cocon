@@ -18,14 +18,14 @@ export interface TimerPillProps {
   compact?: boolean;
 }
 
-/** The most urgent timer, always visible (TimerPill README). Shown from spec 011. */
+/** The most urgent timer, always visible (TimerPill README). Right padding 14, or 8 beside the "+N" chip. */
 export function TimerPill({ name, clock, more, label, onPress, compact }: TimerPillProps) {
   return (
     <Pressable
       role="link"
       aria-label={label}
       onPress={onPress}
-      className={cn('self-center flex-row items-center gap-10 rounded-pill border-2 border-honey bg-surface-card pl-14 pr-8', compact ? 'h-[48px]' : 'h-[50px]', focusRing)}
+      className={cn('self-center flex-row items-center gap-10 rounded-pill border-2 border-honey bg-surface-card pl-14', more ? 'pr-8' : 'pr-14', compact ? 'h-[48px]' : 'h-[50px]', focusRing)}
       style={{ boxShadow: theme.shadow.float }}
     >
       <Icon name="timer" color="olive" />

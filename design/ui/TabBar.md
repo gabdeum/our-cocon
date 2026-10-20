@@ -14,7 +14,7 @@ Source `screens/TabBar.dc.html` · Shown on `/`, `/recipes`, `/groceries`, `/set
 | --- | --- |
 | Active tab | Its label shows next to its icon; it is announced as the current page |
 | Largest text size | The active label stays on one line and may shrink to 13 px; it never wraps |
-| Timers running | TimerPill above the bar: "{n} timers running. Open timers" (spec 011) |
+| Timers running | TimerPill above the bar: "{n} timers running. Open timers", n counting running timers only; "Open timers" when all are paused or done (spec 011) |
 | No timers | Bar only |
 | Pushed screen, sheet, form, cooking mode | No tab bar |
 | Web wider than 720 px | Bar stays bottom-centred inside the 720 px column |

@@ -16,21 +16,23 @@ export interface AppTimerPillProps {
 
 /**
  * The most urgent timer, live, on tab screens and the recipe page (spec 011 US1), "+N" for the
- * others. Nothing while there are no timers. Tapping it opens Timers and sends `timer_pill_tapped`.
+ * other running ones (paused and done timers aren't counted). Nothing while there are no timers.
+ * Tapping it opens Timers and sends `timer_pill_tapped`.
  */
 export function AppTimerPill({ onOpen, tracker, compact }: AppTimerPillProps) {
-  const { timer, left, count } = useMostUrgent();
+  const { timer, left, count, running } = useMostUrgent();
   if (!timer) return null;
   const open = () => {
     tracker.track('timer_pill_tapped', { timer_count: count });
     onOpen();
   };
+  const others = running - (timer.state === 'running' ? 1 : 0);
   return (
     <TimerPill
       name={pillName(timer.label)}
       clock={clock(left)}
-      more={count > 1 ? copy.more(count - 1) : undefined}
-      label={copy.label(count)}
+      more={others > 0 ? copy.more(others) : undefined}
+      label={running > 0 ? copy.label(running) : strings.timers.openTimers}
       onPress={open}
       compact={compact}
     />

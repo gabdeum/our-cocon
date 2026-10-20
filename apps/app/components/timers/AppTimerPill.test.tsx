@@ -1,4 +1,4 @@
-// Spec 011 US1: the pill shows the most urgent timer's name and clock, live, "+N" with others,
+// Spec 011 US1: the pill shows the most urgent timer's name and clock, live, "+N" for other running ones,
 // truncates long names, hides with no timers, and opens Timers (`timer_pill_tapped`).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
@@ -49,13 +49,30 @@ describe('TimerPill (spec 011 US1)', () => {
     expect(pill().textContent).toBe('Blind bake11:59');
   });
 
-  it('FR-001: the most urgent one, with "+N" for the others', () => {
+  it('FR-001: the most urgent one, with "+N" for the other running ones', () => {
     setup();
     act(() => void store.start('Blind bake', 12 * 60, 'step'));
     act(() => void store.start('Soften leeks', 8 * 60, 'step'));
     act(() => void store.quick());
     expect(pill().textContent).toBe('Kitchen timer05:00+2');
     expect(pill().getAttribute('aria-label')).toBe('3 timers running. Open timers');
+  });
+
+  it('"+N" and the label count only running timers, not paused or done ones', () => {
+    setup();
+    const leeks = store.start('Soften leeks', 8 * 60, 'step');
+    act(() => store.pause(leeks));
+    store.start('Simmer', 60, 'step');
+    act(() => vi.advanceTimersByTime(60 * 1000));
+    // Only a paused and a done timer: the pill shows the paused one, with no count.
+    expect(pill().textContent).toBe('Soften leeks08:00');
+    expect(pill().getAttribute('aria-label')).toBe('Open timers');
+    act(() => void store.start('Blind bake', 12 * 60, 'step'));
+    expect(pill().textContent).toBe('Blind bake12:00');
+    expect(pill().getAttribute('aria-label')).toBe('1 timer running. Open timers');
+    act(() => void store.quick());
+    expect(pill().textContent).toBe('Kitchen timer05:00+1');
+    expect(pill().getAttribute('aria-label')).toBe('2 timers running. Open timers');
   });
 
   it('cuts a long name at 14 characters; never the clock', () => {

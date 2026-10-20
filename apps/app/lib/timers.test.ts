@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { add, clock, dismiss, mostUrgent, parseStored, pillName, pillTimer, progress, pause, remaining, resume, set, settle, start, stop, type Timer } from './timers';
+import { add, clock, dismiss, expire, mostUrgent, nextExpiry, parseStored, pillName, pillTimer, progress, STALE_MS, pause, remaining, resume, set, settle, start, stop, type Timer } from './timers';
 
 const T0 = 1_760_000_000_000;
 const sec = (s: number) => s * 1000;
@@ -137,5 +137,22 @@ describe('timer pill and Timers screen (spec 011)', () => {
     expect(progress(one(ts), T0)).toBe(0);
     expect(progress(one(ts), T0 + sec(150))).toBe(0.25);
     expect(progress(one(settle(ts, T0 + sec(600)).timers), T0 + sec(600))).toBe(1);
+  });
+
+  it('clears paused and done timers 3 hours after they stopped; never running ones', () => {
+    let ts = start([], 'p', 'Soften leeks', 480, T0);
+    ts = pause(ts, 'p', T0);
+    ts = start(ts, 'r', 'Braise', 6 * 3600, T0);
+    ts = settle(start(ts, 'd', 'Simmer', 60, T0), T0 + sec(60)).timers;
+    expect(nextExpiry(ts)).toBe(T0 + STALE_MS);
+    expect(expire(ts, T0 + STALE_MS - 1).map((t) => t.id)).toEqual(['p', 'r', 'd']);
+    expect(expire(ts, T0 + STALE_MS).map((t) => t.id)).toEqual(['r', 'd']);
+    expect(expire(ts, T0 + sec(60) + STALE_MS).map((t) => t.id)).toEqual(['r']);
+  });
+
+  it('a stored timer from before 011 (no stop time) gets its 3 hours from now', () => {
+    const old = { id: 'p', label: 'Soften leeks', totalSeconds: 480, state: 'paused' as const, remainingSeconds: 300 };
+    const [kept] = expire([old], T0);
+    expect(kept?.stoppedAt).toBe(T0);
   });
 });
