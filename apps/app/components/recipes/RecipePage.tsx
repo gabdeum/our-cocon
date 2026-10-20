@@ -267,8 +267,13 @@ function LoadedRecipe({
         </View>
         {scaledName && current ? (
           <View className="flex-row flex-wrap items-center gap-8">
-            <Meta label={more.scaledBy(scaledName)} tone="sage" />
-            <Link label={more.reset} aria-label={more.resetA11y(scaledName)} onPress={() => update({ ...current, scaledBy: null })} />
+            {/* Meta and Link align themselves to the top; their wrappers let the row centre them. */}
+            <View>
+              <Meta label={more.scaledBy(scaledName)} tone="sage" />
+            </View>
+            <View>
+              <Link label={more.reset} aria-label={more.resetA11y(scaledName)} onPress={() => update({ ...current, scaledBy: null })} />
+            </View>
           </View>
         ) : null}
         {moreOpen && current ? (
