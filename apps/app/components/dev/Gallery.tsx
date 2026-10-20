@@ -54,6 +54,7 @@ import {
   TextField,
   TimerCard,
   TimerPill,
+  TimePresets,
   TimerRow,
   theme,
   type IconName,
@@ -107,7 +108,6 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
   const [tab, setTab] = useState<(typeof tabs)[number]['key']>('recipes');
   const [cookStep, setCookStep] = useState(2);
   const [section, setSection] = useState('steps');
-  const [editing, setEditing] = useState(false);
 
   return (
     <PushedScreen>
@@ -340,10 +340,6 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             onAction={noop}
             secondaryLabel={state === 'done' ? 'Dismiss' : 'Stop'}
             onSecondary={noop}
-            editLabel="Edit"
-            editing={state === 'running' && editing}
-            onEdit={() => setEditing(!editing)}
-            presets={['5 min', '10 min', '15 min', '30 min'].map((label) => ({ label, onPress: noop }))}
             minusLabel="−1"
             plusLabel="+1"
             minusA11y="One minute less"
@@ -356,6 +352,11 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
 
       <Section group="Cooking" title="TimerPill">
         <TimerPill name="Blind bake" clock="11:42" more="+1" label="2 timers running. Open timers" onPress={noop} />
+        <TimerPill name="Kitchen timer" clock="06:39" label="1 timer running. Open timers" onPress={noop} />
+      </Section>
+
+      <Section group="Cooking" title="TimePresets">
+        <TimePresets label="Quick kitchen timer" presets={[5, 10, 15, 30].map((m) => ({ label: `${m} min`, a11y: `Start a ${m} min kitchen timer`, onPress: noop }))} />
       </Section>
 
       <Section group="Overlays" title="BottomSheet">

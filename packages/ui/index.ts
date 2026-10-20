@@ -27,6 +27,7 @@ export { StatusBanner, Presence, AwakeChip, SuccessPanel } from './components/St
 export { StepCard, StepFootnote, StepText, TimerRow, type StepTextPart, type TimerState } from './components/StepCard';
 export { CookTimerCard, TimerCard, type TimersScreenState } from './components/TimerCard';
 export { TimerPill, type TimerPillProps } from './components/TimerPill';
+export { TimePresets, type TimePreset, type TimePresetsProps } from './components/TimePresets';
 export { TabBar, TAB_LABEL_MIN_SCALE, type TabBarItem, type TabBarProps } from './components/TabBar';
 export { BottomSheet, SheetFooter, type BottomSheetProps } from './components/BottomSheet';
 export { Dialog, type DialogProps } from './components/Dialog';

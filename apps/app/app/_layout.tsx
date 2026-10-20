@@ -50,13 +50,13 @@ function FamilySync({ children }: { children: ReactNode }) {
   );
 }
 
-/** Each signed-in person's timers, on every screen (spec 010), with the done chime and banner. */
+/** Each signed-in person's timers, on every screen (spec 010), with the done chime and banner ("Open timers", 011). */
 function Timers({ children }: { children: ReactNode }) {
   const { state } = useSession();
   return (
     <TimersProvider userId={state.status === 'ready' ? state.userId : ''} storage={deviceStorage} tracker={tracker}>
       {children}
-      <TimerAlerts chime={playChime} vibrate={vibrateDone} />
+      <TimerAlerts chime={playChime} vibrate={vibrateDone} onOpenTimers={() => router.push('/timers')} />
     </TimersProvider>
   );
 }
@@ -115,6 +115,7 @@ export default function RootLayout() {
                   <Stack.Screen name="join/[token]" />
                   <Stack.Screen name="recipes/filters" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]" options={presentation.stack} />
+                  <Stack.Screen name="timers" options={presentation.stack} />
                   <Stack.Screen name="dev/gallery" options={presentation.stack} />
                   <Stack.Screen name="dev/sheet" options={presentation.sheet} />
                   <Stack.Screen name="dev/modal" options={presentation.fullScreen} />

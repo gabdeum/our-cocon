@@ -3,6 +3,7 @@ import type { Tracker } from '@cocon/schemas';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TABS, type TabKey } from '../lib/navigation';
 import { strings } from '../strings/en';
+import { AppTimerPill, useHasTimers } from './timers/AppTimerPill';
 
 /** The parts of Expo Router's tab-bar props this uses (React Navigation's BottomTabBarProps). */
 export interface TabNavigationProps {
@@ -13,9 +14,10 @@ export interface TabNavigationProps {
   };
 }
 
-/** Connects the design-system TabBar to Expo Router's tabs and sends `tab_selected` (spec 002). */
-export function AppTabBar({ state, navigation, tracker }: TabNavigationProps & { tracker: Tracker }) {
+/** Connects the design-system TabBar to Expo Router's tabs and sends `tab_selected` (spec 002), with the TimerPill (011). */
+export function AppTabBar({ state, navigation, tracker, onOpenTimers }: TabNavigationProps & { tracker: Tracker; onOpenTimers: () => void }) {
   const insets = useSafeAreaInsets();
+  const hasTimers = useHasTimers();
   const current = state.routes[state.index]?.name;
   const active = TABS.find((t) => t.route === current)?.key ?? 'home';
 
@@ -29,5 +31,15 @@ export function AppTabBar({ state, navigation, tracker }: TabNavigationProps & {
     tracker.track('tab_selected', { tab: key });
   };
 
-  return <TabBar label={strings.tabBar.label} items={[...TABS]} active={active} onSelect={select} bottomInset={insets.bottom} />;
+  return (
+    <TabBar
+      label={strings.tabBar.label}
+      items={[...TABS]}
+      active={active}
+      onSelect={select}
+      bottomInset={insets.bottom}
+      // The TimerPill above the bar while any timer exists (spec 011 US1).
+      timerPill={hasTimers ? <AppTimerPill onOpen={onOpenTimers} tracker={tracker} /> : undefined}
+    />
+  );
 }

@@ -19,8 +19,8 @@ export interface TimerStore {
   getSnapshot(): TimersSnapshot;
   /** Returns the new timer's id. */
   start(label: string, seconds: number, from: 'step' | 'quick', origin?: TimerOrigin): string;
-  /** The quick kitchen timer: 5 min, "Kitchen timer" (FR-002). */
-  quick(): string;
+  /** A quick "Kitchen timer" (FR-002); 5 min unless the Timers screen picks 10, 15 or 30 (spec 011). */
+  quick(seconds?: number): string;
   pause(id: string): void;
   resume(id: string): void;
   /** ±60 s (FR-002). */
@@ -62,6 +62,8 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
   let snapshot: TimersSnapshot = { timers, now: now() };
   let shown = '';
   let interval: ReturnType<typeof setInterval> | null = null;
+  // Wakes the store when a paused or done timer is due to be cleared (3 h, spec 011).
+  let expiry: ReturnType<typeof setTimeout> | null = null;
   let nextId = 0;
   // Set by destroy(): a load still reading storage must not start ticking a store nobody uses.
   let destroyed = false;
@@ -88,8 +90,10 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
 
   function tick() {
     const at = now();
-    const { timers: next, finished } = T.settle(timers, at);
-    if (finished.length) {
+    const { timers: settled, finished } = T.settle(timers, at);
+    const next = T.expire(settled, at);
+    const cleared = next.length !== settled.length;
+    if (finished.length || cleared) {
       timers = next;
       save();
       finished.forEach((t) => {
@@ -97,7 +101,7 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
         finishedListeners.forEach((l) => l(t));
       });
     }
-    publish(at, finished.length > 0);
+    publish(at, finished.length > 0 || cleared);
     schedule();
   }
 
@@ -108,6 +112,11 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
       clearInterval(interval);
       interval = null;
     }
+    if (expiry) clearTimeout(expiry);
+    expiry = null;
+    const due = destroyed ? null : T.nextExpiry(timers);
+    // setTimeout can't wait longer than about 24 days; 3 h is far below that.
+    if (due !== null) expiry = setTimeout(tick, Math.max(0, due - now()));
   }
 
   function change(f: (ts: readonly Timer[], at: number) => Timer[]) {
@@ -135,7 +144,7 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
       tracker.track('timer_started', { from });
       return id;
     },
-    quick: () => store.start(strings.timers.kitchenTimer, T.QUICK_SECONDS, 'quick'),
+    quick: (seconds = T.QUICK_SECONDS) => store.start(strings.timers.kitchenTimer, seconds, 'quick'),
     pause: (id) => change((ts, at) => T.pause(ts, id, at)),
     resume: (id) => change((ts, at) => T.resume(ts, id, at)),
     add(id, deltaSeconds) {
@@ -166,10 +175,13 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
       }
       if (destroyed) return;
       const at = now();
-      const stored = T.settle(T.parseStored(raw), at).timers;
+      const stored = T.expire(T.settle(T.parseStored(raw), at).timers, at);
       // Anything started while storage was being read stays.
       const ids = new Set(timers.map((t) => t.id));
       timers = [...stored.filter((t) => !ids.has(t.id)), ...timers];
+      // Write back what changed while closed (ended, cleared, given a stop time), so a reload doesn't
+      // restart a paused timer's 3 hours.
+      if (raw !== null) save();
       publish(at, true);
       schedule();
     },
@@ -177,6 +189,8 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
       destroyed = true;
       if (interval) clearInterval(interval);
       interval = null;
+      if (expiry) clearTimeout(expiry);
+      expiry = null;
       listeners.clear();
       finishedListeners.clear();
     },
@@ -184,7 +198,8 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
   return store;
 }
 
-const TimersContext = createContext<TimerStore | null>(null);
+/** Exported for tests that hand a screen their own store. */
+export const TimersContext = createContext<TimerStore | null>(null);
 
 export interface TimersProviderProps {
   userId: string;
@@ -222,9 +237,13 @@ export function useStepTimer(recipeId: string, stepId: string): { timer: Timer |
   return { timer, left: timer ? T.remaining(timer, now) : 0 };
 }
 
-/** FR-004, for the TimerPill (spec 011). */
-export function useMostUrgent(): { timer: Timer | null; left: number; count: number } {
+/**
+ * FR-004, for the TimerPill (spec 011): only running timers count. `timer` is null, and the pill
+ * hidden, when nothing is running; `running` gives its "+N" and label.
+ */
+export function useMostUrgent(): { timer: Timer | null; left: number; count: number; running: number } {
   const { timers, now } = useTimers();
-  const timer = T.mostUrgent(timers, now);
-  return { timer, left: timer ? T.remaining(timer, now) : 0, count: timers.length };
+  const timer = T.pillTimer(timers, now);
+  const running = timers.filter((t) => t.state === 'running').length;
+  return { timer, left: timer ? T.remaining(timer, now) : 0, count: timers.length, running };
 }

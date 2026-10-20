@@ -87,11 +87,6 @@ export interface TimerCardProps extends Adjust {
   /** "Stop" or "Dismiss". */
   secondaryLabel: string;
   onSecondary: () => void;
-  editLabel: string;
-  editing: boolean;
-  onEdit: () => void;
-  /** "5 min" · "10 min" · "15 min" · "30 min". */
-  presets: { label: string; onPress: () => void }[];
 }
 
 const fills: Record<TimersScreenState, string> = {
@@ -100,27 +95,18 @@ const fills: Record<TimersScreenState, string> = {
   done: 'bg-honey border-2 border-ink',
 };
 
-/** A timer on the Timers screen, tinted by state (TimerCard README › Timers screen). */
+/** A timer on the Timers screen, tinted by state (TimerCard README › Timers screen, OC-Timers). */
 export function TimerCard(props: TimerCardProps) {
-  const { name, sub, state, clock, progress, actionLabel, onAction, secondaryLabel, onSecondary, editLabel, editing, onEdit, presets } = props;
+  const { name, sub, state, clock, progress, actionLabel, onAction, secondaryLabel, onSecondary } = props;
   return (
     <View className={cn('gap-12 rounded-[24px] px-16 py-14', fills[state])}>
-      <View className="flex-row items-start gap-8">
-        <View className="min-w-0 flex-1">
-          <Text size={17} weight="900">
-            {name}
-          </Text>
-          <Text size={13} weight="700">
-            {sub}
-          </Text>
-        </View>
-        <Pressable role="button" aria-expanded={editing} onPress={onEdit} className={cn('rounded-pill', focusRing)}>
-          <SoftWhite className="h-[36px] items-center justify-center rounded-pill px-14">
-            <Text size={14} weight="800">
-              {editLabel}
-            </Text>
-          </SoftWhite>
-        </Pressable>
+      <View>
+        <Text size={17} weight="900">
+          {name}
+        </Text>
+        <Text size={13} weight="700" className="opacity-80">
+          {sub}
+        </Text>
       </View>
       <View className="flex-row items-center gap-8">
         <AdjustButton text={props.minusLabel} a11y={props.minusA11y} onPress={props.onMinus} />
@@ -133,27 +119,18 @@ export function TimerCard(props: TimerCardProps) {
         <View aria-hidden className="absolute inset-0 bg-ink opacity-[0.12]" />
         <View className="h-full bg-ink" style={{ width: `${Math.min(1, Math.max(0, progress)) * 100}%` }} />
       </View>
-      {editing ? (
-        <View className="flex-row gap-6">
-          {presets.map((p) => (
-            <Pressable key={p.label} role="button" onPress={p.onPress} className={cn('h-control-md flex-1 items-center justify-center rounded-md bg-surface-card', focusRing)}>
-              <Text size={15} weight="800">
-                {p.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-      <View className="flex-row gap-10">
+      <View className="flex-row gap-8">
         <Pressable role="button" onPress={onAction} className={cn('h-[50px] flex-1 items-center justify-center rounded-pill bg-ink active:bg-ink-pressed', focusRing)}>
           <Text size={16} weight="900" color="on-olive">
             {actionLabel}
           </Text>
         </Pressable>
-        <Pressable role="button" onPress={onSecondary} className={cn('h-[50px] items-center justify-center rounded-pill bg-surface-soft px-18 active:bg-surface-soft-pressed', focusRing)}>
-          <Text size={15} weight="800">
-            {secondaryLabel}
-          </Text>
+        <Pressable role="button" onPress={onSecondary} className={cn('rounded-pill', focusRing)}>
+          <SoftWhite className="h-[50px] items-center justify-center rounded-pill px-16">
+            <Text size={15} weight="800">
+              {secondaryLabel}
+            </Text>
+          </SoftWhite>
         </Pressable>
       </View>
     </View>

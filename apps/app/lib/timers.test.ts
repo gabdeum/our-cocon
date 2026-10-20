@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { add, clock, dismiss, mostUrgent, parseStored, pause, remaining, resume, set, settle, start, stop, type Timer } from './timers';
+import { add, clock, dismiss, expire, mostUrgent, nextExpiry, parseStored, pillName, pillTimer, progress, STALE_MS, pause, remaining, resume, set, settle, start, stop, type Timer } from './timers';
 
 const T0 = 1_760_000_000_000;
 const sec = (s: number) => s * 1000;
@@ -108,5 +108,52 @@ describe('timers (spec 010)', () => {
   it('a timer that ended while the app was closed comes back done', () => {
     const back = parseStored(JSON.parse(JSON.stringify(running(60))));
     expect(one(settle(back, T0 + sec(3600)).timers).state).toBe('done');
+  });
+
+  it('keeps the recipe name a timer started with, through pause and done (spec 011)', () => {
+    const ts = start([], 't1', 'Blind bake', 720, T0, { recipeId: 'r1', stepId: 's2', recipeName: 'Leek & bacon quiche' });
+    expect(one(pause(ts, 't1', T0)).recipeName).toBe('Leek & bacon quiche');
+    expect(one(settle(ts, T0 + sec(720)).timers).recipeName).toBe('Leek & bacon quiche');
+    expect(parseStored(JSON.parse(JSON.stringify(ts)))).toEqual(ts);
+  });
+});
+
+describe('timer pill and Timers screen (spec 011)', () => {
+  it('the pill name stops at 14 characters with an ellipsis', () => {
+    expect(pillName('Blind bake')).toBe('Blind bake');
+    expect(pillName('Exactly14chars')).toBe('Exactly14chars');
+    expect(pillName('Caramelise the onions')).toBe('Caramelise the…');
+  });
+
+  it('the pill shows only a running timer: none while every timer is paused or done', () => {
+    const done = settle(start([], 'd', 'Simmer', 1, T0), T0 + sec(2)).timers;
+    const pausedToo = pause(start(done, 'p', 'Soften leeks', 480, T0), 'p', T0);
+    expect(pillTimer(pausedToo, T0 + sec(2))).toBeNull();
+    expect(pillTimer(start(pausedToo, 'r', 'Rest', 60, T0), T0)?.id).toBe('r');
+    expect(pillTimer([], T0)).toBeNull();
+  });
+
+  it('progress is the share of time gone', () => {
+    const ts = running(600);
+    expect(progress(one(ts), T0)).toBe(0);
+    expect(progress(one(ts), T0 + sec(150))).toBe(0.25);
+    expect(progress(one(settle(ts, T0 + sec(600)).timers), T0 + sec(600))).toBe(1);
+  });
+
+  it('clears paused and done timers 3 hours after they stopped; never running ones', () => {
+    let ts = start([], 'p', 'Soften leeks', 480, T0);
+    ts = pause(ts, 'p', T0);
+    ts = start(ts, 'r', 'Braise', 6 * 3600, T0);
+    ts = settle(start(ts, 'd', 'Simmer', 60, T0), T0 + sec(60)).timers;
+    expect(nextExpiry(ts)).toBe(T0 + STALE_MS);
+    expect(expire(ts, T0 + STALE_MS - 1).map((t) => t.id)).toEqual(['p', 'r', 'd']);
+    expect(expire(ts, T0 + STALE_MS).map((t) => t.id)).toEqual(['r', 'd']);
+    expect(expire(ts, T0 + sec(60) + STALE_MS).map((t) => t.id)).toEqual(['r']);
+  });
+
+  it('a stored timer from before 011 (no stop time) gets its 3 hours from now', () => {
+    const old = { id: 'p', label: 'Soften leeks', totalSeconds: 480, state: 'paused' as const, remainingSeconds: 300 };
+    const [kept] = expire([old], T0);
+    expect(kept?.stoppedAt).toBe(T0);
   });
 });

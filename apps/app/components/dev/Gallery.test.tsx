@@ -9,10 +9,10 @@ afterEach(cleanup);
 const components = [
   'Button', 'IconButton', 'Pill', 'Tag', 'Switch', 'SegmentedControl', 'Stepper', 'TextField', 'MonthPicker',
   'ListRow', 'Card', 'RecipeItem', 'StatTile', 'Callout', 'Avatar', 'StatusBanner', 'StepCard', 'TimerCard',
-  'TimerPill', 'TabBar', 'BottomSheet', 'Dialog', 'Progress', 'ScreenHeader',
+  'TimerPill', 'TimePresets', 'TabBar', 'BottomSheet', 'Dialog', 'Progress', 'ScreenHeader',
 ];
 
-it('shows a section for each of the 24 design-system components', () => {
+it('shows a section for each of the 25 design-system components', () => {
   render(<Gallery onBack={() => undefined} onOpenSheetRoute={() => undefined} onOpenModalRoute={() => undefined} />);
   for (const name of components) expect(screen.getByRole('heading', { name }), name).toBeTruthy();
 });

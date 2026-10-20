@@ -1,16 +1,16 @@
 # TimerPill
 
-An always-visible pill showing the most urgent running timer; tapping it opens the Timers screen.
+A pill, visible while any timer is running, showing the one with the least time left; tapping it opens the Timers screen.
 
 ## Specs
 
 | Part | Spec |
 | --- | --- |
-| Pill | 50 tall (48 in headers), radius pill, white, 2 px honey border, `shadow-float`, padding 0 8 0 14, gap 10 |
+| Pill | 50 tall (48 in headers), radius pill, white, 2 px honey border, `shadow-float`, padding 0 14 (0 8 0 14 when the "+N" chip ends it), gap 10 |
 | Icon | timer 20, olive, stroke 2.4 |
 | Name | timer label 15/800, no wrap ("Blind bake") |
 | Clock | 17/900 tabular |
-| More | "+N" when other timers exist: honey pill, padding 6 10, 13/900 |
+| More | "+N" when other timers are running (paused and done ones aren't counted): honey pill, padding 6 10, 13/900 |
 
 ## Placement
 
@@ -20,5 +20,6 @@ An always-visible pill showing the most urgent running timer; tapping it opens t
 
 ## Rules
 
-- Show the running timer with the least time left; if none is running, the paused one with the least time left. Hide the pill when no timers exist.
-- `aria-label`: "2 timers running. Open timers".
+- Show the running timer with the least time left. Hide the pill while no timer is running (none yet, or all paused or done).
+- The name stops at 14 characters with an ellipsis; the clock never truncates.
+- `aria-label`: "2 timers running. Open timers", counting running timers only.

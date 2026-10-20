@@ -107,6 +107,64 @@ describe('timer store (spec 010)', () => {
     again.destroy();
   });
 
+  it('spec 011: a paused or done timer untouched for 3 hours is cleared, while the app is open', () => {
+    const store = storeFor(memoryStorage());
+    const leeks = store.start('Soften leeks', 8 * 60, 'step');
+    store.pause(leeks);
+    store.start('Simmer', 60, 'step');
+    store.start('Braise', 4 * 3600, 'step');
+    act(() => vi.advanceTimersByTime(60 * 1000));
+    expect(shown(store)).toEqual(['Soften leeks 08:00 paused', 'Simmer 00:00 done', `Braise ${clock(4 * 3600 - 60)} running`]);
+
+    // Touching a paused timer starts its 3 hours over.
+    act(() => vi.advanceTimersByTime(30 * 60 * 1000));
+    store.add(leeks, 60);
+    act(() => vi.advanceTimersByTime(2.5 * 3600 * 1000));
+    expect(shown(store).map((t) => t.split(' ')[0])).toEqual(['Soften', 'Braise']);
+    act(() => vi.advanceTimersByTime(30 * 60 * 1000));
+    // The running one is never cleared, however long it runs.
+    expect(shown(store).map((t) => t.split(' ')[0])).toEqual(['Braise']);
+    store.destroy();
+  });
+
+  it('spec 011: a timer saved before 011 (no stop time) still goes 3 hours later, across reloads', async () => {
+    const storage = memoryStorage();
+    storage.data.set('cocon.timers.u1', JSON.stringify([{ id: 'p', label: 'Soften leeks', totalSeconds: 480, state: 'paused', remainingSeconds: 300 }]));
+    const first = storeFor(storage);
+    await first.load();
+    first.destroy();
+    await flush();
+
+    vi.setSystemTime(T0 + 2 * 3600 * 1000);
+    const second = storeFor(storage);
+    await second.load();
+    expect(shown(second)).toEqual(['Soften leeks 05:00 paused']);
+    second.destroy();
+    await flush();
+
+    vi.setSystemTime(T0 + 3 * 3600 * 1000);
+    const third = storeFor(storage);
+    await third.load();
+    expect(shown(third)).toEqual([]);
+    third.destroy();
+  });
+
+  it('spec 011: after a reload, timers stopped more than 3 hours ago are gone', async () => {
+    const storage = memoryStorage();
+    const first = storeFor(storage);
+    first.start('Simmer', 60, 'step');
+    first.pause(first.start('Soften leeks', 8 * 60, 'step'));
+    first.destroy();
+    await flush();
+
+    // Simmer ended at T0 + 1 min; 3 h after that it goes, but the leeks (paused at T0) went first.
+    vi.setSystemTime(T0 + 3 * 3600 * 1000 + 30 * 1000);
+    const again = storeFor(storage);
+    await again.load();
+    expect(shown(again)).toEqual(['Simmer 00:00 done']);
+    again.destroy();
+  });
+
   it('reaching zero while open marks it done, tells listeners once and sends timer_finished', async () => {
     const tracker = fakeTracker();
     const store = storeFor(memoryStorage(), tracker);
