@@ -45,6 +45,13 @@ export const events = {
   servings_changed: z.strictObject({ from: z.int().min(1).max(50), to: z.int().min(1).max(50) }),
   // Spec 008: a version pill or option switch was tapped; how many variants are now on (0 = Classic).
   variant_selected: z.strictObject({ variant_count: z.int().min(0).max(50) }),
+  // Spec 010: timers, on this device only. Never their names.
+  timer_started: z.strictObject({ from: z.enum(['step', 'quick']) }),
+  // ±1 from the buttons; for "Set to" (011), the change in whole minutes.
+  timer_adjusted: z.strictObject({ delta_min: z.int().min(-1440).max(1440) }),
+  timer_finished: z.strictObject({}),
+  // Spec 009/010: a step's "Start timer"; the step's position, from 0.
+  step_timer_started: z.strictObject({ step_index: z.int().min(0).max(200) }),
 } as const;
 
 export type EventName = keyof typeof events;

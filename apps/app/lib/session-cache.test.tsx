@@ -70,6 +70,7 @@ describe('SessionProvider cache', () => {
     const client = fakeClient(() => Promise.resolve({ data: [], error: null }));
     const queryClient = new QueryClient();
     const persister = { removeClient: vi.fn(() => Promise.resolve()) };
+    const clearDevice = vi.fn(() => Promise.resolve());
     function SignOut() {
       const { signOut } = useSession();
       return (
@@ -80,7 +81,7 @@ describe('SessionProvider cache', () => {
     }
     render(
       <QueryClientProvider client={queryClient}>
-        <SessionProvider client={client as never} tracker={fakeTracker()} persister={persister}>
+        <SessionProvider client={client as never} tracker={fakeTracker()} persister={persister} clearDevice={clearDevice}>
           <SignOut />
         </SessionProvider>
       </QueryClientProvider>,
@@ -91,6 +92,8 @@ describe('SessionProvider cache', () => {
     await flush();
     expect(queryClient.getQueryData(['grocery_items'])).toBeUndefined();
     expect(persister.removeClient).toHaveBeenCalled();
+    // Their timers (with step names) go too (spec 010).
+    expect(clearDevice).toHaveBeenCalledWith(gabriel.user_id);
   });
 
   it("wipes a restored cache that belongs to someone else before it is read", async () => {

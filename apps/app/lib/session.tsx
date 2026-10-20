@@ -55,6 +55,7 @@ export function SessionProvider({
   tracker,
   persister,
   restored = Promise.resolve(),
+  clearDevice,
   children,
 }: {
   client: SessionContextValue['client'];
@@ -63,6 +64,8 @@ export function SessionProvider({
   persister?: { removeClient: () => PromiseLike<void> | void };
   /** Resolves once the saved cache is loaded back (PersistQueryClientProvider onSuccess). */
   restored?: Promise<void>;
+  /** Anything else this person keeps on the device (their timers, spec 010), removed on sign-out. */
+  clearDevice?: (userId: string) => Promise<void>;
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();
@@ -118,8 +121,9 @@ export function SessionProvider({
     queryClient.clear();
     // The saved copy too, now: the cache is only written to the device every second or so.
     await persister?.removeClient();
+    if (userId) await clearDevice?.(userId);
     tracker.reset();
-  }, [client, queryClient, persister, tracker]);
+  }, [client, queryClient, persister, clearDevice, userId, tracker]);
 
   const api = useMemo(() => familyApi(client), [client]);
   const value = useMemo(() => ({ state, client, api, tracker, refresh, signOut }), [state, client, api, tracker, refresh, signOut]);

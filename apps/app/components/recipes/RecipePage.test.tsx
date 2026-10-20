@@ -1,5 +1,6 @@
 // Spec 008: the recipe page. US1 (servings 6 → 9 at once), US2 (Vegetarian, "Make my own dough"),
 // US3 (tabs), FR-006 (choices remembered on this device), the edge cases and the events.
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { onlineManager } from '@tanstack/react-query';
@@ -10,6 +11,7 @@ import type { RecipeDetail } from '../../lib/recipe';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { defaultFormat } from '../../lib/recipe-view';
 import { alex, fakeTracker, gabriel } from '../../test/fakes';
+import { TimersProvider } from '../../lib/timer-store';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -57,6 +59,13 @@ async function setup(props: Partial<RecipePageProps> = {}) {
   const tracker = fakeTracker();
   const storage = props.storage ?? memoryStorage();
   const onTabChange = vi.fn();
+  const timerStorage = memoryStorage();
+  // Timers are app-wide (spec 010); `wrapper` keeps them across rerenders.
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <TimersProvider userId={gabriel.user_id} storage={timerStorage} tracker={tracker}>
+      {children}
+    </TimersProvider>
+  );
   const utils = render(
     <RecipePage
       recipe={detail}
@@ -73,6 +82,7 @@ async function setup(props: Partial<RecipePageProps> = {}) {
       onStartCooking={vi.fn()}
       {...props}
     />,
+    { wrapper },
   );
   await settle();
   return { ...utils, tracker, storage, onTabChange };
@@ -290,18 +300,62 @@ describe('Steps tab (spec 009)', () => {
     expect(within(card('Bake')).getByText('If the top browns too fast, cover it loosely with foil.')).toBeTruthy();
   });
 
-  it('US3 (buttons only until spec 010): the timer row shows "Start timer", the clock and −1 / +1', async () => {
+  it('009 US3 / spec 010: "Start timer" on Blind bake turns olive and counts; Pause, Resume, −1 / +1 work', async () => {
     const { tracker } = await setup({ tab: 'steps' });
-    const blind = card('Blind bake');
-    const start = within(blind).getByRole('button', { name: /Start timer/ });
-    expect(start.textContent).toContain('12:00');
-    expect(within(blind).getByRole('button', { name: 'One minute less' }).textContent).toBe('−1');
-    expect(within(blind).getByRole('button', { name: 'One minute more' }).textContent).toBe('+1');
-    // Not working until spec 010, and screen readers say so.
-    expect(start.getAttribute('aria-disabled')).toBe('true');
-    fireEvent.click(start);
-    expect(tracker.track).not.toHaveBeenCalled();
+    const blind = () => card('Blind bake');
+    const button = () => within(blind()).getAllByRole('button')[0] as HTMLElement;
+    expect(button().textContent).toBe('Start timer12:00');
+    expect(button().getAttribute('aria-pressed')).toBe('false');
     expect(within(card('Preheat and line')).queryByRole('button', { name: /Start timer/ })).toBeNull();
+
+    fireEvent.click(button());
+    expect(tracker.track).toHaveBeenCalledWith('step_timer_started', { step_index: 1 });
+    expect(tracker.track).toHaveBeenCalledWith('timer_started', { from: 'step' });
+    act(() => vi.advanceTimersByTime(1000));
+    expect(button().textContent).toBe('Pause11:59');
+    expect(button().getAttribute('aria-pressed')).toBe('true');
+
+    fireEvent.click(within(blind()).getByRole('button', { name: 'One minute more' }));
+    expect(button().textContent).toBe('Pause12:59');
+    expect(tracker.track).toHaveBeenCalledWith('timer_adjusted', { delta_min: 1 });
+    fireEvent.click(within(blind()).getByRole('button', { name: 'One minute less' }));
+    expect(button().textContent).toBe('Pause11:59');
+
+    fireEvent.click(button());
+    act(() => vi.advanceTimersByTime(5000));
+    expect(button().textContent).toBe('Resume11:59');
+    fireEvent.click(button());
+    act(() => vi.advanceTimersByTime(1000));
+    expect(button().textContent).toBe('Pause11:58');
+    // Names never reach analytics.
+    expect(JSON.stringify(tracker.track.mock.calls)).not.toContain('Blind bake');
+  });
+
+  it('spec 010: at zero the row reads "Done!" 00:00 and says so; tapping it puts the row back', async () => {
+    await setup({ tab: 'steps' });
+    const blind = () => card('Blind bake');
+    const button = () => within(blind()).getAllByRole('button')[0] as HTMLElement;
+    fireEvent.click(button());
+    act(() => vi.advanceTimersByTime(11 * 60 * 1000));
+    expect(within(blind()).getByText('1 minute left')).toBeTruthy();
+    act(() => vi.advanceTimersByTime(60 * 1000));
+    expect(button().textContent).toBe('Done!00:00');
+    expect(within(blind()).getByText('Blind bake is done')).toBeTruthy();
+    fireEvent.click(button());
+    expect(button().textContent).toBe('Start timer12:00');
+  });
+
+  it('spec 010: before a timer starts, −1 / +1 change the time it starts with (never below 0:30)', async () => {
+    const { tracker } = await setup({ tab: 'steps' });
+    const blind = () => card('Blind bake');
+    const button = () => within(blind()).getAllByRole('button')[0] as HTMLElement;
+    fireEvent.click(within(blind()).getByRole('button', { name: 'One minute more' }));
+    expect(button().textContent).toBe('Start timer13:00');
+    for (let i = 0; i < 20; i++) fireEvent.click(within(blind()).getByRole('button', { name: 'One minute less' }));
+    expect(button().textContent).toBe('Start timer00:30');
+    expect(tracker.track).not.toHaveBeenCalled();
+    fireEvent.click(button());
+    expect(button().textContent).toBe('Pause00:30');
   });
 
   it('edge: a variant step carries the Variant tag and numbering stays continuous', async () => {

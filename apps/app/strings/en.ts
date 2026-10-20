@@ -188,6 +188,8 @@ export const strings = {
       plus: '+1',
       minusA11y: 'One minute less',
       plusA11y: 'One minute more',
+      /** Announced once, politely, at 1 minute left (OC-RecipeSteps › Accessibility labels). */
+      oneMinuteLeft: '1 minute left',
       footnote: '−1 / +1 changes a timer by a minute, even while it runs.',
       /** A token whose ingredient is gone and whose name isn't known either. */
       missingIngredient: 'an ingredient',
@@ -216,6 +218,13 @@ export const strings = {
     via: (name: string, assistant: string) => `${name} · via ${assistant}`,
     /** The author left the family or deleted their account. */
     formerMember: 'Former member',
+  },
+  // Timers (spec 010; the Timers screen and pill are 011, OC-Timers).
+  timers: {
+    kitchenTimer: 'Kitchen timer',
+    /** The StatusBanner when a timer ends, on any screen (OC-Timers › States). */
+    done: (name: string) => `${name} is done`,
+    openTimers: 'Open timers',
   },
   // Total time (spec 006 FR-002): "40 min", "2 h", "1 h 05".
   time: {
