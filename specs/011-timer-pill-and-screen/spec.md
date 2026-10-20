@@ -24,6 +24,8 @@
 - **FR-003**: Card colours by state: running sage, paused surface-soft, done honey with a 2 px ink border.
 - **FR-004**: "Quick kitchen timer" with 5 · 10 · 15 · 30 min: each adds and starts a "Kitchen timer" of that length.
 - **FR-005**: A footnote reads: "Timers keep running when you leave the recipe. You'll hear a chime when one ends."
+- **FR-006**: A paused or done timer nobody touches for 3 hours is cleared from the list, while the app is open or the next time it opens. Any change to a paused timer starts its 3 hours over.
+- **FR-007**: The pill's "+N" and screen-reader label count running timers only ("2 timers running. Open timers"); with none running it reads "Open timers".
 
 ## Success Criteria
 - **SC-001**: The pill is visible on 100% of screens while a timer exists (except sheets and dialogs that cover it).

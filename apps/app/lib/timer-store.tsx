@@ -179,6 +179,9 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
       // Anything started while storage was being read stays.
       const ids = new Set(timers.map((t) => t.id));
       timers = [...stored.filter((t) => !ids.has(t.id)), ...timers];
+      // Write back what changed while closed (ended, cleared, given a stop time), so a reload doesn't
+      // restart a paused timer's 3 hours.
+      if (raw !== null) save();
       publish(at, true);
       schedule();
     },

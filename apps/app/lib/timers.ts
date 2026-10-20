@@ -84,7 +84,10 @@ export function adjusted(seconds: number, deltaSeconds: number): number {
   return Math.max(MIN_REDUCED_SECONDS, seconds + deltaSeconds);
 }
 
-/** "Set to 15 min" (FR-002): starts over at that time with the same running state; done runs again. */
+/**
+ * Set to a time (spec 010 FR-002): starts over at that time with the same running state; done runs
+ * again. No screen offers it since 011 removed Edit; kept as part of the engine for cooking mode (012).
+ */
 export function set(timers: readonly Timer[], id: string, seconds: number, now: number): Timer[] {
   const s = clampSeconds(seconds);
   return update(timers, id, (t) => (t.state === 'paused' ? paused({ ...t, totalSeconds: s }, s, now) : running({ ...t, totalSeconds: s }, s, now)));

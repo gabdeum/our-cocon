@@ -127,6 +127,28 @@ describe('timer store (spec 010)', () => {
     store.destroy();
   });
 
+  it('spec 011: a timer saved before 011 (no stop time) still goes 3 hours later, across reloads', async () => {
+    const storage = memoryStorage();
+    storage.data.set('cocon.timers.u1', JSON.stringify([{ id: 'p', label: 'Soften leeks', totalSeconds: 480, state: 'paused', remainingSeconds: 300 }]));
+    const first = storeFor(storage);
+    await first.load();
+    first.destroy();
+    await flush();
+
+    vi.setSystemTime(T0 + 2 * 3600 * 1000);
+    const second = storeFor(storage);
+    await second.load();
+    expect(shown(second)).toEqual(['Soften leeks 05:00 paused']);
+    second.destroy();
+    await flush();
+
+    vi.setSystemTime(T0 + 3 * 3600 * 1000);
+    const third = storeFor(storage);
+    await third.load();
+    expect(shown(third)).toEqual([]);
+    third.destroy();
+  });
+
   it('spec 011: after a reload, timers stopped more than 3 hours ago are gone', async () => {
     const storage = memoryStorage();
     const first = storeFor(storage);
