@@ -43,6 +43,8 @@ import {
   RecipeItemSkeleton,
   SearchField,
   SegmentedControl,
+  PhotoCrop,
+  PhotoField,
   PhotoPlaceholder,
   SettingRow,
   SheetFooter,
@@ -96,6 +98,10 @@ const tabs = [
   { key: 'settings', label: 'Settings', icon: 'settings' },
 ] as const;
 
+// Any image will do for the photo components; the app icon is always bundled.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const samplePhoto = require('../../assets/icon.png') as number;
+
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack: () => void; onOpenSheetRoute: () => void; onOpenModalRoute: () => void }) {
@@ -108,6 +114,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
   const [servings, setServings] = useState(6);
   const [best, setBest] = useState([0, 1, 2, 9, 10, 11]);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [photo, setPhoto] = useState<number | null>(null);
   const [sheet, setSheet] = useState(false);
   const [dialog, setDialog] = useState(false);
   const [tab, setTab] = useState<(typeof tabs)[number]['key']>('recipes');
@@ -298,6 +305,37 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
 
       <Section group="Inputs" title="MonthPicker">
         <MonthPicker label="Best months" monthLabels={months} value={best} onChange={setBest} hint="Leave empty if it's good all year." />
+      </Section>
+
+      <Section group="Inputs" title="PhotoField">
+        <PhotoField
+          source={photo}
+          addLabel="Add a photo (optional)"
+          onAdd={() => setPhoto(samplePhoto)}
+          changeLabel="Change photo"
+          onChange={noop}
+          removeLabel="Remove"
+          onRemove={() => setPhoto(null)}
+          photoLabel="Recipe photo"
+        />
+        <PhotoField source={samplePhoto} addLabel="Add a photo (optional)" onAdd={noop} changeLabel="Change photo" onChange={noop} removeLabel="Remove" onRemove={noop} photoLabel="Recipe photo" busyLabel="Uploading photo…" />
+      </Section>
+
+      <Section group="Inputs" title="PhotoCrop">
+        <View className="overflow-hidden rounded-xl">
+          <PhotoCrop
+            source={samplePhoto}
+            image={{ width: 1024, height: 1024 }}
+            title="Fit your photo"
+            hint="Drag to choose what shows in the header."
+            zoomInLabel="Zoom in"
+            zoomOutLabel="Zoom out"
+            confirmLabel="Use photo"
+            onConfirm={noop}
+            cancelLabel="Cancel"
+            onCancel={noop}
+          />
+        </View>
       </Section>
 
       <Section group="Lists and cards" title="ListRow">

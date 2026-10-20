@@ -266,3 +266,14 @@ textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-siz
 .oc-result--main { background: var(--honey); }
 .oc-result__value { font-size: 26px; font-weight: 900; }
 .oc-result__unit { font-size: 15px; font-weight: 700; }
+
+/* ---------- PhotoField ---------- */
+.oc-photofield { height: 150px; border-radius: 22px; border: 2px dashed var(--line-dashed); background: var(--surface-soft); color: var(--ink-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-size: 15px; font-weight: 800; }
+.oc-photofield__photo { width: 100%; aspect-ratio: 13 / 8; border-radius: 22px; object-fit: cover; }
+.oc-photofield__photo--busy { opacity: var(--opacity-dimmed, 0.4); }
+.oc-photofield__actions { display: flex; gap: 16px; margin-top: 6px; }
+
+/* ---------- PhotoCrop ---------- */
+.oc-photocrop { display: flex; flex-direction: column; gap: 18px; padding: 50px 20px 24px; background: var(--surface-page); }
+.oc-photocrop__frame { position: relative; width: 100%; aspect-ratio: 13 / 8; border-radius: 22px; overflow: hidden; background: var(--ink); }
+.oc-photocrop__zoom, .oc-photocrop__footer { display: flex; gap: 10px; }

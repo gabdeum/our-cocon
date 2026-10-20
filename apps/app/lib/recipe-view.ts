@@ -70,6 +70,8 @@ export interface StepLine {
   tempCheck: string | null;
   timer: { seconds: number; label: string; clock: string } | null;
   tip: string | null;
+  /** The step's photo in storage (spec 009 FR-004; shown from spec 014). */
+  photoPath: string | null;
 }
 
 export interface RecipeView {
@@ -148,6 +150,7 @@ export function recipeView(
     tempCheck: cooking.thermometer ? renderTemperatureCheck(step.temp_check_text ?? null, step.temp_check_c ?? null, options.system) : null,
     timer: step.timer_seconds ? { seconds: step.timer_seconds, label: step.timer_label ?? step.name ?? '', clock: timerClock(step.timer_seconds) } : null,
     tip: step.tip ?? null,
+    photoPath: step.photo_path ?? null,
   }));
   const ingredients = scaled.ingredients.map((i) => ingredientLine(i, options));
   const scaledBy = scaled.by ? (ingredients.find((i) => i.id === scaled.by?.ingredientId) ?? null) : null;

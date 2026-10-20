@@ -15,7 +15,8 @@ export const CatalogKey = z.string().regex(/^[a-z0-9_]{1,60}$/);
 export const Quantity = z.number().positive().lt(100000);
 const Minutes = z.int().min(1).max(10080);
 const Position = z.int().min(0);
-const PhotoPath = z.string().min(1).max(300);
+/** A stored photo: `<family id>/<recipe id>/<uuid>.jpg` (spec 014; storage and the database check the same shape). */
+export const PhotoPath = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|webp)$/);
 const Text = (max: number) => z.string().trim().min(1).max(max);
 
 /**

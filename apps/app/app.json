@@ -20,7 +20,15 @@
       "expo-router",
       "expo-font",
       "expo-splash-screen",
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Our Cocon uses your photos so you can add one to a recipe.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
-import { TextInput, View, type TextInputProps } from 'react-native';
-import { cn } from '../cn';
+import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
 import { useThemeColors } from '../ThemeProvider';
 import { Icon } from './Icon';
@@ -86,6 +86,44 @@ export function TextField({ label, optionalLabel, hint, counter, warning, size =
           ) : null}
         </View>
       ) : null}
+    </View>
+  );
+}
+
+export interface PickerFieldProps {
+  label: string;
+  /** The picked choice's label, or null to show the placeholder. */
+  value: string | null;
+  /** "Pick one" */
+  placeholder: string;
+  onPress: () => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+/**
+ * A field whose value is picked from a list in a sheet (TextField README › Picker): looks like the
+ * input, with a chevron; tapping it opens the sheet (OC-EditBasics › Cuisine).
+ */
+export function PickerField({ label, value, placeholder, onPress, disabled, className }: PickerFieldProps) {
+  return (
+    <View className={cn('gap-6', className)}>
+      <Text size={15} weight="900" aria-hidden>
+        {label}
+      </Text>
+      <Pressable
+        role="button"
+        aria-label={`${label}: ${value ?? placeholder}`}
+        aria-haspopup="dialog"
+        onPress={onPress}
+        disabled={disabled}
+        className={cn('h-control-lg flex-row items-center justify-between gap-8 rounded-lg border-2 border-line-strong bg-surface-card pl-16 pr-12 active:bg-surface-soft', focusRing)}
+      >
+        <Text size={17} weight={value ? '700' : '600'} color={value ? 'ink' : 'ink-muted'} numberOfLines={1} className="shrink">
+          {value ?? placeholder}
+        </Text>
+        <Icon name="chevron-right" size={18} color="inkMuted" />
+      </Pressable>
     </View>
   );
 }

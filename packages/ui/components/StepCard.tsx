@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Icon } from './Icon';
 import { Tag } from './Tag';
+import { Photo } from './Card';
 import { Text } from './Text';
 
 /**
@@ -113,12 +114,14 @@ export interface StepCardProps {
   /** "Variant" when a variant added the step. */
   variantTag?: string;
   parts: StepTextPart[];
+  /** The step's photo, full width at radius 16 above the text (spec 009 FR-004), and its label. */
+  photo?: { uri: string; label: string };
   /** In order: temperature Callout, TimerRow, tip Callout (StepCard README › Order inside). */
   children?: ReactNode;
 }
 
 /** One recipe step on the recipe page (StepCard README). */
-export function StepCard({ number, name, variantTag, parts, children }: StepCardProps) {
+export function StepCard({ number, name, variantTag, parts, photo, children }: StepCardProps) {
   return (
     <View className="gap-12 rounded-xl bg-surface-card p-16">
       <View className="flex-row items-center gap-10">
@@ -136,6 +139,11 @@ export function StepCard({ number, name, variantTag, parts, children }: StepCard
         )}
         {variantTag ? <Tag label={variantTag} tone="sage" /> : null}
       </View>
+      {photo ? (
+        <View className="w-full overflow-hidden rounded-lg" style={{ aspectRatio: 13 / 8 }}>
+          <Photo uri={photo.uri} label={photo.label} />
+        </View>
+      ) : null}
       {parts.length > 0 ? <StepText parts={parts} /> : null}
       {children}
     </View>

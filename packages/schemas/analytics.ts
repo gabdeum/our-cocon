@@ -4,6 +4,9 @@ import { FilterKey } from './recipe-filters';
 // The converter's units (spec 013, `@cocon/quantity` CONVERTER_UNITS), and its result tiles' units.
 const converterUnits = ['g', 'kg', 'oz', 'lb', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'fl_oz', 'c', 'f', 'gas_mark'] as const;
 const ConverterUnitEvent = z.enum(converterUnits);
+/** The recipe form's sections (spec 014 FR-001), in order. */
+export const RecipeFormSection = z.enum(['details', 'ingredients', 'steps', 'variants']);
+export type RecipeFormSection = z.infer<typeof RecipeFormSection>;
 const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 'fan_f']);
 
 /**
@@ -30,7 +33,7 @@ export const events = {
   member_removed: z.strictObject({}),
   family_deleted: z.strictObject({ member_count: z.int().min(1) }),
   // Spec 004: the offline banner appeared on a screen (once per offline spell). Later screens join the enum.
-  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'recipes', 'recipe', 'groceries', 'settings']) }),
+  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'recipes', 'recipe', 'recipe_form', 'groceries', 'settings']) }),
   // Spec 031: an ingredient that matched nothing in the catalog was saved. One event each, never
   // its text: the count tells us where the catalog needs to grow.
   ingredient_unmatched: z.strictObject({}),
@@ -72,6 +75,10 @@ export const events = {
   scaled_by_ingredient: z.strictObject({}),
   // Spec 013: the converter settled on a value; the unit typed in and the main (honey) result.
   unit_converter_used: z.strictObject({ from_unit: ConverterUnitEvent, to_unit: ConverterResultUnitEvent }),
+  // Spec 014: a recipe saved from the form. Whether it has a photo and the form's mode, never its text.
+  recipe_created: z.strictObject({ source: z.enum(['app']), has_photo: z.boolean(), advanced_mode: z.boolean() }),
+  // Spec 014: an existing recipe saved from the form, and the section Save was tapped in.
+  recipe_edited: z.strictObject({ section: RecipeFormSection }),
 } as const;
 
 export type EventName = keyof typeof events;

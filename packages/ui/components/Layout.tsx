@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '../cn';
 import { theme } from '../theme';
@@ -32,6 +32,21 @@ export function PushedScreen({ children, className }: { children: ReactNode; cla
     <ScrollView className="flex-1 bg-surface-page" contentContainerClassName={cn('gap-18 px-20 pb-28 pt-[54px]', className)}>
       {children}
     </ScrollView>
+  );
+}
+
+/**
+ * Create/edit form (Patterns.md › Form): the form bar and Progress stay at the top (50 16 0), the
+ * fields scroll under them (4 20 30, 18 apart). `scrollRef` lets Save bring a warned field into view.
+ */
+export function FormScreen({ bar, children, scrollRef }: { bar: ReactNode; children: ReactNode; scrollRef?: Ref<ScrollView> }) {
+  return (
+    <View className="flex-1 bg-surface-page">
+      <View className="px-16 pb-[14px] pt-[50px]">{bar}</View>
+      <ScrollView ref={scrollRef} className="flex-1" contentContainerClassName="gap-18 px-20 pb-[30px] pt-4" keyboardShouldPersistTaps="handled">
+        {children}
+      </ScrollView>
+    </View>
   );
 }
 

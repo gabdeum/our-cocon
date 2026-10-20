@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { RecipePage, type RecipeTab } from '../../../components/recipes/RecipePage';
 import { loadRecipe, recipeKey } from '../../../lib/recipe';
 import { deviceStorage } from '../../../lib/recipe-choices';
+import { recipePhotoPaths, useRecipePhotoUrls } from '../../../lib/recipe-photo';
 import { useSession } from '../../../lib/session';
 
 // Share (019), recipe settings (027) and add to groceries (022) come later; typed routes learn
@@ -25,6 +26,7 @@ export default function RecipeRoute() {
     queryFn: () => (id ? loadRecipe(client, id) : null),
     enabled: familyId !== null && id !== null,
   });
+  const photoUrls = useRecipePhotoUrls(client, familyId, recipePhotoPaths(recipe.data));
   const go = (page: string) => () => {
     if (id) router.push(recipeRoute(id, page));
   };
@@ -52,6 +54,7 @@ export default function RecipeRoute() {
       onScaleByIngredient={go('scale')}
       onConvert={go('convert')}
       visit={visit}
+      photoUrls={photoUrls}
     />
   );
 }
