@@ -75,8 +75,10 @@ export function timerClock(seconds: number): string {
 export interface CookingSettings {
   /** "I have a thermometer" (spec 027). Until that setting exists, it's on. */
   thermometer: boolean;
+  /** "Keep screen on while cooking" (spec 027, used by cooking mode, 012). On until that setting exists. */
+  keepAwake: boolean;
 }
-export const defaultCooking: CookingSettings = { thermometer: true };
+export const defaultCooking: CookingSettings = { thermometer: true, keepAwake: true };
 
 /**
  * What the page shows for the chosen servings and variants (spec 008 FR-004, SC-002; spec 009
@@ -88,7 +90,7 @@ export function recipeView(
   servings: number,
   choice: VariantChoice,
   options: FormatOptions = defaultFormat,
-  cooking: CookingSettings = defaultCooking,
+  cooking: Pick<CookingSettings, 'thermometer'> = defaultCooking,
 ): RecipeView {
   const applied = applyVariants(recipe, recipe.variants, choice);
   const withFacts = applied.ingredients.map((i) => ({ ...i, facts: i.catalog_key ? recipe.facts[i.catalog_key] : null }));

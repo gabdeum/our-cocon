@@ -15,6 +15,7 @@ import {
   Card,
   Choice,
   CookProgress,
+  CookSection,
   CookTimerCard,
   Dialog,
   FilterButton,
@@ -46,6 +47,7 @@ import {
   StatusBanner,
   StepCard,
   StepFootnote,
+  StepText,
   Stepper,
   TabBar,
   TabHeader,
@@ -348,6 +350,18 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             onPlus={noop}
           />
         ))}
+      </Section>
+
+      <Section group="Cooking" title="CookLayout">
+        {/* The full frame (header, Back / Next) is cooking mode itself: /recipes/[id]/cook. */}
+        <CookSection overline="Step 2" title="Blind bake" current>
+          <StepText parts={['Bake the empty crust for 12 minutes until pale golden.']} cook />
+          <CookTimerCard label="Blind bake timer" clock="12:00" actionLabel="Start timer" onAction={noop} minusLabel="−1" plusLabel="+1" minusA11y="One minute less" plusA11y="One minute more" onMinus={noop} onPlus={noop} />
+        </CookSection>
+        <CookSection overline="Step 3" title="Cook the filling" current={false}>
+          <StepText parts={['Melt ', { amount: '20 g butter' }, ' over medium heat.']} cook />
+          <Callout variant="tip" label="Chef's tip" text="Slice the leeks thinly so they melt into the custard." cook />
+        </CookSection>
       </Section>
 
       <Section group="Cooking" title="TimerPill">

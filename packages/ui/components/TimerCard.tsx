@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
+import { Link } from './Button';
+import { srOnly } from './StepCard';
 import { Text } from './Text';
 
 interface Adjust {
@@ -29,12 +31,17 @@ export interface CookTimerCardProps extends Adjust {
   /** "Start timer" · "Pause" · "Resume" · "Done". */
   actionLabel: string;
   onAction: () => void;
+  /** Said once, politely ("1 minute left"); the ticking clock itself stays silent. */
+  announcement?: string;
 }
 
-/** The dark timer inside a cooking-mode step (TimerCard README › Dark). Logic comes with spec 010. */
-export function CookTimerCard({ label, clock, actionLabel, onAction, ...adj }: CookTimerCardProps) {
+/** The dark timer inside a cooking-mode step (TimerCard README › Dark); its logic is the app's (spec 012). */
+export function CookTimerCard({ label, clock, actionLabel, onAction, announcement, ...adj }: CookTimerCardProps) {
   return (
     <View className="gap-10 rounded-[26px] bg-ink px-16 py-14">
+      <View aria-live="polite" style={srOnly}>
+        <Text>{announcement ?? ''}</Text>
+      </View>
       <Text size={14} weight="700" color="on-ink">
         {label}
       </Text>
@@ -87,6 +94,8 @@ export interface TimerCardProps extends Adjust {
   /** "Stop" or "Dismiss". */
   secondaryLabel: string;
   onSecondary: () => void;
+  /** A step timer's "Go to step": an olive link at the right of the name, opening its step. */
+  link?: { label: string; onPress: () => void };
 }
 
 const fills: Record<TimersScreenState, string> = {
@@ -97,16 +106,19 @@ const fills: Record<TimersScreenState, string> = {
 
 /** A timer on the Timers screen, tinted by state (TimerCard README › Timers screen, OC-Timers). */
 export function TimerCard(props: TimerCardProps) {
-  const { name, sub, state, clock, progress, actionLabel, onAction, secondaryLabel, onSecondary } = props;
+  const { name, sub, state, clock, progress, actionLabel, onAction, secondaryLabel, onSecondary, link } = props;
   return (
     <View className={cn('gap-12 rounded-[24px] px-16 py-14', fills[state])}>
-      <View>
-        <Text size={17} weight="900">
-          {name}
-        </Text>
-        <Text size={13} weight="700" className="opacity-80">
-          {sub}
-        </Text>
+      <View className="flex-row items-center gap-8">
+        <View className="min-w-0 flex-1">
+          <Text size={17} weight="900">
+            {name}
+          </Text>
+          <Text size={13} weight="700" className="opacity-80">
+            {sub}
+          </Text>
+        </View>
+        {link ? <Link label={link.label} onPress={link.onPress} className="self-center" /> : null}
       </View>
       <View className="flex-row items-center gap-8">
         <AdjustButton text={props.minusLabel} a11y={props.minusA11y} onPress={props.onMinus} />

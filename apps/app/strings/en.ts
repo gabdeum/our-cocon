@@ -255,6 +255,30 @@ export const strings = {
     quick: 'Quick kitchen timer',
     quickA11y: (minutes: number) => `Start a ${minutes} min kitchen timer`,
     footnote: "Timers keep running when you leave the recipe. You'll hear a chime when one ends.",
+    /** A step timer's card opens cooking mode at its step (032-later L19). */
+    goToStep: 'Go to step',
+  },
+  // design/ui/OC-Cook.md (spec 012)
+  cook: {
+    exit: 'Exit',
+    /** The `oc-awake` chip, shown when no TimerPill is. */
+    awake: 'Screen stays on',
+    /** Muted, in its place, when this browser can't keep the screen on (OC-Cook › States). */
+    awakeUnsupported: 'This browser may let the screen lock.',
+    stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
+    hint: (serves: number) => `Serves ${serves} · swipe up for next`,
+    overline: (n: number) => `Step ${n}`,
+    timerLabel: (label: string) => `${label} timer`,
+    segment: (n: number, name: string | null) => (name ? `Go to step ${n}: ${name}` : `Go to step ${n}`),
+    startTimer: 'Start timer',
+    pause: 'Pause',
+    resume: 'Resume',
+    done: 'Done',
+    back: 'Back',
+    next: 'Next step',
+    finish: 'Finish',
+    bonAppetit: 'Bon appétit!',
+    loading: 'Loading recipe',
   },
   // Total time (spec 006 FR-002): "40 min", "2 h", "1 h 05".
   time: {

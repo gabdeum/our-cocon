@@ -55,6 +55,11 @@ export const events = {
   // Spec 011: the TimerPill was tapped, and the Timers screen opened; how many timers exist.
   timer_pill_tapped: z.strictObject({ timer_count: z.int().min(1).max(100) }),
   timers_screen_opened: z.strictObject({ timer_count: z.int().min(0).max(100) }),
+  // Spec 012: cooking mode opened, finished ("Finish" on the last step) or left with Exit.
+  // `at_step` counts from 1; `minutes` from opening to Finish.
+  cooking_started: z.strictObject({ step_count: z.int().min(1).max(200) }),
+  cooking_finished: z.strictObject({ step_count: z.int().min(1).max(200), minutes: z.int().min(0).max(1440) }),
+  cooking_exited: z.strictObject({ at_step: z.int().min(1).max(200), step_count: z.int().min(1).max(200) }),
 } as const;
 
 export type EventName = keyof typeof events;

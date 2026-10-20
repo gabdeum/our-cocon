@@ -5,6 +5,8 @@ import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useTimers, useTimerStore } from '../../lib/timer-store';
 import { clock, MINUTE, progress, remaining, type Timer } from '../../lib/timers';
+import { stepStillThere } from '../../lib/cooking';
+import type { RecipeDetail } from '../../lib/recipe';
 
 const copy = strings.timersScreen;
 /** The quick kitchen timers at the bottom (FR-004): 5 · 10 · 15 · 30 min. */
@@ -16,14 +18,19 @@ const actionLabel = { running: copy.pause, paused: copy.resume, done: copy.addMi
 export interface TimersScreenProps {
   onBack: () => void;
   tracker: Tracker;
+  /** The step timers' recipes, by id: `undefined` while loading, `null` when gone. */
+  recipes?: Readonly<Record<string, RecipeDetail | null | undefined>>;
+  /** "Go to step": cooking mode at that step (032-later L19). */
+  onGoToStep?: (recipeId: string, stepId: string) => void;
 }
 
 /**
  * /timers (spec 011 US2, design/ui/OC-Timers.md): every timer on this device, newest first, with
  * −1/+1, Pause/Resume and Stop; done ones offer "Add 1 more minute" and Dismiss. Quick kitchen
- * timers of 5, 10, 15 or 30 min at the bottom.
+ * timers of 5, 10, 15 or 30 min at the bottom. A step timer whose step is still there offers
+ * "Go to step" (032-later L19).
  */
-export function TimersScreen({ onBack, tracker }: TimersScreenProps) {
+export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep }: TimersScreenProps) {
   const store = useTimerStore();
   const { timers, now } = useTimers();
 
@@ -37,6 +44,12 @@ export function TimersScreen({ onBack, tracker }: TimersScreenProps) {
 
   const running = timers.filter((t) => t.state === 'running').length;
   const newestFirst = [...timers].reverse();
+
+  const goTo = (t: Timer) => {
+    const { recipeId, stepId } = t;
+    if (!onGoToStep || !recipeId || !stepId || !stepStillThere(recipes[recipeId], stepId)) return undefined;
+    return { label: copy.goToStep, onPress: () => onGoToStep(recipeId, stepId) };
+  };
 
   const card = (t: Timer) => (
     <TimerCard
@@ -56,6 +69,7 @@ export function TimersScreen({ onBack, tracker }: TimersScreenProps) {
       plusA11y={copy.plusA11y}
       onMinus={() => store.add(t.id, -MINUTE)}
       onPlus={() => store.add(t.id, MINUTE)}
+      link={goTo(t)}
     />
   );
 

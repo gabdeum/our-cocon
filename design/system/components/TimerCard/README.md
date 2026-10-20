@@ -12,6 +12,7 @@ The large timer, used inside cooking-mode steps (dark) and on the Timers screen 
 | −1 / +1 | 48 circles, ink-raised, 15/900 | 48 circles, white at 70% |
 | Main action | honey pill 54, 18/900: Start timer · Pause · Resume · Done | ink pill 50, 16/900 (done: "Add 1 more minute") + "Stop" / "Dismiss" soft |
 | Progress | — | 6 tall bar, ink fill on 12% ink track |
+| Go to step | — | step timers only: olive link 15/800, 44 tall, right of the name and sub-line; opens cooking mode at that step |
 
 ## Rules
 

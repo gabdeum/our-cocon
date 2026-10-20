@@ -6,7 +6,9 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { createTimerStore, TimersContext, type TimerStore } from '../../lib/timer-store';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { fakeTracker } from '../../test/fakes';
-import { TimersScreen } from './TimersScreen';
+import { TimersScreen, type TimersScreenProps } from './TimersScreen';
+import { quiche as quicheRecipe } from '@cocon/schemas/quiche.fixture';
+import type { RecipeDetail } from '../../lib/recipe';
 
 const T0 = 1_760_000_000_000;
 const noStorage: ChoiceStorage = { getItem: async () => null, setItem: async () => undefined };
@@ -24,12 +26,12 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-function setup() {
+function setup(props: Partial<TimersScreenProps> = {}) {
   const tracker = fakeTracker();
   const onBack = vi.fn();
   render(
     <TimersContext.Provider value={store}>
-      <TimersScreen tracker={tracker} onBack={onBack} />
+      <TimersScreen tracker={tracker} onBack={onBack} {...props} />
     </TimersContext.Provider>,
   );
   return { tracker, onBack };
@@ -150,5 +152,45 @@ describe('Timers screen (spec 011 US2)', () => {
     const { onBack } = setup();
     fireEvent.click(screen.getByRole('link', { name: 'Back' }));
     expect(onBack).toHaveBeenCalledOnce();
+  });
+});
+
+// 032-later L19: a step timer's card opens cooking mode at its step, while that step is there.
+describe('Go to step (L19)', () => {
+  const recipeId = 'c0c0e000-0000-4000-8000-000000000001';
+  const stepId = (quicheRecipe.steps[1]?.id ?? '');
+  const recipe = { deleted_at: null, steps: quicheRecipe.steps, variants: quicheRecipe.variants } as unknown as RecipeDetail;
+  const startStep = (id = stepId) => act(() => void store.start('Blind bake', 720, 'step', { recipeId, recipeName: 'Leek & bacon quiche', stepId: id }));
+
+  it('opens cooking mode at the step', () => {
+    startStep();
+    const onGoToStep = vi.fn();
+    setup({ recipes: { [recipeId]: recipe }, onGoToStep });
+    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'Go to step' }));
+    expect(onGoToStep).toHaveBeenCalledWith(recipeId, stepId);
+  });
+
+  it('is hidden for kitchen timers', () => {
+    act(() => void store.quick(5 * 60));
+    setup({ recipes: {}, onGoToStep: vi.fn() });
+    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
+  });
+
+  it('is hidden when the step or the recipe is gone, or while the recipe loads', () => {
+    startStep('c0c02000-0000-4000-8000-00000000000f');
+    setup({ recipes: { [recipeId]: recipe }, onGoToStep: vi.fn() });
+    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
+    cleanup();
+    store.destroy();
+    store = createTimerStore({ storage: noStorage, userId: '', tracker: fakeTracker() });
+    startStep();
+    setup({ recipes: { [recipeId]: null }, onGoToStep: vi.fn() });
+    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
+    cleanup();
+    setup({ recipes: { [recipeId]: { ...recipe, deleted_at: '2026-10-20T10:00:00Z' } }, onGoToStep: vi.fn() });
+    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
+    cleanup();
+    setup({ recipes: {}, onGoToStep: vi.fn() });
+    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
   });
 });

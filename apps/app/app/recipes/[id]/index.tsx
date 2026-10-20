@@ -1,13 +1,13 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
-import { RecipePage, type RecipeTab } from '../../components/recipes/RecipePage';
-import { loadRecipe, recipeKey } from '../../lib/recipe';
-import { deviceStorage } from '../../lib/recipe-choices';
-import { useSession } from '../../lib/session';
+import { RecipePage, type RecipeTab } from '../../../components/recipes/RecipePage';
+import { loadRecipe, recipeKey } from '../../../lib/recipe';
+import { deviceStorage } from '../../../lib/recipe-choices';
+import { useSession } from '../../../lib/session';
 
-// Share (019), recipe settings (027), add to groceries (022) and cooking mode (012) come later;
-// typed routes learn them then.
+// Share (019), recipe settings (027) and add to groceries (022) come later; typed routes learn
+// them then.
 const recipeRoute = (id: string, page: string) => `/recipes/${id}/${page}` as Href;
 
 /** /recipes/[id] (spec 008): the recipe page. `?tab=steps` opens the Steps tab (009). */
