@@ -54,20 +54,24 @@ export interface TimerRowProps {
   plusA11y: string;
   onMinus: () => void;
   onPlus: () => void;
-  /** Drawn but not working yet: screen readers hear the buttons as unavailable; the look doesn't change. */
-  disabled?: boolean;
+  /**
+   * Said politely by screen readers. The clock itself is never live (it would talk every second):
+   * set this only at 1 minute left and at zero (OC-RecipeSteps › Accessibility labels).
+   */
+  announcement?: string;
 }
 
+/** Read by screen readers, not drawn. */
+const srOnly = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 } as const;
+
 /** Timer row inside a step (StepCard README): honey button (olive while running) and −1 / +1. */
-export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, minusA11y, plusA11y, onMinus, onPlus, disabled }: TimerRowProps) {
+export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, minusA11y, plusA11y, onMinus, onPlus, announcement }: TimerRowProps) {
   const running = state === 'running';
   return (
     <View className="flex-row gap-6">
       <Pressable
         role="button"
         aria-pressed={running}
-        aria-disabled={disabled}
-        disabled={disabled}
         onPress={onPress}
         className={cn('min-h-[52px] min-w-0 flex-1 flex-row items-center gap-10 rounded-lg px-14', running ? 'bg-olive' : 'bg-honey active:bg-honey-pressed', focusRing)}
       >
@@ -75,10 +79,13 @@ export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, 
         <Text size={15} weight="800" color={running ? 'on-olive' : 'ink'} className="flex-1">
           {label}
         </Text>
-        <Text size={17} weight="800" color={running ? 'on-olive' : 'ink'} tabular aria-live={running ? 'off' : 'polite'}>
+        <Text size={17} weight="800" color={running ? 'on-olive' : 'ink'} tabular aria-live="off">
           {clock}
         </Text>
       </Pressable>
+      <View aria-live="polite" style={srOnly}>
+        <Text>{announcement ?? ''}</Text>
+      </View>
       {[
         { text: minusLabel, a11y: minusA11y, onPress: onMinus },
         { text: plusLabel, a11y: plusA11y, onPress: onPlus },
@@ -87,8 +94,6 @@ export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, 
           key={b.text}
           role="button"
           aria-label={b.a11y}
-          aria-disabled={disabled}
-          disabled={disabled}
           onPress={b.onPress}
           className={cn('w-[52px] items-center justify-center rounded-lg bg-surface-soft active:bg-surface-soft-pressed', focusRing)}
         >

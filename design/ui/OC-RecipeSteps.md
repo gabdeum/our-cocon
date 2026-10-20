@@ -18,10 +18,12 @@ After the list: the footnote "−1 / +1 changes a timer by a minute, even while 
 | Not started | "Start timer" | honey |
 | Running | "Pause" | olive, white text |
 | Paused | "Resume" | honey |
-| Finished | "Done!" | honey; clock 00:00 |
+| Finished | "Done!" | honey; clock 00:00. Tapping it clears the timer and the row goes back to "Start timer" |
+
+Before the timer starts, −1 / +1 change the time it will start with (never below 0:30). Once it exists they change the timer itself (spec 010).
 
 ## Accessibility labels
-"−1": "One minute less" · "+1": "One minute more" · the clock is announced politely at 1 minute left and at zero.
+"−1": "One minute less" · "+1": "One minute more" · the clock is announced politely at 1 minute left ("1 minute left") and at zero ("{name} is done").
 
 ## States not drawn
 | State | Copy |

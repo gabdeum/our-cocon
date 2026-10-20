@@ -66,7 +66,7 @@ export interface RecipeView {
   stepCount: number;
 }
 
-/** A timer's clock before it starts: "12:00", "05:30". Running clocks are spec 010's. */
+/** A timer's clock: "12:00", "05:30" (also the running clock, lib/timers.ts). */
 export function timerClock(seconds: number): string {
   const s = Math.max(0, Math.round(seconds));
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;

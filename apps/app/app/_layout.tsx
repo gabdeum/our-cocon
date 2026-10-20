@@ -1,6 +1,7 @@
 import '../global.css';
 import { useEffect, type ReactNode } from 'react';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, router, useSegments } from 'expo-router';
 import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
@@ -23,6 +24,10 @@ import { gateRedirect, SessionProvider, useSession } from '../lib/session';
 import { createQueryClient, persistMaxAge, queryPersister } from '../lib/query';
 import { watchConnection } from '../lib/online';
 import { SyncProvider } from '../lib/sync';
+import { clearTimers, TimersProvider } from '../lib/timer-store';
+import { deviceStorage } from '../lib/recipe-choices';
+import { playChime, vibrateDone } from '../lib/chime';
+import { TimerAlerts } from '../components/timers/TimerAlerts';
 
 /** Sends people where their sign-in state allows (spec 003): sign in, set up a family, or the app. */
 function SessionGate() {
@@ -44,6 +49,19 @@ function FamilySync({ children }: { children: ReactNode }) {
     </SyncProvider>
   );
 }
+
+/** Each signed-in person's timers, on every screen (spec 010), with the done chime and banner. */
+function Timers({ children }: { children: ReactNode }) {
+  const { state } = useSession();
+  return (
+    <TimersProvider userId={state.status === 'ready' ? state.userId : ''} storage={deviceStorage} tracker={tracker}>
+      {children}
+      <TimerAlerts chime={playChime} vibrate={vibrateDone} />
+    </TimersProvider>
+  );
+}
+
+const clearDeviceTimers = (userId: string) => clearTimers(AsyncStorage, userId);
 
 const queryClient = createQueryClient();
 // Resolves once the saved cache is back, so the session can check whose it is first.
@@ -84,22 +102,24 @@ export default function RootLayout() {
         onSuccess={() => cacheRestored()}
         onError={() => cacheRestored()}
       >
-        <SessionProvider client={supabase} tracker={tracker} persister={queryPersister} restored={restored}>
+        <SessionProvider client={supabase} tracker={tracker} persister={queryPersister} restored={restored} clearDevice={clearDeviceTimers}>
           <FamilySync>
             <AppFrame>
-              <SessionGate />
-              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="welcome/index" />
-                <Stack.Screen name="welcome/family" options={presentation.stack} />
-                <Stack.Screen name="auth/callback" />
-                <Stack.Screen name="join/[token]" />
-                <Stack.Screen name="recipes/filters" options={presentation.sheet} />
-                <Stack.Screen name="recipes/[id]" options={presentation.stack} />
-                <Stack.Screen name="dev/gallery" options={presentation.stack} />
-                <Stack.Screen name="dev/sheet" options={presentation.sheet} />
-                <Stack.Screen name="dev/modal" options={presentation.fullScreen} />
-              </Stack>
+              <Timers>
+                <SessionGate />
+                <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="welcome/index" />
+                  <Stack.Screen name="welcome/family" options={presentation.stack} />
+                  <Stack.Screen name="auth/callback" />
+                  <Stack.Screen name="join/[token]" />
+                  <Stack.Screen name="recipes/filters" options={presentation.sheet} />
+                  <Stack.Screen name="recipes/[id]" options={presentation.stack} />
+                  <Stack.Screen name="dev/gallery" options={presentation.stack} />
+                  <Stack.Screen name="dev/sheet" options={presentation.sheet} />
+                  <Stack.Screen name="dev/modal" options={presentation.fullScreen} />
+                </Stack>
+              </Timers>
             </AppFrame>
           </FamilySync>
         </SessionProvider>

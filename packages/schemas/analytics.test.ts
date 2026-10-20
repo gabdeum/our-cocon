@@ -114,4 +114,20 @@ describe('createTracker', () => {
     expect(() => tracker.track('servings_changed', { from: 6, to: 0 })).toThrow();
     expect(() => tracker.track('variant_selected', { variant_count: 1, name: 'Vegetarian' } as never)).toThrow();
   });
+
+  it('sends the timer events with numbers and enums only (spec 010)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('timer_started', { from: 'step' });
+    tracker.track('timer_adjusted', { delta_min: -1 });
+    tracker.track('timer_finished', {});
+    tracker.track('step_timer_started', { step_index: 1 });
+    expect(t.capture).toHaveBeenCalledWith('timer_started', { from: 'step' });
+    expect(t.capture).toHaveBeenCalledWith('timer_adjusted', { delta_min: -1 });
+    expect(t.capture).toHaveBeenCalledWith('timer_finished', {});
+    expect(t.capture).toHaveBeenCalledWith('step_timer_started', { step_index: 1 });
+    expect(() => tracker.track('timer_started', { from: 'cook' } as never)).toThrow();
+    expect(() => tracker.track('timer_finished', { label: 'Blind bake' } as never)).toThrow();
+    expect(() => tracker.track('timer_adjusted', { delta_min: 0.5 })).toThrow();
+  });
 });
