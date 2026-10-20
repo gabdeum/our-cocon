@@ -57,8 +57,8 @@ describe('useStepScroll', () => {
     expect(scrollTo).toHaveBeenCalledWith(1552, false);
   });
 
-  it('gives the measured tops for snapping', () => {
+  it('snaps where Next and Back land: each top − 8', () => {
     const { hook } = setup();
-    expect(hook.result.current.tops).toEqual(TOPS);
+    expect(hook.result.current.tops).toEqual([0, 512, 1032, 1552, 2072, 2592]);
   });
 });

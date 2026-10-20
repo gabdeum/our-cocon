@@ -166,31 +166,31 @@ describe('Go to step (L19)', () => {
     startStep();
     const onGoToStep = vi.fn();
     setup({ recipes: { [recipeId]: recipe }, onGoToStep });
-    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'Go to step' }));
+    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'Go to step: Blind bake' }));
     expect(onGoToStep).toHaveBeenCalledWith(recipeId, stepId);
   });
 
   it('is hidden for kitchen timers', () => {
     act(() => void store.quick(5 * 60));
     setup({ recipes: {}, onGoToStep: vi.fn() });
-    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Go to step/ })).toBeNull();
   });
 
   it('is hidden when the step or the recipe is gone, or while the recipe loads', () => {
     startStep('c0c02000-0000-4000-8000-00000000000f');
     setup({ recipes: { [recipeId]: recipe }, onGoToStep: vi.fn() });
-    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Go to step/ })).toBeNull();
     cleanup();
     store.destroy();
     store = createTimerStore({ storage: noStorage, userId: '', tracker: fakeTracker() });
     startStep();
     setup({ recipes: { [recipeId]: null }, onGoToStep: vi.fn() });
-    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Go to step/ })).toBeNull();
     cleanup();
     setup({ recipes: { [recipeId]: { ...recipe, deleted_at: '2026-10-20T10:00:00Z' } }, onGoToStep: vi.fn() });
-    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Go to step/ })).toBeNull();
     cleanup();
     setup({ recipes: {}, onGoToStep: vi.fn() });
-    expect(screen.queryByRole('button', { name: 'Go to step' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Go to step/ })).toBeNull();
   });
 });

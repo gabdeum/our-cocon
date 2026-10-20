@@ -219,4 +219,30 @@ describe('Cooking mode (spec 012)', () => {
     press('Exit');
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('leaving another way (system or browser back) still sends cooking_exited, once', async () => {
+    const first = await setup();
+    press(/^Go to step 2/);
+    first.unmount();
+    expect(first.tracker.track).toHaveBeenCalledWith('cooking_exited', { at_step: 2, step_count: STEPS });
+
+    const second = await setup();
+    press('Exit');
+    second.unmount();
+    expect(second.tracker.track.mock.calls.filter(([e]) => e === 'cooking_exited')).toHaveLength(1);
+  });
+
+  it('a recipe with no steps closes straight back, once', async () => {
+    const { onClose, rerender } = await setup({ recipe: { ...detail, steps: [], variants: [] } });
+    rerender(<CookScreen recipe={{ ...detail, steps: [], variants: [] }} userId={gabriel.user_id} storage={memoryStorage()} tracker={fakeTracker()} onClose={vi.fn()} onOpenTimers={vi.fn()} />);
+    await settle();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('a deleted recipe shows that it could not be opened', async () => {
+    await setup({ recipe: { ...detail, deleted_at: '2026-10-20T10:00:00Z' }, onRetry: vi.fn() });
+    expect(screen.getByText("We couldn't open this recipe.")).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+    expect(screen.queryByText('Bon appétit!')).toBeNull();
+  });
 });

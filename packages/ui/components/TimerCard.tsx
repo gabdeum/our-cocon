@@ -95,7 +95,7 @@ export interface TimerCardProps extends Adjust {
   secondaryLabel: string;
   onSecondary: () => void;
   /** A step timer's "Go to step": an olive link at the right of the name, opening its step. */
-  link?: { label: string; onPress: () => void };
+  link?: { label: string; a11y: string; onPress: () => void };
 }
 
 const fills: Record<TimersScreenState, string> = {
@@ -118,7 +118,7 @@ export function TimerCard(props: TimerCardProps) {
             {sub}
           </Text>
         </View>
-        {link ? <Link label={link.label} onPress={link.onPress} className="self-center" /> : null}
+        {link ? <Link label={link.label} aria-label={link.a11y} onPress={link.onPress} className="self-center" /> : null}
       </View>
       <View className="flex-row items-center gap-8">
         <AdjustButton text={props.minusLabel} a11y={props.minusA11y} onPress={props.onMinus} />

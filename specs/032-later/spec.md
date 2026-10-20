@@ -30,6 +30,7 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L16 | P2 | **Tell assistants about `{temp}`.** The step tool description says `temp_check_text` may hold `{temp}` where the reading goes, and results render it with `renderTemperatureCheck`. | 009 | 023 |
 | L21 | P1 | **Pass "Keep screen on" to cooking mode.** `CookScreen` takes `cooking.keepAwake` (default on, `defaultCooking` in `lib/recipe-view.ts`); give it the setting, so turning it off leaves the screen free to lock and hides the "Screen stays on" chip (OC-Cook › States). | 012 | 027 |
 | L22 | P2 | **Units in cooking mode.** Cooking mode formats amounts with `defaultFormat` (metric), like the recipe page today. When 013 adds the unit choice, cooking mode (`components/cooking/CookScreen.tsx`) must read the same choice, so both screens show the same units. | 012 | 013 |
+| L23 | P2 | **Limit the number of steps in a recipe.** Nothing caps steps (schemas or database), but events cap step counts at 200 and `track` throws on invalid props. Cooking mode caps what it sends (012); `step_timer_started` (009) doesn't. Add a maximum (e.g. 100) to the recipe schema and a database check, and use it as the events' bound. | 012 (security review) | 016 |
 | L6 | P3 | **Private-only Realtime.** Make the self-hosted Realtime service refuse public channels (`infra/supabase/cocon.override.yml`). The app uses only private channels, so this is a second lock, not a fix. | 004 | none |
 | L7 | P3 | **Keep invite tokens out of Auth logs.** A signed-out invitee's sign-in link carries `next=/join/<token>`, which shows in Supabase Auth's server logs until it's used or expires (7 days). Option: keep the token on the device instead. | 003 | none |
 | L8 | P3 | **Cut off removed members' live updates sooner.** A removed member keeps receiving change ids (never content; reads still go through RLS) until their token expires, up to 1 hour. | 004 | none |
@@ -45,4 +46,4 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 - 2026-10-19 (011): removed L13 (TimerPill on the recipe page) and L17 ("Open timers" on the done banner), both built.
 - 2026-10-20 (011): added L19 ("Go to step" on a step timer's card, 012).
 - 2026-10-20 (011): added L20 (a way into Timers when no timer is running).
-- 2026-10-20 (012): did L19 ("Go to step" on a step timer's card); L14 now covers cooking mode too; added L21 (Keep screen on, 027) and L22 (units in cooking mode, 013).
+- 2026-10-20 (012): did L19 ("Go to step" on a step timer's card); L14 now covers cooking mode too; added L21 (Keep screen on, 027), L22 (units in cooking mode, 013) and L23 (a step limit, 016).

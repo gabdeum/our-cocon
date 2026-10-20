@@ -257,6 +257,8 @@ export const strings = {
     footnote: "Timers keep running when you leave the recipe. You'll hear a chime when one ends.",
     /** A step timer's card opens cooking mode at its step (032-later L19). */
     goToStep: 'Go to step',
+    /** Screen reader, so several cards' links tell apart: "Go to step: Blind bake". */
+    goToStepA11y: (timer: string) => `Go to step: ${timer}`,
   },
   // design/ui/OC-Cook.md (spec 012)
   cook: {

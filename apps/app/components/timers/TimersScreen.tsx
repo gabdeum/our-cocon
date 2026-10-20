@@ -48,7 +48,7 @@ export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep }: Time
   const goTo = (t: Timer) => {
     const { recipeId, stepId } = t;
     if (!onGoToStep || !recipeId || !stepId || !stepStillThere(recipes[recipeId], stepId)) return undefined;
-    return { label: copy.goToStep, onPress: () => onGoToStep(recipeId, stepId) };
+    return { label: copy.goToStep, a11y: copy.goToStepA11y(t.label), onPress: () => onGoToStep(recipeId, stepId) };
   };
 
   const card = (t: Timer) => (

@@ -10,7 +10,7 @@ export interface StepScroll {
   onScroll: (scrollTop: number, viewportHeight: number) => void;
   /** Next, Back and segment taps (OC-Cook › Behaviour). */
   jump: (index: number) => void;
-  /** The measured tops, for snapping on the iPhone. */
+  /** Where each step lands (its top − 8), for snapping on the iPhone. */
   tops: number[];
 }
 
@@ -41,7 +41,7 @@ export function useStepScroll(count: number, initial: number, scrollTo: (y: numb
   const onStepLayout = useCallback(
     (index: number, top: number) => {
       tops.current[index] = top;
-      setSnaps(tops.current.filter((t) => t !== undefined));
+      setSnaps(tops.current.filter((t) => t !== undefined).map(scrollTarget));
       const target = pending.current;
       if (target === null || tops.current[target] === undefined) return;
       pending.current = null;

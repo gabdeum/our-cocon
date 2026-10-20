@@ -21,4 +21,6 @@ Source `screens/OC-Timers.dc.html` · Route `/timers` · Specs 010, 011
 | Paused or done for 3 hours | The timer is cleared from the list without a message (any change to a paused timer starts the 3 hours over) |
 | Timer ends anywhere in the app | StatusBanner at the top of any screen: "{name} is done" with "Open timers" |
 
+Screen reader: "Go to step: {timer name}" on a step timer's link.
+
 Timers are personal and live on this device only. The chime is a soft kitchen bell; there are no background/phone alerts in V1.

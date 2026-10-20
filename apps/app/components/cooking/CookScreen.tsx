@@ -13,6 +13,7 @@ import { useStepTimerControl, type StepTimerInput } from '../recipes/step-timer'
 import { useStepScroll } from './use-step-scroll';
 
 const c = strings.cook;
+const MAX_TRACKED_STEPS = 200;
 const p = strings.recipePage;
 
 export interface CookScreenProps {
@@ -42,7 +43,8 @@ export function CookScreen(props: CookScreenProps) {
   const exit = <Button label={c.exit} variant="soft" size="sm" icon="close" onPress={onClose} />;
 
   if (recipe === undefined && !failed) return <CookLoading exit={exit} />;
-  if (!recipe) {
+  // A recipe deleted while open can't be cooked from (OC-Cook › Couldn't load).
+  if (!recipe || recipe.deleted_at) {
     return (
       <PushedScreen>
         {exit}
@@ -50,7 +52,7 @@ export function CookScreen(props: CookScreenProps) {
           {p.loadFailedTitle}
         </Text>
         <Text color="ink-muted">{p.loadFailedBody}</Text>
-        {onRetry ? <Button label={p.retry} variant="soft" onPress={onRetry} /> : null}
+        {onRetry && !recipe ? <Button label={p.retry} variant="soft" onPress={onRetry} /> : null}
       </PushedScreen>
     );
   }
@@ -100,6 +102,8 @@ function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cook
   const view = useMemo(() => recipeView(recipe, choices.servings, choices, defaultFormat, cooking), [recipe, choices, cooking]);
   const steps = view.steps;
   const count = steps.length;
+  // Events cap step counts at 200; recipes have no step limit yet (032-later L23).
+  const sent = (n: number) => Math.min(n, MAX_TRACKED_STEPS);
   const awake = useCookAwake(cooking.keepAwake);
   const hasPill = useHasTimers();
 
@@ -113,26 +117,49 @@ function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cook
   useEffect(() => {
     if (startedAt.current !== null || count === 0) return;
     startedAt.current = now();
-    tracker.track('cooking_started', { step_count: count });
+    tracker.track('cooking_started', { step_count: sent(count) });
   }, [count, now, tracker]);
+
+  const at = Math.min(current, Math.max(count - 1, 0));
+  const last = at === count - 1;
+
+  // Closes once, whatever re-renders meanwhile. Leaving any other way (the system or browser back)
+  // still counts as exiting, at the step it was on.
+  const closed = useRef(false);
+  const exitedAt = useRef({ at, count });
+  useEffect(() => {
+    exitedAt.current = { at, count };
+  }, [at, count]);
+  const close = useCallback(() => {
+    if (closed.current) return;
+    closed.current = true;
+    onClose();
+  }, [onClose]);
+  useEffect(
+    () => () => {
+      const { at: step, count: total } = exitedAt.current;
+      if (!closed.current && total > 0) tracker.track('cooking_exited', { at_step: Math.min(step + 1, MAX_TRACKED_STEPS), step_count: Math.min(total, MAX_TRACKED_STEPS) });
+    },
+    [tracker],
+  );
 
   // Nothing to cook: straight back to the recipe.
   useEffect(() => {
-    if (count === 0) onClose();
-  }, [count, onClose]);
+    if (count === 0) close();
+  }, [count, close]);
   if (count === 0) return null;
 
-  const at = Math.min(current, count - 1);
-  const last = at === count - 1;
   const exit = () => {
-    tracker.track('cooking_exited', { at_step: at + 1, step_count: count });
-    onClose();
+    if (closed.current) return;
+    tracker.track('cooking_exited', { at_step: sent(at + 1), step_count: sent(count) });
+    close();
   };
   // Finish just closes, with no prompt (decision 21).
   const next = () => {
     if (!last) return jump(at + 1);
-    tracker.track('cooking_finished', { step_count: count, minutes: cookingMinutes(startedAt.current ?? now(), now()) });
-    onClose();
+    if (closed.current) return;
+    tracker.track('cooking_finished', { step_count: sent(count), minutes: cookingMinutes(startedAt.current ?? now(), now()) });
+    close();
   };
 
   return (
