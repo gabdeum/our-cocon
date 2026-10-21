@@ -475,7 +475,6 @@ export function RecipeForm({
             drafts={drafts}
             warnings={ingWarnings}
             servings={servingsOf(form.serves)}
-            advanced={advanced}
             banner={banner}
             suggestions={suggestions}
             onChangeRow={(key, patch) => updateRow(key, (d) => ({ ...d, ...patch }))}

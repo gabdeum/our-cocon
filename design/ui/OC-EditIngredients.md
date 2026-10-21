@@ -18,7 +18,7 @@ Source `screens/OC-EditIngredients.dc.html` · Route `…/edit?section=ingredien
 - **Suggestions:** while a name is typed (2 letters or more), up to 5 catalog names show under it, in a list read as "Suggestions". Tapping one fills the name and links the row to the catalog.
 - **Paste a list:** a BottomSheet titled "Paste a list" with the field "Your ingredients", hint "One per line, or separated by commas.", and ink "Add ingredients". A comma part that only says how to prepare ("finely chopped", "to taste") stays with its line.
 - **Aisle:** "New ingredient. Pick its aisle:" is followed by an olive link "Pick an aisle" (or the aisle picked), opening a BottomSheet titled "Aisle" with the aisles in store order (OC-Groceries › Aisles).
-- **Advanced mode, pieces:** two small fields under the name, "Name for one" and "Name for several", with what we'd use as placeholders ("leek", "leeks").
+- **What a piece is called** ("2 leeks", "2 cloves garlic") isn't edited: it comes from the pasted line, else the catalog, else the name.
 - **Reorder:** drag the handle (screen-reader name "Drag to reorder"); screen readers also get the actions "Move up" and "Move down", and the arrow keys move the row on the web.
 - **Remove:** "×" removes the row at once unless a step uses it (then the dialog below).
 - Fields are labelled for screen readers only: "Ingredient name", "Quantity", "Unit", "Weight of one (g)". A row with no name yet has the remove label "Remove ingredient".

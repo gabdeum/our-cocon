@@ -24,9 +24,22 @@ describe('readIngredients (US3)', () => {
     });
   });
 
-  it('keeps nouns typed in advanced mode', () => {
-    const r = readIngredients([row({ name: 'Garlic', quantity: '2', unit: 'piece', nounSingular: 'clove', nounPlural: 'cloves' })]);
-    expect(r).toEqual({ rows: [expect.objectContaining({ piece_noun_singular: 'clove', piece_noun_plural: 'cloves' })] });
+  it('calls a piece what the pasted line said, else the catalog, else the name', () => {
+    const garlic: FormFacts = { ...leek, catalog_key: 'garlic', name: 'Garlic', plural: 'Garlic', noun_singular: 'clove', noun_plural: 'cloves' };
+    const pasted = row({ name: 'Garlic', quantity: '2', unit: 'piece', nounSingular: 'clove', nounPlural: 'cloves' });
+    const linked = applyMatch(row({ name: 'Garlic', quantity: '2', unit: 'piece' }), garlic);
+    const named = row({ name: 'Leeks', quantity: '2', unit: 'piece' });
+    const r = readIngredients([pasted, linked, named]);
+    expect('rows' in r && r.rows.map((x) => [x.piece_noun_singular, x.piece_noun_plural])).toEqual([
+      ['clove', 'cloves'],
+      ['clove', 'cloves'],
+      ['leek', 'leeks'],
+    ]);
+  });
+
+  it('forgets what a piece was called when the row is renamed', () => {
+    const renamed = withName(row({ name: 'Garlic', quantity: '2', unit: 'piece', nounSingular: 'clove', nounPlural: 'cloves' }), 'Shallots');
+    expect(readIngredients([renamed])).toEqual({ rows: [expect.objectContaining({ piece_noun_singular: 'shallot', piece_noun_plural: 'shallots' })] });
   });
 
   it('says what else is wrong, one warning per row', () => {

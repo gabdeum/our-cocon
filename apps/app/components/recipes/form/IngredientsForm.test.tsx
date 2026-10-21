@@ -339,13 +339,10 @@ describe('the other row warnings and states (OC-EditIngredients › Validation c
     expect(screen.getByRole('alertdialog').textContent).toContain("It's used in steps 3 and 4. We'll take it out of those steps too.");
   });
 
-  it('lets advanced mode name the pieces', async () => {
-    const { rpc } = setup({ storage: { getItem: vi.fn(async () => 'true'), setItem: vi.fn(async () => undefined) } });
+  it('has no fields for what a piece is called, even in advanced mode', async () => {
+    setup({ storage: { getItem: vi.fn(async () => 'true'), setItem: vi.fn(async () => undefined) } });
     await flush();
-    expect((screen.getByLabelText('Name for one') as HTMLInputElement).placeholder).toBe('leek');
-    fireEvent.change(screen.getByLabelText('Name for several'), { target: { value: 'baby leeks' } });
-    fireEvent.change(screen.getByLabelText('Name for one'), { target: { value: 'baby leek' } });
-    await save();
-    expect(savedRows(rpc)?.[1]).toMatchObject({ piece_noun_singular: 'baby leek', piece_noun_plural: 'baby leeks' });
+    expect(screen.queryByLabelText('Name for one')).toBeNull();
+    expect(screen.queryByLabelText('Name for several')).toBeNull();
   });
 });

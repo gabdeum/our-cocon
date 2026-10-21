@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { pieceNouns } from '@cocon/quantity';
 import type { IngredientFacts } from '@cocon/schemas';
-import { Button, IngredientEditCard, Link, ListRow, ReorderList, StatusBanner, Text, TextField, type IngredientEditField } from '@cocon/ui';
+import { Button, IngredientEditCard, Link, ListRow, ReorderList, StatusBanner, Text, type IngredientEditField } from '@cocon/ui';
 import { strings } from '../../../strings/en';
 import type { IngredientDraft, IngredientWarning } from '../../../lib/recipe-ingredients';
 import { unitText } from './IngredientSheets';
@@ -22,12 +21,11 @@ export interface IngredientsSectionProps {
   warnings: Record<string, IngredientWarning>;
   /** "For {n} servings", from Details. */
   servings: number;
-  advanced: boolean;
   /** "Added 3 ingredients. Check the amounts." after a paste. */
   banner: string | null;
   /** The row whose name is focused, with what the catalog suggests for it. */
   suggestions: { key: string; items: IngredientFacts[] } | null;
-  onChangeRow: (key: string, patch: Partial<Pick<IngredientDraft, 'quantity' | 'weight' | 'nounSingular' | 'nounPlural'>>) => void;
+  onChangeRow: (key: string, patch: Partial<Pick<IngredientDraft, 'quantity' | 'weight'>>) => void;
   onNameChange: (key: string, name: string) => void;
   onNameFocus: (key: string) => void;
   onNameBlur: (key: string) => void;
@@ -80,7 +78,6 @@ export function IngredientsSection(p: IngredientsSectionProps) {
             const warning = p.warnings[d.key];
             const piece = d.unit === 'piece';
             const suggested = p.suggestions?.key === d.key ? p.suggestions.items : [];
-            const nouns = piece ? pieceNouns(d.name || 'piece') : null;
             return (
               <IngredientEditCard
                 handle={handle}
@@ -124,28 +121,6 @@ export function IngredientsSection(p: IngredientsSectionProps) {
                       label={d.newAisle ? strings.aisles[d.newAisle] : ing.pickAisle}
                       onPress={() => p.onOpenAisle(d.key)}
                       aria-label={`${ing.aisle}: ${d.newAisle ? strings.aisles[d.newAisle] : ing.pickAisle}`}
-                    />
-                  </View>
-                ) : null}
-                {piece && p.advanced ? (
-                  <View className="flex-row gap-8">
-                    <TextField
-                      label={ing.nounOne}
-                      size="sm"
-                      value={d.nounSingular}
-                      placeholder={nouns?.singular}
-                      onChangeText={(t) => p.onChangeRow(d.key, { nounSingular: t })}
-                      maxLength={40}
-                      className="flex-1"
-                    />
-                    <TextField
-                      label={ing.nounMany}
-                      size="sm"
-                      value={d.nounPlural}
-                      placeholder={nouns?.plural}
-                      onChangeText={(t) => p.onChangeRow(d.key, { nounPlural: t })}
-                      maxLength={40}
-                      className="flex-1"
                     />
                   </View>
                 ) : null}

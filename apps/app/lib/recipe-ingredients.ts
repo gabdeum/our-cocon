@@ -29,6 +29,7 @@ export interface IngredientDraft {
   sizeWord: SizeWord | null;
   /** The weight of one piece, in grams (pieces only). */
   weight: string;
+  /** What one piece is called, when the pasted line or the saved row said ("clove"); else the catalog's, else from the name. */
   nounSingular: string;
   nounPlural: string;
   catalogKey: string | null;
@@ -170,9 +171,9 @@ export function applyMatch(draft: IngredientDraft, facts: FormFacts | null, pick
   return next;
 }
 
-/** The name was typed over: whatever it was linked to no longer applies. */
+/** The name was typed over: whatever it was linked to, and what one piece was called, no longer apply. */
 export function withName(draft: IngredientDraft, name: string): IngredientDraft {
-  return { ...draft, name, catalogKey: null, facts: null, isNew: false, newAisle: null };
+  return { ...draft, name, catalogKey: null, facts: null, isNew: false, newAisle: null, nounSingular: '', nounPlural: '' };
 }
 
 export type IngredientWarning = 'nameMissing' | 'quantityInvalid' | 'unitMissing' | 'amountMissing' | 'weightInvalid';
@@ -201,7 +202,14 @@ export function readIngredients(drafts: IngredientDraft[]): { rows: IngredientSa
     else if (weight === 'invalid') warnings[d.key] = 'weightInvalid';
     else if (!name) warnings[d.key] = 'nameMissing';
     if (warnings[d.key] || quantity === 'invalid' || weight === 'invalid') continue;
-    const nouns = piece ? pieceNouns(name) : null;
+    // What one piece is called: the row's own (a pasted "2 cloves garlic", or as saved), the catalog's, or from the name.
+    const nouns = piece
+      ? d.nounSingular && d.nounPlural
+        ? { singular: d.nounSingular, plural: d.nounPlural }
+        : d.facts?.noun_singular && d.facts.noun_plural
+          ? { singular: d.facts.noun_singular, plural: d.facts.noun_plural }
+          : pieceNouns(name)
+      : null;
     const row = {
       name: name.slice(0, 80).trim(),
       catalog_key: d.catalogKey,
@@ -209,8 +217,8 @@ export function readIngredients(drafts: IngredientDraft[]): { rows: IngredientSa
       unit: d.unit,
       size_word: piece ? d.sizeWord : null,
       weight_per_piece_g: weight,
-      piece_noun_singular: piece ? d.nounSingular.trim() || nouns?.singular || null : null,
-      piece_noun_plural: piece ? d.nounPlural.trim() || nouns?.plural || null : null,
+      piece_noun_singular: nouns?.singular.slice(0, 40) ?? null,
+      piece_noun_plural: nouns?.plural.slice(0, 40) ?? null,
       prep_note: d.prepNote,
     };
     const parsed = IngredientInput.safeParse({ ...row, position: rows.length });

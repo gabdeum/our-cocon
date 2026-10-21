@@ -340,8 +340,6 @@ export const strings = {
       moveUp: 'Move up',
       moveDown: 'Move down',
       suggestions: 'Suggestions',
-      nounOne: 'Name for one',
-      nounMany: 'Name for several',
       newIngredient: 'New ingredient. Pick its aisle:',
       pickAisle: 'Pick an aisle',
       aisle: 'Aisle',
