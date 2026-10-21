@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { amountInput } from '@cocon/quantity';
 import { View } from 'react-native';
 import type { IngredientFacts } from '@cocon/schemas';
 import { Button, IngredientEditCard, Link, ListRow, ReorderList, StatusBanner, Text, type IngredientEditField } from '@cocon/ui';
@@ -84,16 +85,22 @@ export function IngredientsSection(p: IngredientsSectionProps) {
                 name={d.name}
                 onNameChange={(t) => p.onNameChange(d.key, t)}
                 nameLabel={ing.name}
+                namePlaceholder={ing.namePlaceholder}
                 onNameFocus={() => p.onNameFocus(d.key)}
                 onNameBlur={() => p.onNameBlur(d.key)}
                 quantity={d.quantity}
-                onQuantityChange={(t) => p.onChangeRow(d.key, { quantity: t })}
+                onQuantityChange={(t) => p.onChangeRow(d.key, { quantity: amountInput(t) })}
                 quantityLabel={ing.quantity}
+                quantityPlaceholder={ing.quantityPlaceholder}
                 unit={unitText(d.unit, d.sizeWord)}
                 unitPlaceholder={warning === 'unitMissing' ? ing.unitMissingButton : ing.unit}
                 unitLabel={ing.unit}
                 onUnitPress={() => p.onOpenUnit(d.key)}
-                weight={piece ? { value: d.weight, onChange: (t) => p.onChangeRow(d.key, { weight: t }), label: ing.weight, prefix: ing.each, suffix: ing.grams } : null}
+                weight={
+                  piece
+                    ? { value: d.weight, onChange: (t) => p.onChangeRow(d.key, { weight: amountInput(t, { fractions: false }) }), label: ing.weight, prefix: ing.each, suffix: ing.grams, placeholder: ing.weightPlaceholder }
+                    : null
+                }
                 removeLabel={ing.remove(d.name.trim())}
                 onRemove={() => p.onRemove(d.key)}
                 warning={warning ? ing.warnings[warning] : null}

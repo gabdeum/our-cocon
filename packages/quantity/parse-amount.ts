@@ -28,6 +28,15 @@ export function readAmount(text: string): { value: number; length: number } | nu
   return { value, length };
 }
 
+/**
+ * What an amount field lets through as it's typed: digits, a decimal point (a comma becomes one),
+ * and with `fractions`, "/", spaces, "-" for ranges and ½-style characters ("1 1/2", "1½").
+ */
+export function amountInput(text: string, { fractions = true }: { fractions?: boolean } = {}): string {
+  const allowed = fractions ? new RegExp(`[^0-9./ \\-${VULGAR_CLASS}]`, 'g') : /[^0-9.]/g;
+  return text.replace(/,/g, '.').replace(allowed, '').replace(/\s{2,}/g, ' ').slice(0, 12);
+}
+
 /** What a quantity field holds: a positive number, nothing (empty), or something that isn't an amount. */
 export function parseAmount(text: string): number | null | 'invalid' {
   const t = text.trim();

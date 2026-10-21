@@ -21,6 +21,9 @@ Source `screens/OC-EditIngredients.dc.html` · Route `…/edit?section=ingredien
 - **What a piece is called** ("2 leeks", "2 cloves garlic") isn't edited: it comes from the pasted line, else the catalog, else the name.
 - **Reorder:** drag the handle (screen-reader name "Drag to reorder"); screen readers also get the actions "Move up" and "Move down", and the arrow keys move the row on the web.
 - **Remove:** "×" removes the row at once unless a step uses it (then the dialog below).
+- **Placeholders:** name "Ingredient, like leeks", quantity "Amount", the unit button "Unit", the weight of one "?" ("each ≈ ? g").
+- **Amounts:** the quantity field takes only digits, a decimal point (a typed comma becomes one), "/", spaces, "-" and ½-style fractions; the weight of one takes only digits and a point.
+- **New recipe:** opens with one empty row; an untouched row is dropped on Save.
 - Fields are labelled for screen readers only: "Ingredient name", "Quantity", "Unit", "Weight of one (g)". A row with no name yet has the remove label "Remove ingredient".
 
 ## Validation copy

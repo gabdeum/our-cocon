@@ -1,7 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { parseAmount } from './parse-amount';
+import { amountInput, parseAmount } from './parse-amount';
 import { lines } from './parse-line.fixture';
 import { parseIngredientLine, parsePastedList, pieceNouns, splitPastedList } from './parse-line';
+
+describe('amountInput (FR-001)', () => {
+  it('keeps only what makes an amount', () => {
+    expect(amountInput('2 eggs')).toBe('2 ');
+    expect(amountInput('abc')).toBe('');
+    expect(amountInput('1 1/2')).toBe('1 1/2');
+    expect(amountInput('1½')).toBe('1½');
+    expect(amountInput('1,5')).toBe('1.5');
+    expect(amountInput('2-3')).toBe('2-3');
+  });
+
+  it('keeps only digits and a point for a weight', () => {
+    expect(amountInput('150 g', { fractions: false })).toBe('150');
+    expect(amountInput('1/2', { fractions: false })).toBe('12');
+    expect(amountInput('12,5', { fractions: false })).toBe('12.5');
+  });
+});
 
 describe('parseAmount (FR-001)', () => {
   it.each([

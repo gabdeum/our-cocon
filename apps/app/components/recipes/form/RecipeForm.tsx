@@ -137,7 +137,8 @@ export function RecipeForm({
   const [scrollTo, setScrollTo] = useState<DetailsField | null>(null);
   // Spec 015: the ingredient rows and what's open over them.
   const [startIngredients] = useState(() => draftsFromRows(recipe?.ingredients ?? [], recipe?.facts ?? {}));
-  const [drafts, setDrafts] = useState<IngredientDraft[]>(startIngredients);
+  // A new recipe opens with one empty row, so it's clear where to type; left empty, Save drops it.
+  const [drafts, setDrafts] = useState<IngredientDraft[]>(() => (recipe ? startIngredients : [emptyDraft(newId())]));
   const [ingWarnings, setIngWarnings] = useState<Record<string, IngredientWarning>>({});
   const [focused, setFocused] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<{ key: string; items: IngredientFacts[] } | null>(null);

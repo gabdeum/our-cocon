@@ -166,12 +166,16 @@ describe('US1: add ingredients quickly', () => {
 describe('US2: counted items know their weight', () => {
   it('asks for the weight of one piece, and steps can show "2 leeks (300 g)"', async () => {
     const { rpc } = setup({ recipe: null });
-    fireEvent.click(screen.getByRole('button', { name: '+ Add ingredient' }));
+    // A new recipe opens with one empty row, with placeholders that say what goes where.
+    expect(names()).toEqual(['']);
+    expect(last('Ingredient name').placeholder).toBe('Ingredient, like leeks');
+    expect(last('Quantity').placeholder).toBe('Amount');
     fireEvent.change(last('Ingredient name'), { target: { value: 'Leeks' } });
     fireEvent.change(last('Quantity'), { target: { value: '2' } });
     expect(screen.queryByLabelText('Weight of one (g)')).toBeNull();
     pickUnit(0, 'pieces');
-    fireEvent.change(screen.getByLabelText('Weight of one (g)'), { target: { value: '150' } });
+    expect((screen.getByLabelText('Weight of one (g)') as HTMLInputElement).placeholder).toBe('?');
+    fireEvent.change(screen.getByLabelText('Weight of one (g)'), { target: { value: '150 g' } });
     await act(async () => {
       fireEvent.click(screen.getByRole('link', { name: 'Details' }));
     });
@@ -296,12 +300,23 @@ describe('the catalog (spec 031)', () => {
   });
 });
 
+describe('amounts take only numbers', () => {
+  it('drops letters typed in the quantity and the weight of one', () => {
+    setup();
+    fireEvent.change(screen.getAllByLabelText('Quantity')[0] as HTMLElement, { target: { value: '30g' } });
+    expect(quantities()[0]).toBe('30');
+    fireEvent.change(screen.getAllByLabelText('Quantity')[0] as HTMLElement, { target: { value: '1 1/2' } });
+    expect(quantities()[0]).toBe('1 1/2');
+    fireEvent.change(screen.getByLabelText('Weight of one (g)'), { target: { value: 'about 150' } });
+    expect((screen.getByLabelText('Weight of one (g)') as HTMLInputElement).value).toBe('150');
+  });
+});
+
 describe('the other row warnings and states (OC-EditIngredients › Validation copy)', () => {
   it('says how to fix an unreadable amount and a missing name', async () => {
     setup({ recipe: null });
-    fireEvent.click(screen.getByRole('button', { name: '+ Add ingredient' }));
     fireEvent.change(last('Ingredient name'), { target: { value: 'Flour' } });
-    fireEvent.change(last('Quantity'), { target: { value: 'lots' } });
+    fireEvent.change(last('Quantity'), { target: { value: '1//2' } });
     fireEvent.click(screen.getByRole('button', { name: '+ Add ingredient' }));
     fireEvent.change(last('Quantity'), { target: { value: '2' } });
     pickUnit(1, 'pieces');
@@ -317,7 +332,7 @@ describe('the other row warnings and states (OC-EditIngredients › Validation c
     fireEvent.click(screen.getByRole('button', { name: '+ Add ingredient' }));
     fireEvent.change(last('Ingredient name'), { target: { value: 'Milk' } });
     pickUnit(2, 'ml');
-    fireEvent.change(screen.getAllByLabelText('Weight of one (g)')[0] as HTMLElement, { target: { value: 'heavy' } });
+    fireEvent.change(screen.getAllByLabelText('Weight of one (g)')[0] as HTMLElement, { target: { value: '1..5' } });
     await save();
     expect(screen.getAllByRole('alert').map((a) => a.textContent)).toEqual(['Type the weight of one in grams, like 150.', 'Add an amount, or pick “No unit”.']);
   });

@@ -15,11 +15,14 @@ export interface IngredientEditCardProps {
   name: string;
   onNameChange: (text: string) => void;
   nameLabel: string;
+  /** Says what goes there: "Ingredient, like leeks". */
+  namePlaceholder?: string;
   onNameFocus?: () => void;
   onNameBlur?: () => void;
   quantity: string;
   onQuantityChange: (text: string) => void;
   quantityLabel: string;
+  quantityPlaceholder?: string;
   /** The picked unit's label ("pieces", "g", "small"), or null for none yet. */
   unit: string | null;
   /** Shown when no unit is picked: "Unit" (muted), or "Unit?" (warn) when the row needs one. */
@@ -27,7 +30,7 @@ export interface IngredientEditCardProps {
   unitLabel: string;
   onUnitPress: () => void;
   /** Pieces only: "each ≈ [150] g". */
-  weight?: { value: string; onChange: (text: string) => void; label: string; prefix: string; suffix: string } | null;
+  weight?: { value: string; onChange: (text: string) => void; label: string; prefix: string; suffix: string; placeholder?: string } | null;
   removeLabel: string;
   onRemove: () => void;
   /** "Pick a unit so we can convert and scale it." */
@@ -74,11 +77,13 @@ export function IngredientEditCard({
   name,
   onNameChange,
   nameLabel,
+  namePlaceholder,
   onNameFocus,
   onNameBlur,
   quantity,
   onQuantityChange,
   quantityLabel,
+  quantityPlaceholder,
   unit,
   unitPlaceholder,
   unitLabel,
@@ -92,6 +97,7 @@ export function IngredientEditCard({
   onLayout,
 }: IngredientEditCardProps) {
   const unitWarn = warningField === 'unit';
+  const colorsMuted = useThemeColors().inkMuted;
   return (
     <View onLayout={onLayout} className={cn('gap-8 rounded-[20px] bg-surface-card p-12', warning && 'border-2 border-warn-border')}>
       <View className="flex-row items-center gap-8">
@@ -99,6 +105,7 @@ export function IngredientEditCard({
         <RowInput
           aria-label={nameLabel}
           value={name}
+          placeholder={namePlaceholder}
           onChangeText={onNameChange}
           onFocus={onNameFocus}
           onBlur={onNameBlur}
@@ -120,6 +127,7 @@ export function IngredientEditCard({
         <RowInput
           aria-label={quantityLabel}
           value={quantity}
+          placeholder={quantityPlaceholder}
           onChangeText={onQuantityChange}
           inputMode="decimal"
           maxLength={12}
@@ -158,6 +166,8 @@ export function IngredientEditCard({
               aria-label={weight.label}
               value={weight.value}
               onChangeText={weight.onChange}
+              placeholder={weight.placeholder}
+              placeholderTextColor={colorsMuted}
               inputMode="decimal"
               maxLength={6}
               className={cn('h-[40px] min-w-0 flex-1 text-ink web:outline-none', focusRing)}
