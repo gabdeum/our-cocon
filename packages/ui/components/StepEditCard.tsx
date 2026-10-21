@@ -12,10 +12,8 @@ export interface StepEditCardProps {
   expanded: boolean;
   /** Collapsed: the step's name, or its text's first line. */
   title: string;
-  /** Collapsed: "Tip", "12 min". */
+  /** Collapsed: the add-ons it has, in the toggles' order: "12 min", "Temp check", "Tip", "Photo". */
   badges?: string[];
-  /** Collapsed: the sage temperature check line, "Temperature check: center reaches 71 °C (160 °F)". */
-  note?: string;
   /** Collapsed: what tapping it does, for screen readers ("Step 2, Blind bake. Tap to edit."). */
   openLabel: string;
   onOpen: () => void;
@@ -41,7 +39,7 @@ function NumberBadge({ number, current }: { number: number; current: boolean }) 
  * One step in the recipe form (StepEditCard README; OC-EditSteps): collapsed to its number, name
  * and badges, or expanded with its fields. Only one is expanded at a time; the screen decides.
  */
-export function StepEditCard({ number, handle, expanded, title, badges = [], note, openLabel, onOpen, attention, header, children }: StepEditCardProps) {
+export function StepEditCard({ number, handle, expanded, title, badges = [], openLabel, onOpen, attention, header, children }: StepEditCardProps) {
   if (expanded) {
     return (
       <View className={cn('gap-12 rounded-xl border-2 bg-surface-card p-14', attention ? 'border-warn-border' : 'border-olive')}>
@@ -57,23 +55,31 @@ export function StepEditCard({ number, handle, expanded, title, badges = [], not
   return (
     <View className={cn('flex-row items-center gap-10 rounded-[18px] bg-surface-card py-12 pl-8 pr-14', attention && 'border-2 border-warn-border')}>
       {handle}
-      <Pressable role="button" aria-expanded={false} aria-label={openLabel} onPress={onOpen} className={cn('min-h-[44px] flex-1 justify-center gap-8 rounded-md active:opacity-90', focusRing)}>
-        <View className="flex-row items-center gap-10">
-          <NumberBadge number={number} current={false} />
-          <Text size={16} weight="800" numberOfLines={1} className="flex-1">
-            {title}
-          </Text>
-          {badges.map((b) => (
-            <Tag key={b} label={b} tone="soft" />
-          ))}
-        </View>
-        {note ? <StepNote text={note} className="ml-[40px]" /> : null}
+      <Pressable
+        role="button"
+        aria-expanded={false}
+        aria-label={openLabel}
+        onPress={onOpen}
+        className={cn('min-h-[44px] flex-1 flex-row items-center gap-10 rounded-md active:opacity-90', focusRing)}
+      >
+        <NumberBadge number={number} current={false} />
+        <Text size={16} weight="800" numberOfLines={1} className="flex-1">
+          {title}
+        </Text>
+        {badges.length > 0 ? (
+          // Many add-ons, or large text: the pills wrap onto a second line, still on the right.
+          <View className="max-w-[60%] flex-row flex-wrap justify-end gap-6">
+            {badges.map((b) => (
+              <Tag key={b} label={b} tone="soft" />
+            ))}
+          </View>
+        ) : null}
       </Pressable>
     </View>
   );
 }
 
-/** The sage temperature check line, under a collapsed step or in the open one (OC-EditSteps, step 5). */
+/** The sage temperature check line in the open step: "Temperature check: center reaches 71 °C (160 °F)". */
 export function StepNote({ text, className }: { text: string; className?: string }) {
   return (
     <View className={cn('rounded-[12px] bg-sage px-10 py-8', className)}>

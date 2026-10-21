@@ -4,7 +4,7 @@ Source `screens/OC-EditSteps.dc.html` · Route `…/edit?section=steps` · Spec 
 
 ## Layout
 1. Title "Steps".
-2. Collapsed step cards: drag handle, number badge, name (or the text's first line), badges ("Tip", "{n} min"). A step with a temperature check shows it in a sage line under the name ("Temperature check: center reaches 71 °C (160 °F)").
+2. Collapsed step cards: drag handle, number badge, name (or the text's first line), and a pill on the right for each add-on, in the toggles' order: "{n} min", "Temp check", "Tip", "Photo". Pills that don't fit wrap onto a second line, still on the right. (The drawn screen shows the temperature check as a sage line under step 5; Gabriel chose pills instead, 2026-10-21.)
 3. The expanded step (2 px olive border, one at a time):
    - drag handle, number + "Step name" input
    - "Instructions" editor with ingredient chips (sage)

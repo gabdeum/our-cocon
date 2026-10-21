@@ -431,13 +431,18 @@ export function addedStepEvents(rows: StepSaveRow[], startIds: ReadonlySet<strin
     .map((r) => ({ has_timer: r.timer_seconds != null, has_temperature: r.temp_check_c != null, has_tip: r.tip != null }));
 }
 
-/** The collapsed card's badges: "Tip", "8 min" (OC-EditSteps › Layout 2). */
+/**
+ * The collapsed card's pills, one per add-on it has, in the toggles' order: "8 min", "Temp check",
+ * "Tip", "Photo" (OC-EditSteps › Layout 2).
+ */
 export function stepBadges(d: StepDraft): string[] {
   const out: string[] = [];
-  if (d.tipOn && d.tip.trim()) out.push(s.tipBadge);
   if (d.timerOn) {
     const m = parseMinutes(d.minutes);
     if (typeof m === 'number') out.push(formatTotalTime(m));
   }
+  if (d.tempOn && d.tempValue.trim()) out.push(s.tempBadge);
+  if (d.tipOn && d.tip.trim()) out.push(s.tipBadge);
+  if (d.photoOn && d.photoPath) out.push(s.photoBadge);
   return out;
 }

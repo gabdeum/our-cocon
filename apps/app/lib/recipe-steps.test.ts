@@ -229,7 +229,12 @@ describe('Save (OC-EditSteps › Validation copy)', () => {
   });
 
   it('badges the collapsed card', () => {
-    expect(stepBadges(step({ tipOn: true, tip: 'x', timerOn: true, minutes: '12' }))).toEqual(['Tip', '12 min']);
+    expect(stepBadges(step({ tipOn: true, tip: 'x', timerOn: true, minutes: '12' }))).toEqual(['12 min', 'Tip']);
+    expect(
+      stepBadges(step({ timerOn: true, minutes: '35', tempOn: true, tempValue: '71', tipOn: true, tip: 'x', photoOn: true, photoPath: 'a/b/c.jpg' })),
+    ).toEqual(['35 min', 'Temp check', 'Tip', 'Photo']);
+    // Switched on but empty, or switched off: no pill.
+    expect(stepBadges(step({ tempOn: true, photoOn: true, tipOn: false, tip: 'kept' }))).toEqual([]);
     expect(stepBadges(step({ timerOn: true, minutes: '90' }))).toEqual(['1 h 30']);
   });
 });

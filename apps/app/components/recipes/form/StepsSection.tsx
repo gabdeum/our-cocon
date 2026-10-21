@@ -80,7 +80,7 @@ export interface StepsSectionProps {
 const partsOf = (segments: BodySegment[]): TokenPart[] =>
   segments.map((g) => (g.type === 'text' ? g.text : { chip: g.label, tone: g.kind === 'missing' ? 'warn' : 'sage' }));
 
-/** The collapsed card's sage line, and the open step's: "Temperature check: center reaches 71 °C (160 °F)". */
+/** The open step's sage line: "Temperature check: center reaches 71 °C (160 °F)". */
 function tempLine(d: StepDraft): string | null {
   if (!d.tempOn) return null;
   const t = d.tempValue.trim().replace(',', '.');
@@ -122,7 +122,6 @@ export function StepsSection(p: StepsSectionProps) {
                   expanded={false}
                   title={title}
                   badges={stepBadges(d)}
-                  note={tempLine(d) ?? undefined}
                   openLabel={s.open(i + 1, d.name.trim())}
                   onOpen={() => p.onOpen(d.key)}
                   attention={warned !== undefined}

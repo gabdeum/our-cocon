@@ -239,9 +239,13 @@ describe('the temperature check, more', () => {
     expect(savedSteps(rpc)).toBeUndefined();
   });
 
-  it('shows on the closed card as a sage line', () => {
-    setup({ recipe: { ...quiche, steps: [saved(0, { name: 'Bake', temp_check_c: 71, temp_check_text: 'center reaches' }), saved(1, { name: 'Rest' })] } });
-    expect(screen.getByRole('button', { name: 'Step 1, Bake. Tap to edit.' }).textContent).toContain('Temperature check: center reaches 71 °C (160 °F)');
+  it('shows on the closed card as a pill, like the other add-ons', () => {
+    const path = `${FAMILY}/${RECIPE}/00000000-0000-4000-8000-0000000000c4.jpg`;
+    setup({
+      recipe: { ...quiche, steps: [saved(0, { name: 'Bake', timer_seconds: 2100, temp_check_c: 71, temp_check_text: 'center reaches', tip: 'Wait.', photo_path: path }), saved(1, { name: 'Rest' })] },
+    });
+    const card = screen.getByRole('button', { name: 'Step 1, Bake. Tap to edit.' });
+    expect(card.textContent).toBe('1Bake35 minTemp checkTipPhoto');
   });
 });
 

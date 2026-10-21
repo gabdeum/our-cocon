@@ -411,6 +411,8 @@ export const strings = {
       removeConfirm: 'Remove',
       removeCancel: 'Keep it',
       tipBadge: 'Tip',
+      tempBadge: 'Temp check',
+      photoBadge: 'Photo',
       open: (n: number, name: string) => (name ? `Step ${n}, ${name}. Tap to edit.` : `Step ${n}. Tap to edit.`),
       handle: 'Drag to reorder',
       moveUp: 'Move up',

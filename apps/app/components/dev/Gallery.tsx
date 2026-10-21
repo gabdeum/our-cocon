@@ -413,7 +413,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           </StepPreview>
           <StepNote text="Temperature check: center reaches 71 °C (160 °F)" />
         </StepEditCard>
-        <StepEditCard number={5} expanded={false} title="Bake" badges={['35 min']} note="Temperature check: center reaches 71 °C (160 °F)" openLabel="Step 5, Bake. Tap to edit." onOpen={noop} attention />
+        <StepEditCard number={5} expanded={false} title="Bake" badges={['35 min', 'Temp check', 'Photo']} openLabel="Step 5, Bake. Tap to edit." onOpen={noop} attention />
       </Section>
 
       <Section group="Lists and cards" title="ReorderList">
