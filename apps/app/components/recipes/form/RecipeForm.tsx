@@ -41,6 +41,7 @@ import {
   type IngredientDraft,
   type IngredientWarning,
 } from '../../../lib/recipe-ingredients';
+import { useDeleteRecipe } from '../../../lib/use-delete-recipe';
 import * as photoIO from '../../../lib/recipe-photo';
 import {
   addedStepEvents,
@@ -57,6 +58,7 @@ import {
 import type { Client } from '../../../lib/supabase';
 import { createdVariantEvents, draftsFromVariants, emptyVariant, readVariants, variantsChanged, type VariantDraft, type VariantSaveRow, type VariantWarnings } from '../../../lib/recipe-variants';
 import { OfflineBanner } from '../../sync/OfflineBanner';
+import { DeleteRecipe } from '../DeleteRecipe';
 import { CuisineSheet } from './CuisineSheet';
 import { DetailsSection } from './DetailsSection';
 import { AisleSheet, PasteSheet, UnitSheet } from './IngredientSheets';
@@ -86,6 +88,8 @@ export interface RecipeFormProps {
   onClose: () => void;
   /** Saved: a new recipe opens; an edit goes back to it. */
   onSaved: () => void;
+  /** Spec 018: the recipe was deleted ("Delete this recipe", edit mode only). */
+  onDeleted?: () => void;
   /** Ids for added ingredients, steps and variants; tests pass their own. */
   newId?: () => string;
   /** Spec 017: the variant to open in Variants (from recipe settings), or "new" to start one. */
@@ -138,12 +142,14 @@ export function RecipeForm({
   photos = photoIO,
   onClose,
   onSaved,
+  onDeleted,
   newId = randomUUID,
   openVariant,
 }: RecipeFormProps) {
   const isNew = recipe === null;
   const online = useOnline();
   const queryClient = useQueryClient();
+  const deleteRecipe = useDeleteRecipe(client, tracker, familyId);
   const [start] = useState(() => formFromRecipe(recipe));
   const [form, setForm] = useState<DetailsForm>(start);
   const [warnings, setWarnings] = useState<DetailsWarnings>({});
@@ -600,6 +606,13 @@ export function RecipeForm({
     onClose();
   };
 
+  const removeRecipe = async () => {
+    await deleteRecipe(recipeId);
+    // Photos this visit stored but never saved go; the recipe's own stay, for a restore.
+    tidyPhotos([savedHeader.current, ...startStepPhotos]);
+    onDeleted?.();
+  };
+
   const cancel = () =>
     isDirty(start, form) || ingredientsChanged(startIngredients, drafts) || stepsChanged(startSteps, steps) || variantsChanged(startVariants, variants)
       ? setConfirmDiscard(true)
@@ -761,6 +774,9 @@ export function RecipeForm({
           busy={!next && saving}
           busyLabel={f.saving}
         />
+        {!isNew && section === 'variants' && onDeleted ? (
+          <DeleteRecipe name={recipe?.name ?? ''} variants={recipe?.variants?.length ?? 0} disabled={saving} onDelete={removeRecipe} />
+        ) : null}
       </FormScreen>
       <CuisineSheet
         visible={cuisineOpen}

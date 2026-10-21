@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Button, Dialog, Link, ListGroup, ListRow, SheetFooter, StatusBanner, Text, TextField } from '@cocon/ui';
 import { DisplayName, type Tracker } from '@cocon/schemas';
@@ -22,6 +22,8 @@ export interface FamilySettingsProps {
   shareDeps?: ShareDeps;
   /** Offline (spec 004): everything stays readable, changes are disabled. Sign out still works. */
   readOnly?: boolean;
+  /** OC-Settings › More, between Family and Account: its rows (spec 018 Recently deleted, 025 AI assistants). */
+  more?: ReactNode;
 }
 
 type Confirm = { kind: 'remove' | 'owner'; member: Member } | { kind: 'deleteFamily' } | { kind: 'deleteAccount' } | null;
@@ -39,7 +41,7 @@ function initial(name: string) {
 }
 
 /** Settings › Family and Account (spec 003; design/ui/OC-Settings.md). */
-export function FamilySettings({ me, family, members, api, tracker, onChanged, onSignOut, shareDeps, readOnly = false }: FamilySettingsProps) {
+export function FamilySettings({ me, family, members, api, tracker, onChanged, onSignOut, shareDeps, readOnly = false, more }: FamilySettingsProps) {
   const isOwner = me.role === 'owner';
   const [banner, setBanner] = useState<string | null>(null);
   const [inviting, setInviting] = useState(false);
@@ -157,6 +159,13 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
         {/* Never stack two banners: offline, the offline banner replaces this one. */}
         {banner && !readOnly ? <StatusBanner message={banner} /> : null}
       </View>
+
+      {more ? (
+        <View className="gap-8">
+          <Heading>{strings.settings.more.heading}</Heading>
+          <ListGroup>{more}</ListGroup>
+        </View>
+      ) : null}
 
       <View className="gap-8">
         <Heading>{a.heading}</Heading>

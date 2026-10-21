@@ -272,7 +272,8 @@ describe.skipIf(!local)('the recipe form against local Supabase', () => {
     const input = readDetails(formFromRecipe(loaded));
     if (!('input' in input)) throw new Error('expected details');
     const mushrooms = randomUUID();
-    const steps = loaded?.steps ?? [];
+    // The loader returns rows in the database's order; the form sorts them by position.
+    const steps = [...(loaded?.steps ?? [])].sort((a, b) => a.position - b.position);
     const version = { id: randomUUID(), name: 'Vegetarian', kind: 'version' as const, changes: [
       { type: 'swap_ingredient' as const, ingredient_id: leekId, with: [{ id: mushrooms, name: 'Mushrooms', quantity: 250, unit: 'g' as const, prep_note: 'sliced' }] },
     ] };

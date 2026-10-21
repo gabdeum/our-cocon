@@ -10,6 +10,8 @@ export interface DialogProps {
   title: string;
   /** The consequence and the way back: "…for 30 days." */
   body: string;
+  /** A part of the body shown in bold ink: "Recently deleted" (OC-Delete). */
+  emphasis?: string;
   /** "Delete recipe". */
   confirmLabel: string;
   onConfirm: () => void;
@@ -20,10 +22,11 @@ export interface DialogProps {
 }
 
 /** Centred confirmation for destructive or irreversible actions only (Dialog README). */
-export function Dialog({ visible, title, body, confirmLabel, onConfirm, cancelLabel, onCancel, icon = 'trash' }: DialogProps) {
+export function Dialog({ visible, title, body, confirmLabel, onConfirm, cancelLabel, onCancel, icon = 'trash', emphasis }: DialogProps) {
   const titleId = useId();
   const bodyId = useId();
   const safeRef = useRef<View>(null);
+  const at = emphasis ? body.indexOf(emphasis) : -1;
 
   useEffect(() => {
     if (!visible) return;
@@ -48,7 +51,17 @@ export function Dialog({ visible, title, body, confirmLabel, onConfirm, cancelLa
             {title}
           </Text>
           <Text size={16} weight="600" color="ink-muted" align="center" nativeID={bodyId} style={{ lineHeight: 16 * 1.45 }}>
-            {body}
+            {emphasis && at >= 0 ? (
+              <>
+                {body.slice(0, at)}
+                <Text size={16} weight="700" color="ink">
+                  {emphasis}
+                </Text>
+                {body.slice(at + emphasis.length)}
+              </>
+            ) : (
+              body
+            )}
           </Text>
           <View className="gap-10 self-stretch">
             <Button label={confirmLabel} variant="danger" size="dialog" block onPress={onConfirm} />

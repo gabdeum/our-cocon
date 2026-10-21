@@ -105,6 +105,12 @@ export const strings = {
       keep: 'Keep it',
       failed: "Couldn't save. Try again.",
     },
+    // OC-Settings › More (spec 018 adds Recently deleted; AI assistants comes with 025).
+    more: {
+      heading: 'More',
+      recentlyDeleted: 'Recently deleted',
+      recipes: (n: number) => `${n} ${n === 1 ? 'recipe' : 'recipes'}`,
+    },
   },
   // design/ui/OC-Recipes.md (spec 006; the filter logic comes with 007)
   recipes: {
@@ -132,6 +138,10 @@ export const strings = {
     loading: 'Loading recipes',
     loadFailed: "Couldn't load your recipes. Check your connection and try again.",
     retry: 'Try again',
+    // Spec 018: after "Delete recipe" (OC-Delete › After deleting).
+    deleted: 'Recipe deleted',
+    undo: 'Undo',
+    undoFailed: "Couldn't restore. Try again.",
   },
   // design/ui/OC-Filters.md (spec 007)
   filters: {
@@ -503,6 +513,43 @@ export const strings = {
         steps: 'Check the step below',
       },
     },
+  },
+  // design/ui/OC-Delete.md (spec 018): the danger link at the end of the edit form, and its Dialog.
+  deleteRecipe: {
+    link: 'Delete this recipe',
+    title: (name: string) => `Delete “${name}”?`,
+    body: (variants: number) =>
+      variants === 0
+        ? 'It will disappear for the whole family. You can bring it back from Recently deleted for 30 days.'
+        : `It will disappear for the whole family, along with its ${variants === 1 ? 'variant' : `${variants} variants`}. You can bring it back from Recently deleted for 30 days.`,
+    bodyEmphasis: 'Recently deleted',
+    confirm: 'Delete recipe',
+    keep: 'Keep it',
+    failed: "Couldn't delete. Try again.",
+  },
+  // design/flows.md › Recently deleted (spec 018; not drawn, copy in design/ui/OC-Settings.md).
+  recentlyDeleted: {
+    back: 'Settings',
+    title: 'Recently deleted',
+    /** "Deleted by Gabriel · 3 days ago · 27 days left" ("Former member" once that person left). */
+    sub: (by: string, daysAgo: number, daysLeft: number) => {
+      const ago = daysAgo === 0 ? 'today' : `${daysAgo} ${daysAgo === 1 ? 'day' : 'days'} ago`;
+      return `Deleted by ${by} · ${ago} · ${daysLeft <= 1 ? 'Last day' : `${daysLeft} days left`}`;
+    },
+    restore: 'Restore',
+    restoreA11y: (name: string) => `Restore ${name}`,
+    deleteNow: 'Delete now',
+    deleteNowTitle: (name: string) => `Delete “${name}” for good?`,
+    deleteNowBody: "Its photos and variants go with it. This can't be undone.",
+    keep: 'Keep it',
+    restored: (name: string) => `“${name}” is back in your recipes.`,
+    emptyTitle: 'Nothing here.',
+    emptyBody: 'Recipes you delete stay here for 30 days.',
+    loading: 'Loading recently deleted recipes',
+    loadFailed: "Couldn't load. Try again.",
+    retry: 'Try again',
+    restoreFailed: "Couldn't restore. Try again.",
+    deleteFailed: "Couldn't delete. Try again.",
   },
   // design/ui/OC-RecipeSettings.md (specs 017 and 027; the switches come with 027)
   recipeSettings: {

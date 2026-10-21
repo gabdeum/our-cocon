@@ -13,7 +13,7 @@ A row inside a white list group: grocery items, picker items, settings links and
 | Title | 16/800 ink; done: line-through + `ink-faint` |
 | Sub-line | 13/600 ink-muted (source: "For Leek & bacon quiche", "Alex via ChatGPT"); warn 700 for merge notes ("Already on the list (100 ml) → will be 400 ml") |
 | Trailing (groceries) | Buy 15/900 ink over Need 12/700 ink-muted, right-aligned, max 140 wide: "Buy 1 pint carton" / "Need 300 ml · ~170 ml left over" |
-| Trailing (other) | value 15/800 ink-muted, a 13/700 status, or a chevron-right 18 |
+| Trailing (other) | value 15/800 ink-muted, a 13/700 status, or a chevron-right 18 (optionally after a status: "1 recipe ›") |
 | Ingredient row (`oc-ingredient`) | no card; padding 12 0, divider `line`; amount column 104 wide 17/900; name 16/700; weight sub-line 13/600; optional Tag at the end |
 
 ## Rules

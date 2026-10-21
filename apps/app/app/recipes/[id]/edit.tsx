@@ -14,6 +14,7 @@ const f = strings.recipeForm;
  * /recipes/[id]/edit?section=… (spec 014): the recipe form for a saved recipe, a full-screen modal.
  * Its entry is "Edit recipe" in recipe settings (017); saved or cancelled, it goes back to the recipe.
  * `&variant=<id>` opens that variant in Variants, `&variant=new` starts one (recipe settings, 017).
+ * Deleted (018), it closes everything over Recipes, which shows "Recipe deleted · Undo".
  */
 export default function EditRecipeRoute() {
   const params = useLocalSearchParams<{ id: string; section?: string; variant?: string }>();
@@ -66,6 +67,7 @@ export default function EditRecipeRoute() {
       storage={deviceStorage}
       onClose={back}
       onSaved={back}
+      onDeleted={() => router.dismissTo({ pathname: '/recipes', params: { deleted: id } })}
     />
   );
 }

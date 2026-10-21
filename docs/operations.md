@@ -46,7 +46,7 @@ infra/bootstrap-from-laptop.sh <server-ip> --staging-key ~/Downloads/cocon-deplo
   --prod-key ~/Downloads/cocon-deploy-prod.pub
 ```
 
-It copies `infra/` to the server and runs `infra/provision.sh`, which installs Docker, adds 4 GB of **swap** (disk used as emergency memory), turns on automatic security updates, sets the firewall, creates your login (`gabriel`) and GitHub's login (`deploy`, which can only deploy, never open a shell), installs both Supabase copies and the front door, and starts the backup and health-check timers. It asks, at hidden prompts (paste from your password manager; nothing shows):
+It copies `infra/` to the server and runs `infra/provision.sh`, which installs Docker, adds 4 GB of **swap** (disk used as emergency memory), turns on automatic security updates, sets the firewall, creates your login (`gabriel`) and GitHub's login (`deploy`, which can only deploy, never open a shell), installs both Supabase copies and the front door, and starts the backup, purge and health-check timers. It asks, at hidden prompts (paste from your password manager; nothing shows):
 
 | Prompt | From |
 | --- | --- |
@@ -116,6 +116,8 @@ Anything older than 30 days is deleted. Backups are encrypted to two keys: yours
 
 **Run a backup now:** `sudo systemctl start cocon-backup@prod` (watch it: `journalctl -fu cocon-backup@prod`).
 
+**Deleted recipes.** Every night (between 04:30 and 05:00 UTC, after the backups), `cocon-purge@<env>` removes for good the recipes deleted more than 30 days ago, with their photos (spec 018). Until then families can restore them from Settings › Recently deleted. Run it now: `sudo systemctl start cocon-purge@prod`.
+
 ### If the server is lost
 
 1. In Hetzner, restore the server from its daily backup (Server → Backups). That's the quickest way. If that isn't possible, create a new Ubuntu 26.04 LTS server, point the 8 Cloudflare DNS records at it, and update `SSH_HOST` and `SSH_KNOWN_HOSTS` in both GitHub environments.
@@ -133,6 +135,7 @@ Emails come to `hello@ourcocon.com`, at most every 6 hours per problem.
 | Memory over 90% used, or swap over 50% | See which container uses most: `sudo docker stats --no-stream`. If it lasts, rescale the server (section 7). |
 | Unhealthy: \<containers> | `sudo cocon-stack prod ps` and `sudo cocon-stack prod logs --tail 100 <service>`. Often `sudo cocon-stack prod restart <service>` fixes it. |
 | cocon-backup@… failed | The email holds the last log lines. Re-run it: `sudo systemctl start cocon-backup@prod`. |
+| cocon-purge@… failed | Nothing is lost: recipes it couldn't remove stay in the database and are tried again the next night. The email holds the last log lines. Re-run it: `sudo systemctl start cocon-purge@prod`. |
 | UptimeRobot: down | Check GitHub Actions (a deploy in progress?), then the containers as above. |
 
 ## 6. Updating Supabase
@@ -163,5 +166,6 @@ When running Supabase yourself takes more than an hour or two a month, or a rest
 | `sudo cocon-secrets get <env> <KEY>` | One Supabase setting |
 | `sudo cocon-secrets edit <name>` | Change sealed settings |
 | `sudo systemctl start cocon-backup@<env>` | Backup now |
-| `systemctl list-timers 'cocon*'` | When backups and health checks run next |
+| `sudo systemctl start cocon-purge@<env>` | Remove recipes deleted over 30 days ago now |
+| `systemctl list-timers 'cocon*'` | When backups, the purge and health checks run next |
 | `cat /srv/cocon/<env>/current` | The commit running on that copy |

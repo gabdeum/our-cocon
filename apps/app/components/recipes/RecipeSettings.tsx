@@ -4,6 +4,7 @@ import { BackHeader, Button, Card, IconTile, Link, ListGroup, ListRow, PushedScr
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { variantSummary, type SummaryBase } from '../../lib/recipe-variants';
+import { DeleteRecipe } from './DeleteRecipe';
 
 const r = strings.recipeSettings;
 
@@ -17,6 +18,8 @@ export interface RecipeSettingsProps {
   onEditRecipe: () => void;
   /** The form at Variants: all of them, one (its id), or a new one ("new"). */
   onEditVariants: (variant?: string) => void;
+  /** Spec 018: "Delete this recipe" at the bottom; throws when deleting failed. */
+  onDelete?: () => Promise<void>;
 }
 
 /** What the one-line summaries need from the recipe. */
@@ -29,9 +32,9 @@ function summaryBase(recipe: RecipeDetail): SummaryBase {
 
 /**
  * Recipe settings (OC-RecipeSettings): the "Edit recipe" row and the Variants list (spec 017). The
- * switches for screen, scale, thermometer and units come with spec 027.
+ * switches for screen, scale, thermometer and units come with spec 027. "Delete this recipe" ends it (018).
  */
-export function RecipeSettings({ recipe, failed, onRetry, onBack, onEditRecipe, onEditVariants }: RecipeSettingsProps) {
+export function RecipeSettings({ recipe, failed, onRetry, onBack, onEditRecipe, onEditVariants, onDelete }: RecipeSettingsProps) {
   if (recipe === undefined && !failed) {
     return (
       <PushedScreen className="gap-18">
@@ -89,6 +92,7 @@ export function RecipeSettings({ recipe, failed, onRetry, onBack, onEditRecipe, 
         })}
         {recipe.variants.length < MAX_VARIANTS ? <Button label={r.addVariant} variant="dashed" icon="plus" block onPress={() => onEditVariants('new')} /> : null}
       </View>
+      {onDelete ? <DeleteRecipe name={recipe.name} variants={recipe.variants.length} onDelete={onDelete} /> : null}
     </PushedScreen>
   );
 }

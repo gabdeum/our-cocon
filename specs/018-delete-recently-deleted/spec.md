@@ -37,7 +37,9 @@
 All copy is in the States tables of the UI specs for: OC-Delete. New messages go there and in `strings/en.ts` first.
 
 ## Needs your attention
-None.
+- **Turn on the nightly purge on the server.** The new timer `cocon-purge@<env>` is installed and started by `infra/provision.sh`, so re-run the server setup once after this merges (docs/operations.md › 1). Until then deleted recipes stay in the database past 30 days; they're no longer listed in Recently deleted.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-21: Built. Delete from the edit form's Variants section (OC-Delete Dialog, then Recipes with "Recipe deleted · Undo" for 8 s); Settings › More › Recently deleted (`/settings/deleted`) with Restore and "Delete now"; a restore after 30 days is refused by the database, and no photo can be added to a deleted recipe's folder; a nightly job (`scripts/purge-deleted.ts`, systemd timer `cocon-purge@<env>` at 04:30 UTC, after the backups) removes recipes deleted over 30 days ago, photos first. Deviations: "Delete now" is in a sheet opened by tapping a row, with copy written for it (OC-Settings.md › Recently deleted); a deleter who left shows as "Former member"; Dialog gained `emphasis` (bold "Recently deleted"), Link an optional icon, and ListRow's chevron an optional status. FR-005 (share links) and the grocery, MCP, activity and Home edge cases moved to 032-later L38–L42, since those features come later. `recipe_deleted.source` is `app` only until assistants can delete (023); Undo sends `recipe_restored` with `days_since_delete: 0`. The More group has only Recently deleted until 025 adds AI assistants. No recipe settings exist yet (027), so SC-001 covers details, ingredients, steps, variants and photos.
+- 2026-10-21: "Delete this recipe" also at the bottom of recipe settings (OC-RecipeSettings), same Dialog and Undo; not drawn, noted in OC-RecipeSettings.md.

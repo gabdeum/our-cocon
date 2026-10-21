@@ -47,4 +47,4 @@
 ## Entry points not drawn on the canvas
 
 - **Edit a recipe:** add an "Edit recipe" row at the top of OC-RecipeSettings (ListRow with a chevron), opening the edit modal at Details.
-- **Recently deleted:** a pushed list screen built from ScreenHeader (back link "Settings", title "Recently deleted") and ListRow (title, sub-line "Deleted by Gabriel · 3 days ago · 27 days left", trailing "Restore" olive link).
+- **Recently deleted:** a pushed list screen built from ScreenHeader (back link "Settings", title "Recently deleted") and ListRow (title, sub-line "Deleted by Gabriel · 3 days ago · 27 days left", trailing "Restore" olive link). Tapping a row opens a sheet with "Restore" and "Delete now" (copy: OC-Settings.md › Recently deleted).

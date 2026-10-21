@@ -1,9 +1,13 @@
-import { router, type Href } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { z } from 'zod';
 import { RecipeList } from '../../components/recipes/RecipeList';
+import { UndoDelete } from '../../components/recipes/UndoDelete';
 import { DebugFooter } from '../../components/DebugFooter';
 import { config } from '../../lib/tracker';
 import { useRecipePhotoUrls } from '../../lib/recipe-photo';
+import { restoreRecipe } from '../../lib/recipe-delete';
 import { loadRecipeList, recipeListKey } from '../../lib/recipes';
 import { filterScope, setRecipeFilters, setSheetSearch, useRecipeFilters } from '../../lib/recipe-filters';
 import { useSession } from '../../lib/session';
@@ -12,9 +16,16 @@ import { useSession } from '../../lib/session';
 const recipePage = (id: string) => `/recipes/${id}` as Href;
 const newRecipe = '/recipes/new' as Href;
 
-/** /recipes (specs 006, 007): the family's recipes, live, searchable and filterable. */
+/**
+ * /recipes (specs 006, 007): the family's recipes, live, searchable and filterable.
+ * `?deleted=<id>` (spec 018): just deleted from the edit form, so "Recipe deleted · Undo" shows.
+ */
 export default function RecipesTab() {
   const { state, client, tracker } = useSession();
+  const queryClient = useQueryClient();
+  const params = useLocalSearchParams<{ deleted?: string }>();
+  const deleted = z.uuid().safeParse(params.deleted).success ? params.deleted : undefined;
+  const clearDeleted = useCallback(() => router.setParams({ deleted: undefined }), []);
   const familyId = state.status === 'ready' ? state.family.id : null;
   const scope = filterScope(state);
   const filters = useRecipeFilters(scope);
@@ -25,22 +36,35 @@ export default function RecipesTab() {
   });
   const photoUrls = useRecipePhotoUrls(client, familyId, list.data?.map((r) => r.photo_path) ?? []);
   return (
-    <RecipeList
-      recipes={list.data}
-      members={state.status === 'ready' ? state.members : []}
-      tracker={tracker}
-      failed={list.isError && !list.data}
-      onRetry={() => void list.refetch()}
-      onOpen={(id) => router.push(recipePage(id))}
-      onNew={() => router.push(newRecipe)}
-      filters={filters}
-      onFiltersChange={(next) => setRecipeFilters(scope, next)}
-      onOpenFilters={(query) => {
-        setSheetSearch(scope, query);
-        router.push('/recipes/filters');
-      }}
-      footer={<DebugFooter config={config} />}
-      photoUrls={photoUrls}
-    />
+    <>
+      <RecipeList
+        recipes={list.data}
+        members={state.status === 'ready' ? state.members : []}
+        tracker={tracker}
+        failed={list.isError && !list.data}
+        onRetry={() => void list.refetch()}
+        onOpen={(id) => router.push(recipePage(id))}
+        onNew={() => router.push(newRecipe)}
+        filters={filters}
+        onFiltersChange={(next) => setRecipeFilters(scope, next)}
+        onOpenFilters={(query) => {
+          setSheetSearch(scope, query);
+          router.push('/recipes/filters');
+        }}
+        footer={<DebugFooter config={config} />}
+        photoUrls={photoUrls}
+      />
+      {deleted ? (
+        <UndoDelete
+          key={deleted}
+          tracker={tracker}
+          onUndo={async () => {
+            await restoreRecipe(client, deleted);
+            await queryClient.invalidateQueries({ queryKey: ['recipes', familyId] });
+          }}
+          onDone={clearDeleted}
+        />
+      ) : null}
+    </>
   );
 }

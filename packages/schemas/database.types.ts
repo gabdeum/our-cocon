@@ -373,6 +373,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"_recipe_folder_deleted":
+{ Args: { "path": string }; Returns: boolean
+                           },
 "_request_source":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -422,6 +425,14 @@ isOneToOne: false
                            },
 "my_family_id":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"purge_deleted_recipes":
+{ Args: { "ids": (string)[] }; Returns: number
+                           },
+"recipes_due_for_purge":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "family_id": string,"id": string
+            }[]
                            },
 "remove_member":
 { Args: { "member_id": string }; Returns: undefined
