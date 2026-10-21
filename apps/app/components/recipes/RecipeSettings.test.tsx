@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { quicheIds } from '@cocon/schemas/quiche.fixture';
+import { flush } from '../../test/fakes';
 import { quicheDetail } from '../../test/quiche-detail';
 import { RecipeSettings, type RecipeSettingsProps } from './RecipeSettings';
 
@@ -58,5 +59,26 @@ describe('Recipe settings (OC-RecipeSettings › Layout)', () => {
     expect(screen.getByRole('heading', { name: "We couldn't open this recipe." })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(onRetry).toHaveBeenCalled();
+  });
+});
+
+// Spec 018: the same "Delete this recipe" as the edit form, at the bottom (OC-Delete).
+describe('Delete this recipe in recipe settings', () => {
+  it('asks with the recipe name and its 2 variants, then deletes it', async () => {
+    const onDelete = vi.fn(async () => undefined);
+    setup({ onDelete });
+    fireEvent.click(screen.getByRole('button', { name: 'Delete this recipe' }));
+    expect(screen.getByRole('alertdialog', { name: 'Delete “Leek & bacon quiche”?' }).textContent).toContain('along with its 2 variants');
+    fireEvent.click(screen.getByRole('button', { name: 'Delete recipe' }));
+    await flush();
+    expect(onDelete).toHaveBeenCalledOnce();
+  });
+
+  it('says what to do when deleting fails', async () => {
+    setup({ onDelete: vi.fn(() => Promise.reject(new Error('offline'))) });
+    fireEvent.click(screen.getByRole('button', { name: 'Delete this recipe' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete recipe' }));
+    await flush();
+    expect(screen.getByText("Couldn't delete. Try again.")).toBeTruthy();
   });
 });

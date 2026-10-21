@@ -15,6 +15,7 @@ Source `screens/OC-RecipeSettings.dc.html` · Route `/recipes/[id]/settings` · 
 5. "Variants" heading with the link "Edit"; lead "Variants are versions of this recipe. They swap ingredients or add steps without making a copy."
 6. One card per variant: an icon tile (sage swap icon for versions, honey plus icon for options), name, a one-line summary of its changes ("Replaces bacon lardons with 250 g sliced mushrooms").
 7. Dashed button "Add a variant".
+8. **(Add, not drawn, spec 018)** the danger link "Delete this recipe" (trash icon), the same as at the end of the edit form: it opens the OC-Delete Dialog, then Recipes with "Recipe deleted · Undo".
 
 ## Interactions
 Switches save instantly. Reset clears the override. "Edit", a variant card and "Add a variant" open the edit modal at Variants.

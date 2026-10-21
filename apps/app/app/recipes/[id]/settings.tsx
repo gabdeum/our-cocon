@@ -3,15 +3,20 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { RecipeSettings } from '../../../components/recipes/RecipeSettings';
 import { loadRecipe, recipeKey } from '../../../lib/recipe';
+import { useDeleteRecipe } from '../../../lib/use-delete-recipe';
 import { useSession } from '../../../lib/session';
 
-/** /recipes/[id]/settings (OC-RecipeSettings, specs 017 and 027). */
+/**
+ * /recipes/[id]/settings (OC-RecipeSettings, specs 017 and 027). Deleted (018), it closes everything
+ * over Recipes, which shows "Recipe deleted · Undo".
+ */
 export default function RecipeSettingsRoute() {
   const params = useLocalSearchParams<{ id: string }>();
   const parsed = z.uuid().safeParse(params.id);
   const id = parsed.success ? parsed.data : null;
-  const { state, client } = useSession();
+  const { state, client, tracker } = useSession();
   const familyId = state.status === 'ready' ? state.family.id : null;
+  const deleteRecipe = useDeleteRecipe(client, tracker, familyId ?? '');
   const recipe = useQuery({
     queryKey: recipeKey(familyId ?? '', id ?? ''),
     queryFn: () => (id ? loadRecipe(client, id) : null),
@@ -29,6 +34,14 @@ export default function RecipeSettingsRoute() {
       onBack={back}
       onEditRecipe={() => edit('section=details')}
       onEditVariants={(variant) => edit(variant ? `section=variants&variant=${variant}` : 'section=variants')}
+      onDelete={
+        id
+          ? async () => {
+              await deleteRecipe(id);
+              router.dismissTo({ pathname: '/recipes', params: { deleted: id } });
+            }
+          : undefined
+      }
     />
   );
 }
