@@ -164,10 +164,28 @@ export interface IngredientRowProps {
   sub?: string;
   tag?: { label: string; tone: TagTone };
   last?: boolean;
+  /**
+   * `compact` (the shared recipe page, OC-SharedView): the name on the left and "{amount} · {weight}"
+   * in bold on the right, 16 px, padding 10 0.
+   */
+  layout?: 'column' | 'compact';
 }
 
 /** Ingredient line on the recipe page (bundle.css › oc-ingredient): no card, amount column 104. */
-export function IngredientRow({ amount, name, sub, tag, last }: IngredientRowProps) {
+export function IngredientRow({ amount, name, sub, tag, last, layout = 'column' }: IngredientRowProps) {
+  if (layout === 'compact') {
+    return (
+      <View role="listitem" className={cn('flex-row items-center gap-12 py-10', !last && 'border-b-[1.5px] border-line')}>
+        <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-8">
+          <Text size={16}>{name}</Text>
+          {tag ? <Tag label={tag.label} tone={tag.tone} /> : null}
+        </View>
+        <Text size={16} weight="900" className="text-right">
+          {sub ? `${amount} · ${sub}` : amount}
+        </Text>
+      </View>
+    );
+  }
   return (
     <View role="listitem" className={cn('flex-row items-center gap-12 py-12', !last && 'border-b-[1.5px] border-line')}>
       <Text size={17} weight="900" className="w-[104px]">

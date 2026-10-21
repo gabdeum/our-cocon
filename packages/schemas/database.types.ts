@@ -327,6 +327,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"share_links": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"family_id": string,"id": string,"include_tips": boolean,"include_variants": boolean,"recipe_id": string,"source": string,"stopped_at": string | null,"stopped_by": string | null,"token": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"include_tips"?: boolean,"include_variants"?: boolean,"recipe_id": string,"source"?: string,"stopped_at"?: string | null,"stopped_by"?: string | null,"token": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"include_tips"?: boolean,"include_variants"?: boolean,"recipe_id"?: string,"source"?: string,"stopped_at"?: string | null,"stopped_by"?: string | null,"token"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "share_links_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "share_links_recipe_id_family_id_fkey"
+      columns: ["recipe_id","family_id"]
+isOneToOne: false
+      referencedRelation: "recipes"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -351,6 +377,11 @@ isOneToOne: false
           Functions: {
             "_family_table":
 { Args: { "live": boolean,"t": unknown }; Returns: undefined
+                           },
+"_ingredient_facts":
+{ Args: { "fam": string }; Returns: {
+              "aisle": Database["public"]['Enums']["aisle"],"catalog_key": string,"default_size": Database["public"]['Enums']["size_word"],"density_g_per_ml": number,"diet": (string)[],"family_ingredient_id": string,"name": string,"noun_plural": string,"noun_singular": string,"plural": string,"size_large_g": number,"size_medium_g": number,"size_small_g": number,"whole_only": boolean
+            }[]
                            },
 "_load_catalog":
 { Args: { "data": Json }; Returns: undefined
@@ -448,6 +479,14 @@ isOneToOne: false
                            },
 "set_display_name":
 { Args: { "display_name": string }; Returns: undefined
+                           },
+"share_recipe":
+{ Args: { "p_recipe_id": string }; Returns: {
+              "created": boolean,"created_at": string,"include_tips": boolean,"include_variants": boolean,"token": string
+            }[]
+                           },
+"shared_recipe":
+{ Args: { "p_token": string }; Returns: Json
                            },
 "suggest_ingredients":
 { Args: { "lim"?: number,"q": string }; Returns: {

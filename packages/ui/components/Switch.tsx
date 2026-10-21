@@ -46,11 +46,15 @@ export interface SettingRowProps {
    * With `onInk`, an ink card: the form's "Advanced mode" (OC-EditBasics).
    */
   boxed?: boolean;
+  /** Nothing to change yet (OC-Share's switches while the link is "Not shared"): muted, not tappable. */
+  disabled?: boolean;
 }
 
 /** A setting with its switch (Switch README › setting row). The whole row toggles. */
-export function SettingRow({ label, hint, value, onValueChange, changedHint, resetLabel, onReset, onInk, last, boxed }: SettingRowProps) {
-  const toggle = () => onValueChange(!value);
+export function SettingRow({ label, hint, value, onValueChange, changedHint, resetLabel, onReset, onInk, last, boxed, disabled }: SettingRowProps) {
+  const toggle = () => {
+    if (!disabled) onValueChange(!value);
+  };
   return (
     <View
       className={cn(
@@ -60,8 +64,8 @@ export function SettingRow({ label, hint, value, onValueChange, changedHint, res
       )}
     >
       <View className="min-w-0 flex-1">
-        <Pressable role="switch" aria-checked={value} aria-label={label} onPress={toggle} className={focusRing}>
-          <Text size={boxed && !onInk ? 15 : 16} weight={boxed && onInk ? '900' : '800'} color={onInk ? 'on-olive' : 'ink'}>
+        <Pressable role="switch" aria-checked={value} aria-label={label} aria-disabled={disabled} disabled={disabled} onPress={toggle} className={focusRing}>
+          <Text size={boxed && !onInk ? 15 : 16} weight={boxed && onInk ? '900' : '800'} color={onInk ? 'on-olive' : disabled ? 'ink-muted' : 'ink'}>
             {label}
           </Text>
           {hint && !changedHint ? (
@@ -86,8 +90,8 @@ export function SettingRow({ label, hint, value, onValueChange, changedHint, res
           </View>
         ) : null}
       </View>
-      <Pressable aria-hidden tabIndex={-1} onPress={toggle}>
-        <View pointerEvents="none">
+      <Pressable aria-hidden tabIndex={-1} onPress={toggle} disabled={disabled}>
+        <View pointerEvents="none" className={disabled ? 'opacity-dimmed' : undefined}>
           <Switch value={value} onInk={onInk} />
         </View>
       </Pressable>

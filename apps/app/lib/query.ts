@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { QueryClient } from '@tanstack/react-query';
+import { defaultShouldDehydrateQuery, QueryClient, type Query } from '@tanstack/react-query';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
@@ -23,3 +23,10 @@ export function createQueryClient(): QueryClient {
 
 export const queryPersister = createAsyncStoragePersister({ storage: AsyncStorage, key: 'cocon-cache' });
 export const persistMaxAge = WEEK;
+
+/**
+ * What's saved on the device: everything but shared recipes (spec 019). Those are someone else's,
+ * and their photo links expire within the hour.
+ */
+export const shouldPersistQuery = (query: Query) => query.queryKey[0] !== 'shared-recipe' && defaultShouldDehydrateQuery(query);
+

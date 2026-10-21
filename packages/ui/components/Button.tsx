@@ -121,9 +121,10 @@ export function Button({
   );
 }
 
-export type LinkTone = 'olive' | 'danger' | 'quiet';
-const linkColor: Record<LinkTone, TextColor> = { olive: 'olive', danger: 'danger', quiet: 'ink-muted' };
-const linkIconColor: Record<LinkTone, ColorName> = { olive: 'olive', danger: 'danger', quiet: 'inkMuted' };
+/** `warn`: an action that ends something but can be redone, like "Stop sharing this link" (OC-Share). */
+export type LinkTone = 'olive' | 'danger' | 'warn' | 'quiet';
+const linkColor: Record<LinkTone, TextColor> = { olive: 'olive', danger: 'danger', warn: 'warn', quiet: 'ink-muted' };
+const linkIconColor: Record<LinkTone, ColorName> = { olive: 'olive', danger: 'danger', warn: 'warn', quiet: 'inkMuted' };
 
 export interface LinkProps extends Omit<PressableProps, 'children' | 'style'> {
   label: string;

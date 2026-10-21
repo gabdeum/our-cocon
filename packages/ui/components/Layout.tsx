@@ -2,6 +2,9 @@ import type { ReactNode, Ref } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '../cn';
 import { theme } from '../theme';
+import { Logo } from './Icon';
+import { Tag } from './Tag';
+import { Text } from './Text';
 
 /**
  * The app's frame: cream ground, and on the web the mobile layout centred at max 720 wide
@@ -92,3 +95,39 @@ export function PhotoScreen({ photo, left, right, banner, floating, children }: 
     </View>
   );
 }
+
+export interface PublicScreenProps {
+  /** "Our Cocon", next to the mark. */
+  brand: string;
+  /** The sage tag on the right: "View only". */
+  tag: string;
+  /** Photo 220 tall, edge to edge; left out on a state with no recipe ("no longer shared"). */
+  photo?: ReactNode;
+  children: ReactNode;
+}
+
+/**
+ * A page anyone can open without an account (Patterns.md › Public page; OC-SharedView): a white
+ * header bar with the mark, the name and a tag, then an optional photo and the content. No tab bar.
+ */
+export function PublicScreen({ brand, tag, photo, children }: PublicScreenProps) {
+  return (
+    <ScrollView className="flex-1 bg-surface-page">
+      <View className="h-[64px] flex-row items-center justify-between border-b-[1.5px] border-line bg-surface-card px-16">
+        <View className="flex-row items-center gap-8">
+          <Logo size={30} />
+          <Text size={16} weight="900">
+            {brand}
+          </Text>
+        </View>
+        {/* Tag aligns itself to the top; its wrapper lets the bar centre it. */}
+        <View>
+          <Tag label={tag} tone="sage" />
+        </View>
+      </View>
+      {photo ? <View className="h-[220px] overflow-hidden">{photo}</View> : null}
+      <View className="gap-16 px-20 pb-[40px] pt-20">{children}</View>
+    </ScrollView>
+  );
+}
+

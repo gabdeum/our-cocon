@@ -9,6 +9,9 @@ services:
     env_file: ${COCON_RUN}/${COCON_ENV}/app.env
     environment:
       COCON_ENV: ${COCON_ENV}
+      # The share preview (spec 019) reaches Supabase inside Docker, not back out through
+      # Cloudflare, so the per-visitor rate limit there counts visitors, not this server.
+      SHARE_ENDPOINT_URL: http://${COCON_ENV}-api:8000
     networks: [edge]
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]

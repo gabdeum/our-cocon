@@ -11,6 +11,8 @@ RUN test -n "$COMMIT" && printf '{"commit":"%s"}\n' "$COMMIT" > /out/version.jso
 
 FROM nginxinc/nginx-unprivileged:1.29-alpine
 COPY --from=build --chown=nginx:nginx /out /usr/share/nginx/html
+COPY infra/web/nginx.main.conf /etc/nginx/nginx.conf
 COPY infra/web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY infra/web/shared-preview.js /etc/nginx/njs/shared-preview.js
 COPY --chmod=755 infra/web/write-config.sh /docker-entrypoint.d/40-cocon-config.sh
 EXPOSE 8080

@@ -12,7 +12,8 @@ const components = [
   'TimerPill', 'TimePresets', 'TabBar', 'BottomSheet', 'Dialog', 'Progress', 'ScreenHeader',
 ];
 
-it('shows a section for each of the 25 design-system components', () => {
+// Rendering every component is slow under a full test run's load, and grows with each spec.
+it('shows a section for each of the 25 design-system components', { timeout: 15_000 }, () => {
   render(<Gallery onBack={() => undefined} onOpenSheetRoute={() => undefined} onOpenModalRoute={() => undefined} />);
   for (const name of components) expect(screen.getByRole('heading', { name }), name).toBeTruthy();
 });

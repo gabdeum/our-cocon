@@ -14,8 +14,11 @@ export interface TimerAlertsProps {
   /** Plays the kitchen-bell chime once (lib/chime.ts). */
   chime: () => void;
   vibrate: () => void;
-  /** "Open timers" on the banner (spec 011): opens the Timers screen. */
-  onOpenTimers: () => void;
+  /**
+   * "Open timers" on the banner (spec 011): opens the Timers screen. Left out on the shared recipe
+   * page (019), which has no Timers screen: the banner then has no button.
+   */
+  onOpenTimers?: () => void;
 }
 
 /**
@@ -57,11 +60,15 @@ export function TimerAlerts({ chime, vibrate, onOpenTimers }: TimerAlertsProps) 
     <View pointerEvents="box-none" className="absolute left-16 right-16 top-12 z-10" style={{ marginTop: insets.top }}>
       <StatusBanner
         message={banner.message}
-        actionLabel={strings.timers.openTimers}
-        onAction={() => {
-          setBanner(null);
-          onOpenTimers();
-        }}
+        actionLabel={onOpenTimers ? strings.timers.openTimers : undefined}
+        onAction={
+          onOpenTimers
+            ? () => {
+                setBanner(null);
+                onOpenTimers();
+              }
+            : undefined
+        }
       />
     </View>
   );

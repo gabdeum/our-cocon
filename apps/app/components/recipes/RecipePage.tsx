@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import {
   Button,
-  Callout,
   Card,
   Choice,
   IconButton,
@@ -17,22 +16,20 @@ import {
   SegmentedControl,
   SettingRow,
   StatusBanner,
-  StepCard,
   StepFootnote,
   Stepper,
   Text,
-  TimerRow,
 } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import type { FormatOptions } from '@cocon/quantity';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
-import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type StepLine } from '../../lib/recipe-view';
+import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount } from '../../lib/recipe-view';
 import type { PhotoUrls } from '../../lib/recipe-photo';
 import type { Member } from '../../lib/session';
 import { AppTimerPill } from '../timers/AppTimerPill';
-import { useStepTimerControl, type StepTimerInput } from './step-timer';
+import { RecipeStep } from './RecipeStep';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const p = strings.recipePage;
@@ -339,7 +336,7 @@ function LoadedRecipe({
               <View role="list" aria-label={p.stepsLabel} className="gap-14">
                 {view.steps.map((step, index) => (
                   <View key={step.id} role="listitem">
-                    <Step step={step} index={index} recipeId={recipe.id} recipeName={recipe.name} tracker={tracker} photoUri={step.photoPath ? photoUrls[step.photoPath] : undefined} />
+                    <RecipeStep step={step} index={index} recipeId={recipe.id} recipeName={recipe.name} tracker={tracker} photoUri={step.photoPath ? photoUrls[step.photoPath] : undefined} />
                   </View>
                 ))}
               </View>
@@ -403,58 +400,5 @@ function MorePanel({
         }}
       />
     </View>
-  );
-}
-
-/** One step (FR-001): text, then the temperature check, the timer row and the tip, in that order. */
-function Step({
-  step,
-  index,
-  recipeId,
-  recipeName,
-  tracker,
-  photoUri,
-}: {
-  step: StepLine;
-  index: number;
-  recipeId: string;
-  recipeName: string;
-  tracker: Tracker;
-  photoUri?: string;
-}) {
-  return (
-    <StepCard
-      number={step.number}
-      name={step.name ?? undefined}
-      variantTag={step.variant ? p.variantTag : undefined}
-      parts={step.parts}
-      photo={photoUri ? { uri: photoUri, label: p.stepPhoto(step.number) } : undefined}
-    >
-      {step.tempCheck ? <Callout variant="temp" label={stepCopy.tempLabel} text={step.tempCheck} /> : null}
-      {step.timer ? <StepTimer stepId={step.id} index={index} recipeId={recipeId} recipeName={recipeName} timer={step.timer} tracker={tracker} /> : null}
-      {step.tip ? <Callout variant="tip" label={stepCopy.tipLabel} text={step.tip} /> : null}
-    </StepCard>
-  );
-}
-
-const rowLabel = { idle: stepCopy.startTimer, running: stepCopy.pause, paused: stepCopy.resume, done: stepCopy.done } as const;
-
-/** A step's timer row (spec 010, 009 US3); the rules are in `useStepTimerControl`. */
-function StepTimer(props: StepTimerInput) {
-  const t = useStepTimerControl(props);
-  return (
-    <TimerRow
-      state={t.state}
-      label={rowLabel[t.state]}
-      clock={t.clock}
-      onPress={t.onPress}
-      minusLabel={stepCopy.minus}
-      plusLabel={stepCopy.plus}
-      minusA11y={stepCopy.minusA11y}
-      plusA11y={stepCopy.plusA11y}
-      onMinus={t.onMinus}
-      onPlus={t.onPlus}
-      announcement={t.announcement}
-    />
   );
 }

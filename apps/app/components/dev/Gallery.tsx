@@ -69,6 +69,9 @@ import {
   TimerPill,
   TimePresets,
   TimerRow,
+  ShareTile,
+  LinkField,
+  RecipeSummary,
   ToggleTile,
   TokenEditor,
   theme,
@@ -251,6 +254,15 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             Recipe × 1.25 → about 7½ servings
           </Text>
         </Card>
+        <Card tone="ink">
+          <Text size={18} weight="900" color="on-olive">
+            Keep your family's recipes together
+          </Text>
+          <Text size={15} weight="600" color="on-ink">
+            Save this quiche to your own Our Cocon.
+          </Text>
+          <Button label="Save to my Our Cocon" variant="honey" block onPress={noop} />
+        </Card>
       </Section>
 
       <Section group="Display" title="Callout">
@@ -409,11 +421,28 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         />
       </Section>
 
+      <Section group="Inputs" title="ShareTile">
+        <View className="flex-row gap-10">
+          <ShareTile label="Message" icon="message" tone="honey" onPress={noop} />
+          <ShareTile label="Email" icon="mail" onPress={noop} />
+          <ShareTile label="More" icon="more" disabled onPress={noop} />
+        </View>
+      </Section>
+
+      <Section group="Inputs" title="LinkField">
+        <LinkField label="Link" value="app.ourcocon.com/r/rK7tqlS2_V5nEAVmNnzl4rjI" actionLabel="Copy link" onAction={noop} />
+        <LinkField label="Link" value="Creating link…" actionLabel="Copy link" actionDisabled onAction={noop} />
+      </Section>
+
       <Section group="Inputs" title="ToggleTile">
         <View className="flex-row gap-8">
           <ToggleTile label="Timer" selectedLabel="Timer ✓" selected onPress={noop} />
           <ToggleTile label="Temperature check" selectedLabel="Temperature check ✓" selected={false} onPress={noop} />
         </View>
+      </Section>
+
+      <Section group="Lists and cards" title="RecipeSummary">
+        <RecipeSummary name="Leek & bacon quiche" sub="From the Demanges family" photoLabel="Recipe photo" />
       </Section>
 
       <Section group="Lists and cards" title="StepEditCard">
@@ -441,6 +470,10 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <View>
           <IngredientRow amount="2" name="Leeks" sub="300 g" />
           <IngredientRow amount="250 g" name="Mushrooms, sliced" tag={{ label: 'Variant', tone: 'sage' }} />
+        </View>
+        <View>
+          <IngredientRow layout="compact" amount="2" sub="300 g" name="Leeks" />
+          <IngredientRow layout="compact" amount="300 ml" name="Heavy cream" last />
         </View>
         <ListGroup>
           <ListRow title="AI assistants" leading={{ kind: 'avatar', initial: 'G', tone: 'honey' }} trailing={{ kind: 'chevron' }} onPress={noop} last />

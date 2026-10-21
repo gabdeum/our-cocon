@@ -1,5 +1,5 @@
 import '../global.css';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, router, useSegments } from 'expo-router';
@@ -21,11 +21,12 @@ import { trackAppOpened } from '../lib/app-opened';
 import { presentation } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 import { gateRedirect, SessionProvider, useSession } from '../lib/session';
-import { createQueryClient, persistMaxAge, queryPersister } from '../lib/query';
+import { createQueryClient, persistMaxAge, queryPersister, shouldPersistQuery } from '../lib/query';
 import { watchConnection } from '../lib/online';
 import { SyncProvider } from '../lib/sync';
 import { clearTimers, TimersProvider } from '../lib/timer-store';
 import { deviceStorage } from '../lib/recipe-choices';
+import { clearPendingSave } from '../lib/pending-save';
 import { playChime, vibrateDone } from '../lib/chime';
 import { TimerAlerts } from '../components/timers/TimerAlerts';
 
@@ -61,7 +62,11 @@ function Timers({ children }: { children: ReactNode }) {
   );
 }
 
-const clearDeviceTimers = (userId: string) => clearTimers(AsyncStorage, userId);
+// On sign-out: this person's timers, and a shared recipe still waiting to be saved (spec 019).
+const clearDevice = async (userId: string) => {
+  await clearTimers(AsyncStorage, userId);
+  await clearPendingSave();
+};
 
 const queryClient = createQueryClient();
 // Resolves once the saved cache is back, so the session can check whose it is first.
@@ -84,8 +89,11 @@ export default function RootLayout() {
 
   useEffect(() => watchConnection(), []);
 
+  // Opened straight onto a shared recipe, nothing identified is sent (constitution VI, spec 019).
+  const [firstSegment] = useSegments();
+  const openedOnShared = useRef(firstSegment === 'r');
   useEffect(() => {
-    trackAppOpened(tracker, Platform.OS, Constants.expoConfig?.version ?? '0.0.0');
+    if (!openedOnShared.current) trackAppOpened(tracker, Platform.OS, Constants.expoConfig?.version ?? '0.0.0');
   }, []);
 
   useEffect(() => {
@@ -98,11 +106,11 @@ export default function RootLayout() {
     <ThemeProvider>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister: queryPersister, maxAge: persistMaxAge }}
+        persistOptions={{ persister: queryPersister, maxAge: persistMaxAge, dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery } }}
         onSuccess={() => cacheRestored()}
         onError={() => cacheRestored()}
       >
-        <SessionProvider client={supabase} tracker={tracker} persister={queryPersister} restored={restored} clearDevice={clearDeviceTimers}>
+        <SessionProvider client={supabase} tracker={tracker} persister={queryPersister} restored={restored} clearDevice={clearDevice}>
           <FamilySync>
             <AppFrame>
               <Timers>
@@ -113,12 +121,14 @@ export default function RootLayout() {
                   <Stack.Screen name="welcome/family" options={presentation.stack} />
                   <Stack.Screen name="auth/callback" />
                   <Stack.Screen name="join/[token]" />
+                  <Stack.Screen name="r/[token]" />
                   <Stack.Screen name="recipes/filters" options={presentation.sheet} />
                   <Stack.Screen name="recipes/new" options={presentation.fullScreen} />
                   <Stack.Screen name="recipes/[id]/index" options={presentation.stack} />
                   <Stack.Screen name="recipes/[id]/cook" options={presentation.fullScreen} />
                   <Stack.Screen name="recipes/[id]/scale" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/convert" options={presentation.sheet} />
+                  <Stack.Screen name="recipes/[id]/share" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/edit" options={presentation.fullScreen} />
                   <Stack.Screen name="recipes/[id]/settings" options={presentation.stack} />
                   <Stack.Screen name="timers" options={presentation.stack} />

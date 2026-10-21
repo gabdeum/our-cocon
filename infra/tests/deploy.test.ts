@@ -17,6 +17,8 @@ case "$1" in
   pull) [ -n "\${STUB_FAIL_PULL:-}" ] && [[ "$*" == *"$STUB_FAIL_PULL"* ]] && exit 1; exit 0 ;;
   ps) echo db-container ;;
   run) [ -n "\${STUB_FAIL_MIGRATE:-}" ] && exit 1; exit 0 ;;
+  create) echo fn-container ;;
+  cp) mkdir -p "$3/shared-recipe" "$3/main" && echo new > "$3/shared-recipe/index.ts" && echo theirs > "$3/main/index.ts" ;;
   compose) echo "$COCON_SHA" > "$STUB_DIR/running" ;;
   exec)
     running=$(cat "$STUB_DIR/running" 2>/dev/null)
@@ -67,6 +69,11 @@ beforeEach(() => {
   mkdirSync(join(dir, 'srv/staging'), { recursive: true });
   writeFileSync(join(dir, 'srv/staging/current'), `${OLD}\n`);
   writeFileSync(join(dir, 'running'), OLD);
+  // Supabase's own router and an older copy of our function.
+  mkdirSync(join(dir, 'srv/staging/supabase/volumes/functions/main'), { recursive: true });
+  writeFileSync(join(dir, 'srv/staging/supabase/volumes/functions/main/index.ts'), 'upstream');
+  mkdirSync(join(dir, 'srv/staging/supabase/volumes/functions/shared-recipe'), { recursive: true });
+  writeFileSync(join(dir, 'srv/staging/supabase/volumes/functions/shared-recipe/old.ts'), 'old');
 });
 
 describe('cocon-deploy', () => {
@@ -124,5 +131,15 @@ describe('cocon-deploy', () => {
     const { status } = deploy(args);
     expect(status).not.toBe(0);
     expect(calls()).toBe('');
+  });
+
+  it('installs the commit\'s Edge Functions next to Supabase\'s router and reloads them (spec 019)', () => {
+    const { status } = deploy(['staging', NEW]);
+    expect(status).toBe(0);
+    const fns = join(dir, 'srv/staging/supabase/volumes/functions');
+    expect(readFileSync(join(fns, 'shared-recipe/index.ts'), 'utf8').trim()).toBe('new');
+    expect(existsSync(join(fns, 'shared-recipe/old.ts'))).toBe(false);
+    expect(readFileSync(join(fns, 'main/index.ts'), 'utf8')).toBe('upstream');
+    expect(calls()).toContain('docker restart db-container');
   });
 });

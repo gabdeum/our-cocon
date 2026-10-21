@@ -15,6 +15,7 @@ A row inside a white list group: grocery items, picker items, settings links and
 | Trailing (groceries) | Buy 15/900 ink over Need 12/700 ink-muted, right-aligned, max 140 wide: "Buy 1 pint carton" / "Need 300 ml · ~170 ml left over" |
 | Trailing (other) | value 15/800 ink-muted, a 13/700 status, or a chevron-right 18 (optionally after a status: "1 recipe ›") |
 | Ingredient row (`oc-ingredient`) | no card; padding 12 0, divider `line`; amount column 104 wide 17/900; name 16/700; weight sub-line 13/600; optional Tag at the end |
+| Compact ingredient row (`oc-ingredient--compact`) | the shared recipe page (OC-SharedView): padding 10 0, divider `line`; name 16/400 on the left (optional Tag after it), "{amount} · {weight}" 16/900 on the right |
 
 ## Rules
 
