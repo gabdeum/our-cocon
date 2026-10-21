@@ -57,3 +57,4 @@ All copy is in the States tables of the UI specs for: OC-Share, OC-SharedView. N
   - Not drawn, added to the UI specs: the share sheet's "Couldn't create the link…" and "Couldn't change that…"; the page's loading, couldn't-load, "Saving…" and save-failed states, and "Shared from Our Cocon".
   - SC-001: the answer holds no member ids and no family data; the family and recipe ids appear only inside photo paths, which Supabase's signed links carry anyway and which give no access on their own.
   - The share endpoint also returns total time, prep time, cuisine and best months, so a saved copy keeps them.
+- 2026-10-21: After review on dev: "View only" is centred in the header bar; the promo card is a proper ink Card (it showed white, its text unreadable); a small honey "Save to my Our Cocon" also sits under the description, so saving doesn't need a scroll to the end (added to OC-SharedView.md).

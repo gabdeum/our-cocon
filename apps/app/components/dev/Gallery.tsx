@@ -70,6 +70,8 @@ import {
   TimePresets,
   TimerRow,
   ShareTile,
+  LinkField,
+  RecipeSummary,
   ToggleTile,
   TokenEditor,
   theme,
@@ -252,6 +254,15 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             Recipe × 1.25 → about 7½ servings
           </Text>
         </Card>
+        <Card tone="ink">
+          <Text size={18} weight="900" color="on-olive">
+            Keep your family's recipes together
+          </Text>
+          <Text size={15} weight="600" color="on-ink">
+            Save this quiche to your own Our Cocon.
+          </Text>
+          <Button label="Save to my Our Cocon" variant="honey" block onPress={noop} />
+        </Card>
       </Section>
 
       <Section group="Display" title="Callout">
@@ -418,11 +429,20 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         </View>
       </Section>
 
+      <Section group="Inputs" title="LinkField">
+        <LinkField label="Link" value="app.ourcocon.com/r/rK7tqlS2_V5nEAVmNnzl4rjI" actionLabel="Copy link" onAction={noop} />
+        <LinkField label="Link" value="Creating link…" actionLabel="Copy link" actionDisabled onAction={noop} />
+      </Section>
+
       <Section group="Inputs" title="ToggleTile">
         <View className="flex-row gap-8">
           <ToggleTile label="Timer" selectedLabel="Timer ✓" selected onPress={noop} />
           <ToggleTile label="Temperature check" selectedLabel="Temperature check ✓" selected={false} onPress={noop} />
         </View>
+      </Section>
+
+      <Section group="Lists and cards" title="RecipeSummary">
+        <RecipeSummary name="Leek & bacon quiche" sub="From the Demanges family" photoLabel="Recipe photo" />
       </Section>
 
       <Section group="Lists and cards" title="StepEditCard">

@@ -120,7 +120,10 @@ export function PublicScreen({ brand, tag, photo, children }: PublicScreenProps)
             {brand}
           </Text>
         </View>
-        <Tag label={tag} tone="sage" />
+        {/* Tag aligns itself to the top; its wrapper lets the bar centre it. */}
+        <View>
+          <Tag label={tag} tone="sage" />
+        </View>
       </View>
       {photo ? <View className="h-[220px] overflow-hidden">{photo}</View> : null}
       <View className="gap-16 px-20 pb-[40px] pt-20">{children}</View>

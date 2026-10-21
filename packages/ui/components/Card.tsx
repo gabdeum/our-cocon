@@ -4,8 +4,11 @@ import { cn, focusRing } from '../cn';
 import { Meta } from './Tag';
 import { Text } from './Text';
 
-/** sage: calm results (OC-ScaleIng's preview, OC-Units' "For this recipe"). */
-export type CardTone = 'default' | 'soft' | 'sage';
+/**
+ * sage: calm results (OC-ScaleIng's preview, OC-Units' "For this recipe"). ink: a promo block,
+ * text in on-olive / on-ink (OC-SharedView's "Keep your family's recipes together").
+ */
+export type CardTone = 'default' | 'soft' | 'sage' | 'ink';
 
 export interface CardProps {
   children: ReactNode;
@@ -23,7 +26,11 @@ export interface CardProps {
 /** Flat rounded container (Card README): radius 22, padding 16, gap 12, never a shadow. */
 export function Card({ children, tone = 'default', selected, attention, onPress, accessibilityLabel, className }: CardProps) {
   const box = cn(
-    tone === 'sage' ? 'gap-6 rounded-[20px] bg-sage px-16 py-14' : cn('gap-12 rounded-xl p-16', tone === 'soft' ? 'bg-surface-soft' : 'bg-surface-card'),
+    tone === 'sage'
+      ? 'gap-6 rounded-[20px] bg-sage px-16 py-14'
+      : tone === 'ink'
+        ? 'gap-10 rounded-[24px] bg-ink p-18'
+        : cn('gap-12 rounded-xl p-16', tone === 'soft' ? 'bg-surface-soft' : 'bg-surface-card'),
     selected && 'border-2 border-olive',
     attention && 'border-2 border-warn-border',
     className,

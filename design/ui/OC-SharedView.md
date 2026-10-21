@@ -6,6 +6,7 @@ Source `screens/OC-SharedView.dc.html` · Route `/r/[token]` (no account, no tab
 1. White header bar: logo mark + "Our Cocon"; sage tag "View only".
 2. Photo 220.
 3. "Shared by {name}" ("Shared from Our Cocon" when that person has left the family), title, description.
+   Under them, a small honey button "Save to my Our Cocon" (plus icon), the same action as the promo card's, so it's there without scrolling.
 4. When the link includes variants: "Version" with the version pills ("Classic" first) and the option switches, as on OC-Recipe (works, not saved).
 5. Servings card with stepper (works, not saved), and the Metric · Imperial pill toggle under it, in the same card.
 6. "Ingredients": rows "name" left, "{amount} · {weight}" right (bold; IngredientRow compact); after 5 rows the link "Show {n} more".

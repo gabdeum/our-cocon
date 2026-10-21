@@ -130,10 +130,17 @@ describe('Shared recipe page', () => {
     expect(screen.queryByRole('heading', { name: 'Version' })).toBeNull();
   });
 
-  it('FR-004: "Save to my Our Cocon"', async () => {
+  it('FR-004: "Save to my Our Cocon", at the top and in the promo card', async () => {
     const { onSave } = await setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Save to my Our Cocon' }));
-    expect(onSave).toHaveBeenCalledOnce();
+    const buttons = screen.getAllByRole('button', { name: 'Save to my Our Cocon' });
+    expect(buttons).toHaveLength(2);
+    for (const b of buttons) fireEvent.click(b);
+    expect(onSave).toHaveBeenCalledTimes(2);
+  });
+
+  it('both save buttons read "Saving…" while it saves', async () => {
+    await setup({ saving: true });
+    expect(screen.getAllByRole('button', { name: 'Saving…' })).toHaveLength(2);
   });
 
   it('says when saving failed', async () => {

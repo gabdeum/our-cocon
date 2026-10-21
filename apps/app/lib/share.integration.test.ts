@@ -29,7 +29,8 @@ if (!local) console.warn('share.integration.test.ts skipped: local Supabase is n
 
 const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1, 0xff, 0xd9]);
 
-describe.skipIf(!local)('sharing a recipe against local Supabase', () => {
+// The first call wakes the Edge Function, which can take a few seconds under load.
+describe.skipIf(!local)('sharing a recipe against local Supabase', { timeout: 20_000 }, () => {
   const { url, anonKey, serviceKey } = local ?? { url: '', anonKey: '', serviceKey: '' };
   const admin = createClient<Database>(url, serviceKey, clientOptions);
   const endpoint = { supabaseUrl: url, anonKey };
@@ -69,7 +70,7 @@ describe.skipIf(!local)('sharing a recipe against local Supabase', () => {
       p_steps: [{ id: randomUUID(), name: 'Bake', body: `Slice {ing:${leeks}} and bake.`, timer_seconds: 720, tip: 'Watch the crust.' }],
     });
     if (steps.error) throw steps.error;
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await admin.storage.from(PHOTO_BUCKET).remove([photoPath]);

@@ -121,6 +121,9 @@ function Loaded({
         ) : null}
       </View>
 
+      {/* Also at the top, so it's there without scrolling to the end. */}
+      <Button label={v.save} busyLabel={v.saving} busy={saving} variant="honey" size="sm" icon="plus" onPress={onSave} />
+
       {recipe.variants.length > 0 ? (
         <View className="gap-10">
           <Text size={16} weight="900" role="heading" aria-level={2}>
@@ -216,7 +219,7 @@ function Loaded({
         </View>
       </View>
 
-      <Card className="mt-4 gap-10 bg-ink p-18">
+      <Card tone="ink" className="mt-4">
         <Text size={18} weight="900" color="on-olive">
           {v.promoTitle}
         </Text>
