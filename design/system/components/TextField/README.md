@@ -13,6 +13,7 @@ Labelled inputs for forms and search, with a hint line and a friendly warning st
 | Textarea | min 76 tall, padding 12 16, 16/600, line-height 1.45 |
 | Hint | 13/600 ink-muted under the input; can include a counter "54 / 140" |
 | Warning | border `warn-border`, fill `warn-soft`, text `warn`; message 14/700 `warn` with a 18 px warning icon |
+| Picker | looks like the input, value 17/700 ink (placeholder 600 ink-muted), 18 px chevron-right ink-muted at the right (padding 0 12 0 16); tapping it opens a BottomSheet of choices (`PickerField`; OC-EditBasics › Cuisine) |
 | Search | 52 tall, radius 18, 20 px search icon in ink-muted, 10 gap, borderless input, hint below: "Try “leek” or “quick”" |
 
 ## Rules

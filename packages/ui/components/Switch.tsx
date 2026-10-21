@@ -41,7 +41,10 @@ export interface SettingRowProps {
   onReset?: () => void;
   onInk?: boolean;
   last?: boolean;
-  /** On a soft tile instead of a divider row: a recipe's option variants (OC-Recipe › Version). */
+  /**
+   * On a soft tile instead of a divider row: a recipe's option variants (OC-Recipe › Version).
+   * With `onInk`, an ink card: the form's "Advanced mode" (OC-EditBasics).
+   */
   boxed?: boolean;
 }
 
@@ -52,13 +55,13 @@ export function SettingRow({ label, hint, value, onValueChange, changedHint, res
     <View
       className={cn(
         'flex-row items-center gap-12',
-        boxed ? 'min-h-[52px] rounded-[18px] bg-surface-soft px-14 py-8' : 'py-14',
+        boxed ? (onInk ? 'min-h-[60px] rounded-[18px] bg-ink px-16 py-8' : 'min-h-[52px] rounded-[18px] bg-surface-soft px-14 py-8') : 'py-14',
         !boxed && !last && 'border-b-[1.5px] border-line',
       )}
     >
       <View className="min-w-0 flex-1">
         <Pressable role="switch" aria-checked={value} aria-label={label} onPress={toggle} className={focusRing}>
-          <Text size={boxed ? 15 : 16} weight="800" color={onInk ? 'on-olive' : 'ink'}>
+          <Text size={boxed && !onInk ? 15 : 16} weight={boxed && onInk ? '900' : '800'} color={onInk ? 'on-olive' : 'ink'}>
             {label}
           </Text>
           {hint && !changedHint ? (

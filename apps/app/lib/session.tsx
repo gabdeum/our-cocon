@@ -17,7 +17,7 @@ export type SessionState =
 
 interface SessionContextValue {
   state: SessionState;
-  client: Pick<Client, 'auth' | 'from' | 'rpc'>;
+  client: Pick<Client, 'auth' | 'from' | 'rpc' | 'storage'>;
   api: FamilyApi;
   tracker: Tracker;
   /** Reloads the family after a change (create, join, remove…). */

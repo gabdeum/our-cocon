@@ -136,7 +136,8 @@ export function FormBar({ cancelLabel, onCancel, title, saveLabel, onSave, saveD
         <Text size={17} weight="900" role="heading" aria-level={1} numberOfLines={1} align="center" className="shrink">
           {title}
         </Text>
-        <View className="flex-1 items-end">
+        {/* A row, so Save sits at the far right: Button aligns itself to the start of a column. */}
+        <View className="flex-1 flex-row justify-end">
           <Button label={saveLabel} variant="olive" size="sm" onPress={onSave} disabled={saveDisabled} busy={saving} busyLabel={savingLabel} />
         </View>
       </View>

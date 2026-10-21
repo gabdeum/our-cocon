@@ -3,6 +3,7 @@ import { ScrollView, View } from 'react-native';
 import { Button, Callout, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
 import { activeFilterKeys, emptyFilters, type RecipeFilters, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
+import type { PhotoUrls } from '../../lib/recipe-photo';
 import { groupBySeason, visibleRecipes, type RecipeListItem } from '../../lib/recipes';
 import { inSeasonOn, toggleInSeason, toggleUnder30, under30On } from '../../lib/recipe-filters';
 import { recipeAuthor, recipeMeta } from '../../lib/recipe-format';
@@ -33,6 +34,8 @@ export interface RecipeListProps {
   /** For the In season group; today by default. */
   now?: Date;
   footer?: ReactNode;
+  /** Signed links of the recipes' photos, by path (032-later L10). */
+  photoUrls?: PhotoUrls;
 }
 
 function useDebounced<T>(value: T, ms: number): T {
@@ -58,6 +61,7 @@ export function RecipeList({
   onOpenFilters,
   now = new Date(),
   footer,
+  photoUrls = {},
 }: RecipeListProps) {
   const online = useOnline();
   const [query, setQuery] = useState('');
@@ -140,6 +144,7 @@ export function RecipeList({
         meta={recipeMeta(recipe)}
         author={recipeAuthor(recipe.created_by, recipe.source, members)}
         placeholderTone={tone.get(recipe.id)}
+        photoUri={recipe.photo_path ? photoUrls[recipe.photo_path] : undefined}
         onPress={() => open(recipe.id)}
       />
     ));

@@ -171,3 +171,17 @@ describe('spec 013 events', () => {
     expect(() => tracker.track('scaled_by_ingredient', { ingredient: 'Bacon' } as never)).toThrow();
   });
 });
+
+describe('spec 014 events', () => {
+  it('sends the form facts, and never the recipe', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('recipe_created', { source: 'app', has_photo: true, advanced_mode: false });
+    tracker.track('recipe_edited', { section: 'details' });
+    expect(t.capture).toHaveBeenCalledWith('recipe_created', { source: 'app', has_photo: true, advanced_mode: false });
+    expect(t.capture).toHaveBeenCalledWith('recipe_edited', { section: 'details' });
+    expect(() => tracker.track('recipe_created', { source: 'claude', has_photo: false, advanced_mode: false } as never)).toThrow();
+    expect(() => tracker.track('recipe_edited', { section: 'photos' } as never)).toThrow();
+    expect(() => tracker.track('recipe_created', { source: 'app', has_photo: false, advanced_mode: false, name: 'Quiche' } as never)).toThrow();
+  });
+});

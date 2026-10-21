@@ -56,6 +56,11 @@ export function PhotoPlaceholder({ label, initial, className }: { label?: string
   );
 }
 
+/** A stored photo filling its box (cover): recipe headers and step photos. Read out by its label. */
+export function Photo({ uri, label, className }: { uri: string; label: string; className?: string }) {
+  return <Image source={{ uri }} resizeMode="cover" role="img" aria-label={label} className={cn('h-full w-full', className)} />;
+}
+
 export interface HeroCardProps {
   title: string;
   /** "Latest recipe". */

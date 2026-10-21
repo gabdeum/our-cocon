@@ -11,6 +11,7 @@ import {
   ListRow,
   Meta,
   PhotoPlaceholder,
+  Photo,
   PhotoScreen,
   PillRow,
   SegmentedControl,
@@ -28,6 +29,7 @@ import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
 import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type StepLine } from '../../lib/recipe-view';
+import type { PhotoUrls } from '../../lib/recipe-photo';
 import type { Member } from '../../lib/session';
 import { AppTimerPill } from '../timers/AppTimerPill';
 import { useStepTimerControl, type StepTimerInput } from './step-timer';
@@ -67,6 +69,8 @@ export interface RecipePageProps {
   onConvert: () => void;
   /** Changes when the page is shown again, so choices a sheet saved are read back. */
   visit?: number;
+  /** Signed links of the recipe's and steps' photos, by path (032-later L10). */
+  photoUrls?: PhotoUrls;
 }
 
 /** The recipe page (spec 008, design/ui/OC-Recipe.md) and its Steps tab (spec 009, OC-RecipeSteps.md). */
@@ -119,6 +123,7 @@ function LoadedRecipe({
   onScaleByIngredient,
   onConvert,
   visit = 0,
+  photoUrls = {},
 }: RecipePageProps & { recipe: RecipeDetail }) {
   const max = servingsMax(recipe.serves);
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
@@ -183,9 +188,16 @@ function LoadedRecipe({
 
   const deletedBy = recipe.deleted_at ? (members.find((m) => m.user_id === recipe.deleted_by)?.display_name ?? strings.recipe.formerMember) : null;
 
+  const headerPhoto = recipe.photo_path ? photoUrls[recipe.photo_path] : undefined;
   return (
     <PhotoScreen
-      photo={<PhotoPlaceholder initial={recipe.name.charAt(0).toUpperCase()} className="h-full" />}
+      photo={
+        headerPhoto ? (
+          <Photo uri={headerPhoto} label={p.photo} />
+        ) : (
+          <PhotoPlaceholder initial={recipe.name.charAt(0).toUpperCase()} className="h-full" />
+        )
+      }
       left={<IconButton icon="back" label={p.back} onPress={onBack} />}
       floating={<AppTimerPill onOpen={onOpenTimers} tracker={tracker} />}
       right={
@@ -327,7 +339,7 @@ function LoadedRecipe({
               <View role="list" aria-label={p.stepsLabel} className="gap-14">
                 {view.steps.map((step, index) => (
                   <View key={step.id} role="listitem">
-                    <Step step={step} index={index} recipeId={recipe.id} recipeName={recipe.name} tracker={tracker} />
+                    <Step step={step} index={index} recipeId={recipe.id} recipeName={recipe.name} tracker={tracker} photoUri={step.photoPath ? photoUrls[step.photoPath] : undefined} />
                   </View>
                 ))}
               </View>
@@ -395,9 +407,29 @@ function MorePanel({
 }
 
 /** One step (FR-001): text, then the temperature check, the timer row and the tip, in that order. */
-function Step({ step, index, recipeId, recipeName, tracker }: { step: StepLine; index: number; recipeId: string; recipeName: string; tracker: Tracker }) {
+function Step({
+  step,
+  index,
+  recipeId,
+  recipeName,
+  tracker,
+  photoUri,
+}: {
+  step: StepLine;
+  index: number;
+  recipeId: string;
+  recipeName: string;
+  tracker: Tracker;
+  photoUri?: string;
+}) {
   return (
-    <StepCard number={step.number} name={step.name ?? undefined} variantTag={step.variant ? p.variantTag : undefined} parts={step.parts}>
+    <StepCard
+      number={step.number}
+      name={step.name ?? undefined}
+      variantTag={step.variant ? p.variantTag : undefined}
+      parts={step.parts}
+      photo={photoUri ? { uri: photoUri, label: p.stepPhoto(step.number) } : undefined}
+    >
       {step.tempCheck ? <Callout variant="temp" label={stepCopy.tempLabel} text={step.tempCheck} /> : null}
       {step.timer ? <StepTimer stepId={step.id} index={index} recipeId={recipeId} recipeName={recipeName} timer={step.timer} tracker={tracker} /> : null}
       {step.tip ? <Callout variant="tip" label={stepCopy.tipLabel} text={step.tip} /> : null}
