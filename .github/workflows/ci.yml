@@ -46,8 +46,20 @@ jobs:
         run: shellcheck -x -P infra:infra/lib:infra/bin infra/*.sh infra/lib/*.sh infra/bin/* infra/web/*.sh .claude/hooks/*.sh .github/scripts/*.sh
       - name: Workflows
         run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
+      # edge-runtime stays: it serves the share endpoint (supabase/functions, spec 019).
       - name: Start local Supabase
-        run: pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+        run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor,mailpit,postgres-meta
+      # The first call to an Edge Function downloads and compiles its imports (can take a minute):
+      # do it here, so tests start with it ready. A guessed token answers 404 "not_shared".
+      - name: Warm up Edge Functions
+        run: |
+          for _ in $(seq 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:54321/functions/v1/shared-recipe?token=$(printf 'a%.0s' $(seq 43))" || true)
+            [ "$code" = 404 ] && exit 0
+            sleep 3
+          done
+          echo "The shared-recipe function never answered (last status: $code)" >&2
+          exit 1
       - name: Tests
         run: pnpm test:all
       # Spec 005 SC-001: the quantity engine keeps over 95% line coverage.
