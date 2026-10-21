@@ -87,7 +87,7 @@ describe('ReorderList', () => {
     expect(onMove).toHaveBeenCalledTimes(1);
   });
 
-  it('a dragged row lands where it was let go', async () => {
+  it('a dragged row lands where it was let go', () => {
     // React Native resets the gesture state once a handler returns, before React applies the
     // update: the distance must be read in the handler (found testing 016: drops didn't move).
     const configs: PanResponderCallbacks[] = [];
@@ -95,16 +95,6 @@ describe('ReorderList', () => {
       configs.push(config);
       return { panHandlers: {} } as ReturnType<typeof PanResponder.create>;
     });
-    // jsdom has no layout: rows are 90 tall, 100 apart, in their parent.
-    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
-      const i = this.parentElement ? [...this.parentElement.children].indexOf(this) : 0;
-      return { x: 0, y: i * 100, top: i * 100, left: 0, width: 300, height: 90, right: 300, bottom: i * 100 + 90, toJSON: () => ({}) } as DOMRect;
-    });
-    const observer = vi.fn(function (this: { observe: (el: Element) => void }, cb: (entries: { target: Element }[]) => void) {
-      this.observe = (el) => queueMicrotask(() => cb([{ target: el }]));
-      Object.assign(this, { unobserve: () => undefined, disconnect: () => undefined });
-    });
-    vi.stubGlobal('ResizeObserver', observer);
     const onMove = vi.fn();
     render(
       <ReorderList
@@ -122,8 +112,13 @@ describe('ReorderList', () => {
         moveDownLabel="Move down"
       />,
     );
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 0));
+    // jsdom has no layout: give each row its place (90 tall, 100 apart) through the handler
+    // react-native-web keeps on the element for onLayout.
+    act(() => {
+      screen.getAllByRole('button', { name: 'Drag to reorder' }).forEach((handle, i) => {
+        const row = handle.parentElement as (HTMLElement & { __reactLayoutHandler?: (e: unknown) => void }) | null;
+        row?.__reactLayoutHandler?.({ nativeEvent: { layout: { x: 0, y: i * 100, width: 300, height: 90 } } });
+      });
     });
     const first = configs[0];
     if (!first) throw new Error('no responder');
@@ -140,7 +135,5 @@ describe('ReorderList', () => {
     });
     expect(onMove).toHaveBeenCalledWith(0, 2);
     create.mockRestore();
-    rect.mockRestore();
-    vi.unstubAllGlobals();
   });
 });
