@@ -79,6 +79,8 @@ export const events = {
   recipe_created: z.strictObject({ source: z.enum(['app']), has_photo: z.boolean(), advanced_mode: z.boolean() }),
   // Spec 014: an existing recipe saved from the form, and the section Save was tapped in.
   recipe_edited: z.strictObject({ section: RecipeFormSection }),
+  // Spec 015: an ingredient row added in the form: by "Paste a list" (once per row) or "+ Add ingredient".
+  ingredient_line_added: z.strictObject({ parsed: z.boolean() }),
 } as const;
 
 export type EventName = keyof typeof events;

@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
+import { randomUUID } from 'expo-crypto';
+import { parsePastedList } from '@cocon/quantity';
 import { Button, Callout, Dialog, FormBar, FormProgress, FormScreen, PhotoCrop, type CropRect } from '@cocon/ui';
-import type { RecipeFormSection, Tracker } from '@cocon/schemas';
+import type { IngredientFacts, RecipeFormSection, Tracker } from '@cocon/schemas';
 import { strings } from '../../../strings/en';
 import { useOnline } from '../../../lib/online';
 import type { ChoiceStorage } from '../../../lib/recipe-choices';
 import {
+  DEFAULT_SERVES,
   FORM_SECTIONS,
   formFromRecipe,
   isDirty,
@@ -20,11 +23,29 @@ import {
   type DetailsWarnings,
   type RecipeDetails,
 } from '../../../lib/recipe-form';
+import {
+  applyMatch,
+  draftFromParsed,
+  draftsFromRows,
+  emptyDraft,
+  ingredientsChanged,
+  matchIngredients,
+  readIngredients,
+  sizesOf,
+  stepsUsing,
+  suggestIngredients,
+  withName,
+  withUnit,
+  type IngredientDraft,
+  type IngredientWarning,
+} from '../../../lib/recipe-ingredients';
 import * as photoIO from '../../../lib/recipe-photo';
 import type { Client } from '../../../lib/supabase';
 import { OfflineBanner } from '../../sync/OfflineBanner';
 import { CuisineSheet } from './CuisineSheet';
 import { DetailsSection } from './DetailsSection';
+import { AisleSheet, PasteSheet, UnitSheet } from './IngredientSheets';
+import { IngredientsSection } from './IngredientsSection';
 
 const f = strings.recipeForm;
 
@@ -40,7 +61,7 @@ export interface RecipeFormProps {
   userId: string;
   section: RecipeFormSection;
   onSectionChange: (section: RecipeFormSection) => void;
-  client: Pick<Client, 'from' | 'storage'>;
+  client: Pick<Client, 'from' | 'storage' | 'rpc'>;
   tracker: Tracker;
   storage: ChoiceStorage;
   photos?: PhotoIO;
@@ -48,6 +69,8 @@ export interface RecipeFormProps {
   onClose: () => void;
   /** Saved: a new recipe opens; an edit goes back to it. */
   onSaved: () => void;
+  /** Ids for added ingredients; tests pass their own. */
+  newId?: () => string;
 }
 
 /** What the photo is doing between picking and Save. */
@@ -61,6 +84,17 @@ interface PhotoWork {
 }
 const idle: PhotoWork = { preview: null, uploading: false, failed: null, denied: false };
 
+const ing = f.ingredients;
+
+/** "For {n} servings" from what's typed in Serves (FR-004), or the default while it isn't a number. */
+function servingsOf(text: string): number {
+  const n = /^\d+$/.test(text.trim()) ? Number(text.trim()) : NaN;
+  return n >= 1 && n <= 50 ? n : DEFAULT_SERVES;
+}
+
+/** The warnings without one row's. */
+const without = <T,>(warnings: Record<string, T>, key: string): Record<string, T> => Object.fromEntries(Object.entries(warnings).filter(([k]) => k !== key));
+
 /** The order Save looks for the first warned field to scroll to. */
 const fieldOrder: DetailsField[] = ['name', 'serves', 'totalTime', 'prepTime'];
 
@@ -68,7 +102,21 @@ const fieldOrder: DetailsField[] = ['name', 'serves', 'totalTime', 'prepTime'];
  * The recipe form (spec 014, OC-EditBasics): the form bar, Progress over the four sections, the
  * section, and "Next: …". Details is built here; Ingredients, Steps and Variants come with 015–017.
  */
-export function RecipeForm({ recipeId, recipe, familyId, userId, section, onSectionChange, client, tracker, storage, photos = photoIO, onClose, onSaved }: RecipeFormProps) {
+export function RecipeForm({
+  recipeId,
+  recipe,
+  familyId,
+  userId,
+  section,
+  onSectionChange,
+  client,
+  tracker,
+  storage,
+  photos = photoIO,
+  onClose,
+  onSaved,
+  newId = randomUUID,
+}: RecipeFormProps) {
   const isNew = recipe === null;
   const online = useOnline();
   const queryClient = useQueryClient();
@@ -87,6 +135,27 @@ export function RecipeForm({ recipeId, recipe, familyId, userId, section, onSect
   const scroll = useRef<ScrollView>(null);
   const fieldY = useRef<Partial<Record<DetailsField, number>>>({});
   const [scrollTo, setScrollTo] = useState<DetailsField | null>(null);
+  // Spec 015: the ingredient rows and what's open over them.
+  const [startIngredients] = useState(() => draftsFromRows(recipe?.ingredients ?? [], recipe?.facts ?? {}));
+  const [drafts, setDrafts] = useState<IngredientDraft[]>(startIngredients);
+  const [ingWarnings, setIngWarnings] = useState<Record<string, IngredientWarning>>({});
+  const [focused, setFocused] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<{ key: string; items: IngredientFacts[] } | null>(null);
+  const [unitFor, setUnitFor] = useState<string | null>(null);
+  const [aisleFor, setAisleFor] = useState<string | null>(null);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [banner, setBanner] = useState<string | null>(null);
+  const [removeAsk, setRemoveAsk] = useState<{ key: string; name: string; steps: number[] } | null>(null);
+  const [dragging, setDragging] = useState(false);
+  // A new recipe whose details saved but whose ingredients didn't: Save again updates it.
+  const created = useRef(false);
+  const rowY = useRef<Record<string, number>>({});
+  const sectionY = useRef(0);
+  const pendingRow = useRef<string | null>(null);
+  const draftsRef = useRef(drafts);
+  useEffect(() => {
+    draftsRef.current = drafts;
+  }, [drafts]);
   const photoUrls = photoIO.useRecipePhotoUrls(client, familyId, [form.photoPath === start.photoPath ? form.photoPath : null]);
 
   useEffect(() => {
@@ -123,6 +192,112 @@ export function RecipeForm({ recipeId, recipe, familyId, userId, section, onSect
   const toggleAdvanced = (on: boolean) => {
     setAdvanced(on);
     void writeAdvanced(storage, userId, on);
+  };
+
+  // Typeahead (spec 031): what the catalog suggests for the focused name, after a short pause.
+  const focusedName = focused ? (drafts.find((d) => d.key === focused)?.name ?? '') : '';
+  const focusedLinked = focused ? drafts.find((d) => d.key === focused)?.catalogKey != null : false;
+  useEffect(() => {
+    if (!focused || focusedName.trim().length < 2 || focusedLinked) return;
+    let alive = true;
+    const timer = setTimeout(() => {
+      void suggestIngredients(client, focusedName).then((items) => {
+        if (alive) setSuggestions({ key: focused, items });
+      });
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [client, focused, focusedName, focusedLinked]);
+
+  /** Changes one row; its warning goes once it's edited. */
+  const updateRow = (key: string, change: (d: IngredientDraft) => IngredientDraft) => {
+    setDrafts((now) => now.map((d) => (d.key === key ? change(d) : d)));
+    setIngWarnings((now) => (key in now ? without(now, key) : now));
+  };
+
+  /** What the catalog knows about these rows' names, applied if a name is still the one looked up. */
+  const match = async (rows: IngredientDraft[]) => {
+    const found = await matchIngredients(
+      client,
+      rows.map((r) => r.name),
+    );
+    if (!found) return;
+    setDrafts((now) =>
+      now.map((d) => {
+        const i = rows.findIndex((r) => r.key === d.key);
+        return i >= 0 && rows[i]?.name === d.name && d.catalogKey === null ? applyMatch(d, found[i] ?? null) : d;
+      }),
+    );
+  };
+
+  const nameChange = (key: string, name: string) => {
+    updateRow(key, (d) => withName(d, name));
+    setSuggestions((s) => (s?.key === key && name.trim().length < 2 ? null : s));
+  };
+
+  const nameBlur = (key: string) => {
+    // Later, so tapping a suggestion still lands on it.
+    setTimeout(() => {
+      setFocused((k) => (k === key ? null : k));
+      setSuggestions((s) => (s?.key === key ? null : s));
+    }, 200);
+    const row = draftsRef.current.find((d) => d.key === key);
+    if (row && row.name.trim() && row.catalogKey === null && !row.isNew) void match([row]);
+  };
+
+  const pickSuggestion = (key: string, facts: IngredientFacts) => {
+    updateRow(key, (d) => applyMatch(d, facts, true));
+    setSuggestions(null);
+  };
+
+  const addRow = () => {
+    setDrafts((now) => [...now, emptyDraft(newId())]);
+    setBanner(null);
+    tracker.track('ingredient_line_added', { parsed: false });
+  };
+
+  const paste = (text: string) => {
+    setPasteOpen(false);
+    const rows = parsePastedList(text).map((line) => draftFromParsed(line, newId()));
+    if (rows.length === 0) {
+      setBanner(ing.pastedNothing);
+      return;
+    }
+    // Empty rows (a new recipe's first) make way for the pasted ones.
+    setDrafts((now) => [...now.filter((d) => d.name.trim() || d.quantity.trim() || d.weight.trim()), ...rows]);
+    setBanner(ing.pasted(rows.length));
+    for (const _row of rows) tracker.track('ingredient_line_added', { parsed: true });
+    void match(rows);
+  };
+
+  const removeRow = (key: string) => {
+    setDrafts((now) => now.filter((d) => d.key !== key));
+    setIngWarnings((now) => without(now, key));
+  };
+
+  const askRemove = (key: string) => {
+    const row = drafts.find((d) => d.key === key);
+    if (!row) return;
+    const steps = stepsUsing(row.id, recipe?.steps ?? []);
+    if (steps.length > 0) setRemoveAsk({ key, name: row.name.trim(), steps });
+    else removeRow(key);
+  };
+
+  const moveRow = (from: number, to: number) =>
+    setDrafts((now) => {
+      const next = [...now];
+      const [row] = next.splice(from, 1);
+      if (row) next.splice(to, 0, row);
+      return next;
+    });
+
+  const scrollToRow = (key: string) => {
+    const y = rowY.current[key];
+    if (y === undefined) return false;
+    scroll.current?.scrollTo({ y: Math.max(0, sectionY.current + y - 12), animated: true });
+    return true;
   };
 
   const pick = async () => {
@@ -197,9 +372,25 @@ export function RecipeForm({ recipeId, recipe, familyId, userId, section, onSect
       setScrollTo(fieldOrder.find((k) => read.warnings[k]) ?? null);
       return;
     }
+    let ingredients: Parameters<typeof saveRecipe>[3];
+    if (ingredientsChanged(startIngredients, drafts)) {
+      const rows = readIngredients(drafts);
+      if ('warnings' in rows) {
+        // US3: Save waits, and the first problem comes into view.
+        setIngWarnings(rows.warnings);
+        const first = drafts.find((d) => rows.warnings[d.key])?.key ?? null;
+        pendingRow.current = first;
+        onSectionChange('ingredients');
+        if (first && section === 'ingredients' && scrollToRow(first)) pendingRow.current = null;
+        return;
+      }
+      ingredients = { rows: rows.rows, drafts };
+    }
     setSaving(true);
     setSaveFailed(false);
-    const ok = await saveRecipe(client, { id: recipeId, familyId, isNew }, read.input);
+    const result = await saveRecipe(client, { id: recipeId, familyId, isNew: isNew && !created.current }, read.input, ingredients);
+    if (result.created) created.current = true;
+    const ok = result.ok;
     setSaving(false);
     if (!ok) {
       setSaveFailed(true);
@@ -218,7 +409,7 @@ export function RecipeForm({ recipeId, recipe, familyId, userId, section, onSect
     onClose();
   };
 
-  const cancel = () => (isDirty(start, form) ? setConfirmDiscard(true) : close());
+  const cancel = () => (isDirty(start, form) || ingredientsChanged(startIngredients, drafts) ? setConfirmDiscard(true) : close());
 
   if (crop) {
     return (
@@ -238,11 +429,13 @@ export function RecipeForm({ recipeId, recipe, familyId, userId, section, onSect
   }
 
   const next = nextSection(section);
+  const unitRow = unitFor ? drafts.find((d) => d.key === unitFor) : undefined;
   const photoSource = photo.preview ? { uri: photo.preview } : form.photoPath && photoUrls[form.photoPath] ? { uri: photoUrls[form.photoPath] } : null;
   return (
     <>
       <FormScreen
         scrollRef={scroll}
+        scrollEnabled={!dragging}
         bar={
           <FormBar
             cancelLabel={f.cancel}
@@ -277,6 +470,35 @@ export function RecipeForm({ recipeId, recipe, familyId, userId, section, onSect
             }}
           />
         ) : null}
+        {section === 'ingredients' ? (
+          <IngredientsSection
+            drafts={drafts}
+            warnings={ingWarnings}
+            servings={servingsOf(form.serves)}
+            advanced={advanced}
+            banner={banner}
+            suggestions={suggestions}
+            onChangeRow={(key, patch) => updateRow(key, (d) => ({ ...d, ...patch }))}
+            onNameChange={nameChange}
+            onNameFocus={(key) => setFocused(key)}
+            onNameBlur={nameBlur}
+            onPickSuggestion={pickSuggestion}
+            onOpenUnit={setUnitFor}
+            onOpenAisle={setAisleFor}
+            onRemove={askRemove}
+            onMove={moveRow}
+            onAdd={addRow}
+            onOpenPaste={() => setPasteOpen(true)}
+            onDragChange={setDragging}
+            onSectionLayout={(y) => {
+              sectionY.current = y;
+            }}
+            onRowLayout={(key, y) => {
+              rowY.current[key] = y;
+              if (pendingRow.current === key && scrollToRow(key)) pendingRow.current = null;
+            }}
+          />
+        ) : null}
         <Button
           label={next ? f.next(f.sections[next]) : f.saveRecipe}
           variant="ink"
@@ -295,6 +517,40 @@ export function RecipeForm({ recipeId, recipe, familyId, userId, section, onSect
           setCuisineOpen(false);
         }}
         onClose={() => setCuisineOpen(false)}
+      />
+      <UnitSheet
+        visible={unitFor !== null}
+        unit={unitRow?.unit ?? null}
+        size={unitRow?.sizeWord ?? null}
+        sizes={sizesOf(unitRow?.facts ?? null)}
+        onPick={(unit, size) => {
+          if (unitFor) updateRow(unitFor, (d) => withUnit(d, unit, size));
+          setUnitFor(null);
+        }}
+        onClose={() => setUnitFor(null)}
+      />
+      <AisleSheet
+        visible={aisleFor !== null}
+        value={drafts.find((d) => d.key === aisleFor)?.newAisle ?? null}
+        onPick={(aisle) => {
+          if (aisleFor) updateRow(aisleFor, (d) => ({ ...d, newAisle: aisle }));
+          setAisleFor(null);
+        }}
+        onClose={() => setAisleFor(null)}
+      />
+      <PasteSheet visible={pasteOpen} onAdd={paste} onClose={() => setPasteOpen(false)} />
+      <Dialog
+        visible={removeAsk !== null}
+        icon="warning"
+        title={removeAsk ? ing.removeTitle(removeAsk.name) : ''}
+        body={removeAsk ? ing.removeBody(removeAsk.steps) : ''}
+        confirmLabel={ing.removeConfirm}
+        onConfirm={() => {
+          if (removeAsk) removeRow(removeAsk.key);
+          setRemoveAsk(null);
+        }}
+        cancelLabel={ing.removeCancel}
+        onCancel={() => setRemoveAsk(null)}
       />
       <Dialog
         visible={confirmDiscard}

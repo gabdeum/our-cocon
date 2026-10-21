@@ -1,7 +1,9 @@
 import { cuisineOf, parseMinutes, RecipeInput, type Cuisine, type RecipeFormSection } from '@cocon/schemas';
 import { strings } from '../strings/en';
+import { loadFacts } from './recipe';
 import type { ChoiceStorage } from './recipe-choices';
 import { formatTotalTime } from './recipe-format';
+import { saveIngredients, type FormFacts, type IngredientDraft, type IngredientSaveRow, type SavedIngredient } from './recipe-ingredients';
 import type { Client } from './supabase';
 
 const f = strings.recipeForm;
@@ -48,20 +50,33 @@ export interface RecipeDetails {
   source_text: string | null;
   best_months: number[];
   photo_path: string | null;
+  /** Spec 015: the ingredients, the steps' text (which ingredients they use) and catalog facts by key. */
+  ingredients?: SavedIngredient[];
+  steps?: { position: number; body: string }[];
+  facts?: Record<string, FormFacts>;
 }
+
+const ingredientColumns =
+  'id, position, name, catalog_key, quantity, unit, size_word, weight_per_piece_g, piece_noun_singular, piece_noun_plural, prep_note';
 
 export const recipeFormKey = (familyId: string, id: string) => ['recipes', familyId, 'form', id] as const;
 
-/** One recipe's details (RLS returns it only to its family), or null when it isn't there. */
+/** One recipe as the form edits it (RLS returns it only to its family), or null when it isn't there. */
 export async function loadRecipeForm(client: Pick<Client, 'from'>, id: string): Promise<RecipeDetails | null> {
   const { data, error } = await client
     .from('recipes')
-    .select('id, name, description, serves, total_minutes, prep_minutes, cuisine, source_text, best_months, photo_path')
+    .select(
+      `id, name, description, serves, total_minutes, prep_minutes, cuisine, source_text, best_months, photo_path,
+      recipe_ingredients(${ingredientColumns}), recipe_steps(position, body)`,
+    )
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  if (!data) return null;
+  const { recipe_ingredients, recipe_steps, ...details } = data;
+  const keys = [...new Set(recipe_ingredients.flatMap((i) => (i.catalog_key ? [i.catalog_key] : [])))];
+  return { ...details, ingredients: recipe_ingredients, steps: recipe_steps, facts: await loadFacts(client, keys) };
 }
 
 /** The form's starting values: the recipe as saved, or an empty new recipe. */
@@ -121,22 +136,30 @@ export function readDetails(form: DetailsForm): { input: RecipeInput } | { warni
   return { input: parsed.data };
 }
 
-/** Saves the details: a new recipe with the id the form made (its photo is already under it), or an edit. */
+/**
+ * Saves the details: a new recipe with the id the form made (its photo is already under it), or an
+ * edit. Then the ingredients, when they changed (spec 015). `created` says the recipe now exists
+ * even if the ingredients failed, so trying again updates it instead of adding it twice.
+ */
 export async function saveRecipe(
-  client: Pick<Client, 'from'>,
+  client: Pick<Client, 'from' | 'rpc'>,
   target: { id: string; familyId: string; isNew: boolean },
   input: RecipeInput,
-): Promise<boolean> {
+  ingredients?: { rows: IngredientSaveRow[]; drafts: IngredientDraft[] },
+): Promise<{ ok: boolean; created: boolean }> {
+  const { id, familyId, isNew } = target;
   try {
-    const { id, familyId, isNew } = target;
     // The database sets the family from who's signed in, whatever is sent (spec 004).
     const { error } = isNew
       ? await client.from('recipes').insert({ id, family_id: familyId, ...input })
       : await client.from('recipes').update(input).eq('id', id);
-    return !error;
+    if (error) return { ok: false, created: false };
   } catch {
-    return false;
+    return { ok: false, created: false };
   }
+  if (!ingredients) return { ok: true, created: isNew };
+  const ok = await saveIngredients(client, { recipeId: id, familyId }, ingredients.rows, ingredients.drafts);
+  return { ok, created: isNew };
 }
 
 // "Advanced mode" (US2): remembered per person on this device, like the recipe page's choices (013).

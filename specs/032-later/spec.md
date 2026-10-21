@@ -36,6 +36,10 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L6 | P3 | **Private-only Realtime.** Make the self-hosted Realtime service refuse public channels (`infra/supabase/cocon.override.yml`). The app uses only private channels, so this is a second lock, not a fix. | 004 | none |
 | L7 | P3 | **Keep invite tokens out of Auth logs.** A signed-out invitee's sign-in link carries `next=/join/<token>`, which shows in Supabase Auth's server logs until it's used or expires (7 days). Option: keep the token on the device instead. | 003 | none |
 | L8 | P3 | **Cut off removed members' live updates sooner.** A removed member keeps receiving change ids (never content; reads still go through RLS) until their token expires, up to 1 hour. | 004 | none |
+| L29 | P2 | **Variants that point at a removed ingredient.** Saving the ingredients (015, `save_recipe_ingredients`) takes a removed ingredient out of the steps, but a variant's `swap_ingredient` or `remove_ingredient` can still name its id. The variant form should catch it: drop the change or ask, as the step dialog does. | 015 | 017 |
+| L30 | P3 | **More shapes for the paste parser.** It reads 98 of the 100 test lines; it misses multiplied packs ("2 x 400 g cans tomatoes") and an amount in brackets after the count ("1 (14 oz) can coconut milk"). French words go in a `words.fr.ts` beside `packages/quantity/words.en.ts`, with the same shape. | 015 | none |
+| L31 | P3 | **Learn a family's piece weights.** A weight of one typed in the form ("each ≈ 170 g") stays with that recipe. It could also become the family's correction for that ingredient (`family_ingredients.size_medium_g`, spec 031), so the next recipe suggests it. | 015 | none |
+| L32 | P2 | **Assistants save ingredients the same way.** The MCP recipe tools should save a recipe's ingredients through `save_recipe_ingredients` (one transaction, steps tidied) and read pasted lines with `parsePastedList` from `@cocon/quantity`, validating rows with `IngredientInput` (`packages/schemas`) before the call, so the app and assistants agree. | 015 | 023 |
 
 ## Changelog
 - 2026-10-19: Created. Seeded with the open items from the Needs your attention sections of 003, 004 and 006.
@@ -51,3 +55,4 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 - 2026-10-20 (012): did L19 ("Go to step" on a step timer's card); L14 now covers cooking mode too; added L21 (Keep screen on, 027), L22 (units in cooking mode, 013) and L23 (a step limit, 016).
 - 2026-10-20 (013): did L22 (units in cooking mode); added L24 (open the converter on a tapped amount).
 - 2026-10-20 (014): did L5 (cuisine checked in the database) and L10 (photos in the recipe list, header and steps); added L25 ("Edit recipe" in recipe settings, 017), L26 (photos on the shared view, 019), L27 (Home hero photo, 028) and L28 (clean up unused photos).
+- 2026-10-20 (015): it had no tasks here. Added L29 (variants naming a removed ingredient, 017), L30 (more parser shapes and French), L31 (learn piece weights) and L32 (MCP saves ingredients the same way, 023).
