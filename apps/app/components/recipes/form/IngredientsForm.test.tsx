@@ -26,6 +26,20 @@ const BUTTER = 'c0c01000-0000-4000-8000-000000000002';
 const egg: IngredientFacts = { catalog_key: 'egg', family_ingredient_id: null, name: 'Egg', plural: 'Eggs', aisle: 'dairy_eggs', density_g_per_ml: null, size_small_g: 43, size_medium_g: 50, size_large_g: 57, default_size: 'medium', noun_singular: null, noun_plural: null, whole_only: true, diet: [] };
 const leek: IngredientFacts = { ...egg, catalog_key: 'leek', name: 'Leek', plural: 'Leeks', aisle: 'produce', size_small_g: 100, size_medium_g: 150, size_large_g: 220, whole_only: false };
 
+/** A saved step with only its text. */
+const savedStep = (position: number, body: string) => ({
+  id: `00000000-0000-4000-8000-0000000005${String(position).padStart(2, '0')}`,
+  position,
+  name: null,
+  body,
+  timer_seconds: null,
+  timer_label: null,
+  temp_check_c: null,
+  temp_check_text: null,
+  tip: null,
+  photo_path: null,
+});
+
 const quiche: RecipeDetails = {
   id: RECIPE,
   name: 'Leek & bacon quiche',
@@ -42,9 +56,9 @@ const quiche: RecipeDetails = {
     { id: LEEKS, position: 1, name: 'Leeks', quantity: 2, unit: 'piece', weight_per_piece_g: 150, catalog_key: 'leek' },
   ],
   steps: [
-    { position: 0, body: 'Preheat the oven.' },
-    { position: 1, body: 'Melt {ing:c0c01000-0000-4000-8000-000000000002}.' },
-    { position: 2, body: 'Add {ing:c0c01000-0000-4000-8000-000000000003} and cook.' },
+    savedStep(0, 'Preheat the oven.'),
+    savedStep(1, 'Melt {ing:c0c01000-0000-4000-8000-000000000002}.'),
+    savedStep(2, 'Add {ing:c0c01000-0000-4000-8000-000000000003} and cook.'),
   ],
   facts: { leek },
 };
@@ -348,7 +362,7 @@ describe('the other row warnings and states (OC-EditIngredients › Validation c
   });
 
   it('names every step that uses an ingredient', () => {
-    const steps = [...(quiche.steps ?? []), { position: 3, body: 'Top with {ing:c0c01000-0000-4000-8000-000000000003}.' }];
+    const steps = [...(quiche.steps ?? []), savedStep(3, 'Top with {ing:c0c01000-0000-4000-8000-000000000003}.')];
     setup({ recipe: { ...quiche, steps } });
     fireEvent.click(screen.getByRole('button', { name: 'Remove Leeks' }));
     expect(screen.getByRole('alertdialog').textContent).toContain("It's used in steps 3 and 4. We'll take it out of those steps too.");

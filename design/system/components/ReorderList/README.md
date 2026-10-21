@@ -1,6 +1,6 @@
 # ReorderList
 
-A list whose rows are reordered by dragging a handle: ingredients in the recipe form (spec 015), and steps next (016).
+A list whose rows are reordered by dragging a handle: ingredients (spec 015) and steps (spec 016) in the recipe form.
 
 ## Specs
 

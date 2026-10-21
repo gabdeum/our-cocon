@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Tracker } from '@cocon/schemas';
+import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { StepLine } from '../../lib/recipe-view';
 import { useStepTimer, useTimerStore } from '../../lib/timer-store';
@@ -43,7 +43,7 @@ export function useStepTimerControl({ recipeId, recipeName, stepId, index, timer
   const onPress = () => {
     if (!timer) {
       store.start(planned.label, startWith, 'step', { recipeId, stepId, recipeName });
-      tracker.track('step_timer_started', { step_index: index });
+      tracker.track('step_timer_started', { step_index: Math.min(index, MAX_TRACKED_STEPS - 1) });
       setStartWith(planned.seconds);
     } else if (timer.state === 'running') store.pause(timer.id);
     else if (timer.state === 'paused') store.resume(timer.id);

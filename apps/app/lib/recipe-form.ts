@@ -4,6 +4,7 @@ import { loadFacts } from './recipe';
 import type { ChoiceStorage } from './recipe-choices';
 import { formatTotalTime } from './recipe-format';
 import { saveIngredients, type FormFacts, type IngredientDraft, type IngredientSaveRow, type SavedIngredient } from './recipe-ingredients';
+import type { SavedStep, StepSaveRow } from './recipe-steps';
 import type { Client } from './supabase';
 
 const f = strings.recipeForm;
@@ -50,11 +51,15 @@ export interface RecipeDetails {
   source_text: string | null;
   best_months: number[];
   photo_path: string | null;
-  /** Spec 015: the ingredients, the steps' text (which ingredients they use) and catalog facts by key. */
+  /** Spec 015: the ingredients and catalog facts by key; spec 016: the steps. */
   ingredients?: SavedIngredient[];
-  steps?: { position: number; body: string }[];
+  steps?: SavedStep[];
+  /** Photos the recipe's variants add with their steps: the form never removes these (spec 017 edits them). */
+  variantPhotos?: string[];
   facts?: Record<string, FormFacts>;
 }
+
+const stepColumns = 'id, position, name, body, timer_seconds, timer_label, temp_check_c, temp_check_text, tip, photo_path';
 
 const ingredientColumns =
   'id, position, name, catalog_key, quantity, unit, size_word, weight_per_piece_g, piece_noun_singular, piece_noun_plural, prep_note';
@@ -67,16 +72,31 @@ export async function loadRecipeForm(client: Pick<Client, 'from'>, id: string): 
     .from('recipes')
     .select(
       `id, name, description, serves, total_minutes, prep_minutes, cuisine, source_text, best_months, photo_path,
-      recipe_ingredients(${ingredientColumns}), recipe_steps(position, body)`,
+      recipe_ingredients(${ingredientColumns}), recipe_steps(${stepColumns}), recipe_variants(changes)`,
     )
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  const { recipe_ingredients, recipe_steps, ...details } = data;
+  const { recipe_ingredients, recipe_steps, recipe_variants, ...details } = data;
   const keys = [...new Set(recipe_ingredients.flatMap((i) => (i.catalog_key ? [i.catalog_key] : [])))];
-  return { ...details, ingredients: recipe_ingredients, steps: recipe_steps, facts: await loadFacts(client, keys) };
+  return {
+    ...details,
+    ingredients: recipe_ingredients,
+    steps: recipe_steps,
+    variantPhotos: recipe_variants.flatMap((v) => variantStepPhotos(v.changes)),
+    facts: await loadFacts(client, keys),
+  };
+}
+
+/** The photo paths a variant's added steps name. Read loosely: `changes` is jsonb an assistant may have written. */
+function variantStepPhotos(changes: unknown): string[] {
+  if (!Array.isArray(changes)) return [];
+  return changes.flatMap((c: unknown) => {
+    const path = (c as { type?: unknown; step?: { photo_path?: unknown } } | null)?.step?.photo_path;
+    return (c as { type?: unknown } | null)?.type === 'add_step' && typeof path === 'string' ? [path] : [];
+  });
 }
 
 /** The form's starting values: the recipe as saved, or an empty new recipe. */
@@ -138,28 +158,42 @@ export function readDetails(form: DetailsForm): { input: RecipeInput } | { warni
 
 /**
  * Saves the details: a new recipe with the id the form made (its photo is already under it), or an
- * edit. Then the ingredients, when they changed (spec 015). `created` says the recipe now exists
- * even if the ingredients failed, so trying again updates it instead of adding it twice.
+ * edit. Then the ingredients (spec 015) and the steps (spec 016), each when they changed: steps
+ * last, as they mention the ingredients. `created` says the recipe now exists even if a later part
+ * failed, so trying again updates it instead of adding it twice; `detailsSaved` says the details
+ * (and so the header photo) were written, whatever happened after.
  */
 export async function saveRecipe(
   client: Pick<Client, 'from' | 'rpc'>,
   target: { id: string; familyId: string; isNew: boolean },
   input: RecipeInput,
   ingredients?: { rows: IngredientSaveRow[]; drafts: IngredientDraft[] },
-): Promise<{ ok: boolean; created: boolean }> {
+  steps?: StepSaveRow[],
+): Promise<{ ok: boolean; created: boolean; detailsSaved: boolean }> {
   const { id, familyId, isNew } = target;
   try {
     // The database sets the family from who's signed in, whatever is sent (spec 004).
     const { error } = isNew
       ? await client.from('recipes').insert({ id, family_id: familyId, ...input })
       : await client.from('recipes').update(input).eq('id', id);
-    if (error) return { ok: false, created: false };
+    if (error) return { ok: false, created: false, detailsSaved: false };
   } catch {
-    return { ok: false, created: false };
+    return { ok: false, created: false, detailsSaved: false };
   }
-  if (!ingredients) return { ok: true, created: isNew };
-  const ok = await saveIngredients(client, { recipeId: id, familyId }, ingredients.rows, ingredients.drafts);
-  return { ok, created: isNew };
+  const saved = { created: isNew, detailsSaved: true };
+  if (ingredients && !(await saveIngredients(client, { recipeId: id, familyId }, ingredients.rows, ingredients.drafts))) return { ok: false, ...saved };
+  if (steps && !(await saveSteps(client, id, steps))) return { ok: false, ...saved };
+  return { ok: true, ...saved };
+}
+
+/** The recipe's whole step list in one call: order is position, steps left out are removed. */
+async function saveSteps(client: Pick<Client, 'rpc'>, recipeId: string, rows: StepSaveRow[]): Promise<boolean> {
+  try {
+    const { error } = await client.rpc('save_recipe_steps', { p_recipe_id: recipeId, p_steps: rows });
+    return !error;
+  } catch {
+    return false;
+  }
 }
 
 // "Advanced mode" (US2): remembered per person on this device, like the recipe page's choices (013).

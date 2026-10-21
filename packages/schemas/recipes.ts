@@ -108,7 +108,10 @@ const StepFields = z.strictObject({
 export type StepRow = z.infer<typeof StepFields> & { id: string };
 const stepRules = (s: z.infer<typeof StepFields>) => s.timer_label == null || s.timer_seconds != null;
 
-export const StepInput = StepFields.extend({ position: Position }).refine(stepRules, 'A timer label needs a timer');
+/** At most this many steps a recipe (032-later L23; the database checks positions 0–99). */
+export const MAX_STEPS = 100;
+
+export const StepInput = StepFields.extend({ position: Position.max(MAX_STEPS - 1) }).refine(stepRules, 'A timer label needs a timer');
 export type StepInput = z.infer<typeof StepInput>;
 
 /** An ingredient a variant brings in. It has its own id, so its steps can mention it. */

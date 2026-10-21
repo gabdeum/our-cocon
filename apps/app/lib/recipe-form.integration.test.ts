@@ -2,7 +2,8 @@
 // Spec 014 against local Supabase. US1: Alex saves a recipe with only a name; it gets the defaults
 // and opens for Mia (same family). An edit saves every detail. FR-004: a photo goes under the
 // family's folder, Mia gets a signed link, and Sam (another family) can neither read, list nor
-// overwrite it, nor see or edit the recipe. Skipped locally when Supabase isn't running.
+// overwrite it, nor see or edit the recipe. Spec 015 saves the ingredients, spec 016 the steps (the
+// recipe page shows what the form previewed). Skipped locally when Supabase isn't running.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
@@ -18,6 +19,9 @@ const { formFromRecipe, loadRecipeForm, readDetails, saveRecipe } = await import
 const { newPhotoPath, PHOTO_BUCKET, removePhotos, signedPhotoUrls, uploadPhoto } = await import('./recipe-photo');
 const { applyMatch, draftsFromRows, emptyDraft, matchIngredients, readIngredients, saveIngredients } = await import('./recipe-ingredients');
 const { loadRecipe } = await import('./recipe');
+const { draftsFromSteps, emptyStep, readSteps } = await import('./recipe-steps');
+const { defaultFormat, recipeView, stepParts } = await import('./recipe-view');
+const { quantityOf } = await import('./recipe-ingredients');
 const { ingredientToken, renderStep } = await import('@cocon/quantity');
 
 const local = localSupabase();
@@ -64,7 +68,7 @@ describe.skipIf(!local)('the recipe form against local Supabase', () => {
   it('US1: saves a recipe with only a name, and Mia opens it', async () => {
     const read = readDetails({ ...formFromRecipe(null), name: 'Grandma’s soup' });
     if (!('input' in read)) throw new Error('expected input');
-    expect(await saveRecipe(alex, { id: recipeId, familyId, isNew: true }, read.input)).toEqual({ ok: true, created: true });
+    expect(await saveRecipe(alex, { id: recipeId, familyId, isNew: true }, read.input)).toEqual({ ok: true, created: true, detailsSaved: true });
     const saved = await loadRecipeForm(mia, recipeId);
     expect(saved).toMatchObject({ id: recipeId, name: 'Grandma’s soup', serves: 4, total_minutes: null, cuisine: null, best_months: [], photo_path: null });
   });
@@ -81,7 +85,7 @@ describe.skipIf(!local)('the recipe form against local Supabase', () => {
       bestMonths: [11, 12, 1],
     });
     if (!('input' in read)) throw new Error('expected input');
-    expect(await saveRecipe(mia, { id: recipeId, familyId, isNew: false }, read.input)).toEqual({ ok: true, created: false });
+    expect(await saveRecipe(mia, { id: recipeId, familyId, isNew: false }, read.input)).toEqual({ ok: true, created: false, detailsSaved: true });
     expect(await loadRecipeForm(alex, recipeId)).toMatchObject({
       description: 'Warm and green.',
       serves: 6,
@@ -108,7 +112,7 @@ describe.skipIf(!local)('the recipe form against local Supabase', () => {
     expect(await uploadPhoto(alex, path, jpeg)).toBe(true);
     const read = readDetails({ ...formFromRecipe(await loadRecipeForm(alex, recipeId)), photoPath: path });
     if (!('input' in read)) throw new Error('expected input');
-    expect(await saveRecipe(alex, { id: recipeId, familyId, isNew: false }, read.input)).toEqual({ ok: true, created: false });
+    expect(await saveRecipe(alex, { id: recipeId, familyId, isNew: false }, read.input)).toEqual({ ok: true, created: false, detailsSaved: true });
 
     const urls = await signedPhotoUrls(mia, [path]);
     expect(urls[path]).toMatch(/^http.*token=/);
@@ -204,5 +208,60 @@ describe.skipIf(!local)('the recipe form against local Supabase', () => {
     if (mine.error) throw mine.error;
     expect(await saveIngredients(sam, { recipeId: own, familyId: samFamily }, steal.rows, [])).toBe(false);
     expect(await ingredientsOf(alex)).toEqual(before);
+  });
+
+  // Spec 016: the steps, saved through save_recipe_steps.
+  it('016: saves steps with their add-ons, and the recipe page reads them as the Preview did (SC-001)', async () => {
+    const leeks = { ...emptyDraft(leekId), name: 'Leeks', quantity: '2', unit: 'piece' as const, weight: '150' };
+    const butter = { ...emptyDraft(butterId), name: 'Butter', quantity: '20', unit: 'g' as const };
+    const rows = readIngredients([butter, leeks]);
+    if (!('rows' in rows)) throw new Error('expected rows');
+    const melt = {
+      ...emptyStep(randomUUID()),
+      name: 'Cook the filling',
+      body: `Melt ${ingredientToken(butterId)}, add ${ingredientToken(leekId)} and bake at 180 °C.`,
+      timerOn: true,
+      minutes: '8',
+      tempOn: true,
+      tempValue: '71',
+      tempText: 'center reaches',
+      tipOn: true,
+      tip: 'Low heat.',
+    };
+    const read = readSteps([melt, { ...emptyStep(randomUUID()), body: 'Rest.' }]);
+    if (!('rows' in read)) throw new Error('expected steps');
+    const loaded = await loadRecipeForm(alex, recipeId);
+    const input = readDetails(formFromRecipe(loaded));
+    if (!('input' in input)) throw new Error('expected details');
+    expect(await saveRecipe(alex, { id: recipeId, familyId, isNew: false }, input.input, { rows: rows.rows, drafts: [] }, read.rows)).toEqual({ ok: true, created: false, detailsSaved: true });
+
+    const formPreview = stepParts(read.rows[0]?.body ?? '', [butter, leeks].map(quantityOf), defaultFormat, new Map());
+    const recipe = await loadRecipe(mia, recipeId);
+    if (!recipe) throw new Error('recipe');
+    const view = recipeView(recipe, recipe.serves, { version: null, options: [] });
+    expect(view.steps[0]?.parts).toEqual(formPreview);
+    expect(view.steps[0]?.parts.map((p) => (typeof p === 'string' ? p : 'amount' in p ? p.amount : p.missing)).join('')).toBe(
+      'Melt 20 g butter, add 2 leeks (300 g) and bake at 180 °C (350 °F).',
+    );
+    expect(view.steps[0]).toMatchObject({ tip: 'Low heat.', tempCheck: 'center reaches 71 °C (160 °F)', timer: { seconds: 480, label: 'Cook the filling' } });
+    expect(view.steps.map((st) => st.number)).toEqual([1, 2]);
+
+    // Opened again, nothing has changed.
+    const again = draftsFromSteps((await loadRecipeForm(alex, recipeId))?.steps ?? []);
+    expect(again.map((d) => [d.name, d.minutes, d.tempValue, d.tip])).toEqual([
+      ['Cook the filling', '8 min', '71', 'Low heat.'],
+      ['', '', '', ''],
+    ]);
+  });
+
+  it("016: another family can't save into this recipe's steps", async () => {
+    const before = (await loadRecipeForm(alex, recipeId))?.steps;
+    const read = readSteps([{ ...emptyStep(randomUUID()), body: 'Mine now.' }]);
+    if (!('rows' in read)) throw new Error('expected steps');
+    const loaded = await loadRecipeForm(alex, recipeId);
+    const input = readDetails(formFromRecipe(loaded));
+    if (!('input' in input)) throw new Error('expected details');
+    expect((await saveRecipe(sam, { id: recipeId, familyId: samFamily, isNew: false }, input.input, undefined, read.rows)).ok).toBe(false);
+    expect((await loadRecipeForm(alex, recipeId))?.steps).toEqual(before);
   });
 });

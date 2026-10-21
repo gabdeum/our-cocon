@@ -40,8 +40,9 @@
 All copy is in the States tables of the UI specs for: OC-EditSteps. New messages go there and in `strings/en.ts` first.
 
 ## Needs your attention
-- FR-006 (added by spec 005): the drawn screen has no temperature chip, and no way yet to mark a typed temperature as a thermometer reading. Claude will add both to `design/ui/OC-EditSteps.md` while building this spec.
+- Done in the build: the temperature chip, the "Oven · Thermometer" choice and the temperature check fields are now in `design/ui/OC-EditSteps.md` (Temperatures). Oven temperatures go in the step's text; the Temperature check add-on is for thermometer readings.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
 - 2026-10-18: FR-006 added from spec 005: temperatures in the step body are stored as `{temp:…}` tokens.
+- 2026-10-21: Built. Steps section of the recipe form: ingredient chips by "@" or "+ Leeks" with a live Preview (shared renderer with the recipe page, SC-001), Timer, Temperature check (°C or °F, stored in °C, `{temp}` places the reading: 032 L15), Chef's tip, Photo, reorder, "+ Add a step", "Remove step". Saved in one call by the new `save_recipe_steps`; at most 100 steps (032 L23, database check plus `MAX_STEPS`). Typed temperatures become `{temp:…}` chips (`tokenizeTemperatures` in `@cocon/quantity`). Event `recipe_step_added`. New components StepEditCard, TokenEditor, ToggleTile; Tag `soft`. Deviations: chips are drawn at the text's weight with no side padding (a real text field can't hold padded chips); step cards get a drag handle on the left; the temperature check preview reads "center reaches 71 °C (160 °F)" (as US3 and the recipe page) instead of "→ shows (160 °F) automatically"; "+ Eggs" chips are Pills (40 tall); "Remove step", the temperature fields and the Oven · Thermometer choice weren't drawn (copy added to the UI spec). Event bounds now use one `MAX_TRACKED_STEPS` (200); `step_timer_started` takes 0–199 and its sender caps it, like cooking mode. Security review: Discard after a save that failed partway keeps the header photo that save wrote, and the form never removes a photo a variant's added step uses.

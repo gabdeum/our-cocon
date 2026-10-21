@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { AwakeChip, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, PushedScreen, StepText, Text } from '@cocon/ui';
-import type { Tracker } from '@cocon/schemas';
+import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
@@ -13,7 +13,6 @@ import { useStepTimerControl, type StepTimerInput } from '../recipes/step-timer'
 import { useStepScroll } from './use-step-scroll';
 
 const c = strings.cook;
-const MAX_TRACKED_STEPS = 200;
 const p = strings.recipePage;
 
 export interface CookScreenProps {
@@ -103,7 +102,7 @@ function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cook
   const view = useMemo(() => recipeView(recipe, choices, choices, formatOf(choices), cooking), [recipe, choices, cooking]);
   const steps = view.steps;
   const count = steps.length;
-  // Events cap step counts at 200; recipes have no step limit yet (032-later L23).
+  // Events cap step counts (variants can add steps on top of a recipe's 100).
   const sent = (n: number) => Math.min(n, MAX_TRACKED_STEPS);
   const awake = useCookAwake(cooking.keepAwake);
   const hasPill = useHasTimers();

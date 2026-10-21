@@ -53,7 +53,10 @@ import {
   StatTile,
   StatusBanner,
   StepCard,
+  StepEditCard,
   StepFootnote,
+  StepNote,
+  StepPreview,
   StepText,
   Stepper,
   TabBar,
@@ -65,6 +68,8 @@ import {
   TimerPill,
   TimePresets,
   TimerRow,
+  ToggleTile,
+  TokenEditor,
   theme,
   type IconName,
   type TextVariant,
@@ -207,6 +212,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <Tag label="To buy" tone="warn" />
           <Tag label="+1" tone="honey" />
           <Tag label="Latest recipe" tone="white" />
+          <Tag label="Tip" tone="soft" />
         </PillRow>
         <PillRow>
           <Meta label="1 h 10" />
@@ -372,6 +378,42 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           warning="Pick a unit so we can convert and scale it."
           warningField="unit"
         />
+      </Section>
+
+      <Section group="Inputs" title="TokenEditor">
+        <TokenEditor
+          label="Instructions"
+          parts={['In a large pan, melt ', { chip: 'Butter', tone: 'sage' }, ' over medium heat. Add ', { chip: 'Leeks', tone: 'sage' }, ' and bake at ', { chip: '180 °C (350 °F)', tone: 'sage' }, '.']}
+          value="In a large pan, melt Butter over medium heat. Add Leeks and bake at 180 °C (350 °F)."
+          onChangeText={noop}
+          hint="Type @ or tap below to insert an ingredient. Its amount fills in and scales by itself."
+        />
+        <TokenEditor
+          label="Instructions"
+          parts={['Top with ', { chip: 'Missing ingredient', tone: 'warn' }, '.']}
+          value="Top with Missing ingredient."
+          onChangeText={noop}
+          warning="This ingredient was removed. Delete the chip or add it back."
+        />
+      </Section>
+
+      <Section group="Inputs" title="ToggleTile">
+        <View className="flex-row gap-8">
+          <ToggleTile label="Timer" selectedLabel="Timer ✓" selected onPress={noop} />
+          <ToggleTile label="Temperature check" selectedLabel="Temperature check ✓" selected={false} onPress={noop} />
+        </View>
+      </Section>
+
+      <Section group="Lists and cards" title="StepEditCard">
+        <StepEditCard number={1} expanded={false} title="Preheat and line" badges={['Tip']} openLabel="Step 1, Preheat and line. Tap to edit." onOpen={noop} />
+        <StepEditCard number={2} expanded={false} title="Blind bake" badges={['12 min']} openLabel="Step 2, Blind bake. Tap to edit." onOpen={noop} />
+        <StepEditCard number={3} expanded title="Cook the filling" openLabel="Step 3" onOpen={noop} header={<Text weight="800">Cook the filling</Text>}>
+          <StepPreview label="Preview">
+            <StepText compact parts={['…melt ', { amount: '20 g butter' }, ' over medium heat. Add ', { amount: '2 leeks (300 g)' }, ' finely sliced…']} />
+          </StepPreview>
+          <StepNote text="Temperature check: center reaches 71 °C (160 °F)" />
+        </StepEditCard>
+        <StepEditCard number={5} expanded={false} title="Bake" badges={['35 min']} note="Temperature check: center reaches 71 °C (160 °F)" openLabel="Step 5, Bake. Tap to edit." onOpen={noop} attention />
       </Section>
 
       <Section group="Lists and cards" title="ReorderList">
