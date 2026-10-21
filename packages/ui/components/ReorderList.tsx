@@ -58,8 +58,15 @@ export function ReorderList<T>({ items, keyOf, renderItem, onMove, handleLabel, 
           onMoveShouldSetPanResponder: () => true,
           onPanResponderTerminationRequest: () => false,
           onPanResponderGrant: () => setState((s) => ({ ...s, drag: { from: index, dy: 0, dropped: false } })),
-          onPanResponderMove: (_e, g) => setState((s) => ({ ...s, drag: { from: index, dy: g.dy, dropped: false } })),
-          onPanResponderRelease: (_e, g) => setState((s) => ({ ...s, drag: { from: index, dy: g.dy, dropped: true } })),
+          // Read dy now: the gesture state is reset once the handler returns, before React runs the update.
+          onPanResponderMove: (_e, g) => {
+            const { dy } = g;
+            setState((s) => ({ ...s, drag: { from: index, dy, dropped: false } }));
+          },
+          onPanResponderRelease: (_e, g) => {
+            const { dy } = g;
+            setState((s) => ({ ...s, drag: { from: index, dy, dropped: true } }));
+          },
           onPanResponderTerminate: () => setState((s) => ({ ...s, drag: { from: index, dy: 0, dropped: true } })),
         }),
       ),
