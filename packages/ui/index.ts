@@ -10,6 +10,7 @@ export { AppFrame, TabScreen, PushedScreen, PhotoScreen, FormScreen, type PhotoS
 
 export { Button, Link, type ButtonProps, type ButtonVariant, type ButtonSize, type LinkProps } from './components/Button';
 export { IconButton, type IconButtonProps, type IconButtonVariant } from './components/IconButton';
+export { IconTile, type IconTileProps, type IconTileTone } from './components/IconTile';
 export { Pill, FilterButton, Choice, PersonPill, PillRow } from './components/Pill';
 export { Tag, Meta, type TagTone, type MetaTone } from './components/Tag';
 export { Switch, SettingRow, type SwitchProps, type SettingRowProps } from './components/Switch';

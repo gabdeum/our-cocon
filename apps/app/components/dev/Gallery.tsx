@@ -25,6 +25,7 @@ import {
   HeroCard,
   Icon,
   IconButton,
+  IconTile,
   IngredientEditCard,
   IngredientRow,
   Link,
@@ -169,6 +170,10 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <Button label="Delete recipe" variant="danger" />
         </PillRow>
         <PillRow>
+          <Button label="Swap ingredient" variant="tile" />
+          <Button label="Add a step" variant="tile" />
+        </PillRow>
+        <PillRow>
           <Button label="Nothing selected" disabled />
           <Link label="Clear all" />
           <Link label="Delete this recipe" tone="danger" />
@@ -219,6 +224,13 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <Meta label="Best Oct – Mar" />
           <Meta label="Gabriel · via Claude" tone="sage" />
           <Meta label="2 to buy" tone="warn" />
+        </PillRow>
+      </Section>
+
+      <Section group="Display" title="IconTile">
+        <PillRow>
+          <IconTile icon="swap" tone="sage" />
+          <IconTile icon="plus" tone="honey" />
         </PillRow>
       </Section>
 

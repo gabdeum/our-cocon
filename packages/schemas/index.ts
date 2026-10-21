@@ -11,4 +11,4 @@ export * from './sources';
 export * from './sync';
 export * from './time-input';
 export * from './variants';
-export type { Database } from './database.types';
+export type { Database, Json } from './database.types';

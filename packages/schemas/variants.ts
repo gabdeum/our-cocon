@@ -1,4 +1,4 @@
-import type { IngredientRow, StepRow, VariantChange, VariantKind } from './recipes';
+import { MAX_VARIANT_CHANGES, VariantChange, type IngredientRow, type StepRow, type VariantKind } from './recipes';
 
 /**
  * Variants (decision 16: they change only ingredients and steps). The one place a recipe's chosen
@@ -86,8 +86,9 @@ export function applyVariants(
           return;
         }
         case 'change_step': {
+          // FR-004: a changed step carries the Variant tag too.
           const { type: _type, step_id, ...fields } = change;
-          steps = steps.map((s) => (s.id === step_id ? { ...s, ...fields } : s));
+          steps = steps.map((s) => (s.id === step_id ? { ...s, ...fields, fromVariant: true } : s));
           return;
         }
         case 'remove_step':
@@ -130,4 +131,74 @@ export function variantEffect(changes: readonly VariantChange[]): VariantEffect 
     else effect.stepsRemoved += 1;
   }
   return effect;
+}
+
+/** A variant's changes that are valid today; one bad change (an older shape) doesn't hide the rest. */
+export function parseVariantChanges(changes: unknown): VariantChange[] {
+  if (!Array.isArray(changes)) return [];
+  // The same cap as VariantInput, so an oversized row can't slow every open.
+  return changes.slice(0, MAX_VARIANT_CHANGES).flatMap((c) => {
+    const parsed = VariantChange.safeParse(c);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+/** The base row a change points at: an ingredient or a step, by id. */
+export function changeTarget(change: VariantChange): { ingredient: string } | { step: string } {
+  switch (change.type) {
+    case 'swap_ingredient':
+    case 'remove_ingredient':
+      return { ingredient: change.ingredient_id };
+    case 'add_ingredient':
+      // Added at the end: it points at nothing, so it can't break. Its own id stands in.
+      return { ingredient: change.ingredient.id };
+    default:
+      return { step: change.step_id };
+  }
+}
+
+/**
+ * The changes (by index) that point at an ingredient or step the base recipe no longer has
+ * (edge case: shown as broken in the editor, skipped on the page by `applyVariants`).
+ */
+export function brokenChanges(base: { ingredients: readonly { id: string }[]; steps: readonly { id: string }[] }, changes: readonly VariantChange[]): number[] {
+  const ingredients = new Set(base.ingredients.map((i) => i.id));
+  const steps = new Set(base.steps.map((s) => s.id));
+  return changes.flatMap((change, index) => {
+    if (change.type === 'add_ingredient') return [];
+    const target = changeTarget(change);
+    return 'ingredient' in target ? (ingredients.has(target.ingredient) ? [] : [index]) : steps.has(target.step) ? [] : [index];
+  });
+}
+
+/** The key two changes clash on: replacing or removing the same ingredient, or changing or removing the same step. */
+function clashKey(change: VariantChange): string | null {
+  if (change.type === 'swap_ingredient' || change.type === 'remove_ingredient') return `i:${change.ingredient_id}`;
+  if (change.type === 'change_step' || change.type === 'remove_step') return `s:${change.step_id}`;
+  return null;
+}
+
+/**
+ * For each variant (by id), the changes another variant also makes to the same ingredient or step,
+ * with that variant's name: "Also changed by “Vegetarian”" (edge case). Only variants that can be on
+ * together count: two versions never are. When both are on, the later in the list wins
+ * (`applyVariants` applies them in order).
+ */
+export function variantConflicts(
+  variants: readonly Pick<RecipeVariant, 'id' | 'name' | 'kind' | 'changes'>[],
+): Record<string, Record<number, string[]>> {
+  const out: Record<string, Record<number, string[]>> = {};
+  for (const v of variants) {
+    const mine: Record<number, string[]> = {};
+    v.changes.forEach((change, index) => {
+      const key = clashKey(change);
+      if (!key) return;
+      const others = variants
+        .filter((o) => o.id !== v.id && !(o.kind === 'version' && v.kind === 'version') && o.changes.some((c) => clashKey(c) === key))
+        .map((o) => o.name);
+      if (others.length > 0) mine[index] = others;
+    });
+    out[v.id] = mine;
+  }
+  return out;
 }

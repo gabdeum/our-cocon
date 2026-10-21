@@ -172,6 +172,16 @@ describe('US2: pick a version', () => {
     expect(screen.getByRole('tab', { name: 'Steps · 7' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Ingredients · 10' })).toBeTruthy();
   });
+
+  it('spec 017 US3: Vegetarian plus "Make my own dough" both apply: Ingredients · 10 / Steps · 7 (the seed Classic has 8)', async () => {
+    await setup();
+    tap('Vegetarian');
+    fireEvent.click(screen.getByRole('switch', { name: 'Make my own dough' }));
+    expect(row('Mushrooms, sliced')).toBeTruthy();
+    expect(row('Flour')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Ingredients · 10' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Steps · 7' })).toBeTruthy();
+  });
 });
 
 describe('US3: tabs', () => {
@@ -498,6 +508,8 @@ describe('Steps tab (spec 009)', () => {
     expect(within(dough).getByText('1')).toBeTruthy();
     expect(within(dough).getByText('Variant')).toBeTruthy();
     expect(within(card('Preheat and line')).getByText('2')).toBeTruthy();
-    expect(within(card('Preheat and line')).queryByText('Variant')).toBeNull();
+    // Spec 017 FR-004: the dough option rewrites this step, so it carries the tag too.
+    expect(within(card('Preheat and line')).getByText('Variant')).toBeTruthy();
+    expect(within(card('Blind bake')).queryByText('Variant')).toBeNull();
   });
 });

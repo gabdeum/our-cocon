@@ -8,7 +8,7 @@ import { deviceStorage } from '../../../lib/recipe-choices';
 import { recipePhotoPaths, useRecipePhotoUrls } from '../../../lib/recipe-photo';
 import { useSession } from '../../../lib/session';
 
-// Share (019), recipe settings (027) and add to groceries (022) come later; typed routes learn
+// Share (019) and add to groceries (022) come later; typed routes learn
 // them then.
 const recipeRoute = (id: string, page: string) => `/recipes/${id}/${page}` as Href;
 

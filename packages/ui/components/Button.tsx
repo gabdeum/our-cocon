@@ -4,7 +4,7 @@ import type { ColorName } from '../theme';
 import { BrandMark, Icon, type BrandName, type IconName } from './Icon';
 import { Text, type TextColor, type Weight } from './Text';
 
-export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'danger';
+export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'tile' | 'danger';
 /** sm 44 · md 58 · lg 60 (cooking mode, recipe CTA) · dialog 56 (Dialog README). */
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'dialog';
 
@@ -15,9 +15,9 @@ interface Look {
   weight: Weight;
   /** Label size when the variant sets its own (outline 16, dashed 15). */
   fontSize?: number;
-  /** outline and dashed are 54 tall whatever the size. */
+  /** outline and dashed are 54 tall, tile 44, whatever the size. */
   fixedHeight?: string;
-  /** dashed: radius 18 instead of a pill. */
+  /** dashed: radius 18, tile: 12, instead of a pill. */
   radius?: string;
 }
 
@@ -43,6 +43,16 @@ const looks: Record<ButtonVariant, Look> = {
     weight: '800',
     fontSize: 15,
     fixedHeight: 'h-control-lg',
+  },
+  // A choice in a two-column grid of actions: "Add a change" (OC-EditVariants, spec 017).
+  tile: {
+    fill: 'bg-surface-card border-2 border-line-strong active:bg-surface-soft',
+    radius: 'rounded-[12px]',
+    text: 'ink',
+    icon: 'ink',
+    weight: '800',
+    fontSize: 14,
+    fixedHeight: 'h-control-md',
   },
   danger: { fill: 'bg-danger active:bg-danger-pressed', text: 'on-olive', icon: 'onOlive', weight: '900' },
 };

@@ -161,7 +161,23 @@ describe('steps (spec 009)', () => {
     expect(steps[0]).toMatchObject({ name: 'Make the dough', variant: true, timer: { clock: '30:00' }, tip: 'Cold hands and cold butter make a flakier crust.' });
     expect(amounts(steps[0]?.parts ?? [])).toEqual(['200 g flour', '100 g cold butter', '50 ml ice water']);
     expect(text(steps[1]?.parts ?? [])).toContain('with the rolled-out dough');
+    // Spec 017 FR-004: a step a variant changes carries the tag too.
+    expect(steps[1]?.variant).toBe(true);
+    expect(steps[2]?.variant).toBe(false);
     expect(amounts(steps[3]?.parts ?? [])).toContain('250 g mushrooms');
+  });
+
+  it('spec 017 SC-001: every variant combination of the seed quiche, step by step', () => {
+    const choices: VariantChoice[] = [
+      noVariants,
+      { version: quicheIds.vegetarian, options: [] },
+      { version: null, options: [quicheIds.dough] },
+      { version: quicheIds.vegetarian, options: [quicheIds.dough] },
+    ];
+    for (const choice of choices) {
+      const steps = recipeView(recipe, 6, choice).steps.map((s) => `${s.number} ${s.name ?? ''}${s.variant ? ' [Variant]' : ''}: ${text(s.parts)}`);
+      expect({ choice, steps }).toMatchSnapshot();
+    }
   });
 
   it('edge: a removed step disappears and the rest renumber', () => {
