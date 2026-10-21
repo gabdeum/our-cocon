@@ -137,7 +137,8 @@ export function useSession(): SessionContextValue {
 }
 
 /** Routes anyone can open; the rest need a signed-in member (design/flows.md). */
-const PUBLIC = new Set(['welcome', 'auth', 'join']);
+// `r`: a shared recipe (spec 019), open to anyone, signed in or not.
+const PUBLIC = new Set(['welcome', 'auth', 'join', 'r']);
 
 /**
  * Where the gate sends someone, or null to stay. `segments` are Expo Router's route segments
@@ -152,7 +153,7 @@ export function gateRedirect(status: SessionState['status'], segments: readonly 
     case 'signedOut':
       return isPublic && !(first === 'welcome' && second === 'family') ? null : '/welcome';
     case 'noFamily':
-      if (first === 'join' || first === 'auth') return null;
+      if (first === 'join' || first === 'auth' || first === 'r') return null;
       return first === 'welcome' && second === 'family' ? null : '/welcome/family';
     case 'ready':
       return first === 'welcome' ? '/' : null;

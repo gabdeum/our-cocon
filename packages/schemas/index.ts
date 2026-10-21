@@ -7,6 +7,7 @@ export * from './ingredient-text';
 export * from './recipe-filters';
 export * from './recipes';
 export * from './search';
+export * from './share';
 export * from './sources';
 export * from './sync';
 export * from './time-input';

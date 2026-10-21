@@ -5,8 +5,9 @@
 #
 # 1. Pull the web, mcp and migrate images for the commit.  Fails → nothing changed.
 # 2. Apply pending database migrations (all or none).     Fails → nothing changed.
-# 3. Start the new web and MCP containers.
-# 4. Wait until both report the new commit. If they don't within COCON_HEALTH_TIMEOUT seconds,
+# 3. Install the commit's Edge Functions and reload them.
+# 4. Start the new web and MCP containers.
+# 5. Wait until both report the new commit. If they don't within COCON_HEALTH_TIMEOUT seconds,
 #    start the previous commit again and fail.
 [ -z "${SUDO_USER:-}" ] || unset COCON_HOME
 . "${COCON_HOME:-/opt/cocon/infra}/lib/common.sh"
@@ -39,6 +40,24 @@ printf 'DATABASE_URL=postgres://postgres:%s@db:5432/postgres\n' "$password" >"$C
 stack_container "$env" db >/dev/null
 docker run --rm --network "cocon-${env}_default" --env-file "$COCON_RUN/$env/migrate.env" \
   "$prefix-migrate:$sha" || die "migrations failed and were rolled back; $env is unchanged"
+
+# Edge Functions (spec 019): the commit's supabase/functions, carried by the migrate image, go next
+# to Supabase's own `main` router (left as is); then the functions container reloads them. They
+# stay on a rollback: each function keeps answering older app versions.
+functions="$(supabase_dir "$env")/volumes/functions"
+staged=$(mktemp -d)
+cid=$(docker create "$prefix-migrate:$sha") || die "could not read the functions of ${sha:0:7}"
+docker cp "$cid:/app/functions/." "$staged" >/dev/null || die "could not copy the functions of ${sha:0:7}"
+docker rm "$cid" >/dev/null || true
+mkdir -p "$functions"
+for fn in "$staged"/*/; do
+  name=$(basename "$fn")
+  [ "$name" = main ] && continue
+  rm -rf "${functions:?}/$name"
+  cp -R "${fn%/}" "$functions/$name"
+done
+rm -rf "$staged"
+docker restart "$(stack_container "$env" functions)" >/dev/null || die "could not restart Supabase functions on $env"
 
 app() {
   COCON_ENV=$env COCON_SHA=$1 COCON_RUN=$COCON_RUN COCON_IMAGE_PREFIX=$prefix \

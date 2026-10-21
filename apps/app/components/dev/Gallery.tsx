@@ -69,6 +69,7 @@ import {
   TimerPill,
   TimePresets,
   TimerRow,
+  ShareTile,
   ToggleTile,
   TokenEditor,
   theme,
@@ -409,6 +410,14 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         />
       </Section>
 
+      <Section group="Inputs" title="ShareTile">
+        <View className="flex-row gap-10">
+          <ShareTile label="Message" icon="message" tone="honey" onPress={noop} />
+          <ShareTile label="Email" icon="mail" onPress={noop} />
+          <ShareTile label="More" icon="more" disabled onPress={noop} />
+        </View>
+      </Section>
+
       <Section group="Inputs" title="ToggleTile">
         <View className="flex-row gap-8">
           <ToggleTile label="Timer" selectedLabel="Timer ✓" selected onPress={noop} />
@@ -441,6 +450,10 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <View>
           <IngredientRow amount="2" name="Leeks" sub="300 g" />
           <IngredientRow amount="250 g" name="Mushrooms, sliced" tag={{ label: 'Variant', tone: 'sage' }} />
+        </View>
+        <View>
+          <IngredientRow layout="compact" amount="2" sub="300 g" name="Leeks" />
+          <IngredientRow layout="compact" amount="300 ml" name="Heavy cream" last />
         </View>
         <ListGroup>
           <ListRow title="AI assistants" leading={{ kind: 'avatar', initial: 'G', tone: 'honey' }} trailing={{ kind: 'chevron' }} onPress={noop} last />

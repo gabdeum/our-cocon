@@ -43,7 +43,17 @@
 All copy is in the States tables of the UI specs for: OC-Share, OC-SharedView. New messages go there and in `strings/en.ts` first.
 
 ## Needs your attention
-None.
+- **Add the Cloudflare rate-limiting rule** before the public launch (docs/operations.md › After the first deploy, step 5; 032-later L2). Until then share links and the invite preview have no request limit.
+- **Check a link preview on staging** once deployed: paste an `app-staging.ourcocon.com/r/…` link into iMessage or WhatsApp and see the photo, name and description. The preview is built by nginx (njs), which can't run under `pnpm dev`.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-21: Built. Table `share_links` (one active link per recipe, token made by the database, stopping is one-way and records who and through what; members can't delete links). The public endpoint is a Supabase Edge Function, `shared-recipe`, the only one Caddy lets through; it reads `shared_recipe(token)` (service role only) and signs only that recipe's photos (032-later L26). A deleted recipe's link reads "no longer shared" until it's restored (L38). Open Graph and `noindex` come from nginx (njs) for `/r/*`; the page also sets them. "Save to my Our Cocon" copies the recipe, its photos and variants into the viewer's family through the recipe form's own save, checked with the shared schemas, Source "Shared by {name}"; signed out or without a family it waits through sign-in (at most an hour; cleared on sign-out). Shared-page events go through a separate anonymous PostHog client; the page's timers send nothing, and `app_opened` isn't sent when the app opens on a shared page. New design-system pieces: ShareTile, LinkField, RecipeSummary, PublicScreen, IngredientRow `compact`, SettingRow `disabled`, Link `warn`. Deviations:
+  - With variants included, the page shows a Version block like OC-Recipe above Servings.
+  - "Not shared": tiles and switches disabled, "Stop sharing this link" hidden.
+  - Steps use StepCard (number badge and name) and its timer row ("Start timer" + clock) instead of "{n} · {name}" and "Start {duration} timer".
+  - "From the {family} family" drops a leading "The".
+  - Metric · Imperial sits inside the Servings card.
+  - Not drawn, added to the UI specs: the share sheet's "Couldn't create the link…" and "Couldn't change that…"; the page's loading, couldn't-load, "Saving…" and save-failed states, and "Shared from Our Cocon".
+  - SC-001: the answer holds no member ids and no family data; the family and recipe ids appear only inside photo paths, which Supabase's signed links carry anyway and which give no access on their own.
+  - The share endpoint also returns total time, prep time, cuisine and best months, so a saved copy keeps them.

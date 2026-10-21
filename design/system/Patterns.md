@@ -16,6 +16,13 @@ These are the layouts every Our Cocon screen is built from. Compose new screens 
 - The main CTA (ink, 60, "Start cooking") ends the content. The `TimerPill` sticks centred 108 from the top while timers exist.
 - In the app: `PhotoScreen` (packages/ui Layout), with the photo, the left and right buttons and the content.
 
+## Public page (shared recipe)
+
+- For pages anyone can open without an account (OC-SharedView, spec 019). No tab bar, no back button.
+- A white header bar 64 tall with a 1.5 px `line` border: the 30 px mark and "Our Cocon" 16/900 on the left, a sage Tag ("View only") on the right.
+- Then the photo 220 tall, edge to edge (left out on a state with no recipe), and the content with padding 20 × 20 × 40, blocks 16 apart.
+- In the app: `PublicScreen` (packages/ui Layout).
+
 ## Pushed screen without photo (settings sub-pages, timers)
 
 - A back link (olive, 16/800, chevron) 44 tall at the top-left, then a `display-lg` title and a `body-sm` muted lead.

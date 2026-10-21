@@ -27,9 +27,10 @@
 }
 
 # Supabase's public API only. Studio, /pg/ (database admin) and Supabase's own /mcp stay private.
+# Of the Edge Functions, only the share endpoint is public (spec 019).
 # (Plain respond/reverse_proxy, not handle blocks: Caddy runs handle before the abort above.)
 (api) {
-	@private not path /auth/v1/* /rest/v1/* /realtime/v1/* /storage/v1/* /graphql/v1 /graphql/v1/* /.well-known/oauth-authorization-server*
+	@private not path /auth/v1/* /rest/v1/* /realtime/v1/* /storage/v1/* /graphql/v1 /graphql/v1/* /.well-known/oauth-authorization-server* /functions/v1/shared-recipe
 	respond @private 404
 	reverse_proxy {args[0]}-api:8000
 }

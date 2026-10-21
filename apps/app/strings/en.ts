@@ -238,6 +238,66 @@ export const strings = {
     loadFailedBody: "It may have been deleted, or you're offline.",
     retry: 'Try again',
   },
+  // design/ui/OC-Share.md (spec 019): the share sheet.
+  share: {
+    title: 'Share this recipe',
+    close: 'Close',
+    /** Family names read "The Smiths" (OC-Welcome), so a leading "The" isn't said twice. */
+    fromFamily: (family: string) => `From the ${family.replace(/^the\s+/i, '')} family`,
+    photo: 'Recipe photo',
+    viewOnly: "View only. Anyone with the link can read and cook it, but can't change it or see your other recipes.",
+    linkLabel: 'Link',
+    creating: 'Creating link…',
+    notShared: 'Not shared',
+    copy: 'Copy link',
+    copied: 'Copied ✓',
+    copiedBanner: 'Link copied',
+    createNew: 'Create a new link',
+    message: 'Message',
+    email: 'Email',
+    more: 'More',
+    /** What Message, Email and More send: "{recipe name} — {link}". */
+    shareText: (name: string, url: string) => `${name} — ${url}`,
+    includeVariants: 'Include variants',
+    includeTips: "Include chef's tips",
+    stop: 'Stop sharing this link',
+    stopTitle: 'Stop sharing?',
+    stopBody: 'The link will stop working for everyone who has it.',
+    stopConfirm: 'Stop sharing',
+    stopKeep: 'Keep sharing',
+    // Not drawn (written for spec 019, added to OC-Share.md).
+    failed: "Couldn't create the link. Check your connection and try again.",
+    retry: 'Try again',
+    changeFailed: "Couldn't change that. Try again.",
+  },
+  // design/ui/OC-SharedView.md (spec 019): the public shared recipe page.
+  sharedView: {
+    brand: 'Our Cocon',
+    viewOnly: 'View only',
+    photo: 'Recipe photo',
+    sharedBy: (name: string) => `Shared by ${name}`,
+    /** When whoever made the link has left the family. */
+    sharedByNobody: 'Shared from Our Cocon',
+    servings: 'Servings',
+    units: 'Units',
+    ingredients: 'Ingredients',
+    showMore: (n: number) => `Show ${n} more`,
+    steps: 'Steps',
+    promoTitle: "Keep your family's recipes together",
+    promoBody: (recipe: string) => `Save this ${recipe} to your own Our Cocon and cook it with timers and servings that adapt.`,
+    save: 'Save to my Our Cocon',
+    stoppedTitle: 'This recipe is no longer shared.',
+    stoppedBody: 'Ask the person who sent it for a new link.',
+    loading: 'Loading recipe',
+    // Not drawn (written for spec 019, added to OC-SharedView.md).
+    loadFailedTitle: "We couldn't open this recipe.",
+    loadFailedBody: 'Check your connection and try again.',
+    retry: 'Try again',
+    saving: 'Saving…',
+    saveFailed: "Couldn't save this recipe. Try again.",
+    /** The copy's Source field, crediting who shared it (FR-004). */
+    source: (name: string) => `Shared by ${name}`,
+  },
   // design/ui/OC-ScaleIng.md (spec 013)
   scaleSheet: {
     title: 'Scale by an ingredient',

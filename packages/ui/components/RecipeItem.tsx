@@ -57,3 +57,40 @@ export function RecipeItem({ name, meta, author, photoUri, placeholderTone = 'pe
     </Pressable>
   );
 }
+
+export interface RecipeSummaryProps {
+  name: string;
+  /** "From the Our Cocon family". */
+  sub: string;
+  photoUri?: string;
+  /** The photo's screen-reader name. */
+  photoLabel: string;
+}
+
+/**
+ * A recipe named at the top of a sheet (RecipeItem README › Summary; OC-Share): 64 thumbnail,
+ * name and one line under it, on a white card. Not tappable.
+ */
+export function RecipeSummary({ name, sub, photoUri, photoLabel }: RecipeSummaryProps) {
+  return (
+    <View className="flex-row items-center gap-12 rounded-[20px] bg-surface-card p-10">
+      {photoUri ? (
+        <Image source={{ uri: photoUri }} resizeMode="cover" role="img" aria-label={photoLabel} className="h-[64px] w-[64px] rounded-[14px]" />
+      ) : (
+        <View aria-hidden className="h-[64px] w-[64px] items-center justify-center rounded-[14px] bg-peach">
+          <Text size={22} weight="900" color="peach-ink">
+            {name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      )}
+      <View className="min-w-0 flex-1">
+        <Text size={17} weight="900" numberOfLines={2}>
+          {name}
+        </Text>
+        <Text size={14} weight="600" color="ink-muted">
+          {sub}
+        </Text>
+      </View>
+    </View>
+  );
+}

@@ -95,6 +95,14 @@ export const events = {
   recipe_deleted: z.strictObject({ source: z.enum(['app']) }),
   // Spec 018: a deleted recipe brought back (Restore, or Undo with 0); whole days since it was deleted.
   recipe_restored: z.strictObject({ days_since_delete: z.int().min(0).max(30) }),
+  // Spec 019: a view-only link made (when the share sheet opens, or "Create a new link"), and
+  // stopped, with how many whole days it was shared.
+  share_link_created: z.strictObject({}),
+  share_link_stopped: z.strictObject({ days_active: z.int().min(0) }),
+  // Spec 019: on the public shared page. Anonymous only (`createAnonymousTracker`): no person,
+  // even when the viewer is signed in (constitution VI).
+  shared_recipe_viewed: z.strictObject({}),
+  shared_units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
 } as const;
 
 export type EventName = keyof typeof events;
@@ -137,6 +145,33 @@ export function createTracker(transport: AnalyticsTransport | null): Tracker {
     },
     reset() {
       out.reset();
+    },
+  };
+}
+
+/** Events a shared-recipe page sends (spec 019). Never identified. */
+export const anonymousEvents = ['shared_recipe_viewed', 'shared_units_toggled'] as const satisfies readonly EventName[];
+export type AnonymousEventName = (typeof anonymousEvents)[number];
+
+/** Sends events with no person attached: its transport must never identify anyone. */
+export interface AnonymousTransport {
+  capture(event: string, props: Record<string, unknown>): void;
+}
+
+export interface AnonymousTracker {
+  track<E extends AnonymousEventName>(event: E, props: EventProps<E>): void;
+}
+
+/**
+ * The shared page's tracker (spec 019). Only the anonymous events, validated like the others; the
+ * app's transport is a separate PostHog client that keeps no identity.
+ */
+export function createAnonymousTracker(transport: AnonymousTransport | null): AnonymousTracker {
+  return {
+    track(event, props) {
+      if (!(anonymousEvents as readonly string[]).includes(event)) throw new Error(`Not an anonymous event: ${String(event)}`);
+      const schema = events[event] as z.ZodType;
+      transport?.capture(event, schema.parse(props) as Record<string, unknown>);
     },
   };
 }

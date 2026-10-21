@@ -6,7 +6,7 @@ export { cn } from './cn';
 
 export { Text, type TextProps, type TextVariant, type TextColor, type Weight } from './components/Text';
 export { BrandMark, Icon, Logo, type BrandName, type IconName, type IconProps } from './components/Icon';
-export { AppFrame, TabScreen, PushedScreen, PhotoScreen, FormScreen, type PhotoScreenProps } from './components/Layout';
+export { AppFrame, TabScreen, PushedScreen, PhotoScreen, PublicScreen, FormScreen, type PhotoScreenProps, type PublicScreenProps } from './components/Layout';
 
 export { Button, Link, type ButtonProps, type ButtonVariant, type ButtonSize, type LinkProps } from './components/Button';
 export { IconButton, type IconButtonProps, type IconButtonVariant } from './components/IconButton';
@@ -25,7 +25,8 @@ export { PhotoField, type PhotoFieldProps } from './components/PhotoField';
 export { PhotoCrop, PHOTO_ASPECT, type CropRect, type PhotoCropProps } from './components/PhotoCrop';
 export { ListGroup, ListRow, Overline, IngredientRow, type ListRowProps } from './components/ListRow';
 export { Card, HeroCard, Photo, PhotoPlaceholder, type CardProps } from './components/Card';
-export { RecipeItem, RecipeItemSkeleton, type RecipeItemProps } from './components/RecipeItem';
+export { RecipeItem, RecipeItemSkeleton, RecipeSummary, type RecipeItemProps, type RecipeSummaryProps } from './components/RecipeItem';
+export { LinkField, type LinkFieldProps } from './components/LinkField';
 export { StatTile, type StatTileProps } from './components/StatTile';
 export { Callout, type CalloutProps, type CalloutVariant } from './components/Callout';
 export { Avatar, AvatarStack, avatarTone, type AvatarTone } from './components/Avatar';
@@ -44,4 +45,5 @@ export { IngredientEditCard, type IngredientEditCardProps, type IngredientEditFi
 export { ReorderList, dropIndex, type ReorderListProps } from './components/ReorderList';
 export { FieldPair, StepEditCard, StepNote, StepPreview, type StepEditCardProps } from './components/StepEditCard';
 export { TokenEditor, type TokenEditorProps, type TokenPart } from './components/TokenEditor';
+export { ShareTile, type ShareTileProps } from './components/ShareTile';
 export { ToggleTile, type ToggleTileProps } from './components/ToggleTile';

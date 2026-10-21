@@ -116,6 +116,8 @@ textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-siz
 .oc-ingredient__amt { width: 104px; flex: none; font-size: 17px; font-weight: 900; }
 .oc-ingredient__name { font-size: 16px; font-weight: 700; }
 .oc-ingredient__sub { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.oc-ingredient--compact { padding: 10px 0; font-size: 16px; justify-content: space-between; }
+.oc-ingredient--compact .oc-ingredient__amt { width: auto; font-size: 16px; text-align: right; }
 
 /* ---------- Card ---------- */
 .oc-card { box-sizing: border-box; background: var(--surface-card); border-radius: var(--radius-xl); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
@@ -136,6 +138,8 @@ textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-siz
 .oc-recipe-item__meta { font-size: 14px; font-weight: 600; color: var(--ink-muted); margin-top: 2px; }
 .oc-recipe-item--loading .oc-recipe-item__thumb, .oc-recipe-item__bar { background: var(--surface-soft); }
 .oc-recipe-item__bar { border-radius: var(--radius-xs); margin-top: 8px; }
+.oc-recipe-item--summary { gap: 12px; border-radius: 20px; }
+.oc-recipe-item--summary .oc-recipe-item__thumb { width: 64px; height: 64px; border-radius: 14px; }
 .oc-recipe-item__by { font-size: 13px; font-weight: 700; color: var(--olive); margin-top: 6px; }
 
 /* ---------- StatTile ---------- */
@@ -312,6 +316,18 @@ textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-siz
 .oc-tokens:focus-within { border-color: var(--olive); }
 .oc-tokens__chip { background: var(--sage); border-radius: 6px; }
 .oc-tokens__chip--missing { background: var(--warn-soft); color: var(--warn); }
+
+/* ---------- LinkField ---------- */
+.oc-linkfield { display: flex; gap: 8px; }
+.oc-linkfield__value { flex: 1; min-width: 0; height: 54px; border-radius: 16px; background: var(--surface-card); border: 2px solid var(--line-strong); display: flex; align-items: center; padding: 0 14px; font-size: 15px; font-weight: 700; color: var(--ink-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.oc-linkfield__action { height: 54px; padding: 0 18px; border-radius: 16px; border: none; background: var(--ink); color: var(--on-olive); font-size: 16px; font-weight: 900; }
+.oc-linkfield__action:disabled { background: var(--on-ink); color: var(--ink-muted); }
+
+/* ---------- ShareTile ---------- */
+.oc-sharetile { height: 76px; border-radius: 18px; border: none; background: var(--surface-soft); color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 800; }
+.oc-sharetile--honey { background: var(--honey); }
+.oc-sharetile:disabled { background: var(--on-ink); color: var(--ink-muted); }
+.oc-sharetile:focus-visible { outline: 3px solid var(--olive); outline-offset: 2px; }
 
 /* ---------- ToggleTile ---------- */
 .oc-toggletile { height: 48px; border-radius: 14px; border: 2px solid var(--line-strong); background: var(--surface-card); color: var(--ink); font-size: 14px; font-weight: 800; }

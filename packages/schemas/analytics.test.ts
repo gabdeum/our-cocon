@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createTracker, type AnalyticsTransport } from './analytics';
+import { createAnonymousTracker, createTracker, type AnalyticsTransport } from './analytics';
 
 function fakeTransport() {
   return { capture: vi.fn(), identify: vi.fn(), group: vi.fn(), reset: vi.fn() } satisfies AnalyticsTransport;
@@ -193,5 +193,31 @@ describe('spec 015 events', () => {
     tracker.track('ingredient_line_added', { parsed: true });
     expect(t.capture).toHaveBeenCalledWith('ingredient_line_added', { parsed: true });
     expect(() => tracker.track('ingredient_line_added', { parsed: true, name: 'Leeks' } as never)).toThrow();
+  });
+
+  it('sends the share link events with a day count only (spec 019)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('share_link_created', {});
+    tracker.track('share_link_stopped', { days_active: 3 });
+    expect(t.capture).toHaveBeenCalledWith('share_link_stopped', { days_active: 3 });
+    expect(() => tracker.track('share_link_created', { recipe: 'Quiche' } as never)).toThrow();
+    expect(() => tracker.track('share_link_stopped', { days_active: -1 })).toThrow();
+  });
+});
+
+describe('createAnonymousTracker (spec 019)', () => {
+  it('sends only the shared page events, validated', () => {
+    const t = { capture: vi.fn() };
+    const tracker = createAnonymousTracker(t);
+    tracker.track('shared_recipe_viewed', {});
+    tracker.track('shared_units_toggled', { system: 'imperial' });
+    expect(t.capture).toHaveBeenCalledWith('shared_units_toggled', { system: 'imperial' });
+    expect(() => tracker.track('shared_units_toggled', { system: 'cups' } as never)).toThrow();
+    expect(() => tracker.track('share_link_created' as never, {} as never)).toThrow();
+  });
+
+  it('does nothing without a transport', () => {
+    expect(() => createAnonymousTracker(null).track('shared_recipe_viewed', {})).not.toThrow();
   });
 });
