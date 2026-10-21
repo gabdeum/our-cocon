@@ -38,6 +38,8 @@ import {
   type BodySegment,
   type Selection,
   type StepDraft,
+  type StepField,
+  type StepWarning,
   type StepWarnings,
 } from '../../../lib/recipe-steps';
 import { defaultFormat, stepParts } from '../../../lib/recipe-view';
@@ -145,10 +147,65 @@ interface OpenStepProps extends StepsSectionProps {
   segments: BodySegment[];
 }
 
-/** The expanded step: name, Instructions with chips, Preview, and its add-ons. */
-function OpenStep({ draft: d, number, handle, names, segments, ...p }: OpenStepProps) {
+/** The expanded step: name, then its fields, and "Remove step". */
+function OpenStep({ draft: d, number, handle, names, ...p }: OpenStepProps) {
   const warned = p.warnings[d.key] ?? {};
-  const change = (patch: Partial<StepDraft>) => p.onChange(d.key, patch);
+  return (
+    <StepEditCard
+      number={number}
+      handle={handle}
+      expanded
+      title={d.name}
+      openLabel={s.open(number, d.name.trim())}
+      onOpen={() => undefined}
+      attention={Object.keys(warned).length > 0}
+      header={<TextField label={s.stepName} labelHidden size="sm" value={d.name} maxLength={60} onChangeText={(name) => p.onChange(d.key, { name })} />}
+    >
+      <StepFieldsEditor
+        draft={d}
+        number={number}
+        names={names}
+        ingredients={p.ingredients}
+        knownNames={p.knownNames}
+        unused={unusedIngredients(p.ingredients, p.steps)}
+        warnings={warned}
+        onChange={(patch) => p.onChange(d.key, patch)}
+        photo={{ state: p.photo(d.key), onPick: () => p.onPickPhoto(d.key), onRemove: () => p.onRemovePhoto(d.key), onRetry: () => p.onRetryPhoto(d.key) }}
+      />
+      <Link label={s.removeStep} tone="danger" onPress={() => p.onRemove(d.key)} className="self-start" />
+    </StepEditCard>
+  );
+}
+
+export type StepAddOn = 'timer' | 'temp' | 'tip' | 'photo';
+
+export interface StepFieldsEditorProps {
+  draft: StepDraft;
+  /** For the photo's label. */
+  number: number;
+  /** The ingredients' names by id, for chips. */
+  names: ReadonlyMap<string, string>;
+  /** The ingredients as they are now, for "@" and the Preview. */
+  ingredients: QuantityIngredient[];
+  /** Names of ingredients the recipe had when the form opened, for the Preview of a removed one. */
+  knownNames: ReadonlyMap<string, string>;
+  /** Ingredients no step mentions yet: the "+ Leeks" chips. */
+  unused: { id: string; name: string }[];
+  warnings: Partial<Record<StepField, StepWarning>>;
+  onChange: (patch: Partial<StepDraft>) => void;
+  /** The add-ons offered, in the toggles' order; a recipe step offers all four. */
+  addOns?: readonly StepAddOn[];
+  photo?: { state: StepPhotoState; onPick: () => void; onRemove: () => void; onRetry: () => void };
+}
+
+const allAddOns: readonly StepAddOn[] = ['timer', 'temp', 'tip', 'photo'];
+
+/**
+ * A step's fields (OC-EditSteps): Instructions with chips, "@" and "+ Leeks", Preview, and its
+ * add-ons. Also the editor of a variant's added or changed step (spec 017).
+ */
+export function StepFieldsEditor({ draft: d, number, names, ingredients, knownNames, unused, warnings: warned, onChange: change, addOns = allAddOns, photo: photoProps }: StepFieldsEditorProps) {
+  const segments = segmentsOf(d.body, names);
   const shown = shownText(segments);
   // Where the caret is (what an edit or an insert works from), and where to put it after one.
   const [selection, setSelection] = useState<Selection>({ start: shown.length, end: shown.length });
@@ -167,31 +224,37 @@ function OpenStep({ draft: d, number, handle, names, segments, ...p }: OpenStepP
   };
 
   const mention = focused && selection.start === selection.end ? mentionAt(shown, selection.end) : null;
-  const matches = mention ? matchMentions(mention.query, p.ingredients) : [];
-  const unused = unusedIngredients(p.ingredients, p.steps);
+  const matches = mention ? matchMentions(mention.query, ingredients) : [];
   const temps = temperaturesIn(d.body);
   const missing = missingIn(d.body, new Set(names.keys())).length > 0;
   let preview: ReturnType<typeof stepParts>;
   try {
-    preview = stepParts(d.body, p.ingredients, defaultFormat, p.knownNames);
+    preview = stepParts(d.body, ingredients, defaultFormat, knownNames);
   } catch {
     // An amount the engine can't read yet: the text as it shows in the editor.
     preview = [shown];
   }
-  const photo = p.photo(d.key);
+  const photo = photoProps?.state;
   const temp = tempLine(d);
+  const tiles: Record<StepAddOn, React.ReactNode> = {
+    timer: (
+      <ToggleTile
+        key="timer"
+        label={s.timer}
+        selectedLabel={s.on(s.timer)}
+        selected={d.timerOn}
+        onPress={() => change(d.timerOn ? { timerOn: false } : { timerOn: true, timerLabel: d.timerLabel || d.name.trim() })}
+      />
+    ),
+    temp: <ToggleTile key="temp" label={s.temperature} selectedLabel={s.on(s.temperature)} selected={d.tempOn} onPress={() => change({ tempOn: !d.tempOn })} />,
+    tip: <ToggleTile key="tip" label={s.tip} selectedLabel={s.on(s.tip)} selected={d.tipOn} onPress={() => change({ tipOn: !d.tipOn })} />,
+    photo: <ToggleTile key="photo" label={s.photo} selectedLabel={s.on(s.photo)} selected={d.photoOn} onPress={() => change({ photoOn: !d.photoOn })} />,
+  };
+  const offered = addOns.filter((a) => a !== 'photo' || photoProps);
+  const rows = offered.reduce<StepAddOn[][]>((out, a, i) => (i % 2 === 0 ? [...out, [a]] : [...out.slice(0, -1), [...(out.at(-1) ?? []), a]]), []);
 
   return (
-    <StepEditCard
-      number={number}
-      handle={handle}
-      expanded
-      title={d.name}
-      openLabel={s.open(number, d.name.trim())}
-      onOpen={() => undefined}
-      attention={Object.keys(warned).length > 0}
-      header={<TextField label={s.stepName} labelHidden size="sm" value={d.name} maxLength={60} onChangeText={(name) => change({ name })} />}
-    >
+    <>
       <View className="gap-6">
         <TokenEditor
           label={s.instructions}
@@ -275,26 +338,22 @@ function OpenStep({ draft: d, number, handle, names, segments, ...p }: OpenStepP
         <StepText parts={preview} compact />
       </StepPreview>
 
-      <Text size={14} weight="900">
-        {s.addTo}
-      </Text>
-      <View className="gap-8">
-        <View className="flex-row gap-8">
-          <ToggleTile
-            label={s.timer}
-            selectedLabel={s.on(s.timer)}
-            selected={d.timerOn}
-            onPress={() => change(d.timerOn ? { timerOn: false } : { timerOn: true, timerLabel: d.timerLabel || d.name.trim() })}
-          />
-          <ToggleTile label={s.temperature} selectedLabel={s.on(s.temperature)} selected={d.tempOn} onPress={() => change({ tempOn: !d.tempOn })} />
-        </View>
-        <View className="flex-row gap-8">
-          <ToggleTile label={s.tip} selectedLabel={s.on(s.tip)} selected={d.tipOn} onPress={() => change({ tipOn: !d.tipOn })} />
-          <ToggleTile label={s.photo} selectedLabel={s.on(s.photo)} selected={d.photoOn} onPress={() => change({ photoOn: !d.photoOn })} />
-        </View>
-      </View>
+      {rows.length > 0 ? (
+        <>
+          <Text size={14} weight="900">
+            {s.addTo}
+          </Text>
+          <View className="gap-8">
+            {rows.map((row) => (
+              <View key={row.join()} className="flex-row gap-8">
+                {row.map((a) => tiles[a])}
+              </View>
+            ))}
+          </View>
+        </>
+      ) : null}
 
-      {d.timerOn ? (
+      {d.timerOn && addOns.includes('timer') ? (
         <FieldPair
           first={
             <TextField
@@ -310,7 +369,7 @@ function OpenStep({ draft: d, number, handle, names, segments, ...p }: OpenStepP
         />
       ) : null}
 
-      {d.tempOn ? (
+      {d.tempOn && addOns.includes('temp') ? (
         <View className="gap-8">
           <View className="flex-row items-end gap-8">
             <TextField
@@ -351,7 +410,7 @@ function OpenStep({ draft: d, number, handle, names, segments, ...p }: OpenStepP
         </View>
       ) : null}
 
-      {d.tipOn ? (
+      {d.tipOn && addOns.includes('tip') ? (
         <TextField
           label={s.tipField}
           multiline
@@ -363,31 +422,29 @@ function OpenStep({ draft: d, number, handle, names, segments, ...p }: OpenStepP
         />
       ) : null}
 
-      {d.photoOn ? (
+      {d.photoOn && photo && photoProps ? (
         <PhotoField
           source={photo.source}
           loading={photo.loading}
           addLabel={f.addPhoto}
-          onAdd={() => p.onPickPhoto(d.key)}
+          onAdd={photoProps.onPick}
           changeLabel={f.changePhoto}
-          onChange={() => p.onPickPhoto(d.key)}
+          onChange={photoProps.onPick}
           removeLabel={f.removePhoto}
-          onRemove={() => p.onRemovePhoto(d.key)}
+          onRemove={photoProps.onRemove}
           photoLabel={s.photoLabel(number)}
           busyLabel={photo.uploading ? f.uploadingPhoto : undefined}
           disabled={photo.uploading}
         />
       ) : null}
-      {d.photoOn && photo.failed ? (
+      {d.photoOn && photo?.failed && photoProps ? (
         <View className="flex-row items-center gap-12">
           <Text size={14} weight="700" color="warn" className="flex-1">
             {f.photoFailed}
           </Text>
-          <Link label={f.photoRetry} onPress={() => p.onRetryPhoto(d.key)} />
+          <Link label={f.photoRetry} onPress={photoProps.onRetry} />
         </View>
       ) : null}
-
-      <Link label={s.removeStep} tone="danger" onPress={() => p.onRemove(d.key)} className="self-start" />
-    </StepEditCard>
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { VariantChange, type IngredientRow, type RecipeVariant, type StepRow } from '@cocon/schemas';
+import { parseVariantChanges, type IngredientRow, type RecipeVariant, type StepRow } from '@cocon/schemas';
 import type { IngredientFactsInput } from '@cocon/quantity';
 import type { Client } from './supabase';
 
@@ -42,23 +42,13 @@ function withoutPosition<T extends { position: number }>({ position: _position, 
   return row;
 }
 
-/** A variant's changes that are valid today; one bad change (an older shape) doesn't hide the rest. */
-function parseChanges(changes: unknown): VariantChange[] {
-  if (!Array.isArray(changes)) return [];
-  // The same cap as VariantInput, so an oversized row can't slow every open.
-  return changes.slice(0, 50).flatMap((c) => {
-    const parsed = VariantChange.safeParse(c);
-    return parsed.success ? [parsed.data] : [];
-  });
-}
-
 /** The recipe (RLS returns it only to its family), or null when there's no such recipe for them. */
 export async function loadRecipe(client: Pick<Client, 'from'>, id: string): Promise<RecipeDetail | null> {
   const { data, error } = await client.from('recipes').select(columns).eq('id', id).maybeSingle();
   if (error) throw error;
   if (!data) return null;
   const { recipe_ingredients, recipe_steps, recipe_variants, ...recipe } = data;
-  const variants = [...recipe_variants].sort(byPosition).map((v) => ({ ...v, changes: parseChanges(v.changes) }));
+  const variants = [...recipe_variants].sort(byPosition).map((v) => ({ ...v, changes: parseVariantChanges(v.changes) }));
 
   const keys = new Set<string>();
   for (const i of recipe_ingredients) if (i.catalog_key) keys.add(i.catalog_key);

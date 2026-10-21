@@ -351,3 +351,77 @@ exports[`recipeView (FR-004) > SC-002: matches the quantity engine for every var
   ],
 }
 `;
+
+exports[`steps (spec 009) > spec 017 SC-001: every variant combination of the seed quiche, step by step 1`] = `
+{
+  "choice": {
+    "options": [],
+    "version": null,
+  },
+  "steps": [
+    "1 Preheat and line: Preheat the oven to 180 °C (350 °F). Line a 23 cm (9 in) tart pan with 1 sheet of shortcrust pastry (230 g) and prick the base with a fork.",
+    "2 Blind bake: Bake the empty crust for 12 minutes until pale golden.",
+    "3 Cook the filling: In a large pan, melt 20 g butter over medium heat. Add 2 leeks (300 g) finely sliced and cook 6–8 minutes until soft. Add 200 g bacon lardons and cook 5 minutes until golden.",
+    "4 Mix the custard: Whisk 3 large eggs (150 g) with 300 ml heavy cream and 1 pinch of nutmeg. Season with salt and pepper, then stir in half of the 100 g gruyère.",
+    "5 Bake: Spread the filling in the crust, pour over the custard and top with the rest of the cheese. Bake for 35 minutes.",
+    "6 Rest: Let it rest for 10 minutes before slicing, so it holds together.",
+  ],
+}
+`;
+
+exports[`steps (spec 009) > spec 017 SC-001: every variant combination of the seed quiche, step by step 2`] = `
+{
+  "choice": {
+    "options": [],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "steps": [
+    "1 Preheat and line: Preheat the oven to 180 °C (350 °F). Line a 23 cm (9 in) tart pan with 1 sheet of shortcrust pastry (230 g) and prick the base with a fork.",
+    "2 Blind bake: Bake the empty crust for 12 minutes until pale golden.",
+    "3 Cook the filling: In a large pan, melt 20 g butter over medium heat. Add 2 leeks (300 g) finely sliced and cook 6–8 minutes until soft. Add 250 g mushrooms and cook 5 minutes until golden.",
+    "4 Mix the custard: Whisk 3 large eggs (150 g) with 300 ml heavy cream and 1 pinch of nutmeg. Season with salt and pepper, then stir in half of the 100 g gruyère.",
+    "5 Bake: Spread the filling in the crust, pour over the custard and top with the rest of the cheese. Bake for 35 minutes.",
+    "6 Rest: Let it rest for 10 minutes before slicing, so it holds together.",
+  ],
+}
+`;
+
+exports[`steps (spec 009) > spec 017 SC-001: every variant combination of the seed quiche, step by step 3`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": null,
+  },
+  "steps": [
+    "1 Make the dough [Variant]: Rub 200 g flour and 100 g cold butter together with your fingertips until sandy. Add 50 ml ice water, bring into a ball, wrap and chill.",
+    "2 Preheat and line [Variant]: Preheat the oven to 180 °C (350 °F). Line a 23 cm (9 in) tart pan with the rolled-out dough and prick the base with a fork.",
+    "3 Blind bake: Bake the empty crust for 12 minutes until pale golden.",
+    "4 Cook the filling: In a large pan, melt 20 g butter over medium heat. Add 2 leeks (300 g) finely sliced and cook 6–8 minutes until soft. Add 200 g bacon lardons and cook 5 minutes until golden.",
+    "5 Mix the custard: Whisk 3 large eggs (150 g) with 300 ml heavy cream and 1 pinch of nutmeg. Season with salt and pepper, then stir in half of the 100 g gruyère.",
+    "6 Bake: Spread the filling in the crust, pour over the custard and top with the rest of the cheese. Bake for 35 minutes.",
+    "7 Rest: Let it rest for 10 minutes before slicing, so it holds together.",
+  ],
+}
+`;
+
+exports[`steps (spec 009) > spec 017 SC-001: every variant combination of the seed quiche, step by step 4`] = `
+{
+  "choice": {
+    "options": [
+      "c0c03000-0000-4000-8000-000000000002",
+    ],
+    "version": "c0c03000-0000-4000-8000-000000000001",
+  },
+  "steps": [
+    "1 Make the dough [Variant]: Rub 200 g flour and 100 g cold butter together with your fingertips until sandy. Add 50 ml ice water, bring into a ball, wrap and chill.",
+    "2 Preheat and line [Variant]: Preheat the oven to 180 °C (350 °F). Line a 23 cm (9 in) tart pan with the rolled-out dough and prick the base with a fork.",
+    "3 Blind bake: Bake the empty crust for 12 minutes until pale golden.",
+    "4 Cook the filling: In a large pan, melt 20 g butter over medium heat. Add 2 leeks (300 g) finely sliced and cook 6–8 minutes until soft. Add 250 g mushrooms and cook 5 minutes until golden.",
+    "5 Mix the custard: Whisk 3 large eggs (150 g) with 300 ml heavy cream and 1 pinch of nutmeg. Season with salt and pepper, then stir in half of the 100 g gruyère.",
+    "6 Bake: Spread the filling in the crust, pour over the custard and top with the rest of the cheese. Bake for 35 minutes.",
+    "7 Rest: Let it rest for 10 minutes before slicing, so it holds together.",
+  ],
+}
+`;

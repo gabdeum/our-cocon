@@ -89,6 +89,8 @@ export const events = {
   ingredient_line_added: z.strictObject({ parsed: z.boolean() }),
   // Spec 016: a step new to the recipe, sent once the form saved it; which add-ons it has.
   recipe_step_added: z.strictObject({ has_timer: z.boolean(), has_temperature: z.boolean(), has_tip: z.boolean() }),
+  // Spec 017: a variant new to the recipe, sent once the form saved it; how many changes it makes.
+  variant_created: z.strictObject({ change_count: z.int().min(1).max(50) }),
 } as const;
 
 export type EventName = keyof typeof events;

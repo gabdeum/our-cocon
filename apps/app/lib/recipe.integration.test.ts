@@ -79,7 +79,8 @@ describe.skipIf(!local)('the recipe page against local Supabase', () => {
         kind: 'version',
         changes: [
           { type: 'swap_ingredient', ingredient_id: lardons, with: [{ id: randomUUID(), name: 'Leeks', catalog_key: 'leek', quantity: 1, unit: 'piece' }] },
-          { type: 'not_a_change', anything: true },
+          // A known type in a shape Zod refuses (the database only checks the type, spec 017).
+          { type: 'remove_step', anything: true },
         ],
       },
       {

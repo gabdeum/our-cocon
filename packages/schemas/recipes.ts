@@ -141,10 +141,14 @@ export const VariantChange = z.discriminatedUnion('type', [
 ]);
 export type VariantChange = z.infer<typeof VariantChange>;
 
+/** At most this many variants a recipe, and changes a variant (spec 017; the database checks both). */
+export const MAX_VARIANTS = 20;
+export const MAX_VARIANT_CHANGES = 50;
+
 export const VariantInput = z.strictObject({
   position: Position,
   name: Text(40),
   kind: VariantKind,
-  changes: z.array(VariantChange).max(50),
+  changes: z.array(VariantChange).max(MAX_VARIANT_CHANGES),
 });
 export type VariantInput = z.infer<typeof VariantInput>;

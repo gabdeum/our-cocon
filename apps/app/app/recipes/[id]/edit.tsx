@@ -13,11 +13,13 @@ const f = strings.recipeForm;
 /**
  * /recipes/[id]/edit?section=… (spec 014): the recipe form for a saved recipe, a full-screen modal.
  * Its entry is "Edit recipe" in recipe settings (017); saved or cancelled, it goes back to the recipe.
+ * `&variant=<id>` opens that variant in Variants, `&variant=new` starts one (recipe settings, 017).
  */
 export default function EditRecipeRoute() {
-  const params = useLocalSearchParams<{ id: string; section?: string }>();
+  const params = useLocalSearchParams<{ id: string; section?: string; variant?: string }>();
   const parsed = z.uuid().safeParse(params.id);
   const id = parsed.success ? parsed.data : null;
+  const variant = params.variant === 'new' || z.uuid().safeParse(params.variant).success ? params.variant : undefined;
   const { state, client, tracker } = useSession();
   const familyId = state.status === 'ready' ? state.family.id : null;
   const recipe = useQuery({
@@ -58,6 +60,7 @@ export default function EditRecipeRoute() {
       userId={state.userId}
       section={sectionOf(params.section)}
       onSectionChange={(section) => router.setParams({ section })}
+      openVariant={variant}
       client={client}
       tracker={tracker}
       storage={deviceStorage}

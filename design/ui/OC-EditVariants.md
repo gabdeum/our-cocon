@@ -21,3 +21,18 @@ Source `screens/OC-EditVariants.dc.html` · Route `…/edit?section=variants` ·
 | Variant with no changes | "Add at least one change, or delete this variant" |
 | Conflict | warn line "Also changed by “{other variant}”" |
 | Broken change | warn line "This change points to something that was removed." + "Remove change" |
+
+## Not drawn (spec 017 build)
+Copy written for states and editors the screen doesn't draw; it lives in `strings/en.ts` › `recipeForm.variants`.
+
+| Where | Copy |
+| --- | --- |
+| Collapsed row, screen reader | "{name}, {n} change(s). Tap to edit." |
+| Name placeholder | "Like Vegetarian" |
+| Change tags | honey "Replace ingredient", sage "Add ingredient", honey "Remove ingredient", sage "Add step · before/after step {n}", honey "Change step {n}", honey "Remove step {n}"; a step that's gone: "Step removed" |
+| Summaries | swap "~~{old}~~ → {amounts and names}"; add "{amount} {name}"; remove "~~{name}~~"; add step "{name} · {30 min} timer"; change step "“{new text}” · {25 min} timer · No timer · Temperature check {reading} · No temperature check"; nothing yet "Nothing changed yet" |
+| Change editor | heading = the tag; pickers "Which ingredient?" / "Which step?" (radio list, "Step {n} · {name}"); "Where": "Before" · "After"; "Replace with" + ingredient rows + "+ Add another ingredient"; "New step" (name, Instructions, Timer, Temperature check, Chef's tip); "The step with this variant" (Instructions, Timer, Temperature check); soft "Done" and danger link "Remove change". Nothing to pick: "Add ingredients to the recipe first." / "Add steps to the recipe first." |
+| Change warnings | "Pick the ingredient this changes" · "Pick the step this changes" · "Add what goes in its place" · "Name the ingredient to add" · "Write the step, or remove this change" · "Change something in the step, or remove this change" · "Check the ingredients below" · "Check the step below" |
+| Delete a variant | danger link "Delete this variant" → Dialog "Delete this variant?" · "Its changes go with it. Nothing is saved until you tap Save." · "Delete" · "Keep it" |
+
+Variant ingredient rows are matched against the catalog like the Ingredients section's (suggestions while typing, matching on blur), but never ask for an aisle.

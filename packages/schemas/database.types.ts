@@ -391,6 +391,9 @@ isOneToOne: false
 "_valid_packs":
 { Args: { "p": Json }; Returns: boolean
                            },
+"_variant_changes_ok":
+{ Args: { "changes": Json }; Returns: boolean
+                           },
 "accept_invite":
 { Args: { "display_name": string,"replace_own_family"?: boolean,"token": string }; Returns: number
                            },
@@ -428,6 +431,9 @@ isOneToOne: false
                            },
 "save_recipe_steps":
 { Args: { "p_recipe_id": string,"p_steps": Json }; Returns: undefined
+                           },
+"save_recipe_variants":
+{ Args: { "p_recipe_id": string,"p_variants": Json }; Returns: undefined
                            },
 "set_display_name":
 { Args: { "display_name": string }; Returns: undefined

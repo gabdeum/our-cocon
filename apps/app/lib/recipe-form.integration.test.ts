@@ -22,6 +22,7 @@ const { loadRecipe } = await import('./recipe');
 const { draftsFromSteps, emptyStep, readSteps } = await import('./recipe-steps');
 const { defaultFormat, recipeView, stepParts } = await import('./recipe-view');
 const { quantityOf } = await import('./recipe-ingredients');
+const { draftsFromVariants, readVariants } = await import('./recipe-variants');
 const { ingredientToken, renderStep } = await import('@cocon/quantity');
 
 const local = localSupabase();
@@ -263,5 +264,47 @@ describe.skipIf(!local)('the recipe form against local Supabase', () => {
     if (!('input' in input)) throw new Error('expected details');
     expect((await saveRecipe(sam, { id: recipeId, familyId: samFamily, isNew: false }, input.input, undefined, read.rows)).ok).toBe(false);
     expect((await loadRecipeForm(alex, recipeId))?.steps).toEqual(before);
+  });
+
+  // Spec 017: the variants, saved through save_recipe_variants.
+  it('017 US1: a version swapping leeks for mushrooms changes the list and the step that mentions it', async () => {
+    const loaded = await loadRecipeForm(alex, recipeId);
+    const input = readDetails(formFromRecipe(loaded));
+    if (!('input' in input)) throw new Error('expected details');
+    const mushrooms = randomUUID();
+    const steps = loaded?.steps ?? [];
+    const version = { id: randomUUID(), name: 'Vegetarian', kind: 'version' as const, changes: [
+      { type: 'swap_ingredient' as const, ingredient_id: leekId, with: [{ id: mushrooms, name: 'Mushrooms', quantity: 250, unit: 'g' as const, prep_note: 'sliced' }] },
+    ] };
+    const option = { id: randomUUID(), name: 'Rest longer', kind: 'option' as const, changes: [
+      { type: 'add_step' as const, step_id: steps[1]?.id ?? '', place: 'after' as const, step: { name: 'Chill', body: 'Chill for an hour.', timer_seconds: 3600 } },
+    ] };
+    expect(await saveRecipe(alex, { id: recipeId, familyId, isNew: false }, input.input, undefined, undefined, [version, option])).toEqual({ ok: true, created: false, detailsSaved: true });
+
+    const recipe = await loadRecipe(mia, recipeId);
+    if (!recipe) throw new Error('recipe');
+    expect(recipe.variants.map((v) => [v.name, v.kind])).toEqual([['Vegetarian', 'version'], ['Rest longer', 'option']]);
+    const view = recipeView(recipe, recipe.serves, { version: version.id, options: [option.id] });
+    expect(view.ingredients.map((i) => [i.name, i.amount, i.variant])).toEqual([['Butter', '20 g', false], ['Mushrooms, sliced', '250 g', true]]);
+    expect(view.steps.map((st) => st.parts.map((p) => (typeof p === 'string' ? p : 'amount' in p ? p.amount : p.missing)).join(''))).toEqual([
+      'Melt 20 g butter, add 250 g mushrooms and bake at 180 °C (350 °F).',
+      'Rest.',
+      'Chill for an hour.',
+    ]);
+
+    // Opened again, nothing has changed: Save would write the same rows.
+    const again = await loadRecipeForm(alex, recipeId);
+    const read = readVariants(draftsFromVariants(again?.variants ?? [], again?.steps ?? [], again?.facts ?? {}), draftsFromSteps(again?.steps ?? []));
+    expect(read).toEqual({ rows: [version, option] });
+  });
+
+  it("017: another family can't save into this recipe's variants", async () => {
+    const before = (await loadRecipeForm(alex, recipeId))?.variants;
+    const loaded = await loadRecipeForm(alex, recipeId);
+    const input = readDetails(formFromRecipe(loaded));
+    if (!('input' in input)) throw new Error('expected details');
+    const mine = [{ id: randomUUID(), name: 'Mine now', kind: 'option' as const, changes: [] }];
+    expect((await saveRecipe(sam, { id: recipeId, familyId: samFamily, isNew: false }, input.input, undefined, undefined, mine)).ok).toBe(false);
+    expect((await loadRecipeForm(alex, recipeId))?.variants).toEqual(before);
   });
 });

@@ -18,3 +18,14 @@ Source `screens/OC-RecipeSettings.dc.html` · Route `/recipes/[id]/settings` · 
 
 ## Interactions
 Switches save instantly. Reset clears the override. "Edit", a variant card and "Add a variant" open the edit modal at Variants.
+
+## Not drawn (spec 017 build)
+| Where | Copy |
+| --- | --- |
+| Variant line | the changes in order, joined by " · ", first letter capital: "replaces {old} with {amount name}" (or "with {n} ingredients"), "adds {amount name}", "removes {name}", "adds step “{name}”", "changes step {n}", "removes step {n}"; none: "No changes yet". Changes pointing at something removed are left out. |
+| Card, screen reader | "{name}. {line}. Tap to edit." |
+| "Edit", screen reader | "Edit variants" |
+| Loading | "Loading recipe settings" (skeleton) |
+| Couldn't load | "We couldn't open this recipe." · "It may have been deleted, or you're offline." · "Try again" |
+
+Links: "Edit" → `…/edit?section=variants`; a card → `&variant={id}` (opens it); "Add a variant" → `&variant=new` (starts one).

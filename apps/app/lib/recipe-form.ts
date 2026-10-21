@@ -1,10 +1,11 @@
-import { cuisineOf, parseMinutes, RecipeInput, type Cuisine, type RecipeFormSection } from '@cocon/schemas';
+import { cuisineOf, parseMinutes, parseVariantChanges, RecipeInput, VariantChange, type Cuisine, type Json, type RecipeFormSection, type RecipeVariant } from '@cocon/schemas';
 import { strings } from '../strings/en';
 import { loadFacts } from './recipe';
 import type { ChoiceStorage } from './recipe-choices';
 import { formatTotalTime } from './recipe-format';
 import { saveIngredients, type FormFacts, type IngredientDraft, type IngredientSaveRow, type SavedIngredient } from './recipe-ingredients';
 import type { SavedStep, StepSaveRow } from './recipe-steps';
+import { saveVariants, type VariantSaveRow } from './recipe-variants';
 import type { Client } from './supabase';
 
 const f = strings.recipeForm;
@@ -54,7 +55,12 @@ export interface RecipeDetails {
   /** Spec 015: the ingredients and catalog facts by key; spec 016: the steps. */
   ingredients?: SavedIngredient[];
   steps?: SavedStep[];
-  /** Photos the recipe's variants add with their steps: the form never removes these (spec 017 edits them). */
+  /**
+   * Spec 017: the variants, in order, with the changes that are valid today, and the ones that
+   * aren't (an older shape, or an assistant's mistake), which Save writes back as they were.
+   */
+  variants?: (RecipeVariant & { unreadable?: Json[] })[];
+  /** Photos the recipe's variants add with their steps: the form never removes these. */
   variantPhotos?: string[];
   facts?: Record<string, FormFacts>;
 }
@@ -72,7 +78,7 @@ export async function loadRecipeForm(client: Pick<Client, 'from'>, id: string): 
     .from('recipes')
     .select(
       `id, name, description, serves, total_minutes, prep_minutes, cuisine, source_text, best_months, photo_path,
-      recipe_ingredients(${ingredientColumns}), recipe_steps(${stepColumns}), recipe_variants(changes)`,
+      recipe_ingredients(${ingredientColumns}), recipe_steps(${stepColumns}), recipe_variants(id, position, name, kind, changes)`,
     )
     .eq('id', id)
     .is('deleted_at', null)
@@ -80,18 +86,30 @@ export async function loadRecipeForm(client: Pick<Client, 'from'>, id: string): 
   if (error) throw error;
   if (!data) return null;
   const { recipe_ingredients, recipe_steps, recipe_variants, ...details } = data;
-  const keys = [...new Set(recipe_ingredients.flatMap((i) => (i.catalog_key ? [i.catalog_key] : [])))];
+  const variants = [...recipe_variants]
+    .sort((a, b) => a.position - b.position)
+    .map((v) => ({
+      ...v,
+      changes: parseVariantChanges(v.changes),
+      unreadable: Array.isArray(v.changes) ? v.changes.filter((c) => !VariantChange.safeParse(c).success) : [],
+    }));
+  // Variant ingredients' facts too, so their amounts read like the recipe page's (032-later L11).
+  const variantKeys = variants.flatMap((v) =>
+    v.changes.flatMap((c) => (c.type === 'swap_ingredient' ? c.with : c.type === 'add_ingredient' ? [c.ingredient] : []).flatMap((i) => (i.catalog_key ? [i.catalog_key] : []))),
+  );
+  const keys = [...new Set([...recipe_ingredients.flatMap((i) => (i.catalog_key ? [i.catalog_key] : [])), ...variantKeys])];
   return {
     ...details,
     ingredients: recipe_ingredients,
     steps: recipe_steps,
+    variants,
     variantPhotos: recipe_variants.flatMap((v) => variantStepPhotos(v.changes)),
     facts: await loadFacts(client, keys),
   };
 }
 
 /** The photo paths a variant's added steps name. Read loosely: `changes` is jsonb an assistant may have written. */
-function variantStepPhotos(changes: unknown): string[] {
+export function variantStepPhotos(changes: unknown): string[] {
   if (!Array.isArray(changes)) return [];
   return changes.flatMap((c: unknown) => {
     const path = (c as { type?: unknown; step?: { photo_path?: unknown } } | null)?.step?.photo_path;
@@ -158,8 +176,8 @@ export function readDetails(form: DetailsForm): { input: RecipeInput } | { warni
 
 /**
  * Saves the details: a new recipe with the id the form made (its photo is already under it), or an
- * edit. Then the ingredients (spec 015) and the steps (spec 016), each when they changed: steps
- * last, as they mention the ingredients. `created` says the recipe now exists even if a later part
+ * edit. Then the ingredients (spec 015), the steps (spec 016) and the variants (spec 017), each
+ * when they changed: in that order, as steps mention ingredients and variants point at both. `created` says the recipe now exists even if a later part
  * failed, so trying again updates it instead of adding it twice; `detailsSaved` says the details
  * (and so the header photo) were written, whatever happened after.
  */
@@ -169,6 +187,7 @@ export async function saveRecipe(
   input: RecipeInput,
   ingredients?: { rows: IngredientSaveRow[]; drafts: IngredientDraft[] },
   steps?: StepSaveRow[],
+  variants?: VariantSaveRow[],
 ): Promise<{ ok: boolean; created: boolean; detailsSaved: boolean }> {
   const { id, familyId, isNew } = target;
   try {
@@ -183,6 +202,7 @@ export async function saveRecipe(
   const saved = { created: isNew, detailsSaved: true };
   if (ingredients && !(await saveIngredients(client, { recipeId: id, familyId }, ingredients.rows, ingredients.drafts))) return { ok: false, ...saved };
   if (steps && !(await saveSteps(client, id, steps))) return { ok: false, ...saved };
+  if (variants && !(await saveVariants(client, id, variants))) return { ok: false, ...saved };
   return { ok: true, ...saved };
 }
 

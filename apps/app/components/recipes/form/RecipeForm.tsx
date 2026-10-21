@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { parsePastedList } from '@cocon/quantity';
 import { Button, Callout, Dialog, FormBar, FormProgress, FormScreen, PhotoCrop, type CropRect } from '@cocon/ui';
-import type { IngredientFacts, RecipeFormSection, Tracker } from '@cocon/schemas';
+import { MAX_VARIANTS, type IngredientFacts, type RecipeFormSection, type Tracker } from '@cocon/schemas';
 import { strings } from '../../../strings/en';
 import { useOnline } from '../../../lib/online';
 import type { ChoiceStorage } from '../../../lib/recipe-choices';
@@ -17,6 +17,7 @@ import {
   readAdvanced,
   readDetails,
   saveRecipe,
+  variantStepPhotos,
   writeAdvanced,
   type DetailsField,
   type DetailsForm,
@@ -54,12 +55,14 @@ import {
   type StepWarnings,
 } from '../../../lib/recipe-steps';
 import type { Client } from '../../../lib/supabase';
+import { createdVariantEvents, draftsFromVariants, emptyVariant, readVariants, variantsChanged, type VariantDraft, type VariantSaveRow, type VariantWarnings } from '../../../lib/recipe-variants';
 import { OfflineBanner } from '../../sync/OfflineBanner';
 import { CuisineSheet } from './CuisineSheet';
 import { DetailsSection } from './DetailsSection';
 import { AisleSheet, PasteSheet, UnitSheet } from './IngredientSheets';
 import { IngredientsSection } from './IngredientsSection';
 import { StepsSection } from './StepsSection';
+import { VariantsSection } from './VariantsSection';
 
 const f = strings.recipeForm;
 
@@ -83,8 +86,10 @@ export interface RecipeFormProps {
   onClose: () => void;
   /** Saved: a new recipe opens; an edit goes back to it. */
   onSaved: () => void;
-  /** Ids for added ingredients and steps; tests pass their own. */
+  /** Ids for added ingredients, steps and variants; tests pass their own. */
   newId?: () => string;
+  /** Spec 017: the variant to open in Variants (from recipe settings), or "new" to start one. */
+  openVariant?: string;
 }
 
 /** What the photo is doing between picking and Save. */
@@ -117,8 +122,8 @@ const fieldOrder: DetailsField[] = ['name', 'serves', 'totalTime', 'prepTime'];
 
 /**
  * The recipe form (spec 014, OC-EditBasics): the form bar, Progress over the four sections, the
- * section, and "Next: …". Details is built here, Ingredients (015) and Steps (016) in their
- * sections; Variants come with 017.
+ * section, and "Next: …". Details is built here, Ingredients (015), Steps (016) and Variants (017)
+ * in their sections.
  */
 export function RecipeForm({
   recipeId,
@@ -134,6 +139,7 @@ export function RecipeForm({
   onClose,
   onSaved,
   newId = randomUUID,
+  openVariant,
 }: RecipeFormProps) {
   const isNew = recipe === null;
   const online = useOnline();
@@ -184,6 +190,17 @@ export function RecipeForm({
   const [removeStepAsk, setRemoveStepAsk] = useState<string | null>(null);
   const stepY = useRef<Record<string, number>>({});
   const pendingStep = useRef<string | null>(null);
+  // Spec 017: the variants. "Add a variant" on recipe settings opens the form with a new one.
+  const [startVariants] = useState(() => draftsFromVariants(recipe?.variants ?? [], recipe?.steps ?? [], recipe?.facts ?? {}));
+  const [variants, setVariants] = useState<VariantDraft[]>(() =>
+    openVariant === 'new' && startVariants.length < MAX_VARIANTS ? [...startVariants, emptyVariant(newId())] : startVariants,
+  );
+  const [openVariantKey, setOpenVariantKey] = useState<string | null>(() =>
+    openVariant === 'new' ? (variants.at(-1)?.key ?? null) : (variants.find((d) => d.id === openVariant)?.key ?? null),
+  );
+  const [variantWarnings, setVariantWarnings] = useState<VariantWarnings>({});
+  const variantY = useRef<Record<string, number>>({});
+  const pendingVariant = useRef<string | null>(null);
   const draftsRef = useRef(drafts);
   useEffect(() => {
     draftsRef.current = drafts;
@@ -371,6 +388,31 @@ export function RecipeForm({
     return true;
   };
 
+  const updateVariant = (key: string, change: (d: VariantDraft) => VariantDraft) => {
+    setVariants((now) => now.map((d) => (d.key === key ? change(d) : d)));
+    setVariantWarnings((now) => (key in now ? without(now, key) : now));
+  };
+
+  const addVariant = () => {
+    if (variants.length >= MAX_VARIANTS) return;
+    const variant = emptyVariant(newId());
+    setVariants((now) => [...now, variant]);
+    setOpenVariantKey(variant.key);
+  };
+
+  const deleteVariant = (key: string) => {
+    setVariants((now) => now.filter((d) => d.key !== key));
+    setVariantWarnings((now) => without(now, key));
+    setOpenVariantKey((k) => (k === key ? null : k));
+  };
+
+  const scrollToVariant = (key: string) => {
+    const y = variantY.current[key];
+    if (y === undefined) return false;
+    scroll.current?.scrollTo({ y: Math.max(0, sectionY.current + y - 12), animated: true });
+    return true;
+  };
+
   const scrollToRow = (key: string) => {
     const y = rowY.current[key];
     if (y === undefined) return false;
@@ -458,14 +500,15 @@ export function RecipeForm({
 
   /**
    * Removes every photo nothing points to any more: the ones this visit stored but didn't keep, and
-   * the recipe's and steps' old ones once a save replaced or removed them. Closing keeps the old ones.
+   * the recipe's, steps' and variant steps' old ones once a save replaced or removed them. Closing
+   * keeps the old ones.
    */
-  const tidyPhotos = (kept: (string | null | undefined)[]) => {
+  const tidyPhotos = (kept: (string | null | undefined)[], variantPhotos: string[] = recipe?.variantPhotos ?? []) => {
     // A variant's added step can name the same file as a base step (an assistant may write that).
-    const keep = new Set([...kept, ...(recipe?.variantPhotos ?? [])].filter(Boolean));
+    const keep = new Set([...kept, ...variantPhotos].filter(Boolean));
     void photos.removePhotos(
       client,
-      [...uploaded.current, start.photoPath, ...startStepPhotos].filter((p): p is string => p !== null && !keep.has(p)),
+      [...new Set([...uploaded.current, start.photoPath, ...startStepPhotos, ...(recipe?.variantPhotos ?? [])])].filter((p): p is string => p !== null && !keep.has(p)),
     );
   };
 
@@ -512,9 +555,24 @@ export function RecipeForm({
       }
       stepRows = read.rows;
     }
+    let variantRows: VariantSaveRow[] | undefined;
+    if (variantsChanged(startVariants, variants)) {
+      // Change steps compare against the steps as they're being saved.
+      const read = readVariants(variants, steps);
+      if ('warnings' in read) {
+        setVariantWarnings(read.warnings);
+        const first = variants.find((d) => read.warnings[d.key])?.key ?? null;
+        setOpenVariantKey(first);
+        pendingVariant.current = first;
+        onSectionChange('variants');
+        if (first && section === 'variants' && scrollToVariant(first)) pendingVariant.current = null;
+        return;
+      }
+      variantRows = read.rows;
+    }
     setSaving(true);
     setSaveFailed(false);
-    const result = await saveRecipe(client, { id: recipeId, familyId, isNew: isNew && !created.current }, read.input, ingredients, stepRows);
+    const result = await saveRecipe(client, { id: recipeId, familyId, isNew: isNew && !created.current }, read.input, ingredients, stepRows, variantRows);
     if (result.created) created.current = true;
     if (result.detailsSaved) savedHeader.current = read.input.photo_path ?? null;
     const ok = result.ok;
@@ -527,8 +585,12 @@ export function RecipeForm({
     if (isNew) tracker.track('recipe_created', { source: 'app', has_photo: read.input.photo_path != null, advanced_mode: advanced });
     else tracker.track('recipe_edited', { section });
     if (stepRows) for (const props of addedStepEvents(stepRows, new Set(startSteps.map((d) => d.id)))) tracker.track('recipe_step_added', props);
+    if (variantRows) for (const props of createdVariantEvents(variantRows, new Set(startVariants.map((d) => d.id)))) tracker.track('variant_created', props);
     // Steps that weren't saved this time keep the photos they had.
-    tidyPhotos([read.input.photo_path, ...(stepRows ? stepRows.map((r) => r.photo_path) : startStepPhotos)]);
+    tidyPhotos(
+      [read.input.photo_path, ...(stepRows ? stepRows.map((r) => r.photo_path) : startStepPhotos)],
+      variantRows ? variantRows.flatMap((r) => variantStepPhotos(r.changes)) : undefined,
+    );
     void queryClient.invalidateQueries({ queryKey: ['recipes', familyId] });
     onSaved();
   };
@@ -539,7 +601,9 @@ export function RecipeForm({
   };
 
   const cancel = () =>
-    isDirty(start, form) || ingredientsChanged(startIngredients, drafts) || stepsChanged(startSteps, steps) ? setConfirmDiscard(true) : close();
+    isDirty(start, form) || ingredientsChanged(startIngredients, drafts) || stepsChanged(startSteps, steps) || variantsChanged(startVariants, variants)
+      ? setConfirmDiscard(true)
+      : close();
 
   if (crop) {
     return (
@@ -661,6 +725,30 @@ export function RecipeForm({
             onStepLayout={(key, y) => {
               stepY.current[key] = y;
               if (pendingStep.current === key && scrollToStep(key)) pendingStep.current = null;
+            }}
+          />
+        ) : null}
+        {section === 'variants' ? (
+          <VariantsSection
+            variants={variants}
+            warnings={variantWarnings}
+            ingredients={drafts}
+            steps={steps}
+            knownNames={knownNames}
+            open={openVariantKey}
+            onOpen={setOpenVariantKey}
+            onChange={updateVariant}
+            onAdd={addVariant}
+            onDelete={deleteVariant}
+            canAdd={variants.length < MAX_VARIANTS}
+            client={client}
+            newId={newId}
+            onSectionLayout={(y) => {
+              sectionY.current = y;
+            }}
+            onVariantLayout={(key, y) => {
+              variantY.current[key] = y;
+              if (pendingVariant.current === key && scrollToVariant(key)) pendingVariant.current = null;
             }}
           />
         ) : null}
