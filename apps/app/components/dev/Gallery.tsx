@@ -25,6 +25,7 @@ import {
   HeroCard,
   Icon,
   IconButton,
+  IngredientEditCard,
   IngredientRow,
   Link,
   ListGroup,
@@ -41,6 +42,7 @@ import {
   ResultTile,
   RecipeItem,
   RecipeItemSkeleton,
+  ReorderList,
   SearchField,
   SegmentedControl,
   PhotoCrop,
@@ -338,6 +340,44 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         </View>
       </Section>
 
+      <Section group="Inputs" title="IngredientEditCard">
+        <IngredientEditCard
+          name="Leeks"
+          onNameChange={noop}
+          nameLabel="Ingredient name"
+          quantity="2"
+          onQuantityChange={noop}
+          quantityLabel="Quantity"
+          unit="pieces"
+          unitPlaceholder="Unit"
+          unitLabel="Unit"
+          onUnitPress={noop}
+          weight={{ value: '150', onChange: noop, label: 'Weight of one (g)', prefix: 'each ≈', suffix: 'g' }}
+          removeLabel="Remove Leeks"
+          onRemove={noop}
+        />
+        <IngredientEditCard
+          name="Heavy cream"
+          onNameChange={noop}
+          nameLabel="Ingredient name"
+          quantity="300"
+          onQuantityChange={noop}
+          quantityLabel="Quantity"
+          unit={null}
+          unitPlaceholder="Unit?"
+          unitLabel="Unit"
+          onUnitPress={noop}
+          removeLabel="Remove Heavy cream"
+          onRemove={noop}
+          warning="Pick a unit so we can convert and scale it."
+          warningField="unit"
+        />
+      </Section>
+
+      <Section group="Lists and cards" title="ReorderList">
+        <ReorderGallery />
+      </Section>
+
       <Section group="Lists and cards" title="ListRow">
         <ListGroup title="Dairy & eggs">
           <ListRow title="Heavy cream" sub="For Leek & bacon quiche" leading={{ kind: 'checkbox', checked: false }} trailing={{ kind: 'buy', buy: 'Buy 1 pint carton', need: 'Need 300 ml · ~170 ml left over' }} onPress={noop} />
@@ -509,5 +549,35 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <FormBar cancelLabel="Cancel" onCancel={noop} title="New recipe" saveLabel="Save" onSave={noop} />
       </Section>
     </PushedScreen>
+  );
+}
+
+/** ReorderList with three rows that really move (drag the handle, or the arrow keys on it). */
+function ReorderGallery() {
+  const [rows, setRows] = useState(['Leeks', 'Bacon lardons', 'Heavy cream']);
+  return (
+    <ReorderList
+      items={rows}
+      keyOf={(r) => r}
+      handleLabel="Drag to reorder"
+      moveUpLabel="Move up"
+      moveDownLabel="Move down"
+      onMove={(from, to) =>
+        setRows((now) => {
+          const next = [...now];
+          const [row] = next.splice(from, 1);
+          if (row) next.splice(to, 0, row);
+          return next;
+        })
+      }
+      renderItem={(r, _i, handle) => (
+        <Card>
+          <View className="flex-row items-center gap-8">
+            {handle}
+            <Text weight="800">{r}</Text>
+          </View>
+        </Card>
+      )}
+    />
   );
 }

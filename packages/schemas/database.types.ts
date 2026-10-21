@@ -423,6 +423,9 @@ isOneToOne: false
 "remove_member":
 { Args: { "member_id": string }; Returns: undefined
                            },
+"save_recipe_ingredients":
+{ Args: { "p_ingredients": Json,"p_recipe_id": string }; Returns: undefined
+                           },
 "set_display_name":
 { Args: { "display_name": string }; Returns: undefined
                            },

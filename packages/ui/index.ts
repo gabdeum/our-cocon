@@ -39,3 +39,5 @@ export { Dialog, type DialogProps } from './components/Dialog';
 export { FormProgress, CookProgress } from './components/Progress';
 export { CookLayout, CookSection, type CookLayoutProps, type CookSectionProps } from './components/CookLayout';
 export { TabHeader, BrandHeader, BackHeader, FormBar } from './components/ScreenHeader';
+export { IngredientEditCard, type IngredientEditCardProps, type IngredientEditField } from './components/IngredientEditCard';
+export { ReorderList, dropIndex, type ReorderListProps } from './components/ReorderList';

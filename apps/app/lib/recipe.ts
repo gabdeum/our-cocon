@@ -77,7 +77,8 @@ export async function loadRecipe(client: Pick<Client, 'from'>, id: string): Prom
   };
 }
 
-async function loadFacts(client: Pick<Client, 'from'>, keys: string[]): Promise<Record<string, IngredientFactsInput>> {
+/** Catalog facts with the family's corrections, by key (also the recipe form's, spec 015). */
+export async function loadFacts(client: Pick<Client, 'from'>, keys: string[]): Promise<Record<string, IngredientFactsInput>> {
   if (keys.length === 0) return {};
   const { data, error } = await client
     .from('ingredient_facts')

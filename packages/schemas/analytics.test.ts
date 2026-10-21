@@ -185,3 +185,13 @@ describe('spec 014 events', () => {
     expect(() => tracker.track('recipe_created', { source: 'app', has_photo: false, advanced_mode: false, name: 'Quiche' } as never)).toThrow();
   });
 });
+
+describe('spec 015 events', () => {
+  it('says whether a row came from a paste, and never what it says', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('ingredient_line_added', { parsed: true });
+    expect(t.capture).toHaveBeenCalledWith('ingredient_line_added', { parsed: true });
+    expect(() => tracker.track('ingredient_line_added', { parsed: true, name: 'Leeks' } as never)).toThrow();
+  });
+});

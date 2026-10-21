@@ -18,6 +18,6 @@ Labelled inputs for forms and search, with a hint line and a friendly warning st
 
 ## Rules
 
-- Always a visible label (search: visually hidden label + placeholder).
+- Always a visible label (search: visually hidden label + placeholder). Exception: rows the design labels by place (IngredientEditCard) hide it with `labelHidden` and keep it for screen readers.
 - Warn, don't block typing. Explain the fix: "Pick a unit so we can convert and scale it."
 - Numeric fields use `inputmode="decimal"`.

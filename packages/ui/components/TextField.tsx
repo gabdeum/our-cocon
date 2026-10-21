@@ -16,11 +16,13 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style' | 'placehol
   /** Warns, never blocks typing: "Pick a unit so we can convert and scale it." */
   warning?: string;
   size?: 'md' | 'sm';
+  /** Read by screen readers only: rows whose design labels them by place (OC-EditIngredients). */
+  labelHidden?: boolean;
   className?: string;
 }
 
 /** Labelled input with a hint and a friendly warning (TextField README). `multiline` is the textarea. */
-export function TextField({ label, optionalLabel, hint, counter, warning, size = 'md', multiline, className, onFocus, onBlur, ...props }: TextFieldProps) {
+export function TextField({ label, optionalLabel, hint, counter, warning, size = 'md', labelHidden, multiline, className, onFocus, onBlur, ...props }: TextFieldProps) {
   const colors = useThemeColors();
   const [focused, setFocused] = useState(false);
   const hintId = useId();
@@ -31,15 +33,17 @@ export function TextField({ label, optionalLabel, hint, counter, warning, size =
     : { fontFamily: theme.font[700], fontSize: sm ? 16 : 17 };
   return (
     <View className={cn('gap-6', className)}>
-      <Text size={15} weight="900" nativeID={`${hintId}-label`}>
-        {label}
-        {optionalLabel ? (
-          <Text size={15} weight="600" color="ink-muted">
-            {' '}
-            {optionalLabel}
-          </Text>
-        ) : null}
-      </Text>
+      {labelHidden ? null : (
+        <Text size={15} weight="900" nativeID={`${hintId}-label`}>
+          {label}
+          {optionalLabel ? (
+            <Text size={15} weight="600" color="ink-muted">
+              {' '}
+              {optionalLabel}
+            </Text>
+          ) : null}
+        </Text>
+      )}
       <TextInput
         aria-label={label}
         aria-describedby={[warning ? warnId : null, hint ? hintId : null].filter(Boolean).join(' ') || undefined}
