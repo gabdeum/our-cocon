@@ -1,0 +1,11 @@
+# Nightly removal of recipes deleted more than 30 days ago in one environment (%i). Emails if it fails.
+[Unit]
+Description=Our Cocon purge of deleted recipes in %i
+Requires=docker.service
+After=docker.service
+OnFailure=cocon-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/cocon-purge %i
+Nice=10

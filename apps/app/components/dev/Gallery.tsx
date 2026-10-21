@@ -176,7 +176,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <PillRow>
           <Button label="Nothing selected" disabled />
           <Link label="Clear all" />
-          <Link label="Delete this recipe" tone="danger" />
+          <Link label="Delete this recipe" tone="danger" icon="trash" />
         </PillRow>
         <PillRow>
           <Button label="Start cooking" size="lg" />
@@ -561,6 +561,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           visible={dialog}
           title="Delete “Leek & bacon quiche”?"
           body="It will disappear for the whole family, along with its 2 variants. You can bring it back from Recently deleted for 30 days."
+          emphasis="Recently deleted"
           confirmLabel="Delete recipe"
           onConfirm={() => setDialog(false)}
           cancelLabel="Keep it"

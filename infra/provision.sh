@@ -406,7 +406,7 @@ done
 step "Front door and timers"
 run systemctl enable --now cocon-edge.service
 run systemctl restart cocon-edge.service
-run systemctl enable --now cocon-backup@staging.timer cocon-backup@prod.timer cocon-healthcheck.timer
+run systemctl enable --now cocon-backup@staging.timer cocon-backup@prod.timer cocon-purge@staging.timer cocon-purge@prod.timer cocon-healthcheck.timer
 
 step "Done"
 note "Studio password (save it in your password manager): sudo cocon-secrets get <env> DASHBOARD_PASSWORD"

@@ -16,7 +16,8 @@
     "db:new": "supabase migration new",
     "db:types": "supabase gen types typescript --local > packages/schemas/database.types.ts",
     "theme": "node scripts/theme.mjs",
-    "catalog": "tsx scripts/catalog.ts"
+    "catalog": "tsx scripts/catalog.ts",
+    "purge": "tsx scripts/purge-deleted.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",

@@ -51,7 +51,8 @@ export type ListRowTrailing =
   | { kind: 'buy'; buy: string; need?: string }
   | { kind: 'value'; text: string }
   | { kind: 'status'; text: string }
-  | { kind: 'chevron' }
+  /** With an optional 13/700 status before it: "1 recipe ›" (OC-Settings › More). */
+  | { kind: 'chevron'; text?: string }
   | { kind: 'node'; node: ReactNode };
 
 export interface ListRowProps {
@@ -140,7 +141,16 @@ function Trailing({ trailing }: { trailing: ListRowTrailing }) {
         </Text>
       );
     case 'chevron':
-      return <Icon name="chevron-right" size={18} color="inkMuted" />;
+      return trailing.text ? (
+        <View className="flex-row items-center gap-12">
+          <Text size={13} weight="700" color="ink-muted">
+            {trailing.text}
+          </Text>
+          <Icon name="chevron-right" size={18} color="inkMuted" />
+        </View>
+      ) : (
+        <Icon name="chevron-right" size={18} color="inkMuted" />
+      );
     case 'node':
       return <>{trailing.node}</>;
   }

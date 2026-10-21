@@ -3,7 +3,7 @@ import { ScrollView } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { parsePastedList } from '@cocon/quantity';
-import { Button, Callout, Dialog, FormBar, FormProgress, FormScreen, PhotoCrop, type CropRect } from '@cocon/ui';
+import { Button, Callout, Dialog, FormBar, FormProgress, FormScreen, Link, PhotoCrop, type CropRect } from '@cocon/ui';
 import { MAX_VARIANTS, type IngredientFacts, type RecipeFormSection, type Tracker } from '@cocon/schemas';
 import { strings } from '../../../strings/en';
 import { useOnline } from '../../../lib/online';
@@ -41,6 +41,7 @@ import {
   type IngredientDraft,
   type IngredientWarning,
 } from '../../../lib/recipe-ingredients';
+import { deleteRecipe } from '../../../lib/recipe-delete';
 import * as photoIO from '../../../lib/recipe-photo';
 import {
   addedStepEvents,
@@ -86,6 +87,8 @@ export interface RecipeFormProps {
   onClose: () => void;
   /** Saved: a new recipe opens; an edit goes back to it. */
   onSaved: () => void;
+  /** Spec 018: the recipe was deleted ("Delete this recipe", edit mode only). */
+  onDeleted?: () => void;
   /** Ids for added ingredients, steps and variants; tests pass their own. */
   newId?: () => string;
   /** Spec 017: the variant to open in Variants (from recipe settings), or "new" to start one. */
@@ -138,6 +141,7 @@ export function RecipeForm({
   photos = photoIO,
   onClose,
   onSaved,
+  onDeleted,
   newId = randomUUID,
   openVariant,
 }: RecipeFormProps) {
@@ -152,6 +156,10 @@ export function RecipeForm({
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  // Spec 018: the OC-Delete dialog, and whether deleting failed.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteFailed, setDeleteFailed] = useState(false);
   const [crop, setCrop] = useState<(photoIO.PickedPhoto & { target: PhotoTarget }) | null>(null);
   const [photo, setPhoto] = useState<PhotoWork>(idle);
   // Spec 016: each step's photo work, by step key.
@@ -600,6 +608,24 @@ export function RecipeForm({
     onClose();
   };
 
+  const removeRecipe = async () => {
+    setConfirmDelete(false);
+    setDeleting(true);
+    setDeleteFailed(false);
+    try {
+      await deleteRecipe(client, recipeId);
+    } catch {
+      setDeleting(false);
+      setDeleteFailed(true);
+      return;
+    }
+    tracker.track('recipe_deleted', { source: 'app' });
+    // Photos this visit stored but never saved go; the recipe's own stay, for a restore.
+    tidyPhotos([savedHeader.current, ...startStepPhotos]);
+    void queryClient.invalidateQueries({ queryKey: ['recipes', familyId] });
+    onDeleted?.();
+  };
+
   const cancel = () =>
     isDirty(start, form) || ingredientsChanged(startIngredients, drafts) || stepsChanged(startSteps, steps) || variantsChanged(startVariants, variants)
       ? setConfirmDiscard(true)
@@ -761,6 +787,18 @@ export function RecipeForm({
           busy={!next && saving}
           busyLabel={f.saving}
         />
+        {!isNew && section === 'variants' && onDeleted ? (
+          <>
+            {deleteFailed ? <Callout variant="warn" text={strings.deleteRecipe.failed} /> : null}
+            <Link
+              label={strings.deleteRecipe.link}
+              tone="danger"
+              icon="trash"
+              onPress={() => setConfirmDelete(true)}
+              disabled={!online || deleting || saving}
+            />
+          </>
+        ) : null}
       </FormScreen>
       <CuisineSheet
         visible={cuisineOpen}
@@ -817,6 +855,16 @@ export function RecipeForm({
         }}
         cancelLabel={strings.recipeForm.steps.removeCancel}
         onCancel={() => setRemoveStepAsk(null)}
+      />
+      <Dialog
+        visible={confirmDelete}
+        title={strings.deleteRecipe.title(recipe?.name ?? '')}
+        body={strings.deleteRecipe.body(recipe?.variants?.length ?? 0)}
+        emphasis={strings.deleteRecipe.bodyEmphasis}
+        confirmLabel={strings.deleteRecipe.confirm}
+        onConfirm={() => void removeRecipe()}
+        cancelLabel={strings.deleteRecipe.keep}
+        onCancel={() => setConfirmDelete(false)}
       />
       <Dialog
         visible={confirmDiscard}

@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly Our Cocon purge of deleted recipes in %i
+
+[Timer]
+OnCalendar=*-*-* 04:30:00 UTC
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

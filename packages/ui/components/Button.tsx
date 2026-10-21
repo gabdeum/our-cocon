@@ -123,6 +123,7 @@ export function Button({
 
 export type LinkTone = 'olive' | 'danger' | 'quiet';
 const linkColor: Record<LinkTone, TextColor> = { olive: 'olive', danger: 'danger', quiet: 'ink-muted' };
+const linkIconColor: Record<LinkTone, ColorName> = { olive: 'olive', danger: 'danger', quiet: 'inkMuted' };
 
 export interface LinkProps extends Omit<PressableProps, 'children' | 'style'> {
   label: string;
@@ -131,13 +132,16 @@ export interface LinkProps extends Omit<PressableProps, 'children' | 'style'> {
   size?: number;
   underline?: boolean;
   weight?: Weight;
+  /** Optional 18 px icon before the label, in the label's colour: trash for "Delete this recipe". */
+  icon?: IconName;
   className?: string;
 }
 
 /** Tertiary text button (Button README › link): "Clear all", "See all", "Stop sharing". 44 tall touch area. */
-export function Link({ label, tone = 'olive', size = 15, underline, weight = '800', className, ...props }: LinkProps) {
+export function Link({ label, tone = 'olive', size = 15, underline, weight = '800', icon, className, ...props }: LinkProps) {
   return (
-    <Pressable role="button" className={cn('min-h-touch-min justify-center self-start', focusRing, className)} {...props}>
+    <Pressable role="button" className={cn('min-h-touch-min flex-row items-center gap-8 self-start', focusRing, className)} {...props}>
+      {icon ? <Icon name={icon} size={18} color={props.disabled ? 'inkMuted' : linkIconColor[tone]} /> : null}
       <Text size={size} weight={weight} color={props.disabled ? 'ink-muted' : linkColor[tone]} underline={underline}>
         {label}
       </Text>

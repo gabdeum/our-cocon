@@ -11,3 +11,10 @@ Warn-soft disc with a danger trash icon · title "Delete “{recipe name}”?" �
 
 ## After deleting
 The app goes to Recipes; StatusBanner "Recipe deleted" with "Undo" (8 s). Focus starts on "Keep it".
+
+## Not drawn (spec 018 build)
+| State | Copy |
+| --- | --- |
+| Deleting failed | warn Callout above the link "Couldn't delete. Try again."; the form stays open |
+| Undo failed | StatusBanner (warn) "Couldn't restore. Try again."; the recipe is still in Recently deleted |
+| Offline | "Delete this recipe" is off |

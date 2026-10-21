@@ -32,6 +32,20 @@ Every change saves instantly and applies to the whole family. Only the owner can
 | "Delete my account" | Dialog: "Delete your account?" / "You'll leave “{family}”. The family's recipes and groceries stay." · "Delete my account" · "Keep it" → Sign in. |
 | "Sign out" | → Sign in (`/welcome`). |
 
+## Recently deleted (spec 018, not drawn)
+Route `/settings/deleted`, pushed from the "Recently deleted" row ("{n} recipe(s) ›", recipes deleted in the last 30 days). Built from ScreenHeader (back link "Settings", title "Recently deleted") and one ListGroup, newest first.
+
+| Element | Copy and behaviour |
+| --- | --- |
+| Row | Title: the recipe name. Sub-line "Deleted by {name} · {n} days ago · {n} days left" ("today" on the day; "1 day ago"; "Last day" on the 30th; "Former member" once that person left). Trailing olive link "Restore" (screen reader: "Restore {name}"). |
+| "Restore" | Puts it back as it was, for everyone. StatusBanner "“{name}” is back in your recipes." |
+| Tap a row | BottomSheet titled with the recipe name: olive "Restore", danger link "Delete now". |
+| "Delete now" | Dialog: "Delete “{name}” for good?" / "Its photos and variants go with it. This can't be undone." · "Delete now" · "Keep it" |
+| Empty | "Nothing here." / "Recipes you delete stay here for 30 days." |
+| Couldn't load | Callout "Couldn't load. Try again." + soft "Try again" |
+| Restore failed / Delete now failed | StatusBanner "Couldn't restore. Try again." / "Couldn't delete. Try again." |
+| Offline | Readable; "Restore" and the row's sheet are off (Patterns.md › Offline) |
+
 ## States
 | State | Copy and behaviour |
 | --- | --- |

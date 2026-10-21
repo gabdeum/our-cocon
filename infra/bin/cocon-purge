@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Nightly removal of recipes deleted more than 30 days ago, with their photos (spec 018 FR-002;
+# systemd timer cocon-purge@<env>). Runs scripts/purge-deleted.ts from the migrate image of the
+# commit the environment is on, against its Supabase API with the service key.
+#
+#   cocon-purge <staging|prod>
+[ -z "${SUDO_USER:-}" ] || unset COCON_HOME
+. "${COCON_HOME:-/opt/cocon/infra}/lib/common.sh"
+
+env=${1:-}
+check_env "$env"
+
+trap 'rm -f "$COCON_RUN/$env/purge.env"; release_env' EXIT
+use_env "$env"
+
+sha=$(cat "$COCON_SRV/$env/current" 2>/dev/null || true)
+[ -n "$sha" ] || die "$env has no deployed commit yet"
+key=$(env_value "$COCON_RUN/$env/supabase.env" SERVICE_ROLE_KEY)
+[ -n "$key" ] || die "SERVICE_ROLE_KEY is missing from $env's Supabase settings"
+# Inside the stack's network, the Supabase API gateway (Envoy, infra/supabase/cocon.override.yml).
+(umask 077 && printf 'SUPABASE_URL=http://api-gw:8000\nSUPABASE_SERVICE_ROLE_KEY=%s\n' "$key" >"$COCON_RUN/$env/purge.env")
+
+stack_container "$env" api-gw >/dev/null
+docker run --rm --network "cocon-${env}_default" --env-file "$COCON_RUN/$env/purge.env" \
+  "$COCON_IMAGE_PREFIX-migrate:$sha" node purge.mjs || die "the purge of deleted recipes failed in $env"

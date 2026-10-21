@@ -25,7 +25,7 @@ Pill-shaped buttons for actions, from the one main step on a screen (ink) down t
 | `dashed` | transparent, 2 px dashed line-dashed / olive-deep | Add a step, Add ingredient, Invite someone, Add a variant |
 | `tile` | surface-card, 2 px line-strong / ink 14/800 | A choice in a two-column grid of actions: "Add a change" (OC-EditVariants). Pressed: surface-soft |
 | `danger` | danger / white | Delete recipe (in a Dialog only) |
-| link | text olive 15/800 (danger and muted versions) | Tertiary: Clear all, See all, Stop sharing |
+| link | text olive 15/800 (danger and muted versions); optional 18 px icon 8 before the label, in its colour | Tertiary: Clear all, See all, Stop sharing, Delete this recipe (trash icon) |
 
 ## States
 
