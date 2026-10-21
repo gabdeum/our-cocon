@@ -51,6 +51,9 @@ describe('recipe inputs', () => {
   it('needs a timer for a timer label', () => {
     expect(StepInput.safeParse({ position: 0, body: 'Bake', timer_seconds: 1800, timer_label: 'Bake' }).success).toBe(true);
     expect(StepInput.safeParse({ position: 0, body: 'Bake', timer_label: 'Bake' }).success).toBe(false);
+    // 032-later L23: 100 steps at most.
+    expect(StepInput.safeParse({ position: 99, body: 'Bake' }).success).toBe(true);
+    expect(StepInput.safeParse({ position: 100, body: 'Bake' }).success).toBe(false);
   });
 });
 

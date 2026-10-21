@@ -12,8 +12,31 @@ import { Text } from './Text';
  */
 export type StepTextPart = string | { amount: string } | { missing: string };
 
-/** Step text with highlighted amounts (bundle.css › oc-amount). `cook`: honey highlight, 21 px text. */
-export function StepText({ parts, cook }: { parts: StepTextPart[]; cook?: boolean }) {
+/**
+ * Step text with highlighted amounts (bundle.css › oc-amount). `cook`: honey highlight, 21 px text.
+ * `compact`: the recipe form's Preview (OC-EditSteps), 14/600 with bold amounts and no highlight.
+ */
+export function StepText({ parts, cook, compact }: { parts: StepTextPart[]; cook?: boolean; compact?: boolean }) {
+  if (compact) {
+    const t = { size: 14, lineHeight: 21 } as const;
+    return (
+      <Text size={t.size} weight="600" style={{ lineHeight: t.lineHeight }}>
+        {parts.map((p, i) =>
+          typeof p === 'string' ? (
+            p
+          ) : 'missing' in p ? (
+            <Text key={i} size={t.size} weight="600" color="ink-muted">
+              {p.missing}
+            </Text>
+          ) : (
+            <Text key={i} size={t.size} weight="900">
+              {p.amount}
+            </Text>
+          ),
+        )}
+      </Text>
+    );
+  }
   return (
     <Text variant={cook ? 'bodyCook' : 'bodyLg'}>
       {parts.map((p, i) =>

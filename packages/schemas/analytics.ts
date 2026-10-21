@@ -10,6 +10,12 @@ export type RecipeFormSection = z.infer<typeof RecipeFormSection>;
 const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 'fan_f']);
 
 /**
+ * The highest step count events take: a recipe's 100 steps (MAX_STEPS) plus any its variants add.
+ * Senders cap what they send at this, so a longer recipe never makes `track` throw.
+ */
+export const MAX_TRACKED_STEPS = 200;
+
+/**
  * Every tracked user action. Each spec's Tracking table lists its events; add them here.
  * Props are closed (`strict`) so no user content (names, emails, recipe or grocery text)
  * can slip into PostHog through an extra field.
@@ -59,15 +65,15 @@ export const events = {
   timer_adjusted: z.strictObject({ delta_min: z.int().min(-1440).max(1440) }),
   timer_finished: z.strictObject({}),
   // Spec 009/010: a step's "Start timer"; the step's position, from 0.
-  step_timer_started: z.strictObject({ step_index: z.int().min(0).max(200) }),
+  step_timer_started: z.strictObject({ step_index: z.int().min(0).max(MAX_TRACKED_STEPS - 1) }),
   // Spec 011: the TimerPill was tapped, and the Timers screen opened; how many timers exist.
   timer_pill_tapped: z.strictObject({ timer_count: z.int().min(1).max(100) }),
   timers_screen_opened: z.strictObject({ timer_count: z.int().min(0).max(100) }),
   // Spec 012: cooking mode opened, finished ("Finish" on the last step) or left with Exit.
   // `at_step` counts from 1; `minutes` from opening to Finish.
-  cooking_started: z.strictObject({ step_count: z.int().min(1).max(200) }),
-  cooking_finished: z.strictObject({ step_count: z.int().min(1).max(200), minutes: z.int().min(0).max(1440) }),
-  cooking_exited: z.strictObject({ at_step: z.int().min(1).max(200), step_count: z.int().min(1).max(200) }),
+  cooking_started: z.strictObject({ step_count: z.int().min(1).max(MAX_TRACKED_STEPS) }),
+  cooking_finished: z.strictObject({ step_count: z.int().min(1).max(MAX_TRACKED_STEPS), minutes: z.int().min(0).max(1440) }),
+  cooking_exited: z.strictObject({ at_step: z.int().min(1).max(MAX_TRACKED_STEPS), step_count: z.int().min(1).max(MAX_TRACKED_STEPS) }),
   // Spec 013: the "…" panel's quick toggles, per recipe on this device.
   kitchen_scale_toggled: z.strictObject({ on: z.boolean() }),
   units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
@@ -81,6 +87,8 @@ export const events = {
   recipe_edited: z.strictObject({ section: RecipeFormSection }),
   // Spec 015: an ingredient row added in the form: by "Paste a list" (once per row) or "+ Add ingredient".
   ingredient_line_added: z.strictObject({ parsed: z.boolean() }),
+  // Spec 016: a step new to the recipe, sent once the form saved it; which add-ons it has.
+  recipe_step_added: z.strictObject({ has_timer: z.boolean(), has_temperature: z.boolean(), has_tip: z.boolean() }),
 } as const;
 
 export type EventName = keyof typeof events;

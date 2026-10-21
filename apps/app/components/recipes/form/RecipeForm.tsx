@@ -30,6 +30,7 @@ import {
   emptyDraft,
   ingredientsChanged,
   matchIngredients,
+  quantityOf,
   readIngredients,
   sizesOf,
   stepsUsing,
@@ -40,12 +41,25 @@ import {
   type IngredientWarning,
 } from '../../../lib/recipe-ingredients';
 import * as photoIO from '../../../lib/recipe-photo';
+import {
+  addedStepEvents,
+  draftsFromSteps,
+  emptyStep,
+  isBlankStep,
+  readSteps,
+  removeTokens,
+  stepsChanged,
+  type StepDraft,
+  type StepSaveRow,
+  type StepWarnings,
+} from '../../../lib/recipe-steps';
 import type { Client } from '../../../lib/supabase';
 import { OfflineBanner } from '../../sync/OfflineBanner';
 import { CuisineSheet } from './CuisineSheet';
 import { DetailsSection } from './DetailsSection';
 import { AisleSheet, PasteSheet, UnitSheet } from './IngredientSheets';
 import { IngredientsSection } from './IngredientsSection';
+import { StepsSection } from './StepsSection';
 
 const f = strings.recipeForm;
 
@@ -69,7 +83,7 @@ export interface RecipeFormProps {
   onClose: () => void;
   /** Saved: a new recipe opens; an edit goes back to it. */
   onSaved: () => void;
-  /** Ids for added ingredients; tests pass their own. */
+  /** Ids for added ingredients and steps; tests pass their own. */
   newId?: () => string;
 }
 
@@ -95,12 +109,16 @@ function servingsOf(text: string): number {
 /** The warnings without one row's. */
 const without = <T,>(warnings: Record<string, T>, key: string): Record<string, T> => Object.fromEntries(Object.entries(warnings).filter(([k]) => k !== key));
 
+/** Where a photo being picked goes: the recipe's header, or a step (by its key). */
+type PhotoTarget = 'recipe' | { step: string };
+
 /** The order Save looks for the first warned field to scroll to. */
 const fieldOrder: DetailsField[] = ['name', 'serves', 'totalTime', 'prepTime'];
 
 /**
  * The recipe form (spec 014, OC-EditBasics): the form bar, Progress over the four sections, the
- * section, and "Next: …". Details is built here; Ingredients, Steps and Variants come with 015–017.
+ * section, and "Next: …". Details is built here, Ingredients (015) and Steps (016) in their
+ * sections; Variants come with 017.
  */
 export function RecipeForm({
   recipeId,
@@ -128,8 +146,10 @@ export function RecipeForm({
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
-  const [crop, setCrop] = useState<photoIO.PickedPhoto | null>(null);
+  const [crop, setCrop] = useState<(photoIO.PickedPhoto & { target: PhotoTarget }) | null>(null);
   const [photo, setPhoto] = useState<PhotoWork>(idle);
+  // Spec 016: each step's photo work, by step key.
+  const [stepPhotos, setStepPhotos] = useState<Record<string, PhotoWork>>({});
   // Photos stored during this visit: whichever isn't kept is removed when the form closes.
   const uploaded = useRef<string[]>([]);
   const scroll = useRef<ScrollView>(null);
@@ -150,14 +170,26 @@ export function RecipeForm({
   const [dragging, setDragging] = useState(false);
   // A new recipe whose details saved but whose ingredients didn't: Save again updates it.
   const created = useRef(false);
+  // The header photo the database points to now: the one it opened with, or the one a save wrote
+  // even if a later part of that save failed. Closing keeps it.
+  const savedHeader = useRef<string | null>(recipe?.photo_path ?? null);
   const rowY = useRef<Record<string, number>>({});
   const sectionY = useRef(0);
   const pendingRow = useRef<string | null>(null);
+  // Spec 016: the steps. A recipe with none opens with one empty, open step; left empty, Save drops it.
+  const [startSteps] = useState(() => draftsFromSteps(recipe?.steps ?? []));
+  const [steps, setSteps] = useState<StepDraft[]>(() => (startSteps.length > 0 ? startSteps : [emptyStep(newId())]));
+  const [openStep, setOpenStep] = useState<string | null>(() => (startSteps.length > 0 ? null : (steps[0]?.key ?? null)));
+  const [stepWarnings, setStepWarnings] = useState<StepWarnings>({});
+  const [removeStepAsk, setRemoveStepAsk] = useState<string | null>(null);
+  const stepY = useRef<Record<string, number>>({});
+  const pendingStep = useRef<string | null>(null);
   const draftsRef = useRef(drafts);
   useEffect(() => {
     draftsRef.current = drafts;
   }, [drafts]);
-  const photoUrls = photoIO.useRecipePhotoUrls(client, familyId, [form.photoPath === start.photoPath ? form.photoPath : null]);
+  const startStepPhotos = startSteps.flatMap((d) => (d.photoPath ? [d.photoPath] : []));
+  const photoUrls = photoIO.useRecipePhotoUrls(client, familyId, [form.photoPath === start.photoPath ? form.photoPath : null, ...startStepPhotos]);
 
   useEffect(() => {
     let alive = true;
@@ -274,15 +306,21 @@ export function RecipeForm({
   };
 
   const removeRow = (key: string) => {
+    const row = draftsRef.current.find((d) => d.key === key);
     setDrafts((now) => now.filter((d) => d.key !== key));
     setIngWarnings((now) => without(now, key));
+    // "We'll take it out of that step too" (OC-EditIngredients), as Save would.
+    if (row) setSteps((now) => now.map((d) => ({ ...d, body: removeTokens(d.body, [row.id]) })));
   };
 
   const askRemove = (key: string) => {
     const row = drafts.find((d) => d.key === key);
     if (!row) return;
-    const steps = stepsUsing(row.id, recipe?.steps ?? []);
-    if (steps.length > 0) setRemoveAsk({ key, name: row.name.trim(), steps });
+    const using = stepsUsing(
+      row.id,
+      steps.map((d, i) => ({ position: i, body: d.body })),
+    );
+    if (using.length > 0) setRemoveAsk({ key, name: row.name.trim(), steps: using });
     else removeRow(key);
   };
 
@@ -294,6 +332,45 @@ export function RecipeForm({
       return next;
     });
 
+  /** Changes one step; its warnings go once it's edited. */
+  const updateStep = (key: string, patch: Partial<StepDraft>) => {
+    setSteps((now) => now.map((d) => (d.key === key ? { ...d, ...patch } : d)));
+    setStepWarnings((now) => (key in now ? without(now, key) : now));
+  };
+
+  const addStep = () => {
+    const step = emptyStep(newId());
+    setSteps((now) => [...now, step]);
+    setOpenStep(step.key);
+  };
+
+  const removeStep = (key: string) => {
+    setSteps((now) => now.filter((d) => d.key !== key));
+    setStepWarnings((now) => without(now, key));
+    setOpenStep((k) => (k === key ? null : k));
+  };
+
+  const askRemoveStep = (key: string) => {
+    const step = steps.find((d) => d.key === key);
+    if (step && !isBlankStep(step)) setRemoveStepAsk(key);
+    else removeStep(key);
+  };
+
+  const moveStep = (from: number, to: number) =>
+    setSteps((now) => {
+      const next = [...now];
+      const [step] = next.splice(from, 1);
+      if (step) next.splice(to, 0, step);
+      return next;
+    });
+
+  const scrollToStep = (key: string) => {
+    const y = stepY.current[key];
+    if (y === undefined) return false;
+    scroll.current?.scrollTo({ y: Math.max(0, sectionY.current + y - 12), animated: true });
+    return true;
+  };
+
   const scrollToRow = (key: string) => {
     const y = rowY.current[key];
     if (y === undefined) return false;
@@ -301,10 +378,33 @@ export function RecipeForm({
     return true;
   };
 
-  const pick = async () => {
+  const pick = async (target: PhotoTarget = 'recipe') => {
     const picked = await photos.pickPhoto();
     if (picked === 'denied') setPhoto((p) => ({ ...p, denied: true }));
-    else if (picked) setCrop(picked);
+    else if (picked) setCrop({ ...picked, target });
+  };
+
+  /** A step's photo: stored under the recipe like its header photo, and kept on the step until Save. */
+  const uploadStep = async (key: string, path: string, bytes: Uint8Array, preview: string | null) => {
+    const before = stepPhotos[key]?.preview ?? null;
+    setStepPhotos((now) => ({ ...now, [key]: { ...idle, uploading: true, preview } }));
+    const ok = await photos.uploadPhoto(client, path, bytes);
+    if (ok) {
+      uploaded.current.push(path);
+      updateStep(key, { photoOn: true, photoPath: path });
+      setStepPhotos((now) => ({ ...now, [key]: { ...idle, preview } }));
+    } else {
+      setStepPhotos((now) => ({ ...now, [key]: { ...idle, preview: before, failed: { path, bytes, preview } } }));
+    }
+  };
+
+  const retryStepPhoto = (key: string) => {
+    const failed = stepPhotos[key]?.failed;
+    if (failed && failed.path) void uploadStep(key, failed.path, failed.bytes, failed.preview);
+    else {
+      setStepPhotos((now) => ({ ...now, [key]: idle }));
+      void pick({ step: key });
+    }
   };
 
   /**
@@ -328,12 +428,17 @@ export function RecipeForm({
     const picked = crop;
     setCrop(null);
     if (!picked) return;
+    const { target } = picked;
     try {
       const prepared = await photos.preparePhoto(picked.uri, rect);
-      await upload(photos.newPhotoPath(familyId, recipeId), prepared.bytes, prepared.uri);
+      const path = photos.newPhotoPath(familyId, recipeId);
+      if (target === 'recipe') await upload(path, prepared.bytes, prepared.uri);
+      else await uploadStep(target.step, path, prepared.bytes, prepared.uri);
     } catch {
       // Couldn't read the picked image: the same message, and Retry picks again.
-      setPhoto((p) => ({ ...idle, preview: p.preview, failed: { path: '', bytes: new Uint8Array(), preview: null } }));
+      const failed = { path: '', bytes: new Uint8Array(), preview: null };
+      if (target === 'recipe') setPhoto((p) => ({ ...idle, preview: p.preview, failed }));
+      else setStepPhotos((now) => ({ ...now, [target.step]: { ...idle, preview: now[target.step]?.preview ?? null, failed } }));
     }
   };
 
@@ -353,10 +458,15 @@ export function RecipeForm({
 
   /**
    * Removes every photo nothing points to any more: the ones this visit stored but didn't keep, and
-   * the recipe's old one once a save replaced or removed it. Closing keeps the old one.
+   * the recipe's and steps' old ones once a save replaced or removed them. Closing keeps the old ones.
    */
-  const tidyPhotos = (kept: string | null) => {
-    void photos.removePhotos(client, [...uploaded.current, start.photoPath].filter((p) => p !== kept));
+  const tidyPhotos = (kept: (string | null | undefined)[]) => {
+    // A variant's added step can name the same file as a base step (an assistant may write that).
+    const keep = new Set([...kept, ...(recipe?.variantPhotos ?? [])].filter(Boolean));
+    void photos.removePhotos(
+      client,
+      [...uploaded.current, start.photoPath, ...startStepPhotos].filter((p): p is string => p !== null && !keep.has(p)),
+    );
   };
 
   const save = async () => {
@@ -387,10 +497,26 @@ export function RecipeForm({
       }
       ingredients = { rows: rows.rows, drafts };
     }
+    let stepRows: StepSaveRow[] | undefined;
+    if (stepsChanged(startSteps, steps)) {
+      const read = readSteps(steps);
+      if ('warnings' in read) {
+        // The first step with a problem opens and comes into view.
+        setStepWarnings(read.warnings);
+        const first = steps.find((d) => read.warnings[d.key])?.key ?? null;
+        setOpenStep(first);
+        pendingStep.current = first;
+        onSectionChange('steps');
+        if (first && section === 'steps' && scrollToStep(first)) pendingStep.current = null;
+        return;
+      }
+      stepRows = read.rows;
+    }
     setSaving(true);
     setSaveFailed(false);
-    const result = await saveRecipe(client, { id: recipeId, familyId, isNew: isNew && !created.current }, read.input, ingredients);
+    const result = await saveRecipe(client, { id: recipeId, familyId, isNew: isNew && !created.current }, read.input, ingredients, stepRows);
     if (result.created) created.current = true;
+    if (result.detailsSaved) savedHeader.current = read.input.photo_path ?? null;
     const ok = result.ok;
     setSaving(false);
     if (!ok) {
@@ -400,17 +526,20 @@ export function RecipeForm({
     }
     if (isNew) tracker.track('recipe_created', { source: 'app', has_photo: read.input.photo_path != null, advanced_mode: advanced });
     else tracker.track('recipe_edited', { section });
-    tidyPhotos(read.input.photo_path ?? null);
+    if (stepRows) for (const props of addedStepEvents(stepRows, new Set(startSteps.map((d) => d.id)))) tracker.track('recipe_step_added', props);
+    // Steps that weren't saved this time keep the photos they had.
+    tidyPhotos([read.input.photo_path, ...(stepRows ? stepRows.map((r) => r.photo_path) : startStepPhotos)]);
     void queryClient.invalidateQueries({ queryKey: ['recipes', familyId] });
     onSaved();
   };
 
   const close = () => {
-    tidyPhotos(start.photoPath);
+    tidyPhotos([savedHeader.current, ...startStepPhotos]);
     onClose();
   };
 
-  const cancel = () => (isDirty(start, form) || ingredientsChanged(startIngredients, drafts) ? setConfirmDiscard(true) : close());
+  const cancel = () =>
+    isDirty(start, form) || ingredientsChanged(startIngredients, drafts) || stepsChanged(startSteps, steps) ? setConfirmDiscard(true) : close();
 
   if (crop) {
     return (
@@ -430,6 +559,7 @@ export function RecipeForm({
   }
 
   const next = nextSection(section);
+  const knownNames = new Map(startIngredients.map((d) => [d.id, d.name]));
   const unitRow = unitFor ? drafts.find((d) => d.key === unitFor) : undefined;
   const photoSource = photo.preview ? { uri: photo.preview } : form.photoPath && photoUrls[form.photoPath] ? { uri: photoUrls[form.photoPath] } : null;
   return (
@@ -462,7 +592,7 @@ export function RecipeForm({
             advanced={advanced}
             onAdvancedChange={toggleAdvanced}
             photo={{ source: photoSource, loading: !photoSource && form.photoPath !== null, uploading: photo.uploading, failed: photo.failed !== null, denied: photo.denied }}
-            onPickPhoto={() => void pick()}
+            onPickPhoto={() => void pick('recipe')}
             onRemovePhoto={removePhoto}
             onRetryPhoto={retryPhoto}
             onOpenCuisine={() => setCuisineOpen(true)}
@@ -496,6 +626,41 @@ export function RecipeForm({
             onRowLayout={(key, y) => {
               rowY.current[key] = y;
               if (pendingRow.current === key && scrollToRow(key)) pendingRow.current = null;
+            }}
+          />
+        ) : null}
+        {section === 'steps' ? (
+          <StepsSection
+            steps={steps}
+            ingredients={drafts.filter((d) => d.name.trim()).map(quantityOf)}
+            knownNames={knownNames}
+            warnings={stepWarnings}
+            open={openStep}
+            onOpen={setOpenStep}
+            onChange={updateStep}
+            onMove={moveStep}
+            onAdd={addStep}
+            onRemove={askRemoveStep}
+            onDragChange={setDragging}
+            photo={(key) => {
+              const work = stepPhotos[key] ?? idle;
+              const path = steps.find((d) => d.key === key)?.photoPath ?? null;
+              const url = path ? photoUrls[path] : undefined;
+              const source = work.preview ? { uri: work.preview } : url ? { uri: url } : null;
+              return { source, loading: !source && path !== null, uploading: work.uploading, failed: work.failed !== null };
+            }}
+            onPickPhoto={(key) => void pick({ step: key })}
+            onRemovePhoto={(key) => {
+              setStepPhotos((now) => ({ ...now, [key]: idle }));
+              updateStep(key, { photoPath: null });
+            }}
+            onRetryPhoto={retryStepPhoto}
+            onSectionLayout={(y) => {
+              sectionY.current = y;
+            }}
+            onStepLayout={(key, y) => {
+              stepY.current[key] = y;
+              if (pendingStep.current === key && scrollToStep(key)) pendingStep.current = null;
             }}
           />
         ) : null}
@@ -551,6 +716,19 @@ export function RecipeForm({
         }}
         cancelLabel={ing.removeCancel}
         onCancel={() => setRemoveAsk(null)}
+      />
+      <Dialog
+        visible={removeStepAsk !== null}
+        icon="warning"
+        title={strings.recipeForm.steps.removeTitle}
+        body={strings.recipeForm.steps.removeBody}
+        confirmLabel={strings.recipeForm.steps.removeConfirm}
+        onConfirm={() => {
+          if (removeStepAsk) removeStep(removeStepAsk);
+          setRemoveStepAsk(null);
+        }}
+        cancelLabel={strings.recipeForm.steps.removeCancel}
+        onCancel={() => setRemoveStepAsk(null)}
       />
       <Dialog
         visible={confirmDiscard}

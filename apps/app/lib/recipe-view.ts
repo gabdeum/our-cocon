@@ -144,9 +144,7 @@ export function recipeView(
     number: i + 1,
     name: step.name ?? null,
     variant: step.fromVariant,
-    parts: renderStep(step.body, scaled.ingredients, options).map((seg) =>
-      seg.type === 'text' ? seg.text : seg.type === 'amount' ? { amount: seg.text } : { missing: knownNames.get(seg.ingredientId) ?? p.steps.missingIngredient },
-    ),
+    parts: stepParts(step.body, scaled.ingredients, options, knownNames),
     tempCheck: cooking.thermometer ? renderTemperatureCheck(step.temp_check_text ?? null, step.temp_check_c ?? null, options.system) : null,
     timer: step.timer_seconds ? { seconds: step.timer_seconds, label: step.timer_label ?? step.name ?? '', clock: timerClock(step.timer_seconds) } : null,
     tip: step.tip ?? null,
@@ -155,6 +153,17 @@ export function recipeView(
   const ingredients = scaled.ingredients.map((i) => ingredientLine(i, options));
   const scaledBy = scaled.by ? (ingredients.find((i) => i.id === scaled.by?.ingredientId) ?? null) : null;
   return { ingredients, steps, stepCount: steps.length, servings: scaled.servings, scaledBy };
+}
+
+/**
+ * A step's text as StepText draws it: plain text, amounts ("2 leeks (300 g)") and, for an
+ * ingredient that's gone, the name it had (or "an ingredient"). The recipe page and the form's
+ * Preview both use this, so a token reads the same in both (spec 016 SC-001).
+ */
+export function stepParts(body: string, ingredients: QuantityIngredient[], options: FormatOptions, names: ReadonlyMap<string, string>): StepPart[] {
+  return renderStep(body, ingredients, options).map((seg) =>
+    seg.type === 'text' ? seg.text : seg.type === 'amount' ? { amount: seg.text } : { missing: names.get(seg.ingredientId) ?? p.steps.missingIngredient },
+  );
 }
 
 /** Every ingredient name the recipe has known, base and variants, for tokens whose ingredient is gone. */

@@ -41,3 +41,6 @@ export { CookLayout, CookSection, type CookLayoutProps, type CookSectionProps } 
 export { TabHeader, BrandHeader, BackHeader, FormBar } from './components/ScreenHeader';
 export { IngredientEditCard, type IngredientEditCardProps, type IngredientEditField } from './components/IngredientEditCard';
 export { ReorderList, dropIndex, type ReorderListProps } from './components/ReorderList';
+export { FieldPair, StepEditCard, StepNote, StepPreview, type StepEditCardProps } from './components/StepEditCard';
+export { TokenEditor, type TokenEditorProps, type TokenPart } from './components/TokenEditor';
+export { ToggleTile, type ToggleTileProps } from './components/ToggleTile';

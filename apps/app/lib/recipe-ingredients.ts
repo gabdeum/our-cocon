@@ -1,4 +1,4 @@
-import { ingredientToken, parseAmount, pieceNouns, type IngredientFactsInput, type ParsedLine } from '@cocon/quantity';
+import { ingredientToken, parseAmount, pieceNouns, type IngredientFactsInput, type ParsedLine, type QuantityIngredient } from '@cocon/quantity';
 import {
   familyIngredientRow,
   IngredientInput,
@@ -181,6 +181,37 @@ export type IngredientWarning = 'nameMissing' | 'quantityInvalid' | 'unitMissing
 /** What `save_recipe_ingredients` takes per row, in order. */
 export type IngredientSaveRow = Omit<IngredientInput, 'position'> & { id: string };
 
+/** What one piece is called: the row's own (a pasted "2 cloves garlic", or as saved), the catalog's, or from the name. */
+function nounsOf(d: IngredientDraft, name: string): { singular: string; plural: string } {
+  if (d.nounSingular && d.nounPlural) return { singular: d.nounSingular, plural: d.nounPlural };
+  if (d.facts?.noun_singular && d.facts.noun_plural) return { singular: d.facts.noun_singular, plural: d.facts.noun_plural };
+  return pieceNouns(name);
+}
+
+/**
+ * A row as the quantity engine reads it, while it's still being typed: for the Steps Preview
+ * (spec 016), so "2 leeks (300 g)" shows before Save. An amount that doesn't read yet is left out.
+ */
+export function quantityOf(d: IngredientDraft): QuantityIngredient {
+  const name = d.name.trim();
+  const quantity = parseAmount(d.quantity);
+  const amount = quantity === 'invalid' ? null : quantity;
+  const piece = d.unit === 'piece' && amount !== null;
+  const weight = piece ? parseAmount(d.weight) : null;
+  const nouns = piece ? nounsOf(d, name) : null;
+  return {
+    id: d.id,
+    name,
+    quantity: amount,
+    unit: amount !== null ? d.unit : null,
+    size_word: piece ? d.sizeWord : null,
+    weight_per_piece_g: weight === 'invalid' ? null : weight,
+    piece_noun_singular: nouns?.singular ?? null,
+    piece_noun_plural: nouns?.plural ?? null,
+    facts: d.facts,
+  };
+}
+
 const isBlank = (d: IngredientDraft) => !d.name.trim() && !d.quantity.trim() && !d.weight.trim();
 
 /**
@@ -202,14 +233,7 @@ export function readIngredients(drafts: IngredientDraft[]): { rows: IngredientSa
     else if (weight === 'invalid') warnings[d.key] = 'weightInvalid';
     else if (!name) warnings[d.key] = 'nameMissing';
     if (warnings[d.key] || quantity === 'invalid' || weight === 'invalid') continue;
-    // What one piece is called: the row's own (a pasted "2 cloves garlic", or as saved), the catalog's, or from the name.
-    const nouns = piece
-      ? d.nounSingular && d.nounPlural
-        ? { singular: d.nounSingular, plural: d.nounPlural }
-        : d.facts?.noun_singular && d.facts.noun_plural
-          ? { singular: d.facts.noun_singular, plural: d.facts.noun_plural }
-          : pieceNouns(name)
-      : null;
+    const nouns = piece ? nounsOf(d, name) : null;
     const row = {
       name: name.slice(0, 80).trim(),
       catalog_key: d.catalogKey,
