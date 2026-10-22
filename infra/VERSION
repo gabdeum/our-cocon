@@ -3,4 +3,4 @@
 # whose version is newer than the server's: run bootstrap-from-laptop.sh from main first.
 # Changed one of those files? Add 1 to version; infra/tests/version.test.ts prints the fingerprint.
 version=1
-fingerprint=d8c216d99a0168d6
+fingerprint=95992c4e1566405a

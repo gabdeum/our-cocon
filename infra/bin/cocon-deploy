@@ -40,7 +40,7 @@ staged=$(mktemp -d)
 cid=$(docker create "$prefix-migrate:$sha") || die "could not read the migrate image of ${sha:0:7}; $env is unchanged"
 docker cp "$cid:/app/infra-version" "$staged/infra-version" >/dev/null 2>&1 || true
 docker rm "$cid" >/dev/null || true
-needs= has=
+needs='' has=''
 [ ! -f "$staged/infra-version" ] || needs=$(env_value "$staged/infra-version" version)
 [ ! -f "$COCON_HOME/VERSION" ] || has=$(env_value "$COCON_HOME/VERSION" version)
 rm -rf "$staged"
