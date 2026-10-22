@@ -44,6 +44,18 @@ describe('rowSource and byName (spec 022)', () => {
     expect(rowSource(row as never, members)).toBe('For Leek & bacon quiche + Pumpkin soup · Added by Gabriel · Alex via ChatGPT');
   });
 
+  it('says "Added manually" when more than one person typed it in', () => {
+    const [row] = combineRows([
+      groceryItem({ id: 'a', created_by: mia.user_id }),
+      groceryItem({ id: 'b', created_by: gabriel.user_id }),
+      groceryItem({ id: 'c', recipes: quiche }),
+      groceryItem({ id: 'd', created_by: alex.user_id, source: 'chatgpt' }),
+    ]);
+    expect(rowSource(row as never, members)).toBe('For Leek & bacon quiche · Added manually · Alex via ChatGPT');
+    const [mine] = combineRows([groceryItem({ id: 'a' }), groceryItem({ id: 'b' })]);
+    expect(rowSource(mine as never, members)).toBe('Added by Gabriel');
+  });
+
   it('sorts by the name shown, ignoring case and accents', () => {
     expect(byName(['croissants', 'Apple', 'Émmental', 'butter'], (n) => n)).toEqual(['Apple', 'butter', 'croissants', 'Émmental']);
   });

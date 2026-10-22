@@ -671,6 +671,8 @@ export const strings = {
     mergedNoAmount: 'Already on the list.',
     forRecipe: (recipe: string) => `For ${recipe}`,
     fromDeletedRecipe: 'From a deleted recipe',
+    // A row more than one person typed in (spec 022).
+    addedManually: 'Added manually',
     // A row added to by several (spec 022): "For Apple crumble + Leek & bacon quiche · Added by Gabriel".
     sourcesJoin: ' + ',
     sourcePartsJoin: ' · ',

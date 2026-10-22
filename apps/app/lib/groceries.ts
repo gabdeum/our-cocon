@@ -209,11 +209,15 @@ export const rowIds = (rows: readonly GroceryRow[]) => rows.flatMap((r) => r.ite
 
 /**
  * A row's sources, each once: "For Apple crumble + Leek & bacon quiche · Added by Gabriel",
- * "From a deleted recipe · Alex via ChatGPT".
+ * "From a deleted recipe · Alex via ChatGPT", or "Added manually" when several people typed it in.
  */
 export function rowSource(row: Pick<GroceryRow, 'items'>, members: readonly Pick<Member, 'user_id' | 'display_name'>[]): string {
   const recipes = [...new Set(row.items.flatMap((i) => (i.recipes && !i.recipes.deleted_at ? [i.recipes.name] : [])))];
-  const others = [...new Set(row.items.filter((i) => !(i.recipes && !i.recipes.deleted_at)).map((i) => sourceLine(i, members)))];
+  const rest = row.items.filter((i) => !(i.recipes && !i.recipes.deleted_at));
+  // Typed in by more than one person: "Added manually" rather than naming only one of them.
+  const byHand = rest.filter((i) => !i.recipes && !i.from_recipe && !assistantName(i.source));
+  const several = new Set(byHand.map((i) => i.created_by)).size > 1;
+  const others = [...new Set(rest.map((i) => (several && byHand.includes(i) ? strings.groceries.addedManually : sourceLine(i, members))))];
   return [...(recipes.length > 0 ? [strings.groceries.forRecipe(recipes.join(strings.groceries.sourcesJoin))] : []), ...others].join(strings.groceries.sourcePartsJoin);
 }
 
@@ -333,12 +337,15 @@ export type AddResult =
 
 /**
  * US2: "2 lemons" → Lemons, 2, in Produce. FR-002 reads the text with spec 015's parser; the aisle
- * is the catalog matcher's (family correction, then catalog, then Other). Something already on the
- * list is merged into (planGroceryAdd).
+ * is the catalog matcher's (family correction, then catalog, then Other). It merges into my own
+ * item of the same thing (planGroceryAdd); someone else's, or a recipe's, keeps its own item, so the
+ * row can say who it's for (spec 022). Either way, something already on the list says what the
+ * row now comes to: "Already on the list. Updated to 15 pieces."
  */
 export async function addItem(
   client: Pick<Client, 'from' | 'rpc'>,
   familyId: string,
+  me: string,
   list: readonly GroceryItem[],
   text: string,
 ): Promise<AddResult> {
@@ -349,18 +356,21 @@ export async function addItem(
   try {
     const [facts] = (await matchIngredients(client, [name])) ?? [undefined];
     const add = { name, catalog_key: facts?.catalog_key ?? null, quantity: parsed.quantity, unit: parsed.quantity == null ? null : parsed.unit };
-    const plan = planGroceryAdd(list, add);
+    const plan = planGroceryAdd(list, { ...add, recipe_id: null, created_by: me, source: 'app' });
+    const identity = groceryIdentity(add);
+    const listed = list.filter((i) => !i.checked && groceryIdentity(i) === identity);
     if (plan.kind === 'merge') {
       const change = GroceryItemUpdate.safeParse({ quantity: plan.quantity, unit: plan.unit });
       if (!change.success) return { status: 'failed' };
       const { error } = await client.from('grocery_items').update(change.data).eq('id', plan.id);
       if (error) return { status: 'failed' };
-      const total = amountText({ id: plan.id, name, quantity: plan.quantity, unit: plan.unit });
-      return { status: 'merged', total };
+      const now = listed.map((i) => (i.id === plan.id ? { quantity: plan.quantity, unit: plan.unit } : i));
+      return { status: 'merged', total: combinedText(name, now, facts) };
     }
     const row = GroceryItemInput.parse({ ...add, aisle: facts?.aisle ?? 'other' });
     const { error } = await client.from('grocery_items').insert({ ...row, family_id: familyId });
     if (error) return { status: 'failed' };
+    if (listed.length > 0) return { status: 'merged', total: combinedText(name, [...listed, add], facts) };
     // A failed lookup isn't a miss: only count names the catalog really doesn't know.
     return { status: 'added', unmatched: facts === null };
   } catch {

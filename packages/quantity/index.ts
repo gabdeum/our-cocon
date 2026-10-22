@@ -34,6 +34,7 @@ export {
   type GroceryAddsPlan,
   type GroceryAmount,
   type GroceryMerge,
+  type GroceryOrigin,
   type ListedGrocery,
 } from './groceries';
 export { parseGroceryLine, parseIngredientLine, parsePastedList, pieceNouns, splitPastedList, type ParsedLine } from './parse-line';

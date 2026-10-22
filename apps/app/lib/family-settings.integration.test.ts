@@ -20,6 +20,7 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
   const run = randomUUID().slice(0, 8);
   const userIds: string[] = [];
   let alex: Client;
+  let alexId: string;
   let mia: Client;
   let sam: Client;
   let familyId: string;
@@ -38,6 +39,7 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
 
   beforeAll(async () => {
     [alex, mia, sam] = await Promise.all([person('alex'), person('mia'), person('sam')]);
+    alexId = (await alex.auth.getUser()).data.user?.id ?? '';
     const fam = await alex.rpc('create_family', { family_name: 'Stores test', display_name: 'Alex' });
     if (fam.error) throw fam.error;
     familyId = fam.data;
@@ -48,7 +50,7 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
     const other = await sam.rpc('create_family', { family_name: 'Other stores test', display_name: 'Sam' });
     if (other.error) throw other.error;
     samFamilyId = other.data;
-    expect(await addItem(alex, familyId, [], '300 ml heavy cream')).toMatchObject({ status: 'added' });
+    expect(await addItem(alex, familyId, alexId, [], '300 ml heavy cream')).toMatchObject({ status: 'added' });
   }, 30_000);
 
   afterAll(async () => {

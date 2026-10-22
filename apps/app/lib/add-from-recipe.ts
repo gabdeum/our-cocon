@@ -95,9 +95,10 @@ const revertMerges = async (client: Pick<Client, 'from'>, merges: readonly Groce
 };
 
 /**
- * US1–US2: adds the ticked lines to the list, each carrying the recipe (FR-003). Something already
- * on the list is updated instead of added again (FR-002, SC-001), planned against the list as it
- * is now. Null when it failed; anything it had done by then is put back.
+ * US1–US2: adds the ticked lines to the list, each carrying the recipe (FR-003). What this recipe
+ * already has on the list is updated instead of added again (FR-002, SC-001), planned against the
+ * list as it is now; anything else of the same thing keeps its own item, and the list shows them
+ * as one row. Null when it failed; anything it had done by then is put back.
  */
 export async function addFromRecipe(
   client: Pick<Client, 'from' | 'rpc'>,
@@ -107,7 +108,11 @@ export async function addFromRecipe(
 ): Promise<AddedFromRecipe | null> {
   try {
     const list = await loadGroceryList(client);
-    const plan = planGroceryAdds(list, lines);
+    // Only into this recipe's own items: someone's own apples keep their item, and the row says both.
+    const plan = planGroceryAdds(
+      list,
+      lines.map((l) => ({ ...l, recipe_id: recipeId, created_by: null, source: 'app' })),
+    );
     // Catalog items get their aisle from the database (the family's correction, then the catalog);
     // a custom one may have a family aisle by name, which only the matcher knows.
     const custom = plan.inserts.filter((i) => !i.catalog_key);

@@ -15,12 +15,23 @@ export interface GroceryAmount {
   unit: Unit | null;
 }
 
-export interface ListedGrocery extends GroceryAmount {
+/** Where an item came from: a recipe, or who added it and how ('app' or the assistant). */
+export interface GroceryOrigin {
+  recipe_id: string | null;
+  created_by: string | null;
+  source: string;
+}
+
+export interface ListedGrocery extends GroceryAmount, GroceryOrigin {
   id: string;
   name: string;
   catalog_key: string | null;
   checked: boolean;
 }
+
+/** A recipe's items are one, whoever added them; otherwise one person's, the same way. */
+const sameOrigin = (a: GroceryOrigin, b: GroceryOrigin) =>
+  a.recipe_id === b.recipe_id && (a.recipe_id !== null || (a.created_by === b.created_by && a.source === b.source));
 
 export type GroceryAddPlan = { kind: 'insert' } | { kind: 'merge'; id: string; quantity: number | null; unit: Unit | null };
 
@@ -29,15 +40,17 @@ const round = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * Spec 020 edge case: adding something already on the list merges the amounts. Only into an item
- * still to buy (a ticked one is in the trolley, so a new row appears), and only when both amounts
+ * still to buy (a ticked one is in the trolley, so a new row appears), of the same origin (spec
+ * 022: the list shows one row per thing anyway, so each recipe and person keeps their own item and
+ * the row can say who it's for), and only when both amounts
  * add up: same kind (weight, volume or pieces), summed in the listed item's unit, or pinches with
  * pinches (spec 022: adding a recipe twice never makes a second nutmeg). When one side has no
  * amount, the merge keeps the other's. Otherwise it's a row of its own.
  */
-export function planGroceryAdd(list: readonly ListedGrocery[], add: GroceryAmount & { name: string; catalog_key: string | null }): GroceryAddPlan {
+export function planGroceryAdd(list: readonly ListedGrocery[], add: GroceryAdd): GroceryAddPlan {
   const identity = groceryIdentity(add);
   for (const item of list) {
-    if (item.checked || groceryIdentity(item) !== identity) continue;
+    if (item.checked || groceryIdentity(item) !== identity || !sameOrigin(item, add)) continue;
     if (item.quantity == null) return { kind: 'merge', id: item.id, quantity: add.quantity, unit: add.quantity == null ? null : add.unit };
     if (add.quantity == null) return { kind: 'merge', id: item.id, quantity: item.quantity, unit: item.unit };
     const into = unitOf(item);
@@ -49,7 +62,7 @@ export function planGroceryAdd(list: readonly ListedGrocery[], add: GroceryAmoun
   return { kind: 'insert' };
 }
 
-export interface GroceryAdd extends GroceryAmount {
+export interface GroceryAdd extends GroceryAmount, GroceryOrigin {
   name: string;
   catalog_key: string | null;
 }
@@ -82,7 +95,7 @@ export function planGroceryAdds<A extends GroceryAdd>(list: readonly ListedGroce
     if (plan.kind === 'insert') {
       const id = `new:${n}`;
       inserts.set(id, { ...add });
-      running.push({ id, name: add.name, catalog_key: add.catalog_key, quantity: add.quantity, unit: add.quantity == null ? null : add.unit, checked: false });
+      running.push({ id, name: add.name, catalog_key: add.catalog_key, quantity: add.quantity, unit: add.quantity == null ? null : add.unit, checked: false, recipe_id: add.recipe_id, created_by: add.created_by, source: add.source });
       return;
     }
     const target = running.find((i) => i.id === plan.id) as ListedGrocery;

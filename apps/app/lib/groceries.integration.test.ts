@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient, type RealtimeChannel } from '@supabase/supabase-js';
 import { ChangeEvent, familyChannel, type Database } from '@cocon/schemas';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
-import { addItem, clearItems, groupByAisle, loadGroceryList, moveToAisle, restoreItems, setChecked, sourceLine, toBuyCount } from './groceries';
+import { addItem, clearItems, combineRows, groupByAisle, loadGroceryList, moveToAisle, restoreItems, rowSource, setChecked, sourceLine, toBuyCount } from './groceries';
 
 const local = localSupabase();
 if (!local && process.env.CI) throw new Error('Local Supabase must be running in CI for the groceries integration test');
@@ -57,7 +57,7 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
   });
 
   it('US2: "2 lemons" goes to Produce as Lemons, 2, added by Mia', async () => {
-    expect(await addItem(mia, familyId, [], '2 lemons')).toEqual({ status: 'added', unmatched: false });
+    expect(await addItem(mia, familyId, miaId, [], '2 lemons')).toEqual({ status: 'added', unmatched: false });
     const list = await loadGroceryList(alex);
     const lemons = must(list.find((i) => i.name === 'Lemons'), 'Lemons');
     expect(lemons).toMatchObject({ quantity: 2, unit: 'piece', aisle: 'produce', catalog_key: 'lemon', created_by: miaId, checked: false });
@@ -66,7 +66,7 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
   });
 
   it('reads the amount after the name too: "heavy cream 240 ml" is Heavy cream, 240 ml, in Dairy & eggs', async () => {
-    expect(await addItem(mia, familyId, await loadGroceryList(mia), 'heavy cream 240 ml')).toEqual({ status: 'added', unmatched: false });
+    expect(await addItem(mia, familyId, miaId, await loadGroceryList(mia), 'heavy cream 240 ml')).toEqual({ status: 'added', unmatched: false });
     const cream = must((await loadGroceryList(alex)).find((i) => i.catalog_key === 'heavy_cream'), 'Heavy cream');
     expect(cream).toMatchObject({ name: 'Heavy cream', quantity: 240, unit: 'ml', aisle: 'dairy_eggs' });
     // Off the list again: the tests below count what's on it.
@@ -75,13 +75,25 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
 
   it('merges an item already on the list', async () => {
     const before = await loadGroceryList(mia);
-    expect(await addItem(mia, familyId, before, '1 lemon')).toEqual({ status: 'merged', total: '3' });
+    expect(await addItem(mia, familyId, miaId, before, '1 lemon')).toEqual({ status: 'merged', total: '3 pieces' });
     const after = await loadGroceryList(mia);
     expect(after.filter((i) => i.catalog_key === 'lemon').map((i) => i.quantity)).toEqual([3]);
   });
 
+  it('spec 022: Alex adding to Mia’s lemons keeps his own item; the row reads "Added manually"', async () => {
+    expect(await addItem(alex, familyId, alexId, await loadGroceryList(alex), '2 lemons')).toEqual({ status: 'merged', total: '5 pieces' });
+    const lemons = (await loadGroceryList(alex)).filter((i) => i.catalog_key === 'lemon');
+    expect(lemons.map((i) => [i.quantity, i.created_by])).toEqual([
+      [3, miaId],
+      [2, alexId],
+    ]);
+    const [row] = combineRows(lemons);
+    expect(rowSource(must(row, 'the lemon row'), members())).toBe('Added manually');
+    expect(await clearItems(alex, [must(lemons[1], 'Alex’s lemons').id])).toBe(true);
+  });
+
   it('US1: Mia ticks, Alex hears it within a second and his list shows it', async () => {
-    await addItem(alex, familyId, await loadGroceryList(alex), '100 g gruyère');
+    await addItem(alex, familyId, alexId, await loadGroceryList(alex), '100 g gruyère');
     const list = await loadGroceryList(alex);
     const gruyere = must(list.find((i) => i.catalog_key === 'gruyere'), 'Gruyère');
     expect(gruyere.aisle).toBe('dairy_eggs');
@@ -137,7 +149,7 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
   }, 60_000);
 
   it('unknown items go to Other; "Move to…" is remembered for the family', async () => {
-    await addItem(alex, familyId, await loadGroceryList(alex), "Za'atar");
+    await addItem(alex, familyId, alexId, await loadGroceryList(alex), "Za'atar");
     let list = await loadGroceryList(alex);
     const zaatar = must(list.find((i) => i.name === "Za'atar"), "Za'atar");
     expect(zaatar).toMatchObject({ aisle: 'other', catalog_key: null });
@@ -148,7 +160,7 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
 
     // Bought and cleared, then added again by Mia: it lands in Spices & baking.
     await clearItems(alex, [zaatar.id]);
-    expect(await addItem(mia, familyId, await loadGroceryList(mia), 'zaatar')).toMatchObject({ status: 'added' });
+    expect(await addItem(mia, familyId, miaId, await loadGroceryList(mia), 'zaatar')).toMatchObject({ status: 'added' });
     list = await loadGroceryList(mia);
     expect(list.find((i) => i.name.toLowerCase() === 'zaatar')?.aisle).toBe('spices_baking');
 
@@ -156,7 +168,7 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
     const lemons = must(list.find((i) => i.catalog_key === 'lemon'), 'Lemons');
     expect(await moveToAisle(mia, familyId, lemons, list, 'drinks')).toBe(true);
     await clearItems(mia, [lemons.id]);
-    await addItem(alex, familyId, await loadGroceryList(alex), '2 lemons');
+    await addItem(alex, familyId, alexId, await loadGroceryList(alex), '2 lemons');
     expect((await loadGroceryList(alex)).find((i) => i.catalog_key === 'lemon')?.aisle).toBe('drinks');
   });
 

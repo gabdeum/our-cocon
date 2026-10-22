@@ -57,7 +57,7 @@ export default function GroceriesTab() {
       members={state.status === 'ready' ? state.members : []}
       tracker={tracker}
       photoUrls={photoUrls}
-      onAdd={(text) => after(addItem(client, familyId ?? '', items ?? [], text))}
+      onAdd={(text) => after(addItem(client, familyId ?? '', state.status === 'ready' ? state.userId : '', items ?? [], text))}
       onToggle={(item, checked) =>
         optimisticWrite<GroceryItem[]>(
           queryClient,
