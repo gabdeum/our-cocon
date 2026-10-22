@@ -79,17 +79,27 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
     expect(gruyere.aisle).toBe('dairy_eggs');
     expect(toBuyCount(list)).toBe(2);
 
+    // Join Alex's live channel first: on a cold CI runner that alone can take several seconds, and
+    // only the tick itself is timed.
+    let onTick: ((at: number) => void) | null = null;
     await alex.realtime.setAuth();
+    const live = alex.channel(familyChannel(familyId), { config: { private: true } });
+    channel = live;
+    live.on('broadcast', { event: 'change' }, ({ payload }) => {
+      const change = ChangeEvent.safeParse(payload);
+      if (change.success && change.data.id === gruyere.id && change.data.op === 'update') onTick?.(performance.now());
+    });
+    expect(
+      await new Promise<string>((resolve) => {
+        live.subscribe((status) => status !== 'CLOSED' && resolve(status));
+        setTimeout(() => resolve('NEVER JOINED'), 20_000);
+      }),
+    ).toBe('SUBSCRIBED');
+
     const heard = new Promise<number>((resolve, reject) => {
-      channel = alex.channel(familyChannel(familyId), { config: { private: true } });
-      channel.on('broadcast', { event: 'change' }, ({ payload }) => {
-        const change = ChangeEvent.safeParse(payload);
-        if (change.success && change.data.id === gruyere.id && change.data.op === 'update') resolve(performance.now());
-      });
+      onTick = resolve;
       setTimeout(() => reject(new Error('Alex never heard the tick')), 5000);
     });
-    await new Promise<void>((resolve) => channel?.subscribe((status) => status === 'SUBSCRIBED' && resolve()));
-
     const start = performance.now();
     expect((await setChecked(mia, gruyere.id, true)).error).toBeNull();
     expect((await heard) - start).toBeLessThan(1000);
@@ -97,7 +107,7 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
     const seen = await loadGroceryList(alex);
     expect(seen.find((i) => i.id === gruyere.id)).toMatchObject({ checked: true, checked_by: miaId });
     expect(toBuyCount(seen)).toBe(1);
-  }, 20_000);
+  }, 40_000);
 
   it('unknown items go to Other; "Move to…" is remembered for the family', async () => {
     await addItem(alex, familyId, await loadGroceryList(alex), "Za'atar");
