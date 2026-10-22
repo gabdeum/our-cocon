@@ -33,7 +33,7 @@ Produce · Bakery · Dairy & eggs · Meat & fish · Dry goods · Spices & baking
 Tick: optimistic and realtime. Long-press or swipe a row → "Edit", "Move to…", "Remove". Add merges with an existing item, with StatusBanner "Already on the list. Updated to {total}."
 
 ## Row menu (spec 020, not drawn)
-A BottomSheet "Edit item" (close label "Close") that opens straight on the edit field: TextField "Item" with hint "An amount and a name, e.g. 2 lemons", starting from "{amount} {name}". Below it, ListRows "Move to…" (chevron, after the current aisle's name) and "Remove". Footer "Cancel" · "Save". The row's screen-reader actions are "Edit" (opens this sheet), "Move to…" and "Remove"; right-click or the keyboard's menu key also opens it on the web.
+A BottomSheet "Edit item" (close label "Close") that opens straight on the edit field: TextField "Item" with hint "An amount and a name, e.g. 2 lemons or 100 g Gruyère", starting from "{amount} {name}". Below it, ListRows "Move to…" (chevron, after the current aisle's name) and "Remove". Footer "Cancel" · "Save". The row's screen-reader actions are "Edit" (opens this sheet), "Move to…" and "Remove"; right-click or the keyboard's menu key also opens it on the web.
 - **Move to…:** sheet title "Move to…", lead "{name} will go here from now on, for your family."; one radio row per aisle in the fixed order, the current one selected. Tapping one moves it and closes.
 - **Merging** only joins an item still to buy whose amount adds up (both weights, volumes or counts); otherwise the new item gets its own row.
 - The recipe card is tappable as a whole (Card rule); "Open" is its olive label.

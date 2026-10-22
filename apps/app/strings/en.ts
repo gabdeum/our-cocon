@@ -678,7 +678,7 @@ export const strings = {
     moveLead: (name: string) => `${name} will go here from now on, for your family.`,
     editTitle: 'Edit item',
     editLabel: 'Item',
-    editHint: 'An amount and a name, e.g. 2 lemons',
+    editHint: 'An amount and a name, e.g. 2 lemons or 100 g Gruyère',
     save: 'Save',
     cancel: 'Cancel',
   },
