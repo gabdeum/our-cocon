@@ -52,6 +52,8 @@ export interface GroceryItem {
   checked_by: string | null;
   checked_at: string | null;
   recipe_id: string | null;
+  /** Added from a recipe, even once that recipe is gone (spec 022, set by the database). */
+  from_recipe: boolean;
   created_by: string | null;
   source: string;
   created_at: string;
@@ -59,7 +61,7 @@ export interface GroceryItem {
 }
 
 const columns =
-  'id, name, catalog_key, quantity, unit, aisle, checked, checked_by, checked_at, recipe_id, created_by, source, created_at, recipes(id, name, serves, photo_path, deleted_at)';
+  'id, name, catalog_key, quantity, unit, aisle, checked, checked_by, checked_at, recipe_id, from_recipe, created_by, source, created_at, recipes(id, name, serves, photo_path, deleted_at)';
 
 /** The list as it stands (RLS returns only the family's), without cleared or removed items, oldest first. */
 export async function loadGroceryList(client: Pick<Client, 'from'>): Promise<GroceryItem[]> {
@@ -78,9 +80,16 @@ export function groupByAisle<T extends Pick<GroceryItem, 'aisle'>>(items: readon
   return AISLE_ORDER.map((aisle) => ({ aisle, items: items.filter((i) => (i.aisle ?? 'other') === aisle) })).filter((g) => g.items.length > 0);
 }
 
-/** FR-003: "For Leek & bacon quiche", "Added by Mia" or "Alex via ChatGPT". */
-export function sourceLine(item: Pick<GroceryItem, 'recipes' | 'created_by' | 'source'>, members: readonly Pick<Member, 'user_id' | 'display_name'>[]): string {
-  if (item.recipes) return strings.groceries.forRecipe(item.recipes.name);
+/**
+ * FR-003: "For Leek & bacon quiche", "Added by Mia" or "Alex via ChatGPT". An item from a recipe
+ * that's in Recently deleted, or gone for good, reads "From a deleted recipe" (spec 018).
+ */
+export function sourceLine(
+  item: Pick<GroceryItem, 'recipes' | 'from_recipe' | 'created_by' | 'source'>,
+  members: readonly Pick<Member, 'user_id' | 'display_name'>[],
+): string {
+  if (item.recipes && !item.recipes.deleted_at) return strings.groceries.forRecipe(item.recipes.name);
+  if (item.recipes || item.from_recipe) return strings.groceries.fromDeletedRecipe;
   const name = members.find((m) => m.user_id === item.created_by)?.display_name ?? strings.recipe.formerMember;
   const assistant = assistantName(item.source);
   return assistant ? strings.groceries.via(name, assistant) : strings.groceries.addedBy(name);

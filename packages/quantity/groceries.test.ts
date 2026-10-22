@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groceryIdentity, planGroceryAdd, type ListedGrocery } from './groceries';
+import { groceryIdentity, planGroceryAdd, planGroceryAdds, type ListedGrocery } from './groceries';
 
 const item = (over: Partial<ListedGrocery>): ListedGrocery => ({
   id: 'i1',
@@ -48,11 +48,41 @@ describe('planGroceryAdd (spec 020: adding something already there merges)', () 
     expect(planGroceryAdd([item({ quantity: 100, unit: 'g' })], { name: 'Lemons', catalog_key: 'lemon', quantity: 2, unit: null })).toEqual({ kind: 'insert' });
     expect(planGroceryAdd([item({ checked: true })], { name: 'Lemons', catalog_key: 'lemon', quantity: 2, unit: null })).toEqual({ kind: 'insert' });
     expect(planGroceryAdd([item({})], { name: 'Limes', catalog_key: 'lime', quantity: 2, unit: null })).toEqual({ kind: 'insert' });
-    expect(planGroceryAdd([item({ quantity: 1, unit: 'pinch' })], { name: 'Lemons', catalog_key: 'lemon', quantity: 1, unit: 'pinch' })).toEqual({ kind: 'insert' });
+    expect(planGroceryAdd([item({ quantity: 1, unit: 'pinch' })], { name: 'Lemons', catalog_key: 'lemon', quantity: 2, unit: 'g' })).toEqual({ kind: 'insert' });
+  });
+
+  it('adds pinches to pinches (spec 022)', () => {
+    const list = [item({ name: 'Nutmeg', catalog_key: 'nutmeg', quantity: 1, unit: 'pinch' })];
+    expect(planGroceryAdd(list, { name: 'Nutmeg', catalog_key: 'nutmeg', quantity: 1, unit: 'pinch' })).toEqual({ kind: 'merge', id: 'i1', quantity: 2, unit: 'pinch' });
   });
 
   it('merges into the item still to buy when a ticked one is listed first', () => {
     const list = [item({ id: 'done', checked: true }), item({ id: 'open' })];
     expect(planGroceryAdd(list, { name: 'Lemons', catalog_key: 'lemon', quantity: 1, unit: null })).toMatchObject({ kind: 'merge', id: 'open' });
+  });
+});
+
+describe('planGroceryAdds (spec 022: a recipe at once)', () => {
+  const cream = item({ id: 'cream', name: 'Heavy cream', catalog_key: 'heavy_cream', quantity: 100, unit: 'ml' });
+  const add = (name: string, catalog_key: string | null, quantity: number | null, unit: ListedGrocery['unit']) => ({ name, catalog_key, quantity, unit });
+
+  it('merges into what is listed and inserts the rest', () => {
+    const plan = planGroceryAdds([cream], [add('Heavy cream', 'heavy_cream', 300, 'ml'), add('Butter', 'butter', 20, 'g'), add('Salt and pepper', null, null, null)]);
+    expect(plan.merges).toEqual([{ id: 'cream', before: { quantity: 100, unit: 'ml' }, after: { quantity: 400, unit: 'ml' } }]);
+    expect(plan.into[0]).toEqual(plan.merges[0]);
+    expect(plan.into.slice(1)).toEqual([null, null]);
+    expect(plan.inserts).toEqual([add('Butter', 'butter', 20, 'g'), add('Salt and pepper', null, null, null)]);
+  });
+
+  it('folds two lines of the same thing into one row', () => {
+    const plan = planGroceryAdds([], [add('Butter', 'butter', 20, 'g'), add('Butter', 'butter', 30, 'g')]);
+    expect(plan.inserts).toEqual([add('Butter', 'butter', 50, 'g')]);
+    expect(plan.merges).toEqual([]);
+  });
+
+  it('keeps the first amount as before when two lines go into one listed item', () => {
+    const plan = planGroceryAdds([cream], [add('Heavy cream', 'heavy_cream', 100, 'ml'), add('Heavy cream', 'heavy_cream', 200, 'ml')]);
+    expect(plan.merges).toEqual([{ id: 'cream', before: { quantity: 100, unit: 'ml' }, after: { quantity: 400, unit: 'ml' } }]);
+    expect(plan.into.map((m) => m?.after.quantity)).toEqual([200, 400]);
   });
 });

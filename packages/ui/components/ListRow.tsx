@@ -15,11 +15,23 @@ export function Overline({ children, className }: { children: string; className?
   );
 }
 
-/** A white list group, optionally under an overline (6 gap). `inset` (4 16) holds SettingRows. */
-export function ListGroup({ title, inset, children, className }: { title?: string; inset?: boolean; children: ReactNode; className?: string }) {
+/**
+ * A white list group, optionally under an overline (6 gap) with a 12/700 note on its right ("All
+ * ticked to start"). `inset` (4 16) holds SettingRows.
+ */
+export function ListGroup({ title, note, inset, children, className }: { title?: string; note?: string; inset?: boolean; children: ReactNode; className?: string }) {
   return (
     <View className={cn('gap-6', className)}>
-      {title ? <Overline>{title}</Overline> : null}
+      {title && note ? (
+        <View className="flex-row items-baseline justify-between gap-12">
+          <Overline className="shrink">{title}</Overline>
+          <Text size={12} weight="700" color="ink-muted">
+            {note}
+          </Text>
+        </View>
+      ) : title ? (
+        <Overline>{title}</Overline>
+      ) : null}
       <View role={inset ? undefined : 'list'} className={cn('overflow-hidden rounded-xl bg-surface-card', inset && 'px-16 py-4')}>
         {children}
       </View>
@@ -66,6 +78,8 @@ export interface ListRowProps {
   subTone?: 'muted' | 'warn';
   /** Ticked grocery: struck through in ink-faint. */
   done?: boolean;
+  /** Left out (an unticked row in Add to groceries): the title in ink-muted, still readable. */
+  dim?: boolean;
   leading?: ListRowLeading;
   trailing?: ListRowTrailing;
   onPress?: () => void;
@@ -117,6 +131,7 @@ export function ListRow({
   sub,
   subTone = 'muted',
   done,
+  dim,
   leading,
   trailing,
   onPress,
@@ -136,7 +151,7 @@ export function ListRow({
       {leading?.kind === 'avatar' ? <Avatar initial={leading.initial} tone={leading.tone} size="lg" /> : null}
       {isCheck ? <Mark kind={leading.kind} checked={leading.checked} /> : null}
       <View className="min-w-0 flex-1">
-        <Text size={16} weight="800" color={done ? 'ink-faint' : 'ink'} strike={done}>
+        <Text size={16} weight="800" color={done ? 'ink-faint' : dim ? 'ink-muted' : 'ink'} strike={done}>
           {title}
           {titleDetail ? `: ${titleDetail.text}` : null}
           {titleDetail?.note ? (

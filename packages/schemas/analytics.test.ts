@@ -226,6 +226,15 @@ describe('spec 015 events', () => {
     expect(() => tracker.track('store_profile_changed', { profile: 'uk' } as never)).toThrow();
     expect(() => tracker.track('store_profile_changed', { profile: 'us', family: 'Demange' } as never)).toThrow();
   });
+
+  it('sends counts only when adding from a recipe (spec 022)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3 });
+    expect(t.capture).toHaveBeenCalledWith('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3 });
+    expect(() => tracker.track('groceries_added_from_recipe', { ingredient_count: 0, unticked_count: 8 })).toThrow();
+    expect(() => tracker.track('groceries_added_from_recipe', { ingredient_count: 1, unticked_count: 0, recipe: 'Quiche' } as never)).toThrow();
+  });
 });
 
 describe('createAnonymousTracker (spec 019)', () => {

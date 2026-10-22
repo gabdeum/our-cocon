@@ -7,7 +7,7 @@ Source `screens/OC-Groceries.dc.html` · Route `/groceries` · Specs 020, 021, 0
 2. Add row: input (hidden label "Add an item", placeholder "Add an item, e.g. 2 lemons") + olive square "Add item" + soft square IconButton (settings icon, 54 px like "Add item") "Grocery settings", which opens the Grocery settings sheet. No hint under the input.
 3. One soft card per linked recipe: thumb, "For {recipe}", "{n} items · serves {n}", link "Open".
 4. Aisle groups in catalog order (spec 031): overline aisle name; white list group; rows:
-   - checkbox · title line "{name}: {to buy}" (800) then " (need {amount})" (15/600 ink-muted) · source sub-line ("For {recipe}" / "Added by {name}" / "{name} via {assistant}")
+   - checkbox · title line "{name}: {to buy}" (800) then " (need {amount})" (15/600 ink-muted) · source sub-line ("For {recipe}" / "Added by {name}" / "{name} via {assistant}"; "From a deleted recipe" once its recipe is in Recently deleted or gone, spec 018)
    - the title line reads "Heavy cream: 1 pint carton (need 300 ml)"; "(need …)" is left out when what to buy is exactly what's needed ("Pumpkin: 1 kg loose", "Lemon: 2 pieces"); counts always say pieces ("1 piece", "2 pieces", "½ piece"). The name is the catalog's singular when it's the same word as typed ("2 lemons" → "Lemon"); a name the matcher only got close to stays as typed ("Meyer lemons"); "Heavy cream: 300 ml" when no pack is known or round-up is off; just "Salt" when there's no quantity. No leftover is shown.
    - trailing: a vertical "…" icon button (`more-vertical`, 44 × 44, ink-muted, vertically centred; screen reader: "Edit {name}"), beside the row rather than inside it; it opens the row menu.
 5. Under the list: soft "Clear done items" (when something is ticked) and outline "Clear all items" (when the list isn't empty), side by side.
@@ -36,7 +36,7 @@ Tick: optimistic and realtime. A row's vertical "…" (or long-press, swipe, rig
 ## Row menu (spec 020, not drawn)
 A BottomSheet "Edit item" (close label "Close") that opens straight on the edit field: TextField "Item" with hint "An amount and a name, e.g. 2 lemons or 100 g Gruyère", starting from "{amount} {name}". Below it, one ListGroup with "Move to…" (chevron, after the current aisle's name) and "Store size" (spec 021); then, apart from them, a red danger Button "Remove" (trash icon, full width). Footer "Cancel" · "Save". The row's screen-reader actions are "Edit" (opens this sheet), "Move to…" and "Remove"; right-click or the keyboard's menu key also opens it on the web.
 - **Move to…:** sheet title "Move to…", lead "{name} will go here from now on, for your family."; one radio row per aisle in the fixed order, the current one selected. Tapping one moves it and closes.
-- **Merging** only joins an item still to buy whose amount adds up (both weights, volumes or counts); otherwise the new item gets its own row.
+- **Merging** only joins an item still to buy whose amount adds up (both weights, volumes or counts, or pinches with pinches); otherwise the new item gets its own row.
 - The recipe card is tappable as a whole (Card rule); "Open" is its olive label.
 
 ## Store sizes (spec 021)

@@ -17,6 +17,16 @@ Source `screens/OC-AddGroceries.dc.html` · Route `/recipes/[id]/add-to-grocerie
 ## Success state (same sheet)
 Sage disc with check · "Added {n} items to groceries" · "The whole family can see them now." · underlined "Undo" · buttons soft "Back to recipe" and ink "See the list".
 
+## States not drawn
+| State | Copy |
+| --- | --- |
+| Unticked row | name in ink-muted (not the drawn faint colour, which is too light to read), no strike-through, no merge note |
+| Adding | the Add button keeps its width and reads "Adding…" |
+| Add failed | Callout warn "Couldn't add these items. Check your connection and try again."; the ticks stay as they were |
+| Undo failed | Callout warn "Couldn't undo. Try again." over the success state |
+| Offline | the offline StatusBanner; the list stays readable, the Add button is off |
+
 ## Rules
 - Every ingredient starts ticked; there's no pantry. Untick what you have.
 - Items with no quantity ("Salt and pepper") are listed with no amount, ticked like the rest.
+- Amounts follow the recipe page (servings, scale by an ingredient, version and options, units). Counted items show their weight ("2 · 300 g"); the list gets whole counts, rounded up.

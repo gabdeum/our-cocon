@@ -115,6 +115,9 @@ export const events = {
   store_profile_changed: z.strictObject({ profile: z.enum(['us', 'eu']) }),
   // "Clear all items" (confirmed), with how many items: the whole list, ticked or not.
   all_items_cleared: z.strictObject({ count: z.int().min(1) }),
+  // Spec 022: "Add to groceries…" on a recipe, with how many ingredients were added and how many
+  // were left unticked. Never which ones.
+  groceries_added_from_recipe: z.strictObject({ ingredient_count: z.int().min(1).max(500), unticked_count: z.int().min(0).max(500) }),
 } as const;
 
 export type EventName = keyof typeof events;

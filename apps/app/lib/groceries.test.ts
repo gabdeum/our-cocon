@@ -38,6 +38,11 @@ describe('sourceLine (FR-003)', () => {
     expect(sourceLine(groceryItem({ created_by: alex.user_id, source: 'chatgpt' }), members)).toBe('Alex via ChatGPT');
     expect(sourceLine(groceryItem({ created_by: 'u-gone' }), members)).toBe('Added by Former member');
   });
+
+  it('says when the recipe was deleted, or is gone for good (spec 018, 032-later L39)', () => {
+    expect(sourceLine(groceryItem({ recipes: { ...quiche, deleted_at: '2026-10-21T10:00:00Z' }, from_recipe: true }), members)).toBe('From a deleted recipe');
+    expect(sourceLine(groceryItem({ recipes: null, from_recipe: true }), members)).toBe('From a deleted recipe');
+  });
 });
 
 describe('amounts', () => {
