@@ -4,6 +4,7 @@
 #   cocon-deploy <staging|prod> <40-character commit>
 #
 # 1. Pull the web, mcp and migrate images for the commit.  Fails → nothing changed.
+#    The commit needs newer server scripts (infra/VERSION) → nothing changed.
 # 2. Apply pending database migrations (all or none).     Fails → nothing changed.
 # 3. Install the commit's Edge Functions and reload them.
 # 4. Start the new web and MCP containers.
@@ -32,6 +33,22 @@ log "deploying ${sha:0:7} to $env"
 for image in web mcp migrate; do
   docker pull -q "$prefix-$image:$sha" >/dev/null || die "could not pull $image:$sha; $env is unchanged"
 done
+
+# Server scripts (infra/VERSION): only bootstrap-from-laptop.sh installs them, so a commit that
+# needs newer ones than the server has stops here. Images from before the check need version 0.
+staged=$(mktemp -d)
+cid=$(docker create "$prefix-migrate:$sha") || die "could not read the migrate image of ${sha:0:7}; $env is unchanged"
+docker cp "$cid:/app/infra-version" "$staged/infra-version" >/dev/null 2>&1 || true
+docker rm "$cid" >/dev/null || true
+needs= has=
+[ ! -f "$staged/infra-version" ] || needs=$(env_value "$staged/infra-version" version)
+[ ! -f "$COCON_HOME/VERSION" ] || has=$(env_value "$COCON_HOME/VERSION" version)
+rm -rf "$staged"
+needs=${needs:-0} has=${has:-0}
+[[ $needs =~ ^[0-9]+$ && $has =~ ^[0-9]+$ ]] || die "unreadable infra version (commit: $needs, server: $has); $env is unchanged"
+if [ "$needs" -gt "$has" ]; then
+  die "${sha:0:7} needs server scripts v$needs, the server has v$has. From main on your laptop, run infra/bootstrap-from-laptop.sh <server-ip>, then deploy again. $env is unchanged"
+fi
 
 password=$(env_value "$COCON_RUN/$env/supabase.env" POSTGRES_PASSWORD)
 [ -n "$password" ] || die "POSTGRES_PASSWORD is missing from $env's Supabase settings"
