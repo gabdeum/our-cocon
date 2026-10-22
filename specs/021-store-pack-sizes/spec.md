@@ -19,7 +19,7 @@
 
 ### Edge cases
 - No pack data for an item: only what recipes need ("Za'atar: 50 g").
-- Items sold loose (apples, pumpkin): "Pumpkin: 1 kg loose", "Apples: 6"; a typical bag with what's in it is left for later (032-later L52).
+- Items sold loose (apples, pumpkin): "Pumpkin: 1 kg loose", "Apple: 6 pieces"; a typical bag with what's in it is left for later (032-later L52).
 - Items with no quantity ("Salt"): just the name.
 
 ## Requirements
@@ -62,3 +62,4 @@ None.
   - "Clear all items" beside "Clear done items", confirmed by a Dialog, with Undo; new event `all_items_cleared`.
   - In Edit item, "Remove" is a red danger button apart from "Move to…" and "Store size".
   - ListRow: the right-hand Buy/Need trailing is replaced by a title detail and an end-of-row action.
+- 2026-10-22 (later): from Gabriel's review: counts always say pieces ("Lemon: 2 pieces"), and a row shows the catalog's singular name when it's the same word as typed ("2 lemons" → "Lemon"; "Meyer lemons" stays as typed). The Grocery settings sheet's card now has the inset padding settings rows need (it had none).

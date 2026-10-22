@@ -13,6 +13,7 @@ import {
 import {
   AISLE_ORDER,
   familyIngredientRow,
+  normaliseName,
   GroceryItemInput,
   GroceryItemUpdate,
   type Aisle,
@@ -89,8 +90,15 @@ export function sourceLine(item: Pick<GroceryItem, 'recipes' | 'created_by' | 's
 export function amountText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>): string | null {
   if (item.quantity == null) return null;
   const f = format({ id: item.id, name: item.name, quantity: item.quantity, unit: item.unit }, { system: 'metric', scale: true });
-  // A count reads on its own beside the name ("Lemons: 2").
+  // A count reads on its own ("Updated to 3", the Edit field's "2 Lemons"); rows say pieces (rowText).
   return item.unit == null || item.unit === 'piece' ? f.amount : `${f.amount} ${f.unit}`.trim();
+}
+
+/** The amount as a row shows it, beside the name: "300 ml", "2 pieces". Null with no quantity. */
+export function rowText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>): string | null {
+  const amount = amountText(item);
+  if (amount === null) return null;
+  return item.unit == null || item.unit === 'piece' ? strings.groceries.pieces(amount) : amount;
 }
 
 // --- What to buy (spec 021) ------------------------------------------------------------------
@@ -117,7 +125,7 @@ export async function loadPacks(client: Pick<Client, 'from'>, keys: readonly str
   if (keys.length === 0) return {};
   const [packs, facts] = await Promise.all([
     client.from('ingredient_packs').select('catalog_key, family_ingredient_id, profile, position, size, unit, label, loose').in('catalog_key', keys).order('position'),
-    client.from('ingredient_facts').select('catalog_key, density_g_per_ml, size_small_g, size_medium_g, size_large_g, default_size').in('catalog_key', keys),
+    client.from('ingredient_facts').select('catalog_key, name, density_g_per_ml, size_small_g, size_medium_g, size_large_g, default_size').in('catalog_key', keys),
   ]);
   if (packs.error) throw packs.error;
   if (facts.error) throw facts.error;
@@ -136,7 +144,7 @@ export async function loadPacks(client: Pick<Client, 'from'>, keys: readonly str
 
 const baseUnit = (kind: PackPlan['kind']): Unit | null => (kind === 'weight' ? 'g' : kind === 'volume' ? 'ml' : null);
 
-/** "1 pint carton", "2 × 20 cl", "1 dozen", "6", "1 piece", "1 kg loose" (spec 021 FR-003). */
+/** "1 pint carton", "2 × 20 cl", "1 dozen", "6 pieces", "1 kg loose" (spec 021 FR-003). */
 export function buyText(plan: PackPlan): string {
   const g = strings.groceries;
   if (plan.loose) {
@@ -146,13 +154,15 @@ export function buyText(plan: PackPlan): string {
     return g.loose(`${f.amount} ${f.unit}`.trim());
   }
   const [only] = plan.picks;
-  // Sold one by one: a count reads on its own beside a count ("Apples: 6"), else as pieces ("1 piece").
-  if (plan.picks.length === 1 && only && only.pack.loose && only.pack.size === 1) return plan.kind === 'piece' ? String(only.count) : g.pieces(only.count);
+  // Sold one by one: "6 pieces".
+  if (plan.picks.length === 1 && only && only.pack.loose && only.pack.size === 1) return g.pieces(String(only.count));
   const parts = plan.picks.map(({ pack, count }) => (count > 1 ? g.packCount(count, pack.label) : /^\d/.test(pack.label) ? pack.label : g.onePack(pack.label)));
   return parts.join(g.packsJoin);
 }
 
 export interface RowAmounts {
+  /** The name to show: the catalog's singular when it's the same word ("Lemons" → "Lemon"). */
+  name?: string;
   /** After the name: what to buy ("1 pint carton"), or what's needed when there's no pack ("300 ml"). */
   detail?: string;
   /** "(need 300 ml)", when what to buy isn't simply what's needed. */
@@ -169,8 +179,11 @@ export function rowAmounts(items: readonly GroceryItem[], packs: Record<string, 
   const out = new Map<string, RowAmounts>();
   const groups = new Map<string, GroceryItem[]>();
   for (const item of items) {
-    const amount = amountText(item);
-    out.set(item.id, amount ? { detail: amount } : {});
+    const amount = rowText(item);
+    const catalogName = item.catalog_key ? packs?.[item.catalog_key]?.facts.name : null;
+    // "Lemon: 2 pieces" reads as a label; a name the matcher only got close to ("Meyer lemons") stays as typed.
+    const name = catalogName && normaliseName(catalogName) === normaliseName(item.name) ? catalogName : undefined;
+    out.set(item.id, { ...(name ? { name } : {}), ...(amount ? { detail: amount } : {}) });
     if (!settings.round_to_packs || !amount || !item.catalog_key || !packs?.[item.catalog_key]) continue;
     const key = item.checked ? `done:${item.id}` : item.catalog_key;
     groups.set(key, [...(groups.get(key) ?? []), item]);
@@ -184,11 +197,12 @@ export function rowAmounts(items: readonly GroceryItem[], packs: Record<string, 
     );
     const plan = total ? pickPacks(total, data.packs[settings.store_profile], data.facts, settings.store_profile) : null;
     if (!total || !plan) continue;
-    const amount = rows.length === 1 ? amountText(first) : amountText({ id: first.id, name: first.name, quantity: Math.round(total.quantity * 100) / 100, unit: baseUnit(total.kind) });
+    const amount = rows.length === 1 ? rowText(first) : rowText({ id: first.id, name: first.name, quantity: Math.round(total.quantity * 100) / 100, unit: baseUnit(total.kind) });
     if (!amount) continue;
     // Exactly what's needed (loose by weight, one by one, 2 × 1 l for 2 L): no need to say it twice.
     const exact = plan.leftover <= plan.need * 0.01 && !plan.approximate;
-    out.set(first.id, exact ? { detail: buyText(plan) } : { detail: buyText(plan), note: strings.groceries.needNote(amount) });
+    const shown = out.get(first.id);
+    out.set(first.id, exact ? { ...shown, detail: buyText(plan) } : { ...shown, detail: buyText(plan), note: strings.groceries.needNote(amount) });
   }
   return out;
 }

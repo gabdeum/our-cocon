@@ -677,7 +677,8 @@ export const strings = {
     via: (name: string, assistant: string) => `${name} via ${assistant}`,
     // Spec 021: what to buy, beside the name: "Heavy cream: 1 pint carton (need 300 ml)".
     needNote: (amount: string) => `(need ${amount})`,
-    pieces: (n: number) => (n === 1 ? '1 piece' : `${n} pieces`),
+    // A count, as read by @cocon/quantity: "1 piece", "2 pieces", "½ piece", "1½ pieces".
+    pieces: (amount: string) => (amount === '1' || amount === '½' || amount === '¼' || amount === '¾' ? `${amount} piece` : `${amount} pieces`),
     packCount: (count: number, label: string) => `${count} × ${label}`,
     onePack: (label: string) => `1 ${label}`,
     packsJoin: ' + ',

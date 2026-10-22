@@ -149,10 +149,10 @@ describe('Groceries', () => {
     expect(tracker.track).toHaveBeenCalledWith('grocery_item_added', { from: 'app' });
   });
 
-  it('US2: the new row reads "Lemons: 2 · Added by Gabriel" under Produce', () => {
+  it('US2: the new row reads "Lemons: 2 pieces · Added by Gabriel" under Produce (before its packs load)', () => {
     setup({ items: [...sample, groceryItem({ id: 'lemons', name: 'Lemons', aisle: 'produce' })] });
     const produce = within(aisle('Produce'));
-    expect(produce.getByText('Lemons: 2')).toBeTruthy();
+    expect(produce.getByText('Lemons: 2 pieces')).toBeTruthy();
     expect(produce.getByText('Added by Gabriel')).toBeTruthy();
   });
 
@@ -328,7 +328,7 @@ describe('Groceries › what to buy (spec 021)', () => {
       packs: await packData(keys),
       settings: { store_profile: 'eu', round_to_packs: true },
     });
-    expect(line('Apples')).toBe('Apples: 6');
+    expect(line('Apple')).toBe('Apple: 6 pieces');
     expect(line('Salt')).toBe('Salt');
     expect(line("Za'atar")).toBe("Za'atar: 50 g");
     expect(screen.queryByText(/is what to pick up at the store/)).toBeNull();

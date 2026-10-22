@@ -98,13 +98,13 @@ describe('rowAmounts (spec 021)', () => {
 
   it('US1: what to buy, then what recipes need, per store', async () => {
     const packs = await packData(['heavy_cream']);
-    expect(rowAmounts([cream()], packs, us).get('cream')).toEqual({ detail: '1 pint carton', note: '(need 300 ml)' });
-    expect(rowAmounts([cream()], packs, eu).get('cream')).toEqual({ detail: '2 × 20 cl', note: '(need 300 ml)' });
+    expect(rowAmounts([cream()], packs, us).get('cream')).toEqual({ name: 'Heavy cream', detail: '1 pint carton', note: '(need 300 ml)' });
+    expect(rowAmounts([cream()], packs, eu).get('cream')).toEqual({ name: 'Heavy cream', detail: '2 × 20 cl', note: '(need 300 ml)' });
   });
 
   it('US3: Need only with round-up off, or before packs load', async () => {
     const packs = await packData(['heavy_cream']);
-    expect(rowAmounts([cream()], packs, { ...us, round_to_packs: false }).get('cream')).toEqual({ detail: '300 ml' });
+    expect(rowAmounts([cream()], packs, { ...us, round_to_packs: false }).get('cream')).toEqual({ name: 'Heavy cream', detail: '300 ml' });
     expect(rowAmounts([cream()], undefined, us).get('cream')).toEqual({ detail: '300 ml' });
   });
 
@@ -112,10 +112,21 @@ describe('rowAmounts (spec 021)', () => {
     const packs = await packData(['heavy_cream']);
     const rows = [cream(), cream({ id: 'cream2', quantity: 200 }), cream({ id: 'done', checked: true, quantity: 100 })];
     const out = rowAmounts(rows, packs, eu);
-    expect(out.get('cream')).toEqual({ detail: '50 cl' });
-    expect(out.get('cream2')).toEqual({ detail: '200 ml' });
+    expect(out.get('cream')).toEqual({ name: 'Heavy cream', detail: '50 cl' });
+    expect(out.get('cream2')).toEqual({ name: 'Heavy cream', detail: '200 ml' });
     // A ticked one is already in the trolley: counted on its own.
-    expect(out.get('done')).toEqual({ detail: '20 cl', note: '(need 100 ml)' });
+    expect(out.get('done')).toEqual({ name: 'Heavy cream', detail: '20 cl', note: '(need 100 ml)' });
+  });
+
+  it('"2 lemons" reads "Lemon: 2 pieces"; a name the matcher only got close to stays as typed', async () => {
+    const packs = await packData(['lemon']);
+    const lemons = groceryItem({ id: 'l', name: 'Lemons', catalog_key: 'lemon', quantity: 2, unit: 'piece' });
+    const meyer = groceryItem({ id: 'm', name: 'Meyer lemons', catalog_key: 'lemon', quantity: 3, unit: 'piece', checked: true });
+    expect(rowAmounts([lemons], packs, eu).get('l')).toEqual({ name: 'Lemon', detail: '2 pieces' });
+    expect(rowAmounts([lemons], packs, { ...eu, round_to_packs: false }).get('l')).toEqual({ name: 'Lemon', detail: '2 pieces' });
+    expect(rowAmounts([meyer], packs, eu).get('m')?.name).toBeUndefined();
+    // Before packs load: the name as typed, still in pieces.
+    expect(rowAmounts([lemons], undefined, eu).get('l')).toEqual({ detail: '2 pieces' });
   });
 
   it('edge cases: no quantity, no catalog entry, loose', async () => {
@@ -126,11 +137,11 @@ describe('rowAmounts (spec 021)', () => {
       groceryItem({ id: 'p', name: 'Pumpkin', catalog_key: 'pumpkin', quantity: 1, unit: 'kg' }),
     ];
     const out = rowAmounts(rows, packs, eu);
-    expect(out.get('salt')).toEqual({});
+    expect(out.get('salt')).toEqual({ name: 'Salt' });
     expect(out.get('z')).toEqual({ detail: '50 g' });
     // Exactly what's needed: said once.
-    expect(out.get('p')).toEqual({ detail: '1 kg loose' });
-    expect(rowAmounts(rows, packs, us).get('p')).toEqual({ detail: '1 piece', note: '(need 1 kg)' });
+    expect(out.get('p')).toEqual({ name: 'Pumpkin', detail: '1 kg loose' });
+    expect(rowAmounts(rows, packs, us).get('p')).toEqual({ name: 'Pumpkin', detail: '1 piece', note: '(need 1 kg)' });
   });
 });
 
@@ -151,7 +162,7 @@ describe('buyText (spec 021)', () => {
 
   it('counts pieces bought one by one', () => {
     const each = { size: 1, unit: 'piece' as const, label: 'each', loose: true };
-    expect(buyText(plan({ kind: 'piece', picks: [{ pack: each, count: 6 }] }))).toBe('6');
+    expect(buyText(plan({ kind: 'piece', picks: [{ pack: each, count: 6 }] }))).toBe('6 pieces');
     expect(buyText(plan({ kind: 'weight', picks: [{ pack: each, count: 1 }] }))).toBe('1 piece');
     expect(buyText(plan({ kind: 'weight', picks: [{ pack: each, count: 2 }] }))).toBe('2 pieces');
   });

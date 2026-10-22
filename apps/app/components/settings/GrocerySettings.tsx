@@ -23,7 +23,7 @@ export function GrocerySettings({ settings, onChange, readOnly }: GrocerySetting
   };
   return (
     <View className="gap-8">
-      <ListGroup>
+      <ListGroup inset>
         <SettingChoice
           label={s.shopLabel}
           hint={s.shopHint}

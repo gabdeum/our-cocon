@@ -270,12 +270,12 @@ export function GroceryList(props: GroceryListProps) {
           <Overline className="mt-4">{strings.aisles[aisle]}</Overline>
           <ListGroup>
             {rows.map((item, i) => {
-              const { detail, note } = amounts.get(item.id) ?? {};
+              const { name, detail, note } = amounts.get(item.id) ?? {};
               const openMenu = online ? () => setMenu({ id: item.id, view: 'menu' }) : undefined;
               return (
                 <ListRow
                   key={item.id}
-                  title={item.name}
+                  title={name ?? item.name}
                   titleDetail={detail ? { text: detail, note } : undefined}
                   sub={sourceLine(item, members)}
                   done={item.checked}
