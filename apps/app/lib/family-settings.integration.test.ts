@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@cocon/schemas';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
 import { loadFamilySettings, saveFamilySettings } from './family-settings';
-import { addItem, loadGroceryList, loadPacks, packKeys, rowAmounts, savePackSize } from './groceries';
+import { addItem, combineRows, loadGroceryList, loadPacks, packKeys, rowAmounts, savePackSize } from './groceries';
 
 const local = localSupabase();
 if (!local && process.env.CI) throw new Error('Local Supabase must be running in CI for the family settings integration test');
@@ -33,7 +33,7 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
     const packs = await loadPacks(client, packKeys(items));
     const cream = items.find((i) => i.catalog_key === 'heavy_cream');
     if (!cream) throw new Error('Heavy cream is not on the list');
-    return rowAmounts(items, packs, settings).get(cream.id);
+    return rowAmounts(combineRows(items), packs, settings).get(cream.id);
   };
 
   beforeAll(async () => {

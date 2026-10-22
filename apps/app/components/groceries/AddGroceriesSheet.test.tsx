@@ -21,7 +21,7 @@ function setup({ list = [], api = {} }: { list?: GroceryItem[]; api?: Partial<Ad
   const full: AddGroceriesApi = { add: vi.fn().mockResolvedValue(added), undo: vi.fn().mockResolvedValue(true), ...api };
   const onClose = vi.fn();
   const onSeeList = vi.fn();
-  render(<AddGroceriesSheet recipeName="Leek & bacon quiche" servings="6" lines={lines} list={list} api={full} tracker={tracker} onClose={onClose} onSeeList={onSeeList} />);
+  render(<AddGroceriesSheet recipeName="Leek & bacon quiche" servings="6" lines={lines} list={list} facts={quicheDetail.facts} api={full} tracker={tracker} onClose={onClose} onSeeList={onSeeList} />);
   return { tracker, api: full, onClose, onSeeList };
 }
 const row = (name: RegExp) => screen.getByRole('checkbox', { name });
@@ -75,14 +75,35 @@ describe('Add to groceries', () => {
     expect(tracker.track).toHaveBeenCalledWith('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3 });
     expect(screen.getByText('Added 5 items to groceries')).toBeTruthy();
     expect(screen.getByText('The whole family can see them now.')).toBeTruthy();
-    fireEvent.click(button('See the list'));
-    expect(onSeeList).toHaveBeenCalled();
-    fireEvent.click(button('Back to recipe'));
-    expect(onClose).toHaveBeenCalled();
+    expect(button('See the list')).toBeTruthy();
+    expect(button('Back to recipe')).toBeTruthy();
     fireEvent.click(button('Undo'));
     await flush();
     expect(api.undo).toHaveBeenCalledWith(added);
     expect(button('Add 5 items')).toBeTruthy();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onSeeList).not.toHaveBeenCalled();
+  });
+
+  it('unticks everything at once, then ticks it all back', () => {
+    setup();
+    fireEvent.click(button('Untick all'));
+    expect(screen.getAllByRole('checkbox').every((r) => r.getAttribute('aria-checked') === 'false')).toBe(true);
+    expect(button('Nothing selected')).toBeTruthy();
+    fireEvent.click(row(/^Butter/));
+    fireEvent.click(button('Untick all'));
+    expect(button('Nothing selected')).toBeTruthy();
+    fireEvent.click(button('Tick all'));
+    expect(button('Add 8 items')).toBeTruthy();
+  });
+
+  it.each(['See the list', 'Back to recipe'])('"%s" takes the sheet away before leaving, so it never stays over the next screen', async (label) => {
+    const { onSeeList, onClose } = setup();
+    fireEvent.click(button('Add 8 items'));
+    await flush();
+    fireEvent.click(button(label));
+    expect(label === 'See the list' ? onSeeList : onClose).toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('says what to do when adding or undoing fails', async () => {

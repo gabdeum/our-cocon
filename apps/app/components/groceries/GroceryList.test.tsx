@@ -267,6 +267,62 @@ describe('Groceries', () => {
   });
 });
 
+describe('Groceries › one row per thing (spec 022)', () => {
+  const crumble = { ...quiche, id: 'r-crumble', name: 'Apple crumble', serves: 4 };
+  const fromCrumble = groceryItem({ id: 'crumble-apples', name: 'Apples', catalog_key: 'apple', quantity: 600, unit: 'g', aisle: 'produce', recipes: crumble, recipe_id: crumble.id });
+  const items = [...sample, fromCrumble];
+
+  it('adds my apples and the crumble’s up in one row that names both', () => {
+    setup({ items });
+    expect(screen.getAllByRole('checkbox', { name: /Apples/ })).toHaveLength(1);
+    expect(screen.getByText('For Apple crumble · Added by Mia')).toBeTruthy();
+    expect(screen.getByText(/^Apples: 6 pieces \+ 600 g/)).toBeTruthy();
+    expect(screen.getByText('6 items to buy · shared with family')).toBeTruthy();
+  });
+
+  it('ticks, and removes, every item of the row', async () => {
+    const { props } = setup({ items });
+    fireEvent.click(row('Apples'));
+    await flush();
+    expect(props.onToggle).toHaveBeenCalledTimes(2);
+    fireEvent.contextMenu(row('Apples'));
+    await flush();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    await flush();
+    expect(props.onClear).toHaveBeenCalledWith(['apples', 'crumble-apples']);
+  });
+
+  it('edits a row that adds up to one amount into one item, and clears the rest', async () => {
+    const { props } = setup({ items, packs: await packData(['apple']) });
+    fireEvent.contextMenu(row('Apple'));
+    await flush();
+    expect((screen.getByLabelText('Item') as HTMLInputElement).value).toBe('10 Apples');
+    fireEvent.change(screen.getByLabelText('Item'), { target: { value: '10 apples' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await flush();
+    expect(props.onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'apples' }), '10 apples');
+    expect(props.onClear).toHaveBeenCalledWith(['crumble-apples']);
+  });
+
+  it('edits only the first item when the amounts do not add up to one, keeping the rest', async () => {
+    const { props } = setup({ items, packs: undefined });
+    fireEvent.contextMenu(row('Apples'));
+    await flush();
+    expect((screen.getByLabelText('Item') as HTMLInputElement).value).toBe('6 Apples');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await flush();
+    expect(props.onEdit).toHaveBeenCalled();
+    expect(props.onClear).not.toHaveBeenCalled();
+  });
+
+  it('lists each aisle in alphabetical order, ticked rows included', () => {
+    setup();
+    const names = (a: string) => within(aisle(a)).getAllByRole('checkbox').map((r) => r.textContent?.split(':')[0]?.replace(/(For|Added|Alex).*/, ''));
+    expect(names('Dairy & eggs')).toEqual(['Gruyère', 'Heavy cream', 'Milk']);
+    expect(names('Bakery')).toEqual(['Croissants', 'Sourdough loaf']);
+  });
+});
+
 describe('Groceries › what to buy (spec 021)', () => {
   const keys = ['heavy_cream', 'gruyere', 'milk', 'apple', 'salt', 'sourdough', 'croissant'];
   /** The row's title line: "Heavy cream: 1 pint carton (need 300 ml)". */

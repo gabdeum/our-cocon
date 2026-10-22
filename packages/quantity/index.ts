@@ -24,9 +24,11 @@ export { GRAMS_PER, ML_PER, WATER_G_PER_ML, cToF, convert, fToC, kindOf, toBase,
 export { amountInput, parseAmount, readAmount } from './parse-amount';
 export { parsePackSize, pickPacks, pieceGrams, sumNeeds, type PackNeed, type PackPick, type PackPlan, type StorePack } from './packs';
 export {
+  combineAmounts,
   groceryIdentity,
   planGroceryAdd,
   planGroceryAdds,
+  type CombinedAmount,
   type GroceryAdd,
   type GroceryAddPlan,
   type GroceryAddsPlan,

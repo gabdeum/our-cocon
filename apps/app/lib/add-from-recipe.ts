@@ -1,7 +1,7 @@
-import { planGroceryAdds, type GroceryAmount, type GroceryMerge } from '@cocon/quantity';
+import { groceryIdentity, kindOf, planGroceryAdds, type GroceryAmount, type GroceryMerge, type IngredientFactsInput } from '@cocon/quantity';
 import { GroceryItemInput, GroceryItemUpdate, type Aisle, type Unit } from '@cocon/schemas';
 import { strings } from '../strings/en';
-import { amountText, clearItems, loadGroceryList, type GroceryItem } from './groceries';
+import { clearItems, combinedText, combineRows, loadGroceryList, type GroceryItem } from './groceries';
 import type { RecipeChoices } from './recipe-choices';
 import type { RecipeDetail } from './recipe';
 import { appliedIngredients, formatOf, ingredientLine, scaleRecipe, servingsText } from './recipe-view';
@@ -41,8 +41,9 @@ export function recipeGroceryLines(recipe: RecipeDetail, choices: RecipeChoices)
     return {
       id: ing.id,
       name: line.baseName.trim().slice(0, 80),
-      // Counted items show their weight ("2 · 300 g"); a volume reads on its own here ("300 ml").
-      shown: ing.quantity == null ? '' : [line.amount, counted ? line.sub : null].filter(Boolean).join(' · '),
+      // Counted items show their weight ("2 · 300 g", "3½ · 600 g" for apples saved in grams); a
+      // volume reads on its own here ("300 ml").
+      shown: ing.quantity == null ? '' : [line.amount, ing.unit && kindOf(ing.unit) === 'volume' ? null : line.sub].filter(Boolean).join(' · '),
       catalog_key: ing.catalog_key ?? null,
       quantity,
       unit: quantity == null ? null : (ing.unit ?? null),
@@ -51,23 +52,34 @@ export function recipeGroceryLines(recipe: RecipeDetail, choices: RecipeChoices)
   return { servings: servingsText(scaled.servings), lines };
 }
 
-const amountOf = (id: string, name: string, amount: GroceryAmount) => amountText({ id, name, ...amount }) ?? '';
-
 /**
- * US2: "Already on the list (100 ml) → will be 400 ml" for each ticked line that goes into an item
- * already on the list, by line id. Lines merging with no amount on either side get no note.
+ * US2: "Already on the list (100 ml) → will be 400 ml" for each ticked line of something the list
+ * already has still to buy, by line id. Amounts read as the list will show them, one row per
+ * thing (combineRows): "Already on the list (11 pieces) → will be 15 pieces". Two lines of the same
+ * thing count up line by line.
  */
-export function mergeNotes(list: readonly GroceryItem[], lines: readonly RecipeGroceryLine[], ticked: ReadonlySet<string>): Map<string, string> {
-  const picked = lines.filter((l) => ticked.has(l.id));
-  const plan = planGroceryAdds(list, picked);
+export function mergeNotes(
+  list: readonly GroceryItem[],
+  lines: readonly RecipeGroceryLine[],
+  ticked: ReadonlySet<string>,
+  facts: Readonly<Record<string, IngredientFactsInput>>,
+): Map<string, string> {
+  const open = new Map(combineRows(list).flatMap((r) => (r.checked ? [] : [[groceryIdentity(r.items[0] as GroceryItem), r] as const])));
+  const adding = new Map<string, GroceryAmount[]>();
   const out = new Map<string, string>();
-  picked.forEach((line, n) => {
-    const merge = plan.into[n];
-    if (!merge) return;
-    const before = amountOf(merge.id, line.name, merge.before);
-    const after = amountOf(merge.id, line.name, merge.after);
+  for (const line of lines) {
+    if (!ticked.has(line.id)) continue;
+    const identity = groceryIdentity(line);
+    const running = [...(adding.get(identity) ?? []), { quantity: line.quantity, unit: line.unit }];
+    adding.set(identity, running);
+    const row = open.get(identity);
+    if (!row) continue;
+    const f = line.catalog_key ? facts[line.catalog_key] : null;
+    const name = (row.items[0] as GroceryItem).name;
+    const before = combinedText(name, row.items, f);
+    const after = combinedText(name, [...row.items, ...running], f);
     if (before && after) out.set(line.id, a.alreadyOnList(before, after));
-  });
+  }
   return out;
 }
 

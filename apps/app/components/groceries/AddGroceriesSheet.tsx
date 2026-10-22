@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Button, Callout, ListGroup, ListRow, SheetFooter, SuccessPanel } from '@cocon/ui';
+import { BottomSheet, Button, Callout, Link, ListGroup, ListRow, SheetFooter, SuccessPanel } from '@cocon/ui';
+import type { IngredientFactsInput } from '@cocon/quantity';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { AddedFromRecipe, RecipeGroceryLine } from '../../lib/add-from-recipe';
@@ -23,6 +24,8 @@ export interface AddGroceriesSheetProps {
   lines: RecipeGroceryLine[];
   /** The list as it stands, for "Already on the list (100 ml) → will be 400 ml". */
   list: readonly GroceryItem[];
+  /** The recipe's catalog facts, so the notes add up pieces and grams as the list does. */
+  facts: Readonly<Record<string, IngredientFactsInput>>;
   api: AddGroceriesApi;
   tracker: Tracker;
   onClose: () => void;
@@ -30,16 +33,22 @@ export interface AddGroceriesSheetProps {
 }
 
 /** Add to groceries (spec 022; design/ui/OC-AddGroceries.md). No pantry: everything starts ticked. */
-export function AddGroceriesSheet({ recipeName, servings, lines, list, api, tracker, onClose, onSeeList }: AddGroceriesSheetProps) {
+export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, api, tracker, onClose, onSeeList }: AddGroceriesSheetProps) {
   const online = useOnline();
   // FR-001: every ingredient ticked to start; ids that are unticked.
   const [off, setOff] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   const [done, setDone] = useState<{ count: number; added: AddedFromRecipe } | null>(null);
+  // On the web a Modal can stay over the next screen while this one leaves: take it away first.
+  const [leaving, setLeaving] = useState(false);
+  const leave = (go: () => void) => () => {
+    setLeaving(true);
+    go();
+  };
 
   const ticked = useMemo(() => new Set(lines.filter((l) => !off.has(l.id)).map((l) => l.id)), [lines, off]);
-  const notes = useMemo(() => mergeNotes(list, lines, ticked), [list, lines, ticked]);
+  const notes = useMemo(() => mergeNotes(list, lines, ticked, facts), [list, lines, ticked, facts]);
   const count = ticked.size;
 
   const toggle = (id: string) =>
@@ -74,20 +83,25 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, api, trac
     else setFailed(a.undoFailed);
   };
 
+  const close = leave(onClose);
   const footer = done ? (
     <View className="flex-row gap-10">
-      <Button label={a.backToRecipe} variant="soft" onPress={onClose} className="flex-1" />
-      <Button label={a.seeList} variant="ink" onPress={onSeeList} className="flex-1" />
+      <Button label={a.backToRecipe} variant="soft" onPress={close} className="flex-1" />
+      <Button label={a.seeList} variant="ink" onPress={leave(onSeeList)} className="flex-1" />
     </View>
   ) : (
     <SheetFooter
-      cancel={{ label: a.cancel, onPress: onClose }}
+      cancel={{ label: a.cancel, onPress: close }}
       primary={{ label: count === 0 ? a.nothingSelected : a.add(count), onPress: () => void add(), disabled: count === 0 || !online, busy, busyLabel: a.adding }}
     />
   );
 
+  // "Untick all" when anything is ticked, else "Tick all".
+  const tickAll = !done && lines.length > 0 ? <Link label={count > 0 ? a.untickAll : a.tickAll} onPress={() => setOff(count > 0 ? new Set(lines.map((l) => l.id)) : new Set())} /> : undefined;
+
+  if (leaving) return null;
   return (
-    <BottomSheet visible title={a.title} lead={a.lead(recipeName, servings)} closeLabel={a.close} onClose={onClose} footer={footer}>
+    <BottomSheet visible title={a.title} lead={a.lead(recipeName, servings)} headerAction={tickAll} closeLabel={a.close} onClose={close} footer={footer}>
       <OfflineBanner screen="recipe" tracker={tracker} />
       {failed ? <Callout variant="warn" text={failed} /> : null}
       {done ? (

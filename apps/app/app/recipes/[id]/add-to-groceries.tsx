@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AddGroceriesSheet, type AddGroceriesApi } from '../../../components/groceries/AddGroceriesSheet';
 import { addFromRecipe, recipeGroceryLines, undoAddFromRecipe } from '../../../lib/add-from-recipe';
@@ -40,10 +40,12 @@ export default function AddToGroceriesRoute() {
       servings={view.servings}
       lines={view.lines}
       list={list.data ?? []}
+      facts={recipe.facts}
       api={api}
       tracker={tracker}
-      onClose={() => router.back()}
-      onSeeList={() => router.navigate('/groceries')}
+      // Opened straight from a link there's nothing to go back to: the recipe page.
+      onClose={() => (router.canGoBack() ? router.back() : router.replace(`/recipes/${recipe.id}` as Href))}
+      onSeeList={() => router.dismissTo('/groceries')}
     />
   );
 }

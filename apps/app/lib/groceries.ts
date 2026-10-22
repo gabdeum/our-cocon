@@ -1,4 +1,5 @@
 import {
+  combineAmounts,
   format,
   groceryIdentity,
   parseGroceryLine,
@@ -6,6 +7,7 @@ import {
   pickPacks,
   planGroceryAdd,
   sumNeeds,
+  type GroceryAmount,
   type IngredientFactsInput,
   type PackPlan,
   type StorePack,
@@ -72,8 +74,8 @@ export async function loadGroceryList(client: Pick<Client, 'from'>): Promise<Gro
 
 // --- What the screen shows -------------------------------------------------------------------
 
-/** The header's count: what's not ticked yet. */
-export const toBuyCount = (items: readonly GroceryItem[]) => items.filter((i) => !i.checked).length;
+/** The header's count: rows not ticked yet (combineRows). */
+export const toBuyCount = (rows: readonly Pick<GroceryRow, 'checked'>[]) => rows.filter((r) => !r.checked).length;
 
 /** FR-001: the aisles in the catalog's fixed order, each with its items; empty aisles are left out. */
 export function groupByAisle<T extends Pick<GroceryItem, 'aisle'>>(items: readonly T[]): { aisle: Aisle; items: T[] }[] {
@@ -151,8 +153,6 @@ export async function loadPacks(client: Pick<Client, 'from'>, keys: readonly str
   return out;
 }
 
-const baseUnit = (kind: PackPlan['kind']): Unit | null => (kind === 'weight' ? 'g' : kind === 'volume' ? 'ml' : null);
-
 /** "1 pint carton", "2 × 20 cl", "1 dozen", "6 pieces", "1 kg loose" (spec 021 FR-003). */
 export function buyText(plan: PackPlan): string {
   const g = strings.groceries;
@@ -179,41 +179,104 @@ export interface RowAmounts {
 }
 
 /**
- * Each row's amounts, beside the name: "Heavy cream: 1 pint carton (need 300 ml)", or just
- * "Heavy cream: 300 ml" when there's no pack, round-up is off (US3), or it's another row of
- * something already counted. Rows of the same catalog entry still to buy are summed (FR-002): the
- * first carries the packs for all of them. Nothing for an item with no quantity ("Salt").
+ * One row on the list (spec 022): every item of the same thing still to buy, whoever or whatever
+ * recipe added it, read as one ("Apple: 15 pieces · For Apple crumble · Added by Gabriel"). Ticked
+ * items make their own row: they're in the trolley. The items stay separate underneath, each with
+ * its source, so recipe cards and Undo still know where they came from.
  */
-export function rowAmounts(items: readonly GroceryItem[], packs: Record<string, PackData> | undefined, settings: FamilySettings): Map<string, RowAmounts> {
-  const out = new Map<string, RowAmounts>();
-  const groups = new Map<string, GroceryItem[]>();
+export interface GroceryRow {
+  /** The first item's id: the row's key, and the item its menu edits. */
+  id: string;
+  items: GroceryItem[];
+  checked: boolean;
+  aisle: Aisle | null;
+}
+
+/** The list's items as rows, one per thing (groceryIdentity) and tick, in the order they first came. */
+export function combineRows(items: readonly GroceryItem[]): GroceryRow[] {
+  const rows = new Map<string, GroceryRow>();
   for (const item of items) {
-    const amount = rowText(item);
-    const catalogName = item.catalog_key ? packs?.[item.catalog_key]?.facts.name : null;
-    // "Lemon: 2 pieces" reads as a label; a name the matcher only got close to ("Meyer lemons") stays as typed.
-    const name = catalogName && normaliseName(catalogName) === normaliseName(item.name) ? catalogName : undefined;
-    out.set(item.id, { ...(name ? { name } : {}), ...(amount ? { detail: amount } : {}) });
-    if (!settings.round_to_packs || !amount || !item.catalog_key || !packs?.[item.catalog_key]) continue;
-    const key = item.checked ? `done:${item.id}` : item.catalog_key;
-    groups.set(key, [...(groups.get(key) ?? []), item]);
+    const key = `${item.checked ? 'done' : 'open'}:${groceryIdentity(item)}`;
+    const row = rows.get(key);
+    if (row) row.items.push(item);
+    else rows.set(key, { id: item.id, items: [item], checked: item.checked, aisle: item.aisle });
   }
-  for (const rows of groups.values()) {
-    const first = rows[0] as GroceryItem;
-    const data = packs?.[first.catalog_key as string] as PackData;
-    const total = sumNeeds(
-      rows.map((r) => ({ quantity: r.quantity as number, unit: r.unit === 'piece' ? null : r.unit })),
-      data.facts,
-    );
-    const plan = total ? pickPacks(total, data.packs[settings.store_profile], data.facts, settings.store_profile) : null;
-    if (!total || !plan) continue;
-    const amount = rows.length === 1 ? rowText(first) : rowText({ id: first.id, name: first.name, quantity: Math.round(total.quantity * 100) / 100, unit: baseUnit(total.kind) });
-    if (!amount) continue;
+  return [...rows.values()];
+}
+
+/** The ids of every item in these rows. */
+export const rowIds = (rows: readonly GroceryRow[]) => rows.flatMap((r) => r.items.map((i) => i.id));
+
+/**
+ * A row's sources, each once: "For Apple crumble + Leek & bacon quiche · Added by Gabriel",
+ * "From a deleted recipe · Alex via ChatGPT".
+ */
+export function rowSource(row: Pick<GroceryRow, 'items'>, members: readonly Pick<Member, 'user_id' | 'display_name'>[]): string {
+  const recipes = [...new Set(row.items.flatMap((i) => (i.recipes && !i.recipes.deleted_at ? [i.recipes.name] : [])))];
+  const others = [...new Set(row.items.filter((i) => !(i.recipes && !i.recipes.deleted_at)).map((i) => sourceLine(i, members)))];
+  return [...(recipes.length > 0 ? [strings.groceries.forRecipe(recipes.join(strings.groceries.sourcesJoin))] : []), ...others].join(strings.groceries.sourcePartsJoin);
+}
+
+const factsOf = (row: GroceryRow, packs: Record<string, PackData> | undefined) => {
+  const key = row.items[0]?.catalog_key;
+  return key ? (packs?.[key]?.facts ?? null) : null;
+};
+
+/**
+ * The row's items as one amount, to start Edit from ("15 Apples"), when they add up to one; else
+ * the first item as it is.
+ */
+export function rowItem(row: GroceryRow, packs: Record<string, PackData> | undefined): GroceryItem {
+  const first = row.items[0] as GroceryItem;
+  if (row.items.length === 1) return first;
+  const { total } = combineAmounts(row.items, factsOf(row, packs));
+  return total ? { ...first, quantity: total.quantity, unit: total.unit } : first;
+}
+
+/**
+ * Amounts of one thing as one, from @cocon/quantity: "300 ml", "15 pieces", or "11 pieces + 600 g"
+ * when they don't convert. Null when none has an amount. The list's rows and Add to groceries'
+ * notes (spec 022) both read it.
+ */
+export function combinedText(name: string, amounts: readonly GroceryAmount[], facts: IngredientFactsInput | null | undefined): string | null {
+  const { parts } = combineAmounts(amounts, facts);
+  const texts = parts.flatMap((p) => rowText({ id: name, name, quantity: p.quantity, unit: p.unit }) ?? []);
+  return texts.length > 0 ? texts.join(strings.groceries.packsJoin) : null;
+}
+
+const needText = (row: GroceryRow, facts: IngredientFactsInput | null) => combinedText((row.items[0] as GroceryItem).name, row.items, facts);
+
+/**
+ * Each row's amounts, beside the name: "Heavy cream: 1 pint carton (need 300 ml)", or just
+ * "Heavy cream: 300 ml" when there's no pack, round-up is off (spec 021 US3), or the amounts don't
+ * add up to one. Nothing for a row with no quantity ("Salt").
+ */
+export function rowAmounts(rows: readonly GroceryRow[], packs: Record<string, PackData> | undefined, settings: FamilySettings): Map<string, RowAmounts> {
+  const out = new Map<string, RowAmounts>();
+  for (const row of rows) {
+    const first = row.items[0] as GroceryItem;
+    const data = first.catalog_key ? packs?.[first.catalog_key] : undefined;
+    const catalogName = data?.facts.name;
+    // "Lemon: 2 pieces" reads as a label; a name the matcher only got close to ("Meyer lemons") stays as typed.
+    const name = catalogName && normaliseName(catalogName) === normaliseName(first.name) ? catalogName : undefined;
+    const need = needText(row, data?.facts ?? null);
+    const shown: RowAmounts = { ...(name ? { name } : {}), ...(need ? { detail: need } : {}) };
+    out.set(row.id, shown);
+    if (!settings.round_to_packs || !need || !data) continue;
+    const { total } = combineAmounts(row.items, data.facts);
+    const sum = total?.quantity == null ? null : sumNeeds([{ quantity: total.quantity, unit: total.unit === 'piece' ? null : total.unit }], data.facts);
+    const plan = sum ? pickPacks(sum, data.packs[settings.store_profile], data.facts, settings.store_profile) : null;
+    if (!plan) continue;
     // Exactly what's needed (loose by weight, one by one, 2 × 1 l for 2 L): no need to say it twice.
     const exact = plan.leftover <= plan.need * 0.01 && !plan.approximate;
-    const shown = out.get(first.id);
-    out.set(first.id, exact ? { ...shown, detail: buyText(plan) } : { ...shown, detail: buyText(plan), note: strings.groceries.needNote(amount) });
+    out.set(row.id, exact ? { ...shown, detail: buyText(plan) } : { ...shown, detail: buyText(plan), note: strings.groceries.needNote(need) });
   }
   return out;
+}
+
+/** FR-001 and spec 022: rows in each aisle in alphabetical order of the name shown, ticked or not. */
+export function byName<T>(rows: readonly T[], nameOf: (row: T) => string): T[] {
+  return [...rows].sort((a, b) => nameOf(a).localeCompare(nameOf(b), 'en', { sensitivity: 'base' }));
 }
 
 export interface RecipeCard {

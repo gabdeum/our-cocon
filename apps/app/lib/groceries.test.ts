@@ -1,7 +1,7 @@
 // Spec 020: what the grocery list shows (aisles, source lines, Need, recipe cards, who's shopping).
 // Spec 021: what to buy beside the name (summed per catalog entry) and the family's own pack size.
 import { describe, expect, it, vi } from 'vitest';
-import { amountText, buyText, editText, groupByAisle, recipeCards, rowAmounts, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
+import { amountText, buyText, byName, combineRows, editText, groupByAisle, recipeCards, rowAmounts, rowItem, rowSource, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
 import { alex, gabriel, groceryItem, mia, packData } from '../test/fakes';
 
 const members = [gabriel, alex, mia];
@@ -26,8 +26,26 @@ describe('groupByAisle (FR-001)', () => {
 });
 
 describe('toBuyCount', () => {
-  it('counts what is not ticked', () => {
-    expect(toBuyCount([groceryItem({}), groceryItem({ checked: true }), groceryItem({})])).toBe(2);
+  it('counts rows not ticked: one per thing', () => {
+    expect(toBuyCount(combineRows([groceryItem({ id: 'a' }), groceryItem({ id: 'b', checked: true }), groceryItem({ id: 'c' }), groceryItem({ id: 'd', name: 'Milk', catalog_key: 'milk' })]))).toBe(2);
+  });
+});
+
+describe('rowSource and byName (spec 022)', () => {
+  it('names every recipe and person a row came from, each once', () => {
+    const soup = { ...quiche, id: 'r-soup', name: 'Pumpkin soup' };
+    const [row] = combineRows([
+      groceryItem({ id: 'a', recipes: quiche }),
+      groceryItem({ id: 'b', created_by: gabriel.user_id }),
+      groceryItem({ id: 'c', recipes: soup }),
+      groceryItem({ id: 'd', created_by: gabriel.user_id }),
+      groceryItem({ id: 'e', created_by: alex.user_id, source: 'chatgpt' }),
+    ]);
+    expect(rowSource(row as never, members)).toBe('For Leek & bacon quiche + Pumpkin soup · Added by Gabriel · Alex via ChatGPT');
+  });
+
+  it('sorts by the name shown, ignoring case and accents', () => {
+    expect(byName(['croissants', 'Apple', 'Émmental', 'butter'], (n) => n)).toEqual(['Apple', 'butter', 'croissants', 'Émmental']);
   });
 });
 
@@ -103,35 +121,50 @@ describe('rowAmounts (spec 021)', () => {
 
   it('US1: what to buy, then what recipes need, per store', async () => {
     const packs = await packData(['heavy_cream']);
-    expect(rowAmounts([cream()], packs, us).get('cream')).toEqual({ name: 'Heavy cream', detail: '1 pint carton', note: '(need 300 ml)' });
-    expect(rowAmounts([cream()], packs, eu).get('cream')).toEqual({ name: 'Heavy cream', detail: '2 × 20 cl', note: '(need 300 ml)' });
+    expect(rowAmounts(combineRows([cream()]), packs, us).get('cream')).toEqual({ name: 'Heavy cream', detail: '1 pint carton', note: '(need 300 ml)' });
+    expect(rowAmounts(combineRows([cream()]), packs, eu).get('cream')).toEqual({ name: 'Heavy cream', detail: '2 × 20 cl', note: '(need 300 ml)' });
   });
 
   it('US3: Need only with round-up off, or before packs load', async () => {
     const packs = await packData(['heavy_cream']);
-    expect(rowAmounts([cream()], packs, { ...us, round_to_packs: false }).get('cream')).toEqual({ name: 'Heavy cream', detail: '300 ml' });
-    expect(rowAmounts([cream()], undefined, us).get('cream')).toEqual({ detail: '300 ml' });
+    expect(rowAmounts(combineRows([cream()]), packs, { ...us, round_to_packs: false }).get('cream')).toEqual({ name: 'Heavy cream', detail: '300 ml' });
+    expect(rowAmounts(combineRows([cream()]), undefined, us).get('cream')).toEqual({ detail: '300 ml' });
   });
 
-  it('FR-002: sums rows of the same item still to buy; the first one carries the packs', async () => {
+  it('FR-002, spec 022: items of the same thing still to buy are one row, with packs for them all', async () => {
     const packs = await packData(['heavy_cream']);
-    const rows = [cream(), cream({ id: 'cream2', quantity: 200 }), cream({ id: 'done', checked: true, quantity: 100 })];
+    const rows = combineRows([cream(), cream({ id: 'cream2', quantity: 200 }), cream({ id: 'done', checked: true, quantity: 100 })]);
+    expect(rows.map((r) => [r.id, r.items.length])).toEqual([
+      ['cream', 2],
+      ['done', 1],
+    ]);
     const out = rowAmounts(rows, packs, eu);
     expect(out.get('cream')).toEqual({ name: 'Heavy cream', detail: '50 cl' });
-    expect(out.get('cream2')).toEqual({ name: 'Heavy cream', detail: '200 ml' });
-    // A ticked one is already in the trolley: counted on its own.
+    // A ticked one is already in the trolley: a row of its own.
     expect(out.get('done')).toEqual({ name: 'Heavy cream', detail: '20 cl', note: '(need 100 ml)' });
+  });
+
+  it('spec 022: pieces and grams of apples are one amount through the catalog; without it, both are said', async () => {
+    const packs = await packData(['apple']);
+    const rows = combineRows([
+      groceryItem({ id: 'mine', name: 'Apples', catalog_key: 'apple', quantity: 11, unit: 'piece' }),
+      groceryItem({ id: 'crumble', name: 'Apples', catalog_key: 'apple', quantity: 600, unit: 'g', recipes: quiche }),
+    ]);
+    expect(rows).toHaveLength(1);
+    expect(rowAmounts(rows, packs, { ...eu, round_to_packs: false }).get('mine')).toEqual({ name: 'Apple', detail: '15 pieces' });
+    expect(rowAmounts(rows, undefined, eu).get('mine')).toEqual({ detail: '11 pieces + 600 g' });
+    expect(rowItem(rows[0] as never, packs)).toMatchObject({ id: 'mine', quantity: 15, unit: 'piece' });
   });
 
   it('"2 lemons" reads "Lemon: 2 pieces"; a name the matcher only got close to stays as typed', async () => {
     const packs = await packData(['lemon']);
     const lemons = groceryItem({ id: 'l', name: 'Lemons', catalog_key: 'lemon', quantity: 2, unit: 'piece' });
     const meyer = groceryItem({ id: 'm', name: 'Meyer lemons', catalog_key: 'lemon', quantity: 3, unit: 'piece', checked: true });
-    expect(rowAmounts([lemons], packs, eu).get('l')).toEqual({ name: 'Lemon', detail: '2 pieces' });
-    expect(rowAmounts([lemons], packs, { ...eu, round_to_packs: false }).get('l')).toEqual({ name: 'Lemon', detail: '2 pieces' });
-    expect(rowAmounts([meyer], packs, eu).get('m')?.name).toBeUndefined();
+    expect(rowAmounts(combineRows([lemons]), packs, eu).get('l')).toEqual({ name: 'Lemon', detail: '2 pieces' });
+    expect(rowAmounts(combineRows([lemons]), packs, { ...eu, round_to_packs: false }).get('l')).toEqual({ name: 'Lemon', detail: '2 pieces' });
+    expect(rowAmounts(combineRows([meyer]), packs, eu).get('m')?.name).toBeUndefined();
     // Before packs load: the name as typed, still in pieces.
-    expect(rowAmounts([lemons], undefined, eu).get('l')).toEqual({ detail: '2 pieces' });
+    expect(rowAmounts(combineRows([lemons]), undefined, eu).get('l')).toEqual({ detail: '2 pieces' });
   });
 
   it('edge cases: no quantity, no catalog entry, loose', async () => {
@@ -141,12 +174,12 @@ describe('rowAmounts (spec 021)', () => {
       groceryItem({ id: 'z', name: "Za'atar", catalog_key: null, quantity: 50, unit: 'g' }),
       groceryItem({ id: 'p', name: 'Pumpkin', catalog_key: 'pumpkin', quantity: 1, unit: 'kg' }),
     ];
-    const out = rowAmounts(rows, packs, eu);
+    const out = rowAmounts(combineRows(rows), packs, eu);
     expect(out.get('salt')).toEqual({ name: 'Salt' });
     expect(out.get('z')).toEqual({ detail: '50 g' });
     // Exactly what's needed: said once.
     expect(out.get('p')).toEqual({ name: 'Pumpkin', detail: '1 kg loose' });
-    expect(rowAmounts(rows, packs, us).get('p')).toEqual({ name: 'Pumpkin', detail: '1 piece', note: '(need 1 kg)' });
+    expect(rowAmounts(combineRows(rows), packs, us).get('p')).toEqual({ name: 'Pumpkin', detail: '1 piece', note: '(need 1 kg)' });
   });
 });
 

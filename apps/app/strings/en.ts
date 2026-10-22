@@ -671,6 +671,9 @@ export const strings = {
     mergedNoAmount: 'Already on the list.',
     forRecipe: (recipe: string) => `For ${recipe}`,
     fromDeletedRecipe: 'From a deleted recipe',
+    // A row added to by several (spec 022): "For Apple crumble + Leek & bacon quiche · Added by Gabriel".
+    sourcesJoin: ' + ',
+    sourcePartsJoin: ' · ',
     recipeMeta: (items: number, serves: number) => `${items === 1 ? '1 item' : `${items} items`} · serves ${serves}`,
     open: 'Open',
     openRecipe: (recipe: string) => `Open ${recipe}`,
@@ -727,6 +730,9 @@ export const strings = {
     lead: (recipe: string, serves: string) => `${recipe} · serves ${serves}. Untick what you already have at home.`,
     group: 'From this recipe',
     groupNote: 'All ticked to start',
+    // Not drawn: the header's link, for when most of it is already at home.
+    untickAll: 'Untick all',
+    tickAll: 'Tick all',
     alreadyOnList: (existing: string, total: string) => `Already on the list (${existing}) → will be ${total}`,
     cancel: 'Cancel',
     add: (n: number) => (n === 1 ? 'Add 1 item' : `Add ${n} items`),

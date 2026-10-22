@@ -108,12 +108,12 @@ export const events = {
   grocery_item_added: z.strictObject({ from: z.enum(['app', 'recipe', 'ai']) }),
   // Ticked, not unticked.
   grocery_item_ticked: z.strictObject({}),
-  // "Clear done items", and its Undo, with how many items.
+  // "Clear done items", and its Undo, with how many rows (one per thing since spec 022).
   done_items_cleared: z.strictObject({ count: z.int().min(1) }),
   clear_done_undone: z.strictObject({ count: z.int().min(1) }),
   // Spec 021: where the family shops changed (the grocery settings sheet).
   store_profile_changed: z.strictObject({ profile: z.enum(['us', 'eu']) }),
-  // "Clear all items" (confirmed), with how many items: the whole list, ticked or not.
+  // "Clear all items" (confirmed), with how many rows: the whole list, ticked or not.
   all_items_cleared: z.strictObject({ count: z.int().min(1) }),
   // Spec 022: "Add to groceries…" on a recipe, with how many ingredients were added and how many
   // were left unticked. Never which ones.

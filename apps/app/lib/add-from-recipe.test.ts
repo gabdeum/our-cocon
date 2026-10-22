@@ -48,11 +48,17 @@ describe('mergeNotes (US2)', () => {
   const listed = [groceryItem({ id: 'cream', name: 'Heavy cream', catalog_key: 'heavy_cream', quantity: 100, unit: 'ml' })];
 
   it('says what is already on the list and what it will be', () => {
-    const notes = mergeNotes(listed, lines, new Set(lines.map((l) => l.id)));
+    const notes = mergeNotes(listed, lines, new Set(lines.map((l) => l.id)), quicheDetail.facts);
     expect([...notes]).toEqual([[cream, 'Already on the list (100 ml) → will be 400 ml']]);
   });
 
+  it('reads as the list will: my eggs and the recipe’s in one row', () => {
+    const eggs = [groceryItem({ id: 'eggs', name: 'Eggs', catalog_key: 'egg', quantity: 6, unit: 'piece' })];
+    const notes = mergeNotes(eggs, lines, new Set(lines.map((l) => l.id)), quicheDetail.facts);
+    expect(notes.get('c0c01000-0000-4000-8000-000000000005')).toBe('Already on the list (6 pieces) → will be 9 pieces');
+  });
+
   it('says nothing for an unticked line', () => {
-    expect(mergeNotes(listed, lines, new Set(lines.filter((l) => l.id !== cream).map((l) => l.id))).size).toBe(0);
+    expect(mergeNotes(listed, lines, new Set(lines.filter((l) => l.id !== cream).map((l) => l.id)), quicheDetail.facts).size).toBe(0);
   });
 });

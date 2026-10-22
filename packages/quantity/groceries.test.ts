@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groceryIdentity, planGroceryAdd, planGroceryAdds, type ListedGrocery } from './groceries';
+import { combineAmounts, groceryIdentity, planGroceryAdd, planGroceryAdds, type ListedGrocery } from './groceries';
 
 const item = (over: Partial<ListedGrocery>): ListedGrocery => ({
   id: 'i1',
@@ -69,8 +69,6 @@ describe('planGroceryAdds (spec 022: a recipe at once)', () => {
   it('merges into what is listed and inserts the rest', () => {
     const plan = planGroceryAdds([cream], [add('Heavy cream', 'heavy_cream', 300, 'ml'), add('Butter', 'butter', 20, 'g'), add('Salt and pepper', null, null, null)]);
     expect(plan.merges).toEqual([{ id: 'cream', before: { quantity: 100, unit: 'ml' }, after: { quantity: 400, unit: 'ml' } }]);
-    expect(plan.into[0]).toEqual(plan.merges[0]);
-    expect(plan.into.slice(1)).toEqual([null, null]);
     expect(plan.inserts).toEqual([add('Butter', 'butter', 20, 'g'), add('Salt and pepper', null, null, null)]);
   });
 
@@ -83,6 +81,29 @@ describe('planGroceryAdds (spec 022: a recipe at once)', () => {
   it('keeps the first amount as before when two lines go into one listed item', () => {
     const plan = planGroceryAdds([cream], [add('Heavy cream', 'heavy_cream', 100, 'ml'), add('Heavy cream', 'heavy_cream', 200, 'ml')]);
     expect(plan.merges).toEqual([{ id: 'cream', before: { quantity: 100, unit: 'ml' }, after: { quantity: 400, unit: 'ml' } }]);
-    expect(plan.into.map((m) => m?.after.quantity)).toEqual([200, 400]);
+  });
+});
+
+describe('combineAmounts (spec 022: one row per thing)', () => {
+  const apple = { size_small_g: 149, size_medium_g: 182, size_large_g: 223, default_size: 'medium' as const };
+
+  it('sums through piece weights in the first kind; counts round up', () => {
+    expect(combineAmounts([{ quantity: 11, unit: 'piece' }, { quantity: 600, unit: 'g' }], apple)).toEqual({ total: { quantity: 15, unit: 'piece' }, parts: [{ quantity: 15, unit: 'piece' }] });
+    expect(combineAmounts([{ quantity: 600, unit: 'g' }, { quantity: 0.4, unit: 'kg' }], null).total).toEqual({ quantity: 1000, unit: 'g' });
+  });
+
+  it('keeps one part per kind when the facts cannot tell, and skips rows with no amount', () => {
+    expect(combineAmounts([{ quantity: 11, unit: 'piece' }, { quantity: null, unit: null }, { quantity: 600, unit: 'g' }, { quantity: 0.2, unit: 'kg' }], null)).toEqual({
+      total: null,
+      parts: [
+        { quantity: 11, unit: 'piece' },
+        { quantity: 800, unit: 'g' },
+      ],
+    });
+    expect(combineAmounts([{ quantity: null, unit: null }], null)).toEqual({ total: null, parts: [] });
+  });
+
+  it('keeps a single amount as it is', () => {
+    expect(combineAmounts([{ quantity: 300, unit: 'ml' }], null).total).toEqual({ quantity: 300, unit: 'ml' });
   });
 });
