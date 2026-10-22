@@ -2,7 +2,7 @@
 // or the keyboard's menu key, and offer the same choices as screen-reader actions.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { ListRow } from './ListRow';
+import { ListGroup, ListRow } from './ListRow';
 
 afterEach(cleanup);
 
@@ -43,5 +43,18 @@ describe('ListRow title detail and action (spec 021)', () => {
     expect(onPress).not.toHaveBeenCalled();
     rerender(<ListRow title="Gruyère" leading={{ kind: 'checkbox', checked: false }} onPress={onPress} action={{ icon: 'more-vertical', accessibilityLabel: 'Edit Gruyère', onPress: onEdit, disabled: true }} />);
     expect(screen.getByRole('button', { name: 'Edit Gruyère' }).getAttribute('aria-disabled')).toBe('true');
+  });
+});
+
+describe('ListGroup note and dim rows (spec 022)', () => {
+  it('shows the note beside the overline, and an unticked row unstruck', () => {
+    render(
+      <ListGroup title="From this recipe" note="All ticked to start">
+        <ListRow title="Butter" dim leading={{ kind: 'checkbox', checked: false }} trailing={{ kind: 'value', text: '20 g' }} onPress={() => undefined} last />
+      </ListGroup>,
+    );
+    expect(screen.getByText('All ticked to start')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'From this recipe' })).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: /Butter/ }).getAttribute('aria-checked')).toBe('false');
   });
 });

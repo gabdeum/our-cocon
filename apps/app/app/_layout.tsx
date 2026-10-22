@@ -129,6 +129,7 @@ export default function RootLayout() {
                   <Stack.Screen name="recipes/[id]/scale" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/convert" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/share" options={presentation.sheet} />
+                  <Stack.Screen name="recipes/[id]/add-to-groceries" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/edit" options={presentation.fullScreen} />
                   <Stack.Screen name="recipes/[id]/settings" options={presentation.stack} />
                   <Stack.Screen name="timers" options={presentation.stack} />

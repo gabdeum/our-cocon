@@ -23,6 +23,19 @@ export type { FormatOptions, FormattedIngredient, IngredientFactsInput, Quantity
 export { GRAMS_PER, ML_PER, WATER_G_PER_ML, cToF, convert, fToC, kindOf, toBase, type UnitKind } from './units';
 export { amountInput, parseAmount, readAmount } from './parse-amount';
 export { parsePackSize, pickPacks, pieceGrams, sumNeeds, type PackNeed, type PackPick, type PackPlan, type StorePack } from './packs';
-export { groceryIdentity, planGroceryAdd, type GroceryAddPlan, type GroceryAmount, type ListedGrocery } from './groceries';
+export {
+  combineAmounts,
+  groceryIdentity,
+  planGroceryAdd,
+  planGroceryAdds,
+  type CombinedAmount,
+  type GroceryAdd,
+  type GroceryAddPlan,
+  type GroceryAddsPlan,
+  type GroceryAmount,
+  type GroceryMerge,
+  type GroceryOrigin,
+  type ListedGrocery,
+} from './groceries';
 export { parseGroceryLine, parseIngredientLine, parsePastedList, pieceNouns, splitPastedList, type ParsedLine } from './parse-line';
 export { en as parserWordsEn, type ParserWords } from './words.en';

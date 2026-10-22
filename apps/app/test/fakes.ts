@@ -69,6 +69,7 @@ export function groceryItem(over: Partial<GroceryItem>): GroceryItem {
     checked_by: null,
     checked_at: null,
     recipe_id: null,
+    from_recipe: false,
     created_by: gabriel.user_id,
     source: 'app',
     created_at: '2026-10-21T10:00:00Z',

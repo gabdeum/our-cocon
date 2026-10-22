@@ -8,7 +8,7 @@ import { deviceStorage } from '../../../lib/recipe-choices';
 import { recipePhotoPaths, useRecipePhotoUrls } from '../../../lib/recipe-photo';
 import { useSession } from '../../../lib/session';
 
-// Add to groceries (022) comes later; typed routes learn it then.
+// The recipe's own pages: share, settings, add-to-groceries, cook, scale, convert.
 const recipeRoute = (id: string, page: string) => `/recipes/${id}/${page}` as Href;
 
 /** /recipes/[id] (spec 008): the recipe page. `?tab=steps` opens the Steps tab (009). */

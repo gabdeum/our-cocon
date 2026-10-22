@@ -20,7 +20,22 @@ import {
 } from '@cocon/ui';
 import type { Aisle, FamilySettings, FamilySettingsUpdate, Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
-import { groupByAisle, recipeCards, rowAmounts, shopper, sourceLine, toBuyCount, type AddResult, type GroceryItem, type PackData } from '../../lib/groceries';
+import {
+  byName,
+  combineRows,
+  groupByAisle,
+  recipeCards,
+  rowAmounts,
+  rowIds,
+  rowItem,
+  rowSource,
+  shopper,
+  toBuyCount,
+  type AddResult,
+  type GroceryItem,
+  type GroceryRow,
+  type PackData,
+} from '../../lib/groceries';
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -30,7 +45,7 @@ import { GroceryActions, type ActionView } from './GroceryActions';
 const g = strings.groceries;
 
 /** What an Undo brings back: ticked items cleared, the whole list, or one removed row. */
-type Banner = { message: string; tone: 'sage' | 'warn'; undo?: { ids: string[]; kind: 'done' | 'all' | 'removed' } };
+type Banner = { message: string; tone: 'sage' | 'warn'; undo?: { ids: string[]; count: number; kind: 'done' | 'all' | 'removed' } };
 
 export interface GroceryListProps {
   /** Undefined while loading (lib/groceries.ts › loadGroceryList). */
@@ -76,6 +91,8 @@ function useClock(fixed: number | undefined): number {
  * until "Clear done items" (decision 28). Long-press or swipe a row for Edit, Move to… and Remove.
  * Spec 021: each row says what to buy where the family shops, beside its name ("Heavy cream:
  * 2 × 20 cl (need 300 ml)"); the settings button beside "Add item" opens where you shop and round up.
+ * Spec 022: one row per thing, whoever added it (combineRows), in alphabetical order in each aisle;
+ * ticking, Edit and Remove act on all of it.
  */
 export function GroceryList(props: GroceryListProps) {
   const { items, failed, onRetry, me, members, tracker, photoUrls, settings, packs } = props;
@@ -84,22 +101,29 @@ export function GroceryList(props: GroceryListProps) {
   const [text, setText] = useState('');
   const [adding, setAdding] = useState(false);
   const [banner, setBanner] = useState<Banner | null>(null);
-  const [menu, setMenu] = useState<{ id: string; view: ActionView } | null>(null);
+  // `rest`: the row's other items when the menu opened, so an Edit clears only what was seen.
+  const [menu, setMenu] = useState<{ id: string; view: ActionView; rest: string[] } | null>(null);
+  // Only a row that adds up to one amount is edited as a whole; otherwise Edit changes the first item.
+  const openRow = (row: GroceryRow, view: ActionView) =>
+    setMenu({ id: row.id, view, rest: rowItem(row, packs) === row.items[0] ? [] : row.items.slice(1).map((i) => i.id) });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   const list = useMemo(() => items ?? [], [items]);
-  const aisles = useMemo(() => groupByAisle(list), [list]);
+  const rows = useMemo(() => combineRows(list), [list]);
   const cards = useMemo(() => recipeCards(list), [list]);
-  const amounts = useMemo(() => rowAmounts(list, packs, settings), [list, packs, settings]);
-  const done = list.filter((i) => i.checked);
+  const amounts = useMemo(() => rowAmounts(rows, packs, settings), [rows, packs, settings]);
+  const titleOf = (row: GroceryRow) => amounts.get(row.id)?.name ?? (row.items[0] as GroceryItem).name;
+  const aisles = groupByAisle(rows).map((a) => ({ aisle: a.aisle, rows: byName(a.items, titleOf) }));
+  const done = rows.filter((r) => r.checked);
   const shopping = shopper(list, me, members, now);
-  const menuItem = menu ? (list.find((i) => i.id === menu.id) ?? null) : null;
+  const menuRow = menu ? (rows.find((r) => r.id === menu.id) ?? null) : null;
+  const menuItem = menuRow ? rowItem(menuRow, packs) : null;
 
   const header = (
     <TabHeader
       title={g.title}
-      sub={items ? g.toBuy(toBuyCount(list)) : undefined}
+      sub={items ? g.toBuy(toBuyCount(rows)) : undefined}
       action={
         shopping ? (
           <View>
@@ -132,25 +156,26 @@ export function GroceryList(props: GroceryListProps) {
     }
   };
 
-  const toggle = async (item: GroceryItem) => {
-    const checked = !item.checked;
-    const result = await props.onToggle(item, checked);
-    if (result === 'failed') setBanner({ message: g.syncFailed, tone: 'warn' });
+  const toggle = async (row: GroceryRow) => {
+    const checked = !row.checked;
+    const results = await Promise.all(row.items.map((item) => props.onToggle(item, checked)));
+    if (results.includes('failed')) setBanner({ message: g.syncFailed, tone: 'warn' });
     else if (checked) tracker.track('grocery_item_ticked', {});
   };
 
-  const clear = async (ids: string[], message: string, kind: NonNullable<Banner['undo']>['kind']) => {
+  /** `count` is the rows the person saw go, for the banner and events. */
+  const clear = async (ids: string[], count: number, message: string, kind: NonNullable<Banner['undo']>['kind']) => {
     setMenu(null);
     if (await props.onClear(ids)) {
-      if (kind === 'done') tracker.track('done_items_cleared', { count: ids.length });
-      if (kind === 'all') tracker.track('all_items_cleared', { count: ids.length });
-      setBanner({ message, tone: 'sage', undo: { ids, kind } });
+      if (kind === 'done') tracker.track('done_items_cleared', { count });
+      if (kind === 'all') tracker.track('all_items_cleared', { count });
+      setBanner({ message, tone: 'sage', undo: { ids, count, kind } });
     } else setBanner({ message: g.syncFailed, tone: 'warn' });
   };
 
   const undo = async (u: NonNullable<Banner['undo']>) => {
     if (await props.onRestore(u.ids)) {
-      if (u.kind === 'done') tracker.track('clear_done_undone', { count: u.ids.length });
+      if (u.kind === 'done') tracker.track('clear_done_undone', { count: u.count });
       setBanner(null);
     } else setBanner({ message: g.syncFailed, tone: 'warn' });
   };
@@ -177,13 +202,18 @@ export function GroceryList(props: GroceryListProps) {
     return { label: data.packs[settings.store_profile][0]?.label ?? null, corrected: data.corrected === null ? null : { text: data.corrected } };
   };
 
+  /** A row of several items becomes the one it was edited into: the first; the others are cleared. */
   const edit = async (item: GroceryItem, value: string) => {
     const result = await props.onEdit(item, value);
     if (result === 'empty') return false;
     setMenu(null);
-    if (result === 'failed') setBanner({ message: g.syncFailed, tone: 'warn' });
+    const rest = menu?.rest ?? [];
+    const merged = result === 'saved' && (rest.length === 0 || (await props.onClear(rest)));
+    if (!merged) setBanner({ message: g.syncFailed, tone: 'warn' });
     return true;
   };
+
+  const remove = (row: GroceryRow) => void clear(rowIds([row]), 1, g.removed(titleOf(row)), 'removed');
 
   const statusBanner = banner ? (
     <StatusBanner
@@ -211,10 +241,10 @@ export function GroceryList(props: GroceryListProps) {
     );
   }
 
-  const menuActions = (item: GroceryItem) => [
-    { name: 'edit', label: g.edit, onAction: () => setMenu({ id: item.id, view: 'menu' }) },
-    { name: 'move', label: g.moveTo, onAction: () => setMenu({ id: item.id, view: 'move' }) },
-    { name: 'remove', label: g.remove, onAction: () => void clear([item.id], g.removed(item.name), 'removed') },
+  const menuActions = (row: GroceryRow) => [
+    { name: 'edit', label: g.edit, onAction: () => openRow(row, 'menu') },
+    { name: 'move', label: g.moveTo, onAction: () => openRow(row, 'move') },
+    { name: 'remove', label: g.remove, onAction: () => remove(row) },
   ];
 
   return (
@@ -265,28 +295,29 @@ export function GroceryList(props: GroceryListProps) {
         </View>
       ) : null}
 
-      {aisles.map(({ aisle, items: rows }) => (
+      {aisles.map(({ aisle, rows: aisleRows }) => (
         <View key={aisle} className="gap-6">
           <Overline className="mt-4">{strings.aisles[aisle]}</Overline>
           <ListGroup>
-            {rows.map((item, i) => {
-              const { name, detail, note } = amounts.get(item.id) ?? {};
-              const openMenu = online ? () => setMenu({ id: item.id, view: 'menu' }) : undefined;
+            {aisleRows.map((row, i) => {
+              const { detail, note } = amounts.get(row.id) ?? {};
+              const title = titleOf(row);
+              const openMenu = online ? () => openRow(row, 'menu') : undefined;
               return (
                 <ListRow
-                  key={item.id}
-                  title={name ?? item.name}
+                  key={row.id}
+                  title={title}
                   titleDetail={detail ? { text: detail, note } : undefined}
-                  sub={sourceLine(item, members)}
-                  done={item.checked}
-                  leading={{ kind: 'checkbox', checked: item.checked }}
-                  action={{ icon: 'more-vertical', accessibilityLabel: g.editItem(item.name), onPress: () => setMenu({ id: item.id, view: 'menu' }), disabled: !online }}
-                  onPress={() => void toggle(item)}
+                  sub={rowSource(row, members)}
+                  done={row.checked}
+                  leading={{ kind: 'checkbox', checked: row.checked }}
+                  action={{ icon: 'more-vertical', accessibilityLabel: g.editItem(title), onPress: () => openRow(row, 'menu'), disabled: !online }}
+                  onPress={() => void toggle(row)}
                   disabled={!online}
                   onLongPress={openMenu}
                   onSwipeLeft={openMenu}
-                  actions={online ? menuActions(item) : undefined}
-                  last={i === rows.length - 1}
+                  actions={online ? menuActions(row) : undefined}
+                  last={i === aisleRows.length - 1}
                 />
               );
             })}
@@ -302,13 +333,7 @@ export function GroceryList(props: GroceryListProps) {
               variant="soft"
               disabled={!online}
               className="flex-1"
-              onPress={() =>
-                void clear(
-                  done.map((i) => i.id),
-                  g.cleared(done.length),
-                  'done',
-                )
-              }
+              onPress={() => void clear(rowIds(done), done.length, g.cleared(done.length), 'done')}
             />
           ) : null}
           <Button label={g.clearAll} variant="outline" disabled={!online} className="flex-1" onPress={() => setConfirmClearAll(true)} />
@@ -322,7 +347,7 @@ export function GroceryList(props: GroceryListProps) {
         view={menu?.view ?? 'menu'}
         onView={(view) => setMenu((m) => (m ? { ...m, view } : m))}
         onClose={() => setMenu(null)}
-        onRemove={(item) => void clear([item.id], g.removed(item.name), 'removed')}
+        onRemove={() => (menuRow ? remove(menuRow) : undefined)}
         onMove={(item, aisle) => void move(item, aisle)}
         onEdit={edit}
       />
@@ -339,18 +364,14 @@ export function GroceryList(props: GroceryListProps) {
         <Dialog
           visible
           icon="warning"
-          title={g.clearAllTitle(list.length)}
+          title={g.clearAllTitle(rows.length)}
           body={g.clearAllBody}
           confirmLabel={g.clearAllConfirm}
           cancelLabel={g.clearAllCancel}
           onCancel={() => setConfirmClearAll(false)}
           onConfirm={() => {
             setConfirmClearAll(false);
-            void clear(
-              list.map((i) => i.id),
-              g.cleared(list.length),
-              'all',
-            );
+            void clear(rowIds(rows), rows.length, g.cleared(rows.length), 'all');
           }}
         />
       ) : null}

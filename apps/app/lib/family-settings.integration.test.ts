@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@cocon/schemas';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
 import { loadFamilySettings, saveFamilySettings } from './family-settings';
-import { addItem, loadGroceryList, loadPacks, packKeys, rowAmounts, savePackSize } from './groceries';
+import { addItem, combineRows, loadGroceryList, loadPacks, packKeys, rowAmounts, savePackSize } from './groceries';
 
 const local = localSupabase();
 if (!local && process.env.CI) throw new Error('Local Supabase must be running in CI for the family settings integration test');
@@ -20,6 +20,7 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
   const run = randomUUID().slice(0, 8);
   const userIds: string[] = [];
   let alex: Client;
+  let alexId: string;
   let mia: Client;
   let sam: Client;
   let familyId: string;
@@ -33,11 +34,12 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
     const packs = await loadPacks(client, packKeys(items));
     const cream = items.find((i) => i.catalog_key === 'heavy_cream');
     if (!cream) throw new Error('Heavy cream is not on the list');
-    return rowAmounts(items, packs, settings).get(cream.id);
+    return rowAmounts(combineRows(items), packs, settings).get(cream.id);
   };
 
   beforeAll(async () => {
     [alex, mia, sam] = await Promise.all([person('alex'), person('mia'), person('sam')]);
+    alexId = (await alex.auth.getUser()).data.user?.id ?? '';
     const fam = await alex.rpc('create_family', { family_name: 'Stores test', display_name: 'Alex' });
     if (fam.error) throw fam.error;
     familyId = fam.data;
@@ -48,7 +50,7 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
     const other = await sam.rpc('create_family', { family_name: 'Other stores test', display_name: 'Sam' });
     if (other.error) throw other.error;
     samFamilyId = other.data;
-    expect(await addItem(alex, familyId, [], '300 ml heavy cream')).toMatchObject({ status: 'added' });
+    expect(await addItem(alex, familyId, alexId, [], '300 ml heavy cream')).toMatchObject({ status: 'added' });
   }, 30_000);
 
   afterAll(async () => {
