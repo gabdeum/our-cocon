@@ -73,6 +73,8 @@ ssh -t gabriel@<server-ip> sudo cocon-secrets get prod DASHBOARD_PASSWORD
 
 The script is safe to run again at any time (`infra/bootstrap-from-laptop.sh <server-ip>`): it only does what's missing. It can also set up a brand new server.
 
+**When to run it again:** deploys from CI only ship the app, the database changes and the Edge Functions, never the server scripts themselves (`infra/`: the Caddy front door, `cocon-deploy`, the timers). When a merged change touches them, `infra/VERSION` goes up and the next deploy stops with "needs server scripts vN, the server has vM". Then, from an up-to-date `main` on your laptop, run `infra/bootstrap-from-laptop.sh <server-ip>` and re-run the deploy (GitHub → Actions → the failed run → Re-run jobs).
+
 ### After the first deploy
 
 1. **GitHub images.** The first CI run on `main` creates three packages under github.com/gabdeum → Packages (`our-cocon-web`, `-mcp`, `-migrate`). Open each → Package settings → Change visibility → Public (the code is public; the server downloads them without a password).
