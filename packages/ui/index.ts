@@ -24,7 +24,7 @@ export { ResultTile, type ResultTileProps } from './components/ResultTile';
 export { PhotoField, type PhotoFieldProps } from './components/PhotoField';
 export { PhotoCrop, PHOTO_ASPECT, type CropRect, type PhotoCropProps } from './components/PhotoCrop';
 export { ListGroup, ListRow, Overline, IngredientRow, type ListRowProps } from './components/ListRow';
-export { Card, HeroCard, Photo, PhotoPlaceholder, type CardProps } from './components/Card';
+export { Card, HeroCard, Photo, PhotoPlaceholder, Thumb, type CardProps } from './components/Card';
 export { RecipeItem, RecipeItemSkeleton, RecipeSummary, type RecipeItemProps, type RecipeSummaryProps } from './components/RecipeItem';
 export { LinkField, type LinkFieldProps } from './components/LinkField';
 export { StatTile, type StatTileProps } from './components/StatTile';

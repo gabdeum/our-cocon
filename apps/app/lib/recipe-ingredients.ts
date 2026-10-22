@@ -14,7 +14,7 @@ import {
 import type { Client } from './supabase';
 
 /** Facts the form needs about a linked ingredient: its sizes and what one piece is called. */
-export type FormFacts = IngredientFactsInput & { catalog_key?: string | null };
+export type FormFacts = IngredientFactsInput & { catalog_key?: string | null; aisle?: Aisle };
 
 /** One ingredient row while it's being typed (spec 015 FR-001). Amounts stay text until Save reads them. */
 export interface IngredientDraft {

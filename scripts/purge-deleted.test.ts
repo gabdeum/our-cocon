@@ -63,6 +63,12 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
     );
     await db.query("insert into public.recipe_steps (family_id, recipe_id, position, body, photo_path) values ($1, $2, 0, 'Simmer.', $3)", [familyId, old, photos.old[1]]);
     await db.query("insert into public.grocery_items (family_id, name, recipe_id) values ($1, 'Leeks', $2)", [familyId, old]);
+    // Spec 020: cleared two days ago, and an hour ago (still undoable).
+    await db.query(
+      `insert into public.grocery_items (family_id, name, deleted_at) values
+         ($1, 'Old milk', now() - interval '2 days'), ($1, 'Fresh bread', now() - interval '1 hour')`,
+      [familyId],
+    );
     for (const path of [...photos.old, photos.recent]) await upload(path);
   }, 30_000);
 
@@ -86,8 +92,13 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
     const steps = await db.query('select 1 from public.recipe_steps where recipe_id = $1', [old]);
     expect(steps.rowCount).toBe(0);
     // Its grocery items stay on the list.
-    const items = await db.query<{ recipe_id: string | null }>('select recipe_id from public.grocery_items where family_id = $1', [familyId]);
+    const items = await db.query<{ recipe_id: string | null }>("select recipe_id from public.grocery_items where family_id = $1 and name = 'Leeks'", [familyId]);
     expect(items.rows).toEqual([{ recipe_id: null }]);
+  });
+
+  it('removes grocery items cleared more than a day ago (spec 020)', async () => {
+    const { rows } = await db.query<{ name: string }>('select name from public.grocery_items where family_id = $1 and deleted_at is not null', [familyId]);
+    expect(rows).toEqual([{ name: 'Fresh bread' }]);
   });
 
   it('refuses a caller without the service key', async () => {

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { useMemo, useState, type ReactNode } from 'react';
+import { Animated, PanResponder, Platform, Pressable, View, type AccessibilityActionEvent } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarTone } from './Avatar';
 import { Icon } from './Icon';
@@ -48,7 +48,8 @@ export type ListRowLeading =
   | { kind: 'avatar'; initial: string; tone: AvatarTone };
 
 export type ListRowTrailing =
-  | { kind: 'buy'; buy: string; need?: string }
+  /** Buy over Need; Need alone when no pack is known or round-up is off (OC-Groceries). */
+  | { kind: 'buy'; buy?: string; need?: string }
   | { kind: 'value'; text: string }
   | { kind: 'status'; text: string }
   /** With an optional 13/700 status before it: "1 recipe ›" (OC-Settings › More). */
@@ -70,10 +71,39 @@ export interface ListRowProps {
   last?: boolean;
   /** Inside a card's padding: no side padding, 52 tall (OC-Recipe's "…" panel). */
   flush?: boolean;
+  /** The row's menu (grocery rows: Edit, Move to…, Remove): long-press, right-click or the keyboard's menu key. */
+  onLongPress?: () => void;
+  /** A drag to the left past 48 px; grocery rows open the same menu. */
+  onSwipeLeft?: () => void;
+  /** The menu's choices as screen-reader actions, so they don't need a long-press. */
+  actions?: { name: string; label: string; onAction: () => void }[];
+  /** Shown as it is but can't be pressed (offline: a grocery row keeps its tick, read-only). */
+  disabled?: boolean;
+}
+
+const SWIPE = 48;
+
+/** Follows a horizontal drag to the left (springs back on release) and calls `onSwipeLeft` past 48 px. */
+function useSwipeLeft(onSwipeLeft: (() => void) | undefined) {
+  const [x] = useState(() => new Animated.Value(0));
+  const responder = useMemo(() => {
+    const back = () => Animated.spring(x, { toValue: 0, useNativeDriver: Platform.OS !== 'web' }).start();
+    return PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => onSwipeLeft !== undefined && g.dx < -12 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
+      onPanResponderMove: (_, g) => x.setValue(Math.max(-80, Math.min(0, g.dx))),
+      onPanResponderRelease: (_, g) => {
+        back();
+        if (g.dx < -SWIPE) onSwipeLeft?.();
+      },
+      onPanResponderTerminate: back,
+    });
+  }, [x, onSwipeLeft]);
+  return { x, handlers: responder.panHandlers };
 }
 
 /** A row inside a ListGroup (ListRow README). Min 60 tall; the whole row is the tap target. */
-export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing, onPress, accessibilityLabel, last, flush }: ListRowProps) {
+export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing, onPress, accessibilityLabel, last, flush, onLongPress, onSwipeLeft, actions, disabled }: ListRowProps) {
+  const swipe = useSwipeLeft(onSwipeLeft);
   const isCheck = leading?.kind === 'checkbox' || leading?.kind === 'radio';
   const content = (
     <>
@@ -100,16 +130,36 @@ export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing
       </View>
     );
   }
-  return (
+  const pressable = (
     <Pressable
       role={isCheck ? leading.kind : trailing?.kind === 'chevron' ? 'link' : 'button'}
       aria-checked={isCheck ? leading.checked : undefined}
       aria-label={accessibilityLabel}
       onPress={onPress}
+      onLongPress={onLongPress}
+      disabled={disabled}
+      aria-disabled={disabled || undefined}
+      accessibilityActions={actions?.map((a) => ({ name: a.name, label: a.label }))}
+      onAccessibilityAction={actions ? (e: AccessibilityActionEvent) => actions.find((a) => a.name === e.nativeEvent.actionName)?.onAction() : undefined}
+      // Web: right-click, or the keyboard's menu key (Shift+F10) on the focused row.
+      {...(Platform.OS === 'web' && onLongPress
+        ? {
+            onContextMenu: (e: { preventDefault: () => void }) => {
+              e.preventDefault();
+              onLongPress();
+            },
+          }
+        : null)}
       className={cn(box, 'active:bg-surface-card-pressed', focusRing)}
     >
       {content}
     </Pressable>
+  );
+  if (!onSwipeLeft) return pressable;
+  return (
+    <Animated.View style={{ transform: [{ translateX: swipe.x }] }} {...swipe.handlers}>
+      {pressable}
+    </Animated.View>
   );
 }
 
@@ -118,9 +168,11 @@ function Trailing({ trailing }: { trailing: ListRowTrailing }) {
     case 'buy':
       return (
         <View className="max-w-[140px] items-end">
-          <Text size={15} weight="900" align="right">
-            {trailing.buy}
-          </Text>
+          {trailing.buy ? (
+            <Text size={15} weight="900" align="right">
+              {trailing.buy}
+            </Text>
+          ) : null}
           {trailing.need ? (
             <Text size={12} weight="700" color="ink-muted" align="right">
               {trailing.need}

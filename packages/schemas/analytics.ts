@@ -103,6 +103,14 @@ export const events = {
   // even when the viewer is signed in (constitution VI).
   shared_recipe_viewed: z.strictObject({}),
   shared_units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
+  // Spec 020: the grocery list. An item added (or merged into one already there), and from where:
+  // typed in the app, from a recipe (022) or by an assistant (024). Never the item's text.
+  grocery_item_added: z.strictObject({ from: z.enum(['app', 'recipe', 'ai']) }),
+  // Ticked, not unticked.
+  grocery_item_ticked: z.strictObject({}),
+  // "Clear done items", and its Undo, with how many items.
+  done_items_cleared: z.strictObject({ count: z.int().min(1) }),
+  clear_done_undone: z.strictObject({ count: z.int().min(1) }),
 } as const;
 
 export type EventName = keyof typeof events;

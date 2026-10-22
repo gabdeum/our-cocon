@@ -1,5 +1,6 @@
 /**
  * Spec 018 FR-002: removes for good the recipes deleted more than 30 days ago, with their photos.
+ * Spec 020: also the grocery items cleared or removed more than a day ago (kept until then for Undo).
  * Runs nightly on the server (systemd timer cocon-purge@<env>, infra/bin/cocon-purge); `pnpm purge`
  * runs it once against local Supabase.
  *
@@ -21,6 +22,7 @@ export interface PurgeConfig {
 export interface PurgeResult {
   recipes: number;
   photos: number;
+  groceries: number;
   /** Recipes kept for the next night because their photos couldn't be removed. */
   failed: string[];
 }
@@ -54,7 +56,8 @@ export async function purgeDeleted({ url, serviceKey, fetch: http = fetch }: Pur
     }
   }
   const recipes = cleared.length > 0 ? await call<number>('POST', '/rest/v1/rpc/purge_deleted_recipes', { ids: cleared }) : 0;
-  return { recipes, photos, failed };
+  const groceries = await call<number>('POST', '/rest/v1/rpc/purge_cleared_groceries', {});
+  return { recipes, photos, groceries, failed };
 }
 
 /** Local development: the URL and service key from the Supabase CLI (never printed). */
@@ -78,8 +81,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
   purgeDeleted(config).then(
-    ({ recipes, photos, failed }) => {
+    ({ recipes, photos, groceries, failed }) => {
       if (recipes > 0 || photos > 0) console.log(`Removed ${recipes} recipe(s) deleted over 30 days ago, and ${photos} photo(s).`);
+      if (groceries > 0) console.log(`Removed ${groceries} grocery item(s) cleared over a day ago.`);
       if (failed.length > 0) process.exit(1);
     },
     (error: unknown) => {

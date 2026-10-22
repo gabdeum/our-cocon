@@ -48,3 +48,15 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-22: Shipped. `/groceries` lists the family's items by aisle, live: typing "2 lemons" adds or merges (`planGroceryAdd` in `@cocon/quantity`, shared with 022 and 024), ticks are optimistic and revert with "Couldn't update. Try again.", "Mia is shopping" shows for 10 minutes after someone else's last tick, recipe cards sit above the aisles, "Clear done items" and "Remove" have Undo, and a row's menu (long-press, swipe left, right-click or the screen reader's actions) offers Edit, Move to… and Remove. Migration: `grocery_items.deleted_at` (a cleared item is kept a day for Undo, then the nightly purge removes it), and an aisle fallback trigger for writers that pass none. Deviations:
+  - The store row, "Buy …" lines and the Buy/Need footnote come with 021; rows show "Need {amount}" only, in metric until 027.
+  - Merging joins only an item still to buy whose amount adds up (two weights, two volumes or two counts); otherwise the new item gets its own row. A merge with no amount says "Already on the list."
+  - Presence comes from tick times (`checked_by`, `checked_at`), so no new table; it ends early if her ticked items are cleared.
+  - Swipe left opens the same menu as long-press, rather than showing buttons under the row.
+  - The recipe card is tappable as a whole (Card rule), with "Open" as its label, and keeps the soft Card's 22 radius.
+  - New copy for states not drawn (add failed, removed, the row menu, Edit and Move to… sheets, loading failed) is in design/ui/OC-Groceries.md.
+  - From the security review (second migration): the database stamps when an item was cleared and by whom (`deleted_by`), whatever the device sends; Undo works for a day; members can no longer delete grocery rows for good (only the nightly purge does). Edits and merges are checked with `GroceryItemUpdate` (`packages/schemas`). The 004 RLS test now expects deletes to be refused.
+  - Tracking: `grocery_item_added` also fires on a merge; `grocery_item_ticked` fires once the tick is saved, not on unticks. The screen also fires 031's `ingredient_unmatched` (an added item the catalog doesn't know) and `catalog_override_saved` `{field: 'aisle'}` (Move to…).
+  - Presence never shows yourself (US3: "the others see"). Clear, Remove, Undo, Edit and Move to… failures use the tick's "Couldn't update. Try again." Offline, rows keep their ticks but can't be changed.
+  - US1's "6 items to buy" assumes a list of seven with one ticked; the seed list starts at 6, so it reads 5 after Mia's tick.
+

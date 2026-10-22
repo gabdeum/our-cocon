@@ -22,5 +22,6 @@ export { tokenizeTemperatures } from './temperature-text';
 export type { FormatOptions, FormattedIngredient, IngredientFactsInput, QuantityIngredient, UnitSystem } from './types';
 export { GRAMS_PER, ML_PER, WATER_G_PER_ML, cToF, convert, fToC, kindOf, toBase, type UnitKind } from './units';
 export { amountInput, parseAmount, readAmount } from './parse-amount';
+export { groceryIdentity, planGroceryAdd, type GroceryAddPlan, type GroceryAmount, type ListedGrocery } from './groceries';
 export { parseIngredientLine, parsePastedList, pieceNouns, splitPastedList, type ParsedLine } from './parse-line';
 export { en as parserWordsEn, type ParserWords } from './words.en';

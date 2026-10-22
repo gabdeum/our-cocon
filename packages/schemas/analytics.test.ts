@@ -204,6 +204,19 @@ describe('spec 015 events', () => {
     expect(() => tracker.track('share_link_created', { recipe: 'Quiche' } as never)).toThrow();
     expect(() => tracker.track('share_link_stopped', { days_active: -1 })).toThrow();
   });
+
+  it('sends grocery events with counts and origins only (spec 020)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('grocery_item_added', { from: 'app' });
+    tracker.track('grocery_item_ticked', {});
+    tracker.track('done_items_cleared', { count: 3 });
+    tracker.track('clear_done_undone', { count: 3 });
+    expect(t.capture).toHaveBeenCalledWith('done_items_cleared', { count: 3 });
+    expect(() => tracker.track('grocery_item_added', { from: 'app', name: 'Lemons' } as never)).toThrow();
+    expect(() => tracker.track('grocery_item_ticked', { item: 'Lemons' } as never)).toThrow();
+    expect(() => tracker.track('done_items_cleared', { count: 0 })).toThrow();
+  });
 });
 
 describe('createAnonymousTracker (spec 019)', () => {
