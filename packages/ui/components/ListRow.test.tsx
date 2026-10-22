@@ -34,14 +34,14 @@ describe('ListRow title detail and action (spec 021)', () => {
     const onPress = vi.fn();
     const onEdit = vi.fn();
     const { rerender } = render(
-      <ListRow title="Gruyère" leading={{ kind: 'checkbox', checked: false }} onPress={onPress} action={{ label: 'Edit', accessibilityLabel: 'Edit Gruyère', onPress: onEdit }} />,
+      <ListRow title="Gruyère" leading={{ kind: 'checkbox', checked: false }} onPress={onPress} action={{ icon: 'more-vertical', accessibilityLabel: 'Edit Gruyère', onPress: onEdit }} />,
     );
     const edit = screen.getByRole('button', { name: 'Edit Gruyère' });
     expect(screen.getByRole('checkbox', { name: /Gruyère/ }).contains(edit)).toBe(false);
     fireEvent.click(edit);
     expect(onEdit).toHaveBeenCalledOnce();
     expect(onPress).not.toHaveBeenCalled();
-    rerender(<ListRow title="Gruyère" leading={{ kind: 'checkbox', checked: false }} onPress={onPress} action={{ label: 'Edit', accessibilityLabel: 'Edit Gruyère', onPress: onEdit, disabled: true }} />);
+    rerender(<ListRow title="Gruyère" leading={{ kind: 'checkbox', checked: false }} onPress={onPress} action={{ icon: 'more-vertical', accessibilityLabel: 'Edit Gruyère', onPress: onEdit, disabled: true }} />);
     expect(screen.getByRole('button', { name: 'Edit Gruyère' }).getAttribute('aria-disabled')).toBe('true');
   });
 });

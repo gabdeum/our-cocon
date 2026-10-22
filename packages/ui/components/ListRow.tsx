@@ -2,8 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { Animated, PanResponder, Platform, Pressable, View, type AccessibilityActionEvent } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarTone } from './Avatar';
-import { Link } from './Button';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { Tag, type TagTone } from './Tag';
 import { Text } from './Text';
 
@@ -84,10 +83,11 @@ export interface ListRowProps {
   /** Shown as it is but can't be pressed (offline: a grocery row keeps its tick, read-only). */
   disabled?: boolean;
   /**
-   * A text button at the end of the row, beside it rather than inside it (grocery rows: "Edit").
-   * `accessibilityLabel` names what it acts on: "Edit Heavy cream".
+   * A 44 × 44 icon button at the end of the row, centred, beside the row rather than inside it
+   * (grocery rows: the vertical "…" that opens Edit). `accessibilityLabel` names what it acts on:
+   * "Edit Heavy cream".
    */
-  action?: { label: string; accessibilityLabel: string; onPress: () => void; disabled?: boolean };
+  action?: { icon: IconName; accessibilityLabel: string; onPress: () => void; disabled?: boolean };
 }
 
 const SWIPE = 48;
@@ -192,7 +192,16 @@ export function ListRow({
   const row = action ? (
     <View className={cn('flex-row items-center', divider)}>
       {pressable}
-      <Link label={action.label} aria-label={action.accessibilityLabel} onPress={action.onPress} disabled={action.disabled} className={flush ? 'pl-4' : 'pl-4 pr-14'} />
+      <Pressable
+        role="button"
+        aria-label={action.accessibilityLabel}
+        onPress={action.onPress}
+        disabled={action.disabled}
+        aria-disabled={action.disabled || undefined}
+        className={cn('h-control-md w-control-md items-center justify-center rounded-full active:bg-surface-card-pressed', flush ? '' : 'mr-6', action.disabled && 'opacity-dimmed', focusRing)}
+      >
+        <Icon name={action.icon} size={22} color="inkMuted" />
+      </Pressable>
     </View>
   ) : (
     pressable

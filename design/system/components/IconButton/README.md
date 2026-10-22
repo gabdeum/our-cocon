@@ -11,6 +11,7 @@ Round or rounded-square buttons holding a single icon, used over photos, in step
 | `--olive` | 44 circle | olive / white | Stepper plus |
 | `--square` | 44, radius 14 | surface-soft / ink; honey when `aria-expanded="true"` | "More options" (…) |
 | `--olive-square` | 54, radius 18 | olive / white | Add item next to an input |
+| `--soft-square` | 54, radius 18 | surface-soft / ink | A second button beside the input, the same size as Add item: "Grocery settings" |
 
 Icons are 20–22 px with stroke 2.2–2.6.
 

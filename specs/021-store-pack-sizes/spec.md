@@ -2,7 +2,7 @@
 
 **Feature Branch**: `021-store-pack-sizes` · **Status**: Ready · **Depends on**: 005, 020, 031
 **Input**: Show both the amount recipes need and the packs to buy, based on where the family shops.
-**Design**: canvas `OC-Groceries` (amounts beside each name, the Grocery settings sheet); components ListRow (title detail, Edit action), SettingChoice, SegmentedControl (light), Switch. The canvas screens predate Gabriel's 2026-10-22 changes: `design/ui/OC-Groceries.md` is the reference.
+**Design**: canvas `OC-Groceries` (amounts beside each name, the Grocery settings sheet); components ListRow (title detail, Edit action), IconButton (`--soft-square`), SegmentedControl (light), Switch (boxed SettingRow). The canvas screens predate Gabriel's 2026-10-22 changes: `design/ui/OC-Groceries.md` is the reference.
 
 ## User Scenarios & Testing
 
@@ -64,3 +64,5 @@ None.
   - ListRow: the right-hand Buy/Need trailing is replaced by a title detail and an end-of-row action.
 - 2026-10-22 (later): from Gabriel's review: counts always say pieces ("Lemon: 2 pieces"), and a row shows the catalog's singular name when it's the same word as typed ("2 lemons" → "Lemon"; "Meyer lemons" stays as typed). The Grocery settings sheet's card now has the inset padding settings rows need (it had none).
 - 2026-10-22 (later): the grocery field also reads amounts after the name ("Gruyere 120g", "Lemon 12"); see spec 020's Changelog.
+- 2026-10-22 (later): from Gabriel's review, the Grocery settings sheet follows the standard sheet layout (a 16/900 section heading and its control on the sheet, the switch as a boxed SettingRow; no white card), and its button is a new 54 px `IconButton --soft-square`, the size of "Add item". `SettingChoice` is removed (no longer used).
+- 2026-10-22 (later): from Gabriel's review, the row's "Edit" text button is a vertical "…" icon button (new `more-vertical` icon), vertically centred; its screen-reader name stays "Edit {name}". The settings sheet is now mounted only while open: on the web a closed Modal could linger invisibly over the list and block ticks and edits.

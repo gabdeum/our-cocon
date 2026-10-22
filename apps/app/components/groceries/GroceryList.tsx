@@ -235,7 +235,7 @@ export function GroceryList(props: GroceryListProps) {
           className="min-w-0 flex-1"
         />
         <IconButton icon="plus" label={g.addButton} variant="olive-square" onPress={() => void add()} disabled={!online || adding || !text.trim()} />
-        <IconButton icon="settings" label={g.settingsButton} variant="square" onPress={() => setSettingsOpen(true)} />
+        <IconButton icon="settings" label={g.settingsButton} variant="soft-square" onPress={() => setSettingsOpen(true)} />
       </View>
       {statusBanner}
 
@@ -280,7 +280,7 @@ export function GroceryList(props: GroceryListProps) {
                   sub={sourceLine(item, members)}
                   done={item.checked}
                   leading={{ kind: 'checkbox', checked: item.checked }}
-                  action={{ label: g.edit, accessibilityLabel: g.editItem(item.name), onPress: () => setMenu({ id: item.id, view: 'menu' }), disabled: !online }}
+                  action={{ icon: 'more-vertical', accessibilityLabel: g.editItem(item.name), onPress: () => setMenu({ id: item.id, view: 'menu' }), disabled: !online }}
                   onPress={() => void toggle(item)}
                   disabled={!online}
                   onLongPress={openMenu}
@@ -327,9 +327,13 @@ export function GroceryList(props: GroceryListProps) {
         onEdit={edit}
       />
 
-      <BottomSheet visible={settingsOpen} onClose={() => setSettingsOpen(false)} title={g.settingsTitle} closeLabel={g.close}>
-        <GrocerySettings settings={settings} onChange={props.onChangeSettings} readOnly={!online} />
-      </BottomSheet>
+      {/* Mounted only while open, like the row's sheets: on the web a closed Modal can linger,
+          invisible, over the list and swallow every tap until its fade-out reports it ended. */}
+      {settingsOpen ? (
+        <BottomSheet visible onClose={() => setSettingsOpen(false)} title={g.settingsTitle} closeLabel={g.close}>
+          <GrocerySettings settings={settings} onChange={props.onChangeSettings} readOnly={!online} />
+        </BottomSheet>
+      ) : null}
 
       {confirmClearAll ? (
         <Dialog

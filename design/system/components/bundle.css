@@ -62,13 +62,6 @@ body { margin: 0; font-family: var(--font-sans); color: var(--ink); background: 
 .oc-switch--on-ink[aria-checked="true"] { background: var(--honey); }
 .oc-setting { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid var(--line); }
 .oc-setting:last-child { border-bottom: none; }
-
-/* ---------- SettingChoice ---------- */
-.oc-setting-choice { display: flex; flex-direction: column; gap: 10px; padding: 14px 0; border-bottom: 1.5px solid var(--line); }
-.oc-setting-choice:last-child { border-bottom: none; }
-.oc-setting-choice__example { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--surface-page); border-radius: 14px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: var(--ink); }
-.oc-setting-choice__example b { font-weight: 900; }
-.oc-setting-choice__result { font-weight: 900; color: var(--olive-deep); white-space: nowrap; }
 .oc-setting__text { flex: 1; min-width: 0; }
 .oc-setting__label { font-size: 16px; font-weight: 800; }
 .oc-setting__hint { font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-top: 2px; }

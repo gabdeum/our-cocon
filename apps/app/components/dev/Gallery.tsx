@@ -49,7 +49,6 @@ import {
   PhotoCrop,
   PhotoField,
   PhotoPlaceholder,
-  SettingChoice,
   SettingRow,
   SheetFooter,
   StatTile,
@@ -301,21 +300,6 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <SettingRow boxed label="Make my own dough" hint="Adds 3 ingredients and 1 step" value={screenOn} onValueChange={setScreenOn} />
       </Section>
 
-      <Section group="Inputs" title="SettingChoice">
-        <ListGroup inset>
-          <SettingChoice
-            label="Where do you shop?"
-            hint="So the list shows packs you can actually buy"
-            example={{ lead: 'Recipe needs ', strong: '300 ml cream', result: store === 'us' ? 'Buy 1 pint' : 'Buy 2 × 20 cl' }}
-          >
-            <SegmentedControl label="Where do you shop?" segments={[{ key: 'us', label: 'US stores' }, { key: 'eu', label: 'European stores' }]} value={store} onChange={setStore} />
-          </SettingChoice>
-          <SettingChoice label="Units" disabled last>
-            <SegmentedControl label="Units" segments={[{ key: 'metric', label: 'Metric · g, ml, °C' }, { key: 'imperial', label: 'Imperial · oz, °F' }]} value={units} onChange={setUnits} disabled />
-          </SettingChoice>
-        </ListGroup>
-      </Section>
-
       <Section group="Inputs" title="SegmentedControl">
         <SegmentedControl label="Units" segments={[{ key: 'metric', label: 'Metric · g, ml, °C' }, { key: 'imperial', label: 'Imperial · oz, °F' }]} value={units} onChange={setUnits} />
         <SegmentedControl label="Store" variant="pill" segments={[{ key: 'us', label: 'US' }, { key: 'eu', label: 'Europe' }]} value={store} onChange={setStore} />
@@ -484,7 +468,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             titleDetail={{ text: '1 pint carton', note: '(need 300 ml)' }}
             sub="For Leek & bacon quiche"
             leading={{ kind: 'checkbox', checked: false }}
-            action={{ label: 'Edit', accessibilityLabel: 'Edit Heavy cream', onPress: noop }}
+            action={{ icon: 'more-vertical', accessibilityLabel: 'Edit Heavy cream', onPress: noop }}
             onPress={noop}
           />
           <ListRow
@@ -493,7 +477,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             sub="Added by Gabriel"
             done
             leading={{ kind: 'checkbox', checked: true }}
-            action={{ label: 'Edit', accessibilityLabel: 'Edit Sourdough loaf', onPress: noop }}
+            action={{ icon: 'more-vertical', accessibilityLabel: 'Edit Sourdough loaf', onPress: noop }}
             onPress={noop}
           />
           <ListRow title="Heavy cream" sub="Already on the list (100 ml) → will be 400 ml" subTone="warn" leading={{ kind: 'checkbox', checked: true }} trailing={{ kind: 'value', text: '300 ml' }} onPress={noop} last />

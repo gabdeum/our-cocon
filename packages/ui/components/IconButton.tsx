@@ -3,7 +3,7 @@ import { cn, focusRing } from '../cn';
 import type { ColorName } from '../theme';
 import { Icon, type IconName } from './Icon';
 
-export type IconButtonVariant = 'default' | 'soft' | 'olive' | 'square' | 'olive-square';
+export type IconButtonVariant = 'default' | 'soft' | 'olive' | 'square' | 'olive-square' | 'soft-square';
 
 // bundle.css › IconButton
 const looks: Record<IconButtonVariant, { box: string; icon: ColorName }> = {
@@ -12,6 +12,8 @@ const looks: Record<IconButtonVariant, { box: string; icon: ColorName }> = {
   olive: { box: 'w-control-md h-control-md rounded-full bg-olive active:bg-olive-pressed', icon: 'onOlive' },
   square: { box: 'w-control-md h-control-md rounded-md bg-surface-soft active:bg-surface-soft-pressed', icon: 'ink' },
   'olive-square': { box: 'w-control-lg h-control-lg rounded-[18px] bg-olive active:bg-olive-pressed', icon: 'onOlive' },
+  // The same size as olive-square, for a second button beside an input (Groceries' settings).
+  'soft-square': { box: 'w-control-lg h-control-lg rounded-[18px] bg-surface-soft active:bg-surface-soft-pressed', icon: 'ink' },
 };
 
 export interface IconButtonProps extends Omit<PressableProps, 'children' | 'style'> {
