@@ -137,6 +137,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"family_settings": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"family_id": string,"id": string,"round_to_packs": boolean,"source": string,"store_profile": Database["public"]['Enums']["store_profile"],"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"round_to_packs"?: boolean,"source"?: string,"store_profile"?: Database["public"]['Enums']["store_profile"],"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"round_to_packs"?: boolean,"source"?: string,"store_profile"?: Database["public"]['Enums']["store_profile"],"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "family_settings_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: true
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"grocery_items": {
                   Row: {
                     "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"checked": boolean,"checked_at": string | null,"checked_by": string | null,"created_at": string,"created_by": string | null,"deleted_at": string | null,"deleted_by": string | null,"family_id": string,"id": string,"name": string,"quantity": number | null,"recipe_id": string | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null

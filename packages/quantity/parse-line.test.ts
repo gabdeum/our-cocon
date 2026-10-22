@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { amountInput, parseAmount } from './parse-amount';
 import { lines } from './parse-line.fixture';
-import { parseIngredientLine, parsePastedList, pieceNouns, splitPastedList } from './parse-line';
+import { parseGroceryLine, parseIngredientLine, parsePastedList, pieceNouns, splitPastedList } from './parse-line';
 
 describe('amountInput (FR-001)', () => {
   it('keeps only what makes an amount', () => {
@@ -97,5 +97,28 @@ describe('pieceNouns', () => {
     ['Peach', 'peach', 'peaches'],
   ])('%s → %s / %s', (name, singular, plural) => {
     expect(pieceNouns(name)).toEqual({ singular, plural });
+  });
+});
+
+describe('parseGroceryLine (spec 020 FR-002)', () => {
+  const read = (line: string) => {
+    const p = parseGroceryLine(line);
+    return p && [p.quantity, p.unit, p.name];
+  };
+
+  it('reads the amount after the name, as lists are often written', () => {
+    expect(read('Gruyere 120g')).toEqual([120, 'g', 'Gruyere']);
+    expect(read('Lemon 12')).toEqual([12, 'piece', 'Lemon']);
+    expect(read('heavy cream 240 ml')).toEqual([240, 'ml', 'Heavy cream']);
+    expect(read('Flour 1.5 kg')).toEqual([1.5, 'kg', 'Flour']);
+    expect(read('Butter ½ lb')).toEqual([0.5, 'lb', 'Butter']);
+  });
+
+  it('still reads it first, and leaves numbers that are part of the name', () => {
+    expect(read('2 lemons')).toEqual([2, 'piece', 'Lemons']);
+    expect(read('120 g Gruyère')).toEqual([120, 'g', 'Gruyère']);
+    expect(read('Size 4 nappies')).toEqual([null, null, 'Size 4 nappies']);
+    expect(read('Salt')).toEqual([null, null, 'Salt']);
+    expect(read('12')).toBeNull();
   });
 });

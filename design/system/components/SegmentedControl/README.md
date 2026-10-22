@@ -12,6 +12,11 @@ Two to four mutually exclusive options in one track: units, store profile, and t
 
 Items share the width equally (pill: hug content).
 
+| State | Look |
+| --- | --- |
+| Disabled (offline) | track at `opacity-dimmed`, not tappable; the choice still shows (spec 021) |
+| Pill touch area | 36 tall, with a 4 px hit slop above and below so it reaches 44 |
+
 ## Rules
 
 - Use `--tabs` only to switch the view of the same content (Ingredients · 9 / Steps · 6). Counts follow a middle dot.

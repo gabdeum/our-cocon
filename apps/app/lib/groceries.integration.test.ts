@@ -65,6 +65,14 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
     expect(groupByAisle(list).map((g) => g.aisle)).toEqual(['produce']);
   });
 
+  it('reads the amount after the name too: "heavy cream 240 ml" is Heavy cream, 240 ml, in Dairy & eggs', async () => {
+    expect(await addItem(mia, familyId, await loadGroceryList(mia), 'heavy cream 240 ml')).toEqual({ status: 'added', unmatched: false });
+    const cream = must((await loadGroceryList(alex)).find((i) => i.catalog_key === 'heavy_cream'), 'Heavy cream');
+    expect(cream).toMatchObject({ name: 'Heavy cream', quantity: 240, unit: 'ml', aisle: 'dairy_eggs' });
+    // Off the list again: the tests below count what's on it.
+    expect(await clearItems(mia, [cream.id])).toBe(true);
+  });
+
   it('merges an item already on the list', async () => {
     const before = await loadGroceryList(mia);
     expect(await addItem(mia, familyId, before, '1 lemon')).toEqual({ status: 'merged', total: '3' });

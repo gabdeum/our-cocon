@@ -1,9 +1,10 @@
-import { readFileSync } from 'node:fs';
 import { CatalogFile, type CatalogEntry } from '@cocon/schemas/catalog';
+// A JSON import, not a file read: the app's tests (jsdom) use this fixture too.
+import catalogJson from '../../data/catalog/ingredients.json';
 import type { IngredientFactsInput } from './types';
 
 /** Tests read the real catalog (spec 031), so they follow its numbers. */
-const catalog = CatalogFile.parse(JSON.parse(readFileSync(new URL('../../data/catalog/ingredients.json', import.meta.url), 'utf8')));
+const catalog = CatalogFile.parse(catalogJson);
 
 /** One entry's facts, shaped like the `ingredient_facts` view. */
 export function facts(key: string): IngredientFactsInput {
@@ -21,4 +22,14 @@ export function facts(key: string): IngredientFactsInput {
     noun_singular: e.nouns?.singular ?? null,
     noun_plural: e.nouns?.plural ?? null,
   };
+}
+
+/** Every entry, for tests that run over the whole catalog (spec 021 SC-001). */
+export const catalogEntries = catalog.ingredients;
+
+/** One entry's packs in a store profile, shaped like the `ingredient_packs` view. */
+export function packsOf(key: string, profile: 'us' | 'eu') {
+  const e = catalog.ingredients.find((i) => i.key === key);
+  if (!e) throw new Error(`No catalog entry ${key}`);
+  return e.packs?.[profile] ?? [];
 }

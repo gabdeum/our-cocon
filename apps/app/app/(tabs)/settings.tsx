@@ -10,7 +10,7 @@ import { config } from '../../lib/tracker';
 import { useSession } from '../../lib/session';
 import { strings } from '../../strings/en';
 
-/** /settings. Spec 003 builds Family and Account, 018 the Recently deleted row; 021, 025, 027 and 029 add the rest. */
+/** /settings. Spec 003 builds Family and Account, 018 the Recently deleted row; 025, 027 and 029 add the rest. Groceries' settings are in the Groceries tab's sheet (spec 021). */
 export default function SettingsTab() {
   const { state, api, client, tracker, refresh, signOut } = useSession();
   const online = useOnline();

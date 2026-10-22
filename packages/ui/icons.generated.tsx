@@ -45,6 +45,9 @@ export const iconShapes = {
   "more": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}><Circle cx="5" cy="12" r="2" /><Circle cx="12" cy="12" r="2" /><Circle cx="19" cy="12" r="2" /></Svg>
   ),
+  "more-vertical": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}><Circle cx="12" cy="5" r="2" /><Circle cx="12" cy="12" r="2" /><Circle cx="12" cy="19" r="2" /></Svg>
+  ),
   "play": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}><Path d="M7 4v16l13-8Z" /></Svg>
   ),

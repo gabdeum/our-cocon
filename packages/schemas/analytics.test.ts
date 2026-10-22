@@ -217,6 +217,15 @@ describe('spec 015 events', () => {
     expect(() => tracker.track('grocery_item_ticked', { item: 'Lemons' } as never)).toThrow();
     expect(() => tracker.track('done_items_cleared', { count: 0 })).toThrow();
   });
+
+  it('sends the store profile and nothing else (spec 021)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('store_profile_changed', { profile: 'eu' });
+    expect(t.capture).toHaveBeenCalledWith('store_profile_changed', { profile: 'eu' });
+    expect(() => tracker.track('store_profile_changed', { profile: 'uk' } as never)).toThrow();
+    expect(() => tracker.track('store_profile_changed', { profile: 'us', family: 'Demange' } as never)).toThrow();
+  });
 });
 
 describe('createAnonymousTracker (spec 019)', () => {

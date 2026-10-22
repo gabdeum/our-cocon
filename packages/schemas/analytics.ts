@@ -111,6 +111,10 @@ export const events = {
   // "Clear done items", and its Undo, with how many items.
   done_items_cleared: z.strictObject({ count: z.int().min(1) }),
   clear_done_undone: z.strictObject({ count: z.int().min(1) }),
+  // Spec 021: where the family shops changed (the grocery settings sheet).
+  store_profile_changed: z.strictObject({ profile: z.enum(['us', 'eu']) }),
+  // "Clear all items" (confirmed), with how many items: the whole list, ticked or not.
+  all_items_cleared: z.strictObject({ count: z.int().min(1) }),
 } as const;
 
 export type EventName = keyof typeof events;

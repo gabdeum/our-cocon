@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import {
+  BottomSheet,
   Button,
   Callout,
   Card,
+  Dialog,
   IconButton,
   ListGroup,
   ListRow,
@@ -16,17 +18,19 @@ import {
   TextField,
   Thumb,
 } from '@cocon/ui';
-import type { Aisle, Tracker } from '@cocon/schemas';
+import type { Aisle, FamilySettings, FamilySettingsUpdate, Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
-import { groupByAisle, needText, recipeCards, shopper, sourceLine, toBuyCount, type AddResult, type GroceryItem } from '../../lib/groceries';
+import { groupByAisle, recipeCards, rowAmounts, shopper, sourceLine, toBuyCount, type AddResult, type GroceryItem, type PackData } from '../../lib/groceries';
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
 import { OfflineBanner } from '../sync/OfflineBanner';
+import { GrocerySettings } from '../settings/GrocerySettings';
 import { GroceryActions, type ActionView } from './GroceryActions';
 
 const g = strings.groceries;
 
-type Banner = { message: string; tone: 'sage' | 'warn'; undo?: { ids: string[]; cleared: boolean } };
+/** What an Undo brings back: ticked items cleared, the whole list, or one removed row. */
+type Banner = { message: string; tone: 'sage' | 'warn'; undo?: { ids: string[]; kind: 'done' | 'all' | 'removed' } };
 
 export interface GroceryListProps {
   /** Undefined while loading (lib/groceries.ts › loadGroceryList). */
@@ -44,6 +48,13 @@ export interface GroceryListProps {
   onEdit: (item: GroceryItem, text: string) => Promise<'saved' | 'empty' | 'failed'>;
   onMove: (item: GroceryItem, aisle: Aisle) => Promise<boolean>;
   onOpenRecipe: (id: string) => void;
+  /** Spec 021: where the family shops and whether rows round up to store sizes. */
+  settings: FamilySettings;
+  /** Packs per catalog entry on the list (lib/groceries.ts › loadPacks); undefined while loading. */
+  packs: Record<string, PackData> | undefined;
+  /** The grocery settings sheet's changes (where you shop, round up), for the whole family. */
+  onChangeSettings: (change: FamilySettingsUpdate) => Promise<'saved' | 'failed'>;
+  onSavePacks: (item: GroceryItem, text: string | null) => Promise<'saved' | 'invalid' | 'failed'>;
   /** For tests; otherwise the clock, read again every 30 s so "is shopping" goes away. */
   now?: number;
 }
@@ -63,20 +74,24 @@ function useClock(fixed: number | undefined): number {
  * /groceries (spec 020, OC-Groceries): the family's one list, by aisle, live. Typing "2 lemons"
  * adds or merges; ticking is optimistic and reverts on failure; ticked items stay struck through
  * until "Clear done items" (decision 28). Long-press or swipe a row for Edit, Move to… and Remove.
- * The store row and Buy lines come with spec 021.
+ * Spec 021: each row says what to buy where the family shops, beside its name ("Heavy cream:
+ * 2 × 20 cl (need 300 ml)"); the settings button beside "Add item" opens where you shop and round up.
  */
 export function GroceryList(props: GroceryListProps) {
-  const { items, failed, onRetry, me, members, tracker, photoUrls } = props;
+  const { items, failed, onRetry, me, members, tracker, photoUrls, settings, packs } = props;
   const online = useOnline();
   const now = useClock(props.now);
   const [text, setText] = useState('');
   const [adding, setAdding] = useState(false);
   const [banner, setBanner] = useState<Banner | null>(null);
   const [menu, setMenu] = useState<{ id: string; view: ActionView } | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   const list = useMemo(() => items ?? [], [items]);
   const aisles = useMemo(() => groupByAisle(list), [list]);
   const cards = useMemo(() => recipeCards(list), [list]);
+  const amounts = useMemo(() => rowAmounts(list, packs, settings), [list, packs, settings]);
   const done = list.filter((i) => i.checked);
   const shopping = shopper(list, me, members, now);
   const menuItem = menu ? (list.find((i) => i.id === menu.id) ?? null) : null;
@@ -124,17 +139,18 @@ export function GroceryList(props: GroceryListProps) {
     else if (checked) tracker.track('grocery_item_ticked', {});
   };
 
-  const clear = async (ids: string[], message: string, cleared: boolean) => {
+  const clear = async (ids: string[], message: string, kind: NonNullable<Banner['undo']>['kind']) => {
     setMenu(null);
     if (await props.onClear(ids)) {
-      if (cleared) tracker.track('done_items_cleared', { count: ids.length });
-      setBanner({ message, tone: 'sage', undo: { ids, cleared } });
+      if (kind === 'done') tracker.track('done_items_cleared', { count: ids.length });
+      if (kind === 'all') tracker.track('all_items_cleared', { count: ids.length });
+      setBanner({ message, tone: 'sage', undo: { ids, kind } });
     } else setBanner({ message: g.syncFailed, tone: 'warn' });
   };
 
   const undo = async (u: NonNullable<Banner['undo']>) => {
     if (await props.onRestore(u.ids)) {
-      if (u.cleared) tracker.track('clear_done_undone', { count: u.ids.length });
+      if (u.kind === 'done') tracker.track('clear_done_undone', { count: u.ids.length });
       setBanner(null);
     } else setBanner({ message: g.syncFailed, tone: 'warn' });
   };
@@ -143,6 +159,22 @@ export function GroceryList(props: GroceryListProps) {
     setMenu(null);
     if (await props.onMove(item, aisle)) tracker.track('catalog_override_saved', { field: 'aisle' });
     else setBanner({ message: g.syncFailed, tone: 'warn' });
+  };
+
+  const savePacks = async (item: GroceryItem, value: string | null) => {
+    const result = await props.onSavePacks(item, value);
+    if (result === 'invalid') return result;
+    setMenu(null);
+    if (result === 'failed') setBanner({ message: g.syncFailed, tone: 'warn' });
+    // A correction saved; putting the usual sizes back isn't one.
+    else if (value !== null) tracker.track('catalog_override_saved', { field: 'packs' });
+    return result;
+  };
+
+  const itemPacks = (item: GroceryItem | null) => {
+    const data = item?.catalog_key ? packs?.[item.catalog_key] : undefined;
+    if (!data) return null;
+    return { label: data.packs[settings.store_profile][0]?.label ?? null, corrected: data.corrected === null ? null : { text: data.corrected } };
   };
 
   const edit = async (item: GroceryItem, value: string) => {
@@ -182,7 +214,7 @@ export function GroceryList(props: GroceryListProps) {
   const menuActions = (item: GroceryItem) => [
     { name: 'edit', label: g.edit, onAction: () => setMenu({ id: item.id, view: 'menu' }) },
     { name: 'move', label: g.moveTo, onAction: () => setMenu({ id: item.id, view: 'move' }) },
-    { name: 'remove', label: g.remove, onAction: () => void clear([item.id], g.removed(item.name), false) },
+    { name: 'remove', label: g.remove, onAction: () => void clear([item.id], g.removed(item.name), 'removed') },
   ];
 
   return (
@@ -194,7 +226,6 @@ export function GroceryList(props: GroceryListProps) {
           label={g.addLabel}
           labelHidden
           placeholder={g.addPlaceholder}
-          hint={g.addHint}
           value={text}
           onChangeText={setText}
           onSubmitEditing={() => void add()}
@@ -204,6 +235,7 @@ export function GroceryList(props: GroceryListProps) {
           className="min-w-0 flex-1"
         />
         <IconButton icon="plus" label={g.addButton} variant="olive-square" onPress={() => void add()} disabled={!online || adding || !text.trim()} />
+        <IconButton icon="settings" label={g.settingsButton} variant="soft-square" onPress={() => setSettingsOpen(true)} />
       </View>
       {statusBanner}
 
@@ -238,16 +270,17 @@ export function GroceryList(props: GroceryListProps) {
           <Overline className="mt-4">{strings.aisles[aisle]}</Overline>
           <ListGroup>
             {rows.map((item, i) => {
-              const need = needText(item);
+              const { name, detail, note } = amounts.get(item.id) ?? {};
               const openMenu = online ? () => setMenu({ id: item.id, view: 'menu' }) : undefined;
               return (
                 <ListRow
                   key={item.id}
-                  title={item.name}
+                  title={name ?? item.name}
+                  titleDetail={detail ? { text: detail, note } : undefined}
                   sub={sourceLine(item, members)}
                   done={item.checked}
                   leading={{ kind: 'checkbox', checked: item.checked }}
-                  trailing={need ? { kind: 'buy', need } : undefined}
+                  action={{ icon: 'more-vertical', accessibilityLabel: g.editItem(item.name), onPress: () => setMenu({ id: item.id, view: 'menu' }), disabled: !online }}
                   onPress={() => void toggle(item)}
                   disabled={!online}
                   onLongPress={openMenu}
@@ -261,30 +294,66 @@ export function GroceryList(props: GroceryListProps) {
         </View>
       ))}
 
-      {done.length > 0 ? (
-        <Button
-          label={g.clearDone}
-          variant="soft"
-          disabled={!online}
-          onPress={() =>
-            void clear(
-              done.map((i) => i.id),
-              g.cleared(done.length),
-              true,
-            )
-          }
-        />
+      {list.length > 0 ? (
+        <View className="flex-row flex-wrap gap-8">
+          {done.length > 0 ? (
+            <Button
+              label={g.clearDone}
+              variant="soft"
+              disabled={!online}
+              className="flex-1"
+              onPress={() =>
+                void clear(
+                  done.map((i) => i.id),
+                  g.cleared(done.length),
+                  'done',
+                )
+              }
+            />
+          ) : null}
+          <Button label={g.clearAll} variant="outline" disabled={!online} className="flex-1" onPress={() => setConfirmClearAll(true)} />
+        </View>
       ) : null}
 
       <GroceryActions
         item={menuItem}
+        packs={itemPacks(menuItem)}
+        onSavePacks={savePacks}
         view={menu?.view ?? 'menu'}
         onView={(view) => setMenu((m) => (m ? { ...m, view } : m))}
         onClose={() => setMenu(null)}
-        onRemove={(item) => void clear([item.id], g.removed(item.name), false)}
+        onRemove={(item) => void clear([item.id], g.removed(item.name), 'removed')}
         onMove={(item, aisle) => void move(item, aisle)}
         onEdit={edit}
       />
+
+      {/* Mounted only while open, like the row's sheets: on the web a closed Modal can linger,
+          invisible, over the list and swallow every tap until its fade-out reports it ended. */}
+      {settingsOpen ? (
+        <BottomSheet visible onClose={() => setSettingsOpen(false)} title={g.settingsTitle} closeLabel={g.close}>
+          <GrocerySettings settings={settings} onChange={props.onChangeSettings} readOnly={!online} />
+        </BottomSheet>
+      ) : null}
+
+      {confirmClearAll ? (
+        <Dialog
+          visible
+          icon="warning"
+          title={g.clearAllTitle(list.length)}
+          body={g.clearAllBody}
+          confirmLabel={g.clearAllConfirm}
+          cancelLabel={g.clearAllCancel}
+          onCancel={() => setConfirmClearAll(false)}
+          onConfirm={() => {
+            setConfirmClearAll(false);
+            void clear(
+              list.map((i) => i.id),
+              g.cleared(list.length),
+              'all',
+            );
+          }}
+        />
+      ) : null}
     </TabScreen>
   );
 }

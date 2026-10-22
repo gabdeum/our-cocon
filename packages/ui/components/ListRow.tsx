@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { Animated, PanResponder, Platform, Pressable, View, type AccessibilityActionEvent } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarTone } from './Avatar';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { Tag, type TagTone } from './Tag';
 import { Text } from './Text';
 
@@ -48,8 +48,6 @@ export type ListRowLeading =
   | { kind: 'avatar'; initial: string; tone: AvatarTone };
 
 export type ListRowTrailing =
-  /** Buy over Need; Need alone when no pack is known or round-up is off (OC-Groceries). */
-  | { kind: 'buy'; buy?: string; need?: string }
   | { kind: 'value'; text: string }
   | { kind: 'status'; text: string }
   /** With an optional 13/700 status before it: "1 recipe ›" (OC-Settings › More). */
@@ -58,6 +56,11 @@ export type ListRowTrailing =
 
 export interface ListRowProps {
   title: string;
+  /**
+   * After the title on the same line (grocery rows, spec 021): "Heavy cream: 1 pint carton
+   * (need 300 ml)". `text` is 16/800 like the title, `note` 15/600 ink-muted.
+   */
+  titleDetail?: { text: string; note?: string };
   sub?: string;
   /** Merge notes ("Already on the list (100 ml) → will be 400 ml") in warn 700. */
   subTone?: 'muted' | 'warn';
@@ -79,6 +82,12 @@ export interface ListRowProps {
   actions?: { name: string; label: string; onAction: () => void }[];
   /** Shown as it is but can't be pressed (offline: a grocery row keeps its tick, read-only). */
   disabled?: boolean;
+  /**
+   * A 44 × 44 icon button at the end of the row, centred, beside the row rather than inside it
+   * (grocery rows: the vertical "…" that opens Edit). `accessibilityLabel` names what it acts on:
+   * "Edit Heavy cream".
+   */
+  action?: { icon: IconName; accessibilityLabel: string; onPress: () => void; disabled?: boolean };
 }
 
 const SWIPE = 48;
@@ -102,7 +111,24 @@ function useSwipeLeft(onSwipeLeft: (() => void) | undefined) {
 }
 
 /** A row inside a ListGroup (ListRow README). Min 60 tall; the whole row is the tap target. */
-export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing, onPress, accessibilityLabel, last, flush, onLongPress, onSwipeLeft, actions, disabled }: ListRowProps) {
+export function ListRow({
+  title,
+  titleDetail,
+  sub,
+  subTone = 'muted',
+  done,
+  leading,
+  trailing,
+  onPress,
+  accessibilityLabel,
+  last,
+  flush,
+  onLongPress,
+  onSwipeLeft,
+  actions,
+  disabled,
+  action,
+}: ListRowProps) {
   const swipe = useSwipeLeft(onSwipeLeft);
   const isCheck = leading?.kind === 'checkbox' || leading?.kind === 'radio';
   const content = (
@@ -112,6 +138,12 @@ export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing
       <View className="min-w-0 flex-1">
         <Text size={16} weight="800" color={done ? 'ink-faint' : 'ink'} strike={done}>
           {title}
+          {titleDetail ? `: ${titleDetail.text}` : null}
+          {titleDetail?.note ? (
+            <Text size={15} weight="600" color={done ? 'ink-faint' : 'ink-muted'} strike={done}>
+              {` ${titleDetail.note}`}
+            </Text>
+          ) : null}
         </Text>
         {sub ? (
           <Text variant="caption" weight={subTone === 'warn' ? '700' : '600'} color={subTone === 'warn' ? 'warn' : 'ink-muted'} className="mt-[1px]">
@@ -122,7 +154,9 @@ export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing
       {trailing ? <Trailing trailing={trailing} /> : null}
     </>
   );
-  const box = cn('flex-row items-center gap-12 py-10', flush ? 'min-h-[52px]' : 'min-h-[60px] px-14', !last && 'border-b-[1.5px] border-line');
+  const divider = !last && 'border-b-[1.5px] border-line';
+  // With an action, the divider goes on the wrapper so it runs under the button too.
+  const box = cn('flex-row items-center gap-12 py-10', flush ? 'min-h-[52px]' : 'min-h-[60px] px-14', action ? 'flex-1' : divider);
   if (!onPress) {
     return (
       <View role="listitem" className={box}>
@@ -155,31 +189,33 @@ export function ListRow({ title, sub, subTone = 'muted', done, leading, trailing
       {content}
     </Pressable>
   );
-  if (!onSwipeLeft) return pressable;
+  const row = action ? (
+    <View className={cn('flex-row items-center', divider)}>
+      {pressable}
+      <Pressable
+        role="button"
+        aria-label={action.accessibilityLabel}
+        onPress={action.onPress}
+        disabled={action.disabled}
+        aria-disabled={action.disabled || undefined}
+        className={cn('h-control-md w-control-md items-center justify-center rounded-full active:bg-surface-card-pressed', flush ? '' : 'mr-6', action.disabled && 'opacity-dimmed', focusRing)}
+      >
+        <Icon name={action.icon} size={22} color="inkMuted" />
+      </Pressable>
+    </View>
+  ) : (
+    pressable
+  );
+  if (!onSwipeLeft) return row;
   return (
     <Animated.View style={{ transform: [{ translateX: swipe.x }] }} {...swipe.handlers}>
-      {pressable}
+      {row}
     </Animated.View>
   );
 }
 
 function Trailing({ trailing }: { trailing: ListRowTrailing }) {
   switch (trailing.kind) {
-    case 'buy':
-      return (
-        <View className="max-w-[140px] items-end">
-          {trailing.buy ? (
-            <Text size={15} weight="900" align="right">
-              {trailing.buy}
-            </Text>
-          ) : null}
-          {trailing.need ? (
-            <Text size={12} weight="700" color="ink-muted" align="right">
-              {trailing.need}
-            </Text>
-          ) : null}
-        </View>
-      );
     case 'value':
       return (
         <Text size={15} weight="800" color="ink-muted">
