@@ -1,7 +1,7 @@
 -- Spec 021: the family's settings (where you shop, round up to store sizes). One row per family,
 -- read and changed by its members only, and every change goes live to the family.
 begin;
-select plan(13);
+select plan(15);
 
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
@@ -58,10 +58,13 @@ insert into public.family_settings (family_id, store_profile)
   select id, 'us' from public.families on conflict (family_id) do update set store_profile = excluded.store_profile;
 select is((select store_profile::text from public.family_settings), 'us', 'an upsert changes the one row');
 
+select throws_ok($$ delete from public.family_settings $$, '42501', null, 'members never delete the row (it is only saved)');
+
 -- Other families and signed-out people.
 select pg_temp.login('00000000-0000-0000-0000-00000000021f');
 select is((select count(*)::int from public.family_settings), 0, 'another family reads nothing');
 select is(pg_temp.affected($$ update public.family_settings set store_profile = 'eu' $$), 0, 'or changes nothing');
+select throws_ok($$ delete from public.family_settings $$, '42501', null, 'or removes anything');
 reset role;
 select pg_temp.login('00000000-0000-0000-0000-00000000021f');
 insert into public.family_settings (family_id, store_profile)

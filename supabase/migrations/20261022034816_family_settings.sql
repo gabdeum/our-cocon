@@ -15,3 +15,5 @@ create table public.family_settings (
 
 -- Live: a change on one phone updates every grocery list in the family (US2).
 select public._family_table('public.family_settings', live => true);
+-- The app only ever saves this row; deleting it would silently put everyone back on the defaults.
+revoke delete on public.family_settings from authenticated;

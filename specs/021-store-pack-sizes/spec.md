@@ -46,3 +46,12 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-22: Shipped. `family_settings` table (one row per family, live; spec 027 adds its columns here; members save it, never delete it), the pack engine `pickPacks` in `@cocon/quantity` (least left over, then exact before estimated, then fewest packs), Buy over Need rows, the US · Europe toggle, Settings › Groceries, and the family's own pack size from Edit › "Store size". Deviations:
+  - Leftovers within 1% of the need count as a tie, so fewest packs wins: the catalog stores a half pint as 236 ml and a pint as 473 ml, and two half pints would otherwise beat the pint carton by 1 ml.
+  - Buy text comes from catalog pack labels, so the screen's sample text differs (Gruyère US "6 oz wedge", apples in Europe "Buy 6" loose rather than a bag, pumpkin US "Buy 1 · ~500 g left over"); the bag-contents note ("about 8 apples") isn't built (032-later L52).
+  - "~" marks estimated leftovers: US sizes, or a conversion through density or piece weight.
+  - Rows of the same item still to buy are summed; the first carries Buy and "Need {total}", the others "Need {their amount}".
+  - The Settings example is fixed copy ("Buy 1 pint" / "Buy 2 × 20 cl"); a test checks it against the engine, which says "Buy 1 pint carton" in the US.
+  - Edit › "Store size" is not drawn; its copy is in OC-Groceries.md › Store sizes. Catalog items only (L53). A saved size replaces the catalog's packs for both stores (spec 031); "Use the usual sizes" puts them back and isn't tracked as a correction.
+  - New design-system component `SettingChoice` (the stacked "Where do you shop?" setting with its example; 027 reuses it for Units). `SegmentedControl` gained a `disabled` state (offline) and a hit slop so the 36 px pill reaches 44.
+

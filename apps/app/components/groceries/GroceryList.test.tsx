@@ -358,6 +358,27 @@ describe('Groceries › store sizes (spec 021)', () => {
     expect(onSavePacks).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'cream' }), null);
   });
 
+  it('FR-004: putting the usual sizes back is not counted as a correction; a failed save says so', async () => {
+    const onSavePacks = vi.fn(async (_item: GroceryItem, text: string | null) => (text === null ? ('saved' as const) : ('failed' as const)));
+    const { tracker } = setup({ packs: await packData(keys, { heavy_cream: '25 cl' }), onSavePacks });
+    const openSheet = async () => {
+      fireEvent.contextMenu(row('Heavy cream'));
+      await flush();
+      fireEvent.click(screen.getByRole('link', { name: /Store size/ }));
+      await flush();
+    };
+    await openSheet();
+    fireEvent.click(screen.getByRole('button', { name: 'Use the usual sizes' }));
+    await flush();
+    expect(tracker.track).not.toHaveBeenCalledWith('catalog_override_saved', expect.anything());
+    await openSheet();
+    fireEvent.change(screen.getByLabelText('Pack size'), { target: { value: '30 cl' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await flush();
+    expect(screen.getByText("Couldn't update. Try again.")).toBeTruthy();
+    expect(tracker.track).not.toHaveBeenCalledWith('catalog_override_saved', expect.anything());
+  });
+
   it('has no Store size for items the catalog does not know', async () => {
     setup({ items: [groceryItem({ id: 'zaatar', name: "Za'atar", catalog_key: null, quantity: 50, unit: 'g', aisle: 'other' })], packs: await packData(keys) });
     fireEvent.contextMenu(row("Za'atar"));

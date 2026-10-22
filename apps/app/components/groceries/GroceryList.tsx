@@ -166,7 +166,8 @@ export function GroceryList(props: GroceryListProps) {
     if (result === 'invalid') return result;
     setMenu(null);
     if (result === 'failed') setBanner({ message: g.syncFailed, tone: 'warn' });
-    else tracker.track('catalog_override_saved', { field: 'packs' });
+    // A correction saved; putting the usual sizes back isn't one.
+    else if (value !== null) tracker.track('catalog_override_saved', { field: 'packs' });
     return result;
   };
 
