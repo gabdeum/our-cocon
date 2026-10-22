@@ -79,9 +79,12 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
     expect(gruyere.aisle).toBe('dairy_eggs');
     expect(toBuyCount(list)).toBe(2);
 
-    // Join Alex's live channel first: on a cold CI runner that alone can take several seconds, and
-    // only the tick itself is timed.
+    // Alex has the list open before Mia ticks, as in the store. On a fresh Supabase (CI), messages
+    // only start flowing a few seconds after the first member joins, and earlier ones are lost; so
+    // join, then wait until a change reaches Alex (Mia touching another item), and only then time
+    // the tick.
     let onTick: ((at: number) => void) | null = null;
+    let warm = false;
     // What Alex's channel received, to say why if the tick never arrives.
     const received: string[] = [];
     await alex.realtime.setAuth();
@@ -90,7 +93,9 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
     live.on('broadcast', { event: 'change' }, ({ payload }) => {
       received.push(JSON.stringify(payload));
       const change = ChangeEvent.safeParse(payload);
-      if (change.success && change.data.id === gruyere.id && change.data.op === 'update') onTick?.(performance.now());
+      if (!change.success) return;
+      if (change.data.id === gruyere.id && change.data.op === 'update') onTick?.(performance.now());
+      else warm = true;
     });
     expect(
       await new Promise<string>((resolve) => {
@@ -98,6 +103,12 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
         setTimeout(() => resolve('NEVER JOINED'), 20_000);
       }),
     ).toBe('SUBSCRIBED');
+    const other = must(list.find((i) => i.catalog_key === 'lemon'), 'Lemons');
+    for (let i = 0; i < 40 && !warm; i += 1) {
+      await mia.from('grocery_items').update({ quantity: 3 }).eq('id', other.id);
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    expect(warm, `no live change reached Alex. Received: ${received.join(' | ') || 'nothing'}`).toBe(true);
 
     const heard = new Promise<number>((resolve, reject) => {
       onTick = resolve;
@@ -115,7 +126,7 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
     const seen = await loadGroceryList(alex);
     expect(seen.find((i) => i.id === gruyere.id)).toMatchObject({ checked: true, checked_by: miaId });
     expect(toBuyCount(seen)).toBe(1);
-  }, 40_000);
+  }, 60_000);
 
   it('unknown items go to Other; "Move to…" is remembered for the family', async () => {
     await addItem(alex, familyId, await loadGroceryList(alex), "Za'atar");
