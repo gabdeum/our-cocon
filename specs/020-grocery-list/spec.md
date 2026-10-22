@@ -59,4 +59,4 @@ None.
   - Tracking: `grocery_item_added` also fires on a merge; `grocery_item_ticked` fires once the tick is saved, not on unticks. The screen also fires 031's `ingredient_unmatched` (an added item the catalog doesn't know) and `catalog_override_saved` `{field: 'aisle'}` (Move to…).
   - Presence never shows yourself (US3: "the others see"). Clear, Remove, Undo, Edit and Move to… failures use the tick's "Couldn't update. Try again." Offline, rows keep their ticks but can't be changed.
   - US1's "6 items to buy" assumes a list of seven with one ticked; the seed list starts at 6, so it reads 5 after Mia's tick.
-
+- 2026-10-22: From Gabriel's review: the row menu opens straight on the Edit field (Move to… and Remove sit below it), and a hint under the add field says "Long-press an item to edit, move or remove it."

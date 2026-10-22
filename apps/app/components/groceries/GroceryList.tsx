@@ -180,7 +180,7 @@ export function GroceryList(props: GroceryListProps) {
   }
 
   const menuActions = (item: GroceryItem) => [
-    { name: 'edit', label: g.edit, onAction: () => setMenu({ id: item.id, view: 'edit' }) },
+    { name: 'edit', label: g.edit, onAction: () => setMenu({ id: item.id, view: 'menu' }) },
     { name: 'move', label: g.moveTo, onAction: () => setMenu({ id: item.id, view: 'move' }) },
     { name: 'remove', label: g.remove, onAction: () => void clear([item.id], g.removed(item.name), false) },
   ];
@@ -194,6 +194,7 @@ export function GroceryList(props: GroceryListProps) {
           label={g.addLabel}
           labelHidden
           placeholder={g.addPlaceholder}
+          hint={g.addHint}
           value={text}
           onChangeText={setText}
           onSubmitEditing={() => void add()}

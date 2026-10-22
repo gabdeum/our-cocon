@@ -4,7 +4,7 @@ Source `screens/OC-Groceries.dc.html` · Route `/groceries` · Specs 020, 021, 0
 
 ## Layout
 1. ScreenHeader "Groceries"; sub-line "{n} items to buy · shared with family" ("1 item"); right: presence "{name} is shopping" (when someone else ticked in the last 10 min; never yourself).
-2. Add row: input (hidden label "Add an item", placeholder "Add an item, e.g. 2 lemons") + olive square "Add item".
+2. Add row: input (hidden label "Add an item", placeholder "Add an item, e.g. 2 lemons") + olive square "Add item"; hint below the input "Long-press an item to edit, move or remove it.".
 3. Store row: "Store sizes:" + pill segmented "US" · "Europe" + link "Set in Settings" (hidden when "Round up to store sizes" is off).
 4. One soft card per linked recipe: thumb, "For {recipe}", "{n} items · serves {n}", link "Open".
 5. Aisle groups in catalog order (spec 031): overline aisle name; white list group; rows:
@@ -33,8 +33,7 @@ Produce · Bakery · Dairy & eggs · Meat & fish · Dry goods · Spices & baking
 Tick: optimistic and realtime. Long-press or swipe a row → "Edit", "Move to…", "Remove". Add merges with an existing item, with StatusBanner "Already on the list. Updated to {total}."
 
 ## Row menu (spec 020, not drawn)
-A BottomSheet titled with the item's name, close label "Close". ListRows: "Edit" (chevron), "Move to…" (chevron, after the current aisle's name), "Remove". The same three are the row's screen-reader actions; right-click or the keyboard's menu key also opens it on the web.
+A BottomSheet "Edit item" (close label "Close") that opens straight on the edit field: TextField "Item" with hint "An amount and a name, e.g. 2 lemons", starting from "{amount} {name}". Below it, ListRows "Move to…" (chevron, after the current aisle's name) and "Remove". Footer "Cancel" · "Save". The row's screen-reader actions are "Edit" (opens this sheet), "Move to…" and "Remove"; right-click or the keyboard's menu key also opens it on the web.
 - **Move to…:** sheet title "Move to…", lead "{name} will go here from now on, for your family."; one radio row per aisle in the fixed order, the current one selected. Tapping one moves it and closes.
-- **Edit:** sheet title "Edit item"; TextField "Item" with hint "An amount and a name, e.g. 2 lemons", starting from "{amount} {name}"; footer "Cancel" · "Save".
 - **Merging** only joins an item still to buy whose amount adds up (both weights, volumes or counts); otherwise the new item gets its own row.
 - The recipe card is tappable as a whole (Card rule); "Open" is its olive label.

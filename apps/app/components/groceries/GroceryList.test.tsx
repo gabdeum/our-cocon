@@ -135,6 +135,7 @@ describe('Groceries', () => {
     const { props, tracker } = setup();
     const field = screen.getByLabelText('Add an item');
     expect(field.getAttribute('placeholder')).toBe('Add an item, e.g. 2 lemons');
+    expect(screen.getByText('Long-press an item to edit, move or remove it.')).toBeTruthy();
     fireEvent.change(field, { target: { value: '2 lemons' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add item' }));
     await flush();
@@ -214,8 +215,8 @@ describe('Groceries', () => {
     const { props } = setup();
     fireEvent.contextMenu(row('Apples'));
     await flush();
-    fireEvent.click(screen.getByRole('link', { name: /^Edit/ }));
-    await flush();
+    // The menu opens straight on the Edit field.
+    expect(screen.getByRole('heading', { name: 'Edit item' })).toBeTruthy();
     const field = screen.getByLabelText('Item') as HTMLInputElement;
     expect(field.value).toBe('6 Apples');
     fireEvent.change(field, { target: { value: '8 apples' } });

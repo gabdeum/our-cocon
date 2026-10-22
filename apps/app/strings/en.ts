@@ -652,6 +652,7 @@ export const strings = {
     addLabel: 'Add an item',
     addPlaceholder: 'Add an item, e.g. 2 lemons',
     addButton: 'Add item',
+    addHint: 'Long-press an item to edit, move or remove it.',
     addFailed: "Couldn't add this item. Try again.",
     merged: (total: string) => `Already on the list. Updated to ${total}.`,
     mergedNoAmount: 'Already on the list.',
