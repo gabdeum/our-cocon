@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { StoreProfile } from './catalog';
 
 /**
  * Spec 003 inputs. The database checks the same limits (supabase/migrations, accounts_family);
@@ -44,3 +45,17 @@ export function familyErrorOf(error: { message?: string } | null | undefined): F
   const parsed = FamilyError.safeParse(error?.message);
   return parsed.success ? parsed.data : null;
 }
+
+/**
+ * Spec 021: the family's settings (one `family_settings` row; spec 027 adds the cooking defaults).
+ * No row means these defaults.
+ */
+export const FamilySettings = z.object({
+  store_profile: StoreProfile,
+  round_to_packs: z.boolean(),
+});
+export type FamilySettings = z.infer<typeof FamilySettings>;
+export const DEFAULT_FAMILY_SETTINGS: FamilySettings = { store_profile: 'us', round_to_packs: true };
+/** What a change sends: one setting or more. */
+export const FamilySettingsUpdate = FamilySettings.partial().strict();
+export type FamilySettingsUpdate = z.infer<typeof FamilySettingsUpdate>;

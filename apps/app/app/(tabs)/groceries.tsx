@@ -1,7 +1,22 @@
 import { router, type Href } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { GroceryList } from '../../components/groceries/GroceryList';
-import { addItem, clearItems, editItem, groceryListKey, loadGroceryList, moveToAisle, restoreItems, setChecked, type GroceryItem } from '../../lib/groceries';
+import { useFamilySettings } from '../../lib/family-settings';
+import {
+  addItem,
+  clearItems,
+  editItem,
+  groceryListKey,
+  groceryPacksKey,
+  loadGroceryList,
+  loadPacks,
+  moveToAisle,
+  packKeys,
+  restoreItems,
+  savePackSize,
+  setChecked,
+  type GroceryItem,
+} from '../../lib/groceries';
 import { useRecipePhotoUrls } from '../../lib/recipe-photo';
 import { useSession } from '../../lib/session';
 import { optimisticWrite } from '../../lib/write';
@@ -17,6 +32,11 @@ export default function GroceriesTab() {
   const key = groceryListKey(familyId ?? '');
   const list = useQuery({ queryKey: key, queryFn: () => loadGroceryList(client), enabled: familyId !== null });
   const items = list.data;
+  const familySettings = useFamilySettings();
+  const keys = packKeys(items ?? []);
+  const packsKey = groceryPacksKey(familyId ?? '', keys);
+  // Kept from the last list while a new item's packs load, so rows don't flicker back to "Need".
+  const packs = useQuery({ queryKey: packsKey, queryFn: () => loadPacks(client, keys), enabled: familyId !== null && items !== undefined, placeholderData: (previous) => previous });
   const photoUrls = useRecipePhotoUrls(client, familyId, items?.map((i) => i.recipes?.photo_path) ?? []);
 
   // Every write refetches the list; live changes do the same on everyone else's device.
@@ -51,6 +71,17 @@ export default function GroceriesTab() {
       onEdit={(item, text) => after(editItem(client, item, text))}
       onMove={(item, aisle) => after(moveToAisle(client, familyId ?? '', item, items ?? [], aisle))}
       onOpenRecipe={(id) => router.push(recipePage(id))}
+      settings={familySettings.settings}
+      packs={packs.data}
+      onStoreProfile={(store_profile) => familySettings.change({ store_profile })}
+      onOpenSettings={() => router.navigate('/settings')}
+      onSavePacks={async (item, text) => {
+        try {
+          return await savePackSize(client, familyId ?? '', item, text);
+        } finally {
+          void queryClient.invalidateQueries({ queryKey: ['family_ingredients', familyId ?? ''] });
+        }
+      }}
     />
   );
 }

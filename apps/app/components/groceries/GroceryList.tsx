@@ -8,7 +8,9 @@ import {
   ListGroup,
   ListRow,
   Overline,
+  Link,
   Presence,
+  SegmentedControl,
   StatusBanner,
   TabHeader,
   TabScreen,
@@ -16,9 +18,9 @@ import {
   TextField,
   Thumb,
 } from '@cocon/ui';
-import type { Aisle, Tracker } from '@cocon/schemas';
+import type { Aisle, FamilySettings, StoreProfile, Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
-import { groupByAisle, needText, recipeCards, shopper, sourceLine, toBuyCount, type AddResult, type GroceryItem } from '../../lib/groceries';
+import { groupByAisle, recipeCards, rowAmounts, shopper, sourceLine, toBuyCount, type AddResult, type GroceryItem, type PackData } from '../../lib/groceries';
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -44,6 +46,13 @@ export interface GroceryListProps {
   onEdit: (item: GroceryItem, text: string) => Promise<'saved' | 'empty' | 'failed'>;
   onMove: (item: GroceryItem, aisle: Aisle) => Promise<boolean>;
   onOpenRecipe: (id: string) => void;
+  /** Spec 021: where the family shops and whether rows round up to store sizes. */
+  settings: FamilySettings;
+  /** Packs per catalog entry on the list (lib/groceries.ts › loadPacks); undefined while loading. */
+  packs: Record<string, PackData> | undefined;
+  onStoreProfile: (profile: StoreProfile) => Promise<'saved' | 'failed'>;
+  onOpenSettings: () => void;
+  onSavePacks: (item: GroceryItem, text: string | null) => Promise<'saved' | 'invalid' | 'failed'>;
   /** For tests; otherwise the clock, read again every 30 s so "is shopping" goes away. */
   now?: number;
 }
@@ -63,10 +72,11 @@ function useClock(fixed: number | undefined): number {
  * /groceries (spec 020, OC-Groceries): the family's one list, by aisle, live. Typing "2 lemons"
  * adds or merges; ticking is optimistic and reverts on failure; ticked items stay struck through
  * until "Clear done items" (decision 28). Long-press or swipe a row for Edit, Move to… and Remove.
- * The store row and Buy lines come with spec 021.
+ * Spec 021: each row says what to buy where the family shops ("Buy 2 × 20 cl" over "Need 300 ml ·
+ * 100 ml left over"); the store row switches the family between US and European stores.
  */
 export function GroceryList(props: GroceryListProps) {
-  const { items, failed, onRetry, me, members, tracker, photoUrls } = props;
+  const { items, failed, onRetry, me, members, tracker, photoUrls, settings, packs } = props;
   const online = useOnline();
   const now = useClock(props.now);
   const [text, setText] = useState('');
@@ -77,6 +87,7 @@ export function GroceryList(props: GroceryListProps) {
   const list = useMemo(() => items ?? [], [items]);
   const aisles = useMemo(() => groupByAisle(list), [list]);
   const cards = useMemo(() => recipeCards(list), [list]);
+  const amounts = useMemo(() => rowAmounts(list, packs, settings), [list, packs, settings]);
   const done = list.filter((i) => i.checked);
   const shopping = shopper(list, me, members, now);
   const menuItem = menu ? (list.find((i) => i.id === menu.id) ?? null) : null;
@@ -145,6 +156,26 @@ export function GroceryList(props: GroceryListProps) {
     else setBanner({ message: g.syncFailed, tone: 'warn' });
   };
 
+  const storeProfile = async (profile: StoreProfile) => {
+    if (profile === settings.store_profile) return;
+    if ((await props.onStoreProfile(profile)) === 'failed') setBanner({ message: g.syncFailed, tone: 'warn' });
+  };
+
+  const savePacks = async (item: GroceryItem, value: string | null) => {
+    const result = await props.onSavePacks(item, value);
+    if (result === 'invalid') return result;
+    setMenu(null);
+    if (result === 'failed') setBanner({ message: g.syncFailed, tone: 'warn' });
+    else tracker.track('catalog_override_saved', { field: 'packs' });
+    return result;
+  };
+
+  const itemPacks = (item: GroceryItem | null) => {
+    const data = item?.catalog_key ? packs?.[item.catalog_key] : undefined;
+    if (!data) return null;
+    return { label: data.packs[settings.store_profile][0]?.label ?? null, corrected: data.corrected === null ? null : { text: data.corrected } };
+  };
+
   const edit = async (item: GroceryItem, value: string) => {
     const result = await props.onEdit(item, value);
     if (result === 'empty') return false;
@@ -207,6 +238,26 @@ export function GroceryList(props: GroceryListProps) {
       </View>
       {statusBanner}
 
+      {settings.round_to_packs ? (
+        <View className="flex-row flex-wrap items-center gap-10">
+          <Text size={14} weight="700" color="ink-muted">
+            {g.storeSizes}
+          </Text>
+          <SegmentedControl<StoreProfile>
+            label={g.storeSizes}
+            variant="pill"
+            segments={[
+              { key: 'us', label: g.storeUs },
+              { key: 'eu', label: g.storeEu },
+            ]}
+            value={settings.store_profile}
+            onChange={(profile) => void storeProfile(profile)}
+            disabled={!online}
+          />
+          <Link label={g.setInSettings} size={13} onPress={props.onOpenSettings} />
+        </View>
+      ) : null}
+
       {cards.map((card) => (
         <Card key={card.id} tone="soft" onPress={() => props.onOpenRecipe(card.id)} accessibilityLabel={g.openRecipe(card.name)} className="flex-row items-center gap-8 px-12 py-10">
           <Thumb uri={card.photo_path ? photoUrls[card.photo_path] : undefined} label={card.name} />
@@ -238,7 +289,7 @@ export function GroceryList(props: GroceryListProps) {
           <Overline className="mt-4">{strings.aisles[aisle]}</Overline>
           <ListGroup>
             {rows.map((item, i) => {
-              const need = needText(item);
+              const { buy, need } = amounts.get(item.id) ?? {};
               const openMenu = online ? () => setMenu({ id: item.id, view: 'menu' }) : undefined;
               return (
                 <ListRow
@@ -247,7 +298,7 @@ export function GroceryList(props: GroceryListProps) {
                   sub={sourceLine(item, members)}
                   done={item.checked}
                   leading={{ kind: 'checkbox', checked: item.checked }}
-                  trailing={need ? { kind: 'buy', need } : undefined}
+                  trailing={need ? { kind: 'buy', buy, need } : undefined}
                   onPress={() => void toggle(item)}
                   disabled={!online}
                   onLongPress={openMenu}
@@ -276,8 +327,23 @@ export function GroceryList(props: GroceryListProps) {
         />
       ) : null}
 
+      {list.length > 0 && settings.round_to_packs ? (
+        <Text size={14} weight="600" color="ink-muted" className="text-center">
+          <Text size={14} weight="900" color="ink-muted">
+            {g.footnoteBuy}
+          </Text>
+          {g.footnoteBuyRest}
+          <Text size={14} weight="900" color="ink-muted">
+            {g.footnoteNeed}
+          </Text>
+          {g.footnoteNeedRest}
+        </Text>
+      ) : null}
+
       <GroceryActions
         item={menuItem}
+        packs={itemPacks(menuItem)}
+        onSavePacks={savePacks}
         view={menu?.view ?? 'menu'}
         onView={(view) => setMenu((m) => (m ? { ...m, view } : m))}
         onClose={() => setMenu(null)}

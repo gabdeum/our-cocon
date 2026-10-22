@@ -1,11 +1,11 @@
 // Spec 020 on the Groceries screen: US1 (ticked rows struck through, the count), US2 (add "2 lemons"),
 // US3 (who's shopping), merging, Clear done items with Undo, a failed tick, the row menu, the recipe
 // cards and the empty list. The data rules are in lib/groceries.test.ts and the live sync in
-// lib/groceries.integration.test.ts.
+// lib/groceries.integration.test.ts. Spec 021 (store sizes: Buy over Need) is the last block.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { onlineManager } from '@tanstack/react-query';
-import { alex, fakeTracker, flush, gabriel, groceryItem, mia } from '../../test/fakes';
+import { alex, fakeTracker, flush, gabriel, groceryItem, mia, packData } from '../../test/fakes';
 import type { GroceryItem } from '../../lib/groceries';
 
 vi.mock('expo-image-picker', () => ({}));
@@ -51,6 +51,11 @@ function setup(over: Partial<Props> = {}) {
     onEdit: vi.fn(async () => 'saved' as const),
     onMove: vi.fn(async () => true),
     onOpenRecipe: vi.fn(),
+    settings: { store_profile: 'us', round_to_packs: true },
+    packs: undefined,
+    onStoreProfile: vi.fn(async () => 'saved' as const),
+    onOpenSettings: vi.fn(),
+    onSavePacks: vi.fn(async () => 'saved' as const),
     now,
     ...over,
   };
@@ -260,5 +265,110 @@ describe('Groceries', () => {
     expect(screen.getByText('Your list is empty.')).toBeTruthy();
     expect(screen.getByText('Add items above, or from any recipe with “Add to groceries…”.')).toBeTruthy();
     expect(screen.getByText('0 items to buy · shared with family')).toBeTruthy();
+  });
+});
+
+describe('Groceries › store sizes (spec 021)', () => {
+  const keys = ['heavy_cream', 'gruyere', 'milk', 'apple', 'salt', 'sourdough', 'croissant'];
+  const buyNeed = (name: string) => within(row(name)).getAllByText(/^(Buy|Need) /).map((t) => t.textContent);
+
+  it('US1: in US stores, heavy cream is a pint carton, with what is left over', async () => {
+    setup({ packs: await packData(keys) });
+    expect(buyNeed('Heavy cream')).toEqual(['Buy 1 pint carton', 'Need 300 ml · ~170 ml left over']);
+    expect(screen.getByRole('button', { name: 'US' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('US1: in European stores, it is 2 × 20 cl, 100 ml left over', async () => {
+    setup({ packs: await packData(keys), settings: { store_profile: 'eu', round_to_packs: true } });
+    expect(buyNeed('Heavy cream')).toEqual(['Buy 2 × 20 cl', 'Need 300 ml · 100 ml left over']);
+  });
+
+  it('US2: the toggle changes the family setting, and every row follows', async () => {
+    const { props, rerender } = setup({ packs: await packData(keys) });
+    fireEvent.click(screen.getByRole('button', { name: 'Europe' }));
+    await flush();
+    expect(props.onStoreProfile).toHaveBeenCalledWith('eu');
+    rerender({ settings: { store_profile: 'eu', round_to_packs: true } });
+    expect(buyNeed('Milk')).toEqual(['Buy 2 × 1 l carton', 'Need 2 L']);
+    fireEvent.click(screen.getByRole('button', { name: 'Set in Settings' }));
+    expect(props.onOpenSettings).toHaveBeenCalled();
+  });
+
+  it('US2: says so when the change could not be saved', async () => {
+    setup({ packs: await packData(keys), onStoreProfile: vi.fn(async () => 'failed' as const) });
+    fireEvent.click(screen.getByRole('button', { name: 'Europe' }));
+    await flush();
+    expect(screen.getByText("Couldn't update. Try again.")).toBeTruthy();
+  });
+
+  it('US3: with round-up off, rows show only what recipes need, and no store row', async () => {
+    setup({ packs: await packData(keys), settings: { store_profile: 'us', round_to_packs: false } });
+    expect(buyNeed('Heavy cream')).toEqual(['Need 300 ml']);
+    expect(screen.queryByRole('button', { name: 'Europe' })).toBeNull();
+    expect(screen.queryByText('Set in Settings')).toBeNull();
+  });
+
+  it('edge cases: loose by the piece, no quantity, no pack data', async () => {
+    setup({
+      items: [...sample, groceryItem({ id: 'zaatar', name: "Za'atar", catalog_key: null, quantity: 50, unit: 'g', aisle: 'other' })],
+      packs: await packData(keys),
+      settings: { store_profile: 'eu', round_to_packs: true },
+    });
+    expect(buyNeed('Apples')).toEqual(['Buy 6', 'Need 6']);
+    expect(within(row('Salt')).queryByText(/Buy|Need/)).toBeNull();
+    expect(buyNeed("Za'atar")).toEqual(['Need 50 g']);
+  });
+
+  it('explains Buy and Need under the list', async () => {
+    setup({ packs: await packData(keys) });
+    expect(screen.getByText(/is what to pick up at the store\. /)).toBeTruthy();
+    expect(screen.getByText(/is what your recipes call for\./)).toBeTruthy();
+  });
+
+  it('FR-004: Edit › Store size saves the family’s own pack size', async () => {
+    const { props, tracker } = setup({ packs: await packData(keys) });
+    fireEvent.contextMenu(row('Heavy cream'));
+    await flush();
+    fireEvent.click(screen.getByRole('link', { name: /Store size/ }));
+    await flush();
+    expect(screen.getByText('What Heavy cream comes in where you shop. Saved for your family.')).toBeTruthy();
+    expect(screen.queryByText('Use the usual sizes')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Pack size'), { target: { value: '25 cl' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await flush();
+    expect(props.onSavePacks).toHaveBeenCalledWith(expect.objectContaining({ id: 'cream' }), '25 cl');
+    expect(tracker.track).toHaveBeenCalledWith('catalog_override_saved', { field: 'packs' });
+  });
+
+  it('FR-004: a size it cannot read keeps the sheet open with a warning; a correction can be undone', async () => {
+    const onSavePacks = vi.fn(async (_item: GroceryItem, text: string | null) => (text === 'a bag' ? ('invalid' as const) : ('saved' as const)));
+    setup({ packs: await packData(keys, { heavy_cream: '25 cl' }), onSavePacks });
+    fireEvent.contextMenu(row('Heavy cream'));
+    await flush();
+    fireEvent.click(screen.getByRole('link', { name: /Store size/ }));
+    await flush();
+    const field = screen.getByLabelText('Pack size') as HTMLInputElement;
+    expect(field.value).toBe('25 cl');
+    fireEvent.change(field, { target: { value: 'a bag' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await flush();
+    expect(screen.getByText('Type one amount, like 250 g or 1 l.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Use the usual sizes' }));
+    await flush();
+    expect(onSavePacks).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'cream' }), null);
+  });
+
+  it('has no Store size for items the catalog does not know', async () => {
+    setup({ items: [groceryItem({ id: 'zaatar', name: "Za'atar", catalog_key: null, quantity: 50, unit: 'g', aisle: 'other' })], packs: await packData(keys) });
+    fireEvent.contextMenu(row("Za'atar"));
+    await flush();
+    expect(screen.getByRole('heading', { name: 'Edit item' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /Store size/ })).toBeNull();
+  });
+
+  it('offline: the store toggle is off', async () => {
+    setup({ packs: await packData(keys) });
+    act(() => onlineManager.setOnline(false));
+    expect(screen.getByRole('button', { name: 'Europe' }).getAttribute('aria-disabled')).toBe('true');
   });
 });

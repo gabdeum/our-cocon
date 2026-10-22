@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import type { Tracker } from '@cocon/schemas';
 import type { FamilyApi } from '../lib/family';
 import type { Family, Member } from '../lib/session';
-import type { GroceryItem } from '../lib/groceries';
+import type { GroceryItem, PackData } from '../lib/groceries';
 
 export const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
 
@@ -75,4 +75,10 @@ export function groceryItem(over: Partial<GroceryItem>): GroceryItem {
     recipes: null,
     ...over,
   };
+}
+
+/** Spec 021: one catalog entry's packs and facts, from the real catalog, as loadPacks returns them. */
+export async function packData(keys: string[], corrected: Record<string, string> = {}): Promise<Record<string, PackData>> {
+  const { facts, packsOf } = await import('@cocon/quantity/catalog.fixture');
+  return Object.fromEntries(keys.map((k) => [k, { packs: { us: packsOf(k, 'us'), eu: packsOf(k, 'eu') }, facts: facts(k), corrected: corrected[k] ?? null }]));
 }

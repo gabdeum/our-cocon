@@ -37,3 +37,11 @@ A BottomSheet "Edit item" (close label "Close") that opens straight on the edit 
 - **Move to…:** sheet title "Move to…", lead "{name} will go here from now on, for your family."; one radio row per aisle in the fixed order, the current one selected. Tapping one moves it and closes.
 - **Merging** only joins an item still to buy whose amount adds up (both weights, volumes or counts); otherwise the new item gets its own row.
 - The recipe card is tappable as a whole (Card rule); "Open" is its olive label.
+
+## Store sizes (spec 021)
+- **Buy text:** one pack is its label ("Buy 1 pint carton", "Buy 20 cl"; "Buy 1 dozen" when the label has no number); several of one pack "Buy 2 × 20 cl"; mixed packs joined with " + " ("Buy 50 cl + 20 cl"); sold one by one "Buy 6"; sold by weight "Buy 1 kg loose" (in lb for US stores).
+- **Leftover:** "Need 300 ml · 100 ml left over"; "~" when it's an estimate (US sizes, or a weight worked out from pieces or a volume): "~170 ml left over". Nothing when under 1% of the need.
+- **Same item from several rows** (two recipes): the first row still to buy carries Buy for the total and "Need {total}"; the others show "Need {their amount}".
+- **Store toggle:** saves for the whole family at once (same setting as Settings); fails → StatusBanner warn "Couldn't update. Try again.". Off while offline. "Set in Settings" opens the Settings tab.
+- **Footnote** hidden when the list is empty or round-up is off.
+- **Edit › "Store size" (not drawn):** in the Edit item sheet, a ListRow "Store size" (chevron, the first pack's label for the family's store) after "Move to…", for catalog items only. It opens a BottomSheet "Store size", lead "What {name} comes in where you shop. Saved for your family."; TextField "Pack size", hint "One pack, e.g. 250 g, 20 cl or 6", starting empty (or from the family's own size); footer "Cancel" · "Save". When the family has its own size, a link "Use the usual sizes" puts the catalog's back. Can't read it → TextField warning "Type one amount, like 250 g or 1 l.". The size replaces the catalog's packs for this family, for both stores (spec 031).

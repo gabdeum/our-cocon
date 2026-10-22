@@ -1,5 +1,25 @@
-import { format, groceryIdentity, parseIngredientLine, planGroceryAdd } from '@cocon/quantity';
-import { AISLE_ORDER, familyIngredientRow, GroceryItemInput, GroceryItemUpdate, type Aisle, type Unit } from '@cocon/schemas';
+import {
+  format,
+  groceryIdentity,
+  parseIngredientLine,
+  parsePackSize,
+  pickPacks,
+  planGroceryAdd,
+  sumNeeds,
+  type IngredientFactsInput,
+  type PackPlan,
+  type StorePack,
+} from '@cocon/quantity';
+import {
+  AISLE_ORDER,
+  familyIngredientRow,
+  GroceryItemInput,
+  GroceryItemUpdate,
+  type Aisle,
+  type FamilySettings,
+  type StoreProfile,
+  type Unit,
+} from '@cocon/schemas';
 import { strings } from '../strings/en';
 import { assistantName } from './recipe-format';
 import { matchIngredients } from './recipe-ingredients';
@@ -73,10 +93,120 @@ export function amountText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 
   return item.unit == null || item.unit === 'piece' ? f.amount : `${f.amount} ${f.unit}`.trim();
 }
 
-/** "Need 300 ml"; null when there's no quantity (Salt). Buy lines come with spec 021. */
+/** "Need 300 ml"; null when there's no quantity (Salt). */
 export function needText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>): string | null {
   const amount = amountText(item);
   return amount ? strings.groceries.need(amount) : null;
+}
+
+// --- What to buy (spec 021) ------------------------------------------------------------------
+
+/** One catalog entry's packs per store (the family's correction replacing the catalog's) and facts. */
+export interface PackData {
+  packs: Record<StoreProfile, StorePack[]>;
+  facts: IngredientFactsInput;
+  /** The family's own pack size (FR-004), as typed: "250 g", "6". Null when it uses the catalog's. */
+  corrected: string | null;
+}
+
+/**
+ * Packs depend on the family's corrections, so the key starts with `family_ingredients` (a saved
+ * correction refetches it).
+ */
+export const groceryPacksKey = (familyId: string, keys: readonly string[]) => ['family_ingredients', familyId, 'packs', [...keys].sort().join(',')] as const;
+
+/** The list's catalog entries, each once. */
+export const packKeys = (items: readonly Pick<GroceryItem, 'catalog_key'>[]) => [...new Set(items.flatMap((i) => (i.catalog_key ? [i.catalog_key] : [])))].sort();
+
+/** FR-002: packs and facts for the list's catalog entries, from spec 031's views. */
+export async function loadPacks(client: Pick<Client, 'from'>, keys: readonly string[]): Promise<Record<string, PackData>> {
+  if (keys.length === 0) return {};
+  const [packs, facts] = await Promise.all([
+    client.from('ingredient_packs').select('catalog_key, family_ingredient_id, profile, position, size, unit, label, loose').in('catalog_key', keys).order('position'),
+    client.from('ingredient_facts').select('catalog_key, density_g_per_ml, size_small_g, size_medium_g, size_large_g, default_size').in('catalog_key', keys),
+  ]);
+  if (packs.error) throw packs.error;
+  if (facts.error) throw facts.error;
+  const out: Record<string, PackData> = {};
+  for (const f of facts.data) {
+    if (f.catalog_key) out[f.catalog_key] = { packs: { us: [], eu: [] }, facts: f as IngredientFactsInput, corrected: null };
+  }
+  for (const p of packs.data) {
+    const entry = p.catalog_key ? out[p.catalog_key] : undefined;
+    if (!entry || !p.profile || p.size == null || !p.unit || !p.label || p.loose == null) continue;
+    entry.packs[p.profile].push({ size: p.size, unit: p.unit, label: p.label, loose: p.loose });
+    if (p.family_ingredient_id && entry.corrected === null) entry.corrected = p.unit === 'piece' ? String(p.size) : p.label;
+  }
+  return out;
+}
+
+const baseUnit = (kind: PackPlan['kind']): Unit | null => (kind === 'weight' ? 'g' : kind === 'volume' ? 'ml' : null);
+
+/** Two significant figures, for estimates: 173 → 170, 26.4 → 26. */
+const roughly = (n: number) => {
+  if (n <= 0) return 0;
+  const scale = 10 ** (Math.floor(Math.log10(n)) - 1);
+  return Math.round(n / scale) * scale;
+};
+
+/** "1 pint carton", "2 × 20 cl", "1 dozen", "6", "1 kg loose" (spec 021 FR-003). */
+export function buyText(plan: PackPlan): string {
+  const g = strings.groceries;
+  if (plan.loose) {
+    const { pack, amount, kind } = plan.loose;
+    const imperial = pack.unit === 'lb' || pack.unit === 'oz';
+    const f = format({ id: 'buy', name: '', quantity: amount, unit: kind === 'weight' ? 'g' : 'ml' }, { system: imperial ? 'imperial' : 'metric', scale: true });
+    return g.buy(g.loose(`${f.amount} ${f.unit}`.trim()));
+  }
+  const [only] = plan.picks;
+  if (plan.picks.length === 1 && only && only.pack.loose && only.pack.size === 1) return g.buy(String(only.count));
+  const parts = plan.picks.map(({ pack, count }) => (count > 1 ? g.packCount(count, pack.label) : /^\d/.test(pack.label) ? pack.label : g.onePack(pack.label)));
+  return g.buy(parts.join(g.packsJoin));
+}
+
+/** "~170 ml left over", "100 ml left over"; null when nothing is left, or it rounds to nothing. */
+export function leftoverText(plan: PackPlan): string | null {
+  const value = plan.approximate ? (plan.kind === 'piece' ? Math.round(plan.leftover) : roughly(plan.leftover)) : plan.leftover;
+  if (value <= 0 || value < plan.need * 0.01) return null;
+  const amount = amountText({ id: 'leftover', name: '', quantity: value, unit: baseUnit(plan.kind) });
+  return amount ? strings.groceries.leftover(amount, plan.approximate) : null;
+}
+
+export interface RowAmounts {
+  buy?: string;
+  need?: string;
+}
+
+/**
+ * Each row's trailing text: "Buy …" over "Need … · … left over", or "Need …" alone when there's
+ * no pack, round-up is off (US3), or it's another row of something already counted. Rows of the
+ * same catalog entry still to buy are summed (FR-002): the first carries the packs for all of them.
+ */
+export function rowAmounts(items: readonly GroceryItem[], packs: Record<string, PackData> | undefined, settings: FamilySettings): Map<string, RowAmounts> {
+  const out = new Map<string, RowAmounts>();
+  const groups = new Map<string, GroceryItem[]>();
+  for (const item of items) {
+    const need = needText(item);
+    out.set(item.id, need ? { need } : {});
+    if (!settings.round_to_packs || !need || !item.catalog_key || !packs?.[item.catalog_key]) continue;
+    const key = item.checked ? `done:${item.id}` : item.catalog_key;
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  for (const rows of groups.values()) {
+    const first = rows[0] as GroceryItem;
+    const data = packs?.[first.catalog_key as string] as PackData;
+    const total = sumNeeds(
+      rows.map((r) => ({ quantity: r.quantity as number, unit: r.unit === 'piece' ? null : r.unit })),
+      data.facts,
+    );
+    const plan = total ? pickPacks(total, data.packs[settings.store_profile], data.facts, settings.store_profile) : null;
+    if (!total || !plan) continue;
+    const amount = rows.length === 1 ? amountText(first) : amountText({ id: first.id, name: first.name, quantity: Math.round(total.quantity * 100) / 100, unit: baseUnit(total.kind) });
+    if (!amount) continue;
+    const leftover = leftoverText(plan);
+    out.set(first.id, { buy: buyText(plan), need: leftover ? strings.groceries.needWith(amount, leftover) : strings.groceries.need(amount) });
+  }
+  return out;
 }
 
 export interface RecipeCard {
@@ -242,5 +372,32 @@ export async function moveToAisle(
     return !moved.error;
   } catch {
     return false;
+  }
+}
+
+/**
+ * FR-004: the family's own pack size for a catalog item ("250 g", "20 cl", "6"), from Edit. It
+ * replaces the catalog's packs, for both stores (spec 031). Null text puts the usual sizes back.
+ */
+export async function savePackSize(
+  client: Pick<Client, 'from'>,
+  familyId: string,
+  item: Pick<GroceryItem, 'catalog_key'>,
+  text: string | null,
+): Promise<'saved' | 'invalid' | 'failed'> {
+  if (!item.catalog_key) return 'failed';
+  let packs: StorePack[] | null = null;
+  if (text !== null) {
+    const size = parsePackSize(text.slice(0, 40));
+    if (!size) return 'invalid';
+    const typed = text.trim().replace(/\s+/g, ' ');
+    packs = [{ ...size, label: size.unit === 'piece' ? strings.groceries.storeSizePieces(typed) : typed, loose: false }];
+  }
+  try {
+    const row = familyIngredientRow({ catalog_key: item.catalog_key, packs });
+    const { error } = await client.from('family_ingredients').upsert({ ...row, family_id: familyId }, { onConflict: 'family_id,catalog_key' });
+    return error ? 'failed' : 'saved';
+  } catch {
+    return 'invalid';
   }
 }

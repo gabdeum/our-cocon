@@ -20,7 +20,7 @@ Check whether an existing component plus a variant covers it. Recurring tasks, a
 | `ink` | surface-page, surface-card, surface-soft, honey, sage, peach, warn-soft | 10.5–14.5 |
 | `ink-muted` | surface-page, surface-card, surface-soft, sage | 5.9–7.9 |
 | `olive` | surface-page, surface-card (links, selected text) | 5.8–6.1 |
-| `olive-deep` | sage, surface-card | 6.7–9.1 |
+| `olive-deep` | sage, surface-card, surface-page (SettingChoice example) | 6.7–9.1 |
 | `warn` | warn-soft, surface-soft, surface-card, sage (a warning inside a result card) | 5.0–6.8 |
 | `on-olive` (white) | olive, ink, danger | 6.1–15.6 |
 | `on-ink` | ink | 11.6 |

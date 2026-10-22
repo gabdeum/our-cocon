@@ -49,6 +49,7 @@ import {
   PhotoCrop,
   PhotoField,
   PhotoPlaceholder,
+  SettingChoice,
   SettingRow,
   SheetFooter,
   StatTile,
@@ -298,6 +299,21 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <SettingRow label="Thermometer checks" changedHint="Changed for this recipe" resetLabel="Reset" onReset={noop} value={checks} onValueChange={setChecks} last />
         </ListGroup>
         <SettingRow boxed label="Make my own dough" hint="Adds 3 ingredients and 1 step" value={screenOn} onValueChange={setScreenOn} />
+      </Section>
+
+      <Section group="Inputs" title="SettingChoice">
+        <ListGroup inset>
+          <SettingChoice
+            label="Where do you shop?"
+            hint="So the list shows packs you can actually buy"
+            example={{ lead: 'Recipe needs ', strong: '300 ml cream', result: store === 'us' ? 'Buy 1 pint' : 'Buy 2 × 20 cl' }}
+          >
+            <SegmentedControl label="Where do you shop?" segments={[{ key: 'us', label: 'US stores' }, { key: 'eu', label: 'European stores' }]} value={store} onChange={setStore} />
+          </SettingChoice>
+          <SettingChoice label="Units" disabled last>
+            <SegmentedControl label="Units" segments={[{ key: 'metric', label: 'Metric · g, ml, °C' }, { key: 'imperial', label: 'Imperial · oz, °F' }]} value={units} onChange={setUnits} disabled />
+          </SettingChoice>
+        </ListGroup>
       </Section>
 
       <Section group="Inputs" title="SegmentedControl">

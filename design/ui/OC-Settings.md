@@ -52,6 +52,7 @@ Route `/settings/deleted`, pushed from the "Recently deleted" row ("{n} recipe(s
 | Share sheet not available (some browsers) | The message is copied; StatusBanner "Invite link copied. Send it to them by message." |
 | Invite couldn't be created | StatusBanner "Couldn't create an invite. Try again." |
 | Too many invites | StatusBanner "Too many tries. Wait a minute, then try again." |
-| A change failed | StatusBanner "Couldn't save. Try again." |
+| A change failed | StatusBanner "Couldn't save. Try again." (Groceries: under the section; the choice reverts) |
+| Offline (Groceries) | "Where do you shop?" and the switch show the family's choice and are off (spec 021) |
 | Name missing | TextField warning "Add your name so your family knows who you are." |
 | Name couldn't be saved | TextField warning "Couldn't save. Try again." inside the sheet (a StatusBanner would be hidden behind it). |

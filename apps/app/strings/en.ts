@@ -62,6 +62,21 @@ export const strings = {
   // design/ui/OC-Settings.md (spec 003 sections; the rest come with 021, 025, 027, 018 and 029)
   settings: {
     title: 'Settings',
+    // Spec 021: where the family shops.
+    groceries: {
+      heading: 'Groceries',
+      shopLabel: 'Where do you shop?',
+      shopHint: 'So the list shows packs you can actually buy',
+      usStores: 'US stores',
+      euStores: 'European stores',
+      // The example is copy (OC-Settings), checked against the engine in GrocerySettings.test.tsx.
+      exampleNeed: 'Recipe needs ',
+      exampleAmount: '300 ml cream',
+      exampleBuy: { us: 'Buy 1 pint', eu: 'Buy 2 × 20 cl' },
+      roundLabel: 'Round up to store sizes',
+      roundHint: 'Off: the list shows only what recipes need',
+      saveFailed: "Couldn't save. Try again.",
+    },
     family: {
       heading: 'Family',
       owner: 'Owner',
@@ -663,6 +678,30 @@ export const strings = {
     addedBy: (name: string) => `Added by ${name}`,
     via: (name: string, assistant: string) => `${name} via ${assistant}`,
     need: (amount: string) => `Need ${amount}`,
+    // Spec 021: what to buy. "Buy 1 pint carton" over "Need 300 ml · ~170 ml left over".
+    needWith: (amount: string, leftover: string) => `Need ${amount} · ${leftover}`,
+    buy: (what: string) => `Buy ${what}`,
+    packCount: (count: number, label: string) => `${count} × ${label}`,
+    onePack: (label: string) => `1 ${label}`,
+    packsJoin: ' + ',
+    loose: (amount: string) => `${amount} loose`,
+    leftover: (amount: string, approximate: boolean) => `${approximate ? '~' : ''}${amount} left over`,
+    storeSizes: 'Store sizes:',
+    storeUs: 'US',
+    storeEu: 'Europe',
+    setInSettings: 'Set in Settings',
+    footnoteBuy: 'Buy',
+    footnoteBuyRest: ' is what to pick up at the store. ',
+    footnoteNeed: 'Need',
+    footnoteNeedRest: ' is what your recipes call for.',
+    // FR-004: the family's own pack size, from Edit (not drawn; OC-Groceries › Row menu).
+    storeSize: 'Store size',
+    storeSizeLead: (name: string) => `What ${name} comes in where you shop. Saved for your family.`,
+    storeSizeLabel: 'Pack size',
+    storeSizeHint: 'One pack, e.g. 250 g, 20 cl or 6',
+    storeSizeInvalid: 'Type one amount, like 250 g or 1 l.',
+    storeSizeReset: 'Use the usual sizes',
+    storeSizePieces: (n: string) => `pack of ${n}`,
     emptyTitle: 'Your list is empty.',
     emptyBody: 'Add items above, or from any recipe with “Add to groceries…”.',
     clearDone: 'Clear done items',

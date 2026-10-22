@@ -18,6 +18,8 @@ export interface SegmentedControlProps<K extends string> {
   variant?: SegmentedVariant;
   /** Screen-reader name of the group. */
   label: string;
+  /** Offline (Patterns.md › Offline): shows the choice, can't change it. */
+  disabled?: boolean;
 }
 
 // bundle.css › SegmentedControl
@@ -33,10 +35,10 @@ const items: Record<SegmentedVariant, string> = {
 };
 
 /** Two to four exclusive options in one track (SegmentedControl README). */
-export function SegmentedControl<K extends string>({ segments, value, onChange, variant = 'light', label }: SegmentedControlProps<K>) {
+export function SegmentedControl<K extends string>({ segments, value, onChange, variant = 'light', label, disabled }: SegmentedControlProps<K>) {
   const tabs = variant === 'tabs';
   return (
-    <View role={tabs ? 'tablist' : 'group'} aria-label={label} className={tracks[variant]}>
+    <View role={tabs ? 'tablist' : 'group'} aria-label={label} aria-disabled={disabled || undefined} className={cn(tracks[variant], disabled && 'opacity-dimmed')}>
       {segments.map((s) => {
         const on = s.key === value;
         return (
@@ -46,6 +48,10 @@ export function SegmentedControl<K extends string>({ segments, value, onChange, 
             aria-selected={tabs ? on : undefined}
             aria-pressed={tabs ? undefined : on}
             onPress={() => onChange(s.key)}
+            disabled={disabled}
+            aria-disabled={disabled || undefined}
+            // The pill is 36 tall: the touch area still reaches 44.
+            hitSlop={variant === 'pill' ? 4 : undefined}
             className={cn('items-center justify-center', items[variant], on && (tabs ? 'bg-honey' : 'bg-surface-card'), focusRing)}
             style={on && !tabs ? { boxShadow: theme.shadow.segment } : undefined}
           >
