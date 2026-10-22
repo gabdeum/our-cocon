@@ -1,7 +1,7 @@
 // Spec 020: what the grocery list shows (aisles, source lines, Need, recipe cards, who's shopping).
-// Spec 021: what to buy (Buy over Need, summed per catalog entry) and the family's own pack size.
+// Spec 021: what to buy beside the name (summed per catalog entry) and the family's own pack size.
 import { describe, expect, it, vi } from 'vitest';
-import { amountText, buyText, editText, groupByAisle, leftoverText, needText, recipeCards, rowAmounts, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
+import { amountText, buyText, editText, groupByAisle, recipeCards, rowAmounts, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
 import { alex, gabriel, groceryItem, mia, packData } from '../test/fakes';
 
 const members = [gabriel, alex, mia];
@@ -40,13 +40,13 @@ describe('sourceLine (FR-003)', () => {
   });
 });
 
-describe('Need', () => {
+describe('amounts', () => {
   it('reads amounts through @cocon/quantity; a count stands alone', () => {
-    expect(needText(groceryItem({}))).toBe('Need 2');
-    expect(needText(groceryItem({ quantity: 300, unit: 'ml' }))).toBe('Need 300 ml');
-    expect(needText(groceryItem({ quantity: 1, unit: 'kg' }))).toBe('Need 1 kg');
-    expect(needText(groceryItem({ quantity: 6, unit: 'piece' }))).toBe('Need 6');
-    expect(needText(groceryItem({ quantity: null }))).toBeNull();
+    expect(amountText(groceryItem({}))).toBe('2');
+    expect(amountText(groceryItem({ quantity: 300, unit: 'ml' }))).toBe('300 ml');
+    expect(amountText(groceryItem({ quantity: 1, unit: 'kg' }))).toBe('1 kg');
+    expect(amountText(groceryItem({ quantity: 6, unit: 'piece' }))).toBe('6');
+    expect(amountText(groceryItem({ quantity: null }))).toBeNull();
   });
 
   it('starts the Edit field from the amount and name', () => {
@@ -96,26 +96,26 @@ describe('rowAmounts (spec 021)', () => {
   const eu = { store_profile: 'eu', round_to_packs: true } as const;
   const cream = (over = {}) => groceryItem({ id: 'cream', name: 'Heavy cream', catalog_key: 'heavy_cream', quantity: 300, unit: 'ml', ...over });
 
-  it('US1: Buy over Need with the leftover, per store', async () => {
+  it('US1: what to buy, then what recipes need, per store', async () => {
     const packs = await packData(['heavy_cream']);
-    expect(rowAmounts([cream()], packs, us).get('cream')).toEqual({ buy: 'Buy 1 pint carton', need: 'Need 300 ml · ~170 ml left over' });
-    expect(rowAmounts([cream()], packs, eu).get('cream')).toEqual({ buy: 'Buy 2 × 20 cl', need: 'Need 300 ml · 100 ml left over' });
+    expect(rowAmounts([cream()], packs, us).get('cream')).toEqual({ detail: '1 pint carton', note: '(need 300 ml)' });
+    expect(rowAmounts([cream()], packs, eu).get('cream')).toEqual({ detail: '2 × 20 cl', note: '(need 300 ml)' });
   });
 
   it('US3: Need only with round-up off, or before packs load', async () => {
     const packs = await packData(['heavy_cream']);
-    expect(rowAmounts([cream()], packs, { ...us, round_to_packs: false }).get('cream')).toEqual({ need: 'Need 300 ml' });
-    expect(rowAmounts([cream()], undefined, us).get('cream')).toEqual({ need: 'Need 300 ml' });
+    expect(rowAmounts([cream()], packs, { ...us, round_to_packs: false }).get('cream')).toEqual({ detail: '300 ml' });
+    expect(rowAmounts([cream()], undefined, us).get('cream')).toEqual({ detail: '300 ml' });
   });
 
   it('FR-002: sums rows of the same item still to buy; the first one carries the packs', async () => {
     const packs = await packData(['heavy_cream']);
     const rows = [cream(), cream({ id: 'cream2', quantity: 200 }), cream({ id: 'done', checked: true, quantity: 100 })];
     const out = rowAmounts(rows, packs, eu);
-    expect(out.get('cream')).toEqual({ buy: 'Buy 50 cl', need: 'Need 500 ml' });
-    expect(out.get('cream2')).toEqual({ need: 'Need 200 ml' });
+    expect(out.get('cream')).toEqual({ detail: '50 cl' });
+    expect(out.get('cream2')).toEqual({ detail: '200 ml' });
     // A ticked one is already in the trolley: counted on its own.
-    expect(out.get('done')).toEqual({ buy: 'Buy 20 cl', need: 'Need 100 ml · 100 ml left over' });
+    expect(out.get('done')).toEqual({ detail: '20 cl', note: '(need 100 ml)' });
   });
 
   it('edge cases: no quantity, no catalog entry, loose', async () => {
@@ -127,31 +127,33 @@ describe('rowAmounts (spec 021)', () => {
     ];
     const out = rowAmounts(rows, packs, eu);
     expect(out.get('salt')).toEqual({});
-    expect(out.get('z')).toEqual({ need: 'Need 50 g' });
-    expect(out.get('p')).toEqual({ buy: 'Buy 1 kg loose', need: 'Need 1 kg' });
-    expect(rowAmounts(rows, packs, us).get('p')).toEqual({ buy: 'Buy 1', need: 'Need 1 kg · ~500 g left over' });
+    expect(out.get('z')).toEqual({ detail: '50 g' });
+    // Exactly what's needed: said once.
+    expect(out.get('p')).toEqual({ detail: '1 kg loose' });
+    expect(rowAmounts(rows, packs, us).get('p')).toEqual({ detail: '1 piece', note: '(need 1 kg)' });
   });
 });
 
-describe('buyText and leftoverText (spec 021)', () => {
+describe('buyText (spec 021)', () => {
   const plan = (over: Partial<Parameters<typeof buyText>[0]>) => ({ picks: [], loose: null, kind: 'volume' as const, need: 700, bought: 700, leftover: 0, approximate: false, ...over });
   const pack = (label: string, size = 1) => ({ size, unit: 'piece' as const, label, loose: false });
 
   it('joins mixed packs, names a single one, counts several', () => {
-    expect(buyText(plan({ picks: [{ pack: pack('50 cl'), count: 1 }, { pack: pack('20 cl'), count: 1 }] }))).toBe('Buy 50 cl + 20 cl');
-    expect(buyText(plan({ picks: [{ pack: pack('dozen', 12), count: 1 }] }))).toBe('Buy 1 dozen');
-    expect(buyText(plan({ picks: [{ pack: pack('box of 6', 6), count: 2 }] }))).toBe('Buy 2 × box of 6');
+    expect(buyText(plan({ picks: [{ pack: pack('50 cl'), count: 1 }, { pack: pack('20 cl'), count: 1 }] }))).toBe('50 cl + 20 cl');
+    expect(buyText(plan({ picks: [{ pack: pack('dozen', 12), count: 1 }] }))).toBe('1 dozen');
+    expect(buyText(plan({ picks: [{ pack: pack('box of 6', 6), count: 2 }] }))).toBe('2 × box of 6');
   });
 
   it('buys loose by the pound in US stores', () => {
     const lb = { size: 1, unit: 'lb' as const, label: 'per lb', loose: true };
-    expect(buyText(plan({ loose: { pack: lb, amount: 1000, kind: 'weight' } }))).toBe('Buy 2.2 lb loose');
+    expect(buyText(plan({ loose: { pack: lb, amount: 1000, kind: 'weight' } }))).toBe('2.2 lb loose');
   });
 
-  it('says nothing about a leftover that rounds away', () => {
-    expect(leftoverText(plan({ leftover: 0 }))).toBeNull();
-    expect(leftoverText(plan({ leftover: 3, need: 700 }))).toBeNull();
-    expect(leftoverText(plan({ kind: 'piece', need: 6, leftover: 2, approximate: true }))).toBe('~2 left over');
+  it('counts pieces bought one by one', () => {
+    const each = { size: 1, unit: 'piece' as const, label: 'each', loose: true };
+    expect(buyText(plan({ kind: 'piece', picks: [{ pack: each, count: 6 }] }))).toBe('6');
+    expect(buyText(plan({ kind: 'weight', picks: [{ pack: each, count: 1 }] }))).toBe('1 piece');
+    expect(buyText(plan({ kind: 'weight', picks: [{ pack: each, count: 2 }] }))).toBe('2 pieces');
   });
 });
 

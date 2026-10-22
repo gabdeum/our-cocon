@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { ListGroup, SegmentedControl, SettingChoice, SettingRow, StatusBanner, Text } from '@cocon/ui';
+import { ListGroup, SegmentedControl, SettingChoice, SettingRow, StatusBanner } from '@cocon/ui';
 import type { FamilySettings, FamilySettingsUpdate, StoreProfile } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 
@@ -13,8 +13,8 @@ export interface GrocerySettingsProps {
 }
 
 /**
- * OC-Settings › Groceries (spec 021): where the family shops and whether the list rounds up to
- * store sizes. Saved at once for the whole family; a failed save reverts and says so.
+ * Spec 021: where the family shops and whether the list rounds up to store sizes, in the Groceries
+ * tab's settings sheet. Saved at once for the whole family; a failed save reverts and says so.
  */
 export function GrocerySettings({ settings, onChange, readOnly }: GrocerySettingsProps) {
   const [failed, setFailed] = useState(false);
@@ -23,9 +23,6 @@ export function GrocerySettings({ settings, onChange, readOnly }: GrocerySetting
   };
   return (
     <View className="gap-8">
-      <Text size={18} weight="900" role="heading" aria-level={2}>
-        {s.heading}
-      </Text>
       <ListGroup>
         <SettingChoice
           label={s.shopLabel}

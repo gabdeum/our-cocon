@@ -62,9 +62,8 @@ export const strings = {
   // design/ui/OC-Settings.md (spec 003 sections; the rest come with 021, 025, 027, 018 and 029)
   settings: {
     title: 'Settings',
-    // Spec 021: where the family shops.
+    // Spec 021: where the family shops (the Groceries tab's "Grocery settings" sheet).
     groceries: {
-      heading: 'Groceries',
       shopLabel: 'Where do you shop?',
       shopHint: 'So the list shows packs you can actually buy',
       usStores: 'US stores',
@@ -667,7 +666,6 @@ export const strings = {
     addLabel: 'Add an item',
     addPlaceholder: 'Add an item, e.g. 2 lemons',
     addButton: 'Add item',
-    addHint: 'Long-press an item to edit, move or remove it.',
     addFailed: "Couldn't add this item. Try again.",
     merged: (total: string) => `Already on the list. Updated to ${total}.`,
     mergedNoAmount: 'Already on the list.',
@@ -677,23 +675,23 @@ export const strings = {
     openRecipe: (recipe: string) => `Open ${recipe}`,
     addedBy: (name: string) => `Added by ${name}`,
     via: (name: string, assistant: string) => `${name} via ${assistant}`,
-    need: (amount: string) => `Need ${amount}`,
-    // Spec 021: what to buy. "Buy 1 pint carton" over "Need 300 ml · ~170 ml left over".
-    needWith: (amount: string, leftover: string) => `Need ${amount} · ${leftover}`,
-    buy: (what: string) => `Buy ${what}`,
+    // Spec 021: what to buy, beside the name: "Heavy cream: 1 pint carton (need 300 ml)".
+    needNote: (amount: string) => `(need ${amount})`,
+    pieces: (n: number) => (n === 1 ? '1 piece' : `${n} pieces`),
     packCount: (count: number, label: string) => `${count} × ${label}`,
     onePack: (label: string) => `1 ${label}`,
     packsJoin: ' + ',
     loose: (amount: string) => `${amount} loose`,
-    leftover: (amount: string, approximate: boolean) => `${approximate ? '~' : ''}${amount} left over`,
-    storeSizes: 'Store sizes:',
-    storeUs: 'US',
-    storeEu: 'Europe',
-    setInSettings: 'Set in Settings',
-    footnoteBuy: 'Buy',
-    footnoteBuyRest: ' is what to pick up at the store. ',
-    footnoteNeed: 'Need',
-    footnoteNeedRest: ' is what your recipes call for.',
+    // The list's settings sheet (the button beside "Add item").
+    settingsButton: 'Grocery settings',
+    settingsTitle: 'Grocery settings',
+    editItem: (name: string) => `Edit ${name}`,
+    // "Clear all items" and its Dialog.
+    clearAll: 'Clear all items',
+    clearAllTitle: (n: number) => (n === 1 ? 'Clear the 1 item on the list?' : `Clear all ${n} items on the list?`),
+    clearAllBody: 'This removes every item, ticked or not, for everyone in the family. You can undo it right after.',
+    clearAllConfirm: 'Clear all items',
+    clearAllCancel: 'Keep the list',
     // FR-004: the family's own pack size, from Edit (not drawn; OC-Groceries › Row menu).
     storeSize: 'Store size',
     storeSizeLead: (name: string) => `What ${name} comes in where you shop. Saved for your family.`,

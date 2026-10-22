@@ -57,32 +57,32 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
 
   it('US1: a new family shops in US stores, rounding up', async () => {
     expect(await loadFamilySettings(alex)).toEqual({ store_profile: 'us', round_to_packs: true });
-    expect(await creamRow(alex)).toEqual({ buy: 'Buy 1 pint carton', need: 'Need 300 ml · ~170 ml left over' });
+    expect(await creamRow(alex)).toEqual({ detail: '1 pint carton', note: '(need 300 ml)' });
   });
 
   it('US2: Mia picks European stores, and Alex’s list follows', async () => {
     expect((await saveFamilySettings(mia, familyId, { store_profile: 'eu' })).error).toBeNull();
-    expect(await creamRow(alex)).toEqual({ buy: 'Buy 2 × 20 cl', need: 'Need 300 ml · 100 ml left over' });
+    expect(await creamRow(alex)).toEqual({ detail: '2 × 20 cl', note: '(need 300 ml)' });
     // Another family keeps its own.
     expect(await loadFamilySettings(sam)).toEqual({ store_profile: 'us', round_to_packs: true });
   });
 
   it('US3: with round-up off, only what recipes need', async () => {
     expect((await saveFamilySettings(alex, familyId, { round_to_packs: false })).error).toBeNull();
-    expect(await creamRow(mia)).toEqual({ need: 'Need 300 ml' });
+    expect(await creamRow(mia)).toEqual({ detail: '300 ml' });
     expect(await loadFamilySettings(alex)).toEqual({ store_profile: 'eu', round_to_packs: false });
     await saveFamilySettings(alex, familyId, { round_to_packs: true });
   });
 
   it('FR-004: the family’s own pack size replaces the catalog’s, for that family only', async () => {
     expect(await savePackSize(mia, familyId, { catalog_key: 'heavy_cream' }, '25 cl')).toBe('saved');
-    expect(await creamRow(alex)).toEqual({ buy: 'Buy 2 × 25 cl', need: 'Need 300 ml · 200 ml left over' });
+    expect(await creamRow(alex)).toEqual({ detail: '2 × 25 cl', note: '(need 300 ml)' });
     const theirs = await loadPacks(sam, ['heavy_cream']);
     expect(theirs.heavy_cream?.corrected).toBeNull();
     expect(theirs.heavy_cream?.packs.eu[0]?.label).toBe('20 cl');
     // Back to the usual sizes.
     expect(await savePackSize(alex, familyId, { catalog_key: 'heavy_cream' }, null)).toBe('saved');
-    expect(await creamRow(alex)).toEqual({ buy: 'Buy 2 × 20 cl', need: 'Need 300 ml · 100 ml left over' });
+    expect(await creamRow(alex)).toEqual({ detail: '2 × 20 cl', note: '(need 300 ml)' });
   });
 
   it('a member of another family can not change these settings', async () => {

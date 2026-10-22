@@ -17,4 +17,4 @@ A setting whose options sit under its label, with an optional line showing what 
 - Use it when a setting has two to four named options; an on/off setting is a `SettingRow`.
 - The example updates with the choice and shows a real case, not a description.
 - The control carries the screen-reader name (the setting's label).
-- Why it exists: OC-Settings › Groceries (spec 021) stacks the store choice and its example; Cooking defaults › Units (spec 027) is the same shape.
+- Why it exists: the Grocery settings sheet (OC-Groceries, spec 021) stacks the store choice and its example; Cooking defaults › Units (spec 027) is the same shape.

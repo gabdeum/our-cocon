@@ -89,14 +89,8 @@ export function sourceLine(item: Pick<GroceryItem, 'recipes' | 'created_by' | 's
 export function amountText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>): string | null {
   if (item.quantity == null) return null;
   const f = format({ id: item.id, name: item.name, quantity: item.quantity, unit: item.unit }, { system: 'metric', scale: true });
-  // A count reads on its own beside the name ("Lemons · Need 2").
+  // A count reads on its own beside the name ("Lemons: 2").
   return item.unit == null || item.unit === 'piece' ? f.amount : `${f.amount} ${f.unit}`.trim();
-}
-
-/** "Need 300 ml"; null when there's no quantity (Salt). */
-export function needText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>): string | null {
-  const amount = amountText(item);
-  return amount ? strings.groceries.need(amount) : null;
 }
 
 // --- What to buy (spec 021) ------------------------------------------------------------------
@@ -142,53 +136,42 @@ export async function loadPacks(client: Pick<Client, 'from'>, keys: readonly str
 
 const baseUnit = (kind: PackPlan['kind']): Unit | null => (kind === 'weight' ? 'g' : kind === 'volume' ? 'ml' : null);
 
-/** Two significant figures, for estimates: 173 → 170, 26.4 → 26. */
-const roughly = (n: number) => {
-  if (n <= 0) return 0;
-  const scale = 10 ** (Math.floor(Math.log10(n)) - 1);
-  return Math.round(n / scale) * scale;
-};
-
-/** "1 pint carton", "2 × 20 cl", "1 dozen", "6", "1 kg loose" (spec 021 FR-003). */
+/** "1 pint carton", "2 × 20 cl", "1 dozen", "6", "1 piece", "1 kg loose" (spec 021 FR-003). */
 export function buyText(plan: PackPlan): string {
   const g = strings.groceries;
   if (plan.loose) {
     const { pack, amount, kind } = plan.loose;
     const imperial = pack.unit === 'lb' || pack.unit === 'oz';
     const f = format({ id: 'buy', name: '', quantity: amount, unit: kind === 'weight' ? 'g' : 'ml' }, { system: imperial ? 'imperial' : 'metric', scale: true });
-    return g.buy(g.loose(`${f.amount} ${f.unit}`.trim()));
+    return g.loose(`${f.amount} ${f.unit}`.trim());
   }
   const [only] = plan.picks;
-  if (plan.picks.length === 1 && only && only.pack.loose && only.pack.size === 1) return g.buy(String(only.count));
+  // Sold one by one: a count reads on its own beside a count ("Apples: 6"), else as pieces ("1 piece").
+  if (plan.picks.length === 1 && only && only.pack.loose && only.pack.size === 1) return plan.kind === 'piece' ? String(only.count) : g.pieces(only.count);
   const parts = plan.picks.map(({ pack, count }) => (count > 1 ? g.packCount(count, pack.label) : /^\d/.test(pack.label) ? pack.label : g.onePack(pack.label)));
-  return g.buy(parts.join(g.packsJoin));
-}
-
-/** "~170 ml left over", "100 ml left over"; null when nothing is left, or it rounds to nothing. */
-export function leftoverText(plan: PackPlan): string | null {
-  const value = plan.approximate ? (plan.kind === 'piece' ? Math.round(plan.leftover) : roughly(plan.leftover)) : plan.leftover;
-  if (value <= 0 || value < plan.need * 0.01) return null;
-  const amount = amountText({ id: 'leftover', name: '', quantity: value, unit: baseUnit(plan.kind) });
-  return amount ? strings.groceries.leftover(amount, plan.approximate) : null;
+  return parts.join(g.packsJoin);
 }
 
 export interface RowAmounts {
-  buy?: string;
-  need?: string;
+  /** After the name: what to buy ("1 pint carton"), or what's needed when there's no pack ("300 ml"). */
+  detail?: string;
+  /** "(need 300 ml)", when what to buy isn't simply what's needed. */
+  note?: string;
 }
 
 /**
- * Each row's trailing text: "Buy …" over "Need … · … left over", or "Need …" alone when there's
- * no pack, round-up is off (US3), or it's another row of something already counted. Rows of the
- * same catalog entry still to buy are summed (FR-002): the first carries the packs for all of them.
+ * Each row's amounts, beside the name: "Heavy cream: 1 pint carton (need 300 ml)", or just
+ * "Heavy cream: 300 ml" when there's no pack, round-up is off (US3), or it's another row of
+ * something already counted. Rows of the same catalog entry still to buy are summed (FR-002): the
+ * first carries the packs for all of them. Nothing for an item with no quantity ("Salt").
  */
 export function rowAmounts(items: readonly GroceryItem[], packs: Record<string, PackData> | undefined, settings: FamilySettings): Map<string, RowAmounts> {
   const out = new Map<string, RowAmounts>();
   const groups = new Map<string, GroceryItem[]>();
   for (const item of items) {
-    const need = needText(item);
-    out.set(item.id, need ? { need } : {});
-    if (!settings.round_to_packs || !need || !item.catalog_key || !packs?.[item.catalog_key]) continue;
+    const amount = amountText(item);
+    out.set(item.id, amount ? { detail: amount } : {});
+    if (!settings.round_to_packs || !amount || !item.catalog_key || !packs?.[item.catalog_key]) continue;
     const key = item.checked ? `done:${item.id}` : item.catalog_key;
     groups.set(key, [...(groups.get(key) ?? []), item]);
   }
@@ -203,8 +186,9 @@ export function rowAmounts(items: readonly GroceryItem[], packs: Record<string, 
     if (!total || !plan) continue;
     const amount = rows.length === 1 ? amountText(first) : amountText({ id: first.id, name: first.name, quantity: Math.round(total.quantity * 100) / 100, unit: baseUnit(total.kind) });
     if (!amount) continue;
-    const leftover = leftoverText(plan);
-    out.set(first.id, { buy: buyText(plan), need: leftover ? strings.groceries.needWith(amount, leftover) : strings.groceries.need(amount) });
+    // Exactly what's needed (loose by weight, one by one, 2 × 1 l for 2 L): no need to say it twice.
+    const exact = plan.leftover <= plan.need * 0.01 && !plan.approximate;
+    out.set(first.id, exact ? { detail: buyText(plan) } : { detail: buyText(plan), note: strings.groceries.needNote(amount) });
   }
   return out;
 }

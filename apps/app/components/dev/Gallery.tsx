@@ -479,8 +479,23 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
 
       <Section group="Lists and cards" title="ListRow">
         <ListGroup title="Dairy & eggs">
-          <ListRow title="Heavy cream" sub="For Leek & bacon quiche" leading={{ kind: 'checkbox', checked: false }} trailing={{ kind: 'buy', buy: 'Buy 1 pint carton', need: 'Need 300 ml · ~170 ml left over' }} onPress={noop} />
-          <ListRow title="Sourdough loaf" sub="Added by Gabriel" done leading={{ kind: 'checkbox', checked: true }} trailing={{ kind: 'buy', buy: 'Buy 1 loaf', need: 'Need 1' }} onPress={noop} />
+          <ListRow
+            title="Heavy cream"
+            titleDetail={{ text: '1 pint carton', note: '(need 300 ml)' }}
+            sub="For Leek & bacon quiche"
+            leading={{ kind: 'checkbox', checked: false }}
+            action={{ label: 'Edit', accessibilityLabel: 'Edit Heavy cream', onPress: noop }}
+            onPress={noop}
+          />
+          <ListRow
+            title="Sourdough loaf"
+            titleDetail={{ text: '1' }}
+            sub="Added by Gabriel"
+            done
+            leading={{ kind: 'checkbox', checked: true }}
+            action={{ label: 'Edit', accessibilityLabel: 'Edit Sourdough loaf', onPress: noop }}
+            onPress={noop}
+          />
           <ListRow title="Heavy cream" sub="Already on the list (100 ml) → will be 400 ml" subTone="warn" leading={{ kind: 'checkbox', checked: true }} trailing={{ kind: 'value', text: '300 ml' }} onPress={noop} last />
         </ListGroup>
         <View>

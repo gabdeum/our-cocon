@@ -60,3 +60,4 @@ None.
   - Presence never shows yourself (US3: "the others see"). Clear, Remove, Undo, Edit and Move to… failures use the tick's "Couldn't update. Try again." Offline, rows keep their ticks but can't be changed.
   - US1's "6 items to buy" assumes a list of seven with one ticked; the seed list starts at 6, so it reads 5 after Mia's tick.
 - 2026-10-22: From Gabriel's review: the row menu opens straight on the Edit field (Move to… and Remove sit below it), and a hint under the add field says "Long-press an item to edit, move or remove it." The Edit field's hint reads "An amount and a name, e.g. 2 lemons or 100 g Gruyère".
+- 2026-10-22 (from spec 021, Gabriel's changes): rows have an "Edit" button and the long-press hint is gone; "Clear all items" (confirmed, with Undo, event `all_items_cleared`) sits beside "Clear done items"; in Edit item, "Remove" is a red button apart from the options.

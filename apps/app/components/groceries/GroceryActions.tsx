@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BottomSheet, Link, ListGroup, ListRow, SheetFooter, TextField } from '@cocon/ui';
+import { BottomSheet, Button, Link, ListGroup, ListRow, SheetFooter, TextField } from '@cocon/ui';
 import { AISLE_ORDER, type Aisle } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { editText, type GroceryItem } from '../../lib/groceries';
@@ -94,10 +94,11 @@ function MenuSheet({
     >
       <TextField label={g.editLabel} hint={g.editHint} value={text} onChangeText={setText} onSubmitEditing={() => void save()} maxLength={200} />
       <ListGroup>
-        <ListRow title={g.moveTo} trailing={{ kind: 'chevron', text: strings.aisles[item.aisle ?? 'other'] }} onPress={() => onView('move')} />
-        {packs ? <ListRow title={g.storeSize} trailing={{ kind: 'chevron', text: packs.label ?? undefined }} onPress={() => onView('packs')} /> : null}
-        <ListRow title={g.remove} onPress={() => onRemove(item)} last />
+        <ListRow title={g.moveTo} trailing={{ kind: 'chevron', text: strings.aisles[item.aisle ?? 'other'] }} onPress={() => onView('move')} last={!packs} />
+        {packs ? <ListRow title={g.storeSize} trailing={{ kind: 'chevron', text: packs.label ?? undefined }} onPress={() => onView('packs')} last /> : null}
       </ListGroup>
+      {/* Apart from the options, in red: it takes the item off the list (with Undo). */}
+      <Button label={g.remove} variant="danger" icon="trash" block onPress={() => onRemove(item)} />
     </BottomSheet>
   );
 }

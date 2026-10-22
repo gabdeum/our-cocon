@@ -1,5 +1,5 @@
-// Spec 021 US2 and US3 in Settings › Groceries: where the family shops, and round up to store sizes.
-// The Groceries rows that follow these settings are tested in GroceryList.test.tsx.
+// Spec 021 US2 and US3 in the Groceries settings sheet: where the family shops, and round up to
+// store sizes. The rows that follow these settings, and the sheet itself, are in GroceryList.test.tsx.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { pickPacks } from '@cocon/quantity';
@@ -18,10 +18,9 @@ function setup(settings: FamilySettings = { store_profile: 'us', round_to_packs:
   return { onChange, rerender: (next: FamilySettings) => view.rerender(<GrocerySettings settings={next} onChange={onChange} readOnly={readOnly} />) };
 }
 
-describe('Settings › Groceries', () => {
+describe('Grocery settings', () => {
   it('shows where the family shops, with an example', () => {
     setup();
-    expect(screen.getByRole('heading', { name: 'Groceries' })).toBeTruthy();
     expect(screen.getByText('Where do you shop?')).toBeTruthy();
     expect(screen.getByText('So the list shows packs you can actually buy')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'US stores' }).getAttribute('aria-pressed')).toBe('true');
@@ -65,7 +64,7 @@ describe('Settings › Groceries', () => {
   it('the example agrees with what the list would buy for 300 ml of cream', () => {
     const buy = (profile: 'us' | 'eu') => {
       const plan = pickPacks({ quantity: 300, unit: 'ml' }, packsOf('heavy_cream', profile), facts('heavy_cream'), profile);
-      return plan ? buyText(plan) : null;
+      return plan ? `Buy ${buyText(plan)}` : null;
     };
     // The US example shortens the catalog's "1 pint carton" (OC-Settings copy).
     expect(buy('us')).toBe('Buy 1 pint carton');

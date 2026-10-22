@@ -7,7 +7,7 @@
 ## User Scenarios & Testing
 
 ### User Story 1 — Find any setting in one screen (P1)
-**Acceptance**: **Given** the Settings tab, **Then** I see, in order: Cooking defaults (spec 027), Groceries (spec 021), Family (spec 003), More: AI assistants "2 connected ›" (spec 025) and Recently deleted "1 recipe ›" (spec 018).
+**Acceptance**: **Given** the Settings tab, **Then** I see, in order: Cooking defaults (spec 027), Family (spec 003), More: AI assistants "2 connected ›" (spec 025) and Recently deleted "1 recipe ›" (spec 018).
 
 ### User Story 2 — Understand every option (P1)
 **Given** any setting, **Then** a one-line hint says what it does ("Off: shows cups and spoons instead of grams").
@@ -15,7 +15,7 @@
 ## Requirements
 
 - **FR-001**: Changes save instantly, with no Save button, and sync to all family members (family-level settings).
-- **FR-002**: The Groceries section has "Where do you shop?" (US stores · European stores), with a live example line, and "Round up to store sizes".
+- **FR-002**: Settings has no Groceries section: "Where do you shop?" and "Round up to store sizes" live in the Groceries tab's "Grocery settings" sheet (moved there by spec 021).
 - **FR-003**: An Account section at the bottom, built from existing components as `design/ui/OC-Settings.md` describes: "Your name", "Sign out", "Delete my account".
 - **FR-004**: Only the owner sees member role controls and "Delete family".
 
@@ -36,3 +36,4 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-22 (from spec 021): Gabriel moved the Groceries section (where you shop, round up) to a sheet on the Groceries tab; FR-002 and the acceptance order updated.

@@ -73,8 +73,7 @@ export default function GroceriesTab() {
       onOpenRecipe={(id) => router.push(recipePage(id))}
       settings={familySettings.settings}
       packs={packs.data}
-      onStoreProfile={(store_profile) => familySettings.change({ store_profile })}
-      onOpenSettings={() => router.navigate('/settings')}
+      onChangeSettings={familySettings.change}
       onSavePacks={async (item, text) => {
         try {
           return await savePackSize(client, familyId ?? '', item, text);

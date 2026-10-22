@@ -1,7 +1,8 @@
 // Spec 020 on the Groceries screen: US1 (ticked rows struck through, the count), US2 (add "2 lemons"),
 // US3 (who's shopping), merging, Clear done items with Undo, a failed tick, the row menu, the recipe
 // cards and the empty list. The data rules are in lib/groceries.test.ts and the live sync in
-// lib/groceries.integration.test.ts. Spec 021 (store sizes: Buy over Need) is the last block.
+// lib/groceries.integration.test.ts. Spec 021 (what to buy beside each name, the settings sheet, Edit
+// and Clear all) is the last block.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { onlineManager } from '@tanstack/react-query';
@@ -53,8 +54,7 @@ function setup(over: Partial<Props> = {}) {
     onOpenRecipe: vi.fn(),
     settings: { store_profile: 'us', round_to_packs: true },
     packs: undefined,
-    onStoreProfile: vi.fn(async () => 'saved' as const),
-    onOpenSettings: vi.fn(),
+    onChangeSettings: vi.fn(async () => 'saved' as const),
     onSavePacks: vi.fn(async () => 'saved' as const),
     now,
     ...over,
@@ -67,18 +67,18 @@ const row = (name: string) => screen.getByRole('checkbox', { name: new RegExp(na
 const aisle = (name: string) => screen.getByRole('heading', { name }).parentElement as HTMLElement;
 
 describe('Groceries', () => {
-  it('groups rows by aisle in store order, with the source and Need (FR-001, FR-003)', () => {
+  it('groups rows by aisle in store order, with the source and amount (FR-001, FR-003)', () => {
     setup();
     const headings = screen.getAllByRole('heading').map((h) => h.textContent);
     expect(headings).toEqual(['Groceries', 'Produce', 'Bakery', 'Dairy & eggs', 'Spices & baking']);
     expect(screen.getByText('6 items to buy · shared with family')).toBeTruthy();
     const dairy = within(aisle('Dairy & eggs'));
     expect(dairy.getAllByText('For Leek & bacon quiche')).toHaveLength(2);
-    expect(dairy.getByText('Need 300 ml')).toBeTruthy();
+    expect(dairy.getByText('Heavy cream: 300 ml')).toBeTruthy();
     expect(dairy.getByText('Alex via ChatGPT')).toBeTruthy();
     expect(within(aisle('Produce')).getByText('Added by Mia')).toBeTruthy();
     // No quantity, no Need.
-    expect(within(aisle('Spices & baking')).queryByText(/Need/)).toBeNull();
+    expect(within(aisle('Spices & baking')).getByText('Salt')).toBeTruthy();
   });
 
   it('US1: a tick from Mia shows struck through and the count drops', () => {
@@ -140,7 +140,7 @@ describe('Groceries', () => {
     const { props, tracker } = setup();
     const field = screen.getByLabelText('Add an item');
     expect(field.getAttribute('placeholder')).toBe('Add an item, e.g. 2 lemons');
-    expect(screen.getByText('Long-press an item to edit, move or remove it.')).toBeTruthy();
+    expect(screen.queryByText(/Long-press/)).toBeNull();
     fireEvent.change(field, { target: { value: '2 lemons' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add item' }));
     await flush();
@@ -149,11 +149,10 @@ describe('Groceries', () => {
     expect(tracker.track).toHaveBeenCalledWith('grocery_item_added', { from: 'app' });
   });
 
-  it('US2: the new row reads "Lemons · Need 2 · Added by Gabriel" under Produce', () => {
+  it('US2: the new row reads "Lemons: 2 · Added by Gabriel" under Produce', () => {
     setup({ items: [...sample, groceryItem({ id: 'lemons', name: 'Lemons', aisle: 'produce' })] });
     const produce = within(aisle('Produce'));
-    expect(produce.getByText('Lemons')).toBeTruthy();
-    expect(produce.getByText('Need 2')).toBeTruthy();
+    expect(produce.getByText('Lemons: 2')).toBeTruthy();
     expect(produce.getByText('Added by Gabriel')).toBeTruthy();
   });
 
@@ -268,66 +267,137 @@ describe('Groceries', () => {
   });
 });
 
-describe('Groceries › store sizes (spec 021)', () => {
+describe('Groceries › what to buy (spec 021)', () => {
   const keys = ['heavy_cream', 'gruyere', 'milk', 'apple', 'salt', 'sourdough', 'croissant'];
-  const buyNeed = (name: string) => within(row(name)).getAllByText(/^(Buy|Need) /).map((t) => t.textContent);
+  /** The row's title line: "Heavy cream: 1 pint carton (need 300 ml)". */
+  const line = (name: string) => within(row(name)).getByText(new RegExp(`^${name}`)).textContent;
+  const openSettings = async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Grocery settings' }));
+    await flush();
+  };
 
-  it('US1: in US stores, heavy cream is a pint carton, with what is left over', async () => {
+  it('US1: in US stores, heavy cream is a pint carton, beside its name; no leftover', async () => {
     setup({ packs: await packData(keys) });
-    expect(buyNeed('Heavy cream')).toEqual(['Buy 1 pint carton', 'Need 300 ml · ~170 ml left over']);
-    expect(screen.getByRole('button', { name: 'US' }).getAttribute('aria-pressed')).toBe('true');
+    expect(line('Heavy cream')).toBe('Heavy cream: 1 pint carton (need 300 ml)');
+    expect(screen.queryByText(/left over/)).toBeNull();
   });
 
-  it('US1: in European stores, it is 2 × 20 cl, 100 ml left over', async () => {
+  it('US1: in European stores, it is 2 × 20 cl', async () => {
     setup({ packs: await packData(keys), settings: { store_profile: 'eu', round_to_packs: true } });
-    expect(buyNeed('Heavy cream')).toEqual(['Buy 2 × 20 cl', 'Need 300 ml · 100 ml left over']);
+    expect(line('Heavy cream')).toBe('Heavy cream: 2 × 20 cl (need 300 ml)');
+    // Exactly what's needed is said once.
+    expect(line('Milk')).toBe('Milk: 2 × 1 l carton');
   });
 
-  it('US2: the toggle changes the family setting, and every row follows', async () => {
+  it('US2: the settings sheet changes where the family shops, and every row follows', async () => {
     const { props, rerender } = setup({ packs: await packData(keys) });
-    fireEvent.click(screen.getByRole('button', { name: 'Europe' }));
-    await flush();
-    expect(props.onStoreProfile).toHaveBeenCalledWith('eu');
-    rerender({ settings: { store_profile: 'eu', round_to_packs: true } });
-    expect(buyNeed('Milk')).toEqual(['Buy 2 × 1 l carton', 'Need 2 L']);
-    fireEvent.click(screen.getByRole('button', { name: 'Set in Settings' }));
-    expect(props.onOpenSettings).toHaveBeenCalled();
-  });
-
-  it('US2: says so when the change could not be saved', async () => {
-    setup({ packs: await packData(keys), onStoreProfile: vi.fn(async () => 'failed' as const) });
-    fireEvent.click(screen.getByRole('button', { name: 'Europe' }));
-    await flush();
-    expect(screen.getByText("Couldn't update. Try again.")).toBeTruthy();
-  });
-
-  it('US3: with round-up off, rows show only what recipes need, and no store row', async () => {
-    setup({ packs: await packData(keys), settings: { store_profile: 'us', round_to_packs: false } });
-    expect(buyNeed('Heavy cream')).toEqual(['Need 300 ml']);
+    // No store row on the page any more.
     expect(screen.queryByRole('button', { name: 'Europe' })).toBeNull();
-    expect(screen.queryByText('Set in Settings')).toBeNull();
+    await openSettings();
+    expect(screen.getByRole('heading', { name: 'Grocery settings' })).toBeTruthy();
+    expect(screen.getByText('Buy 1 pint')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'European stores' }));
+    await flush();
+    expect(props.onChangeSettings).toHaveBeenCalledWith({ store_profile: 'eu' });
+    rerender({ settings: { store_profile: 'eu', round_to_packs: true } });
+    expect(screen.getByText('Buy 2 × 20 cl')).toBeTruthy();
+    expect(line('Heavy cream')).toBe('Heavy cream: 2 × 20 cl (need 300 ml)');
   });
 
-  it('edge cases: loose by the piece, no quantity, no pack data', async () => {
+  it('US2: the sheet says so when a change could not be saved', async () => {
+    setup({ packs: await packData(keys), onChangeSettings: vi.fn(async () => 'failed' as const) });
+    await openSettings();
+    fireEvent.click(screen.getByRole('button', { name: 'European stores' }));
+    await flush();
+    expect(screen.getByText("Couldn't save. Try again.")).toBeTruthy();
+  });
+
+  it('US3: round-up is in the sheet; off, rows show only what recipes need', async () => {
+    const { props, rerender } = setup({ packs: await packData(keys) });
+    await openSettings();
+    fireEvent.click(screen.getByRole('switch', { name: 'Round up to store sizes' }));
+    await flush();
+    expect(props.onChangeSettings).toHaveBeenCalledWith({ round_to_packs: false });
+    rerender({ settings: { store_profile: 'us', round_to_packs: false } });
+    expect(line('Heavy cream')).toBe('Heavy cream: 300 ml');
+  });
+
+  it('edge cases: one by one, no quantity, no pack data', async () => {
     setup({
       items: [...sample, groceryItem({ id: 'zaatar', name: "Za'atar", catalog_key: null, quantity: 50, unit: 'g', aisle: 'other' })],
       packs: await packData(keys),
       settings: { store_profile: 'eu', round_to_packs: true },
     });
-    expect(buyNeed('Apples')).toEqual(['Buy 6', 'Need 6']);
-    expect(within(row('Salt')).queryByText(/Buy|Need/)).toBeNull();
-    expect(buyNeed("Za'atar")).toEqual(['Need 50 g']);
+    expect(line('Apples')).toBe('Apples: 6');
+    expect(line('Salt')).toBe('Salt');
+    expect(line("Za'atar")).toBe("Za'atar: 50 g");
+    expect(screen.queryByText(/is what to pick up at the store/)).toBeNull();
   });
 
-  it('explains Buy and Need under the list', async () => {
+  it('every row has an Edit button that opens its sheet, beside the row (not inside it)', async () => {
     setup({ packs: await packData(keys) });
-    expect(screen.getByText(/is what to pick up at the store\. /)).toBeTruthy();
-    expect(screen.getByText(/is what your recipes call for\./)).toBeTruthy();
+    const edit = screen.getByRole('button', { name: 'Edit Heavy cream' });
+    expect(row('Heavy cream').contains(edit)).toBe(false);
+    fireEvent.click(edit);
+    await flush();
+    expect(screen.getByRole('heading', { name: 'Edit item' })).toBeTruthy();
+    expect((screen.getByLabelText('Item') as HTMLInputElement).value).toBe('300 ml Heavy cream');
+  });
+
+  it('the Edit sheet keeps Move to… and Store size together, and Remove apart, in red', async () => {
+    const { props } = setup({ packs: await packData(keys) });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Heavy cream' }));
+    await flush();
+    const remove = screen.getByRole('button', { name: 'Remove' });
+    const options = screen.getByRole('link', { name: /Move to…/ }).parentElement as HTMLElement;
+    expect(options.contains(remove)).toBe(false);
+    expect(within(options).getByRole('link', { name: /Store size/ })).toBeTruthy();
+    fireEvent.click(remove);
+    await flush();
+    expect(props.onClear).toHaveBeenCalledWith(['cream']);
+  });
+
+  it('Clear all items asks first, then clears every item with Undo', async () => {
+    const { props, tracker } = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear all items' }));
+    await flush();
+    expect(screen.getByText('Clear all 7 items on the list?')).toBeTruthy();
+    expect(screen.getByText('This removes every item, ticked or not, for everyone in the family. You can undo it right after.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep the list' }));
+    await flush();
+    expect(props.onClear).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear all items' }));
+    await flush();
+    const dialog = screen.getByRole('alertdialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Clear all items' }));
+    await flush();
+    expect(props.onClear).toHaveBeenCalledWith(sample.map((i) => i.id));
+    expect(tracker.track).toHaveBeenCalledWith('all_items_cleared', { count: 7 });
+    expect(screen.getByText('Cleared 7 items')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await flush();
+    expect(props.onRestore).toHaveBeenCalledWith(sample.map((i) => i.id));
+    expect(tracker.track).not.toHaveBeenCalledWith('clear_done_undone', expect.anything());
+  });
+
+  it('Clear all says "the 1 item" for one, and says so when it fails', async () => {
+    setup({ items: [sample[0] as GroceryItem], onClear: vi.fn(async () => false) });
+    fireEvent.click(screen.getByRole('button', { name: 'Clear all items' }));
+    await flush();
+    expect(screen.getByText('Clear the 1 item on the list?')).toBeTruthy();
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Clear all items' }));
+    await flush();
+    expect(screen.getByText("Couldn't update. Try again.")).toBeTruthy();
+  });
+
+  it('has no Clear all on an empty list', () => {
+    setup({ items: [] });
+    expect(screen.queryByRole('button', { name: 'Clear all items' })).toBeNull();
   });
 
   it('FR-004: Edit › Store size saves the family’s own pack size', async () => {
     const { props, tracker } = setup({ packs: await packData(keys) });
-    fireEvent.contextMenu(row('Heavy cream'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Heavy cream' }));
     await flush();
     fireEvent.click(screen.getByRole('link', { name: /Store size/ }));
     await flush();
@@ -342,8 +412,8 @@ describe('Groceries › store sizes (spec 021)', () => {
 
   it('FR-004: a size it cannot read keeps the sheet open with a warning; a correction can be undone', async () => {
     const onSavePacks = vi.fn(async (_item: GroceryItem, text: string | null) => (text === 'a bag' ? ('invalid' as const) : ('saved' as const)));
-    setup({ packs: await packData(keys, { heavy_cream: '25 cl' }), onSavePacks });
-    fireEvent.contextMenu(row('Heavy cream'));
+    const { tracker } = setup({ packs: await packData(keys, { heavy_cream: '25 cl' }), onSavePacks });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Heavy cream' }));
     await flush();
     fireEvent.click(screen.getByRole('link', { name: /Store size/ }));
     await flush();
@@ -356,40 +426,37 @@ describe('Groceries › store sizes (spec 021)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Use the usual sizes' }));
     await flush();
     expect(onSavePacks).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'cream' }), null);
+    // Putting the usual sizes back isn't a correction.
+    expect(tracker.track).not.toHaveBeenCalledWith('catalog_override_saved', expect.anything());
   });
 
-  it('FR-004: putting the usual sizes back is not counted as a correction; a failed save says so', async () => {
-    const onSavePacks = vi.fn(async (_item: GroceryItem, text: string | null) => (text === null ? ('saved' as const) : ('failed' as const)));
-    const { tracker } = setup({ packs: await packData(keys, { heavy_cream: '25 cl' }), onSavePacks });
-    const openSheet = async () => {
-      fireEvent.contextMenu(row('Heavy cream'));
-      await flush();
-      fireEvent.click(screen.getByRole('link', { name: /Store size/ }));
-      await flush();
-    };
-    await openSheet();
-    fireEvent.click(screen.getByRole('button', { name: 'Use the usual sizes' }));
+  it('FR-004: a failed pack save says so', async () => {
+    setup({ packs: await packData(keys), onSavePacks: vi.fn(async () => 'failed' as const) });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Heavy cream' }));
     await flush();
-    expect(tracker.track).not.toHaveBeenCalledWith('catalog_override_saved', expect.anything());
-    await openSheet();
+    fireEvent.click(screen.getByRole('link', { name: /Store size/ }));
+    await flush();
     fireEvent.change(screen.getByLabelText('Pack size'), { target: { value: '30 cl' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await flush();
     expect(screen.getByText("Couldn't update. Try again.")).toBeTruthy();
-    expect(tracker.track).not.toHaveBeenCalledWith('catalog_override_saved', expect.anything());
   });
 
   it('has no Store size for items the catalog does not know', async () => {
     setup({ items: [groceryItem({ id: 'zaatar', name: "Za'atar", catalog_key: null, quantity: 50, unit: 'g', aisle: 'other' })], packs: await packData(keys) });
-    fireEvent.contextMenu(row("Za'atar"));
+    fireEvent.click(screen.getByRole('button', { name: "Edit Za'atar" }));
     await flush();
     expect(screen.getByRole('heading', { name: 'Edit item' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: /Store size/ })).toBeNull();
   });
 
-  it('offline: the store toggle is off', async () => {
+  it('offline: Edit, Clear all and the settings are off; the sheet still shows the choice', async () => {
     setup({ packs: await packData(keys) });
     act(() => onlineManager.setOnline(false));
-    expect(screen.getByRole('button', { name: 'Europe' }).getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Edit Heavy cream' }).getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Clear all items' }).getAttribute('aria-disabled')).toBe('true');
+    await openSettings();
+    expect(screen.getByRole('button', { name: 'US stores' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('group', { name: 'Where do you shop?' }).getAttribute('aria-disabled')).toBe('true');
   });
 });
