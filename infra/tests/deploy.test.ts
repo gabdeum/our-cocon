@@ -9,6 +9,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 const infra = resolve(import.meta.dirname, '..');
 const OLD = 'a'.repeat(40);
 const NEW = 'b'.repeat(40);
+// The server's scripts are this repo's (COCON_HOME below).
+const serverInfra = Number(/^version=(\d+)$/m.exec(readFileSync(join(infra, 'VERSION'), 'utf8'))?.[1]);
 
 const stubs = {
   docker: `#!/usr/bin/env bash
@@ -18,7 +20,12 @@ case "$1" in
   ps) echo db-container ;;
   run) [ -n "\${STUB_FAIL_MIGRATE:-}" ] && exit 1; exit 0 ;;
   create) echo fn-container ;;
-  cp) mkdir -p "$3/shared-recipe" "$3/main" && echo new > "$3/shared-recipe/index.ts" && echo theirs > "$3/main/index.ts" ;;
+  cp)
+    case "$2" in
+      # Images from before infra/VERSION have no infra-version.
+      *infra-version) [ -n "\${STUB_IMAGE_INFRA:-}" ] || exit 1; printf 'version=%s\\n' "$STUB_IMAGE_INFRA" > "$3" ;;
+      *) mkdir -p "$3/shared-recipe" "$3/main" && echo new > "$3/shared-recipe/index.ts" && echo theirs > "$3/main/index.ts" ;;
+    esac ;;
   compose) echo "$COCON_SHA" > "$STUB_DIR/running" ;;
   exec)
     running=$(cat "$STUB_DIR/running" 2>/dev/null)
@@ -119,6 +126,26 @@ describe('cocon-deploy', () => {
     expect(stderr).toContain('going back to aaaaaaa');
     expect(readFileSync(join(dir, 'running'), 'utf8').trim()).toBe(OLD);
     expect(current()).toBe(OLD);
+  });
+
+  it('stops before migrating when the commit needs newer server scripts than the server has', () => {
+    const { status, stderr } = deploy(['staging', NEW], { STUB_IMAGE_INFRA: String(serverInfra + 1) });
+    expect(status).not.toBe(0);
+    expect(stderr).toContain(`needs server scripts v${serverInfra + 1}, the server has v${serverInfra}`);
+    expect(stderr).toContain('bootstrap-from-laptop.sh');
+    expect(calls()).not.toContain('docker run');
+    expect(calls()).not.toContain('docker compose');
+    expect(current()).toBe(OLD);
+  });
+
+  it.each([
+    ['the same server scripts', () => String(serverInfra)],
+    ['older server scripts (prod on an earlier tag)', () => String(serverInfra - 1)],
+    ['an image from before infra/VERSION', () => ''],
+  ])('deploys a commit that needs %s', (_, version) => {
+    const { status } = deploy(['staging', NEW], { STUB_IMAGE_INFRA: version() });
+    expect(status).toBe(0);
+    expect(current()).toBe(NEW);
   });
 
   it.each([
