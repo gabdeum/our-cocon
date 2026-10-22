@@ -63,3 +63,4 @@ None.
   - In Edit item, "Remove" is a red danger button apart from "Move to…" and "Store size".
   - ListRow: the right-hand Buy/Need trailing is replaced by a title detail and an end-of-row action.
 - 2026-10-22 (later): from Gabriel's review: counts always say pieces ("Lemon: 2 pieces"), and a row shows the catalog's singular name when it's the same word as typed ("2 lemons" → "Lemon"; "Meyer lemons" stays as typed). The Grocery settings sheet's card now has the inset padding settings rows need (it had none).
+- 2026-10-22 (later): the grocery field also reads amounts after the name ("Gruyere 120g", "Lemon 12"); see spec 020's Changelog.

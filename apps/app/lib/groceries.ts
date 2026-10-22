@@ -1,7 +1,7 @@
 import {
   format,
   groceryIdentity,
-  parseIngredientLine,
+  parseGroceryLine,
   parsePackSize,
   pickPacks,
   planGroceryAdd,
@@ -270,7 +270,7 @@ export async function addItem(
   list: readonly GroceryItem[],
   text: string,
 ): Promise<AddResult> {
-  const parsed = parseIngredientLine(text.slice(0, 200));
+  const parsed = parseGroceryLine(text.slice(0, 200));
   if (!parsed) return { status: 'empty' };
   const name = parsed.name.slice(0, 80).trim();
   if (!name) return { status: 'empty' };
@@ -323,7 +323,7 @@ export function editText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'u
 
 /** FR-006 Edit: the text is read again; a new name is matched again for its aisle. */
 export async function editItem(client: Pick<Client, 'from' | 'rpc'>, item: GroceryItem, text: string): Promise<'saved' | 'empty' | 'failed'> {
-  const parsed = parseIngredientLine(text.slice(0, 200));
+  const parsed = parseGroceryLine(text.slice(0, 200));
   const name = parsed?.name.slice(0, 80).trim();
   if (!parsed || !name) return 'empty';
   try {

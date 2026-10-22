@@ -24,5 +24,5 @@ export { GRAMS_PER, ML_PER, WATER_G_PER_ML, cToF, convert, fToC, kindOf, toBase,
 export { amountInput, parseAmount, readAmount } from './parse-amount';
 export { parsePackSize, pickPacks, pieceGrams, sumNeeds, type PackNeed, type PackPick, type PackPlan, type StorePack } from './packs';
 export { groceryIdentity, planGroceryAdd, type GroceryAddPlan, type GroceryAmount, type ListedGrocery } from './groceries';
-export { parseIngredientLine, parsePastedList, pieceNouns, splitPastedList, type ParsedLine } from './parse-line';
+export { parseGroceryLine, parseIngredientLine, parsePastedList, pieceNouns, splitPastedList, type ParsedLine } from './parse-line';
 export { en as parserWordsEn, type ParserWords } from './words.en';

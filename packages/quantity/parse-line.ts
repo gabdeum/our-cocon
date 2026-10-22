@@ -153,3 +153,25 @@ export function pieceNouns(name: string): { singular: string; plural: string } {
   }
   return { singular: `${head}${singular}`.slice(0, 40), plural: `${head}${plural}`.slice(0, 40) };
 }
+
+/**
+ * A grocery line (spec 020 FR-002): like a recipe line, or with the amount after the name, as
+ * lists are often written: "Gruyere 120g", "Lemon 12", "heavy cream 240 ml". The amount at the end
+ * counts only when it's the last word or two and nothing but a known unit follows the number, so
+ * "Size 4 nappies" stays a name.
+ */
+export function parseGroceryLine(line: string, words: ParserWords = en): ParsedLine | null {
+  const parsed = parseIngredientLine(line, words);
+  if (!parsed || parsed.quantity !== null) return parsed;
+  const tokens = line.trim().replace(/\.$/, '').split(/\s+/);
+  for (let i = Math.max(1, tokens.length - 2); i < tokens.length; i++) {
+    const tail = tokens.slice(i).join(' ');
+    const amount = readAmount(tail);
+    if (!amount || !(amount.value > 0)) continue;
+    const rest = tail.slice(amount.length).trim().toLowerCase().replace(/\.$/, '');
+    if (rest && !unitOf(rest, words)) continue;
+    const reordered = parseIngredientLine(`${tail} ${tokens.slice(0, i).join(' ')}`, words);
+    if (reordered && reordered.quantity !== null && reordered.name) return reordered;
+  }
+  return parsed;
+}

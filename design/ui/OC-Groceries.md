@@ -31,7 +31,7 @@ Produce · Bakery · Dairy & eggs · Meat & fish · Dry goods · Spices & baking
 | Offline | the offline StatusBanner; adding, ticking, "Edit", the row menu, "Clear done items" and "Clear all items" are off; the Grocery settings sheet opens but its choices are off |
 
 ## Interactions
-Tick: optimistic and realtime. "Edit" on a row (or long-press, swipe, right-click) → the row menu. Add merges with an existing item, with StatusBanner "Already on the list. Updated to {total}."
+Tick: optimistic and realtime. "Edit" on a row (or long-press, swipe, right-click) → the row menu. Add merges with an existing item, with StatusBanner "Already on the list. Updated to {total}." The amount can come first or last: "2 lemons", "Lemon 12", "Gruyere 120g", "heavy cream 240 ml" (a number inside a name, "Size 4 nappies", stays part of it).
 
 ## Row menu (spec 020, not drawn)
 A BottomSheet "Edit item" (close label "Close") that opens straight on the edit field: TextField "Item" with hint "An amount and a name, e.g. 2 lemons or 100 g Gruyère", starting from "{amount} {name}". Below it, one ListGroup with "Move to…" (chevron, after the current aisle's name) and "Store size" (spec 021); then, apart from them, a red danger Button "Remove" (trash icon, full width). Footer "Cancel" · "Save". The row's screen-reader actions are "Edit" (opens this sheet), "Move to…" and "Remove"; right-click or the keyboard's menu key also opens it on the web.
