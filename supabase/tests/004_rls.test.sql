@@ -145,7 +145,7 @@ select is(pg_temp.affected($$ delete from public.recipes $$), 0, 'other family: 
 select is(pg_temp.affected($$ delete from public.recipe_ingredients $$), 0, 'other family: ingredients delete 0 rows');
 select is(pg_temp.affected($$ delete from public.recipe_steps $$), 0, 'other family: steps delete 0 rows');
 select is(pg_temp.affected($$ delete from public.recipe_variants $$), 0, 'other family: variants delete 0 rows');
-select is(pg_temp.affected($$ delete from public.grocery_items $$), 0, 'other family: grocery items delete 0 rows');
+select throws_ok($$ delete from public.grocery_items $$, '42501', null, 'other family: grocery items cannot be deleted (cleared instead, spec 020)');
 select throws_ok($$ delete from public.activity $$, '42501', null, 'other family: activity cannot be deleted');
 
 -- Inserting into family A: the row lands in Sam's own family, and can't point at A's recipe.
@@ -179,7 +179,8 @@ select throws_ok($$ delete from public.activity $$, '42501', null, 'member: acti
 select is(pg_temp.affected(format('delete from public.recipe_ingredients where id = %L', pg_temp.id('ingredient'))), 1, 'member deletes an ingredient');
 select is(pg_temp.affected(format('delete from public.recipe_steps where id = %L', pg_temp.id('step'))), 1, 'member deletes a step');
 select is(pg_temp.affected(format('delete from public.recipe_variants where id = %L', pg_temp.id('variant'))), 1, 'member deletes a variant');
-select is(pg_temp.affected(format('delete from public.grocery_items where id = %L', pg_temp.id('grocery'))), 1, 'member deletes a grocery item');
+select throws_ok(format('delete from public.grocery_items where id = %L', pg_temp.id('grocery')), '42501', null,
+  'grocery items are cleared, never deleted (spec 020)');
 select is(pg_temp.affected(format('delete from public.recipes where id = %L', pg_temp.id('ai_recipe'))), 0, 'a recipe cannot be removed for good before it is deleted');
 update public.recipes set deleted_at = now() where id = pg_temp.id('ai_recipe');
 select is(pg_temp.affected(format('delete from public.recipes where id = %L', pg_temp.id('ai_recipe'))), 1, 'a deleted recipe can be removed for good (Delete now)');
@@ -195,7 +196,7 @@ select ok((select count(*) from realtime.messages where topic = 'family:' || pg_
 select is((select count(*)::int from realtime.messages where payload ->> 'table' in ('recipe_ingredients', 'recipe_variants')), 0, 'ingredients and variants travel through their recipe');
 select is((select array_agg(distinct k order by k) from realtime.messages, jsonb_object_keys(payload) k where topic = 'family:' || pg_temp.id('famA')),
   array['by', 'id', 'op', 'recipe_id', 'source', 'table'], 'messages carry ids, never content');
-select ok(exists (select 1 from realtime.messages where payload ->> 'id' = pg_temp.id('grocery')::text and payload ->> 'op' = 'delete'), 'deletes are sent too');
+select ok(exists (select 1 from realtime.messages where payload ->> 'id' = pg_temp.id('ai_recipe')::text and payload ->> 'op' = 'delete'), 'deletes are sent too');
 
 -- Who may listen: Alex to family A's channel, Sam not.
 select pg_temp.login('00000000-0000-0000-0000-00000000000b');

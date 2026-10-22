@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 import type { Tracker } from '@cocon/schemas';
 import type { FamilyApi } from '../lib/family';
 import type { Family, Member } from '../lib/session';
+import type { GroceryItem } from '../lib/groceries';
 
 export const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
 
@@ -53,4 +54,25 @@ export function last<T>(items: T[]): T {
   const item = items[items.length - 1];
   if (item === undefined) throw new Error('no match');
   return item;
+}
+
+/** A grocery list row (spec 020): 2 Lemons in Produce, added by Gabriel in the app. */
+export function groceryItem(over: Partial<GroceryItem>): GroceryItem {
+  return {
+    id: 'i1',
+    name: 'Lemons',
+    catalog_key: 'lemon',
+    quantity: 2,
+    unit: null,
+    aisle: 'produce',
+    checked: false,
+    checked_by: null,
+    checked_at: null,
+    recipe_id: null,
+    created_by: gabriel.user_id,
+    source: 'app',
+    created_at: '2026-10-21T10:00:00Z',
+    recipes: null,
+    ...over,
+  };
 }

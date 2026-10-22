@@ -139,14 +139,14 @@ isOneToOne: false
                   ]
                 },"grocery_items": {
                   Row: {
-                    "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"checked": boolean,"checked_at": string | null,"checked_by": string | null,"created_at": string,"created_by": string | null,"family_id": string,"id": string,"name": string,"quantity": number | null,"recipe_id": string | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null
+                    "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"checked": boolean,"checked_at": string | null,"checked_by": string | null,"created_at": string,"created_by": string | null,"deleted_at": string | null,"deleted_by": string | null,"family_id": string,"id": string,"name": string,"quantity": number | null,"recipe_id": string | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"name": string,"quantity"?: number | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"family_id": string,"id"?: string,"name": string,"quantity"?: number | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"name"?: string,"quantity"?: number | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"family_id"?: string,"id"?: string,"name"?: string,"quantity"?: number | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -329,14 +329,14 @@ isOneToOne: false
                   ]
                 },"share_links": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"family_id": string,"id": string,"include_tips": boolean,"include_variants": boolean,"recipe_id": string,"source": string,"stopped_at": string | null,"stopped_by": string | null,"token": string,"updated_at": string,"updated_by": string | null
+                    "created_at": string,"created_by": string | null,"family_id": string,"id": string,"include_tips": boolean,"include_variants": boolean,"recipe_id": string,"source": string,"stopped_at": string | null,"stopped_by": string | null,"stopped_source": string | null,"token": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"include_tips"?: boolean,"include_variants"?: boolean,"recipe_id": string,"source"?: string,"stopped_at"?: string | null,"stopped_by"?: string | null,"token": string,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"include_tips"?: boolean,"include_variants"?: boolean,"recipe_id": string,"source"?: string,"stopped_at"?: string | null,"stopped_by"?: string | null,"stopped_source"?: string | null,"token": string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"include_tips"?: boolean,"include_variants"?: boolean,"recipe_id"?: string,"source"?: string,"stopped_at"?: string | null,"stopped_by"?: string | null,"token"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"include_tips"?: boolean,"include_variants"?: boolean,"recipe_id"?: string,"source"?: string,"stopped_at"?: string | null,"stopped_by"?: string | null,"stopped_source"?: string | null,"token"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -456,6 +456,9 @@ isOneToOne: false
                            },
 "my_family_id":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"purge_cleared_groceries":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "purge_deleted_recipes":
 { Args: { "ids": (string)[] }; Returns: number

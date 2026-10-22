@@ -68,6 +68,11 @@ export function Photo({ uri, label, className }: { uri: string; label: string; c
   return <Image source={{ uri }} resizeMode="cover" role="img" aria-label={label} className={cn('h-full w-full', className)} />;
 }
 
+/** 40 × 40, radius 12: a recipe's photo on a grocery recipe card (OC-Groceries), peach when it has none. */
+export function Thumb({ uri, label }: { uri?: string; label: string }) {
+  return <View className="h-[40px] w-[40px] overflow-hidden rounded-[12px]">{uri ? <Photo uri={uri} label={label} /> : <PhotoPlaceholder className="h-full w-full" />}</View>;
+}
+
 export interface HeroCardProps {
   title: string;
   /** "Latest recipe". */
