@@ -82,10 +82,13 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
     // Join Alex's live channel first: on a cold CI runner that alone can take several seconds, and
     // only the tick itself is timed.
     let onTick: ((at: number) => void) | null = null;
+    // What Alex's channel received, to say why if the tick never arrives.
+    const received: string[] = [];
     await alex.realtime.setAuth();
     const live = alex.channel(familyChannel(familyId), { config: { private: true } });
     channel = live;
     live.on('broadcast', { event: 'change' }, ({ payload }) => {
+      received.push(JSON.stringify(payload));
       const change = ChangeEvent.safeParse(payload);
       if (change.success && change.data.id === gruyere.id && change.data.op === 'update') onTick?.(performance.now());
     });
@@ -98,10 +101,15 @@ describe.skipIf(!local)('the grocery list against local Supabase', () => {
 
     const heard = new Promise<number>((resolve, reject) => {
       onTick = resolve;
-      setTimeout(() => reject(new Error('Alex never heard the tick')), 5000);
+      setTimeout(async () => {
+        const row = await alex.from('grocery_items').select('checked, checked_by').eq('id', gruyere.id).maybeSingle();
+        reject(new Error(`Alex never heard the tick. Row: ${JSON.stringify(row.data)}. Received: ${received.join(' | ') || 'nothing'}`));
+      }, 5000);
     });
     const start = performance.now();
-    expect((await setChecked(mia, gruyere.id, true)).error).toBeNull();
+    const tick = await setChecked(mia, gruyere.id, true).select('id');
+    expect(tick.error).toBeNull();
+    expect(tick.data).toHaveLength(1);
     expect((await heard) - start).toBeLessThan(1000);
 
     const seen = await loadGroceryList(alex);
