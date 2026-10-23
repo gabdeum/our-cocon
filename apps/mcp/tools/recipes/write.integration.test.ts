@@ -86,7 +86,7 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
     expect(ratatouille.ingredients.map((i: Result) => i.text)).toContain('3 courgettes (600 g), sliced');
     expect(ratatouille.steps.map((s: Result) => s.text)).toEqual([
       'Fry 1 large onion (200 g) in 2 tbsp olive oil for 5 minutes.',
-      'Add 2 aubergines (900 g) and 3 courgettes (600 g), then 400 g tinned tomatoes.',
+      'Add 2 aubergines (900 g) and 3 courgettes (600 g), sliced, then 400 g tinned tomatoes.',
       'Bake at 180 °C (350 °F) for 40 minutes.',
     ]);
     expect(ratatouille.steps.map((s: Result) => s.timer_minutes)).toEqual([5, null, 40]);
@@ -124,6 +124,43 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
     it('a token for an ingredient not in the list, quoting it', async () => {
       const { error } = await call('create_recipe', { name: 'Pancakes', serves: 2, ingredients: ['200 g flour'], steps: ['Melt {ing:butter}, add the flour.'] });
       expect(error).toBe('Step 1 mentions {ing:butter}, but that isn’t one of the recipe’s ingredients. Add it to the ingredients, or write it as plain text.');
+    });
+  });
+
+  describe('one ingredient in two steps, and amounts written as text', () => {
+    const create = (ingredients: unknown[], steps: unknown[]) => call('create_recipe', { name: 'Onion tart', serves: 2, ingredients, steps });
+
+    it('two rows told apart by a bracket, each named in its step; the short name works when only one row has it', async () => {
+      const { data, error } = await create(
+        [{ name: 'Onion (filling)', quantity: 2, unit: 'piece' }, { name: 'Onion (topping)', quantity: 1, unit: 'piece', prep_note: 'thinly sliced' }, '20 g butter, softened'],
+        ['Soften {ing:Onion (filling)} in {ing:butter}.', 'Scatter {ing:onion (topping)} over the tart.'],
+      );
+      expect(error).toBeNull();
+      expect(data?.steps.map((st: Result) => st.text)).toEqual(['Soften 2 onions (240 g) in 20 g butter, softened.', 'Scatter 1 onion (120 g), thinly sliced over the tart.']);
+    });
+
+    it('a short name two rows share asks for the full one', async () => {
+      const { error } = await create([{ name: 'Onion (topping)', quantity: 1, unit: 'piece' }, { name: 'Onion (filling)', quantity: 1, unit: 'piece' }], ['Fry {ing:onion}.']);
+      expect(error).toBe('Step 1 mentions {ing:onion}, which could be {ing:Onion (topping)} or {ing:Onion (filling)}. Use the full name.');
+    });
+
+    it('each ingredient goes in one step: a later plain mention stays text, a token again is refused with how to split it', async () => {
+      const { data } = await create(['100 ml water', '1 onion'], ['Boil the water with the onion.', 'Top up with water if it dries out.']);
+      expect(data?.steps.map((st: Result) => st.text)).toEqual(['Boil 100 ml water with 1 onion (120 g).', 'Top up with water if it dries out.']);
+      const { error } = await create(['100 ml water', '1 onion'], ['Boil {ing:water}.', 'Add {ing:water} and the onion.']);
+      expect(error).toBe(
+        'Step 2 mentions Water, which step 1 already uses. Each ingredient goes in one step, with its whole amount. If it’s used twice, add one row per use with its own amount, like "Water (sauce)" and "Water (topping)", and name each in its step; otherwise write later mentions as plain text.',
+      );
+    });
+
+    it('refuses amounts that would not scale, in steps, tips and names; fixed ones are fine', async () => {
+      expect((await create(['1 onion'], ['Fry the onion. You will need about 20g of oil.'])).error).toMatch(/^Step 1 says "20g", which won’t change with the servings\./);
+      expect((await create(['1 onion'], [{ text: 'Fry the onion.', tip: 'Add 50 ml water if it sticks.' }])).error).toMatch(/^Step 1 says "50 ml"/);
+      expect((await create(['1 onion'], [{ name: 'Add 20 g butter', text: 'Fry the onion.' }])).error).toMatch(/^Step 1 says "20 g"/);
+      expect((await create([{ name: 'Onion, need 3g', quantity: 1, unit: 'piece' }], [])).error).toBe(
+        'Ingredient #1 (Onion, need 3g) has an amount in its name or prep note ("3g"), which won’t change with the servings. Put it in quantity and unit instead, and keep the name to what it is.',
+      );
+      expect((await create(['1 onion', '2 tbsp olive oil'], ['Fry the onion in the olive oil in a 2 l pan; serve with 1 tbsp per serving of yoghurt.'])).error).toBeNull();
     });
   });
 

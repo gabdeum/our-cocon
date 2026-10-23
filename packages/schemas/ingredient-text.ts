@@ -116,3 +116,26 @@ export function parseIngredientText(text: string): ParsedIngredientText {
   const prep = prepParts.length > 0 ? prepParts.join(', ').slice(0, 80).trim() : null;
   return { full, core, size_word: size, prep };
 }
+
+/**
+ * The name cooks read: no brackets and nothing after a comma ("Onion (sauce), finely chopped" →
+ * "Onion"). Brackets only tell two rows of one ingredient apart while editing; what follows a
+ * comma is how it's prepared (`ingredientNote`). The name as is when nothing would be left.
+ */
+export function ingredientName(name: string): string {
+  const short = name
+    .replace(/\([^)]*\)/g, ' ')
+    .split(/[,;]/)[0]
+    ?.replace(/\s+/g, ' ')
+    .trim();
+  return short || name.trim();
+}
+
+/** How it's prepared, shown in steps: the row's prep note, else what follows a comma in its name. */
+export function ingredientNote(name: string, prepNote?: string | null): string | null {
+  if (prepNote?.trim()) return prepNote.trim();
+  const unbracketed = name.replace(/\([^)]*\)/g, ' ');
+  const comma = unbracketed.search(/[,;]/);
+  if (comma < 0) return null;
+  return unbracketed.slice(comma + 1).replace(/\s+/g, ' ').trim() || null;
+}

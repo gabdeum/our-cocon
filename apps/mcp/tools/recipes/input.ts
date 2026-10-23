@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { matchIngredients, type MatchedFacts } from '@cocon/data';
-import { parseIngredientLine, pieceNouns, tokenizeIngredients, tokenizeTemperatures, type MentionTarget } from '@cocon/quantity';
+import { parseIngredientLine, pieceNouns, scalingAmountIn, tokenizeIngredients, tokenizeTemperatures, type MentionTarget } from '@cocon/quantity';
 import {
   IngredientInput,
   MAX_STEPS,
@@ -10,6 +10,7 @@ import {
   SizeWord,
   StepInput,
   Unit,
+  ingredientName,
   VariantChange,
   VariantKind,
   normalizeText,
@@ -30,7 +31,10 @@ export const IngredientIn = z.union([
   z.string().min(1).max(200).describe('One line as written in a recipe: "2 leeks, sliced", "200 ml double cream", "salt to taste".'),
   z.strictObject({
     id: z.uuid().optional().describe('Keep this ingredient (its id from get_recipe) when changing a recipe; leave out for a new one.'),
-    name: z.string().max(80).describe('What it is, without the amount: "Leeks", "Double cream".'),
+    name: z
+      .string()
+      .max(80)
+      .describe('What it is, without the amount: "Leeks", "Double cream". Two rows of one ingredient get a bracket each to tell them apart: "Onion (sauce)", "Onion (topping)".'),
     quantity: z.number().positive().lt(100000).optional().describe('How much, as a number (1.5, not "1½"). Leave out for "to taste".'),
     unit: z.string().max(20).optional().describe(`One of: ${UNITS}. "piece" for things you count (2 eggs). Leave out with no quantity.`),
     size: SizeWord.optional().describe('For counted things only: small, medium or large ("1 large onion").'),
@@ -64,7 +68,10 @@ export type StepIn = z.infer<typeof StepIn>;
 
 /** How steps are written, for tool descriptions (spec 023 FR-004, 032-later L16). */
 export const STEP_WRITING = [
-  'Write steps as plain text naming the ingredients ("Soften the leeks in the butter"): Our Cocon links each ingredient’s first mention and writes its amount in, so don’t repeat amounts.',
+  'Write steps as plain text naming the ingredients ("Soften the leeks in the butter"): Our Cocon links each ingredient’s first mention in the recipe and writes its whole amount in, so don’t repeat amounts.',
+  'Each ingredient goes in one step only. When one is used in several steps (onion in the sauce and on top), add one row per use, each with its own amount and a bracket to tell them apart ("Onion (sauce)", "Onion (topping)"), and name each in its step as {ing:Onion (sauce)}. Brackets only show while editing; the ingredient list and the grocery list add the rows up. Later plain mentions ("the rest of the onion") stay text.',
+  'Never write an amount that depends on the servings in step text, step names, tips, ingredient names or prep notes ("about 20 g", "need 3 g"): it would not change when the servings do. Put it in the ingredient’s quantity and unit instead. Numbers that stay the same whatever the servings are fine ("2 tbsp per serving", "a 23 cm tin", "bake for 25 minutes").',
+  'What follows a comma in an ingredient’s name, or its prep_note, is shown in the step after the amount ("2 onions, finely chopped").',
   'Write oven temperatures as you like ("180 °C", "350 °F"); they’re shown in both scales. For a thermometer reading in the text, write {temp:<°C>:food}, e.g. {temp:63:food}; or use thermometer_check.',
   'A single duration in a step ("bake for 25 minutes") becomes its timer unless you send timer_minutes.',
 ].join(' ');
@@ -98,8 +105,25 @@ function splitPrep(name: string): { name: string; prep: string | null } {
   return at > 0 ? { name: name.slice(0, at).trim(), prep: name.slice(at + 2).trim() || null } : { name: name.trim(), prep: null };
 }
 
+/** Refuses an amount written into a name or note, which wouldn't scale with the servings. */
+function checkNoAmount(where: string, name: string, ...texts: (string | null | undefined)[]) {
+  for (const text of texts) {
+    const amount = text ? scalingAmountIn(text) : null;
+    if (amount)
+      throw new ToolError(
+        `${where} (${name}) has an amount in its name or prep note ("${amount}"), which won’t change with the servings. Put it in quantity and unit instead, and keep the name to what it is.`,
+      );
+  }
+}
+
 function draftOf(input: IngredientIn, n: number, keep: ReadonlySet<string>): Draft {
   const where = `Ingredient #${n}`;
+  const draft = readDraft(input, where, keep);
+  checkNoAmount(where, draft.name, draft.name, draft.prep_note);
+  return draft;
+}
+
+function readDraft(input: IngredientIn, where: string, keep: ReadonlySet<string>): Draft {
   if (typeof input === 'string') {
     const parsed = parseIngredientLine(input);
     if (!parsed) throw new ToolError(`${where} is empty. Write it like "2 leeks" or "salt to taste".`);
@@ -175,13 +199,48 @@ export async function ingredientRows(ctx: Pick<ToolContext, 'db'>, inputs: reado
 export const mentionTargets = (rows: readonly (Pick<IngredientRow, 'id' | 'name'> & { plural?: string | null })[]): MentionTarget[] =>
   rows.map((r) => ({ id: r.id, name: r.name, plural: r.plural ?? null }));
 
-/** One step as the app saves it: names and temperatures tokenized, a timer from its text. */
-export function stepFields(input: StepIn, where: string, targets: readonly MentionTarget[]) {
+/** Why a step's ingredient tokens were refused, as the sentence to fix it. */
+function tokenError(where: string, failure: Exclude<ReturnType<typeof tokenizeIngredients>, { ok: true }>, targets: readonly MentionTarget[], usedIn: ReadonlyMap<string, number>): ToolError {
+  switch (failure.reason) {
+    case 'unknown':
+      return new ToolError(`${where} mentions ${failure.token}, but that isn’t one of the recipe’s ingredients. Add it to the ingredients, or write it as plain text.`);
+    case 'ambiguous':
+      return new ToolError(`${where} mentions ${failure.token}, which could be ${failure.names.map((n) => `{ing:${n}}`).join(' or ')}. Use the full name.`);
+    case 'repeated': {
+      const name = targets.find((t) => t.id === failure.id)?.name ?? failure.token;
+      const earlier = usedIn.get(failure.id);
+      const short = ingredientName(name);
+      return new ToolError(
+        `${where} mentions ${name}, which ${earlier ? `step ${earlier}` : 'this step'} already uses. Each ingredient goes in one step, with its whole amount. If it’s used twice, add one row per use with its own amount, like "${short} (sauce)" and "${short} (topping)", and name each in its step; otherwise write later mentions as plain text.`,
+      );
+    }
+  }
+}
+
+/** Refuses an amount written into a step (its text, title or tip), which wouldn't scale with the servings. */
+export function checkStepAmounts(where: string, body: string, ...more: (string | null | undefined)[]) {
+  for (const text of [body.replace(/\{[^{}]*\}/g, ' '), ...more.map((t) => t ?? '')]) {
+    const amount = scalingAmountIn(text);
+    if (amount)
+      throw new ToolError(
+        `${where} says "${amount}", which won’t change with the servings. Put the amount on the ingredient (add a row if it’s a separate part, like "Onion (topping)") and name the ingredient in the step instead. Amounts that stay the same whatever the servings ("2 tbsp per serving") are fine.`,
+      );
+  }
+}
+
+/**
+ * One step as the app saves it: names and temperatures tokenized, a timer from its text. `usedIn`
+ * are the ingredients earlier steps mention, by step number: each ingredient goes in one step.
+ */
+export function stepFields(input: StepIn, where: string, targets: readonly MentionTarget[], usedIn: ReadonlyMap<string, number> = new Map()) {
   const s: Partial<Exclude<StepIn, string>> & { text: string } = typeof input === 'string' ? { text: input } : input;
-  const tokens = tokenizeIngredients(s.text.trim(), targets);
-  if (!tokens.ok) throw new ToolError(`${where} mentions ${tokens.unknown}, but that isn’t one of the recipe’s ingredients. Add it to the ingredients, or write it as plain text.`);
+  const tokens = tokenizeIngredients(s.text.trim(), targets, new Set(usedIn.keys()));
+  if (!tokens.ok) throw tokenError(where, tokens, targets, usedIn);
+  checkStepAmounts(where, tokens.body, s.tip, s.name);
   const timer = s.timer_minutes !== undefined ? Math.round(s.timer_minutes * 60) : stepTimerFrom(s.text);
   return {
+    /** The ingredients it mentions, for the next steps (not saved). */
+    mentions: tokens.ids,
     name: s.name?.trim() || null,
     body: tokenizeTemperatures(tokens.body),
     timer_seconds: timer,
@@ -203,16 +262,29 @@ export function checkStep<T extends Record<string, unknown>>(fields: T, where: s
   return fields;
 }
 
-export type StepOut = ReturnType<typeof stepFields> & { id: string; photo_path?: string | null };
+/** Which step (by number) mentions each ingredient, for a change to one step: the others' mentions. */
+export function mentionsIn(steps: readonly { body: string }[], except?: number): Map<string, number> {
+  const out = new Map<string, number>();
+  steps.forEach((st, i) => {
+    if (i === except) return;
+    for (const m of st.body.matchAll(/\{ing:([^{}\s:]+)\}/g)) if (m[1] && !out.has(m[1])) out.set(m[1], i + 1);
+  });
+  return out;
+}
 
-/** The assistant's steps as rows; `keep` are ids they may keep (the recipe's own). */
+export type StepOut = Omit<ReturnType<typeof stepFields>, 'mentions'> & { id: string; photo_path?: string | null };
+
+/** The assistant's steps as rows; `keep` are ids they may keep (the recipe's own). Each ingredient goes in one step. */
 export function stepRows(inputs: readonly StepIn[], targets: readonly MentionTarget[], keep: ReadonlySet<string> = new Set()): StepOut[] {
   if (inputs.length > MAX_STEPS) throw new ToolError(`A recipe can have at most ${MAX_STEPS} steps. Combine some.`);
+  const usedIn = new Map<string, number>();
   return inputs.map((input, i) => {
     const where = `Step ${i + 1}`;
     const id = typeof input === 'object' && input.id ? input.id : randomUUID();
     if (typeof input === 'object' && input.id && !keep.has(input.id)) throw new ToolError(`${where} has an id that isn't one of this recipe's steps. Leave the id out for a new step.`);
-    return { id, ...checkStep(stepFields(input, where, targets), where, i) };
+    const { mentions, ...fields } = stepFields(input, where, targets, usedIn);
+    for (const m of mentions) usedIn.set(m, i + 1);
+    return { id, ...checkStep(fields, where, i) };
   });
 }
 
@@ -259,7 +331,11 @@ function findIngredient(ref: string, rows: readonly MentionTarget[]): MentionTar
     const name = normalizeText(r.name);
     return [name, `${name}s`, `${name}es`, name.replace(/e?s$/, ''), r.plural ? normalizeText(r.plural) : ''];
   };
-  return rows.find((r) => r.id === ref) ?? rows.find((r) => forms(r).includes(want));
+  const exact = rows.find((r) => r.id === ref) ?? rows.find((r) => forms(r).includes(want));
+  if (exact) return exact;
+  // The name cooks read ("onion" for "Onion, cooked"), when only one row has it.
+  const short = rows.filter((r) => forms({ ...r, name: ingredientName(r.name) }).includes(want));
+  return short.length === 1 ? short[0] : undefined;
 }
 
 export type VariantSaveRow = { id: string; name: string; kind: z.infer<typeof VariantKind>; changes: VariantChange[] };
@@ -317,7 +393,8 @@ export async function variantRows(
           out = { type: c.type, ingredient_id: ingredientId(c.ingredient) };
           break;
         case 'add_step': {
-          const { name, body, timer_seconds, timer_label, temp_check_c, temp_check_text, tip } = checkStep(stepFields(c.new_step, where, targets), where, 0);
+          const { mentions: _m, ...fields } = stepFields(c.new_step, where, targets);
+          const { name, body, timer_seconds, timer_label, temp_check_c, temp_check_text, tip } = checkStep(fields, where, 0);
           out = { type: c.type, step_id: stepId(c.step), place: c.place, step: { name, body, timer_seconds, timer_label, temp_check_c, temp_check_text, tip } };
           break;
         }

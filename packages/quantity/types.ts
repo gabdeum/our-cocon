@@ -28,6 +28,8 @@ export interface QuantityIngredient {
   weight_per_piece_g?: number | null;
   piece_noun_singular?: string | null;
   piece_noun_plural?: string | null;
+  /** How it's prepared ("sliced"): steps show it after the amount. */
+  prep_note?: string | null;
   facts?: IngredientFactsInput | null;
 }
 

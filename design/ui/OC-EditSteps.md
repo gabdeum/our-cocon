@@ -9,7 +9,7 @@ Source `screens/OC-EditSteps.dc.html` · Route `…/edit?section=steps` · Spec 
    - drag handle, number + "Step name" input
    - "Instructions" editor with ingredient chips (sage)
    - hint "Type @ or tap below to insert an ingredient. Its amount fills in and scales by itself."
-   - typing "@" lists matching ingredients ("Ingredient suggestions"); picking one puts its chip in
+   - typing "@" lists matching ingredients that no step mentions yet ("Ingredient suggestions"; each ingredient goes in one step); picking one puts its chip in
    - temperatures in the text, when there are any: "Is it the oven, or a thermometer reading?" with "Oven" · "Thermometer" for each (see Temperatures)
    - chips "+ {ingredient}" for ingredients not yet used in any step
    - "Preview" box showing the rendered text with bold amounts

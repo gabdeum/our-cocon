@@ -484,7 +484,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         </ListGroup>
         <View>
           <IngredientRow amount="2" name="Leeks" sub="300 g" />
-          <IngredientRow amount="250 g" name="Mushrooms, sliced" tag={{ label: 'Variant', tone: 'sage' }} />
+          <IngredientRow amount="250 g" name="Mushrooms" tag={{ label: 'Variant', tone: 'sage' }} />
         </View>
         <View>
           <IngredientRow layout="compact" amount="2" sub="300 g" name="Leeks" />

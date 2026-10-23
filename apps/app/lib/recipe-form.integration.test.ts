@@ -286,9 +286,9 @@ describe.skipIf(!local)('the recipe form against local Supabase', () => {
     if (!recipe) throw new Error('recipe');
     expect(recipe.variants.map((v) => [v.name, v.kind])).toEqual([['Vegetarian', 'version'], ['Rest longer', 'option']]);
     const view = recipeView(recipe, recipe.serves, { version: version.id, options: [option.id] });
-    expect(view.ingredients.map((i) => [i.name, i.amount, i.variant])).toEqual([['Butter', '20 g', false], ['Mushrooms, sliced', '250 g', true]]);
+    expect(view.ingredients.map((i) => [i.name, i.amount, i.variant])).toEqual([['Butter', '20 g', false], ['Mushrooms', '250 g', true]]);
     expect(view.steps.map((st) => st.parts.map((p) => (typeof p === 'string' ? p : 'amount' in p ? p.amount : p.missing)).join(''))).toEqual([
-      'Melt 20 g butter, add 250 g mushrooms and bake at 180 °C (350 °F).',
+      'Melt 20 g butter, add 250 g mushrooms, sliced and bake at 180 °C (350 °F).',
       'Rest.',
       'Chill for an hour.',
     ]);

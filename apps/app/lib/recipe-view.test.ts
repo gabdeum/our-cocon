@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { quiche, quicheIds } from '@cocon/schemas/quiche.fixture';
 import { format, scale } from '@cocon/quantity';
-import { applyVariants, noVariants, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
+import { applyVariants, ingredientNote, noVariants, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
 import { bestMonthsLabel, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, timerClock, type StepPart } from './recipe-view';
 
 const recipe = { ...quiche, facts: {} };
@@ -18,7 +18,7 @@ describe('recipeView (FR-004)', () => {
       ['200 g', 'Bacon lardons', null],
       ['3', 'Large eggs', '150 g'],
       ['300 ml', 'Heavy cream', null],
-      ['100 g', 'Gruyère, grated', null],
+      ['100 g', 'Gruyère', null],
       ['1 pinch', 'Nutmeg', null],
     ]);
   });
@@ -54,10 +54,10 @@ describe('recipeView (FR-004)', () => {
   it('US2: Vegetarian shows mushrooms, tagged as a variant; dough shows its three rows and 7 steps', () => {
     const veg = { version: quicheIds.vegetarian, options: [] };
     expect(line(veg, 6, 'Bacon lardons')).toBeUndefined();
-    expect(line(veg, 6, 'Mushrooms, sliced')).toMatchObject({ amount: '250 g', variant: true });
+    expect(line(veg, 6, 'Mushrooms')).toMatchObject({ amount: '250 g', variant: true });
     const dough = { version: null, options: [quicheIds.dough] };
     const view = recipeView(recipe, 6, dough);
-    expect(view.ingredients.slice(0, 3).map((i) => i.name)).toEqual(['Flour', 'Cold butter, cubed', 'Ice water']);
+    expect(view.ingredients.slice(0, 3).map((i) => i.name)).toEqual(['Flour', 'Cold butter', 'Ice water']);
     expect(view.stepCount).toBe(7);
     expect(recipeView(recipe, 6, noVariants).stepCount).toBe(6);
   });
@@ -84,6 +84,48 @@ describe('recipeView (FR-004)', () => {
     const start = performance.now();
     for (let s = 1; s <= 16; s++) recipeView(recipe, s, { version: quicheIds.vegetarian, options: [quicheIds.dough] });
     expect((performance.now() - start) / 16).toBeLessThan(50);
+  });
+});
+
+describe('rows of one ingredient', () => {
+  const base = quiche.ingredients[0] as (typeof quiche.ingredients)[number];
+  const onion = (id: string, name: string, quantity: number | null, unit: 'piece' | 'g' | 'ml' | 'cup' | null, position: number) => ({
+    ...base,
+    id,
+    name,
+    quantity,
+    unit,
+    position,
+    catalog_key: null,
+    size_word: null,
+    weight_per_piece_g: null,
+    piece_noun_singular: 'onion',
+    piece_noun_plural: 'onions',
+    prep_note: null,
+  });
+  const withRows = (rows: ReturnType<typeof onion>[]) => ({ ...recipe, ingredients: rows, steps: [], variants: [] });
+
+  it('are one line, by the name cooks read, with their amounts added', () => {
+    const view = recipeView(withRows([onion('a', 'Onion (sauce)', 1, 'piece', 0), onion('b', 'Butter', 20, 'g', 1), onion('c', 'Onion, sliced', 2, 'piece', 2)]), 6, noVariants);
+    expect(view.ingredients.map((i) => [i.amount, i.name, i.ids])).toEqual([
+      ['3', 'Onion', ['a', 'c']],
+      ['20 g', 'Butter', ['b']],
+    ]);
+  });
+
+  it('side by side when the amounts don’t add up', () => {
+    const view = recipeView(withRows([onion('a', 'Stock (sauce)', 100, 'g', 0), onion('b', 'Stock (glaze)', 1, 'cup', 1)]), 6, noVariants);
+    expect(view.ingredients.map((i) => [i.amount, i.name])).toEqual([['100 g + 237 ml', 'Stock']]);
+  });
+
+  it('a scale by the line goes by the total', () => {
+    const rows = withRows([onion('a', 'Onion (sauce)', 1, 'piece', 0), onion('b', 'Onion (topping)', 2, 'piece', 1), onion('c', 'Butter', 30, 'g', 2)]);
+    const view = recipeView(rows, { servings: 6, scaledBy: { ingredientId: 'a', amount: 6, unit: 'piece' } }, noVariants);
+    expect(view.ingredients.map((i) => [i.amount, i.name])).toEqual([
+      ['6', 'Onion'],
+      ['60 g', 'Butter'],
+    ]);
+    expect(view.servings).toBe(12);
   });
 });
 
@@ -159,12 +201,12 @@ describe('steps (spec 009)', () => {
     const steps = recipeView(recipe, 6, { version: quicheIds.vegetarian, options: [quicheIds.dough] }).steps;
     expect(steps.map((s) => s.number)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(steps[0]).toMatchObject({ name: 'Make the dough', variant: true, timer: { clock: '30:00' }, tip: 'Cold hands and cold butter make a flakier crust.' });
-    expect(amounts(steps[0]?.parts ?? [])).toEqual(['200 g flour', '100 g cold butter', '50 ml ice water']);
+    expect(amounts(steps[0]?.parts ?? [])).toEqual(['200 g flour', '100 g cold butter, cubed', '50 ml ice water']);
     expect(text(steps[1]?.parts ?? [])).toContain('with the rolled-out dough');
     // Spec 017 FR-004: a step a variant changes carries the tag too.
     expect(steps[1]?.variant).toBe(true);
     expect(steps[2]?.variant).toBe(false);
-    expect(amounts(steps[3]?.parts ?? [])).toContain('250 g mushrooms');
+    expect(amounts(steps[3]?.parts ?? [])).toContain('250 g mushrooms, sliced');
   });
 
   it('spec 017 SC-001: every variant combination of the seed quiche, step by step', () => {
@@ -204,9 +246,11 @@ describe('steps (spec 009)', () => {
             scale({ serves: 6, ingredients: applied.ingredients }, { servings }).ingredients.map((i) => [i.id, format(i, options)] as const),
           );
           const lines = new Map(view.ingredients.map((l) => [l.id, l]));
+          // Steps add how it's prepared after the amount: "17 g gruyère, grated".
+          const notes = new Map(applied.ingredients.map((i) => [i.id, ingredientNote(i.name, i.prep_note)]));
           applied.steps.forEach((step, n) => {
             const ids = [...step.body.matchAll(/\{ing:([^}]+)\}/g)].map((m) => m[1] as string).filter((id) => phrases.has(id));
-            expect(amounts(view.steps[n]?.parts ?? [])).toEqual(ids.map((id) => phrases.get(id)?.phrase));
+            expect(amounts(view.steps[n]?.parts ?? [])).toEqual(ids.map((id) => `${phrases.get(id)?.phrase}${notes.get(id) ? `, ${notes.get(id)}` : ''}`));
             // The list line for each of those ingredients shows the same amount the step does.
             ids.forEach((id) => expect(phrases.get(id)?.phrase.startsWith(phrases.get(id)?.amount ?? '')).toBe(true));
             ids.forEach((id) => expect(lines.get(id)?.amount.startsWith(phrases.get(id)?.amount ?? '')).toBe(true));

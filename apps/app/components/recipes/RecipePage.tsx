@@ -175,7 +175,7 @@ function LoadedRecipe({
     burst.current = { from, to, timer: setTimeout(() => sendServings(), SERVINGS_SETTLE_MS) };
     update({ ...current, servings: to, scaledBy: null });
   };
-  const scaledName = view?.scaledBy ? `${view.scaledBy.baseName.charAt(0).toLowerCase()}${view.scaledBy.baseName.slice(1)}` : null;
+  const scaledName = view?.scaledBy ? `${view.scaledBy.name.charAt(0).toLowerCase()}${view.scaledBy.name.slice(1)}` : null;
 
   const pickVariants = (next: RecipeChoices) => {
     if (!current || (next.version === current.version && next.options.length === current.options.length && next.options.every((id) => current.options.includes(id)))) return;

@@ -97,3 +97,16 @@ describe('renderTemperatureCheck (spec 009 FR-003)', () => {
     expect(renderTemperatureCheck(null, null, 'metric')).toBeNull();
   });
 });
+
+describe('names and notes in steps', () => {
+  const garlic: QuantityIngredient = { id: 'g', name: 'Garlic (sauce), crushed', quantity: 10, unit: 'g' };
+
+  it('reads the name without its bracket, and the note after the amount', () => {
+    expect(plain(renderStep(`Add ${ingredientToken('g')}.`, [garlic], options))).toBe('Add 10 g garlic, crushed.');
+  });
+
+  it('takes the row’s prep note first', () => {
+    const sliced = { ...onion, name: 'Onion (topping)', prep_note: 'thinly sliced' };
+    expect(plain(renderStep(`Scatter ${ingredientToken('onion-1')}.`, [sliced], options))).toBe('Scatter 1 small onion (70 g), thinly sliced.');
+  });
+});

@@ -162,6 +162,14 @@ describe('US1: amounts that scale by themselves', () => {
     expect(savedSteps(rpc)?.[2]?.body).toBe(`In a large pan, melt {ing:${BUTTER}} over medium heat. Add {ing:${LEEKS}}`);
   });
 
+  it('"@" leaves out ingredients a step already mentions (each goes in one step)', () => {
+    setup();
+    openStep(3, 'Cook the filling');
+    fireEvent.focus(editor());
+    type(editor(), 'In a large pan, melt Butter over medium heat. Add @bu');
+    expect(screen.queryByRole('list', { name: 'Ingredient suggestions' })).toBeNull();
+  });
+
   it('"+ Eggs" offers ingredients no step uses yet, and inserts one', () => {
     setup();
     openStep(3, 'Cook the filling');

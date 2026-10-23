@@ -1,10 +1,10 @@
-import { groceryIdentity, kindOf, planGroceryAdds, type GroceryAmount, type GroceryMerge, type IngredientFactsInput } from '@cocon/quantity';
+import { groceryIdentity, groupSameIngredient, kindOf, planGroceryAdds, sumIngredients, type GroceryAmount, type GroceryMerge, type IngredientFactsInput } from '@cocon/quantity';
 import { GroceryItemInput, GroceryItemUpdate, type Aisle, type Unit } from '@cocon/schemas';
 import { strings } from '../strings/en';
 import { clearItems, combinedText, combineRows, loadGroceryList, type GroceryItem } from './groceries';
 import type { RecipeChoices } from './recipe-choices';
 import type { RecipeDetail } from './recipe';
-import { appliedIngredients, formatOf, ingredientLine, scaleRecipe, servingsText } from './recipe-view';
+import { appliedIngredients, formatOf, ingredientLine, mergedLine, scaleRecipe, servingsText } from './recipe-view';
 import { matchIngredients } from './recipe-ingredients';
 import type { Client } from './supabase';
 
@@ -12,9 +12,9 @@ const a = strings.addGroceries;
 
 /** One of the recipe's ingredients in the sheet (OC-AddGroceries), as the recipe page shows it now. */
 export interface RecipeGroceryLine {
-  /** The recipe ingredient's id (a variant's added one has its own). */
+  /** The recipe ingredient's id (a variant's added one has its own); a line of several rows has the first one's. */
   id: string;
-  /** "Large eggs", "Gruyère": the page's name without its prep note. */
+  /** "Large eggs", "Gruyère": the name as the page's list shows it. */
   name: string;
   /** "300 ml", "2 · 300 g", "1 pinch", in the page's units; empty with no quantity ("Salt and pepper"). */
   shown: string;
@@ -34,20 +34,25 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export function recipeGroceryLines(recipe: RecipeDetail, choices: RecipeChoices): { servings: string; lines: RecipeGroceryLine[] } {
   const options = formatOf(choices);
   const scaled = scaleRecipe(recipe.serves, appliedIngredients(recipe, choices), choices);
-  const lines = scaled.ingredients.map((ing) => {
-    const line = ingredientLine(ing, options);
-    const counted = ing.unit == null || ing.unit === 'piece';
-    const quantity = ing.quantity == null ? null : counted ? Math.max(1, Math.ceil(round2(ing.quantity))) : round2(ing.quantity);
-    return {
-      id: ing.id,
-      name: line.baseName.trim().slice(0, 80),
-      // Counted items show their weight ("2 · 300 g", "3½ · 600 g" for apples saved in grams); a
-      // volume reads on its own here ("300 ml").
-      shown: ing.quantity == null ? '' : [line.amount, ing.unit && kindOf(ing.unit) === 'volume' ? null : line.sub].filter(Boolean).join(' · '),
-      catalog_key: ing.catalog_key ?? null,
-      quantity,
-      unit: quantity == null ? null : (ing.unit ?? null),
-    };
+  // Rows of one ingredient ("Onion (sauce)", "Onion (topping)") are one line, as on the page;
+  // when their amounts don't add up, each keeps its own.
+  const lines = groupSameIngredient(scaled.ingredients).flatMap((rows) => {
+    const sum = rows.length > 1 ? sumIngredients(rows) : null;
+    const items = sum ? [{ ing: { ...sum, id: rows[0]?.id ?? sum.id }, line: mergedLine(rows, options) }] : rows.map((ing) => ({ ing, line: ingredientLine(ing, options) }));
+    return items.map(({ ing, line }) => {
+      const counted = ing.unit == null || ing.unit === 'piece';
+      const quantity = ing.quantity == null ? null : counted ? Math.max(1, Math.ceil(round2(ing.quantity))) : round2(ing.quantity);
+      return {
+        id: ing.id,
+        name: line.name.trim().slice(0, 80),
+        // Counted items show their weight ("2 · 300 g", "3½ · 600 g" for apples saved in grams); a
+        // volume reads on its own here ("300 ml").
+        shown: ing.quantity == null ? '' : [line.amount, ing.unit && kindOf(ing.unit) === 'volume' ? null : line.sub].filter(Boolean).join(' · '),
+        catalog_key: ing.catalog_key ?? null,
+        quantity,
+        unit: quantity == null ? null : (ing.unit ?? null),
+      };
+    });
   });
   return { servings: servingsText(scaled.servings), lines };
 }

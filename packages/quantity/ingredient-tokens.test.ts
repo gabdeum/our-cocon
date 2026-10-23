@@ -7,9 +7,10 @@ const gruyere = { id: 'gruy', name: 'Gruyère' };
 const onion = { id: 'onion', name: 'Onion', plural: 'onions' };
 const salt = { id: 'salt', name: 'Salt' };
 const all = [leek, cream, gruyere, onion, salt];
-const body = (text: string) => {
-  const r = tokenizeIngredients(text, all);
-  return r.ok ? r.body : `unknown ${r.unknown}`;
+const body = (text: string, rows = all, used: ReadonlySet<string> = new Set()) => {
+  const r = tokenizeIngredients(text, rows, used);
+  if (r.ok) return r.body;
+  return r.reason === 'ambiguous' ? `ambiguous ${r.token}: ${r.names.join(', ')}` : `${r.reason} ${r.token}`;
 };
 
 describe('tokenizeIngredients (spec 023 FR-004)', () => {
@@ -46,6 +47,47 @@ describe('tokenizeIngredients (spec 023 FR-004)', () => {
 
   it('refuses a token for an ingredient that is not in the list, with its text', () => {
     expect(body('Add {ing:butter} and the leeks.')).toBe('unknown {ing:butter}');
+  });
+});
+
+describe('rows of one ingredient', () => {
+  const sauce = { id: 'sauce', name: 'Onion (sauce)', plural: 'onions' };
+  const topping = { id: 'topping', name: 'Onion (topping)', plural: 'onions' };
+  const cooked = { id: 'cooked', name: 'Onion, cooked', plural: 'onions' };
+
+  it('takes a token by its full name first', () => {
+    expect(body('Soften {ing:Onion (sauce)}.', [sauce, topping])).toBe('Soften {ing:sauce}.');
+    expect(body('Scatter {ing:onion (Topping)} over.', [sauce, topping])).toBe('Scatter {ing:topping} over.');
+  });
+
+  it('takes the short name when only one row has it', () => {
+    expect(body('Add {ing:onion}.', [cooked, leek])).toBe('Add {ing:cooked}.');
+    expect(body('Add the onions.', [cooked, leek])).toBe('Add {ing:cooked}.');
+  });
+
+  it('refuses a short name several rows have, naming them; plain text stays text', () => {
+    expect(body('Add {ing:onion}.', [sauce, topping])).toBe('ambiguous {ing:onion}: Onion (sauce), Onion (topping)');
+    expect(body('Add the onion.', [sauce, topping])).toBe('Add the onion.');
+  });
+
+  it('a full name matching exactly wins over a shared short name', () => {
+    expect(body('Add {ing:onion}.', [onion, sauce])).toBe('Add {ing:onion}.');
+  });
+});
+
+describe('one step per ingredient', () => {
+  it('leaves plain mentions of what an earlier step uses as text', () => {
+    expect(body('Add the leeks and the double cream.', all, new Set(['leek']))).toBe('Add the leeks and {ing:cream}.');
+  });
+
+  it('refuses a token for what an earlier step, or this one, already uses', () => {
+    expect(body('Add {ing:Leeks}.', all, new Set(['leek']))).toBe('repeated {ing:Leeks}');
+    expect(body('Add {ing:Leeks}, then {ing:leek}.')).toBe('repeated {ing:leek}');
+  });
+
+  it('says which ingredients the step mentions', () => {
+    const r = tokenizeIngredients('Add {ing:Double cream} and the leeks.', all);
+    expect(r.ok && r.ids.sort()).toEqual(['cream', 'leek']);
   });
 });
 

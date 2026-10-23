@@ -24,7 +24,9 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
 - Best months: "Best Oct – Mar" for one run (it may wrap round the new year), "Best Apr" for a single month, "Best Jan, May – Jun" for several runs.
 - Option hint: "Adds {n} ingredient(s) and {n} step(s)", then ". Removes …" and ". Changes {n} step(s)" when the option does those. A swap counts what it brings in as added.
 - The default size is never named ("2½" · "Leeks"); another size moves from the amount into the name: "2" · "Small eggs".
-- A volume shows its weight as the sub-line when the density is known: "350 ml" · "Heavy cream" · "350 g". A prep note follows the name: "Mushrooms, sliced".
+- A volume shows its weight as the sub-line when the density is known: "350 ml" · "Heavy cream" · "350 g".
+- Names read without brackets or what follows a comma: "Onion (sauce)" and "Mushrooms, sliced" read "Onion" and "Mushrooms". How it's prepared shows in the step instead ("250 g mushrooms, sliced").
+- Rows of one ingredient (same catalog item, or the same name read that way) are one line with their amounts added: "Onion (sauce)" 1 and "Onion (topping)" 2 read "3" · "Onion". When they don't add up (a weight and a volume with no density), the amounts sit side by side: "100 g + 250 ml". The line has the Variant tag when any of its rows comes from a variant, and the Ingredients tab counts lines.
 
 ## States not drawn
 | State | Copy |

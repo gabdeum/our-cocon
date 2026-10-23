@@ -399,7 +399,7 @@ const lowerFirst = (s: string) => (/^.[A-Z]/u.test(s) ? s : s.charAt(0).toLowerC
 export function amountName(row: IngredientRow, base: Pick<SummaryBase, 'facts'>): string {
   try {
     const line = ingredientLine({ ...row, fromVariant: true, facts: row.catalog_key ? (base.facts(row.catalog_key) ?? null) : null }, defaultFormat);
-    return [line.amount, row.prep_note, lowerFirst(line.baseName)].filter(Boolean).join(' ');
+    return [line.amount, row.prep_note, lowerFirst(line.fullName)].filter(Boolean).join(' ');
   } catch {
     return lowerFirst(row.name);
   }

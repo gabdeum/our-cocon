@@ -26,7 +26,7 @@ Tabs "Ingredients · 9" and "Steps · 6" switch the view; steps are spec 009.
 - **FR-001**: Header: photo 240 tall; back, share (spec 019) and settings (spec 027) buttons; title, description, meta chips: time (`total_minutes`, format from spec 006 FR-002; hidden when empty), cuisine label (hidden when Other), best months as "Best Oct – Mar" (hidden if all year), author with "via <assistant>".
 - **FR-002**: Variants of kind `version` render as choice pills (one selected); variants of kind `option` render as switches with a one-line hint of what they change ("Adds 3 ingredients and 1 step").
 - **FR-003**: The servings card shows only Servings and a "More options" (…) button; the options panel is spec 013. Units are not shown here; they come from settings (spec 027).
-- **FR-004**: The ingredient list uses `@cocon/quantity` with the active servings, variants, unit system and scale mode. The amount column is 104 px; pieces show their weight as a sub-line.
+- **FR-004**: The ingredient list uses `@cocon/quantity` with the active servings, variants, unit system and scale mode. The amount column is 104 px; pieces show their weight as a sub-line. Names read without brackets or what follows a comma, and rows of one ingredient are one line with their amounts added (OC-Recipe › Dynamic copy).
 - **FR-005**: "Add to groceries…" opens the picker (spec 022). "Start cooking" opens cooking mode (spec 012).
 - **FR-006**: Servings and variant choices are remembered per recipe per device until changed.
 
@@ -53,3 +53,4 @@ None.
 - 2026-10-19: After testing, as Gabriel asked: no size word for an ingredient's default size ("2½ leeks"), and grams under every volume whose density is known (spec 005's engine, so steps, cooking mode and groceries follow).
 - 2026-10-19: Seed: the "Make my own dough" ingredients now point at the catalog (ice water shows "50 g"). Mushrooms stay unlinked so Vegetarian keeps "250 g". Real recipes need variant ingredients matched (032-later L11).
 - 2026-10-19: Seed gains four sample recipes from Gabriel, each with variants: tuna poke bowl, apple crumble, banana bread, eggs Benedict. They were adapted to the data model: amounts typed into step text became ingredient tokens, and shared ingredients were split per use. The seed test now allows ingredients the catalog doesn't know.
+- 2026-10-23: With Gabriel: the list reads names without brackets or what follows a comma ("Onion (sauce)", "Mushrooms, sliced" → "Onion", "Mushrooms"), and rows of one ingredient are one line, amounts added (`groupSameIngredient`, `sumIngredients` in `@cocon/quantity`; side by side when they don't add up). Brackets let a recipe use one ingredient in two steps; how it's prepared now shows in the step (009). FR-004 and OC-Recipe.md updated.
