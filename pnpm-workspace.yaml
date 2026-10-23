@@ -9,3 +9,4 @@ auditConfig:
   ignoreGhsas:
     - GHSA-86w9-cpqp-85rv # node-forge, via @expo/cli code signing (iOS builds)
     - GHSA-vfj7-8cjw-p6xm # braces, via Metro's file watcher
+    - GHSA-mrhx-c7xc-m3w5 # zod 3, via @expo/cli (only fixed in zod 4, which Expo's CLI doesn't use yet; ours is 4.6.7)
