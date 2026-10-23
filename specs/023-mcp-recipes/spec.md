@@ -43,7 +43,18 @@ Tool errors return one plain sentence saying what to fix (e.g. "Unknown unit 'cu
 ## Needs your attention
 First task, before any tool is built: prove on the self-hosted staging stack that Supabase's OAuth 2.1 server with dynamic client registration is enabled and that Claude, ChatGPT and Gemini can connect through it. If it isn't available self-hosted, stop and tell me: the options are a small OAuth layer in the MCP server, or moving to Supabase Cloud.
 
+- 2026-10-22 (part A): available self-hosted (Auth v2.196) and proven on local Supabase end to end (register, approve, token, tools). Self-hosted needs Caddy to add the anon key on the OAuth routes (done). Still to prove on staging after part A merges: connect Claude, ChatGPT and Gemini to `https://mcp-staging.ourcocon.com/mcp`. Part B (write tools) waits for that.
+
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
 - 2026-10-18: FR-004 now converts written temperatures to `{temp:…}` tokens (spec 005).
 - 2026-10-19: FR-002a: search and filters shared with the app; cuisine as a key; diet gone.
+- 2026-10-22: Part A shipped (the build is split in two so assistants can be tried on staging before any tool writes):
+  - Shipped: OAuth sign-in for assistants (Supabase OAuth 2.1 server with dynamic registration), the Approve access page (`/oauth/consent`, copy in OC-Connect.md), the module-agnostic MCP core (`apps/mcp/src`, modules in `apps/mcp/tools/<module>`), and `search_recipes` and `get_recipe`. `mcp_tool_called` is sent from the server.
+  - Deviation: assistant tokens act as a limited Postgres role, `cocon_assistant`, which can only read recipes for now. Passwords can't sign anyone in, and authenticator-app MFA is off on the servers. Found by the security review: without these, a token would be a full member session.
+  - Deviation: assistants are named from their return addresses, not a fixed list of clients.
+  - Deviation: shared reads moved to the new `packages/data`.
+  - Deviation: the approval page names an assistant only when its return address proves it. Otherwise it quotes the app's own name and warns about a look-alike (OC-Connect.md › Approve access).
+  - Deviation: `search_recipes` filters accept `other` (no cuisine), so their unknown-cuisine sentence ends "or other for recipes with no cuisine". Writes keep FR-002a's "or leave it empty".
+  - For part B: calls refused before a tool runs (sign-in, rate limit, unknown tool) send no `mcp_tool_called`. Spec 024's permission refusals must go through `callTool`, so they're tracked with `ok: false`.
+  - Part B: `create_recipe`, `update_recipe`, `delete_recipe`, `list_variants`, `upsert_variant` and the activity entries (FR-005).

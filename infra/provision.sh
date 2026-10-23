@@ -372,10 +372,23 @@ for env in staging prod; do
     cat >"$tmp" <<EOF
 SUPABASE_URL=https://$(host_for api "$env")
 SUPABASE_ANON_KEY=$(cocon-secrets get "$env" ANON_KEY)
+APP_URL=https://$(host_for app "$env")
+MCP_URL=https://$(host_for mcp "$env")
 POSTHOG_KEY=$posthog
 POSTHOG_HOST=$POSTHOG_HOST
 EOF
     cocon-secrets seal "$env-app.env" "$tmp"
+  elif [ $dry = 0 ]; then
+    # Spec 023: the MCP server links to recipes and names itself to assistants.
+    tmp=$(mktemp)
+    cocon-secrets open "$env-app.env" "$tmp"
+    if ! grep -q '^MCP_URL=' "$tmp"; then
+      set_env "$tmp" APP_URL "https://$(host_for app "$env")"
+      set_env "$tmp" MCP_URL "https://$(host_for mcp "$env")"
+      cocon-secrets seal "$env-app.env" "$tmp"
+      note "app settings: added APP_URL and MCP_URL"
+    else note "app settings: already set"; fi
+    rm -f "$tmp"
   else note "app settings: already set"; fi
 
   # Spec 003: Sign in with Google and the app's sign-in redirects, asked once per environment
@@ -404,6 +417,14 @@ done
 
 # --- Front door and timers ---------------------------------------------------------------------
 step "Front door and timers"
+# Spec 023: Supabase's gateway wants an apikey on its OAuth routes, which AI assistants never send.
+# Caddy adds each environment's anon key there (a public key: the web app ships it too).
+if [ $dry = 0 ]; then
+  write /etc/cocon/edge/apikeys.env 644 <<EOF || true
+STAGING_ANON_KEY=$(cocon-secrets get staging ANON_KEY)
+PROD_ANON_KEY=$(cocon-secrets get prod ANON_KEY)
+EOF
+fi
 run systemctl enable --now cocon-edge.service
 run systemctl restart cocon-edge.service
 run systemctl enable --now cocon-backup@staging.timer cocon-backup@prod.timer cocon-purge@staging.timer cocon-purge@prod.timer cocon-healthcheck.timer

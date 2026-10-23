@@ -30,6 +30,7 @@
 | Sign-in link | `/auth/callback` (public) | page, not designed: OC-Welcome.md | 003 |
 | Set up your family | `/welcome/family` | page, not designed: OC-Welcome.md | 003 |
 | Join | `/join/[token]` (public, no tab bar) | page, not designed: OC-Welcome.md | 003 |
+| Approve access | `/oauth/consent?authorization_id=…` (public, no tab bar) | page, not designed: OC-Connect.md › Approve access | 023 |
 
 ## Main flows
 
@@ -40,9 +41,9 @@
 5. **Create.** Recipes → "New" → EditBasics → "Next: Ingredients" → EditIngredients → "Next: Steps" → EditSteps → "Next: Variants" → EditVariants → "Save recipe" → Recipe.
 6. **Edit and delete.** Recipe → (edit entry: "Edit" in recipe settings) → Edit modal at Details → … → EditVariants → "Delete this recipe" → Delete dialog → "Delete recipe" → Recipes, with a StatusBanner "Recipe deleted · Undo".
 7. **Share.** Recipe → share icon → Share → "Copy link" → friend opens `/r/[token]` → SharedView.
-8. **Connect AI.** Settings → "AI assistants" → Connect → "Connect" on an assistant → guided sheet (spec 025).
+8. **Connect AI.** Settings → "AI assistants" → Connect → "Connect" on an assistant → guided sheet (spec 025). In the assistant, adding Our Cocon opens Approve access (`/oauth/consent`; signed out, sign in first and come back) → "Allow" → back to the assistant.
 9. **Start and invite.** Sign in → (first time) Set up your family → Home. Settings → "Invite someone" → share sheet → the invitee opens `/join/[token]` → signs in → "Join {family}" → Home.
-   Signed out, every page except Sign in, the sign-in link and Join goes to Sign in.
+   Signed out, every page except Sign in, the sign-in link, Join, a shared recipe and Approve access goes to Sign in.
 
 ## Entry points not drawn on the canvas
 

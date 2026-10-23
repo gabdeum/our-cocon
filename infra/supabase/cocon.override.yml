@@ -35,6 +35,20 @@ services:
       GOTRUE_MAILER_SUBJECTS_CONFIRMATION: Your Our Cocon sign-in link
       GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${SITE_URL}/email/sign-in.html
       GOTRUE_MAILER_TEMPLATES_CONFIRMATION: ${SITE_URL}/email/sign-in.html
+      # Spec 023: AI assistants register themselves and connect as the member; the app's
+      # /oauth/consent page asks the member to approve.
+      GOTRUE_OAUTH_SERVER_ENABLED: "true"
+      GOTRUE_OAUTH_SERVER_ALLOW_DYNAMIC_REGISTRATION: "true"
+      GOTRUE_OAUTH_SERVER_AUTHORIZATION_PATH: /oauth/consent
+      # An assistant's token gets the limited cocon_assistant role, and no one signs in with a
+      # password (migration mcp_assistant_role). No authenticator-app MFA: the app doesn't use it,
+      # and a stolen token could otherwise enrol a factor and lock the member out.
+      GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED: "true"
+      GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI: pg-functions://postgres/public/access_token_hook
+      GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_ENABLED: "true"
+      GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_URI: pg-functions://postgres/public/password_attempt_hook
+      GOTRUE_MFA_TOTP_ENROLL_ENABLED: "false"
+      GOTRUE_MFA_TOTP_VERIFY_ENABLED: "false"
 
   rest:
     container_name: !reset null

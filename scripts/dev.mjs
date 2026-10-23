@@ -29,6 +29,7 @@ if (!existsSync('.env.local')) {
     EXPO_PUBLIC_SUPABASE_URL: local.API_URL,
     EXPO_PUBLIC_SUPABASE_ANON_KEY: local.ANON_KEY,
     SUPABASE_URL: local.API_URL,
+    SUPABASE_ANON_KEY: local.ANON_KEY,
   };
   const env = readFileSync('env.example', 'utf8').replace(/^([A-Z_]+)=$/gm, (line, key) =>
     fill[key] ? `${key}=${fill[key]}` : line,
