@@ -150,6 +150,8 @@ interface OpenStepProps extends StepsSectionProps {
 /** The expanded step: name, then its fields, and "Remove step". */
 function OpenStep({ draft: d, number, handle, names, ...p }: OpenStepProps) {
   const warned = p.warnings[d.key] ?? {};
+  // Each ingredient goes in one step: "@" and the chips offer only what no step mentions yet.
+  const unused = unusedIngredients(p.ingredients, p.steps);
   return (
     <StepEditCard
       number={number}
@@ -167,7 +169,8 @@ function OpenStep({ draft: d, number, handle, names, ...p }: OpenStepProps) {
         names={names}
         ingredients={p.ingredients}
         knownNames={p.knownNames}
-        unused={unusedIngredients(p.ingredients, p.steps)}
+        unused={unused}
+        mentionable={unused}
         warnings={warned}
         onChange={(patch) => p.onChange(d.key, patch)}
         photo={{ state: p.photo(d.key), onPick: () => p.onPickPhoto(d.key), onRemove: () => p.onRemovePhoto(d.key), onRetry: () => p.onRetryPhoto(d.key) }}
@@ -191,6 +194,8 @@ export interface StepFieldsEditorProps {
   knownNames: ReadonlyMap<string, string>;
   /** Ingredients no step mentions yet: the "+ Leeks" chips. */
   unused: { id: string; name: string }[];
+  /** What "@" suggests; all the ingredients when left out (a variant's step may name any of them). */
+  mentionable?: { id: string; name: string }[];
   warnings: Partial<Record<StepField, StepWarning>>;
   onChange: (patch: Partial<StepDraft>) => void;
   /** The add-ons offered, in the toggles' order; a recipe step offers all four. */
@@ -204,7 +209,7 @@ const allAddOns: readonly StepAddOn[] = ['timer', 'temp', 'tip', 'photo'];
  * A step's fields (OC-EditSteps): Instructions with chips, "@" and "+ Leeks", Preview, and its
  * add-ons. Also the editor of a variant's added or changed step (spec 017).
  */
-export function StepFieldsEditor({ draft: d, number, names, ingredients, knownNames, unused, warnings: warned, onChange: change, addOns = allAddOns, photo: photoProps }: StepFieldsEditorProps) {
+export function StepFieldsEditor({ draft: d, number, names, ingredients, knownNames, unused, mentionable, warnings: warned, onChange: change, addOns = allAddOns, photo: photoProps }: StepFieldsEditorProps) {
   const segments = segmentsOf(d.body, names);
   const shown = shownText(segments);
   // Where the caret is (what an edit or an insert works from), and where to put it after one.
@@ -224,7 +229,7 @@ export function StepFieldsEditor({ draft: d, number, names, ingredients, knownNa
   };
 
   const mention = focused && selection.start === selection.end ? mentionAt(shown, selection.end) : null;
-  const matches = mention ? matchMentions(mention.query, ingredients) : [];
+  const matches = mention ? matchMentions(mention.query, mentionable ?? ingredients) : [];
   const temps = temperaturesIn(d.body);
   const missing = missingIn(d.body, new Set(names.keys())).length > 0;
   let preview: ReturnType<typeof stepParts>;

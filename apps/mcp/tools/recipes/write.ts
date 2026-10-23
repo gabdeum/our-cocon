@@ -6,8 +6,10 @@ import { defineTool, ToolError, type ToolContext } from '../../src/tools.js';
 import { familyRecipe, readRecipe } from './get.js';
 import {
   checkStep,
+  checkStepAmounts,
   IngredientIn,
   ingredientRows,
+  mentionsIn,
   mentionTargets,
   STEP_WRITING,
   StepIn,
@@ -194,14 +196,21 @@ export const updateRecipe = defineTool({
         if (!row) throw new ToolError(`This recipe has ${rows.length} steps, so there’s no step ${change.step}.`);
         const where = `Step ${change.step}`;
         if (change.text !== undefined) {
-          const { body } = stepFields({ text: change.text, ...(row.timer_seconds ? { timer_minutes: row.timer_seconds / 60 } : {}) }, where, targets);
+          // Each ingredient goes in one step: what the other steps mention stays theirs.
+          const { body } = stepFields({ text: change.text, ...(row.timer_seconds ? { timer_minutes: row.timer_seconds / 60 } : {}) }, where, targets, mentionsIn(rows, at));
           row.body = body;
         }
-        if (change.name !== undefined) row.name = change.name?.trim() || null;
+        if (change.name !== undefined) {
+          checkStepAmounts(where, '', change.name);
+          row.name = change.name?.trim() || null;
+        }
         if (change.timer_minutes !== undefined) row.timer_seconds = change.timer_minutes === null ? null : Math.round(change.timer_minutes * 60);
         if (change.timer_label !== undefined) row.timer_label = change.timer_label?.trim() || null;
         if (!row.timer_seconds) row.timer_label = null;
-        if (change.tip !== undefined) row.tip = change.tip?.trim() || null;
+        if (change.tip !== undefined) {
+          checkStepAmounts(where, '', change.tip);
+          row.tip = change.tip?.trim() || null;
+        }
         if (change.thermometer_check !== undefined) {
           row.temp_check_c = change.thermometer_check?.celsius ?? null;
           row.temp_check_text = change.thermometer_check?.text?.trim() || null;

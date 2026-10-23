@@ -1,3 +1,4 @@
+import { ingredientName } from '@cocon/schemas/ingredient-text';
 import type { SizeWord } from '@cocon/schemas/recipes';
 import { QuantityError, assertAmount } from './errors';
 import { decimalText, fractionText, toStep } from './round';
@@ -156,8 +157,9 @@ export function pieceWeight(ing: QuantityIngredient): number | null {
   return ing.weight_per_piece_g ?? catalog ?? null;
 }
 
-/** FR-002: how an ingredient reads in the list and in steps. */
-export function format(ing: QuantityIngredient, options: FormatOptions): FormattedIngredient {
+/** FR-002: how an ingredient reads in the list and in steps, by the name cooks read (`ingredientName`). */
+export function format(row: QuantityIngredient, options: FormatOptions): FormattedIngredient {
+  const ing = { ...row, name: ingredientName(row.name) };
   const q = ing.quantity;
   if (q == null && ing.unit != null) throw new QuantityError('invalid_quantity', `"${ing.name}" has a unit but no amount`);
   if (q == null || q === 0) return { amount: '', unit: '', sub: null, phrase: ing.name };

@@ -76,7 +76,7 @@ describe('scalePreview (US2)', () => {
   it('Apply: the page then uses factor 1.25 and shows 7½ servings', () => {
     const view = recipeView(recipe, { servings: 6, scaledBy: lardons }, noVariants);
     expect(view.servings).toBe(7.5);
-    expect(view.scaledBy?.baseName).toBe('Bacon lardons');
+    expect(view.scaledBy?.name).toBe('Bacon lardons');
     expect(view.ingredients.find((i) => i.name === 'Bacon lardons')?.amount).toBe('250 g');
     expect(view.ingredients.find((i) => i.name === 'Eggs')?.amount).toBe('4');
   });

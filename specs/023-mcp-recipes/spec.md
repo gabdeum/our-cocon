@@ -71,3 +71,8 @@ First task, before any tool is built: prove on the self-hosted staging stack tha
   - Deviation: delete is the app's soft delete. Assistants can't remove a recipe for good, and can't set photos.
   - Deviation: the unknown-unit sentence lists every unit. An amount with no unit asks for one instead of guessing.
   - Tracking: `recipe_deleted` is also sent from the MCP server, with the assistant as `source`.
+- 2026-10-23: With Gabriel, after watching assistants write recipes:
+  - FR-004: a token or name matches the ingredient's full name first, then its short name ("onion" for "Onion, cooked") when only one row has it; a short name two rows share is refused with both full names.
+  - Each ingredient goes in one step: plain text links only its first mention in the recipe, and a token for one an earlier step uses is refused, saying how to split it into rows ("Water (sauce)", "Water (topping)"). Same for `step_changes`; variants' steps aren't checked.
+  - Amounts that would not scale are refused in step text, titles, tips, ingredient names and prep notes ("about 20 g", "need 3 g"); ones that hold whatever the servings are fine ("2 tbsp per serving", "a 2 l pan"). `scalingAmountIn` in `@cocon/quantity`.
+  - The step instructions in the tool descriptions say all of this, plus brackets and comma notes.

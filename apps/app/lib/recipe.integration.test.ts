@@ -114,7 +114,8 @@ describe.skipIf(!local)('the recipe page against local Supabase', () => {
     expect(recipe.deleted_at).toBeNull();
 
     const view = recipeView(recipe, 6, { version: veg, options: [extra] });
-    expect(view.ingredients.map((i) => i.name)).toEqual(['Leeks', 'Leeks']);
+    // The swapped-in leeks and the recipe's own are one line (same ingredient).
+    expect(view.ingredients.map((i) => i.name)).toEqual(['Leeks']);
     expect(view.stepCount).toBe(3);
   });
 

@@ -1,10 +1,10 @@
-import { kindOf, pieceWeight, QuantityError, scale, type FormatOptions } from '@cocon/quantity';
+import { groupSameIngredient, kindOf, pieceWeight, QuantityError, scale, sumIngredients, type FormatOptions } from '@cocon/quantity';
 import type { VariantChoice } from '@cocon/schemas';
 import type { Unit } from '@cocon/schemas/recipes';
 import { strings } from '../strings/en';
 import type { RecipeDetail } from './recipe';
 import type { RecipeChoices, ScaledBy } from './recipe-choices';
-import { appliedIngredients, ingredientLine, scaleRecipe, servingsText } from './recipe-view';
+import { appliedIngredients, mergedLine, rowScale, scaleRecipe, servingsText } from './recipe-view';
 
 const s = strings.scaleSheet;
 
@@ -32,17 +32,20 @@ export interface ScaleCandidate {
 type Recipe = Pick<RecipeDetail, 'serves' | 'ingredients' | 'steps' | 'variants' | 'facts'>;
 
 /**
- * The ingredients you can scale by (FR-003), in recipe order: those with an amount, never a pinch.
- * Pieces take a count, or a weight when one piece's weight is known.
+ * The ingredients you can scale by (FR-003), as the list shows them: those with an amount, never a
+ * pinch. Pieces take a count, or a weight when one piece's weight is known. A line of several rows
+ * scales by their total, so it's offered only when they add up.
  */
 export function scaleCandidates(recipe: Recipe, choices: RecipeChoices, options: FormatOptions): ScaleCandidate[] {
   const scaled = scaleRecipe(recipe.serves, appliedIngredients(recipe, choices), choices).ingredients;
-  return scaled.flatMap((ing) => {
-    const own = ing.unit ?? 'piece';
-    if (!ing.quantity || kindOf(own) === 'pinch') return [];
+  return groupSameIngredient(scaled).flatMap((rows) => {
+    const [ing] = rows;
+    const own = ing?.unit ?? 'piece';
+    if (!ing?.quantity || kindOf(own) === 'pinch') return [];
+    if (rows.length > 1 && !(sumIngredients(rows) && rowScale({ ingredientId: ing.id, amount: 1, unit: own }, rows))) return [];
     const units = kindOf(own) === 'weight' ? WEIGHTS : kindOf(own) === 'volume' ? VOLUMES : pieceWeight(ing) ? ['piece' as const, ...WEIGHTS] : ['piece' as const];
-    const line = ingredientLine(ing, options);
-    return [{ id: ing.id, name: line.baseName, current: line.sub ? `${line.amount} (${line.sub})` : line.amount, units, unit: own }];
+    const line = mergedLine(rows, options);
+    return [{ id: ing.id, name: line.name, current: line.sub ? `${line.amount} (${line.sub})` : line.amount, units, unit: own }];
   });
 }
 
@@ -68,19 +71,21 @@ const list = (names: string[]) => (names.length < 2 ? names.join('') : `${names.
 export function scalePreview(recipe: Recipe, choice: VariantChoice, by: ScaledBy, options: FormatOptions): ScalePreview | null {
   if (!(by.amount > 0)) return null;
   const ingredients = appliedIngredients(recipe, choice);
+  const row = rowScale(by, ingredients);
+  if (!row) return null;
   let scaled;
   try {
-    scaled = scale({ serves: recipe.serves, ingredients }, by);
+    scaled = scale({ serves: recipe.serves, ingredients }, row);
   } catch (e) {
     if (e instanceof QuantityError) return null;
     throw e;
   }
-  const others = scaled.ingredients.filter((i) => i.id !== by.ingredientId && i.quantity && kindOf(i.unit ?? 'piece') !== 'pinch');
-  const amounts = others.slice(0, PREVIEW_AMOUNTS).map((i) => {
-    const line = ingredientLine(i, options);
-    return `${line.baseName} ${line.amount}${line.sub ? ` (${line.sub})` : ''}`;
+  const others = groupSameIngredient(scaled.ingredients).filter((g) => g[0]?.id !== by.ingredientId && g.some((i) => i.quantity && kindOf(i.unit ?? 'piece') !== 'pinch'));
+  const amounts = others.slice(0, PREVIEW_AMOUNTS).map((g) => {
+    const line = mergedLine(g, options);
+    return `${line.name} ${line.amount}${line.sub ? ` (${line.sub})` : ''}`;
   });
-  const whole = others.filter((i) => i.facts?.whole_only).map((i) => ingredientLine(i, options).baseName);
+  const whole = others.filter((g) => g[0]?.facts?.whole_only).map((g) => mergedLine(g, options).name);
   const factor = String(Number(scaled.factor.toFixed(2)));
   return {
     factor,

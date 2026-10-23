@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { foldText, normaliseName, parseIngredientText, singularWord } from './ingredient-text';
+import { foldText, ingredientName, ingredientNote, normaliseName, parseIngredientText, singularWord } from './ingredient-text';
 
 describe('foldText', () => {
   it('lower-cases and drops accents and punctuation', () => {
@@ -70,5 +70,25 @@ describe('parseIngredientText', () => {
     expect(parseIngredientText('chopped and toasted walnuts').core).toBe('walnut');
     const long = parseIngredientText(`onion, ${'very '.repeat(30)}finely chopped`);
     expect(long.prep?.length).toBeLessThanOrEqual(80);
+  });
+});
+
+describe('ingredientName and ingredientNote', () => {
+  it.each([
+    ['Onion', 'Onion', null],
+    ['Onion (sauce)', 'Onion', null],
+    ['Onion, finely chopped', 'Onion', 'finely chopped'],
+    ['Onion (topping), sliced', 'Onion', 'sliced'],
+    ['Red onion (sauce); diced', 'Red onion', 'diced'],
+    ['  Onion   (sauce)  ', 'Onion', null],
+    ['(sauce)', '(sauce)', null],
+  ])('%s → %s · %s', (name, shown, note) => {
+    expect(ingredientName(name)).toBe(shown);
+    expect(ingredientNote(name)).toBe(note);
+  });
+
+  it('prefers the row’s own prep note', () => {
+    expect(ingredientNote('Onion, diced', 'sliced')).toBe('sliced');
+    expect(ingredientNote('Onion', '  ')).toBeNull();
   });
 });

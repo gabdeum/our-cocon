@@ -148,13 +148,13 @@ describe('US1: cook for more people', () => {
 });
 
 describe('US2: pick a version', () => {
-  it('Vegetarian replaces "Bacon lardons 200 g" with "Mushrooms, sliced 250 g" and a Variant tag', async () => {
+  it('Vegetarian replaces "Bacon lardons 200 g" with "Mushrooms 250 g" and a Variant tag', async () => {
     const { tracker } = await setup();
     expect(row('Bacon lardons')?.textContent).toContain('200 g');
     expect(screen.getByRole('button', { name: 'Classic' }).getAttribute('aria-pressed')).toBe('true');
     tap('Vegetarian');
     expect(row('Bacon lardons')).toBeUndefined();
-    const mushrooms = row('Mushrooms, sliced');
+    const mushrooms = row('Mushrooms');
     expect(mushrooms?.textContent).toContain('250 g');
     expect(within(mushrooms as HTMLElement).getByText('Variant')).toBeTruthy();
     expect(tracker.track).toHaveBeenCalledWith('variant_selected', { variant_count: 1 });
@@ -168,7 +168,7 @@ describe('US2: pick a version', () => {
     expect(screen.getByRole('tab', { name: 'Steps · 6' })).toBeTruthy();
     fireEvent.click(screen.getByRole('switch', { name: 'Make my own dough' }));
     expect(row('Shortcrust pastry')).toBeUndefined();
-    for (const name of ['Flour', 'Cold butter, cubed', 'Ice water']) expect(row(name)).toBeTruthy();
+    for (const name of ['Flour', 'Cold butter', 'Ice water']) expect(row(name)).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Steps · 7' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Ingredients · 10' })).toBeTruthy();
   });
@@ -177,7 +177,7 @@ describe('US2: pick a version', () => {
     await setup();
     tap('Vegetarian');
     fireEvent.click(screen.getByRole('switch', { name: 'Make my own dough' }));
-    expect(row('Mushrooms, sliced')).toBeTruthy();
+    expect(row('Mushrooms')).toBeTruthy();
     expect(row('Flour')).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Ingredients · 10' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Steps · 7' })).toBeTruthy();
@@ -224,7 +224,7 @@ describe('FR-006: choices are remembered on this device', () => {
     cleanup();
     await setup({ storage });
     expect(screen.getByText('7')).toBeTruthy();
-    expect(row('Mushrooms, sliced')).toBeTruthy();
+    expect(row('Mushrooms')).toBeTruthy();
     expect(storage.data.get(`cocon.recipe.${gabriel.user_id}.${detail.id}`)).toBe(
       JSON.stringify({ servings: 7, version: quicheIds.vegetarian, options: [], system: null, kitchenScale: null, scaledBy: null }),
     );
@@ -303,11 +303,11 @@ describe('More options (spec 013)', () => {
   it('US1: no scale shows cups and spoons, pieces drop their weight, and the hint changes', async () => {
     const storage = memoryStorage();
     const { tracker } = await setup({ recipe: withDensity, storage });
-    expect(row('Gruyère, grated')?.textContent).toContain('100 g');
+    expect(row('Gruyère')?.textContent).toContain('100 g');
     expect(row('Leeks')?.textContent).toContain('300 g');
     tap('More options');
     fireEvent.click(screen.getByRole('switch', { name: "I'm using a kitchen scale" }));
-    expect(row('Gruyère, grated')?.textContent).toContain('about ¾ cup');
+    expect(row('Gruyère')?.textContent).toContain('about ¾ cup');
     expect(row('Leeks')?.textContent).not.toContain('300 g');
     expect(screen.getByText('Showing cups and spoons, like about ¾ cup')).toBeTruthy();
     expect(tracker.track).toHaveBeenCalledWith('kitchen_scale_toggled', { on: false });

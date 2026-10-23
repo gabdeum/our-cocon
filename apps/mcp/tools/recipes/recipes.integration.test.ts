@@ -125,7 +125,7 @@ describe.skipIf(!local)('recipe tools against local Supabase', () => {
     const { data } = await call('get_recipe', { id: ids.quick, servings: 8 });
     expect(data?.servings).toBe(8);
     expect(data?.ingredients.map((i: { text: string }) => i.text)).toEqual(['4 leeks, sliced', '400 ml double cream']);
-    expect(data?.steps[0]).toMatchObject({ number: 1, text: 'Soften 4 leeks, add 400 ml double cream and bake at 180 °C (350 °F).', timer_minutes: 10 });
+    expect(data?.steps[0]).toMatchObject({ number: 1, text: 'Soften 4 leeks, sliced, add 400 ml double cream and bake at 180 °C (350 °F).', timer_minutes: 10 });
   });
 
   it('SC-002: another family’s recipe is never found or listed', async () => {

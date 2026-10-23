@@ -1,3 +1,4 @@
+import { ingredientNote } from '@cocon/schemas/ingredient-text';
 import { format } from './format';
 import { formatTemperature, type TemperatureOptions } from './temperature';
 import type { FormatOptions, QuantityIngredient } from './types';
@@ -45,7 +46,13 @@ export function renderStep(body: string, ingredients: QuantityIngredient[], opti
       continue;
     }
     const ing = byId.get(value);
-    segments.push(ing ? { type: 'amount', text: format(ing, options).phrase, ingredientId: value } : { type: 'missing', ingredientId: value });
+    if (!ing) {
+      segments.push({ type: 'missing', ingredientId: value });
+      continue;
+    }
+    // How it's prepared follows the amount: "2 onions, finely chopped".
+    const note = ingredientNote(ing.name, ing.prep_note);
+    segments.push({ type: 'amount', text: `${format(ing, options).phrase}${note ? `, ${note}` : ''}`, ingredientId: value });
   }
   addText(body.slice(last));
   return segments;

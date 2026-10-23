@@ -1,5 +1,19 @@
-import { applyVariants, cuisineOf, variantEffect, type Applied, type IngredientRow, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
-import { format, fractionText, QuantityError, renderStep, renderTemperatureCheck, scale, toStep, type FormatOptions, type QuantityIngredient, type Scaled } from '@cocon/quantity';
+import { applyVariants, cuisineOf, ingredientName, variantEffect, type Applied, type IngredientRow, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
+import {
+  firstRowShare,
+  format,
+  fractionText,
+  groupSameIngredient,
+  QuantityError,
+  renderStep,
+  renderTemperatureCheck,
+  scale,
+  sumIngredients,
+  toStep,
+  type FormatOptions,
+  type QuantityIngredient,
+  type Scaled,
+} from '@cocon/quantity';
 import { strings } from '../strings/en';
 import type { Member } from './session';
 import type { RecipeDetail } from './recipe';
@@ -28,13 +42,16 @@ export const SERVINGS_MIN = 1;
 export const servingsMax = (serves: number) => Math.max(16, serves);
 
 export interface IngredientLine {
+  /** Its first row's id. */
   id: string;
-  /** The 104 px amount column: "300 ml", "3", "1 pinch". */
+  /** Every row the line stands for: one, or several of the same ingredient ("Onion (sauce)", "Onion (topping)"). */
+  ids: string[];
+  /** The 104 px amount column: "300 ml", "3", "1 pinch"; "250 g + 2 tbsp" when rows don't add up. */
   amount: string;
-  /** "Mushrooms, sliced", "Large eggs". */
+  /** The name cooks read, without brackets or what follows a comma: "Mushrooms", "Large eggs". */
   name: string;
-  /** The name without its prep note: "Mushrooms", "Large eggs". */
-  baseName: string;
+  /** The row's full name, as the form shows it: "Large eggs (glaze)". */
+  fullName: string;
   /** Pieces' weight: "300 g". */
   sub: string | null;
   variant: boolean;
@@ -43,16 +60,51 @@ export interface IngredientLine {
 const upperFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const sizeWords = new Set(['small', 'medium', 'large']);
 
+type LineIngredient = Applied<IngredientRow> & QuantityIngredient;
+
 /**
  * How one ingredient reads in the list (FR-004), from the quantity engine. A size word ("large")
- * moves from the amount to the name ("3" · "Large eggs"), and the prep note follows the name.
+ * moves from the amount to the name ("3" · "Large eggs"). Brackets and how it's prepared stay out
+ * of the list; steps say how it's prepared.
  */
-export function ingredientLine(ing: Applied<IngredientRow> & QuantityIngredient, options: FormatOptions): IngredientLine {
+export function ingredientLine(ing: LineIngredient, options: FormatOptions): IngredientLine {
   const f = format(ing, options);
   const size = sizeWords.has(f.unit) ? f.unit : null;
   const amount = size ? f.amount : [f.amount, f.unit].filter(Boolean).join(' ');
-  const base = size ? `${upperFirst(size)} ${ing.name.charAt(0).toLowerCase()}${ing.name.slice(1)}` : ing.name;
-  return { id: ing.id, amount, name: ing.prep_note ? `${base}, ${ing.prep_note}` : base, baseName: base, sub: f.sub, variant: ing.fromVariant };
+  const sized = (name: string) => (size ? `${upperFirst(size)} ${name.charAt(0).toLowerCase()}${name.slice(1)}` : name);
+  return { id: ing.id, ids: [ing.id], amount, name: sized(ingredientName(ing.name)), fullName: sized(ing.name), sub: f.sub, variant: ing.fromVariant };
+}
+
+/**
+ * Rows of one ingredient (`groupSameIngredient`) as one line: their amounts added up, or side by
+ * side ("250 g + 2 tbsp") when they don't add up. A Variant tag when any row is a variant's.
+ */
+export function mergedLine(rows: LineIngredient[], options: FormatOptions): IngredientLine {
+  const [first] = rows;
+  if (!first) throw new Error('mergedLine needs a row');
+  if (rows.length === 1) return ingredientLine(first, options);
+  const ids = rows.map((r) => r.id);
+  const variant = rows.some((r) => r.fromVariant);
+  const sum = sumIngredients(rows);
+  if (sum) return { ...ingredientLine(sum, options), id: first.id, ids, name: ingredientLine(first, options).name, variant };
+  const lines = rows.map((r) => ingredientLine(r, options));
+  return { ...ingredientLine(first, options), ids, amount: lines.map((l) => l.amount).filter(Boolean).join(' + '), sub: null, variant };
+}
+
+/** The list (FR-004): one line per ingredient, where its first row is. */
+export const ingredientLines = (rows: LineIngredient[], options: FormatOptions) => groupSameIngredient(rows).map((g) => mergedLine(g, options));
+
+/**
+ * A scale by an ingredient as the engine takes it (spec 013). A line of several rows scales by
+ * their total: its first row takes its share of the amount. Null when the line isn't in the recipe
+ * (any more) or its amounts don't add up.
+ */
+export function rowScale<I extends QuantityIngredient & { catalog_key?: string | null }>(by: ScaledBy, ingredients: I[]): ScaledBy | null {
+  const group = groupSameIngredient(ingredients).find((g) => g[0]?.id === by.ingredientId);
+  if (!group) return null;
+  if (group.length === 1) return by;
+  const share = firstRowShare(group);
+  return share ? { ...by, amount: by.amount * share } : null;
 }
 
 /** Step text for StepCard: plain text, a highlighted amount, or the name of an ingredient that's gone. */
@@ -91,11 +143,12 @@ export type PageScale = Pick<RecipeChoices, 'servings' | 'scaledBy'>;
  * Scales by the ingredient when it's still in the recipe and its unit still fits (a variant or an
  * edit may have changed it); otherwise by the stepper's servings.
  */
-export function scaleRecipe<I extends QuantityIngredient>(serves: number, ingredients: I[], page: PageScale): Scaled<I> & { by: ScaledBy | null } {
+export function scaleRecipe<I extends QuantityIngredient & { catalog_key?: string | null }>(serves: number, ingredients: I[], page: PageScale): Scaled<I> & { by: ScaledBy | null } {
   const { scaledBy } = page;
-  if (scaledBy && ingredients.some((i) => i.id === scaledBy.ingredientId)) {
+  const by = scaledBy && rowScale(scaledBy, ingredients);
+  if (scaledBy && by) {
     try {
-      return { ...scale({ serves, ingredients }, scaledBy), by: scaledBy };
+      return { ...scale({ serves, ingredients }, by), by: scaledBy };
     } catch (e) {
       if (!(e instanceof QuantityError)) throw e;
     }
@@ -150,7 +203,7 @@ export function recipeView(
     tip: step.tip ?? null,
     photoPath: step.photo_path ?? null,
   }));
-  const ingredients = scaled.ingredients.map((i) => ingredientLine(i, options));
+  const ingredients = ingredientLines(scaled.ingredients, options);
   const scaledBy = scaled.by ? (ingredients.find((i) => i.id === scaled.by?.ingredientId) ?? null) : null;
   return { ingredients, steps, stepCount: steps.length, servings: scaled.servings, scaledBy };
 }
