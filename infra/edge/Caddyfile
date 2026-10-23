@@ -29,9 +29,17 @@
 # Supabase's public API only. Studio, /pg/ (database admin) and Supabase's own /mcp stay private.
 # Of the Edge Functions, only the share endpoint is public (spec 019).
 # (Plain respond/reverse_proxy, not handle blocks: Caddy runs handle before the abort above.)
+# Spec 023: AI assistants sign in through Supabase's OAuth server. They send no apikey, which the
+# gateway wants on /auth/v1/*, so the OAuth and discovery routes get this environment's anon key
+# (args[1], public anyway). Assistants look the server up at the standard address for an issuer
+# with a path (RFC 8414: /.well-known/oauth-authorization-server/auth/v1); Supabase answers it
+# without the suffix.
 (api) {
 	@private not path /auth/v1/* /rest/v1/* /realtime/v1/* /storage/v1/* /graphql/v1 /graphql/v1/* /.well-known/oauth-authorization-server* /functions/v1/shared-recipe
 	respond @private 404
+	@oauth path /auth/v1/oauth/* /auth/v1/.well-known/*
+	request_header @oauth apikey {args[1]}
+	rewrite /.well-known/oauth-authorization-server/auth/v1 /.well-known/oauth-authorization-server
 	reverse_proxy {args[0]}-api:8000
 }
 
@@ -42,12 +50,16 @@ app.{$COCON_DOMAIN} {
 
 mcp.{$COCON_DOMAIN} {
 	import site
-	reverse_proxy prod-mcp:8787
+	# The MCP server limits requests per address: give it the real one (Cloudflare's CF-Connecting-IP,
+	# see client_ip_headers), never what the caller wrote in X-Forwarded-For.
+	reverse_proxy prod-mcp:8787 {
+		header_up X-Forwarded-For {client_ip}
+	}
 }
 
 api.{$COCON_DOMAIN} {
 	import site
-	import api prod
+	import api prod {$PROD_ANON_KEY}
 }
 
 # Behind Cloudflare Access (email PIN), then Supabase's dashboard password.
@@ -63,12 +75,16 @@ app-staging.{$COCON_DOMAIN} {
 
 mcp-staging.{$COCON_DOMAIN} {
 	import site
-	reverse_proxy staging-mcp:8787
+	# The MCP server limits requests per address: give it the real one (Cloudflare's CF-Connecting-IP,
+	# see client_ip_headers), never what the caller wrote in X-Forwarded-For.
+	reverse_proxy staging-mcp:8787 {
+		header_up X-Forwarded-For {client_ip}
+	}
 }
 
 api-staging.{$COCON_DOMAIN} {
 	import site
-	import api staging
+	import api staging {$STAGING_ANON_KEY}
 }
 
 studio-staging.{$COCON_DOMAIN} {

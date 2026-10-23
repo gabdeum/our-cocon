@@ -395,7 +395,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "_family_table":
+            "_assistant_for_redirects":
+{ Args: { "uris": string }; Returns: string
+                           },
+"_family_table":
 { Args: { "live": boolean,"t": unknown }; Returns: undefined
                            },
 "_ingredient_facts":
@@ -451,6 +454,12 @@ isOneToOne: false
 "accept_invite":
 { Args: { "display_name": string,"replace_own_family"?: boolean,"token": string }; Returns: number
                            },
+"access_token_hook":
+{ Args: { "event": Json }; Returns: Json
+                           },
+"assistant_for_redirect":
+{ Args: { "uri": string }; Returns: string
+                           },
 "create_family":
 { Args: { "display_name": string,"family_name": string }; Returns: string
                            },
@@ -477,6 +486,9 @@ isOneToOne: false
 "my_family_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"password_attempt_hook":
+{ Args: { "event": Json }; Returns: Json
+                           },
 "purge_cleared_groceries":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -490,6 +502,9 @@ isOneToOne: false
                            },
 "remove_member":
 { Args: { "member_id": string }; Returns: undefined
+                           },
+"request_source":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "save_recipe_ingredients":
 { Args: { "p_ingredients": Json,"p_recipe_id": string }; Returns: undefined

@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit --pretty false"
   },
   "dependencies": {
+    "@cocon/data": "workspace:*",
     "@cocon/quantity": "workspace:*",
     "@cocon/schemas": "workspace:*",
     "@cocon/ui": "workspace:*",

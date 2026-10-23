@@ -11,7 +11,7 @@ services:
     ports:
       - 80:80
       - 443:443
-    env_file: /etc/cocon/edge/cloudflare.env
+    env_file: [/etc/cocon/edge/cloudflare.env, /etc/cocon/edge/apikeys.env]
     environment:
       COCON_DOMAIN: ${COCON_DOMAIN:?}
     volumes:

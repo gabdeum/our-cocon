@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FilterKey } from './recipe-filters';
+import { WriteSource } from './sources';
 
 // The converter's units (spec 013, `@cocon/quantity` CONVERTER_UNITS), and its result tiles' units.
 const converterUnits = ['g', 'kg', 'oz', 'lb', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'fl_oz', 'c', 'f', 'gas_mark'] as const;
@@ -118,6 +119,9 @@ export const events = {
   // Spec 022: "Add to groceries…" on a recipe, with how many ingredients were added and how many
   // were left unticked. Never which ones.
   groceries_added_from_recipe: z.strictObject({ ingredient_count: z.int().min(1).max(500), unticked_count: z.int().min(0).max(500) }),
+  // Spec 023: an assistant called an MCP tool (sent from the MCP server): which tool, which
+  // assistant ('claude', 'chatgpt', 'gemini' or 'mcp') and whether it worked. Never its input.
+  mcp_tool_called: z.strictObject({ tool: z.string().regex(/^[a-z][a-z_]{0,59}$/), assistant: WriteSource, ok: z.boolean() }),
 } as const;
 
 export type EventName = keyof typeof events;

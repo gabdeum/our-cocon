@@ -59,6 +59,25 @@ export const strings = {
     replaceBody: (own: string) => `Your family “${own}” and everything in it will be deleted. This can't be undone.`,
     keepMine: 'Keep mine',
   },
+  // design/ui/OC-Connect.md › Approve access (spec 023): an AI assistant asks to act as this member.
+  oauthConsent: {
+    title: (assistant: string) => `Let ${assistant} use Our Cocon?`,
+    /** The name an app gave itself, when its return address doesn't prove who it is. */
+    titleUnverified: (name: string) => `Let “${name}” use Our Cocon?`,
+    notReally: (name: string, host: string) => `This app calls itself ${name}, but it would send you back to ${host}. Only allow it if you trust ${host}.`,
+    lead: "It will see and change your family's things in Our Cocon, like recipes and the grocery list, as you. You can disconnect it any time in Settings › AI assistants.",
+    sendsBackTo: (host: string) => `After this you'll go back to ${host}.`,
+    allow: 'Allow',
+    allowing: 'Connecting…',
+    deny: "Don't allow",
+    allowed: (assistant: string) => `All set. You can go back to ${assistant}.`,
+    denied: (assistant: string) => `${assistant} wasn't given access.`,
+    signInTitle: 'Sign in to connect your AI assistant',
+    signInLead: "Then you'll choose whether it can use Our Cocon.",
+    expired: 'This request has expired. Go back to your AI assistant and connect again.',
+    failed: "Couldn't connect. Check your connection and try again.",
+    unnamed: 'Your AI assistant',
+  },
   // design/ui/OC-Settings.md (spec 003 sections; the rest come with 021, 025, 027, 018 and 029)
   settings: {
     title: 'Settings',

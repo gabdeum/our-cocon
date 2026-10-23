@@ -17,7 +17,7 @@ A household app for families, run from the app or from any AI assistant through 
 
 - `apps/app`: Expo Router (web + iOS). Routes per module (`app/(tabs)`, `app/recipes`, `app/groceries`); all copy in `strings/en.ts`
 - `apps/mcp`: MCP server. Tools in `tools/<module>/`
-- `packages/ui` (design-system components), `packages/schemas` (Zod, types, analytics events), `packages/quantity` (units and amounts)
+- `packages/ui` (design-system components), `packages/schemas` (Zod, types, analytics events), `packages/quantity` (units and amounts), `packages/data` (Supabase reads and writes shared by the app and the MCP server)
 - `supabase/`: migrations, RLS policies and tests, seed
 - `design/`: design system, screens and UI specs (read `design/README.md` before UI work)
 - `specs/`: one folder per feature

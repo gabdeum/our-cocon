@@ -10,8 +10,11 @@
     "typecheck": "tsc --noEmit --pretty false"
   },
   "dependencies": {
+    "@cocon/data": "workspace:*",
+    "@cocon/quantity": "workspace:*",
     "@cocon/schemas": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.32.1",
+    "@supabase/supabase-js": "^2.118.0",
     "posthog-node": "^5.56.1",
     "zod": "^4.6.7"
   },

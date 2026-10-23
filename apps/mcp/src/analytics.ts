@@ -2,25 +2,32 @@ import { PostHog } from 'posthog-node';
 import { createTracker, type Tracker } from '@cocon/schemas';
 import type { McpConfig } from './config.js';
 
-/** PostHog for this environment's project; nothing when no key is set. */
-export function createMcpTracker(config: McpConfig): { tracker: Tracker; shutdown: () => Promise<void> } {
-  if (!config.posthogKey) return { tracker: createTracker(null), shutdown: async () => undefined };
+export interface McpAnalytics {
+  /** A tracker for one member's call: user id and family only (constitution VI). */
+  forCaller(userId: string, familyId: string | null): Tracker;
+  shutdown(): Promise<void>;
+}
+
+/**
+ * PostHog for this environment's project; nothing when no key is set. One server answers many
+ * members at once, so each call gets its own tracker instead of sharing an identity.
+ */
+export function createMcpAnalytics(config: Pick<McpConfig, 'posthogKey' | 'posthogHost'>): McpAnalytics {
+  if (!config.posthogKey) return { forCaller: () => createTracker(null), shutdown: async () => undefined };
   const posthog = new PostHog(config.posthogKey, config.posthogHost ? { host: config.posthogHost } : {});
-  let distinctId = 'anonymous';
-  let familyId: string | undefined;
-  const tracker = createTracker({
-    capture: (event, properties) =>
-      posthog.capture({ distinctId, event, properties, ...(familyId ? { groups: { family: familyId } } : {}) }),
-    identify: (userId) => {
-      distinctId = userId;
+  return {
+    forCaller(userId, familyId) {
+      const tracker = createTracker({
+        capture: (event, properties) =>
+          posthog.capture({ distinctId: userId, event, properties, ...(familyId ? { groups: { family: familyId } } : {}) }),
+        identify: () => undefined,
+        group: () => undefined,
+        reset: () => undefined,
+      });
+      // Validates the ids (uuids only), as the app's tracker does.
+      tracker.identify(userId, familyId);
+      return tracker;
     },
-    group: (_type, id) => {
-      familyId = id;
-    },
-    reset: () => {
-      distinctId = 'anonymous';
-      familyId = undefined;
-    },
-  });
-  return { tracker, shutdown: () => posthog.shutdown() };
+    shutdown: () => posthog.shutdown(),
+  };
 }
