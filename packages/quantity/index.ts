@@ -19,6 +19,7 @@ export { decimalText, fractionText, toStep } from './round';
 export { scale, type ScaleBy, type ScalableRecipe, type Scaled } from './scale';
 export { formatTemperature, type TemperatureOptions } from './temperature';
 export { tokenizeTemperatures } from './temperature-text';
+export { tokenizeIngredients, type MentionTarget, type Tokenized } from './ingredient-tokens';
 export type { FormatOptions, FormattedIngredient, IngredientFactsInput, QuantityIngredient, UnitSystem } from './types';
 export { GRAMS_PER, ML_PER, WATER_G_PER_ML, cToF, convert, fToC, kindOf, toBase, type UnitKind } from './units';
 export { amountInput, parseAmount, readAmount } from './parse-amount';

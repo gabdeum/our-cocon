@@ -92,8 +92,9 @@ export const events = {
   recipe_step_added: z.strictObject({ has_timer: z.boolean(), has_temperature: z.boolean(), has_tip: z.boolean() }),
   // Spec 017: a variant new to the recipe, sent once the form saved it; how many changes it makes.
   variant_created: z.strictObject({ change_count: z.int().min(1).max(50) }),
-  // Spec 018: a recipe moved to Recently deleted, and through what (assistant names come with 023).
-  recipe_deleted: z.strictObject({ source: z.enum(['app']) }),
+  // Spec 018: a recipe moved to Recently deleted, and through what: 'app', or the assistant's name
+  // when an MCP tool deleted it (spec 023, sent from the MCP server).
+  recipe_deleted: z.strictObject({ source: WriteSource }),
   // Spec 018: a deleted recipe brought back (Restore, or Undo with 0); whole days since it was deleted.
   recipe_restored: z.strictObject({ days_since_delete: z.int().min(0).max(30) }),
   // Spec 019: a view-only link made (when the share sheet opens, or "Create a new link"), and

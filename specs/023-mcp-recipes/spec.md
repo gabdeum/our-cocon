@@ -36,6 +36,7 @@
 | Event | Properties |
 | --- | --- |
 | `mcp_tool_called` | tool, assistant, ok (sent from the MCP server) |
+| `recipe_deleted` | source (spec 018's event; the assistant's name when `delete_recipe` deletes, sent from the MCP server) |
 
 ## Warnings and errors
 Tool errors return one plain sentence saying what to fix (e.g. "Unknown unit 'cupz'. Use g, ml, cup, tbsp or tsp.") so the assistant can retry. Permission denied: "This member hasn't allowed AI to do that. They can change it in Settings › AI assistants."
@@ -43,7 +44,7 @@ Tool errors return one plain sentence saying what to fix (e.g. "Unknown unit 'cu
 ## Needs your attention
 First task, before any tool is built: prove on the self-hosted staging stack that Supabase's OAuth 2.1 server with dynamic client registration is enabled and that Claude, ChatGPT and Gemini can connect through it. If it isn't available self-hosted, stop and tell me: the options are a small OAuth layer in the MCP server, or moving to Supabase Cloud.
 
-- 2026-10-22 (part A): available self-hosted (Auth v2.196) and proven on local Supabase end to end (register, approve, token, tools). Self-hosted needs Caddy to add the anon key on the OAuth routes (done). Still to prove on staging after part A merges: connect Claude, ChatGPT and Gemini to `https://mcp-staging.ourcocon.com/mcp`. Part B (write tools) waits for that.
+- 2026-10-22 (part A): available self-hosted (Auth v2.196) and proven on local Supabase end to end (register, approve, token, tools). Self-hosted needs Caddy to add the anon key on the OAuth routes (done). Proven on staging after part A merged (Gabriel, 2026-10-23): assistants connect to `https://mcp-staging.ourcocon.com/mcp`.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
@@ -58,3 +59,15 @@ First task, before any tool is built: prove on the self-hosted staging stack tha
   - Deviation: `search_recipes` filters accept `other` (no cuisine), so their unknown-cuisine sentence ends "or other for recipes with no cuisine". Writes keep FR-002a's "or leave it empty".
   - For part B: calls refused before a tool runs (sign-in, rate limit, unknown tool) send no `mcp_tool_called`. Spec 024's permission refusals must go through `callTool`, so they're tracked with `ok: false`.
   - Part B: `create_recipe`, `update_recipe`, `delete_recipe`, `list_variants`, `upsert_variant` and the activity entries (FR-005).
+- 2026-10-23: Part B shipped:
+  - Shipped: `create_recipe`, `update_recipe` and `delete_recipe`.
+    - Ingredients are matched against the catalog.
+    - Plain-text steps get ingredient and temperature tokens, and a timer from a single duration they mention.
+    - The tools work through the app's save RPCs.
+  - Deviation (FR-002, Gabriel's call): variants are part of the recipe. `create_recipe` and `update_recipe` take a `variants` list, whose changes name ingredients by name and steps by number. `get_recipe` returns variants in that same form. `list_variants` and `upsert_variant` were dropped.
+  - Deviation: tools take flat arguments, not `recipe` and `patch` objects.
+  - Deviation: `update_recipe` adds `step_changes` (small edits) and `scale_to`. With `scale_to`, "serve 8 by default" rescales every amount with the quantity engine; `serves` alone only corrects the number, as in the form.
+  - Deviation (FR-005): the activity log is written by the database. A trigger logs every row an assistant adds, changes or removes, with the row as it was. It can't be skipped (an assistant's token also works on the API directly) or forged. Each tool call is tagged (`call_id`, `tool`) so spec 026 can group its entries. A change too big to log in full (a variant over 60 KB) is refused, so nothing an assistant does is beyond undo.
+  - Deviation: delete is the app's soft delete. Assistants can't remove a recipe for good, and can't set photos.
+  - Deviation: the unknown-unit sentence lists every unit. An amount with no unit asks for one instead of guessing.
+  - Tracking: `recipe_deleted` is also sent from the MCP server, with the assistant as `source`.
