@@ -1,9 +1,8 @@
-import { ingredientToken, parseAmount, pieceNouns, type IngredientFactsInput, type ParsedLine, type QuantityIngredient } from '@cocon/quantity';
+import { ingredientToken, parseAmount, pieceNouns, type ParsedLine, type QuantityIngredient } from '@cocon/quantity';
 import {
   familyIngredientRow,
   IngredientInput,
   normaliseName,
-  parseIngredientText,
   pieceSnapshot,
   type Aisle,
   type IngredientFacts,
@@ -11,10 +10,13 @@ import {
   type SizeWord,
   type Unit,
 } from '@cocon/schemas';
+import type { MatchedFacts } from '@cocon/data';
 import type { Client } from './supabase';
 
 /** Facts the form needs about a linked ingredient: its sizes and what one piece is called. */
-export type FormFacts = IngredientFactsInput & { catalog_key?: string | null; aisle?: Aisle };
+export type FormFacts = MatchedFacts;
+
+export { matchIngredients } from '@cocon/data';
 
 /** One ingredient row while it's being typed (spec 015 FR-001). Amounts stay text until Save reads them. */
 export interface IngredientDraft {
@@ -282,30 +284,6 @@ export async function suggestIngredients(client: Pick<Client, 'rpc'>, text: stri
     return error || !data ? [] : (data as IngredientFacts[]);
   } catch {
     return [];
-  }
-}
-
-/**
- * The catalog's facts for each name (spec 031's `match_ingredients`), in order: null where nothing
- * matched. Undefined when the lookup failed, so rows aren't marked new just because we're offline.
- */
-export async function matchIngredients(client: Pick<Client, 'rpc'>, names: string[]): Promise<(FormFacts | null)[] | undefined> {
-  if (names.length === 0) return [];
-  try {
-    const queries = names.map((n) => {
-      const { full, core } = parseIngredientText(n);
-      return { full: full.slice(0, 80), core: core.slice(0, 80) };
-    });
-    const { data, error } = await client.rpc('match_ingredients', { queries });
-    if (error || !data) return undefined;
-    const out: (FormFacts | null)[] = names.map(() => null);
-    for (const row of data) {
-      if (row.how === 'none') continue;
-      out[row.idx] = row as FormFacts;
-    }
-    return out;
-  } catch {
-    return undefined;
   }
 }
 

@@ -91,10 +91,11 @@ describe.skipIf(!local)('recipe tools against local Supabase', () => {
     expect(data).toBe('claude');
   });
 
-  it('lists the recipe tools with read-only hints', async () => {
+  it('lists the recipe tools, with hints from what they do', async () => {
     const { tools } = await mcp.listTools();
-    expect(tools.map((t) => t.name)).toEqual(['search_recipes', 'get_recipe']);
-    expect(tools.every((t) => t.annotations?.readOnlyHint)).toBe(true);
+    expect(tools.map((t) => t.name)).toEqual(['search_recipes', 'get_recipe', 'create_recipe', 'update_recipe', 'delete_recipe']);
+    const hints = Object.fromEntries(tools.map((t) => [t.name, [t.annotations?.readOnlyHint, t.annotations?.destructiveHint]]));
+    expect(hints).toMatchObject({ search_recipes: [true, false], create_recipe: [false, false], delete_recipe: [false, true] });
   });
 
   it('US2: "under 30 minutes this month" finds the matching recipe, with a link', async () => {
@@ -149,10 +150,8 @@ describe.skipIf(!local)('recipe tools against local Supabase', () => {
       expect(claimsOf(await refreshAssistant(url, connection)).role).toBe('cocon_assistant');
     });
 
-    it('cannot write through the API directly', async () => {
+    it('cannot remove a recipe for good through the API directly', async () => {
       const direct = memberClient(config, token);
-      const { error } = await direct.from('recipes').insert({ name: 'Sneaky', family_id: randomUUID() } as never);
-      expect(error?.code).toBe('42501');
       const del = await direct.from('recipes').delete().eq('id', ids.slow).select();
       expect(del.error?.code ?? del.data?.length).toBeTruthy();
       const { data } = await gabriel.from('recipes').select('id').eq('id', ids.slow);

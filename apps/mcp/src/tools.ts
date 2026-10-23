@@ -112,7 +112,11 @@ export async function callTool(tool: Tool, args: unknown, ctx: ToolContext): Pro
       structuredContent: result as Record<string, unknown>,
     };
   } catch (error) {
-    if (!(error instanceof ToolError || error instanceof z.ZodError || error instanceof QuantityError)) console.error(`${tool.name} failed`, error);
+    // Codes only: a database error's details can quote the row, and so the family's recipe text.
+    if (!(error instanceof ToolError || error instanceof z.ZodError || error instanceof QuantityError)) {
+      const e = error as { code?: unknown; name?: unknown };
+      console.error(`${tool.name} failed`, { code: e?.code ?? null, name: e?.name ?? null });
+    }
     return { content: [{ type: 'text', text: errorSentence(error) }], isError: true };
   } finally {
     ctx.tracker.track('mcp_tool_called', { tool: tool.name, assistant: ctx.assistant, ok });

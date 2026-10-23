@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import type { Db } from '@cocon/data';
 import type { Database } from '@cocon/schemas';
@@ -6,11 +7,15 @@ import type { Caller } from './auth.js';
 import type { McpConfig } from './config.js';
 import { ToolError, type ToolContext } from './tools.js';
 
-/** Supabase as the member: their token on every request, nothing kept between calls. */
-export function memberClient(config: Pick<McpConfig, 'supabaseUrl' | 'supabaseAnonKey'>, token: string): Db {
+/**
+ * Supabase as the member: their token on every request, nothing kept between calls. A tool call
+ * tags its requests (x-cocon-call, x-cocon-tool), so the database's activity log groups what one
+ * call changed (migration mcp_recipe_writes).
+ */
+export function memberClient(config: Pick<McpConfig, 'supabaseUrl' | 'supabaseAnonKey'>, token: string, tool?: string): Db {
   return createClient<Database>(config.supabaseUrl, config.supabaseAnonKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: { authorization: `Bearer ${token}` } },
+    global: { headers: { authorization: `Bearer ${token}`, ...(tool ? { 'x-cocon-call': randomUUID(), 'x-cocon-tool': tool } : {}) } },
   });
 }
 
@@ -18,8 +23,8 @@ export function memberClient(config: Pick<McpConfig, 'supabaseUrl' | 'supabaseAn
  * The context a tool runs in. The family and the assistant's name come from the database, from
  * the token alone (the same rule that stamps `source` on every write, spec 004).
  */
-export async function toolContext(config: McpConfig, caller: Caller, analytics: McpAnalytics): Promise<ToolContext> {
-  const db = memberClient(config, caller.token);
+export async function toolContext(config: McpConfig, caller: Caller, analytics: McpAnalytics, tool: string): Promise<ToolContext> {
+  const db = memberClient(config, caller.token, tool);
   const [family, source] = await Promise.all([db.rpc('my_family_id'), db.rpc('request_source')]);
   if (family.error || source.error) throw new Error('Could not read the caller’s family');
   const assistant = source.data ?? 'mcp';

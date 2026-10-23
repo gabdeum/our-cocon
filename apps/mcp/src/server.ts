@@ -20,7 +20,7 @@ export function instructions(list: readonly Module[]): string {
 }
 
 /** The MCP server for one caller (stateless: one per request). Tools come from the modules. */
-export function createMcp(config: McpConfig, list: readonly Module[], context: () => Promise<ToolContext>): Server {
+export function createMcp(config: McpConfig, list: readonly Module[], context: (tool: string) => Promise<ToolContext>): Server {
   const server = new Server({ name: 'our-cocon', title: 'Our Cocon', version: config.commit }, { capabilities: { tools: {} }, instructions: instructions(list) });
   const tools = list.flatMap((m) => m.tools);
   const byName = new Map(tools.map((t) => [t.name, t]));
@@ -30,7 +30,7 @@ export function createMcp(config: McpConfig, list: readonly Module[], context: (
     if (!tool) return { content: [{ type: 'text', text: `There's no tool called ${request.params.name}.` }], isError: true };
     let ctx: ToolContext;
     try {
-      ctx = await context();
+      ctx = await context(tool.name);
     } catch (error) {
       return { content: [{ type: 'text', text: errorSentence(error) }], isError: true };
     }
@@ -85,8 +85,7 @@ export function createHttpServer(config: McpConfig, deps: ServerDeps = {}): Http
         if (!caller) return unauthorized(res, config);
         if (!perMember.take(caller.userId)) return json(429, { error: 'Too many requests. Wait a minute and try again.' }, { 'retry-after': '60' });
 
-        let context: Promise<ToolContext> | undefined;
-        const mcp = createMcp(config, list, () => (context ??= toolContext(config, caller, analytics)));
+        const mcp = createMcp(config, list, (tool) => toolContext(config, caller, analytics, tool));
         const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
         res.on('close', () => {
           void transport.close();
