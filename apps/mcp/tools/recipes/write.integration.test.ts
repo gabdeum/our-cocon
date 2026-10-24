@@ -150,7 +150,7 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
       expect(data?.as_shown.steps.map((st: Result) => st.text)).toEqual(['Boil 100 ml water with 1 onion (120 g).', 'Top up with water if it dries out.']);
       const { error } = await create(['100 ml water', '1 onion'], ['Boil {ing:water}.', 'Add {ing:water} and the onion.']);
       expect(error).toBe(
-        'Step 2 mentions Water, which step 1 already uses. Each ingredient goes in one step, with its whole amount. If it’s used twice, add one row per use with its own amount, like "Water (sauce)" and "Water (topping)", and name each in its step; otherwise write later mentions as plain text.',
+        'Step 2 mentions Water, which step 1 already uses. Each ingredient goes in one step, with its whole amount. If it’s used in two parts of the recipe, add one row per part with its own amount, like "Water (dough)" and "Water (filling)", and name each in its step; otherwise write later mentions as plain text.',
       );
     });
 
@@ -302,6 +302,43 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
     expect(error).toBeNull();
     const veg = await call('get_recipe', { id: data?.id, variants: ['Vegetarian'] });
     expect(veg.data?.as_shown.steps[0].text).toBe('Fry 14 mushrooms (250 g).');
+  });
+
+  it('bao: an ingredient in two parts is two bracketed rows, read as one ingredient', async () => {
+    const { data, error } = await call('create_recipe', {
+      name: 'Bao buns',
+      serves: 8,
+      ingredients: ['30 g all-purpose flour (tangzhong)', '150 ml water (tangzhong)', '300 g all-purpose flour (dough)', '100 ml water (dough)'],
+      steps: [
+        'Whisk {ing:All-purpose flour (tangzhong)} with {ing:Water (tangzhong)} over a low heat until thick.',
+        'Mix {ing:All-purpose flour (dough)}, {ing:Water (dough)} and the tangzhong into a dough.',
+      ],
+    });
+    expect(error).toBeNull();
+    expect(data?.warnings).toBeUndefined();
+    // Matched to the catalog through the bracket, one line each in the list, each row's amount in its step.
+    const { data: rows } = await gabriel.from('recipe_ingredients').select('name, catalog_key').eq('recipe_id', data?.id).order('position');
+    expect(rows?.map((r) => r.catalog_key)).toEqual(['all_purpose_flour', 'water', 'all_purpose_flour', 'water']);
+    expect(data?.as_shown.ingredients.map((i: Result) => i.text)).toEqual(['330 g all-purpose flour', '250 ml water']);
+    expect(data?.as_shown.steps.map((st: Result) => st.text)).toEqual([
+      'Whisk 30 g all-purpose flour with 150 ml water over a low heat until thick.',
+      'Mix 300 g all-purpose flour, 100 ml water and the tangzhong into a dough.',
+    ]);
+  });
+
+  it('bao: a part in the name, or something the recipe makes, is saved with a warning', async () => {
+    const { data, error } = await call('create_recipe', {
+      name: 'Bao buns (wrong)',
+      serves: 8,
+      ingredients: ['30 g tangzhong flour', '150 ml tangzhong water', 'prepared tangzhong'],
+      steps: ['Mix the tangzhong flour and tangzhong water.'],
+    });
+    expect(error).toBeNull();
+    expect(data?.warnings).toEqual([
+      expect.stringMatching(/^Ingredient #1 \(Tangzhong flour\) isn’t an ingredient Our Cocon knows/),
+      expect.stringMatching(/^Ingredient #2 \(Tangzhong water\) isn’t/),
+      expect.stringMatching(/^Ingredient #3 \(Prepared tangzhong\) isn’t/),
+    ]);
   });
 
   it('places an ingredient a variant adds by importance, and warns about steps a removal leaves behind', async () => {
