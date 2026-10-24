@@ -28,7 +28,7 @@ const UNITS = Unit.options.join(', ');
 
 /** An ingredient row's fields; a variant's new ingredients have no id to keep. */
 const ingredientRow = {
-  name: z.string().max(80).describe('The raw ingredient, no amount: "Onion". A bracket for a second row ("Onion (sauce)"), details after a comma ("Onion, sliced").'),
+  name: z.string().max(80).describe('The canonical ingredient, as a shop sells it, no amount: "All-purpose flour". Used in several parts: one row per part, the part in brackets ("All-purpose flour (dough)"). Details after a comma ("Onion, sliced").'),
   quantity: z.number().positive().lt(100000).optional().describe('A number (1.5). Leave out for "to taste".'),
   unit: z.string().max(20).optional().describe(`One of: ${UNITS}. "piece" for counted things.`),
   size: SizeWord.optional().describe('small, medium or large, for counted things.'),
@@ -67,18 +67,21 @@ export type StepIn = z.infer<typeof StepIn>;
 
 /** How ingredients are written, for tool descriptions. */
 export const INGREDIENT_WRITING = [
-  'Ingredients: a written line each ("2 leeks, sliced", "salt to taste") or a row.',
+  'Ingredients: a written line each ("2 leeks, sliced", "salt to taste") or a row. Each row is something you buy. Our Cocon matches its name to its ingredient catalog, which converts its units, scales it and adds it up on the grocery list, so the name decides all of that.',
   '- Order: most important first, as the app lists them: what the dish is built on (meat, fish, main vegetables, pasta, rice), then what gives it character (cream, cheese, stock, spices), then salt, pepper and oil, then garnishes.',
-  '- Name: the raw ingredient, one per row ("Onion", "Chicken thighs", "Double cream"). No brand, no cut or preparation, and no variety unless the recipe needs it ("Arborio rice" in a risotto). Names are matched to Our Cocon’s catalog for unit conversion and the grocery list, so a product sold as its own thing keeps its name ("Tinned tomatoes", "Frozen peas").',
+  '- Name: the canonical ingredient, as a shop sells it: "All-purpose flour", "Water", "Butter", "Chicken thighs". One ingredient per row ("Salt" and "Black pepper" are two). No brand, no cut or preparation, and no variety unless the recipe needs it ("Arborio rice" in a risotto). A product sold as its own thing keeps its name ("Tinned tomatoes", "Frozen peas").',
+  '- Parts of the recipe never go in a name: "Tangzhong flour", "Dough water" and "Sauce onion" aren’t ingredients, and Our Cocon can’t match them.',
+  '- One ingredient in several parts (a tangzhong and a dough, a sauce and a topping): one row per part, each with that part’s amount, the canonical name and the part in brackets: "All-purpose flour (tangzhong)", "All-purpose flour (dough)", "Water (tangzhong)", "Water (dough)". The app matches, scales and adds them up as one ingredient: one line in the ingredient list, one on the grocery list. Used in one part only: no bracket.',
+  '- What the recipe makes (a tangzhong, a roux, a dough, a sauce, a marinade) isn’t an ingredient: list what goes into it, and name it in the steps as plain text ("Add the tangzhong to the dough"). List one only when it’s bought ready-made ("Puff pastry", "Chicken stock").',
   '- After a comma: any other detail, how it’s cut, prepared or bought ("Onion, finely chopped", "Butter, softened", "Chicken thighs, skin on"). It shows after the amount in the steps.',
-  '- Brackets: when one ingredient is used in several places, one row per use with its own amount ("Onion (sauce)", "Onion (topping)"). The ingredient and grocery lists add them up.',
   '- No amount in a name or after the comma: use quantity and unit, so it scales.',
+  '- The reply’s warnings name each ingredient Our Cocon doesn’t know. Check it isn’t a part or something the recipe makes; a real ingredient it doesn’t know yet can stay.',
 ].join('\n');
 
 /** How steps are written, for tool descriptions (spec 023 FR-004, 032-later L16). */
 export const STEP_WRITING = [
   'Steps: text naming the ingredients ("Soften the leeks in the butter", or {ing:Leeks} as for_editing writes them). The app links each ingredient’s first mention and writes its amount in: don’t repeat amounts.',
-  '- An ingredient is linked in one step only; later mentions ("season with more salt") stay plain text. Name a bracketed row in full: {ing:Onion (sauce)}.',
+  '- An ingredient is linked in one step only; later mentions ("season with more salt") stay plain text. Name a bracketed row in full in its part’s step: "Whisk {ing:All-purpose flour (tangzhong)} with {ing:Water (tangzhong)}". The step shows "30 g all-purpose flour", without the bracket.',
   '- No amount that should scale in step text, titles or tips ("about 20 g of oil"): put it on the ingredient. Fine: sizes ("75 g balls", "a 23 cm tin"), amounts for one ("2 tbsp per serving"), ratios ("60% hydration") and times. The reply’s warnings list each amount found: check them.',
   '- Oven temperatures go in the text ("180 °C" or "350 °F"); the app shows both.',
 ].join('\n');
@@ -165,6 +168,11 @@ function readDraft(input: IngredientIn, where: string, keep: ReadonlySet<string>
   };
 }
 
+/** An ingredient the catalog doesn't know: often a recipe part in the name, or something the recipe makes. */
+function unknownIngredient(where: string, name: string): string {
+  return `${where} (${name}) isn’t an ingredient Our Cocon knows, so it won’t convert units or add up with the same ingredient on the grocery list. If its name holds a part of the recipe, use the canonical ingredient with the part in brackets ("All-purpose flour (tangzhong)"). If the recipe makes it from its other ingredients, take it out of the list and name it in the steps. If it’s a real ingredient, leave it.`;
+}
+
 /** A saved ingredient row (no position: order is position), and what steps call it. */
 export type IngredientOut = IngredientRow & { plural: string | null };
 
@@ -172,14 +180,24 @@ export type IngredientOut = IngredientRow & { plural: string | null };
  * The assistant's ingredients as rows: each matched against the catalog (so amounts get their
  * weights), checked like the form's. `keep` are ids the rows may keep (the recipe's own).
  */
-export async function ingredientRows(ctx: Pick<ToolContext, 'db'>, inputs: readonly IngredientIn[], keep: ReadonlySet<string> = new Set()): Promise<IngredientOut[]> {
+export async function ingredientRows(
+  ctx: Pick<ToolContext, 'db'>,
+  inputs: readonly IngredientIn[],
+  keep: ReadonlySet<string> = new Set(),
+  /** Names the catalog doesn't know, for the reply; `where` says whose rows these are. */
+  warnings: string[] = [],
+  where = '',
+): Promise<IngredientOut[]> {
   const drafts = inputs.map((input, i) => draftOf(input, i + 1, keep));
   const seen = new Set<string>();
   for (const d of drafts) {
     if (seen.has(d.id)) throw new ToolError(`The ingredient with id ${d.id} is listed twice. Keep it once.`);
     seen.add(d.id);
   }
-  const matched = (await matchIngredients(ctx.db, drafts.map((d) => d.name))) ?? drafts.map(() => null);
+  const lookup = await matchIngredients(ctx.db, drafts.map((d) => d.name));
+  const matched = lookup ?? drafts.map(() => null);
+  // Only when the catalog answered: a failed lookup says nothing about the names.
+  if (lookup) drafts.forEach((d, i) => !lookup[i] && warnings.push(unknownIngredient(`${where}Ingredient #${i + 1}`, d.name)));
   return drafts.map((d, i) => {
     const facts: MatchedFacts | null = matched[i] ?? null;
     // "2 flour": counted, but the catalog knows flour isn't something you count. Ask, don't guess.
@@ -226,7 +244,7 @@ function tokenError(where: string, failure: Exclude<ReturnType<typeof tokenizeIn
       const earlier = usedIn.get(failure.id);
       const short = ingredientName(name);
       return new ToolError(
-        `${where} mentions ${name}, which ${earlier ? `step ${earlier}` : 'this step'} already uses. Each ingredient goes in one step, with its whole amount. If it’s used twice, add one row per use with its own amount, like "${short} (sauce)" and "${short} (topping)", and name each in its step; otherwise write later mentions as plain text.`,
+        `${where} mentions ${name}, which ${earlier ? `step ${earlier}` : 'this step'} already uses. Each ingredient goes in one step, with its whole amount. If it’s used in two parts of the recipe, add one row per part with its own amount, like "${short} (dough)" and "${short} (filling)", and name each in its step; otherwise write later mentions as plain text.`,
       );
     }
   }
@@ -413,8 +431,9 @@ export async function variantRows(
     // New ingredients first, so the variant's own steps can name them.
     const brought = new Map<number, IngredientOut[]>();
     for (const [n, c] of v.changes.entries()) {
-      if (c.type === 'swap_ingredient') brought.set(n, await ingredientRows(ctx, c.with));
-      if (c.type === 'add_ingredient') brought.set(n, await ingredientRows(ctx, [c.ingredient]));
+      const where = `${label}, change #${n + 1}: `;
+      if (c.type === 'swap_ingredient') brought.set(n, await ingredientRows(ctx, c.with, new Set(), warnings, where));
+      if (c.type === 'add_ingredient') brought.set(n, await ingredientRows(ctx, [c.ingredient], new Set(), warnings, where));
     }
     const targets = [...base.ingredients, ...mentionTargets([...brought.values()].flat())];
     const bare = (list: IngredientOut[] = []) => list.map(({ plural: _p, ...r }) => r);

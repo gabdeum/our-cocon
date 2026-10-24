@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { loadRecipe, type RecipeDetail } from '@cocon/data';
-import { format, renderStep, renderTemperatureCheck, scale, type FormatOptions } from '@cocon/quantity';
+import { format, groupSameIngredient, renderStep, renderTemperatureCheck, scale, sumIngredients, type FormatOptions } from '@cocon/quantity';
 import { applyVariants, normalizeText, type IngredientRow, type RecipeVariant, type StepRow, type VariantChoice } from '@cocon/schemas';
 import { defineTool, ToolError, type ToolContext } from '../../src/tools.js';
 import type { ChangeIn } from './input.js';
@@ -153,9 +153,13 @@ export async function readRecipe(ctx: Pick<ToolContext, 'db' | 'appUrl'>, id: st
       servings: scaled.servings,
       variants_applied: recipe.variants.filter((v) => v.id === choice.version || choice.options.includes(v.id)).map((v) => v.name),
       best_months: recipe.best_months.map((m) => MONTHS[m - 1]),
-      ingredients: scaled.ingredients.map((i) => {
-        const f = format(i, options);
-        return { text: i.prep_note ? `${f.phrase}, ${i.prep_note}` : f.phrase, from_variant: i.fromVariant };
+      // As the app's list (spec 008): rows of one ingredient ("Flour (tangzhong)", "Flour (dough)") are one line, added up.
+      ingredients: groupSameIngredient(scaled.ingredients).map((rows) => {
+        const phrase = (i: (typeof rows)[number]) => format(i, options).phrase;
+        const [first] = rows as [(typeof rows)[number]];
+        const sum = rows.length > 1 ? sumIngredients(rows) : null;
+        const text = rows.length === 1 ? (first.prep_note ? `${phrase(first)}, ${first.prep_note}` : phrase(first)) : sum ? phrase(sum) : rows.map(phrase).join(' + ');
+        return { text, from_variant: rows.some((r) => r.fromVariant) };
       }),
       steps: applied.steps.map((s, index) => ({
         number: index + 1,
