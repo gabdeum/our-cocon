@@ -103,9 +103,9 @@ export const createRecipe = defineTool({
   }),
   async run(args, ctx) {
     const input = recipeInput(pickDetails(args));
-    const ingredients = await ingredientRows(ctx, args.ingredients);
-    const targets = mentionTargets(ingredients);
     const warnings: string[] = [];
+    const ingredients = await ingredientRows(ctx, args.ingredients, new Set(), warnings);
+    const targets = mentionTargets(ingredients);
     const steps = stepRows(args.steps, targets, undefined, warnings);
     const variants = await variantRows(ctx, args.variants ?? [], { ingredients: targets, steps }, [], warnings);
 
@@ -172,7 +172,8 @@ export const updateRecipe = defineTool({
     // Read and check everything before writing anything.
     const { id: _id, ingredients: _i, steps: _s, variants: _v, facts: _f, created_by: _c, source: _src, deleted_at: _d, deleted_by: _db, ...current } = before;
     const input = changingDetails ? recipeInput(sent, current) : null;
-    let ingredients = args.ingredients ? await ingredientRows(ctx, args.ingredients, new Set(before.ingredients.map((i) => i.id))) : null;
+    const warnings: string[] = [];
+    let ingredients = args.ingredients ? await ingredientRows(ctx, args.ingredients, new Set(before.ingredients.map((i) => i.id)), warnings) : null;
     if (args.scale_to !== undefined && args.scale_to !== before.serves) {
       // FR-003: the quantity engine rescales, as the app's servings do; the rows keep everything else.
       const scaled = scale(
@@ -183,7 +184,6 @@ export const updateRecipe = defineTool({
     }
     const targets = mentionTargets(ingredients ?? before.ingredients.map((i) => ({ ...i, plural: i.catalog_key ? (before.facts[i.catalog_key]?.plural ?? null) : null })));
     let steps: StepOut[] | null = null;
-    const warnings: string[] = [];
     if (args.steps) {
       // A kept step keeps its photo: assistants can't add or change photos (spec 016's are the app's).
       const photos = new Map(before.steps.map((s) => [s.id, s.photo_path ?? null]));
