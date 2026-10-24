@@ -14,7 +14,6 @@ import {
   VariantChange,
   VariantKind,
   normalizeText,
-  stepTimerFrom,
   type IngredientRow,
 } from '@cocon/schemas';
 import { ToolError, type ToolContext } from '../../src/tools.js';
@@ -27,55 +26,70 @@ import { ToolError, type ToolContext } from '../../src/tools.js';
 
 const UNITS = Unit.options.join(', ');
 
-export const IngredientIn = z.union([
-  z.string().min(1).max(200).describe('One line as written in a recipe: "2 leeks, sliced", "200 ml double cream", "salt to taste".'),
-  z.strictObject({
-    id: z.uuid().optional().describe('Keep this ingredient (its id from get_recipe) when changing a recipe; leave out for a new one.'),
-    name: z
-      .string()
-      .max(80)
-      .describe('What it is, without the amount: "Leeks", "Double cream". Two rows of one ingredient get a bracket each to tell them apart: "Onion (sauce)", "Onion (topping)".'),
-    quantity: z.number().positive().lt(100000).optional().describe('How much, as a number (1.5, not "1½"). Leave out for "to taste".'),
-    unit: z.string().max(20).optional().describe(`One of: ${UNITS}. "piece" for things you count (2 eggs). Leave out with no quantity.`),
-    size: SizeWord.optional().describe('For counted things only: small, medium or large ("1 large onion").'),
-    prep_note: z.string().max(80).optional().describe('How it’s prepared: "sliced", "at room temperature".'),
-  }),
-]);
+/** An ingredient row's fields; a variant's new ingredients have no id to keep. */
+const ingredientRow = {
+  name: z.string().max(80).describe('The raw ingredient, no amount: "Onion". A bracket for a second row ("Onion (sauce)"), details after a comma ("Onion, sliced").'),
+  quantity: z.number().positive().lt(100000).optional().describe('A number (1.5). Leave out for "to taste".'),
+  unit: z.string().max(20).optional().describe(`One of: ${UNITS}. "piece" for counted things.`),
+  size: SizeWord.optional().describe('small, medium or large, for counted things.'),
+  prep_note: z.string().max(80).optional().describe('The same as text after a comma in the name.'),
+};
+const IngredientLine = z.string().min(1).max(200).describe('A line as in a recipe: "2 leeks, sliced".');
+const Id = (what: string) => z.uuid().optional().describe(`Its id from get_recipe, to keep the ${what}. Leave out for a new one.`);
+
+export const IngredientIn = z.union([IngredientLine, z.strictObject({ id: Id('ingredient'), ...ingredientRow })]);
+/** A new ingredient in a variant. */
+const VariantIngredientIn = z.union([IngredientLine, z.strictObject(ingredientRow)]);
 export type IngredientIn = z.infer<typeof IngredientIn>;
 
-export const ThermometerCheck = z.strictObject({
-  celsius: z.number().min(-50).max(400).describe('The reading to check for, in °C (e.g. 63 for chicken).'),
-  text: z
-    .string()
-    .max(120)
-    .optional()
-    .describe('What to check, e.g. "The thickest part should read {temp}". {temp} is where the reading goes; leave it out to add the reading at the end.'),
-});
+export const ThermometerCheck = z
+  .strictObject({
+    celsius: z.number().min(-50).max(400).describe('°C, e.g. 63.'),
+    text: z.string().max(120).optional().describe('"The thickest part should read {temp}". Without {temp}, the reading goes at the end.'),
+  })
+  .describe('The food thermometer reading when done. Never the oven.');
 
-export const StepIn = z.union([
-  z.string().min(1).max(2000).describe('The step as plain text.'),
-  z.strictObject({
-    id: z.uuid().optional().describe('Keep this step (its id from get_recipe) when changing a recipe; leave out for a new one.'),
-    name: z.string().max(60).optional().describe('A short title: "Make the sauce".'),
-    text: z.string().max(2000).describe('The step as plain text.'),
-    timer_minutes: z.number().positive().max(1440).optional().describe('A timer for this step. Left out, a single duration in the text becomes the timer.'),
-    timer_label: z.string().max(40).optional().describe('What the timer is for: "Bake".'),
-    tip: z.string().max(200).optional().describe('A short tip shown under the step.'),
-    thermometer_check: ThermometerCheck.optional(),
-  }),
-]);
+/** A step's fields. null removes one from a kept step (update_recipe keeps what's left out). */
+const stepRow = {
+  name: z.string().max(60).nullable().optional().describe('A short title: "Make the sauce".'),
+  text: z.string().max(2000),
+  timer_minutes: z.number().positive().max(1440).nullable().optional().describe('Only for a set wait (Step add-ons).'),
+  timer_label: z.string().max(40).nullable().optional().describe('What it times: "Roast".'),
+  tip: z.string().max(200).nullable().optional().describe('A chef’s tip (Step add-ons).'),
+  thermometer_check: ThermometerCheck.nullable().optional(),
+};
+const StepLine = z.string().min(1).max(2000).describe('The step as plain text.');
+
+export const StepIn = z.union([StepLine, z.strictObject({ id: Id('step'), ...stepRow })]);
+/** A new step in a variant. */
+const VariantStepIn = z.union([StepLine, z.strictObject(stepRow)]);
 export type StepIn = z.infer<typeof StepIn>;
+
+/** How ingredients are written, for tool descriptions. */
+export const INGREDIENT_WRITING = [
+  'Ingredients: a written line each ("2 leeks, sliced", "salt to taste") or a row.',
+  '- Order: most important first, as the app lists them: what the dish is built on (meat, fish, main vegetables, pasta, rice), then what gives it character (cream, cheese, stock, spices), then salt, pepper and oil, then garnishes.',
+  '- Name: the raw ingredient, one per row ("Onion", "Chicken thighs", "Double cream"). No brand, no cut or preparation, and no variety unless the recipe needs it ("Arborio rice" in a risotto). Names are matched to Our Cocon’s catalog for unit conversion and the grocery list, so a product sold as its own thing keeps its name ("Tinned tomatoes", "Frozen peas").',
+  '- After a comma: any other detail, how it’s cut, prepared or bought ("Onion, finely chopped", "Butter, softened", "Chicken thighs, skin on"). It shows after the amount in the steps.',
+  '- Brackets: when one ingredient is used in several places, one row per use with its own amount ("Onion (sauce)", "Onion (topping)"). The ingredient and grocery lists add them up.',
+  '- No amount in a name or after the comma: use quantity and unit, so it scales.',
+].join('\n');
 
 /** How steps are written, for tool descriptions (spec 023 FR-004, 032-later L16). */
 export const STEP_WRITING = [
-  'Write steps as plain text naming the ingredients ("Soften the leeks in the butter"): Our Cocon links each ingredient’s first mention in the recipe and writes its whole amount in, so don’t repeat amounts.',
-  'Each ingredient goes in one step only. When one is used in several steps (onion in the sauce and on top), add one row per use, each with its own amount and a bracket to tell them apart ("Onion (sauce)", "Onion (topping)"), and name each in its step as {ing:Onion (sauce)}. Brackets only show while editing; the ingredient list and the grocery list add the rows up. Later plain mentions ("the rest of the onion") stay text.',
-  'Never write an amount that changes with the servings in step text, step names or tips ("you’ll need about 20 g of oil"): it would stay the same when the servings change. Put it in the ingredient’s quantity and unit instead, so it scales. Amounts that stay the same whatever the servings are fine: sizes ("divide into 75 g balls", "a 23 cm tin"), amounts for one of something ("2 tbsp per serving"), ratios ("12 g of onion per 100 g of flour", "60% hydration") and times. Ingredient names and prep notes never hold amounts.',
-  'When a step mentions an amount, the reply lists it under warnings: check each one, and change the step if that amount should scale.',
-  'What follows a comma in an ingredient’s name, or its prep_note, is shown in the step after the amount ("2 onions, finely chopped").',
-  'Write oven temperatures as you like ("180 °C", "350 °F"); they’re shown in both scales. For a thermometer reading in the text, write {temp:<°C>:food}, e.g. {temp:63:food}; or use thermometer_check.',
-  'A single duration in a step ("bake for 25 minutes") becomes its timer unless you send timer_minutes.',
-].join(' ');
+  'Steps: text naming the ingredients ("Soften the leeks in the butter", or {ing:Leeks} as for_editing writes them). The app links each ingredient’s first mention and writes its amount in: don’t repeat amounts.',
+  '- An ingredient is linked in one step only; later mentions ("season with more salt") stay plain text. Name a bracketed row in full: {ing:Onion (sauce)}.',
+  '- No amount that should scale in step text, titles or tips ("about 20 g of oil"): put it on the ingredient. Fine: sizes ("75 g balls", "a 23 cm tin"), amounts for one ("2 tbsp per serving"), ratios ("60% hydration") and times. The reply’s warnings list each amount found: check them.',
+  '- Oven temperatures go in the text ("180 °C" or "350 °F"); the app shows both.',
+].join('\n');
+
+/** What a step's add-ons are for in the app, for tool descriptions (spec 016 FR-003). */
+export const ADD_ON_WRITING = [
+  'Step add-ons: a timer, a temperature check, a chef’s tip. Each has one job: go through the steps one by one and add one only when you can say why. Most steps have none.',
+  '- Timer (timer_minutes, timer_label): a countdown button on the step, in cooking mode too, so the cook can walk away. For a set wait they could overrun: baking, roasting, simmering, resting, proving, chilling, marinating. Not for short hands-on actions ("fry for 2 minutes"), "until golden" or the total time. For a range, the shorter end. Never added for you.',
+  '- Temperature check (thermometer_check): what a food thermometer reads when it’s done ("The thickest part should read {temp}", 63 °C for salmon), for meat, fish, custard, bread, sugar, frying oil. Never the oven. Hidden for members without a thermometer, so the text still gives a visual cue ("until the juices run clear"). A reading inside the text: {temp:115:food}.',
+  '- Chef’s tip (tip): the app’s "something you wish you’d known the first time": why it matters, a common mistake, a rescue, what can be made ahead. Never something the cook must do (that’s the text) or a repeat. One to three per recipe.',
+].join('\n');
 
 /** Units the way people write them ("grams", "tablespoons") as the app's, else the sentence to fix it. */
 export function unitOf(raw: string): z.infer<typeof Unit> {
@@ -240,7 +254,7 @@ export function stepFields(input: StepIn, where: string, targets: readonly Menti
   const tokens = tokenizeIngredients(s.text.trim(), targets, new Set(usedIn.keys()));
   if (!tokens.ok) throw tokenError(where, tokens, targets, usedIn);
   const warning = stepAmountWarning(where, tokens.body, s.tip, s.name);
-  const timer = s.timer_minutes !== undefined ? Math.round(s.timer_minutes * 60) : stepTimerFrom(s.text);
+  const timer = s.timer_minutes != null ? Math.round(s.timer_minutes * 60) : null;
   return {
     /** The ingredients it mentions, for the next steps (not saved). */
     mentions: tokens.ids,
@@ -303,16 +317,21 @@ export function stepRows(inputs: readonly StepIn[], targets: readonly MentionTar
 /** An ingredient of the recipe, by its name (or id). */
 const IngredientRef = z.string().min(1).max(80).describe('The recipe ingredient’s name, as in its ingredient list.');
 /** A step of the recipe, by its number. */
-const StepRef = z.int().min(1).max(MAX_STEPS).describe('The step’s number in the recipe, without variants.');
+const StepRef = z.int().min(1).max(MAX_STEPS).describe('The step’s number in for_editing.');
 
 export const ChangeIn = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('swap_ingredient'), ingredient: IngredientRef, with: z.array(IngredientIn).min(1).max(10).describe('What it becomes.') }),
-  z.strictObject({ type: z.literal('add_ingredient'), ingredient: IngredientIn }),
+  z.strictObject({ type: z.literal('swap_ingredient'), ingredient: IngredientRef, with: z.array(VariantIngredientIn).min(1).max(10).describe('What it becomes.') }),
+  z.strictObject({
+    type: z.literal('add_ingredient'),
+    ingredient: VariantIngredientIn,
+    next_to: IngredientRef.optional().describe('The recipe ingredient it goes next to, by importance. Left out, at the end.'),
+    place: z.enum(['before', 'after']).optional().describe('Before or after next_to (default after).'),
+  }),
   z.strictObject({ type: z.literal('remove_ingredient'), ingredient: IngredientRef }),
-  z.strictObject({ type: z.literal('add_step'), step: StepRef.describe('The step it goes next to.'), place: z.enum(['before', 'after']), new_step: StepIn }),
+  z.strictObject({ type: z.literal('add_step'), step: StepRef.describe('The step it goes next to.'), place: z.enum(['before', 'after']), new_step: VariantStepIn }),
   z.strictObject({
     type: z.literal('change_step'),
-    step: StepRef,
+    step: StepRef.describe('The step’s number. A variant changes its text, timer or temperature check, not its title or tip.'),
     text: z.string().min(1).max(2000).optional().describe('The step’s text in this variant.'),
     timer_minutes: z.number().positive().max(1440).nullable().optional(),
     timer_label: z.string().max(40).nullable().optional(),
@@ -330,8 +349,28 @@ export const VariantIn = z.strictObject({
 export type VariantIn = z.infer<typeof VariantIn>;
 
 /** How variants are written, for tool descriptions. */
-export const VARIANT_WRITING =
-  'Variants (optional) change only ingredients and steps: name the recipe’s ingredients as in its list, and its steps by number. New ingredients and steps are written like the recipe’s own.';
+export const VARIANT_WRITING = [
+  'Variants: a few changes to ingredients or steps, picked with one tap on the recipe page. A version is one at a time ("Vegetarian"); an option is on or off on top ("Extra cheese").',
+  '- Save the ones the member gave ("or use chicken", an optional extra, a diet swap). Name ingredients as in the list, and steps by their number in for_editing.',
+  '- An ingredient a variant adds goes by importance too: next_to says where (a swap keeps its place).',
+  '- Swapping one ingredient for one other updates the steps that name it. Swapping it for several, or removing it, doesn’t: change those steps too (change_step); the reply’s warnings name them.',
+  '- Don’t add variants unasked. After saving, suggest ones that suit the recipe, and add them if the member agrees.',
+].join('\n');
+
+/**
+ * Steps that still name an ingredient a variant removes or swaps for several: only a swap for one
+ * follows into the steps (applyVariants), so those steps would lose the name and amount.
+ */
+function namesLeftBehind(label: string, changes: readonly VariantChange[], base: { ingredients: readonly MentionTarget[]; steps: readonly { id: string; body: string }[] }): string[] {
+  const gone = changes.flatMap((c) => (c.type === 'remove_ingredient' || (c.type === 'swap_ingredient' && c.with.length > 1) ? [c.ingredient_id] : []));
+  const handled = new Set(changes.flatMap((c) => (c.type === 'remove_step' || (c.type === 'change_step' && c.body !== undefined) ? [c.step_id] : [])));
+  return base.steps.flatMap((st, i) => {
+    if (handled.has(st.id)) return [];
+    return gone
+      .filter((id) => st.body.includes(`{ing:${id}}`))
+      .map((id) => `${label}: step ${i + 1} names ${base.ingredients.find((t) => t.id === id)?.name ?? 'an ingredient'}, which this variant takes out, so the step would lose it. Rewrite that step in the variant (change_step).`);
+  });
+}
 
 /** The recipe ingredient a change names: by id, or by name (singular or plural, any case or accents). */
 function findIngredient(ref: string, rows: readonly MentionTarget[]): MentionTarget | undefined {
@@ -357,7 +396,7 @@ export type VariantSaveRow = { id: string; name: string; kind: z.infer<typeof Va
 export async function variantRows(
   ctx: Pick<ToolContext, 'db'>,
   inputs: readonly VariantIn[],
-  base: { ingredients: readonly MentionTarget[]; stepIds: readonly string[] },
+  base: { ingredients: readonly MentionTarget[]; steps: readonly { id: string; body: string }[] },
   existing: readonly { id: string; name: string }[] = [],
   /** Amounts in the variants' steps to check, for the reply. */
   warnings: string[] = [],
@@ -388,8 +427,8 @@ export async function variantRows(
         return found.id;
       };
       const stepId = (number: number) => {
-        const id = base.stepIds[number - 1];
-        if (!id) throw new ToolError(`${where} names step ${number}, but the recipe has ${base.stepIds.length} steps.`);
+        const id = base.steps[number - 1]?.id;
+        if (!id) throw new ToolError(`${where} names step ${number}, but the recipe has ${base.steps.length} steps.`);
         return id;
       };
       let out: unknown;
@@ -398,7 +437,7 @@ export async function variantRows(
           out = { type: c.type, ingredient_id: ingredientId(c.ingredient), with: bare(brought.get(n)) };
           break;
         case 'add_ingredient':
-          out = { type: c.type, ingredient: bare(brought.get(n))[0] };
+          out = { type: c.type, ingredient: bare(brought.get(n))[0], ...(c.next_to ? { next_to_id: ingredientId(c.next_to), place: c.place ?? 'after' } : {}) };
           break;
         case 'remove_ingredient':
           out = { type: c.type, ingredient_id: ingredientId(c.ingredient) };
@@ -411,7 +450,7 @@ export async function variantRows(
           break;
         }
         case 'change_step': {
-          const changed = c.text !== undefined ? stepFields({ text: c.text, timer_minutes: 1 }, where, targets) : null;
+          const changed = c.text !== undefined ? stepFields({ text: c.text }, where, targets) : null;
           if (changed?.warning) warnings.push(changed.warning);
           out = {
             type: c.type,
@@ -433,6 +472,7 @@ export async function variantRows(
       if (!parsed.success) throw new ToolError(`${where}: ${(parsed.error.issues[0]?.message ?? 'isn’t valid').replace(/\.$/, '')}. Fix it and try again.`);
       return parsed.data;
     });
+    warnings.push(...namesLeftBehind(label, changes, base));
     const kept = existing.find((e) => normalizeText(e.name) === key);
     rows.push({ id: kept?.id ?? randomUUID(), name: v.name.trim(), kind: v.kind, changes });
   }

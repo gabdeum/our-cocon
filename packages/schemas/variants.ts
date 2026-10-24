@@ -71,9 +71,14 @@ export function applyVariants(
           if (only && only.id !== change.ingredient_id) renamed.set(change.ingredient_id, only.id);
           return;
         }
-        case 'add_ingredient':
-          ingredients = [...ingredients, { ...change.ingredient, fromVariant: true }];
+        case 'add_ingredient': {
+          // Ingredients go by importance: next to the one it names, else (none, or gone) at the end.
+          const added = { ...change.ingredient, fromVariant: true };
+          const at = change.next_to_id ? ingredients.findIndex((i) => i.id === change.next_to_id) : -1;
+          const where = at < 0 ? ingredients.length : change.place === 'before' ? at : at + 1;
+          ingredients = [...ingredients.slice(0, where), added, ...ingredients.slice(where)];
           return;
+        }
         case 'remove_ingredient':
           ingredients = ingredients.filter((i) => i.id !== change.ingredient_id);
           return;
@@ -150,7 +155,7 @@ export function changeTarget(change: VariantChange): { ingredient: string } | { 
     case 'remove_ingredient':
       return { ingredient: change.ingredient_id };
     case 'add_ingredient':
-      // Added at the end: it points at nothing, so it can't break. Its own id stands in.
+      // Placed next to an ingredient, or at the end once that one is gone, so it can't break. Its own id stands in.
       return { ingredient: change.ingredient.id };
     default:
       return { step: change.step_id };

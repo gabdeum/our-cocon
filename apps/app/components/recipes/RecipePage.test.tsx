@@ -28,6 +28,8 @@ const detail: RecipeDetail = {
   description: 'Silky custard, sweet leeks and a crisp, buttery crust.',
   serves: 6,
   total_minutes: 70,
+  prep_minutes: null,
+  source_text: null,
   cuisine: 'french',
   best_months: [10, 11, 12, 1, 2, 3],
   photo_path: null,

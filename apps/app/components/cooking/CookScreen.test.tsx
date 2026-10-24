@@ -27,6 +27,8 @@ const detail: RecipeDetail = {
   description: null,
   serves: 6,
   total_minutes: 70,
+  prep_minutes: null,
+  source_text: null,
   cuisine: 'french',
   best_months: [],
   photo_path: null,

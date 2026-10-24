@@ -3,9 +3,11 @@ import { z } from 'zod';
 import { scale } from '@cocon/quantity';
 import { cuisineOf, MAX_VARIANTS, RecipeInput, type Json } from '@cocon/schemas';
 import { defineTool, ToolError, type ToolContext } from '../../src/tools.js';
-import { familyRecipe, readRecipe } from './get.js';
+import { familyRecipe, readRecipe, stepAddOns } from './get.js';
 import {
+  ADD_ON_WRITING,
   checkStep,
+  INGREDIENT_WRITING,
   IngredientIn,
   ingredientRows,
   mentionsIn,
@@ -80,18 +82,24 @@ export const createRecipe = defineTool({
   title: 'Save a new recipe',
   access: 'write',
   description: [
-    'Save a new recipe to the family’s Our Cocon. It shows in the app as added by the member, through you.',
-    'Before calling, make sure you know how many it serves and each ingredient’s amount and unit as the member gave them; ask rather than guess.',
-    'Ingredients: one written line each ("2 leeks, sliced", "200 ml double cream", "salt to taste") or structured rows.',
+    [
+      'Save a new recipe. It shows in the app as added by the member, through you. Returns it with its link: share the link.',
+      'You can’t see the app, so work in this order (update_recipe follows the same rules):',
+      '1. Know how many it serves and each amount and unit as the member gave them. Ask rather than guess.',
+      '2. Ingredients, most important first.',
+      '3. Steps, then step by step: which need a timer, a temperature check or a tip, and why.',
+      '4. Variants: save the ones given; after saving, suggest others.',
+    ].join('\n'),
+    INGREDIENT_WRITING,
     STEP_WRITING,
+    ADD_ON_WRITING,
     VARIANT_WRITING,
-    'Returns the saved recipe with its link: share the link.',
-  ].join(' '),
+  ].join('\n\n'),
   input: z.strictObject({
     ...details,
-    ingredients: z.array(IngredientIn).max(100).describe('Every ingredient, in order.'),
+    ingredients: z.array(IngredientIn).max(100).describe('Every ingredient, most important first.'),
     steps: z.array(StepIn).max(100).describe('The method, one step each, in order.'),
-    variants: variantsField.optional().describe('Versions and options of the recipe, if it has any.'),
+    variants: variantsField.optional().describe('Versions and options the member gave.'),
   }),
   async run(args, ctx) {
     const input = recipeInput(pickDetails(args));
@@ -99,7 +107,7 @@ export const createRecipe = defineTool({
     const targets = mentionTargets(ingredients);
     const warnings: string[] = [];
     const steps = stepRows(args.steps, targets, undefined, warnings);
-    const variants = await variantRows(ctx, args.variants ?? [], { ingredients: targets, stepIds: steps.map((st) => st.id) }, [], warnings);
+    const variants = await variantRows(ctx, args.variants ?? [], { ingredients: targets, steps }, [], warnings);
 
     const id = randomUUID();
     const { error } = await ctx.db.from('recipes').insert({ id, family_id: ctx.familyId, ...input });
@@ -118,13 +126,13 @@ export const createRecipe = defineTool({
 });
 
 const StepChange = z.strictObject({
-  step: z.int().min(1).max(100).describe('The step’s number, as get_recipe shows it (without variants).'),
+  step: z.int().min(1).max(100).describe('The step’s number in for_editing.'),
   name: z.string().max(60).nullable().optional().describe('A new title, or null to remove it.'),
-  text: z.string().min(1).max(2000).optional().describe('New text. Start from the step’s text_for_editing.'),
+  text: z.string().min(1).max(2000).optional().describe('New text. Start from the step’s text in for_editing.'),
   timer_minutes: z.number().positive().max(1440).nullable().optional().describe('A new timer, or null to remove it.'),
   timer_label: z.string().max(40).nullable().optional(),
   tip: z.string().max(200).nullable().optional().describe('A new tip, or null to remove it.'),
-  thermometer_check: ThermometerCheck.nullable().optional().describe('A new thermometer check, or null to remove it.'),
+  thermometer_check: ThermometerCheck.nullable().optional().describe('A new temperature check, or null to remove it.'),
 });
 
 export const updateRecipe = defineTool({
@@ -132,19 +140,17 @@ export const updateRecipe = defineTool({
   title: 'Change a recipe',
   access: 'write',
   description: [
-    'Change a recipe. Send only what changes: details, the whole ingredient list, the whole step list, step_changes for small edits to some steps ("add a tip to step 5"), or the whole variant list.',
-    'To make the recipe for more or fewer people by default ("make it serve 8"), send scale_to: every amount is rescaled for you. serves alone only corrects the number and leaves the amounts as they are.',
-    'In whole lists, items with an id (from get_recipe) are kept and changed, items without one are new, and anything left out is removed (a removed ingredient is taken out of the steps too). Variants are kept by name: to add or change one, send get_recipe’s variants back with the change; [] removes them all.',
-    STEP_WRITING,
-    VARIANT_WRITING,
-    'Every change shows in the app’s activity, where the member can undo it. Returns the updated recipe.',
-  ].join(' '),
+    'Change a recipe. Send only what changes: details, the whole ingredient list, the whole step list, step_changes (some steps, by number: "add a tip to step 5") or the whole variant list. Write them by create_recipe’s rules.',
+    '- scale_to makes it serve more or fewer by default, rescaling every amount. serves alone corrects the number only.',
+    '- Start from get_recipe’s for_editing. Whole lists replace what’s there: items with an id are kept, items without one are new, items left out are removed (a removed ingredient leaves the steps too). Send kept ingredients complete. A kept step keeps its title, timer, tip and temperature check unless you send a new one, or null to remove it. Variants are matched by name; [] removes them all.',
+    '- Every change shows in the app’s activity, where the member can undo it. Returns the updated recipe.',
+  ].join('\n'),
   input: z.strictObject({
     id: RecipeId,
     ...Object.fromEntries(Object.entries(details).map(([k, v]) => [k, v.optional()])),
     ingredients: z.array(IngredientIn).max(100).optional().describe('The whole new ingredient list.'),
     steps: z.array(StepIn).max(100).optional().describe('The whole new step list.'),
-    step_changes: z.array(StepChange).max(100).optional().describe('Changes to some steps, by number. Not with steps.'),
+    step_changes: z.array(StepChange).max(100).optional().describe('Changes to some steps, by their number in for_editing. Not with steps.'),
     scale_to: z.int().min(1).max(50).optional().describe('Make the recipe for this many by default: sets serves and rescales every amount. Not with serves or ingredients.'),
     variants: variantsField.optional().describe('The whole new variant list.'),
   }) as z.ZodObject<{ id: typeof RecipeId } & { [K in keyof typeof details]: z.ZodOptional<(typeof details)[K]> } & {
@@ -181,7 +187,10 @@ export const updateRecipe = defineTool({
     if (args.steps) {
       // A kept step keeps its photo: assistants can't add or change photos (spec 016's are the app's).
       const photos = new Map(before.steps.map((s) => [s.id, s.photo_path ?? null]));
-      steps = stepRows(args.steps, targets, new Set(photos.keys()), warnings).map((s) => ({ ...s, photo_path: photos.get(s.id) ?? null }));
+      // A kept step keeps its title and add-ons unless the assistant sends new ones (or null).
+      const stored = new Map(before.steps.map((s) => [s.id, stepAddOns(s)]));
+      const sent = args.steps.map((st) => (typeof st === 'object' && st.id && stored.has(st.id) ? { ...stored.get(st.id), ...st } : st));
+      steps = stepRows(sent, targets, new Set(photos.keys()), warnings).map((s) => ({ ...s, photo_path: photos.get(s.id) ?? null }));
     }
     if (args.step_changes) {
       const rows: StepOut[] = before.steps.map((s) => ({
@@ -203,7 +212,7 @@ export const updateRecipe = defineTool({
         let warning: string | null = null;
         if (change.text !== undefined) {
           // Each ingredient goes in one step: what the other steps mention stays theirs.
-          const fields = stepFields({ text: change.text, ...(row.timer_seconds ? { timer_minutes: row.timer_seconds / 60 } : {}) }, where, targets, mentionsIn(rows, at));
+          const fields = stepFields({ text: change.text }, where, targets, mentionsIn(rows, at));
           warning = fields.warning;
           row.body = fields.body;
         }
@@ -224,7 +233,7 @@ export const updateRecipe = defineTool({
       steps = rows;
     }
     const variants = args.variants
-      ? await variantRows(ctx, args.variants, { ingredients: targets, stepIds: (steps ?? before.steps).map((st) => st.id) }, before.variants, warnings)
+      ? await variantRows(ctx, args.variants, { ingredients: targets, steps: steps ?? before.steps }, before.variants, warnings)
       : null;
 
     const saved: string[] = [];

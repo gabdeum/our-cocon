@@ -12,7 +12,9 @@ export interface RecipeDetail {
   description: string | null;
   serves: number;
   total_minutes: number | null;
+  prep_minutes: number | null;
   cuisine: string | null;
+  source_text: string | null;
   best_months: number[];
   photo_path: string | null;
   created_by: string | null;
@@ -30,7 +32,7 @@ export interface RecipeDetail {
 const ingredientColumns =
   'id, position, name, catalog_key, quantity, unit, size_word, weight_per_piece_g, piece_noun_singular, piece_noun_plural, prep_note';
 const stepColumns = 'id, position, name, body, timer_seconds, timer_label, temp_check_c, temp_check_text, tip, photo_path';
-const columns = `id, name, description, serves, total_minutes, cuisine, best_months, photo_path, created_by, source, deleted_at, deleted_by,
+const columns = `id, name, description, serves, total_minutes, prep_minutes, cuisine, source_text, best_months, photo_path, created_by, source, deleted_at, deleted_by,
   recipe_ingredients(${ingredientColumns}), recipe_steps(${stepColumns}), recipe_variants(id, position, name, kind, changes)`;
 
 const byPosition = (a: { position: number }, b: { position: number }) => a.position - b.position;

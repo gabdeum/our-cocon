@@ -7,6 +7,6 @@ import { createRecipe, deleteRecipe, updateRecipe } from './write.js';
 export const recipes: Module = {
   name: 'recipes',
   instructions:
-    'Recipes: search_recipes finds the family’s recipes (by words, season, total time, cuisine or who added them) and get_recipe reads one, scaled and with variants applied. Amounts and temperatures come written out: quote them, never convert or scale them yourself. Link to the recipe in the app when you mention one. create_recipe saves a new one and update_recipe changes one, variants (versions and options) included; delete_recipe moves one to Recently deleted (restorable for 30 days). Before saving, check you know how many it serves and each amount and unit; ask the member when one is missing.',
+    'Recipes: search_recipes finds the family’s recipes (by words, season, total time, cuisine or who added them) and get_recipe reads one: as_shown is what the member sees (scaled, variants applied; quote its amounts and temperatures, never convert or scale them yourself), for_editing is what you change and send back. Link to the recipe in the app when you mention one. create_recipe saves a new one and update_recipe changes one, variants (versions and options) included; delete_recipe moves one to Recently deleted (restorable for 30 days). Before saving, read create_recipe’s description: it says how the app shows a recipe, which you can’t see from here.',
   tools: [searchRecipes, getRecipe, createRecipe, updateRecipe, deleteRecipe],
 };
