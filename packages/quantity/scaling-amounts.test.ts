@@ -5,7 +5,6 @@ describe('scalingAmountIn (spec 023 FR-004)', () => {
   it.each([
     ['You will need about 20g of it.', '20g'],
     ['Reserve 100 ml of the cooking water.', '100 ml'],
-    ['Add 75 g, then shape the buns.', '75 g'],
     ['need 3 g', '3 g'],
     ['Add 1½ tbsp of oil.', '1½ tbsp'],
     ['Stir in 2 tablespoons more.', '2 tablespoons'],
@@ -16,15 +15,6 @@ describe('scalingAmountIn (spec 023 FR-004)', () => {
 
   it.each([
     'Add 2 spoons per serving.',
-    'Divide the dough into equal portions of approximately 75 g per bao ball.',
-    'Shape into balls of 75 g each.',
-    'Weigh out 75 g for each bun.',
-    'Use 30 g/bun.',
-    'Have 12g of onion per 100g of flour.',
-    'Use 12 g of finely chopped onion per 100 g of flour.',
-    'Add 2 g of salt for every 100 g of flour.',
-    'The dough should be 60% hydration.',
-    'Add 12g for each plate.',
     'Allow 100 g of pasta per person.',
     'Use a 2 l pot.',
     'Bring a 3 litre saucepan of water to the boil.',

@@ -6,13 +6,13 @@ import { defineTool, ToolError, type ToolContext } from '../../src/tools.js';
 import { familyRecipe, readRecipe } from './get.js';
 import {
   checkStep,
-  checkStepAmounts,
   IngredientIn,
   ingredientRows,
   mentionsIn,
   mentionTargets,
   STEP_WRITING,
   StepIn,
+  stepAmountWarning,
   stepFields,
   stepRows,
   ThermometerCheck,
@@ -72,6 +72,9 @@ async function saveVariants(ctx: Pick<ToolContext, 'db'>, recipeId: string, rows
 
 const variantsField = z.array(VariantIn).max(MAX_VARIANTS);
 
+/** The saved recipe, with amounts in its steps for the assistant to check (`stepAmountWarning`). */
+const withWarnings = <R extends object>(recipe: R, warnings: readonly string[]) => (warnings.length ? { ...recipe, warnings } : recipe);
+
 export const createRecipe = defineTool({
   name: 'create_recipe',
   title: 'Save a new recipe',
@@ -94,8 +97,9 @@ export const createRecipe = defineTool({
     const input = recipeInput(pickDetails(args));
     const ingredients = await ingredientRows(ctx, args.ingredients);
     const targets = mentionTargets(ingredients);
-    const steps = stepRows(args.steps, targets);
-    const variants = await variantRows(ctx, args.variants ?? [], { ingredients: targets, stepIds: steps.map((st) => st.id) });
+    const warnings: string[] = [];
+    const steps = stepRows(args.steps, targets, undefined, warnings);
+    const variants = await variantRows(ctx, args.variants ?? [], { ingredients: targets, stepIds: steps.map((st) => st.id) }, [], warnings);
 
     const id = randomUUID();
     const { error } = await ctx.db.from('recipes').insert({ id, family_id: ctx.familyId, ...input });
@@ -109,7 +113,7 @@ export const createRecipe = defineTool({
       await ctx.db.from('recipes').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       throw e;
     }
-    return readRecipe(ctx, id);
+    return withWarnings(await readRecipe(ctx, id), warnings);
   },
 });
 
@@ -173,10 +177,11 @@ export const updateRecipe = defineTool({
     }
     const targets = mentionTargets(ingredients ?? before.ingredients.map((i) => ({ ...i, plural: i.catalog_key ? (before.facts[i.catalog_key]?.plural ?? null) : null })));
     let steps: StepOut[] | null = null;
+    const warnings: string[] = [];
     if (args.steps) {
       // A kept step keeps its photo: assistants can't add or change photos (spec 016's are the app's).
       const photos = new Map(before.steps.map((s) => [s.id, s.photo_path ?? null]));
-      steps = stepRows(args.steps, targets, new Set(photos.keys())).map((s) => ({ ...s, photo_path: photos.get(s.id) ?? null }));
+      steps = stepRows(args.steps, targets, new Set(photos.keys()), warnings).map((s) => ({ ...s, photo_path: photos.get(s.id) ?? null }));
     }
     if (args.step_changes) {
       const rows: StepOut[] = before.steps.map((s) => ({
@@ -195,22 +200,21 @@ export const updateRecipe = defineTool({
         const row = rows[at];
         if (!row) throw new ToolError(`This recipe has ${rows.length} steps, so there’s no step ${change.step}.`);
         const where = `Step ${change.step}`;
+        let warning: string | null = null;
         if (change.text !== undefined) {
           // Each ingredient goes in one step: what the other steps mention stays theirs.
-          const { body } = stepFields({ text: change.text, ...(row.timer_seconds ? { timer_minutes: row.timer_seconds / 60 } : {}) }, where, targets, mentionsIn(rows, at));
-          row.body = body;
+          const fields = stepFields({ text: change.text, ...(row.timer_seconds ? { timer_minutes: row.timer_seconds / 60 } : {}) }, where, targets, mentionsIn(rows, at));
+          warning = fields.warning;
+          row.body = fields.body;
         }
-        if (change.name !== undefined) {
-          checkStepAmounts(where, '', change.name);
-          row.name = change.name?.trim() || null;
-        }
+        if (change.name !== undefined) row.name = change.name?.trim() || null;
         if (change.timer_minutes !== undefined) row.timer_seconds = change.timer_minutes === null ? null : Math.round(change.timer_minutes * 60);
         if (change.timer_label !== undefined) row.timer_label = change.timer_label?.trim() || null;
         if (!row.timer_seconds) row.timer_label = null;
-        if (change.tip !== undefined) {
-          checkStepAmounts(where, '', change.tip);
-          row.tip = change.tip?.trim() || null;
-        }
+        if (change.tip !== undefined) row.tip = change.tip?.trim() || null;
+        // The text was checked with its tokens above; a new title or tip here. One warning per step.
+        warning ??= stepAmountWarning(where, '', change.name, change.tip);
+        if (warning) warnings.push(warning);
         if (change.thermometer_check !== undefined) {
           row.temp_check_c = change.thermometer_check?.celsius ?? null;
           row.temp_check_text = change.thermometer_check?.text?.trim() || null;
@@ -220,7 +224,7 @@ export const updateRecipe = defineTool({
       steps = rows;
     }
     const variants = args.variants
-      ? await variantRows(ctx, args.variants, { ingredients: targets, stepIds: (steps ?? before.steps).map((st) => st.id) }, before.variants)
+      ? await variantRows(ctx, args.variants, { ingredients: targets, stepIds: (steps ?? before.steps).map((st) => st.id) }, before.variants, warnings)
       : null;
 
     const saved: string[] = [];
@@ -247,7 +251,7 @@ export const updateRecipe = defineTool({
       }
       saved.push(part);
     }
-    return readRecipe(ctx, args.id);
+    return withWarnings(await readRecipe(ctx, args.id), warnings);
   },
 });
 

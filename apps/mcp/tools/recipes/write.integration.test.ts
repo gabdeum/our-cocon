@@ -153,15 +153,35 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
       );
     });
 
-    it('refuses amounts that would not scale, in steps, tips and names; fixed ones are fine', async () => {
-      expect((await create(['1 onion'], ['Fry the onion. You will need about 20g of oil.'])).error).toMatch(/^Step 1 says "20g", which won’t change with the servings\./);
-      expect((await create(['1 onion'], [{ text: 'Fry the onion.', tip: 'Add 50 ml water if it sticks.' }])).error).toMatch(/^Step 1 says "50 ml"/);
-      expect((await create(['1 onion'], [{ name: 'Add 20 g butter', text: 'Fry the onion.' }])).error).toMatch(/^Step 1 says "20 g"/);
+    it('saves a step with an amount but warns to check it; refuses an amount in a name', async () => {
+      const oil = await create(['1 onion'], ['Fry the onion. You will need about 20g of oil.']);
+      expect(oil.error).toBeNull();
+      expect(oil.data?.warnings).toEqual([
+        'Step 1 mentions "20g", which stays the same when the servings change. If it should scale, put it on the ingredient (a row of its own if it’s a separate part, like "Onion (topping)") and name the ingredient in the step. If it’s a size or an amount for one of something ("75 g balls"), leave it.',
+      ]);
+      expect(oil.data?.steps[0].text).toBe('Fry 1 onion (120 g). You will need about 20g of oil.');
+      // A size saves the same way; the assistant reads the warning and leaves it.
+      const balls = await create(['1 onion'], ['Divide the dough in 75g balls, then fry the onion.']);
+      expect(balls.error).toBeNull();
+      expect(balls.data?.warnings).toHaveLength(1);
+      // Titles and tips count too (one warning per step).
+      expect((await create(['1 onion'], [{ name: 'Add 20 g butter', text: 'Fry the onion.', tip: 'Add 50 ml water if it sticks.' }])).data?.warnings).toEqual([expect.stringMatching(/^Step 1 mentions "50 ml"/)]);
+      // Nothing to check, no warnings.
+      expect((await create(['1 onion', '2 tbsp olive oil'], ['Fry the onion in the olive oil in a 2 l pan.'])).data?.warnings).toBeUndefined();
       expect((await create([{ name: 'Onion, need 3g', quantity: 1, unit: 'piece' }], [])).error).toBe(
         'Ingredient #1 (Onion, need 3g) has an amount in its name or prep note ("3g"), which won’t change with the servings. Put it in quantity and unit instead, and keep the name to what it is.',
       );
-      expect((await create(['1 onion', '2 tbsp olive oil'], ['Fry the onion in the olive oil in a 2 l pan; serve with 1 tbsp per serving of yoghurt.'])).error).toBeNull();
-      expect((await create(['1 onion'], ['Divide the dough into equal portions of approximately 75 g per bao ball, then fry the onion.'])).error).toBeNull();
+    });
+
+    it('a step change with an amount saves and warns', async () => {
+      const { data } = await create(['1 onion'], ['Fry the onion.', 'Shape the dough.']);
+      const changed = await call('update_recipe', { id: data?.id, step_changes: [{ step: 2, text: 'Divide the dough into 75 g balls.' }] });
+      expect(changed.error).toBeNull();
+      expect(changed.data?.steps[1].text).toBe('Divide the dough into 75 g balls.');
+      expect(changed.data?.warnings).toEqual([expect.stringMatching(/^Step 2 mentions "75 g"/)]);
+      // A new tip alongside new text is checked too.
+      const both = await call('update_recipe', { id: data?.id, step_changes: [{ step: 1, text: 'Fry the onion gently.', tip: 'Add 50 ml water if it sticks.' }] });
+      expect(both.data?.warnings).toEqual([expect.stringMatching(/^Step 1 mentions "50 ml"/)]);
     });
   });
 
