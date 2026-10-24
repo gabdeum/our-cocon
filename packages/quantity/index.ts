@@ -31,6 +31,8 @@ export {
   groceryIdentity,
   planGroceryAdd,
   planGroceryAdds,
+  groceryQuantity,
+  rescaleGroceryAmount,
   type CombinedAmount,
   type GroceryAdd,
   type GroceryAddPlan,

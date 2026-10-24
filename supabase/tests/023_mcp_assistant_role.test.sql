@@ -2,7 +2,7 @@
 -- calls: its own family's recipes (read, add, change, soft delete), every write logged by the
 -- database with the row as it was; nothing else.
 begin;
-select plan(31);
+select plan(32);
 
 -- As `role` with the claims an access token carries (`client` adds an assistant's client_id).
 create function pg_temp.login(uid uuid, r text, client text default null) returns void language plpgsql as $$
@@ -86,6 +86,7 @@ select throws_ok($$ delete from public.recipe_variants where name = 'Huge' $$, '
 select pg_temp.login('00000000-0000-0000-0000-00000000000a', 'cocon_assistant', 'c1');
 select is((select catalog_key from public.match_ingredients('[{"full":"olive oil","core":"olive oil"}]'::jsonb)), 'olive_oil', 'it matches names against the catalog, as the app does');
 select throws_ok($$ select * from public.grocery_items $$, '42501', null, 'it cannot see the grocery list yet (spec 024)');
+select throws_ok($$ select * from public.grocery_recipes $$, '42501', null, 'or the servings on the list');
 select throws_ok($$ select * from public.activity $$, '42501', null, 'or the activity log');
 select throws_ok($$ select * from public.share_links $$, '42501', null, 'or share links');
 select throws_ok($$ select public.delete_family() $$, '42501', null, 'it cannot delete the family');

@@ -52,6 +52,7 @@ function setup(over: Partial<Props> = {}) {
     onEdit: vi.fn(async () => 'saved' as const),
     onMove: vi.fn(async () => true),
     onOpenRecipe: vi.fn(),
+    onSetServings: vi.fn(async () => true),
     settings: { store_profile: 'us', round_to_packs: true },
     packs: undefined,
     onChangeSettings: vi.fn(async () => 'saved' as const),
@@ -239,11 +240,57 @@ describe('Groceries', () => {
     expect(screen.getByText('Removed Croissants.')).toBeTruthy();
   });
 
-  it('FR-004: a card per linked recipe opens it', () => {
+  it('FR-004: a card per linked recipe; its menu opens the recipe', async () => {
     const { props } = setup();
     expect(screen.getByText('2 items · serves 6')).toBeTruthy();
-    fireEvent.click(screen.getByRole('link', { name: 'Open Leek & bacon quiche' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+    await flush();
+    fireEvent.click(screen.getByRole('link', { name: 'Open recipe' }));
     expect(props.onOpenRecipe).toHaveBeenCalledWith('r-quiche');
+  });
+
+  it('spec 022: the card reads the servings the list is for', () => {
+    setup({ servings: { 'r-quiche': 8 } });
+    expect(screen.getByText('2 items · serves 8')).toBeTruthy();
+  });
+
+  it('spec 022: the card menu changes the servings: Save rescales from 6 to 8', async () => {
+    const { props, tracker } = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+    await flush();
+    expect(screen.queryByRole('button', { name: /^Save for/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More servings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More servings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save for 8' }));
+    await flush();
+    expect(props.onSetServings).toHaveBeenCalledWith('r-quiche', 6, 8);
+    expect(tracker.track).toHaveBeenCalledWith('grocery_recipe_servings_changed', { from: 6, to: 8 });
+    expect(screen.queryByRole('button', { name: 'Save for 8' })).toBeNull();
+  });
+
+  it('spec 022: a failed servings change says so', async () => {
+    setup({ onSetServings: vi.fn(async () => false) });
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+    await flush();
+    fireEvent.click(screen.getByRole('button', { name: 'Fewer servings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save for 5' }));
+    await flush();
+    expect(screen.getByText("Couldn't update. Try again.")).toBeTruthy();
+  });
+
+  it('spec 022: the card menu removes the recipe\'s items, with Undo', async () => {
+    const { props, tracker } = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+    await flush();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove its items' }));
+    await flush();
+    expect(props.onClear).toHaveBeenCalledWith(['cream', 'cheese']);
+    expect(screen.getByText('Removed 2 items for Leek & bacon quiche.')).toBeTruthy();
+    expect(tracker.track).toHaveBeenCalledWith('grocery_recipe_removed', { item_count: 2 });
+    expect(JSON.stringify(tracker.track.mock.calls)).not.toContain('quiche');
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await flush();
+    expect(props.onRestore).toHaveBeenCalledWith(['cream', 'cheese']);
   });
 
   it('offline: the list stays readable, nothing can be changed', async () => {
@@ -257,6 +304,12 @@ describe('Groceries', () => {
     await flush();
     expect(props.onToggle).not.toHaveBeenCalled();
     expect(screen.queryByRole('link', { name: /Move to…/ })).toBeNull();
+    // A recipe card still opens its recipe; changing it waits for the connection.
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+    await flush();
+    expect(screen.getByRole('button', { name: 'Remove its items' }).getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(screen.getByRole('link', { name: 'Open recipe' }));
+    expect(props.onOpenRecipe).toHaveBeenCalledWith('r-quiche');
   });
 
   it('shows the empty list', () => {

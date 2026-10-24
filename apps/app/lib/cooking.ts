@@ -26,6 +26,36 @@ export function scrollTarget(stepTop: number): number {
   return Math.max(0, stepTop - SCROLL_OFFSET);
 }
 
+/** Within a step taller than the screen, snap points are at most this far apart, less this overlap. */
+export const SNAP_OVERLAP = 80;
+
+/**
+ * Where scrolling comes to rest (OC-Cook › Behaviour): each step's top (−8). A step taller than the
+ * scroll area also stops with its bottom at the bottom of the screen, so one swipe reads to the end
+ * of the step and the next one lands on the next step; a very tall step has stops in between too,
+ * a screen apart less 80, so none of it is skipped. Sorted, no duplicates.
+ */
+export function snapPoints(stepTops: readonly number[], stepHeights: readonly number[], viewportHeight: number): number[] {
+  const points = new Set<number>();
+  stepTops.forEach((top, i) => {
+    const start = scrollTarget(top);
+    points.add(start);
+    const height = stepHeights[i];
+    if (height === undefined || viewportHeight <= 0) return;
+    const end = top + height - viewportHeight;
+    if (end <= start) return;
+    const stride = Math.max(viewportHeight - SNAP_OVERLAP, 1);
+    for (let at = start + stride; at < end; at += stride) points.add(Math.round(at));
+    points.add(Math.round(end));
+  });
+  return [...points].sort((a, b) => a - b);
+}
+
+/** Whether a step is taller than the scroll area (so it also snaps at its end). */
+export function isTall(stepHeight: number | undefined, viewportHeight: number): boolean {
+  return stepHeight !== undefined && viewportHeight > 0 && stepHeight + SCROLL_OFFSET > viewportHeight;
+}
+
 /** Whole minutes spent cooking, for `cooking_finished` (at most a day). */
 export function cookingMinutes(startedAt: number, now: number): number {
   return Math.min(1440, Math.max(0, Math.round((now - startedAt) / 60_000)));

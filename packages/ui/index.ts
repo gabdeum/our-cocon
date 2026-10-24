@@ -31,7 +31,7 @@ export { StatTile, type StatTileProps } from './components/StatTile';
 export { Callout, type CalloutProps, type CalloutVariant } from './components/Callout';
 export { Avatar, AvatarStack, avatarTone, type AvatarTone } from './components/Avatar';
 export { StatusBanner, Presence, AwakeChip, SuccessPanel } from './components/StatusBanner';
-export { StepCard, StepFootnote, StepText, TimerRow, type StepTextPart, type TimerState } from './components/StepCard';
+export { StepCard, StepFootnote, StepRow, StepText, TimerRow, type StepTextPart, type TimerState } from './components/StepCard';
 export { CookTimerCard, TimerCard, type TimersScreenState } from './components/TimerCard';
 export { TimerPill, type TimerPillProps } from './components/TimerPill';
 export { TimePresets, type TimePreset, type TimePresetsProps } from './components/TimePresets';

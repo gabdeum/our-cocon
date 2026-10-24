@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
-import { AwakeChip, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, PushedScreen, StepText, Text } from '@cocon/ui';
+import { BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, PushedScreen, SettingRow, StepText, Text } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
-import { readChoices, startingChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
+import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
 import { defaultCooking, formatOf, recipeView, servingsMax, servingsText, type CookingSettings } from '../../lib/recipe-view';
 import { cookingMinutes, startIndex } from '../../lib/cooking';
-import { useCookAwake, type AwakeStatus as Awake } from '../../lib/keep-awake';
+import { useCookAwake } from '../../lib/keep-awake';
 import { AppTimerPill, useHasTimers } from '../timers/AppTimerPill';
 import { useStepTimerControl, type StepTimerInput } from '../recipes/step-timer';
+import { MoreOptions } from '../recipes/MoreOptions';
 import { useStepScroll } from './use-step-scroll';
 
 const c = strings.cook;
@@ -31,6 +32,11 @@ export interface CookScreenProps {
   onClose: () => void;
   /** The TimerPill opens the Timers screen. */
   onOpenTimers: () => void;
+  /** The options sheet's Scale by an ingredient and Unit converter (spec 013). */
+  onScaleByIngredient: () => void;
+  onConvert: () => void;
+  /** Changes when the screen is shown again, so choices a sheet saved are read back. */
+  visit?: number;
   /** "I have a thermometer" and "Keep screen on" (spec 027 wires them); on until then. */
   cooking?: CookingSettings;
   now?: () => number;
@@ -77,7 +83,7 @@ type LoadedProps = CookScreenProps & { recipe: RecipeDetail; exit: ReactNode };
 
 /** The recipe page's current servings and variants on this device (spec 008 FR-006), then the steps. */
 function WithChoices(props: LoadedProps) {
-  const { recipe, storage, userId, exit } = props;
+  const { recipe, storage, userId, exit, visit = 0 } = props;
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
   useEffect(() => {
     let live = true;
@@ -87,30 +93,49 @@ function WithChoices(props: LoadedProps) {
     return () => {
       live = false;
     };
-    // The recipe page set these; a live edit to the recipe re-validates them below.
+    // The recipe page set these, or a sheet opened from the options; a live edit to the recipe re-validates them below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storage, userId, recipe.id]);
+  }, [storage, userId, recipe.id, visit]);
 
   // A variant deleted while cooking no longer counts.
   const current = useMemo(() => (choices ? startingChoices(choices, recipe, servingsMax(recipe.serves)) : null), [choices, recipe]);
   if (!current) return <CookLoading exit={exit} />;
-  return <Cooking {...props} choices={current} />;
+  const update = (next: RecipeChoices) => {
+    setChoices(next);
+    void writeChoices(storage, userId, recipe.id, next);
+  };
+  return <Cooking {...props} choices={current} onChoices={update} />;
 }
 
-function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cooking = defaultCooking, now = Date.now }: LoadedProps & { choices: RecipeChoices }) {
+function Cooking({
+  recipe,
+  choices,
+  onChoices,
+  tracker,
+  stepId,
+  onClose,
+  onOpenTimers,
+  onScaleByIngredient,
+  onConvert,
+  cooking = defaultCooking,
+  now = Date.now,
+}: LoadedProps & { choices: RecipeChoices; onChoices: (next: RecipeChoices) => void }) {
   // The recipe page's units, kitchen scale and scale by an ingredient too (013, 032-later L22).
   const view = useMemo(() => recipeView(recipe, choices, choices, formatOf(choices), cooking), [recipe, choices, cooking]);
   const steps = view.steps;
   const count = steps.length;
   // Events cap step counts (variants can add steps on top of a recipe's 100).
   const sent = (n: number) => Math.min(n, MAX_TRACKED_STEPS);
-  const awake = useCookAwake(cooking.keepAwake);
+  // "Screen stays on" in the options sheet, for this visit; it starts from the setting (spec 027).
+  const [keepAwake, setKeepAwake] = useState(cooking.keepAwake);
+  const awake = useCookAwake(keepAwake);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const hasPill = useHasTimers();
 
   const scroller = useRef<ScrollView>(null);
   const scrollTo = useCallback((y: number, animated: boolean) => scroller.current?.scrollTo({ y, animated }), []);
   const [initial] = useState(() => startIndex(steps.map((s) => s.id), stepId));
-  const { current, onStepLayout, onScroll, jump, tops } = useStepScroll(count, initial, scrollTo);
+  const { current, onStepLayout, onViewport, onScroll, jump, snaps, tall } = useStepScroll(count, initial, scrollTo);
 
   // Once per visit; `minutes` counts from here.
   const startedAt = useRef<number | null>(null);
@@ -162,11 +187,20 @@ function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cook
     close();
   };
 
+  // The options' sheets open over cooking mode and come back to it.
+  const openSheet = (open: () => void) => () => {
+    setOptionsOpen(false);
+    open();
+  };
+
   return (
+    <>
     <CookLayout
       exitLabel={c.exit}
       onExit={exit}
-      status={hasPill ? <AppTimerPill onOpen={onOpenTimers} tracker={tracker} compact /> : <AwakeStatus awake={awake} />}
+      status={hasPill ? <AppTimerPill onOpen={onOpenTimers} tracker={tracker} compact /> : null}
+      optionsLabel={c.options}
+      onOptions={() => setOptionsOpen(true)}
       progress={
         <CookProgress
           count={count}
@@ -178,15 +212,17 @@ function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cook
         />
       }
       endLabel={c.bonAppetit}
-      backLabel={c.back}
-      onBack={() => {
-        if (at > 0) jump(at - 1);
-      }}
+      // On the first step, Back leaves cooking mode, as Exit does.
+      backLabel={at === 0 ? c.exit : c.back}
+      backExits={at === 0}
+      onBack={() => (at > 0 ? jump(at - 1) : exit())}
       nextLabel={last ? c.finish : c.next}
+      nextFinishes={last}
       onNext={next}
       scrollRef={scroller}
       onScroll={(e) => onScroll(e.nativeEvent.contentOffset.y, e.nativeEvent.layoutMeasurement.height)}
-      snapOffsets={tops}
+      onViewportLayout={onViewport}
+      snapOffsets={snaps}
     >
       {steps.map((step, i) => (
         <CookSection
@@ -194,7 +230,8 @@ function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cook
           testID={`cook-step-${i}`}
           title={step.name ?? undefined}
           current={i === at}
-          onLayout={(e) => onStepLayout(i, e.nativeEvent.layout.y)}
+          onLayout={(e) => onStepLayout(i, e.nativeEvent.layout.y, e.nativeEvent.layout.height)}
+          snapEnd={tall[i]}
         >
           <StepText parts={step.parts} cook />
           {step.timer ? <CookTimer stepId={step.id} index={i} recipeId={recipe.id} recipeName={recipe.name} timer={step.timer} tracker={tracker} /> : null}
@@ -203,17 +240,27 @@ function Cooking({ recipe, choices, tracker, stepId, onClose, onOpenTimers, cook
         </CookSection>
       ))}
     </CookLayout>
-  );
-}
-
-/** With no TimerPill: "Screen stays on", or a muted hint when this browser can't keep it on (OC-Cook › States). */
-function AwakeStatus({ awake }: { awake: Awake }) {
-  if (awake === 'on') return <AwakeChip label={c.awake} />;
-  if (awake === 'off') return null;
-  return (
-    <Text size={13} weight="700" color="ink-muted" align="right">
-      {c.awakeUnsupported}
-    </Text>
+    {/* Mounted only while open (a closed react-native-web Modal can still catch taps). */}
+    {optionsOpen ? (
+      <BottomSheet
+        visible
+        onClose={() => setOptionsOpen(false)}
+        title={c.options}
+        closeLabel={c.closeOptions}
+      >
+        <SettingRow
+          label={c.awake}
+          hint={awake === 'unsupported' ? c.awakeUnsupported : keepAwake ? c.awakeOnHint : c.awakeOffHint}
+          value={keepAwake}
+          onValueChange={(on) => {
+            setKeepAwake(on);
+            tracker.track('cook_screen_awake_toggled', { on });
+          }}
+        />
+        <MoreOptions choices={choices} tracker={tracker} onChange={onChoices} onScaleByIngredient={openSheet(onScaleByIngredient)} onConvert={openSheet(onConvert)} />
+      </BottomSheet>
+    ) : null}
+    </>
   );
 }
 

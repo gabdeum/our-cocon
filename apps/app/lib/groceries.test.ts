@@ -107,6 +107,11 @@ describe('recipeCards (FR-004)', () => {
       { id: 'r-soup', name: 'Pumpkin soup', serves: 4, photo_path: null, count: 1 },
     ]);
   });
+
+  it('spec 022: reads the servings the list is for, else the recipe\'s own', () => {
+    const items = [groceryItem({ id: 'a', recipes: quiche }), groceryItem({ id: 'b', recipes: { ...quiche, id: 'r-soup', serves: 4 } })];
+    expect(recipeCards(items, { 'r-quiche': 8 }).map((c) => c.serves)).toEqual([8, 4]);
+  });
 });
 
 describe('shopper (US3)', () => {

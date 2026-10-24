@@ -3,7 +3,7 @@ import { router, type Href } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AddGroceriesSheet, type AddGroceriesApi } from '../../../components/groceries/AddGroceriesSheet';
 import { addFromRecipe, recipeGroceryLines, undoAddFromRecipe } from '../../../lib/add-from-recipe';
-import { groceryListKey, loadGroceryList } from '../../../lib/groceries';
+import { groceryListKey, groceryServingsKey, loadGroceryList } from '../../../lib/groceries';
 import { useRecipeSheet } from '../../../lib/use-recipe-sheet';
 import { useSession } from '../../../lib/session';
 
@@ -17,12 +17,16 @@ export default function AddToGroceriesRoute() {
   const list = useQuery({ queryKey: key, queryFn: () => loadGroceryList(client), enabled: familyId !== null });
   const view = useMemo(() => (recipe && choices ? recipeGroceryLines(recipe, choices) : null), [recipe, choices]);
   const recipeId = recipe?.id;
+  const serves = view?.serves;
   const api = useMemo<AddGroceriesApi | null>(() => {
-    if (!familyId || !recipeId) return null;
-    const refresh = () => void queryClient.invalidateQueries({ queryKey: groceryListKey(familyId) });
+    if (!familyId || !recipeId || serves === undefined) return null;
+    const refresh = () => {
+      void queryClient.invalidateQueries({ queryKey: groceryListKey(familyId) });
+      void queryClient.invalidateQueries({ queryKey: groceryServingsKey(familyId) });
+    };
     return {
       add: async (picked) => {
-        const added = await addFromRecipe(client, familyId, recipeId, picked);
+        const added = await addFromRecipe(client, familyId, recipeId, picked, serves);
         refresh();
         return added;
       },
@@ -32,7 +36,7 @@ export default function AddToGroceriesRoute() {
         return ok;
       },
     };
-  }, [client, familyId, recipeId, queryClient]);
+  }, [client, familyId, recipeId, serves, queryClient]);
   if (!recipe || !view || !api) return null;
   return (
     <AddGroceriesSheet

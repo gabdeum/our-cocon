@@ -1,7 +1,7 @@
 // Spec 012: cooking mode's scroll rules (US1, FR-004) and where it opens (032-later L19).
 import { describe, expect, it } from 'vitest';
 import { quiche } from '@cocon/schemas/quiche.fixture';
-import { cookingMinutes, currentStep, scrollTarget, startIndex, stepStillThere } from './cooking';
+import { cookingMinutes, currentStep, isTall, scrollTarget, snapPoints, startIndex, stepStillThere } from './cooking';
 
 describe('currentStep (US1 › 2)', () => {
   const tops = [0, 520, 1040, 1560];
@@ -22,6 +22,32 @@ describe('scrollTarget', () => {
   it("lands 8 above a step's top, never above the start", () => {
     expect(scrollTarget(520)).toBe(512);
     expect(scrollTarget(0)).toBe(0);
+  });
+});
+
+describe('snapPoints (OC-Cook › Behaviour)', () => {
+  it('short steps snap at their tops only', () => {
+    expect(snapPoints([0, 520, 1040], [520, 520, 520], 700)).toEqual([0, 512, 1032]);
+  });
+
+  it('a step taller than the screen also snaps with its bottom at the bottom of the screen', () => {
+    // Step 2 runs 520 → 1420: its end is 1420 − 700 = 720, between its top (512) and step 3 (1412).
+    expect(snapPoints([0, 520, 1420], [520, 900, 520], 700)).toEqual([0, 512, 720, 1412]);
+  });
+
+  it('a very tall step has stops a screen apart less 80, so nothing is skipped', () => {
+    // 0 → 2000 in a 700 screen: 0, 620, 1240, then its end at 1300.
+    expect(snapPoints([0], [2000], 700)).toEqual([0, 620, 1240, 1300]);
+  });
+
+  it('before the screen is measured, tops only', () => {
+    expect(snapPoints([0, 520], [2000, 520], 0)).toEqual([0, 512]);
+  });
+
+  it('isTall agrees with where the end stop appears', () => {
+    expect(isTall(900, 700)).toBe(true);
+    expect(isTall(520, 700)).toBe(false);
+    expect(isTall(undefined, 700)).toBe(false);
   });
 });
 

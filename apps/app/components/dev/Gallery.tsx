@@ -56,6 +56,7 @@ import {
   StepCard,
   StepEditCard,
   StepFootnote,
+  StepRow,
   StepNote,
   StepPreview,
   StepText,
@@ -536,6 +537,10 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <TimerRow state="idle" label="Start timer" clock="35:00" onPress={noop} minusLabel="−1" plusLabel="+1" minusA11y="One minute less" plusA11y="One minute more" onMinus={noop} onPlus={noop} />
         </StepCard>
         <StepFootnote text="−1 / +1 changes a timer by a minute, even while it runs." />
+      </Section>
+      <Section group="Cooking" title="StepRow">
+        <StepRow number={2} title="Blind bake" clock="12:00" accessibilityLabel="Open step 2 in cooking mode" onPress={noop} />
+        <StepRow number={3} title="Cook the filling" accessibilityLabel="Open step 3 in cooking mode" onPress={noop} />
       </Section>
 
       <Section group="Cooking" title="TimerCard">

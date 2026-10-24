@@ -219,6 +219,8 @@ export const strings = {
     addToGroceries: 'Add to groceries…',
     startCooking: 'Start cooking',
     stepsLabel: 'Steps',
+    /** A row in the Steps tab opens cooking mode there. */
+    openStep: (n: number) => `Open step ${n} in cooking mode`,
     // The Steps tab (spec 009, OC-RecipeSteps).
     steps: {
       tempLabel: 'Temperature check:',
@@ -696,8 +698,16 @@ export const strings = {
     sourcesJoin: ' + ',
     sourcePartsJoin: ' · ',
     recipeMeta: (items: number, serves: number) => `${items === 1 ? '1 item' : `${items} items`} · serves ${serves}`,
-    open: 'Open',
-    openRecipe: (recipe: string) => `Open ${recipe}`,
+    // A recipe card's menu (spec 022, OC-Groceries › Recipe card menu).
+    recipeOptions: (recipe: string) => `Options for ${recipe}`,
+    openRecipeRow: 'Open recipe',
+    servings: 'Servings',
+    fewerServings: 'Fewer servings',
+    moreServings: 'More servings',
+    servingsHint: 'Changes what is still to buy. Ticked items stay as they are.',
+    saveServings: (n: number) => `Save for ${n}`,
+    removeRecipeItems: 'Remove its items',
+    removedRecipe: (items: number, recipe: string) => `Removed ${items === 1 ? '1 item' : `${items} items`} for ${recipe}.`,
     addedBy: (name: string) => `Added by ${name}`,
     via: (name: string, assistant: string) => `${name} via ${assistant}`,
     // Spec 021: what to buy, beside the name: "Heavy cream: 1 pint carton (need 300 ml)".
@@ -870,9 +880,14 @@ export const strings = {
   // design/ui/OC-Cook.md (spec 012)
   cook: {
     exit: 'Exit',
-    /** The `oc-awake` chip, shown when no TimerPill is. */
+    /** The settings button in the header, and the sheet it opens. */
+    options: 'Cooking options',
+    closeOptions: 'Close cooking options',
+    /** The switch in the options sheet. */
     awake: 'Screen stays on',
-    /** Muted, in its place, when this browser can't keep the screen on (OC-Cook › States). */
+    awakeOnHint: "Your screen won't lock while you cook",
+    awakeOffHint: 'Your screen locks as usual',
+    /** The switch's hint when this browser can't keep the screen on (OC-Cook › States). */
     awakeUnsupported: 'This browser may let the screen lock.',
     stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
     hint: (serves: string) => `Serves ${serves} · swipe up for next`,

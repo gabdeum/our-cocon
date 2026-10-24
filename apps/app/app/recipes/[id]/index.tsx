@@ -49,6 +49,9 @@ export default function RecipeRoute() {
       onSettings={go('settings')}
       onAddToGroceries={go('add-to-groceries')}
       onStartCooking={go('cook')}
+      onOpenStep={(step) => {
+        if (id) router.push(`${recipeRoute(id, 'cook')}?step=${encodeURIComponent(step)}&from=recipe` as Href);
+      }}
       onOpenTimers={() => router.push('/timers')}
       onScaleByIngredient={go('scale')}
       onConvert={go('convert')}

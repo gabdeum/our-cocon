@@ -1,7 +1,8 @@
 // @vitest-environment node
 // Spec 022 against local Supabase: US2 (cream already on the list reads as one row with the recipe's),
 // FR-003 (items carry the recipe), FR-004 (Undo removes exactly what was added and reverts the
-// merge) and SC-001 (adding the same recipe twice never makes duplicate rows). Skipped with a
+// merge) and SC-001 (adding the same recipe twice never makes duplicate rows). The recipe card's
+// menu: the servings the list records, rescaling the recipe's items, and removing them with Undo. Skipped with a
 // notice when Supabase isn't running locally (`pnpm dev` starts it; CI starts it first).
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -10,7 +11,7 @@ import type { Database } from '@cocon/schemas';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
 import { quicheDetail } from '../test/quiche-detail';
 import { addFromRecipe, recipeGroceryLines, undoAddFromRecipe } from './add-from-recipe';
-import { addItem, combinedText, combineRows, loadGroceryList } from './groceries';
+import { addItem, clearItems, combinedText, combineRows, loadGroceryList, loadGroceryServings, recipeItems, restoreItems, setRecipeServings } from './groceries';
 import { defaultPanelChoices } from './recipe-choices';
 
 const local = localSupabase();
@@ -46,7 +47,7 @@ describe.skipIf(!local)('adding a recipe to groceries against local Supabase', (
 
   it('US2, FR-003, FR-004: the cream reads as one row of 400 ml, the rest is for the recipe, and Undo puts it back', async () => {
     expect(await addItem(alex, familyId, alexId, [], '100 ml heavy cream')).toMatchObject({ status: 'added' });
-    const added = await addFromRecipe(alex, familyId, recipeId, picked);
+    const added = await addFromRecipe(alex, familyId, recipeId, picked, 6);
     if (!added) throw new Error('the add failed');
     let list = await loadGroceryList(alex);
     // My cream keeps its own item (and "Added by Alex"); the list shows it with the quiche's as one row.
@@ -65,8 +66,8 @@ describe.skipIf(!local)('adding a recipe to groceries against local Supabase', (
   });
 
   it('SC-001: adding the same recipe twice updates its rows instead of duplicating them', async () => {
-    const first = await addFromRecipe(alex, familyId, recipeId, lines);
-    const second = await addFromRecipe(alex, familyId, recipeId, lines);
+    const first = await addFromRecipe(alex, familyId, recipeId, lines, 6);
+    const second = await addFromRecipe(alex, familyId, recipeId, lines, 6);
     expect(first && second).toBeTruthy();
     const mine = (await loadGroceryList(alex)).filter((i) => i.recipe_id === recipeId);
     const names = mine.map((i) => i.catalog_key ?? i.name.toLowerCase());
@@ -75,5 +76,29 @@ describe.skipIf(!local)('adding a recipe to groceries against local Supabase', (
     expect(mine.find((i) => i.name === 'Bacon lardons')?.quantity).toBe(400);
     expect(mine.find((i) => i.name === 'Nutmeg')).toMatchObject({ quantity: 2, unit: 'pinch' });
     expect(second?.addedIds).toEqual([]);
+    // The first add started the servings again (the recipe had nothing left on the list); the second adds to them.
+    expect((await loadGroceryServings(alex))[recipeId]).toBe(12);
+  });
+
+  it('card menu: servings 12 → 6 halves what is still to buy; ticked items stay', async () => {
+    let list = await loadGroceryList(alex);
+    const leeks = list.find((i) => i.recipe_id === recipeId && i.name === 'Leeks');
+    if (!leeks) throw new Error('no leeks');
+    await alex.from('grocery_items').update({ checked: true }).eq('id', leeks.id);
+    list = await loadGroceryList(alex);
+    expect(await setRecipeServings(alex, familyId, recipeId, 12, 6, list)).toBe(true);
+    const mine = recipeItems(await loadGroceryList(alex), recipeId);
+    expect(mine.find((i) => i.name === 'Bacon lardons')?.quantity).toBe(200);
+    expect(mine.find((i) => i.name === 'Leeks')?.quantity).toBe(leeks.quantity);
+    expect((await loadGroceryServings(alex))[recipeId]).toBe(6);
+  });
+
+  it('card menu: removing the recipe\'s items hides them all, and Undo brings them back', async () => {
+    const ids = recipeItems(await loadGroceryList(alex), recipeId).map((i) => i.id);
+    expect(ids.length).toBeGreaterThan(0);
+    expect(await clearItems(alex, ids)).toBe(true);
+    expect(recipeItems(await loadGroceryList(alex), recipeId)).toEqual([]);
+    expect(await restoreItems(alex, ids)).toBe(true);
+    expect(recipeItems(await loadGroceryList(alex), recipeId)).toHaveLength(ids.length);
   });
 });

@@ -173,6 +173,47 @@ export function StepCard({ number, name, variantTag, parts, photo, children }: S
   );
 }
 
+export interface StepRowProps {
+  number: number;
+  /** The step's name, or its text when it has none (one line, cut short). */
+  title: string;
+  /** The step timer's length ("35:00"), in a honey chip on the right. */
+  clock?: string;
+  /** "Open step 3 in cooking mode". */
+  accessibilityLabel: string;
+  onPress: () => void;
+}
+
+/** One step in the recipe page's step list (StepCard README › StepRow): a quick look that opens the step in cooking mode. */
+export function StepRow({ number, title, clock, accessibilityLabel, onPress }: StepRowProps) {
+  return (
+    <Pressable
+      role="link"
+      aria-label={accessibilityLabel}
+      onPress={onPress}
+      className={cn('min-h-[60px] flex-row items-center gap-10 rounded-lg bg-surface-card py-10 pl-14 pr-10 active:bg-surface-card-pressed', focusRing)}
+    >
+      <View aria-hidden className="h-[32px] w-[32px] items-center justify-center rounded-full bg-honey">
+        <Text size={15} weight="900">
+          {number}
+        </Text>
+      </View>
+      <Text size={16} weight="800" numberOfLines={1} className="min-w-0 flex-1">
+        {title}
+      </Text>
+      {clock ? (
+        <View className="flex-row items-center gap-4 rounded-pill bg-honey px-10 py-4">
+          <Icon name="timer" size={16} />
+          <Text size={14} weight="800" tabular>
+            {clock}
+          </Text>
+        </View>
+      ) : null}
+      <Icon name="chevron-right" color="inkMuted" />
+    </Pressable>
+  );
+}
+
 /** Under the step list: "−1 / +1 changes a timer by a minute, even while it runs." (StepCard README). */
 export function StepFootnote({ text }: { text: string }) {
   return (

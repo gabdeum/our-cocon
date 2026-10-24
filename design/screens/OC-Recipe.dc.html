@@ -107,44 +107,25 @@ body{margin:0}
     </sc-if>
 
     <sc-if value="{{isSteps}}" hint-placeholder-val="{{false}}">
-      <section style="display: flex; flex-direction: column; gap: 14px">
+      <section style="display: flex; flex-direction: column; gap: 8px">
         <sc-for list="{{steps}}" as="s" hint-placeholder-count="6">
-          <article style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
-            <div style="display: flex; align-items: center; gap: 10px">
-              <span style="width: 32px; height: 32px; flex: none; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900">{{s.num}}</span>
-              <h3 style="margin: 0; font-size: 18px; font-weight: 900; flex: 1">{{s.name}}</h3>
-              <sc-if value="{{s.isVariant}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; font-weight: 800; color: #424D17; background: #D9E3A8; padding: 4px 10px; border-radius: 999px">Variant</span></sc-if>
-            </div>
-            <p style="margin: 0; font-size: 17px; line-height: 1.55"><sc-for list="{{s.parts}}" as="pt" hint-placeholder-count="3"><span style="{{pt.style}}">{{pt.text}}</span></sc-for></p>
-            <sc-if value="{{s.hasTemp}}" hint-placeholder-val="{{false}}">
-              <div style="display: flex; gap: 10px; align-items: flex-start; background: #D9E3A8; border-radius: 16px; padding: 12px 14px">
-                <svg aria-hidden="true" style="flex: none; margin-top: 2px" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0Z"/><path d="M12 9v7"/></svg>
-                <div style="font-size: 15px; font-weight: 700; line-height: 1.4"><span style="font-weight: 900">Temperature check: </span>{{s.temp}}</div>
-              </div>
-            </sc-if>
+          <a href="OC-Cook.dc.html" aria-label="Open step {{s.num}} in cooking mode" style="background: #FFFFFF; border-radius: 16px; min-height: 60px; padding: 10px 10px 10px 14px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: #2A2414">
+            <span style="width: 32px; height: 32px; flex: none; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900">{{s.num}}</span>
+            <span style="flex: 1; min-width: 0; font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.name}}</span>
             <sc-if value="{{s.hasTimer}}" hint-placeholder-val="{{false}}">
-              <div style="display: flex; gap: 6px">
-                <button onClick="{{s.toggle}}" style="{{s.timerStyle}}">
-                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
-                  <span style="flex: 1; text-align: left">{{s.timerText}}</span>
-                  <span style="font-variant-numeric: tabular-nums; font-size: 17px">{{s.clock}}</span>
-                </button>
-                <button onClick="{{s.minus}}" aria-label="One minute less" style="width: 52px; flex: none; border-radius: 16px; border: none; background: #FFF0C9; color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer">−1</button>
-                <button onClick="{{s.plus}}" aria-label="One minute more" style="width: 52px; flex: none; border-radius: 16px; border: none; background: #FFF0C9; color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer">+1</button>
-              </div>
+              <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: #FFCF5C; font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>{{s.clock}}
+              </span>
             </sc-if>
-            <sc-if value="{{s.hasTip}}" hint-placeholder-val="{{false}}">
-              <div style="background: #FFF0C9; border-radius: 16px; padding: 12px 14px">
-                <div style="font-size: 12px; font-weight: 900; color: #8A4B00; text-transform: uppercase; letter-spacing: 0.7px">Chef's tip</div>
-                <div style="font-size: 15px; font-weight: 600; line-height: 1.45; margin-top: 2px">{{s.tip}}</div>
-              </div>
-            </sc-if>
-          </article>
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A503A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+          </a>
         </sc-for>
-        <div style="font-size: 13px; font-weight: 600; color: #5A503A; text-align: center">−1 / +1 changes a timer by a minute, even while it runs.</div>
       </section>
     </sc-if>
 
+  </div>
+  <!-- Fixed footer: "Start cooking" stays in reach while the page scrolls. -->
+  <div style="position: sticky; bottom: 0; background: #FFF8E3; border-top: 1.5px solid #F2E6C4; padding: 12px 20px 28px">
     <a href="OC-Cook.dc.html" style="height: 60px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; font-weight: 900">
       <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8Z"/></svg>Start cooking
     </a>

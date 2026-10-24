@@ -31,21 +31,25 @@ import {
   rowSource,
   shopper,
   toBuyCount,
+  recipeItems,
   type AddResult,
   type GroceryItem,
   type GroceryRow,
+  type GroceryServings,
   type PackData,
+  type RecipeCard,
 } from '../../lib/groceries';
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
 import { OfflineBanner } from '../sync/OfflineBanner';
 import { GrocerySettings } from '../settings/GrocerySettings';
 import { GroceryActions, type ActionView } from './GroceryActions';
+import { RecipeCardSheet } from './RecipeCardSheet';
 
 const g = strings.groceries;
 
-/** What an Undo brings back: ticked items cleared, the whole list, or one removed row. */
-type Banner = { message: string; tone: 'sage' | 'warn'; undo?: { ids: string[]; count: number; kind: 'done' | 'all' | 'removed' } };
+/** What an Undo brings back: ticked items cleared, the whole list, one removed row, or a recipe's items. */
+type Banner = { message: string; tone: 'sage' | 'warn'; undo?: { ids: string[]; count: number; kind: 'done' | 'all' | 'removed' | 'recipe' } };
 
 export interface GroceryListProps {
   /** Undefined while loading (lib/groceries.ts › loadGroceryList). */
@@ -63,6 +67,10 @@ export interface GroceryListProps {
   onEdit: (item: GroceryItem, text: string) => Promise<'saved' | 'empty' | 'failed'>;
   onMove: (item: GroceryItem, aisle: Aisle) => Promise<boolean>;
   onOpenRecipe: (id: string) => void;
+  /** The servings each recipe is on the list for (spec 022); the recipe's own until loaded. */
+  servings?: GroceryServings;
+  /** A recipe card's menu: rescale its items still to buy from `from` to `to` servings. */
+  onSetServings: (recipeId: string, from: number, to: number) => Promise<boolean>;
   /** Spec 021: where the family shops and whether rows round up to store sizes. */
   settings: FamilySettings;
   /** Packs per catalog entry on the list (lib/groceries.ts › loadPacks); undefined while loading. */
@@ -107,11 +115,13 @@ export function GroceryList(props: GroceryListProps) {
   const openRow = (row: GroceryRow, view: ActionView) =>
     setMenu({ id: row.id, view, rest: rowItem(row, packs) === row.items[0] ? [] : row.items.slice(1).map((i) => i.id) });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [cardMenu, setCardMenu] = useState<string | null>(null);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   const list = useMemo(() => items ?? [], [items]);
   const rows = useMemo(() => combineRows(list), [list]);
-  const cards = useMemo(() => recipeCards(list), [list]);
+  const cards = useMemo(() => recipeCards(list, props.servings), [list, props.servings]);
+  const menuCard = cardMenu ? (cards.find((c) => c.id === cardMenu) ?? null) : null;
   const amounts = useMemo(() => rowAmounts(rows, packs, settings), [rows, packs, settings]);
   const titleOf = (row: GroceryRow) => amounts.get(row.id)?.name ?? (row.items[0] as GroceryItem).name;
   const aisles = groupByAisle(rows).map((a) => ({ aisle: a.aisle, rows: byName(a.items, titleOf) }));
@@ -169,6 +179,7 @@ export function GroceryList(props: GroceryListProps) {
     if (await props.onClear(ids)) {
       if (kind === 'done') tracker.track('done_items_cleared', { count });
       if (kind === 'all') tracker.track('all_items_cleared', { count });
+      if (kind === 'recipe') tracker.track('grocery_recipe_removed', { item_count: Math.min(count, 500) });
       setBanner({ message, tone: 'sage', undo: { ids, count, kind } });
     } else setBanner({ message: g.syncFailed, tone: 'warn' });
   };
@@ -214,6 +225,24 @@ export function GroceryList(props: GroceryListProps) {
   };
 
   const remove = (row: GroceryRow) => void clear(rowIds([row]), 1, g.removed(titleOf(row)), 'removed');
+
+  // A recipe card's menu (spec 022).
+  const removeRecipe = (card: RecipeCard) => {
+    setCardMenu(null);
+    const ids = recipeItems(list, card.id).map((i) => i.id);
+    void clear(ids, ids.length, g.removedRecipe(ids.length, card.name), 'recipe');
+  };
+  const saveServings = async (card: RecipeCard, to: number) => {
+    const from = card.serves;
+    if (await props.onSetServings(card.id, from, to)) {
+      tracker.track('grocery_recipe_servings_changed', { from: Math.min(from, 50), to });
+      setCardMenu(null);
+      return true;
+    }
+    setCardMenu(null);
+    setBanner({ message: g.syncFailed, tone: 'warn' });
+    return false;
+  };
 
   const statusBanner = banner ? (
     <StatusBanner
@@ -270,7 +299,7 @@ export function GroceryList(props: GroceryListProps) {
       {statusBanner}
 
       {cards.map((card) => (
-        <Card key={card.id} tone="soft" onPress={() => props.onOpenRecipe(card.id)} accessibilityLabel={g.openRecipe(card.name)} className="flex-row items-center gap-8 px-12 py-10">
+        <Card key={card.id} tone="soft" className="flex-row items-center gap-8 py-10 pl-12 pr-4">
           <Thumb uri={card.photo_path ? photoUrls[card.photo_path] : undefined} label={card.name} />
           <View className="min-w-0 flex-1">
             <Text size={15} weight="800">
@@ -280,9 +309,7 @@ export function GroceryList(props: GroceryListProps) {
               {g.recipeMeta(card.count, card.serves)}
             </Text>
           </View>
-          <Text size={14} weight="800" color="olive" className="px-4 py-8">
-            {g.open}
-          </Text>
+          <IconButton icon="more-vertical" label={g.recipeOptions(card.name)} variant="soft" onPress={() => setCardMenu(card.id)} />
         </Card>
       ))}
 
@@ -351,6 +378,21 @@ export function GroceryList(props: GroceryListProps) {
         onMove={(item, aisle) => void move(item, aisle)}
         onEdit={edit}
       />
+
+      {menuCard ? (
+        <RecipeCardSheet
+          key={menuCard.id}
+          card={menuCard}
+          online={online}
+          onOpen={() => {
+            setCardMenu(null);
+            props.onOpenRecipe(menuCard.id);
+          }}
+          onSaveServings={(to) => saveServings(menuCard, to)}
+          onRemove={() => removeRecipe(menuCard)}
+          onClose={() => setCardMenu(null)}
+        />
+      ) : null}
 
       {/* Mounted only while open, like the row's sheets: on the web a closed Modal can linger,
           invisible, over the list and swallow every tap until its fade-out reports it ended. */}

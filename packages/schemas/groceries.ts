@@ -24,3 +24,8 @@ export type GroceryItemInput = z.infer<typeof GroceryItemInput>;
 /** Spec 020: a change to an item (Edit, a merge). Clearing and ticking are set by the database. */
 export const GroceryItemUpdate = GroceryItemFields.omit({ checked: true, recipe_id: true }).partial().refine(unitNeedsAmount, 'A unit needs an amount');
 export type GroceryItemUpdate = z.infer<typeof GroceryItemUpdate>;
+
+/** Spec 022: the servings a recipe is on the list for (grocery_recipes, same limits as a recipe's). */
+export const GroceryRecipeServings = z.int().min(1).max(50);
+export const GroceryRecipeInput = z.strictObject({ recipe_id: z.uuid(), servings: GroceryRecipeServings });
+export type GroceryRecipeInput = z.infer<typeof GroceryRecipeInput>;

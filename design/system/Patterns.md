@@ -13,7 +13,7 @@ These are the layouts every Our Cocon screen is built from. Compose new screens 
 
 - Photo 240 tall, edge to edge. Round white `IconButton`s (48) sit 52 from the top and 16 from the sides: back on the left, actions on the right, 8 apart.
 - The content sheet overlaps the photo by 30 with top radius 30, `surface-page`, padding 24 × 20.
-- The main CTA (ink, 60, "Start cooking") ends the content. The `TimerPill` sticks centred 108 from the top while timers exist.
+- The main CTA (ink, 60, "Start cooking") sits in a footer bar fixed at the bottom (`surface-page`, 1.5 px `line` top border, padding 12 × 20 × 28), so it is always in reach while the page scrolls under it. The `TimerPill` sticks centred 108 from the top while timers exist.
 - In the app: `PhotoScreen` (packages/ui Layout), with the photo, the left and right buttons and the content.
 
 ## Public page (shared recipe)
@@ -48,9 +48,9 @@ These are the layouts every Our Cocon screen is built from. Compose new screens 
 
 ## Cooking mode
 
-- The header is fixed: Exit (soft pill), and on the right either the `TimerPill` or the "Screen stays on" chip. Then the cook `Progress` bar (tappable segments) and "Step N of M".
+- The header is fixed: Exit (soft pill), and on the right the `TimerPill` while timers run, then a soft settings IconButton that opens the "Cooking options" sheet. Then the cook `Progress` bar (tappable segments) and "Step N of M".
 - Every step sits in one scrolling column with scroll-snap. The current step is at full opacity and the others at `opacity-dimmed`.
-- The footer is fixed: a soft Back (1/3) and an olive Next (2/3), both 60 tall.
+- The footer is fixed: a soft Back (1/3) and an olive Next (2/3), both 60 tall. A button that leaves cooking mode (Exit in Back's place on the first step, Finish on the last) is ink with an icon.
 
 ## States that every list needs
 

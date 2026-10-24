@@ -64,14 +64,17 @@ export interface PhotoScreenProps {
   banner?: ReactNode;
   /** Stays put while the page scrolls, centred 108 from the top: the TimerPill (spec 011). */
   floating?: ReactNode;
+  /** Fixed at the bottom while the page scrolls under it: the recipe page's "Start cooking". */
+  footer?: ReactNode;
   children: ReactNode;
 }
 
 /**
  * Pushed screen with photo header (Patterns.md): photo 240 edge to edge, buttons 52 from the top and
- * 16 from the sides, and the content sheet overlapping it by 30 with a top radius of 30.
+ * 16 from the sides, and the content sheet overlapping it by 30 with a top radius of 30. An optional
+ * footer bar stays at the bottom (page background, top border, 20 sides, 12 top, 28 bottom).
  */
-export function PhotoScreen({ photo, left, right, banner, floating, children }: PhotoScreenProps) {
+export function PhotoScreen({ photo, left, right, banner, floating, footer, children }: PhotoScreenProps) {
   const page = (
     <ScrollView className="flex-1 bg-surface-page">
       <View className="h-[240px] overflow-hidden">
@@ -85,13 +88,16 @@ export function PhotoScreen({ photo, left, right, banner, floating, children }: 
       </View>
     </ScrollView>
   );
-  if (!floating) return page;
+  if (!floating && !footer) return page;
   return (
     <View className="flex-1">
       {page}
-      <View pointerEvents="box-none" className="absolute left-0 right-0 top-[108px] items-center px-16">
-        {floating}
-      </View>
+      {floating ? (
+        <View pointerEvents="box-none" className="absolute left-0 right-0 top-[108px] items-center px-16">
+          {floating}
+        </View>
+      ) : null}
+      {footer ? <View className="border-t-[1.5px] border-line bg-surface-page px-20 pb-28 pt-12">{footer}</View> : null}
     </View>
   );
 }

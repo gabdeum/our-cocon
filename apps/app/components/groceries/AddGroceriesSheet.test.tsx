@@ -14,7 +14,7 @@ beforeEach(() => onlineManager.setOnline(true));
 afterEach(cleanup);
 
 const { lines } = recipeGroceryLines(quicheDetail, { servings: 6, version: null, options: [], ...defaultPanelChoices, scaledBy: null });
-const added: AddedFromRecipe = { addedIds: ['a'], merges: [] };
+const added: AddedFromRecipe = { addedIds: ['a'], merges: [], recipeId: 'r-quiche', familyId: 'f-1', servingsBefore: null };
 
 function setup({ list = [], api = {} }: { list?: GroceryItem[]; api?: Partial<AddGroceriesApi> } = {}) {
   const tracker = fakeTracker();

@@ -84,6 +84,8 @@ async function setup(props: Partial<CookScreenProps> = {}) {
       tracker={tracker}
       onClose={onClose}
       onOpenTimers={onOpenTimers}
+      onScaleByIngredient={vi.fn()}
+      onConvert={vi.fn()}
       {...props}
     />,
     { wrapper },
@@ -99,7 +101,9 @@ const press = (name: string | RegExp) => fireEvent.click(screen.getByRole('butto
 describe('Cooking mode (spec 012)', () => {
   it('opens at step 1 with the header, every step and "Bon appétit!", and sends cooking_started', async () => {
     const { tracker } = await setup();
-    expect(screen.getByRole('button', { name: 'Exit' })).toBeTruthy();
+    // The header's Exit, and Back reads Exit on the first step.
+    expect(screen.getAllByRole('button', { name: 'Exit' })).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Cooking options' })).toBeTruthy();
     expect(screen.getByText(`Step 1 of ${STEPS}`)).toBeTruthy();
     expect(screen.getByText('Serves 6 · swipe up for next')).toBeTruthy();
     expect(screen.getByRole('heading', { level: 2, name: 'Blind bake' })).toBeTruthy();
@@ -128,12 +132,11 @@ describe('Cooking mode (spec 012)', () => {
     expect(screen.getByRole('button', { name: `Go to step 5: ${(quiche.steps[4]?.name ?? '')}` })).toBeTruthy();
   });
 
-  it('US2: a timed step has the dark timer; starting it puts the pill in the header in place of the chip', async () => {
+  it('US2: a timed step has the dark timer; starting it puts the pill in the header, beside the options', async () => {
     const { tracker } = await setup();
     const blind = section(1);
     expect(within(blind).getByText('Blind bake timer')).toBeTruthy();
     expect(within(blind).getByRole('timer').textContent).toBe('12:00');
-    expect(screen.getByText('Screen stays on')).toBeTruthy();
 
     fireEvent.click(within(blind).getByRole('button', { name: 'One minute more' }));
     expect(within(blind).getByRole('timer').textContent).toBe('13:00');
@@ -141,12 +144,12 @@ describe('Cooking mode (spec 012)', () => {
     expect(tracker.track).toHaveBeenCalledWith('step_timer_started', { step_index: 1 });
     expect(within(blind).getByRole('button', { name: 'Pause' })).toBeTruthy();
     expect(screen.getByRole('link', { name: '1 timer running. Open timers' })).toBeTruthy();
-    expect(screen.queryByText('Screen stays on')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Cooking options' })).toBeTruthy();
 
     fireEvent.click(within(blind).getByRole('button', { name: 'Pause' }));
     expect(within(blind).getByRole('button', { name: 'Resume' })).toBeTruthy();
-    // A paused timer isn't shown in the pill (TimerPill README), so the chip is back.
-    expect(screen.getByText('Screen stays on')).toBeTruthy();
+    // A paused timer isn't shown in the pill (TimerPill README).
+    expect(screen.queryByRole('link', { name: /Open timers/ })).toBeNull();
   });
 
   it('US3: keeps the screen on while open and lets it lock after', async () => {
@@ -157,17 +160,60 @@ describe('Cooking mode (spec 012)', () => {
     expect(keepAwake.deactivateKeepAwake).toHaveBeenCalledTimes(1);
   });
 
-  it('US3: explains it when this browser cannot keep the screen on; shows nothing when the setting is off', async () => {
+  it('US3: "Screen stays on" is a switch in the options sheet; off lets the screen lock', async () => {
+    const { tracker } = await setup();
+    press('Cooking options');
+    const awake = screen.getByRole('switch', { name: 'Screen stays on' });
+    expect(awake.getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByText("Your screen won't lock while you cook")).toBeTruthy();
+    fireEvent.click(awake);
+    await settle();
+    expect(keepAwake.deactivateKeepAwake).toHaveBeenCalled();
+    expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
+    expect(tracker.track).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false });
+  });
+
+  it('US3: the switch explains it when this browser cannot keep the screen on; it starts off when the setting is off', async () => {
     keepAwake.isAvailableAsync.mockResolvedValue(false);
     const first = await setup();
+    expect(screen.queryByText('This browser may let the screen lock.')).toBeNull();
+    press('Cooking options');
     expect(screen.getByText('This browser may let the screen lock.')).toBeTruthy();
-    expect(screen.queryByText('Screen stays on')).toBeNull();
     first.unmount();
 
     keepAwake.isAvailableAsync.mockResolvedValue(true);
     await setup({ cooking: { thermometer: true, keepAwake: false } });
-    expect(screen.queryByText('Screen stays on')).toBeNull();
-    expect(screen.queryByText('This browser may let the screen lock.')).toBeNull();
+    expect(keepAwake.activateKeepAwakeAsync).not.toHaveBeenCalled();
+    press('Cooking options');
+    expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('the options sheet has the recipe page\'s "…" options: Imperial changes the steps at once and is remembered', async () => {
+    const storage = memoryStorage();
+    const onConvert = vi.fn();
+    const { tracker } = await setup({ storage, onConvert });
+    press('Cooking options');
+    expect(screen.getByRole('switch', { name: "I'm using a kitchen scale" })).toBeTruthy();
+    press('Imperial');
+    expect(within(section(0)).getByText(/350 °F \(180 °C\)/)).toBeTruthy();
+    expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial' });
+    expect(JSON.parse((await storage.getItem(`cocon.recipe.${gabriel.user_id}.${detail.id}`)) ?? '{}').system).toBe('imperial');
+    fireEvent.click(screen.getByRole('link', { name: 'Unit converter' }));
+    expect(onConvert).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('switch', { name: 'Screen stays on' })).toBeNull();
+  });
+
+  it('Back on the first step reads Exit and leaves cooking mode, like Exit', async () => {
+    const { tracker, onClose } = await setup();
+    const back = screen.getAllByRole('button', { name: 'Exit' })[1] as HTMLElement;
+    fireEvent.click(back);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(tracker.track).toHaveBeenCalledWith('cooking_exited', { at_step: 1, step_count: STEPS });
+    cleanup();
+    await setup();
+    press('Next step');
+    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Exit' })).toHaveLength(1);
   });
 
   it('the last step reads "Finish": it closes with no prompt and sends cooking_finished', async () => {
@@ -249,14 +295,25 @@ describe('Cooking mode (spec 012)', () => {
     expect(first.tracker.track).toHaveBeenCalledWith('cooking_exited', { at_step: 2, step_count: STEPS });
 
     const second = await setup();
-    press('Exit');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Exit' })[0] as HTMLElement);
     second.unmount();
     expect(second.tracker.track.mock.calls.filter(([e]) => e === 'cooking_exited')).toHaveLength(1);
   });
 
   it('a recipe with no steps closes straight back, once', async () => {
     const { onClose, rerender } = await setup({ recipe: { ...detail, steps: [], variants: [] } });
-    rerender(<CookScreen recipe={{ ...detail, steps: [], variants: [] }} userId={gabriel.user_id} storage={memoryStorage()} tracker={fakeTracker()} onClose={vi.fn()} onOpenTimers={vi.fn()} />);
+    rerender(
+      <CookScreen
+        recipe={{ ...detail, steps: [], variants: [] }}
+        userId={gabriel.user_id}
+        storage={memoryStorage()}
+        tracker={fakeTracker()}
+        onClose={vi.fn()}
+        onOpenTimers={vi.fn()}
+        onScaleByIngredient={vi.fn()}
+        onConvert={vi.fn()}
+      />,
+    );
     await settle();
     expect(onClose).toHaveBeenCalledTimes(1);
   });

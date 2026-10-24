@@ -15,7 +15,7 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
 6. Dark tabs: "Ingredients · {n}" | "Steps · {n}".
 7. Ingredient rows: amount (17/900), name, optional weight sub-line, optional sage tag "Variant".
 8. Outline button with cart icon "Add to groceries…".
-9. Ink button 60 with play icon "Start cooking".
+9. Ink button 60 with play icon "Start cooking", in a footer bar fixed at the bottom (on both tabs) so it is in reach wherever the page is scrolled.
 
 ## Dynamic copy
 - The amount format comes from spec 005 ("2", "300 ml", "about ¾ cup", "1 pinch"), with sub-line weights like "300 g".

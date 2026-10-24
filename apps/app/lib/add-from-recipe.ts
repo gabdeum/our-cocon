@@ -1,7 +1,7 @@
-import { groceryIdentity, groupSameIngredient, kindOf, planGroceryAdds, sumIngredients, type GroceryAmount, type GroceryMerge, type IngredientFactsInput } from '@cocon/quantity';
+import { groceryIdentity, groceryQuantity, groupSameIngredient, kindOf, planGroceryAdds, sumIngredients, type GroceryAmount, type GroceryMerge, type IngredientFactsInput } from '@cocon/quantity';
 import { GroceryItemInput, GroceryItemUpdate, type Aisle, type Unit } from '@cocon/schemas';
 import { strings } from '../strings/en';
-import { clearItems, combinedText, combineRows, loadGroceryList, type GroceryItem } from './groceries';
+import { clearItems, combinedText, combineRows, loadGroceryList, recipeItems, saveRecipeServings, type GroceryItem } from './groceries';
 import type { RecipeChoices } from './recipe-choices';
 import type { RecipeDetail } from './recipe';
 import { appliedIngredients, formatOf, ingredientLine, mergedLine, scaleRecipe, servingsText } from './recipe-view';
@@ -24,14 +24,12 @@ export interface RecipeGroceryLine {
   unit: Unit | null;
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
-
 /**
  * Edge case: the ingredients at the page's current servings (or scale by an ingredient), variants
  * and units, and the servings for the lead. The list gets
  * the scaled amount in the recipe's own unit; counts round up, since you can't buy ⅓ of a leek.
  */
-export function recipeGroceryLines(recipe: RecipeDetail, choices: RecipeChoices): { servings: string; lines: RecipeGroceryLine[] } {
+export function recipeGroceryLines(recipe: RecipeDetail, choices: RecipeChoices): { servings: string; serves: number; lines: RecipeGroceryLine[] } {
   const options = formatOf(choices);
   const scaled = scaleRecipe(recipe.serves, appliedIngredients(recipe, choices), choices);
   // Rows of one ingredient ("Onion (sauce)", "Onion (topping)") are one line, as on the page;
@@ -40,8 +38,7 @@ export function recipeGroceryLines(recipe: RecipeDetail, choices: RecipeChoices)
     const sum = rows.length > 1 ? sumIngredients(rows) : null;
     const items = sum ? [{ ing: { ...sum, id: rows[0]?.id ?? sum.id }, line: mergedLine(rows, options) }] : rows.map((ing) => ({ ing, line: ingredientLine(ing, options) }));
     return items.map(({ ing, line }) => {
-      const counted = ing.unit == null || ing.unit === 'piece';
-      const quantity = ing.quantity == null ? null : counted ? Math.max(1, Math.ceil(round2(ing.quantity))) : round2(ing.quantity);
+      const quantity = ing.quantity == null ? null : groceryQuantity(ing.quantity, ing.unit ?? null);
       return {
         id: ing.id,
         name: line.name.trim().slice(0, 80),
@@ -54,7 +51,9 @@ export function recipeGroceryLines(recipe: RecipeDetail, choices: RecipeChoices)
       };
     });
   });
-  return { servings: servingsText(scaled.servings), lines };
+  // What the list records (grocery_recipes): whole servings, 1–50 ("7½" after a scale is 8).
+  const serves = Math.min(50, Math.max(1, Math.round(scaled.servings)));
+  return { servings: servingsText(scaled.servings), serves, lines };
 }
 
 /**
@@ -88,10 +87,16 @@ export function mergeNotes(
   return out;
 }
 
-/** What Undo needs (FR-004): the rows it made, and the items it changed with their amounts before. */
+/**
+ * What Undo needs (FR-004): the rows it made, the items it changed with their amounts before, and
+ * the servings the list had for the recipe before (null when it had none).
+ */
 export interface AddedFromRecipe {
   addedIds: string[];
   merges: GroceryMerge[];
+  recipeId: string;
+  familyId: string;
+  servingsBefore: number | null;
 }
 
 const revertMerges = async (client: Pick<Client, 'from'>, merges: readonly GroceryMerge[]) => {
@@ -104,15 +109,23 @@ const revertMerges = async (client: Pick<Client, 'from'>, merges: readonly Groce
  * already has on the list is updated instead of added again (FR-002, SC-001), planned against the
  * list as it is now; anything else of the same thing keeps its own item, and the list shows them
  * as one row. Null when it failed; anything it had done by then is put back.
+ *
+ * Spec 022: the list records the servings it's for. With the recipe already on the list (the new
+ * amounts merged into its items), they add up: 4 then 2 more is 6. Otherwise they start again.
  */
 export async function addFromRecipe(
   client: Pick<Client, 'from' | 'rpc'>,
   familyId: string,
   recipeId: string,
   lines: readonly RecipeGroceryLine[],
+  serves: number,
 ): Promise<AddedFromRecipe | null> {
   try {
     const list = await loadGroceryList(client);
+    const stored = await client.from('grocery_recipes').select('servings').eq('recipe_id', recipeId).maybeSingle();
+    if (stored.error) return null;
+    const servingsBefore = stored.data?.servings ?? null;
+    const onList = recipeItems(list, recipeId).length > 0;
     // Only into this recipe's own items: someone's own apples keep their item, and the row says both.
     const plan = planGroceryAdds(
       list,
@@ -138,11 +151,13 @@ export async function addFromRecipe(
       addedIds = data.map((r) => r.id);
     }
     const results = await Promise.all(updates.map((u) => client.from('grocery_items').update(u.change).eq('id', u.id)));
-    if (results.some((r) => r.error)) {
+    const servings = Math.min(50, onList && servingsBefore !== null ? servingsBefore + serves : serves);
+    const saved = !results.some((r) => r.error) && (await saveRecipeServings(client, familyId, recipeId, servings));
+    if (!saved) {
       await Promise.all([clearItems(client, addedIds), revertMerges(client, plan.merges.filter((_, n) => !results[n]?.error))]);
       return null;
     }
-    return { addedIds, merges: plan.merges };
+    return { addedIds, merges: plan.merges, recipeId, familyId, servingsBefore };
   } catch {
     return null;
   }
@@ -151,8 +166,13 @@ export async function addFromRecipe(
 /** FR-004 Undo: removes exactly the rows it added and puts merged items back as they were. */
 export async function undoAddFromRecipe(client: Pick<Client, 'from'>, added: AddedFromRecipe): Promise<boolean> {
   try {
-    const [cleared, reverted] = await Promise.all([clearItems(client, added.addedIds), revertMerges(client, added.merges)]);
-    return cleared && reverted;
+    const [cleared, reverted, servings] = await Promise.all([
+      clearItems(client, added.addedIds),
+      revertMerges(client, added.merges),
+      // With none before, the row stays: unused once the recipe has no items on the list.
+      added.servingsBefore === null ? true : saveRecipeServings(client, added.familyId, added.recipeId, added.servingsBefore),
+    ]);
+    return cleared && reverted && servings;
   } catch {
     return false;
   }

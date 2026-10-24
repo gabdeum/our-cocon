@@ -8,13 +8,16 @@ import {
   editItem,
   groceryListKey,
   groceryPacksKey,
+  groceryServingsKey,
   loadGroceryList,
+  loadGroceryServings,
   loadPacks,
   moveToAisle,
   packKeys,
   restoreItems,
   savePackSize,
   setChecked,
+  setRecipeServings,
   type GroceryItem,
 } from '../../lib/groceries';
 import { useRecipePhotoUrls } from '../../lib/recipe-photo';
@@ -32,6 +35,8 @@ export default function GroceriesTab() {
   const key = groceryListKey(familyId ?? '');
   const list = useQuery({ queryKey: key, queryFn: () => loadGroceryList(client), enabled: familyId !== null });
   const items = list.data;
+  const servingsKey = groceryServingsKey(familyId ?? '');
+  const servings = useQuery({ queryKey: servingsKey, queryFn: () => loadGroceryServings(client), enabled: familyId !== null });
   const familySettings = useFamilySettings();
   const keys = packKeys(items ?? []);
   const packsKey = groceryPacksKey(familyId ?? '', keys);
@@ -71,6 +76,15 @@ export default function GroceriesTab() {
       onEdit={(item, text) => after(editItem(client, item, text))}
       onMove={(item, aisle) => after(moveToAisle(client, familyId ?? '', item, items ?? [], aisle))}
       onOpenRecipe={(id) => router.push(recipePage(id))}
+      servings={servings.data}
+      onSetServings={async (recipeId, from, to) => {
+        try {
+          return await setRecipeServings(client, familyId ?? '', recipeId, from, to, items ?? []);
+        } finally {
+          void queryClient.invalidateQueries({ queryKey: key });
+          void queryClient.invalidateQueries({ queryKey: servingsKey });
+        }
+      }}
       settings={familySettings.settings}
       packs={packs.data}
       onChangeSettings={familySettings.change}

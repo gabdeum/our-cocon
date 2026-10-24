@@ -155,6 +155,23 @@ describe('createTracker', () => {
     expect(() => tracker.track('cooking_exited', { at_step: 0, step_count: 6 })).toThrow();
     expect(() => tracker.track('cooking_finished', { step_count: 6, minutes: 1.5 })).toThrow();
     expect(() => tracker.track('cooking_started', { step_count: 6, recipe: 'Quiche' } as never)).toThrow();
+    tracker.track('cook_screen_awake_toggled', { on: false });
+    expect(t.capture).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false });
+    expect(() => tracker.track('cook_screen_awake_toggled', { on: 'yes' } as never)).toThrow();
+  });
+});
+
+describe('grocery recipe card events (spec 022)', () => {
+  it('sends counts and servings, never the recipe', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('grocery_recipe_removed', { item_count: 7 });
+    tracker.track('grocery_recipe_servings_changed', { from: 4, to: 8 });
+    expect(t.capture).toHaveBeenCalledWith('grocery_recipe_removed', { item_count: 7 });
+    expect(t.capture).toHaveBeenCalledWith('grocery_recipe_servings_changed', { from: 4, to: 8 });
+    expect(() => tracker.track('grocery_recipe_removed', { item_count: 0 })).toThrow();
+    expect(() => tracker.track('grocery_recipe_servings_changed', { from: 4, to: 51 })).toThrow();
+    expect(() => tracker.track('grocery_recipe_removed', { item_count: 2, recipe: 'Quiche' } as never)).toThrow();
   });
 });
 
