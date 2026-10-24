@@ -40,10 +40,13 @@ button,input{font-family:inherit}
       <a href="OC-Settings.dc.html" style="font-size: 13px; font-weight: 800; padding: 6px 0">Set in Settings</a>
     </div>
 
-    <div style="display: flex; gap: 8px; align-items: center; background: #FFF0C9; border-radius: 18px; padding: 10px 12px">
+    <div style="display: flex; gap: 8px; align-items: center; background: #FFF0C9; border-radius: 18px; padding: 10px 4px 10px 12px">
       <div style="width: 40px; height: 40px; flex: none; border-radius: 12px; background: #F5D9A8"></div>
       <div style="flex: 1; min-width: 0"><div style="font-size: 15px; font-weight: 800">For Leek &amp; bacon quiche</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">2 items · serves 6</div></div>
-      <a href="OC-Recipe.dc.html" style="font-size: 14px; font-weight: 800; padding: 8px 4px">Open</a>
+      <!-- Opens the recipe card menu: Open recipe, Servings, Remove its items. -->
+      <button aria-label="Options for Leek &amp; bacon quiche" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: #FFF0C9; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+      </button>
     </div>
 
     <sc-for list="{{aisles}}" as="a" hint-placeholder-count="3">

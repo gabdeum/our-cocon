@@ -6,6 +6,7 @@ import {
   parsePackSize,
   pickPacks,
   planGroceryAdd,
+  rescaleGroceryAmount,
   sumNeeds,
   type GroceryAmount,
   type IngredientFactsInput,
@@ -18,6 +19,7 @@ import {
   normaliseName,
   GroceryItemInput,
   GroceryItemUpdate,
+  GroceryRecipeInput,
   type Aisle,
   type FamilySettings,
   type StoreProfile,
@@ -34,6 +36,20 @@ import type { Client } from './supabase';
  * anyone in the family refetches it (lib/sync.tsx).
  */
 export const groceryListKey = (familyId: string) => ['grocery_items', familyId, 'list'] as const;
+
+/**
+ * The servings each recipe is on the list for (spec 022, `grocery_recipes`), by recipe id. Its own
+ * key, starting with the table's name, so a change from anyone refetches it.
+ */
+export const groceryServingsKey = (familyId: string) => ['grocery_recipes', familyId] as const;
+
+export type GroceryServings = Readonly<Record<string, number>>;
+
+export async function loadGroceryServings(client: Pick<Client, 'from'>): Promise<GroceryServings> {
+  const { data, error } = await client.from('grocery_recipes').select('recipe_id, servings');
+  if (error) throw error;
+  return Object.fromEntries(data.map((r) => [r.recipe_id, r.servings]));
+}
 
 export interface GroceryRecipe {
   id: string;
@@ -291,18 +307,24 @@ export interface RecipeCard {
   count: number;
 }
 
-/** FR-004: one card per recipe the list has items for, in the order they were added. */
-export function recipeCards(items: readonly GroceryItem[]): RecipeCard[] {
+/**
+ * FR-004: one card per recipe the list has items for, in the order they were added, with the
+ * servings it's on the list for (the recipe's own until it has some, spec 022).
+ */
+export function recipeCards(items: readonly GroceryItem[], servings: GroceryServings = {}): RecipeCard[] {
   const cards = new Map<string, RecipeCard>();
   for (const item of items) {
     const r = item.recipes;
     if (!r || r.deleted_at) continue;
     const card = cards.get(r.id);
     if (card) card.count += 1;
-    else cards.set(r.id, { id: r.id, name: r.name, serves: r.serves, photo_path: r.photo_path, count: 1 });
+    else cards.set(r.id, { id: r.id, name: r.name, serves: servings[r.id] ?? r.serves, photo_path: r.photo_path, count: 1 });
   }
   return [...cards.values()];
 }
+
+/** A recipe's items on the list, ticked or not (the card's menu, spec 022). */
+export const recipeItems = <T extends Pick<GroceryItem, 'recipe_id'>>(items: readonly T[], recipeId: string): T[] => items.filter((i) => i.recipe_id === recipeId);
 
 /** US3: how long someone counts as shopping after their last tick. */
 export const SHOPPING_MINUTES = 10;
@@ -395,6 +417,47 @@ export async function restoreItems(client: Pick<Client, 'from'>, ids: readonly s
   if (ids.length === 0) return true;
   const { error } = await client.from('grocery_items').update({ deleted_at: null }).in('id', ids);
   return !error;
+}
+
+/** The servings a recipe is on the list for: one row per recipe, made or changed. */
+export async function saveRecipeServings(client: Pick<Client, 'from'>, familyId: string, recipeId: string, servings: number): Promise<boolean> {
+  const row = GroceryRecipeInput.safeParse({ recipe_id: recipeId, servings });
+  if (!row.success) return false;
+  const { error } = await client.from('grocery_recipes').upsert({ ...row.data, family_id: familyId }, { onConflict: 'family_id,recipe_id' });
+  return !error;
+}
+
+/**
+ * The card menu's servings (spec 022): the recipe's items still to buy are rescaled by `to / from`
+ * (counts round up); ticked ones are bought already and stay. Then the new servings are saved. On a
+ * failure, what had changed is put back.
+ */
+export async function setRecipeServings(
+  client: Pick<Client, 'from'>,
+  familyId: string,
+  recipeId: string,
+  from: number,
+  to: number,
+  items: readonly GroceryItem[],
+): Promise<boolean> {
+  if (from === to) return true;
+  const changes = recipeItems(items, recipeId).flatMap((item) => {
+    if (item.checked || item.quantity == null) return [];
+    const after = rescaleGroceryAmount(item, from, to);
+    const change = GroceryItemUpdate.safeParse({ quantity: after.quantity, unit: after.unit });
+    return change.success && after.quantity !== item.quantity ? [{ item, change: change.data }] : [];
+  });
+  try {
+    const results = await Promise.all(changes.map((c) => client.from('grocery_items').update(c.change).eq('id', c.item.id)));
+    const saved = results.every((r) => !r.error) && (await saveRecipeServings(client, familyId, recipeId, to));
+    if (saved) return true;
+    await Promise.all(
+      changes.filter((_, n) => !results[n]?.error).map((c) => client.from('grocery_items').update({ quantity: c.item.quantity, unit: c.item.unit }).eq('id', c.item.id)),
+    );
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /** What the Edit field starts with: "2 Lemons", "300 ml Heavy cream", or just "Salt". */

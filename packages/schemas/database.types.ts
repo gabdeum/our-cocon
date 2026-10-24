@@ -189,6 +189,32 @@ isOneToOne: false
       referencedColumns: ["id","family_id"]
     }
                   ]
+                },"grocery_recipes": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"family_id": string,"id": string,"recipe_id": string,"servings": number,"source": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"recipe_id": string,"servings": number,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"recipe_id"?: string,"servings"?: number,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "grocery_recipes_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "grocery_recipes_recipe_id_family_id_fkey"
+      columns: ["recipe_id","family_id"]
+isOneToOne: false
+      referencedRelation: "recipes"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
                 },"invites": {
                   Row: {
                     "created_at": string,"created_by": string,"expires_at": string,"family_id": string,"id": string,"source": string,"token_hash": string,"used_at": string | null,"used_by": string | null

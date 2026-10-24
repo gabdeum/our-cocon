@@ -24,3 +24,16 @@ Amounts come from the quantity engine, never typed: "20 g butter", "2 leeks (300
 - −1 never goes below 0:30. Starting a timer adds it to the TimerPill.
 - The clock is never a live region (it would talk every second). `announcement` fills a hidden polite region: "1 minute left" at 1:00 and "{name} is done" at zero.
 - Steps added by a variant carry the `Variant` tag.
+
+## StepRow
+
+The recipe page's Steps tab lists each step as a StepRow: a quick look that opens cooking mode at that step. The full StepCard stays on the shared page.
+
+| Part | Spec |
+| --- | --- |
+| Row | surface-card, radius 16, min-height 60, padding 10 10 10 14, gap 10; pressed `surface-card-pressed`; role link |
+| Left | number badge (as in StepCard) |
+| Title | the step's name, or its text when it has none: 16/800, one line, cut short |
+| Timer chip | only for a step with a timer: honey pill, padding 4 10, timer icon 16 and the length ("12:00") 14/800 tabular |
+| Right | chevron-right 20, ink-muted |
+| Label | "Open step {n} in cooking mode" |

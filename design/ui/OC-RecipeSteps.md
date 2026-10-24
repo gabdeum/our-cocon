@@ -3,32 +3,25 @@
 Source `screens/OC-Recipe.dc.html` with `tab="steps"` (`screens/OC-RecipeSteps.dc.html` only mounts it) · Route `/recipes/[id]?tab=steps` · Spec 009
 
 ## Layout
-Same header, version and servings blocks as OC-Recipe, then one StepCard per step:
-1. Number badge, step name, optional sage tag "Variant".
-2. Body text with highlighted amounts.
-3. Optional sage callout: thermometer icon, bold "Temperature check: " + text (e.g. "the center should reach 71 °C (160 °F) and barely wobble.").
-4. Optional timer row: button with timer icon + label + clock, then "−1" and "+1".
-5. Optional tip: label "Chef's tip" + text.
+Same header, version and servings blocks as OC-Recipe, then one StepRow per step, a quick look to find your place (StepCard README › StepRow):
+1. Number badge.
+2. The step's name (one line, cut short). A step with no name shows its text instead.
+3. When the step has a timer, a honey chip on the right with a timer icon and its length ("12:00").
+4. A chevron.
 
-After the list: the footnote "−1 / +1 changes a timer by a minute, even while it runs.", then "Start cooking".
+The full step (text, temperature check, timer, tip) is in cooking mode; the shared page (OC-SharedView) keeps the full StepCards. "Start cooking" stays in the fixed footer.
 
-## Timer button copy
-| State | Label | Look |
-| --- | --- | --- |
-| Not started | "Start timer" | honey |
-| Running | "Pause" | olive, white text |
-| Paused | "Resume" | honey |
-| Finished | "Done!" | honey; clock 00:00. Tapping it clears the timer and the row goes back to "Start timer" |
-
-Before the timer starts, −1 / +1 change the time it will start with (never below 0:30). Once it exists they change the timer itself (spec 010).
+## Interactions
+| Element | Result |
+| --- | --- |
+| A step row | → cooking mode at that step (`/recipes/[id]/cook?step={id}&from=recipe`); Exit or Finish returns here |
 
 ## Accessibility labels
-"−1": "One minute less" · "+1": "One minute more" · the clock is announced politely at 1 minute left ("1 minute left") and at zero ("{name} is done").
+A step row is a link: "Open step {n} in cooking mode".
 
 ## States not drawn
 | State | Copy |
 | --- | --- |
 | A step mentions an ingredient that was deleted | the ingredient's last known name in muted text, no highlight; "an ingredient" when the name is gone too (the form warns, spec 016) |
-| Thermometer setting off (spec 027) | the temperature check callout is hidden |
-| Temperature check text | `{temp}` in the saved text marks where the reading goes ("the center should reach {temp} and barely wobble." → "…reach 71 °C (160 °F) and…"); without it, the reading follows the text |
-| A step with no name | the number badge and text only |
+| A step with no name | the number badge and its text on one line |
+| A step added by a variant | listed in its place; numbering never skips |

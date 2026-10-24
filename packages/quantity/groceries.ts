@@ -154,3 +154,24 @@ export function combineAmounts(amounts: readonly GroceryAmount[], facts: Ingredi
   }
   return { total: null, parts: [...byKind.values()].map((p) => ({ quantity: round(p.quantity), unit: p.unit })) };
 }
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * An amount as it goes on the list (spec 022): counts round up, since you can't buy ⅓ of a leek;
+ * anything else to two decimals. Never above the list's limit (under 100000).
+ */
+export function groceryQuantity(quantity: number, unit: Unit | null): number {
+  const counted = unit == null || unit === 'piece';
+  const q = counted ? Math.max(1, Math.ceil(round2(quantity))) : round2(quantity);
+  return Math.min(Math.max(q, 0.01), 99999);
+}
+
+/**
+ * A recipe's item rescaled for new servings on the list (spec 022, the recipe card's menu): its
+ * amount times `to / from`, rounded as `groceryQuantity` does. No quantity stays none.
+ */
+export function rescaleGroceryAmount(amount: GroceryAmount, from: number, to: number): GroceryAmount {
+  if (amount.quantity == null || from <= 0 || to <= 0) return amount;
+  return { quantity: groceryQuantity((amount.quantity * to) / from, amount.unit), unit: amount.unit };
+}

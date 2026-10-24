@@ -83,6 +83,7 @@ async function setup(props: Partial<RecipePageProps> = {}) {
       onSettings={vi.fn()}
       onAddToGroceries={vi.fn()}
       onStartCooking={vi.fn()}
+      onOpenStep={vi.fn()}
       onOpenTimers={onOpenTimers}
       onScaleByIngredient={vi.fn()}
       onConvert={vi.fn()}
@@ -206,6 +207,7 @@ describe('US3: tabs', () => {
         onSettings={vi.fn()}
         onAddToGroceries={vi.fn()}
         onStartCooking={vi.fn()}
+        onOpenStep={vi.fn()}
         onOpenTimers={vi.fn()}
         onScaleByIngredient={vi.fn()}
         onConvert={vi.fn()}
@@ -316,7 +318,7 @@ describe('More options (spec 013)', () => {
     expect(saved(storage).kitchenScale).toBe(false);
   });
 
-  it('units: Imperial at once, in the list and the steps, remembered for this recipe', async () => {
+  it('units: Imperial at once, remembered for this recipe', async () => {
     const storage = memoryStorage();
     const { tracker } = await setup({ storage });
     tap('More options');
@@ -325,9 +327,6 @@ describe('More options (spec 013)', () => {
     expect(row('Bacon lardons')?.textContent).toContain('7.1 oz');
     expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial' });
     expect(saved(storage).system).toBe('imperial');
-    cleanup();
-    await setup({ storage, tab: 'steps' });
-    expect(screen.getByText(/160 °F \(71 °C\)/)).toBeTruthy();
   });
 
   it('US2: scaled by lardons, servings read 7½ with a chip; Reset goes back to 6', async () => {
@@ -373,6 +372,7 @@ describe('More options (spec 013)', () => {
         onSettings={vi.fn()}
         onAddToGroceries={vi.fn()}
         onStartCooking={vi.fn()}
+        onOpenStep={vi.fn()}
         onOpenTimers={vi.fn()}
         onScaleByIngredient={vi.fn()}
         onConvert={vi.fn()}
@@ -396,122 +396,42 @@ describe('FR-005: actions', () => {
   });
 });
 
-// Spec 009: the Steps tab.
+// Spec 009: the Steps tab, a quick look that opens cooking mode at a step.
 describe('Steps tab (spec 009)', () => {
-  const cards = () => within(screen.getByRole('list', { name: 'Steps' })).getAllByRole('listitem');
-  const card = (name: string) => cards().find((c) => within(c).queryByRole('heading', { name })) as HTMLElement;
+  const steps = () => within(screen.getByRole('list', { name: 'Steps' })).getAllByRole('listitem');
+  const step = (n: number) => screen.getByRole('link', { name: `Open step ${n} in cooking mode` });
 
-  it('FR-001: one StepCard per step, in order, with number, name and highlighted amounts', async () => {
+  it('FR-001: one row per step, in order, with its number, name and the timer length', async () => {
     await setup({ tab: 'steps' });
-    expect(cards()).toHaveLength(6);
-    expect(cards().map((c) => within(c).getByRole('heading').textContent)).toEqual(['Preheat and line', 'Blind bake', 'Cook the filling', 'Mix the custard', 'Bake', 'Rest']);
-    const filling = card('Cook the filling');
-    expect(within(filling).getByText('3')).toBeTruthy();
-    for (const amount of ['20 g butter', '2 leeks (300 g)', '200 g bacon lardons']) expect(within(filling).getByText(amount)).toBeTruthy();
-    expect(within(card('Preheat and line')).getByText("Chef's tip")).toBeTruthy();
-    expect(screen.getByText('−1 / +1 changes a timer by a minute, even while it runs.')).toBeTruthy();
+    expect(steps()).toHaveLength(6);
+    expect(steps().map((s) => s.textContent)).toEqual(['1Preheat and line', '2Blind bake12:00', '3Cook the filling08:00', '4Mix the custard', '5Bake35:00', '6Rest10:00']);
+    // The details and timers are in cooking mode now.
+    expect(screen.queryByRole('button', { name: /Start timer/ })).toBeNull();
+    expect(screen.queryByText("Chef's tip")).toBeNull();
+    expect(screen.queryByText('−1 / +1 changes a timer by a minute, even while it runs.')).toBeNull();
+  });
+
+  it('tapping a step opens cooking mode there', async () => {
+    const onOpenStep = vi.fn();
+    await setup({ tab: 'steps', onOpenStep });
+    fireEvent.click(step(3));
+    expect(onOpenStep).toHaveBeenCalledWith(quiche.steps[2]?.id);
+  });
+
+  it('"Start cooking" is in the fixed footer on both tabs', async () => {
+    await setup({ tab: 'steps' });
+    expect(screen.getByRole('button', { name: 'Start cooking' })).toBeTruthy();
+    cleanup();
+    await setup();
     expect(screen.getByRole('button', { name: 'Start cooking' })).toBeTruthy();
   });
 
-  it('US1: amounts follow the servings', async () => {
-    await setup({ tab: 'steps' });
-    for (let i = 0; i < 3; i++) tap('More servings');
-    expect(within(card('Cook the filling')).getByText('3 leeks (450 g)')).toBeTruthy();
-    expect(within(card('Cook the filling')).getByText('30 g butter')).toBeTruthy();
-  });
-
-  it('US2: the thermometer setting shows or hides the temperature check', async () => {
-    await setup({ tab: 'steps' });
-    expect(within(card('Bake')).getByText('the center should reach 71 °C (160 °F) and barely wobble.', { exact: false }).textContent).toBe(
-      'Temperature check: the center should reach 71 °C (160 °F) and barely wobble.',
-    );
-    cleanup();
-    await setup({ tab: 'steps', thermometer: false });
-    expect(within(card('Bake')).queryByText(/Temperature check/)).toBeNull();
-    expect(within(card('Bake')).getByText('If the top browns too fast, cover it loosely with foil.')).toBeTruthy();
-  });
-
-  it('009 US3 / spec 010: "Start timer" on Blind bake turns olive and counts; Pause, Resume, −1 / +1 work', async () => {
-    const { tracker } = await setup({ tab: 'steps' });
-    const blind = () => card('Blind bake');
-    const button = () => within(blind()).getAllByRole('button')[0] as HTMLElement;
-    expect(button().textContent).toBe('Start timer12:00');
-    expect(button().getAttribute('aria-pressed')).toBe('false');
-    expect(within(card('Preheat and line')).queryByRole('button', { name: /Start timer/ })).toBeNull();
-
-    fireEvent.click(button());
-    expect(tracker.track).toHaveBeenCalledWith('step_timer_started', { step_index: 1 });
-    expect(tracker.track).toHaveBeenCalledWith('timer_started', { from: 'step' });
-    act(() => vi.advanceTimersByTime(1000));
-    expect(button().textContent).toBe('Pause11:59');
-    expect(button().getAttribute('aria-pressed')).toBe('true');
-
-    fireEvent.click(within(blind()).getByRole('button', { name: 'One minute more' }));
-    expect(button().textContent).toBe('Pause12:59');
-    expect(tracker.track).toHaveBeenCalledWith('timer_adjusted', { delta_min: 1 });
-    fireEvent.click(within(blind()).getByRole('button', { name: 'One minute less' }));
-    expect(button().textContent).toBe('Pause11:59');
-
-    fireEvent.click(button());
-    act(() => vi.advanceTimersByTime(5000));
-    expect(button().textContent).toBe('Resume11:59');
-    fireEvent.click(button());
-    act(() => vi.advanceTimersByTime(1000));
-    expect(button().textContent).toBe('Pause11:58');
-    // Names never reach analytics.
-    expect(JSON.stringify(tracker.track.mock.calls)).not.toContain('Blind bake');
-  });
-
-  it('spec 011 US1 (L13): the TimerPill shows the running timer on the recipe page and opens Timers', async () => {
-    const { tracker, onOpenTimers } = await setup({ tab: 'steps' });
-    expect(screen.queryByRole('link', { name: /Open timers/ })).toBeNull();
-    fireEvent.click(within(card('Blind bake')).getAllByRole('button')[0] as HTMLElement);
-    act(() => vi.advanceTimersByTime(1000));
-    const pill = screen.getByRole('link', { name: '1 timer running. Open timers' });
-    expect(pill.textContent).toBe('Blind bake11:59');
-    fireEvent.click(pill);
-    expect(tracker.track).toHaveBeenCalledWith('timer_pill_tapped', { timer_count: 1 });
-    expect(onOpenTimers).toHaveBeenCalledOnce();
-  });
-
-  it('spec 010: at zero the row reads "Done!" 00:00 and says so; tapping it puts the row back', async () => {
-    await setup({ tab: 'steps' });
-    const blind = () => card('Blind bake');
-    const button = () => within(blind()).getAllByRole('button')[0] as HTMLElement;
-    fireEvent.click(button());
-    act(() => vi.advanceTimersByTime(11 * 60 * 1000));
-    expect(within(blind()).getByText('1 minute left')).toBeTruthy();
-    act(() => vi.advanceTimersByTime(60 * 1000));
-    expect(button().textContent).toBe('Done!00:00');
-    expect(within(blind()).getByText('Blind bake is done')).toBeTruthy();
-    fireEvent.click(button());
-    expect(button().textContent).toBe('Start timer12:00');
-  });
-
-  it('spec 010: before a timer starts, −1 / +1 change the time it starts with (never below 0:30)', async () => {
-    const { tracker } = await setup({ tab: 'steps' });
-    const blind = () => card('Blind bake');
-    const button = () => within(blind()).getAllByRole('button')[0] as HTMLElement;
-    fireEvent.click(within(blind()).getByRole('button', { name: 'One minute more' }));
-    expect(button().textContent).toBe('Start timer13:00');
-    for (let i = 0; i < 20; i++) fireEvent.click(within(blind()).getByRole('button', { name: 'One minute less' }));
-    expect(button().textContent).toBe('Start timer00:30');
-    expect(tracker.track).not.toHaveBeenCalled();
-    fireEvent.click(button());
-    expect(button().textContent).toBe('Pause00:30');
-  });
-
-  it('edge: a variant step carries the Variant tag and numbering stays continuous', async () => {
+  it('edge: a variant step is listed and numbering stays continuous', async () => {
     await setup({ tab: 'steps' });
     fireEvent.click(screen.getByRole('switch', { name: /Make my own dough/ }));
     await settle();
-    expect(cards()).toHaveLength(7);
-    const dough = card('Make the dough');
-    expect(within(dough).getByText('1')).toBeTruthy();
-    expect(within(dough).getByText('Variant')).toBeTruthy();
-    expect(within(card('Preheat and line')).getByText('2')).toBeTruthy();
-    // Spec 017 FR-004: the dough option rewrites this step, so it carries the tag too.
-    expect(within(card('Preheat and line')).getByText('Variant')).toBeTruthy();
-    expect(within(card('Blind bake')).queryByText('Variant')).toBeNull();
+    expect(steps()).toHaveLength(7);
+    expect(steps()[0]?.textContent).toBe('1Make the dough30:00');
+    expect(steps()[1]?.textContent).toBe('2Preheat and line');
   });
 });

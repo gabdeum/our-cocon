@@ -7,7 +7,6 @@ import {
   IconButton,
   IngredientRow,
   Link,
-  ListRow,
   Meta,
   PhotoPlaceholder,
   Photo,
@@ -16,25 +15,23 @@ import {
   SegmentedControl,
   SettingRow,
   StatusBanner,
-  StepFootnote,
+  StepRow,
   Stepper,
   Text,
 } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
-import type { FormatOptions } from '@cocon/quantity';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
-import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount } from '../../lib/recipe-view';
+import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type StepLine } from '../../lib/recipe-view';
 import type { PhotoUrls } from '../../lib/recipe-photo';
 import type { Member } from '../../lib/session';
 import { AppTimerPill } from '../timers/AppTimerPill';
-import { RecipeStep } from './RecipeStep';
+import { MoreOptions } from './MoreOptions';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const p = strings.recipePage;
 const more = strings.recipePage.more;
-const stepCopy = strings.recipePage.steps;
 /** `servings_changed` waits for the stepper to settle, so 6 → 9 in three taps is one change. */
 export const SERVINGS_SETTLE_MS = 800;
 
@@ -57,6 +54,8 @@ export interface RecipePageProps {
   onSettings: () => void;
   onAddToGroceries: () => void;
   onStartCooking: () => void;
+  /** A step in the Steps tab opens cooking mode at that step. */
+  onOpenStep: (stepId: string) => void;
   /** The TimerPill opens the Timers screen (spec 011). */
   onOpenTimers: () => void;
   /** "I have a thermometer" (spec 027 wires the setting); on until then. */
@@ -115,6 +114,7 @@ function LoadedRecipe({
   onSettings,
   onAddToGroceries,
   onStartCooking,
+  onOpenStep,
   onOpenTimers,
   thermometer = defaultCooking.thermometer,
   onScaleByIngredient,
@@ -197,6 +197,7 @@ function LoadedRecipe({
       }
       left={<IconButton icon="back" label={p.back} onPress={onBack} />}
       floating={<AppTimerPill onOpen={onOpenTimers} tracker={tracker} />}
+      footer={<Button label={p.startCooking} variant="ink" size="lg" icon="play" block onPress={onStartCooking} />}
       right={
         <>
           <IconButton icon="share" label={p.share} onPress={onShare} />
@@ -286,20 +287,7 @@ function LoadedRecipe({
           </View>
         ) : null}
         {moreOpen && current ? (
-          <MorePanel
-            choices={current}
-            format={formatOf(current)}
-            onChange={(next) => {
-              // Tapping what's already in force changes nothing, and keeps following the settings.
-              const now = formatOf(current);
-              if (next.kitchenScale !== null && next.kitchenScale !== now.scale) tracker.track('kitchen_scale_toggled', { on: next.kitchenScale });
-              else if (next.system !== null && next.system !== now.system) tracker.track('units_toggled', { system: next.system });
-              else return;
-              update(next);
-            }}
-            onScaleByIngredient={onScaleByIngredient}
-            onConvert={onConvert}
-          />
+          <MoreOptions choices={current} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} />
         ) : null}
       </Card>
 
@@ -332,73 +320,27 @@ function LoadedRecipe({
               <Button label={p.addToGroceries} variant="outline" icon="groceries" block onPress={onAddToGroceries} className="mt-16" />
             </View>
           ) : (
-            <View className="gap-14">
-              <View role="list" aria-label={p.stepsLabel} className="gap-14">
-                {view.steps.map((step, index) => (
-                  <View key={step.id} role="listitem">
-                    <RecipeStep step={step} index={index} recipeId={recipe.id} recipeName={recipe.name} tracker={tracker} photoUri={step.photoPath ? photoUrls[step.photoPath] : undefined} />
-                  </View>
-                ))}
-              </View>
-              <StepFootnote text={stepCopy.footnote} />
+            <View role="list" aria-label={p.stepsLabel} className="gap-8">
+              {view.steps.map((step) => (
+                <View key={step.id} role="listitem">
+                  <StepRow
+                    number={step.number}
+                    title={step.name ?? stepText(step)}
+                    clock={step.timer?.clock}
+                    accessibilityLabel={p.openStep(step.number)}
+                    onPress={() => onOpenStep(step.id)}
+                  />
+                </View>
+              ))}
             </View>
           )}
         </>
       ) : null}
-
-      <Button label={p.startCooking} variant="ink" size="lg" icon="play" block onPress={onStartCooking} />
     </PhotoScreen>
   );
 }
 
-/**
- * The "…" panel under Servings (spec 013, OC-Recipe): the kitchen scale and units are quick
- * toggles for this recipe on this device; the two sheets sit between them, as drawn.
- */
-function MorePanel({
-  choices,
-  format,
-  onChange,
-  onScaleByIngredient,
-  onConvert,
-}: {
-  choices: RecipeChoices;
-  /** What's in force: the toggles, else the settings. */
-  format: FormatOptions;
-  onChange: (next: RecipeChoices) => void;
-  onScaleByIngredient: () => void;
-  onConvert: () => void;
-}) {
-  return (
-    <View>
-      <SettingRow
-        label={more.kitchenScale}
-        hint={format.scale ? more.scaleOnHint : more.scaleOffHint}
-        value={format.scale}
-        onValueChange={(on) => onChange({ ...choices, kitchenScale: on })}
-      />
-      <ListRow flush title={more.scaleByIngredient} trailing={{ kind: 'chevron' }} onPress={onScaleByIngredient} />
-      <ListRow flush title={more.converter} trailing={{ kind: 'chevron' }} onPress={onConvert} />
-      <ListRow
-        flush
-        last
-        title={more.units}
-        trailing={{
-          kind: 'node',
-          node: (
-            <SegmentedControl
-              variant="pill"
-              label={more.units}
-              value={format.system}
-              onChange={(system) => onChange({ ...choices, system })}
-              segments={[
-                { key: 'metric', label: more.metric },
-                { key: 'imperial', label: more.imperial },
-              ]}
-            />
-          ),
-        }}
-      />
-    </View>
-  );
+/** A step with no name is listed by its text. */
+function stepText(step: StepLine): string {
+  return step.parts.map((part) => (typeof part === 'string' ? part : 'amount' in part ? part.amount : part.missing)).join('').trim();
 }

@@ -12,7 +12,7 @@ afterEach(() => vi.useRealTimers());
 function setup(initial = 0) {
   const scrollTo = vi.fn();
   const hook = renderHook(() => useStepScroll(TOPS.length, initial, scrollTo));
-  act(() => TOPS.forEach((top, i) => hook.result.current.onStepLayout(i, top)));
+  act(() => TOPS.forEach((top, i) => hook.result.current.onStepLayout(i, top, 520)));
   return { hook, scrollTo };
 }
 
@@ -59,6 +59,17 @@ describe('useStepScroll', () => {
 
   it('snaps where Next and Back land: each top − 8', () => {
     const { hook } = setup();
-    expect(hook.result.current.tops).toEqual([0, 512, 1032, 1552, 2072, 2592]);
+    act(() => hook.result.current.onViewport(700));
+    expect(hook.result.current.snaps).toEqual([0, 512, 1032, 1552, 2072, 2592]);
+    expect(hook.result.current.tall).toEqual([false, false, false, false, false, false]);
+  });
+
+  it('a step taller than the screen also snaps at its end, then the next step', () => {
+    const { hook } = setup();
+    act(() => hook.result.current.onViewport(700));
+    // Step 3 grows to 900 tall: steps 4–6 move down by 380.
+    act(() => [0, 520, 1040, 1940, 2460, 2980].forEach((top, i) => hook.result.current.onStepLayout(i, top, i === 2 ? 900 : 520)));
+    expect(hook.result.current.snaps).toEqual([0, 512, 1032, 1240, 1932, 2452, 2972]);
+    expect(hook.result.current.tall[2]).toBe(true);
   });
 });

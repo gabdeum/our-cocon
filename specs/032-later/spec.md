@@ -59,6 +59,7 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L63 | P2 | **Re-check an AI entry before Undo.** The activity log's `before` rows are written by the database (023), but Undo writes them back as the member: validate each with the shared Zod schemas and through RLS first, and skip a row whose recipe has changed since. | 023 | 026 |
 | L64 | P2 | **Tighter photo paths.** `recipes.photo_path` and `recipe_steps.photo_path` are checked with `like '<family>/<recipe>/%'`, which accepts `..` segments. Check the exact shape instead (`^<family>/<recipe>/[A-Za-z0-9_-]+\.(jpe?g|webp)$`) for everyone. Assistants can't write photos (023), so only app clients are affected. | 023 | none |
 | L65 | P3 | **`scale_to` and variants.** `update_recipe`'s `scale_to` rescales the recipe's own ingredients; amounts that a variant brings in (swaps, added ingredients) keep theirs. Scale those too if families notice. | 023 | none |
+| L66 | P2 | **Assistants keep a recipe's grocery servings.** `add_recipe_to_groceries` (024) must record the servings in `grocery_recipes` as the app does (`saveRecipeServings`, added while the recipe still has items on the list), or the card's "serves {n}" and its servings change go wrong. Move `saveRecipeServings` and `setRecipeServings` to `packages/data` with `recipeGroceryLines` (L55). | 022 | 024 |
 
 ## Changelog
 - 2026-10-19: Created. Seeded with the open items from the Needs your attention sections of 003, 004 and 006.

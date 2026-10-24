@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { combineAmounts, groceryIdentity, planGroceryAdd, planGroceryAdds, type ListedGrocery } from './groceries';
+import { combineAmounts, groceryIdentity, groceryQuantity, planGroceryAdd, planGroceryAdds, rescaleGroceryAmount, type ListedGrocery } from './groceries';
 
 const me = { recipe_id: null, created_by: 'u-me', source: 'app' };
 const item = (over: Partial<ListedGrocery>): ListedGrocery => ({
@@ -119,5 +119,28 @@ describe('combineAmounts (spec 022: one row per thing)', () => {
 
   it('keeps a single amount as it is', () => {
     expect(combineAmounts([{ quantity: 300, unit: 'ml' }], null).total).toEqual({ quantity: 300, unit: 'ml' });
+  });
+});
+
+describe('groceryQuantity (spec 022)', () => {
+  it('rounds counts up and other amounts to two decimals', () => {
+    expect(groceryQuantity(1.2, null)).toBe(2);
+    expect(groceryQuantity(2.001, 'piece')).toBe(2);
+    expect(groceryQuantity(0.2, 'piece')).toBe(1);
+    expect(groceryQuantity(112.5, 'g')).toBe(112.5);
+    expect(groceryQuantity(1 / 3, 'cup')).toBe(0.33);
+  });
+});
+
+describe('rescaleGroceryAmount (spec 022: servings changed on the list)', () => {
+  it('scales by new / old servings, rounding as the list does', () => {
+    expect(rescaleGroceryAmount({ quantity: 300, unit: 'ml' }, 4, 8)).toEqual({ quantity: 600, unit: 'ml' });
+    expect(rescaleGroceryAmount({ quantity: 3, unit: null }, 6, 4)).toEqual({ quantity: 2, unit: null });
+    // 3 onions for 4 is 2.25 for 3: counts round up.
+    expect(rescaleGroceryAmount({ quantity: 3, unit: 'piece' }, 4, 3)).toEqual({ quantity: 3, unit: 'piece' });
+  });
+
+  it('leaves an item with no amount as it is', () => {
+    expect(rescaleGroceryAmount({ quantity: null, unit: null }, 4, 8)).toEqual({ quantity: null, unit: null });
   });
 });

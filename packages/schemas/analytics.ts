@@ -75,6 +75,8 @@ export const events = {
   cooking_started: z.strictObject({ step_count: z.int().min(1).max(MAX_TRACKED_STEPS) }),
   cooking_finished: z.strictObject({ step_count: z.int().min(1).max(MAX_TRACKED_STEPS), minutes: z.int().min(0).max(1440) }),
   cooking_exited: z.strictObject({ at_step: z.int().min(1).max(MAX_TRACKED_STEPS), step_count: z.int().min(1).max(MAX_TRACKED_STEPS) }),
+  // Spec 012: "Screen stays on" switched in cooking mode's options sheet, for this visit.
+  cook_screen_awake_toggled: z.strictObject({ on: z.boolean() }),
   // Spec 013: the "…" panel's quick toggles, per recipe on this device.
   kitchen_scale_toggled: z.strictObject({ on: z.boolean() }),
   units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
@@ -120,6 +122,11 @@ export const events = {
   // Spec 022: "Add to groceries…" on a recipe, with how many ingredients were added and how many
   // were left unticked. Never which ones.
   groceries_added_from_recipe: z.strictObject({ ingredient_count: z.int().min(1).max(500), unticked_count: z.int().min(0).max(500) }),
+  // Spec 022: a recipe card's menu on the grocery list. Its items removed, and
+  // its servings changed on the list. Never which recipe.
+  // `item_count` counts the recipe's items removed (the banner's "Removed {n} items").
+  grocery_recipe_removed: z.strictObject({ item_count: z.int().min(1).max(500) }),
+  grocery_recipe_servings_changed: z.strictObject({ from: z.int().min(1).max(50), to: z.int().min(1).max(50) }),
   // Spec 023: an assistant called an MCP tool (sent from the MCP server): which tool, which
   // assistant ('claude', 'chatgpt', 'gemini' or 'mcp') and whether it worked. Never its input.
   mcp_tool_called: z.strictObject({ tool: z.string().regex(/^[a-z][a-z_]{0,59}$/), assistant: WriteSource, ok: z.boolean() }),
