@@ -120,7 +120,13 @@ const VariantIngredient = IngredientFields.extend({ id: z.uuid() }).refine(ingre
 /** One change a variant makes to the base recipe (spec 017 FR-002). Ids refer to the base recipe's rows. */
 export const VariantChange = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('swap_ingredient'), ingredient_id: z.uuid(), with: z.array(VariantIngredient).min(1).max(10) }),
-  z.strictObject({ type: z.literal('add_ingredient'), ingredient: VariantIngredient }),
+  z.strictObject({
+    type: z.literal('add_ingredient'),
+    ingredient: VariantIngredient,
+    /** Where it goes in the list: next to this base ingredient (after it unless `place` says before). Without one, or once that one is gone, at the end. */
+    next_to_id: z.uuid().optional(),
+    place: z.enum(['before', 'after']).optional(),
+  }),
   z.strictObject({ type: z.literal('remove_ingredient'), ingredient_id: z.uuid() }),
   z.strictObject({
     type: z.literal('add_step'),

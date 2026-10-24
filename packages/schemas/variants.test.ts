@@ -61,6 +61,21 @@ describe('applyVariants (spec 008 US2)', () => {
     expect(r.ingredients.at(-1)).toMatchObject({ name: 'Chives', fromVariant: true });
   });
 
+  it('places an added ingredient next to the one it names, and at the end once that one is gone', () => {
+    const add = (next_to_id: string, place?: 'before' | 'after'): RecipeVariant => ({
+      id: 'c',
+      position: 0,
+      name: 'Ham',
+      kind: 'option',
+      changes: [{ type: 'add_ingredient', ingredient: { id: 'ham', name: 'Ham' }, next_to_id, ...(place ? { place } : {}) }],
+    });
+    const at = (v: RecipeVariant) => applyVariants(quiche, [v], { version: null, options: ['c'] }).ingredients.map((i) => i.name);
+    const lardons = quiche.ingredients.findIndex((i) => i.id === quicheIds.lardons);
+    expect(at(add(quicheIds.lardons))[lardons + 1]).toBe('Ham');
+    expect(at(add(quicheIds.lardons, 'before'))[lardons]).toBe('Ham');
+    expect(at(add('c0c02000-0000-4000-8000-0000000000aa')).at(-1)).toBe('Ham');
+  });
+
   it('changes and removes steps', () => {
     const v: RecipeVariant = {
       id: 'v',

@@ -41,6 +41,9 @@ interface ChangeBase {
   edited: boolean;
 }
 
+/** Where an assistant placed an added ingredient (the form doesn't show it, but keeps it). */
+type AddedPlace = Pick<Extract<VariantChange, { type: 'add_ingredient' }>, 'next_to_id' | 'place'>;
+
 /**
  * One change while it's being edited (FR-002). Ingredients and steps reuse the form's own drafts
  * (specs 015, 016). A target id is null until it's picked.
@@ -48,7 +51,7 @@ interface ChangeBase {
 export type ChangeDraft = ChangeBase &
   (
     | { type: 'swap_ingredient'; ingredientId: string | null; with: IngredientDraft[] }
-    | { type: 'add_ingredient'; ingredient: IngredientDraft }
+    | { type: 'add_ingredient'; ingredient: IngredientDraft; place?: AddedPlace }
     | { type: 'remove_ingredient'; ingredientId: string | null }
     | { type: 'add_step'; stepId: string | null; place: 'before' | 'after'; step: StepDraft }
     | { type: 'change_step'; stepId: string | null; step: StepDraft }
@@ -129,7 +132,7 @@ function draftOf(change: VariantChange, variantId: string, index: number, baseSt
     case 'swap_ingredient':
       return { ...base, type: change.type, ingredientId: change.ingredient_id, with: rows(change.with) };
     case 'add_ingredient':
-      return { ...base, type: change.type, ingredient: rows([change.ingredient])[0] as IngredientDraft };
+      return { ...base, type: change.type, ingredient: rows([change.ingredient])[0] as IngredientDraft, place: { next_to_id: change.next_to_id, place: change.place } };
     case 'remove_ingredient':
       return { ...base, type: change.type, ingredientId: change.ingredient_id };
     case 'add_step':
@@ -202,13 +205,16 @@ const readOne = (d: StepDraft) => {
 };
 
 /** A change as it reads now, or null while it has nothing to point at. Lenient: for summaries and warnings, not for Save. */
+/** The saved place, without empty keys (the change's schema is strict about shape, not about undefined). */
+const placed = (p: AddedPlace | undefined): AddedPlace => (p?.next_to_id ? { next_to_id: p.next_to_id, ...(p.place ? { place: p.place } : {}) } : {});
+
 export function previewChange(c: ChangeDraft, baseSteps: readonly StepDraft[]): VariantChange | null {
   if (!c.edited && c.saved) return c.saved;
   switch (c.type) {
     case 'swap_ingredient':
       return c.ingredientId ? { type: c.type, ingredient_id: c.ingredientId, with: c.with.filter((d) => !isBlankRow(d)).map(rowOf) } : null;
     case 'add_ingredient':
-      return c.ingredient.name.trim() ? { type: c.type, ingredient: rowOf(c.ingredient) } : null;
+      return c.ingredient.name.trim() ? { type: c.type, ingredient: rowOf(c.ingredient), ...placed(c.place) } : null;
     case 'add_step': {
       if (!c.stepId) return null;
       const minutes = c.step.timerOn ? parseMinutes(c.step.minutes) : null;
@@ -268,7 +274,7 @@ function readChange(c: ChangeDraft, baseSteps: readonly StepDraft[]): Read {
       const read = readIngredients([c.ingredient]);
       if ('warnings' in read) return { warning: 'rows', rows: read.warnings };
       const row = read.rows[0];
-      return row ? { change: { type: c.type, ingredient: row } } : { warning: 'addEmpty' };
+      return row ? { change: { type: c.type, ingredient: row, ...placed(c.place) } } : { warning: 'addEmpty' };
     }
     case 'add_step': {
       if (!c.stepId) return isBlankStep(c.step) ? { drop: true } : { warning: 'pickStep' };
