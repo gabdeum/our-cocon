@@ -161,6 +161,7 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
         'Ingredient #1 (Onion, need 3g) has an amount in its name or prep note ("3g"), which won’t change with the servings. Put it in quantity and unit instead, and keep the name to what it is.',
       );
       expect((await create(['1 onion', '2 tbsp olive oil'], ['Fry the onion in the olive oil in a 2 l pan; serve with 1 tbsp per serving of yoghurt.'])).error).toBeNull();
+      expect((await create(['1 onion'], ['Divide the dough into equal portions of approximately 75 g per bao ball, then fry the onion.'])).error).toBeNull();
     });
   });
 

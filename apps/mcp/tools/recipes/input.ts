@@ -70,7 +70,7 @@ export type StepIn = z.infer<typeof StepIn>;
 export const STEP_WRITING = [
   'Write steps as plain text naming the ingredients ("Soften the leeks in the butter"): Our Cocon links each ingredient’s first mention in the recipe and writes its whole amount in, so don’t repeat amounts.',
   'Each ingredient goes in one step only. When one is used in several steps (onion in the sauce and on top), add one row per use, each with its own amount and a bracket to tell them apart ("Onion (sauce)", "Onion (topping)"), and name each in its step as {ing:Onion (sauce)}. Brackets only show while editing; the ingredient list and the grocery list add the rows up. Later plain mentions ("the rest of the onion") stay text.',
-  'Never write an amount that depends on the servings in step text, step names, tips, ingredient names or prep notes ("about 20 g", "need 3 g"): it would not change when the servings do. Put it in the ingredient’s quantity and unit instead. Numbers that stay the same whatever the servings are fine ("2 tbsp per serving", "a 23 cm tin", "bake for 25 minutes").',
+  'Never write an amount that depends on the servings in step text, step names, tips, ingredient names or prep notes ("about 20 g", "need 3 g"): it would not change when the servings do. Put it in the ingredient’s quantity and unit instead. Amounts for one of something stay the same whatever the servings, so they’re fine: write them with "per" or "each" ("75 g per bao ball", "2 tbsp per serving", "75 g each"), as are sizes and times ("a 23 cm tin", "bake for 25 minutes").',
   'What follows a comma in an ingredient’s name, or its prep_note, is shown in the step after the amount ("2 onions, finely chopped").',
   'Write oven temperatures as you like ("180 °C", "350 °F"); they’re shown in both scales. For a thermometer reading in the text, write {temp:<°C>:food}, e.g. {temp:63:food}; or use thermometer_check.',
   'A single duration in a step ("bake for 25 minutes") becomes its timer unless you send timer_minutes.',
@@ -223,7 +223,7 @@ export function checkStepAmounts(where: string, body: string, ...more: (string |
     const amount = scalingAmountIn(text);
     if (amount)
       throw new ToolError(
-        `${where} says "${amount}", which won’t change with the servings. Put the amount on the ingredient (add a row if it’s a separate part, like "Onion (topping)") and name the ingredient in the step instead. Amounts that stay the same whatever the servings ("2 tbsp per serving") are fine.`,
+        `${where} says "${amount}", which won’t change with the servings. Put the amount on the ingredient (add a row if it’s a separate part, like "Onion (topping)") and name the ingredient in the step instead. An amount for one of something is fine when it says so: "75 g per bao ball", "2 tbsp per serving", "75 g each".`,
       );
   }
 }
