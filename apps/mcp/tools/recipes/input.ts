@@ -70,7 +70,8 @@ export type StepIn = z.infer<typeof StepIn>;
 export const STEP_WRITING = [
   'Write steps as plain text naming the ingredients ("Soften the leeks in the butter"): Our Cocon links each ingredient’s first mention in the recipe and writes its whole amount in, so don’t repeat amounts.',
   'Each ingredient goes in one step only. When one is used in several steps (onion in the sauce and on top), add one row per use, each with its own amount and a bracket to tell them apart ("Onion (sauce)", "Onion (topping)"), and name each in its step as {ing:Onion (sauce)}. Brackets only show while editing; the ingredient list and the grocery list add the rows up. Later plain mentions ("the rest of the onion") stay text.',
-  'Never write an amount that depends on the servings in step text, step names, tips, ingredient names or prep notes ("about 20 g", "need 3 g"): it would not change when the servings do. Put it in the ingredient’s quantity and unit instead. Numbers that stay the same whatever the servings are fine ("2 tbsp per serving", "a 23 cm tin", "bake for 25 minutes").',
+  'Never write an amount that changes with the servings in step text, step names or tips ("you’ll need about 20 g of oil"): it would stay the same when the servings change. Put it in the ingredient’s quantity and unit instead, so it scales. Amounts that stay the same whatever the servings are fine: sizes ("divide into 75 g balls", "a 23 cm tin"), amounts for one of something ("2 tbsp per serving"), ratios ("12 g of onion per 100 g of flour", "60% hydration") and times. Ingredient names and prep notes never hold amounts.',
+  'When a step mentions an amount, the reply lists it under warnings: check each one, and change the step if that amount should scale.',
   'What follows a comma in an ingredient’s name, or its prep_note, is shown in the step after the amount ("2 onions, finely chopped").',
   'Write oven temperatures as you like ("180 °C", "350 °F"); they’re shown in both scales. For a thermometer reading in the text, write {temp:<°C>:food}, e.g. {temp:63:food}; or use thermometer_check.',
   'A single duration in a step ("bake for 25 minutes") becomes its timer unless you send timer_minutes.',
@@ -217,15 +218,17 @@ function tokenError(where: string, failure: Exclude<ReturnType<typeof tokenizeIn
   }
 }
 
-/** Refuses an amount written into a step (its text, title or tip), which wouldn't scale with the servings. */
-export function checkStepAmounts(where: string, body: string, ...more: (string | null | undefined)[]) {
+/**
+ * An amount written into a step (its text, title or tip) may need to scale with the servings, or
+ * may be a size ("75 g balls"): the step saves either way, and the reply says to check it.
+ */
+export function stepAmountWarning(where: string, body: string, ...more: (string | null | undefined)[]): string | null {
   for (const text of [body.replace(/\{[^{}]*\}/g, ' '), ...more.map((t) => t ?? '')]) {
     const amount = scalingAmountIn(text);
     if (amount)
-      throw new ToolError(
-        `${where} says "${amount}", which won’t change with the servings. Put the amount on the ingredient (add a row if it’s a separate part, like "Onion (topping)") and name the ingredient in the step instead. Amounts that stay the same whatever the servings ("2 tbsp per serving") are fine.`,
-      );
+      return `${where} mentions "${amount}", which stays the same when the servings change. If it should scale, put it on the ingredient (a row of its own if it’s a separate part, like "Onion (topping)") and name the ingredient in the step. If it’s a size or an amount for one of something ("75 g balls"), leave it.`;
   }
+  return null;
 }
 
 /**
@@ -236,11 +239,13 @@ export function stepFields(input: StepIn, where: string, targets: readonly Menti
   const s: Partial<Exclude<StepIn, string>> & { text: string } = typeof input === 'string' ? { text: input } : input;
   const tokens = tokenizeIngredients(s.text.trim(), targets, new Set(usedIn.keys()));
   if (!tokens.ok) throw tokenError(where, tokens, targets, usedIn);
-  checkStepAmounts(where, tokens.body, s.tip, s.name);
+  const warning = stepAmountWarning(where, tokens.body, s.tip, s.name);
   const timer = s.timer_minutes !== undefined ? Math.round(s.timer_minutes * 60) : stepTimerFrom(s.text);
   return {
     /** The ingredients it mentions, for the next steps (not saved). */
     mentions: tokens.ids,
+    /** An amount to check, for the reply (not saved). */
+    warning,
     name: s.name?.trim() || null,
     body: tokenizeTemperatures(tokens.body),
     timer_seconds: timer,
@@ -272,18 +277,22 @@ export function mentionsIn(steps: readonly { body: string }[], except?: number):
   return out;
 }
 
-export type StepOut = Omit<ReturnType<typeof stepFields>, 'mentions'> & { id: string; photo_path?: string | null };
+export type StepOut = Omit<ReturnType<typeof stepFields>, 'mentions' | 'warning'> & { id: string; photo_path?: string | null };
 
-/** The assistant's steps as rows; `keep` are ids they may keep (the recipe's own). Each ingredient goes in one step. */
-export function stepRows(inputs: readonly StepIn[], targets: readonly MentionTarget[], keep: ReadonlySet<string> = new Set()): StepOut[] {
+/**
+ * The assistant's steps as rows; `keep` are ids they may keep (the recipe's own). Each ingredient
+ * goes in one step. Amounts to check go into `warnings`.
+ */
+export function stepRows(inputs: readonly StepIn[], targets: readonly MentionTarget[], keep: ReadonlySet<string> = new Set(), warnings: string[] = []): StepOut[] {
   if (inputs.length > MAX_STEPS) throw new ToolError(`A recipe can have at most ${MAX_STEPS} steps. Combine some.`);
   const usedIn = new Map<string, number>();
   return inputs.map((input, i) => {
     const where = `Step ${i + 1}`;
     const id = typeof input === 'object' && input.id ? input.id : randomUUID();
     if (typeof input === 'object' && input.id && !keep.has(input.id)) throw new ToolError(`${where} has an id that isn't one of this recipe's steps. Leave the id out for a new step.`);
-    const { mentions, ...fields } = stepFields(input, where, targets, usedIn);
+    const { mentions, warning, ...fields } = stepFields(input, where, targets, usedIn);
     for (const m of mentions) usedIn.set(m, i + 1);
+    if (warning) warnings.push(warning);
     return { id, ...checkStep(fields, where, i) };
   });
 }
@@ -350,6 +359,8 @@ export async function variantRows(
   inputs: readonly VariantIn[],
   base: { ingredients: readonly MentionTarget[]; stepIds: readonly string[] },
   existing: readonly { id: string; name: string }[] = [],
+  /** Amounts in the variants' steps to check, for the reply. */
+  warnings: string[] = [],
 ): Promise<VariantSaveRow[]> {
   if (inputs.length > MAX_VARIANTS) throw new ToolError(`A recipe can have at most ${MAX_VARIANTS} variants.`);
   const names = new Set<string>();
@@ -393,16 +404,19 @@ export async function variantRows(
           out = { type: c.type, ingredient_id: ingredientId(c.ingredient) };
           break;
         case 'add_step': {
-          const { mentions: _m, ...fields } = stepFields(c.new_step, where, targets);
+          const { mentions: _m, warning, ...fields } = stepFields(c.new_step, where, targets);
+          if (warning) warnings.push(warning);
           const { name, body, timer_seconds, timer_label, temp_check_c, temp_check_text, tip } = checkStep(fields, where, 0);
           out = { type: c.type, step_id: stepId(c.step), place: c.place, step: { name, body, timer_seconds, timer_label, temp_check_c, temp_check_text, tip } };
           break;
         }
-        case 'change_step':
+        case 'change_step': {
+          const changed = c.text !== undefined ? stepFields({ text: c.text, timer_minutes: 1 }, where, targets) : null;
+          if (changed?.warning) warnings.push(changed.warning);
           out = {
             type: c.type,
             step_id: stepId(c.step),
-            ...(c.text !== undefined ? { body: stepFields({ text: c.text, timer_minutes: 1 }, where, targets).body } : {}),
+            ...(changed ? { body: changed.body } : {}),
             ...(c.timer_minutes !== undefined ? { timer_seconds: c.timer_minutes === null ? null : Math.round(c.timer_minutes * 60) } : {}),
             ...(c.timer_label !== undefined ? { timer_label: c.timer_label?.trim() || null } : {}),
             ...(c.thermometer_check !== undefined
@@ -410,6 +424,7 @@ export async function variantRows(
               : {}),
           };
           break;
+        }
         case 'remove_step':
           out = { type: c.type, step_id: stepId(c.step) };
           break;
