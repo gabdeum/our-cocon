@@ -43,6 +43,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"ai_permissions": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"family_id": string,"groceries": boolean,"id": string,"recipes_delete": boolean,"recipes_edit": boolean,"source": string,"updated_at": string,"updated_by": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_permissions_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_permissions_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "members"
+      referencedColumns: ["user_id"]
+    }
+                  ]
                 },"catalog_ingredients": {
                   Row: {
                     "aisle": Database["public"]['Enums']["aisle"],"default_size": Database["public"]['Enums']["size_word"] | null,"density_g_per_ml": number | null,"diet": (string)[],"key": string,"names": NonNullable<Json>,"noun_plural": string | null,"noun_singular": string | null,"size_large_g": number | null,"size_medium_g": number | null,"size_small_g": number | null,"synonyms": NonNullable<Json>,"updated_at": string,"whole_only": boolean
@@ -482,6 +508,9 @@ isOneToOne: false
                            },
 "access_token_hook":
 { Args: { "event": Json }; Returns: Json
+                           },
+"ai_allowed":
+{ Args: { "permission": string }; Returns: boolean
                            },
 "assistant_for_redirect":
 { Args: { "uri": string }; Returns: string

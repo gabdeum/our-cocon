@@ -4,12 +4,8 @@ import { validChoice, type RecipeVariant, type VariantChoice } from '@cocon/sche
 import { Unit } from '@cocon/schemas/recipes';
 import type { UnitSystem } from '@cocon/quantity';
 
-/** "Scale by an ingredient" (spec 013): what you have of one ingredient. */
-export interface ScaledBy {
-  ingredientId: string;
-  amount: number;
-  unit: Unit;
-}
+export type { ScaledBy } from '@cocon/data';
+import type { ScaledBy } from '@cocon/data';
 
 /**
  * FR-006: the servings and variants picked on a recipe, remembered on this device until changed.

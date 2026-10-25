@@ -93,7 +93,7 @@ describe.skipIf(!local)('recipe tools against local Supabase', () => {
 
   it('lists the recipe tools, with hints from what they do', async () => {
     const { tools } = await mcp.listTools();
-    expect(tools.map((t) => t.name)).toEqual(['search_recipes', 'get_recipe', 'create_recipe', 'update_recipe', 'delete_recipe']);
+    expect(tools.map((t) => t.name).filter((n) => n.endsWith('_recipe') || n.endsWith('_recipes'))).toEqual(['search_recipes', 'get_recipe', 'create_recipe', 'update_recipe', 'delete_recipe']);
     const hints = Object.fromEntries(tools.map((t) => [t.name, [t.annotations?.readOnlyHint, t.annotations?.destructiveHint]]));
     expect(hints).toMatchObject({ search_recipes: [true, false], create_recipe: [false, false], delete_recipe: [false, true] });
   });

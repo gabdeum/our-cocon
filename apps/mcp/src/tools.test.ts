@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { QuantityError } from '@cocon/quantity';
-import { callTool, defineTool, errorSentence, inputSentence, listing, ToolError, type ToolContext } from './tools.js';
+import { callTool, defineTool, errorSentence, inputSentence, listing, notAllowedSentence, ToolError, type ToolContext } from './tools.js';
 import { rateLimit } from './rate-limit.js';
 
 const echo = defineTool({
@@ -14,9 +14,13 @@ const echo = defineTool({
 });
 const remove = defineTool({ name: 'remove_thing', title: 'Remove', description: 'Removes.', access: 'delete', input: z.strictObject({}), run: async () => ({}) });
 
-function context(): ToolContext & { track: ReturnType<typeof vi.fn> } {
+const tick = defineTool({ name: 'tick_thing', title: 'Tick', description: 'Ticks.', access: 'write', needs: 'groceries', input: z.strictObject({}), run: vi.fn(async () => ({ ticked: true })) });
+
+/** `allowed`: what the database's ai_allowed answers (spec 024). */
+function context(allowed = true): ToolContext & { track: ReturnType<typeof vi.fn>; rpc: ReturnType<typeof vi.fn> } {
   const track = vi.fn();
-  return { db: {} as ToolContext['db'], userId: 'u', familyId: 'f', assistant: 'claude', appUrl: 'https://app', tracker: { track, identify: vi.fn(), reset: vi.fn() }, track };
+  const rpc = vi.fn(async () => ({ data: allowed, error: null }));
+  return { db: { rpc } as unknown as ToolContext['db'], userId: 'u', familyId: 'f', assistant: 'claude', appUrl: 'https://app', tracker: { track, identify: vi.fn(), reset: vi.fn() }, track, rpc };
 }
 
 describe('listing', () => {
@@ -63,6 +67,36 @@ describe('callTool', () => {
     expect(result.isError).toBe(true);
     expect(result.content).toEqual([{ type: 'text', text: 'name: Too small: expected string to have >=1 characters.' }]);
     expect(ctx.track).toHaveBeenCalledWith('mcp_tool_called', { tool: 'echo_things', assistant: 'claude', ok: false });
+  });
+});
+
+describe('permissions (spec 024 FR-002)', () => {
+  it('asks the database before a tool that needs one runs', async () => {
+    const ctx = context(true);
+    const result = await callTool(tick, {}, ctx);
+    expect(ctx.rpc).toHaveBeenCalledWith('ai_allowed', { permission: 'groceries' });
+    expect(result.structuredContent).toEqual({ ticked: true });
+  });
+
+  it('Not allowed: a polite refusal the assistant can relay, tracked as not ok, and the tool never runs', async () => {
+    const ctx = context(false);
+    vi.mocked(tick.run).mockClear();
+    const result = await callTool(tick, {}, ctx);
+    expect(result).toMatchObject({ isError: true, content: [{ type: 'text', text: 'This member hasn’t allowed AI to change the grocery list. They can change it in Settings › AI assistants.' }] });
+    expect(tick.run).not.toHaveBeenCalled();
+    expect(ctx.track).toHaveBeenCalledWith('mcp_tool_called', { tool: 'tick_thing', assistant: 'claude', ok: false });
+  });
+
+  it('reads tools without a permission straight away', async () => {
+    const ctx = context(false);
+    await callTool(echo, { name: 'x' }, ctx);
+    expect(ctx.rpc).not.toHaveBeenCalled();
+  });
+
+  it('turns the database’s own refusal into the same sentence', () => {
+    expect(errorSentence({ code: '42501', hint: 'ai_not_allowed', message: 'recipes_delete' })).toBe(notAllowedSentence('recipes_delete'));
+    expect(notAllowedSentence('recipes_edit')).toBe('This member hasn’t allowed AI to create or edit recipes. They can change it in Settings › AI assistants.');
+    expect(errorSentence({ code: '42501', message: 'permission denied for table recipes' })).toBe("Something went wrong on Our Cocon's side. Try again in a moment.");
   });
 });
 
