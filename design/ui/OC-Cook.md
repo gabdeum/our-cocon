@@ -35,6 +35,7 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Spec 012
 | A timer paused or done | Not in the pill (TimerPill README) |
 | Opened at a step (Timers › "Go to step") | Starts at that step; a step that's gone starts at step 1. Exit and Finish then open the recipe page |
 | Opened at a step from the recipe page's Steps tab | Starts at that step; Exit and Finish go back to the recipe page |
+| Opened at a step while the page is still laying out (fonts loading, steps above growing) | Keeps landing on that step for 2 s, until the person scrolls |
 
 ## Accessibility labels
 Segments: "Go to step {n}: {name}" ("Go to step {n}" for a step with no name). Settings button: "Cooking options"; the options sheet's close label: "Close cooking options". Timer buttons: "Start timer", "Pause", "Resume", "Done", "One minute less", "One minute more".

@@ -1,7 +1,7 @@
 // Spec 012 US1 and FR-004: which step is current, scrolling to it, and the 700 ms pause in tracking.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { SCROLL_LOCK_MS } from '../../lib/cooking';
+import { OPEN_SETTLE_MS, SCROLL_LOCK_MS } from '../../lib/cooking';
 import { useStepScroll } from './use-step-scroll';
 
 const TOPS = [0, 520, 1040, 1560, 2080, 2600];
@@ -53,8 +53,60 @@ describe('useStepScroll', () => {
   it('opens at a given step without animation, once it is measured', () => {
     const { hook, scrollTo } = setup(3);
     expect(hook.result.current.current).toBe(3);
-    expect(scrollTo).toHaveBeenCalledTimes(1);
-    expect(scrollTo).toHaveBeenCalledWith(1552, false);
+    // Once measured, and again as the steps after it are laid out: always to the same place.
+    expect(scrollTo.mock.calls.every(([y, animated]) => y === 1552 && animated === false)).toBe(true);
+    expect(scrollTo).toHaveBeenCalled();
+  });
+
+  it('opened at a step: a step above it growing afterwards scrolls to it again', () => {
+    const { hook, scrollTo } = setup(4);
+    expect(scrollTo).toHaveBeenLastCalledWith(2072, false);
+    // Step 2 reflows 300 taller (fonts loaded): steps 3–6 move down.
+    act(() => [0, 520, 1340, 1860, 2380, 2900].forEach((top, i) => hook.result.current.onStepLayout(i, top, i === 1 ? 820 : 520)));
+    expect(scrollTo).toHaveBeenLastCalledWith(2372, false);
+    expect(hook.result.current.current).toBe(4);
+  });
+
+  it('opened at a step: scrolling by hand, or 2 s passing, ends the re-aiming', () => {
+    const first = setup(4);
+    // It got there; then the person scrolls up.
+    act(() => first.hook.result.current.onScroll(2072, 800));
+    act(() => vi.advanceTimersByTime(SCROLL_LOCK_MS));
+    act(() => first.hook.result.current.onScroll(1500, 800));
+    const calls = first.scrollTo.mock.calls.length;
+    act(() => first.hook.result.current.onStepLayout(1, 520, 820));
+    expect(first.scrollTo).toHaveBeenCalledTimes(calls);
+
+    const second = setup(4);
+    act(() => vi.advanceTimersByTime(OPEN_SETTLE_MS));
+    const before = second.scrollTo.mock.calls.length;
+    act(() => second.hook.result.current.onStepLayout(1, 520, 820));
+    expect(second.scrollTo).toHaveBeenCalledTimes(before);
+  });
+
+  it('opened at a step: a scroll that stopped short goes again when tracking resumes', () => {
+    const { hook, scrollTo } = setup(4);
+    // The browser only got to step 2, while the step bar already reads step 5.
+    act(() => hook.result.current.onScroll(900, 800));
+    expect(hook.result.current.current).toBe(4);
+    const calls = scrollTo.mock.calls.length;
+    act(() => vi.advanceTimersByTime(SCROLL_LOCK_MS));
+    expect(scrollTo).toHaveBeenCalledTimes(calls + 1);
+    expect(scrollTo).toHaveBeenLastCalledWith(2072, false);
+  });
+
+  it('opened at a step: once it got there, nothing more happens', () => {
+    const { hook, scrollTo } = setup(4);
+    // Scroll-snap rests on the step's own top, 8 below where it was sent.
+    act(() => hook.result.current.onScroll(2080, 800));
+    const calls = scrollTo.mock.calls.length;
+    act(() => vi.advanceTimersByTime(SCROLL_LOCK_MS));
+    expect(scrollTo).toHaveBeenCalledTimes(calls);
+  });
+
+  it('opened at step 1: nothing to aim at', () => {
+    const { scrollTo } = setup(0);
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 
   it('snaps where Next and Back land: each top − 8', () => {
