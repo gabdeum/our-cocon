@@ -2,7 +2,7 @@
 -- API they call; every assistant grocery write is logged for Undo (FR-003); a removed member's
 -- assistants lose access at once.
 begin;
-select plan(41);
+select plan(49);
 
 -- As `role` with the claims an access token carries (`client` adds an assistant's client_id).
 create function pg_temp.login(uid uuid, r text, client text default null) returns void language plpgsql as $$
@@ -47,7 +47,7 @@ insert into public.grocery_items (name) values ('Bread');
 select pg_temp.login('00000000-0000-0000-0000-00000000000b', 'authenticated');
 select public.accept_invite((select token from tokens), 'Alex');
 select pg_temp.login('00000000-0000-0000-0000-00000000000f', 'authenticated');
-select public.create_family('The Others', 'Sam');
+insert into ids values ('famB', public.create_family('The Others', 'Sam'));
 insert into public.grocery_items (name) values ('Rice');
 
 -- Permissions are each member's own (OC-Connect: "Settings are per person").
@@ -75,6 +75,7 @@ select pg_temp.login('00000000-0000-0000-0000-00000000000b', 'cocon_assistant', 
 select is(public.ai_allowed('groceries'), true, 'groceries are Allowed for his assistant');
 select is(public.ai_allowed('recipes_delete'), false, 'deleting recipes is not');
 select is(public.ai_allowed('anything'), false, 'an unknown permission is never allowed');
+select is(public.ai_allowed(null), false, 'nor a missing one');
 select throws_ok($$ select * from public.ai_permissions $$, '42501', null, 'it cannot read permissions');
 select throws_ok($$ update public.ai_permissions set recipes_delete = true $$, '42501', null, 'or allow itself more');
 select is((select array_agg(name)::text from public.grocery_items), '{Bread}', 'it reads its family''s list, and only theirs');
@@ -89,6 +90,14 @@ select throws_ok($$ update public.grocery_items set created_by = null $$, '42501
 select is(pg_temp.affected($$ update public.grocery_items set checked = true where name = 'Rice' $$), 0, 'or touch another family''s list');
 select lives_ok($$ insert into public.grocery_recipes (recipe_id, servings) values ((select id from ids where name = 'tart'), 4) $$, 'it records a recipe''s servings');
 select lives_ok($$ update public.grocery_recipes set servings = 6 $$, 'and changes them');
+-- What it may send can't move a row: the database keeps the family, the recipe and the stamps.
+select lives_ok($$ insert into public.grocery_items (name, family_id) values ('Onion', (select id from ids where name = 'famB')) $$, 'an item sent for another family');
+select is((select family_id from public.grocery_items where name = 'Onion'), (select id from ids where name = 'famA'), 'lands in its own');
+select throws_ok($$ insert into public.grocery_items (name, source) values ('Leek', 'claude') $$, '42501', null, 'it cannot choose the source');
+select throws_ok($$ insert into public.grocery_items (name, created_by) values ('Leek', '00000000-0000-0000-0000-00000000000a') $$, '42501', null, 'or the author');
+select lives_ok($$ update public.grocery_recipes set recipe_id = gen_random_uuid(), family_id = (select id from ids where name = 'famB') $$, 'a servings row sent elsewhere');
+select is((select recipe_id::text || family_id::text from public.grocery_recipes),
+  (select (select id from ids where name = 'tart')::text || (select id from ids where name = 'famA')::text), 'keeps its recipe and family');
 
 -- FR-002: Not allowed holds on the direct API too.
 select throws_ok($$ update public.recipes set deleted_at = now() $$, '42501', 'recipes_delete', 'Delete recipes: Not allowed refuses a delete');
@@ -103,8 +112,8 @@ select lives_ok($$ update public.recipes set deleted_at = now() $$, 'a delete al
 
 -- FR-003: every assistant grocery write is logged, with the row as it was.
 reset role;
-select is((select count(*)::int from public.activity where target_kind = 'grocery_items'), 3, 'the add, the tick and the clear are each an entry');
-select is((select payload ->> 'name' from public.activity where target_kind = 'grocery_items' and action = 'insert'), 'Milk', 'with the item''s name');
+select is((select count(*)::int from public.activity where target_kind = 'grocery_items'), 4, 'each add, the tick and the clear are an entry');
+select is((select payload ->> 'name' from public.activity where target_kind = 'grocery_items' and action = 'insert' order by payload ->> 'name' limit 1), 'Milk', 'with the item''s name');
 select ok((select payload #>> '{before,deleted_at}' is null from public.activity
   where target_kind = 'grocery_items' and action = 'update' and payload #>> '{before,checked}' = 'true'), 'the clear keeps the item as it was, for Undo');
 
@@ -114,6 +123,8 @@ select public.remove_member('00000000-0000-0000-0000-00000000000b');
 select pg_temp.login('00000000-0000-0000-0000-00000000000b', 'cocon_assistant', 'c1');
 select is((select count(*)::int from public.grocery_items), 0, 'a removed member''s assistant sees no list');
 select is(pg_temp.affected($$ update public.grocery_items set checked = true $$), 0, 'and changes nothing');
+select pg_temp.login('00000000-0000-0000-0000-00000000000f', 'cocon_assistant', 'c2');
+select is((select count(*)::int from public.grocery_recipes), 0, 'another family''s assistant sees no servings rows');
 
 select * from finish();
 rollback;

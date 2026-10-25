@@ -7,7 +7,7 @@ import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { loadGroceryList, setAiPermission, type Db, type GroceryItem } from '@cocon/data';
+import { loadGroceryList, restoreItems, setAiPermission, type Db, type GroceryItem } from '@cocon/data';
 import { loadConfig } from '../../src/config.js';
 import { createHttpServer } from '../../src/server.js';
 import { adminClient, connectAssistant, localSupabase, signInPerson } from '../../test/local.js';
@@ -161,6 +161,11 @@ describe.skipIf(!local)('grocery tools and permissions against local Supabase', 
     const cleared = entries.find((e) => e.action === 'update' && (e.payload as Result).before?.name === 'Leeks' && (e.payload as Result).before?.checked === true);
     expect(cleared?.payload).toMatchObject({ tool: 'clear_done_groceries', before: { deleted_at: null } });
     expect(entries.some((e) => e.action === 'insert' && (e.payload as Result).name === 'Milk')).toBe(true);
+
+    // A removal or clear is undone the app's way (spec 020's Undo): the item comes back as it was.
+    const leeks = (cleared?.payload as Result).before.id as string;
+    expect(await restoreItems(gabriel, [leeks])).toBe(true);
+    expect((await loadGroceryList(gabriel)).find((i) => i.id === leeks)).toMatchObject({ name: 'Leeks', checked: true, created_by: alexId, source: 'chatgpt' });
   });
 
   it('US3 and SC-001: "Delete the quiche" moves it to Recently deleted, logged, and it can be restored', async () => {

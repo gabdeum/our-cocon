@@ -50,7 +50,7 @@ create trigger ai_permissions_a_user before insert or update on public.ai_permis
 create function public.ai_allowed(permission text) returns boolean
 language sql stable security definer set search_path = '' as $$
   select case
-    when permission not in ('recipes_edit', 'groceries', 'recipes_delete') then false
+    when permission is null or permission not in ('recipes_edit', 'groceries', 'recipes_delete') then false
     when auth.jwt() ->> 'client_id' is null then true
     else coalesce((
       select case permission when 'recipes_edit' then p.recipes_edit when 'groceries' then p.groceries else p.recipes_delete end
