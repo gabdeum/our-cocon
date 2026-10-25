@@ -19,7 +19,7 @@ Produce · Bakery · Dairy & eggs · Meat & fish · Dry goods · Spices & baking
 ## States not drawn
 | State | Copy |
 | --- | --- |
-| Empty list | "Your list is empty." · "Add items above, or from any recipe with “Add to groceries…”." |
+| Empty list | "Your list is empty." · "Add items above, or from any recipe with “Add groceries”." |
 | Clear all items | Dialog (warning icon): "Clear all {n} items on the list?" ("Clear the 1 item on the list?") / "This removes every item, ticked or not, for everyone in the family. You can undo it right after." · "Clear all items" · "Keep the list". Confirming clears them all and shows StatusBanner "Cleared {n} items" with "Undo". |
 | One or more ticked | Soft button "Clear done items" at the end of the list. Pressing it removes ticked items and shows StatusBanner "Cleared {n} items" with "Undo". Nothing is cleared automatically. |
 | Item in Other | row long-press menu "Move to…" with the aisle list; the choice is remembered for the family |
@@ -47,7 +47,7 @@ A BottomSheet titled "For {recipe}", lead "{n} items · serves {n}" (close label
 3. Apart from them, a red danger Button "Remove its items" (trash icon, full width).
 - Once the servings change, the footer shows "Cancel" · "Save for {n}". Saving multiplies the recipe's items still to buy by new ÷ old servings (counts round up, as when adding from a recipe), saves the servings for the family and closes. Ticked items are left as they are.
 - "Remove its items" removes all the recipe's items, ticked or not, closes, and shows StatusBanner "Removed {n} items for {recipe}." with "Undo".
-- The servings: "Add to groceries…" records them (8 after a scale by an ingredient to 7½). Adding the recipe again while it still has items on the list adds them up (4, then 2 more, is 6); once its items are gone, the next add starts again.
+- The servings: "Add groceries" records them (8 after a scale by an ingredient to 7½). Adding the recipe again while it still has items on the list adds them up (4, then 2 more, is 6); once its items are gone, the next add starts again.
 
 ## Store sizes (spec 021)
 - **What to buy:** one pack is its label ("1 pint carton", "20 cl"; "1 dozen" when the label has no number); several of one pack "2 × 20 cl"; mixed packs joined with " + " ("50 cl + 20 cl"); sold one by one, in pieces ("Lemon: 2 pieces", "Pumpkin: 1 piece (need 1 kg)"); sold by weight "1 kg loose" (in lb for US stores).

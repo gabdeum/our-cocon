@@ -216,8 +216,11 @@ export const strings = {
     stepsTab: (n: number) => `Steps · ${n}`,
     ingredientsLabel: 'Ingredients',
     variantTag: 'Variant',
-    addToGroceries: 'Add to groceries…',
+    addToGroceries: 'Add groceries',
     startCooking: 'Start cooking',
+    /** The footer's labels when the full ones don't fit side by side (screen readers keep the full ones). */
+    addToGroceriesShort: 'Groceries',
+    startCookingShort: 'Cook',
     stepsLabel: 'Steps',
     /** A row in the Steps tab opens cooking mode there. */
     openStep: (n: number) => `Open step ${n} in cooking mode`,
@@ -737,7 +740,7 @@ export const strings = {
     storeSizeReset: 'Use the usual sizes',
     storeSizePieces: (n: string) => `pack of ${n}`,
     emptyTitle: 'Your list is empty.',
-    emptyBody: 'Add items above, or from any recipe with “Add to groceries…”.',
+    emptyBody: 'Add items above, or from any recipe with “Add groceries”.',
     clearDone: 'Clear done items',
     cleared: (n: number) => `Cleared ${n === 1 ? '1 item' : `${n} items`}`,
     removed: (name: string) => `Removed ${name}.`,

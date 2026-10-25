@@ -100,9 +100,6 @@ body{margin:0}
             <sc-if value="{{ing.variant}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; font-weight: 800; color: #424D17; background: #D9E3A8; padding: 4px 10px; border-radius: 999px">Variant</span></sc-if>
           </div>
         </sc-for>
-        <a href="OC-AddGroceries.dc.html" style="margin-top: 16px; height: 54px; border-radius: 999px; border: 2px solid #5A6820; background: #FFFFFF; color: #424D17; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; font-weight: 800">
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>Add to groceries…
-        </a>
       </section>
     </sc-if>
 
@@ -124,10 +121,15 @@ body{margin:0}
     </sc-if>
 
   </div>
-  <!-- Fixed footer: "Start cooking" stays in reach while the page scrolls. -->
-  <div style="position: sticky; bottom: 0; background: #FFF8E3; border-top: 1.5px solid #F2E6C4; padding: 12px 20px 28px">
-    <a href="OC-Cook.dc.html" style="height: 60px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; font-weight: 900">
-      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8Z"/></svg>Start cooking
+  <!-- Fixed footer: "Add groceries" and "Start cooking", half each, no icons, in reach while the
+       page scrolls. When either label doesn't fit on one line (narrower than 390), both read
+       "Groceries" and "Cook". -->
+  <div style="position: sticky; bottom: 0; background: #FFF8E3; border-top: 1.5px solid #F2E6C4; padding: 12px 20px 28px; display: flex; gap: 10px">
+    <a href="OC-AddGroceries.dc.html" style="flex: 1; min-width: 0; height: 60px; box-sizing: border-box; border-radius: 999px; border: 2px solid #5A6820; background: #FFFFFF; color: #424D17; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 16px; font-weight: 800">
+      Add groceries
+    </a>
+    <a href="OC-Cook.dc.html" style="flex: 1; min-width: 0; height: 60px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; font-weight: 900">
+      Start cooking
     </a>
   </div>
 </div>

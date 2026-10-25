@@ -197,7 +197,7 @@ function LoadedRecipe({
       }
       left={<IconButton icon="back" label={p.back} onPress={onBack} />}
       floating={<AppTimerPill onOpen={onOpenTimers} tracker={tracker} />}
-      footer={<Button label={p.startCooking} variant="ink" size="lg" icon="play" block onPress={onStartCooking} />}
+      footer={<RecipeActions onAddToGroceries={onAddToGroceries} onStartCooking={onStartCooking} />}
       right={
         <>
           <IconButton icon="share" label={p.share} onPress={onShare} />
@@ -317,7 +317,6 @@ function LoadedRecipe({
                   />
                 ))}
               </View>
-              <Button label={p.addToGroceries} variant="outline" icon="groceries" block onPress={onAddToGroceries} className="mt-16" />
             </View>
           ) : (
             <View role="list" aria-label={p.stepsLabel} className="gap-8">
@@ -337,6 +336,41 @@ function LoadedRecipe({
         </>
       ) : null}
     </PhotoScreen>
+  );
+}
+
+/**
+ * The fixed footer (OC-Recipe): "Add groceries" (outline) and "Start cooking" (ink), no icons, side by
+ * side, half each. When either label doesn't fit on one line, both read short: "Groceries", "Cook".
+ */
+function RecipeActions({ onAddToGroceries, onStartCooking }: { onAddToGroceries: () => void; onStartCooking: () => void }) {
+  const [fits, setFits] = useState({ groceries: true, cook: true });
+  const short = !fits.groceries || !fits.cook;
+  return (
+    <View className="flex-row gap-10">
+      <Button
+        label={p.addToGroceries}
+        shortLabel={p.addToGroceriesShort}
+        short={short}
+        onLabelFits={(groceries) => setFits((f) => (f.groceries === groceries ? f : { ...f, groceries }))}
+        variant="outline"
+        size="lg"
+        block
+        className="flex-1"
+        onPress={onAddToGroceries}
+      />
+      <Button
+        label={p.startCooking}
+        shortLabel={p.startCookingShort}
+        short={short}
+        onLabelFits={(cook) => setFits((f) => (f.cook === cook ? f : { ...f, cook }))}
+        variant="ink"
+        size="lg"
+        block
+        className="flex-1"
+        onPress={onStartCooking}
+      />
+    </View>
   );
 }
 
