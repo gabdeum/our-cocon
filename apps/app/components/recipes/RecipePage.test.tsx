@@ -389,7 +389,7 @@ describe('FR-005: actions', () => {
     const onAddToGroceries = vi.fn();
     const onStartCooking = vi.fn();
     await setup({ onAddToGroceries, onStartCooking });
-    tap('Add to groceries…');
+    tap('Add groceries');
     tap('Start cooking');
     expect(onAddToGroceries).toHaveBeenCalled();
     expect(onStartCooking).toHaveBeenCalled();
@@ -418,12 +418,14 @@ describe('Steps tab (spec 009)', () => {
     expect(onOpenStep).toHaveBeenCalledWith(quiche.steps[2]?.id);
   });
 
-  it('"Start cooking" is in the fixed footer on both tabs', async () => {
+  it('"Add groceries" and "Start cooking" are side by side in the fixed footer, on both tabs', async () => {
     await setup({ tab: 'steps' });
     expect(screen.getByRole('button', { name: 'Start cooking' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Add groceries' })).toBeTruthy();
     cleanup();
     await setup();
-    expect(screen.getByRole('button', { name: 'Start cooking' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Add groceries' })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Start cooking' }).parentElement).toBe(screen.getByRole('button', { name: 'Add groceries' }).parentElement);
   });
 
   it('edge: a variant step is listed and numbering stays continuous', async () => {

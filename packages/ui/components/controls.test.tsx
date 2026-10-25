@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
-import { Button } from './Button';
+import { Button, labelFits } from './Button';
 import { Switch, SettingRow } from './Switch';
 import { SegmentedControl } from './SegmentedControl';
 import { Stepper } from './Stepper';
@@ -146,5 +146,28 @@ describe('Avatar', () => {
     render(<AvatarStack members={members} moreLabel={(n) => `+${n}`} label="Family" />);
     expect(screen.getByText('+2')).toBeTruthy();
     expect(screen.queryByText('E')).toBeNull();
+  });
+});
+
+describe('Button › short label', () => {
+  it('a label fits when it is no wider than the button less its padding and icon', () => {
+    // 170 wide, 24 padding each side, icon 20 + gap 10: 92 left for the label.
+    expect(labelFits(170, 92, 24, true)).toBe(true);
+    expect(labelFits(170, 93, 24, true)).toBe(false);
+    expect(labelFits(170, 120, 24, false)).toBe(true);
+    // Not measured yet: the full label shows.
+    expect(labelFits(0, 120, 24, true)).toBe(true);
+  });
+
+  it('short shows the short label; screen readers still read the full one', () => {
+    render(<Button label="Start cooking" shortLabel="Cook" short onPress={vi.fn()} />);
+    const button = screen.getByRole('button', { name: 'Start cooking' });
+    // The full label after it is the hidden one that measures it.
+    expect(button.textContent?.startsWith('Cook')).toBe(true);
+  });
+
+  it('without short, the full label shows', () => {
+    render(<Button label="Start cooking" shortLabel="Cook" onPress={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Start cooking' }).textContent?.startsWith('Start cooking')).toBe(true);
   });
 });

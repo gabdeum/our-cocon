@@ -14,8 +14,7 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
    - Row "Units" with a pill SegmentedControl "Metric" · "Imperial"
 6. Dark tabs: "Ingredients · {n}" | "Steps · {n}".
 7. Ingredient rows: amount (17/900), name, optional weight sub-line, optional sage tag "Variant".
-8. Outline button with cart icon "Add to groceries…".
-9. Ink button 60 with play icon "Start cooking", in a footer bar fixed at the bottom (on both tabs) so it is in reach wherever the page is scrolled.
+8. A footer bar fixed at the bottom (on both tabs), in reach wherever the page is scrolled, with two buttons side by side, half each, with no icons: outline 60 "Add groceries" (left) and ink 60 "Start cooking" (right). Both fit at 390 wide. On a narrower screen (or larger text), when either label doesn't fit on one line, both read short, "Groceries" and "Cook"; labels never wrap or get cut. Screen readers always hear "Add groceries" and "Start cooking".
 
 ## Dynamic copy
 - The amount format comes from spec 005 ("2", "300 ml", "about ¾ cup", "1 pinch"), with sub-line weights like "300 g".
@@ -52,5 +51,5 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
 | Reset (scaled chip) | back to the servings from before the scale |
 | − / + while scaled | from 7½: − to 7, + to 8; the scale ends |
 | Tabs | switch Ingredients / Steps in place, keeping scroll |
-| Add to groceries… | → add-to-groceries sheet |
+| Add groceries | → add-to-groceries sheet |
 | Start cooking | → `/recipes/[id]/cook` |

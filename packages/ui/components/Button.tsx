@@ -1,4 +1,5 @@
-import { Pressable, type PressableProps } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, View, type PressableProps } from 'react-native';
 import { cn, focusRing } from '../cn';
 import type { ColorName } from '../theme';
 import { BrandMark, Icon, type BrandName, type IconName } from './Icon';
@@ -15,7 +16,7 @@ interface Look {
   weight: Weight;
   /** Label size when the variant sets its own (outline 16, dashed 15). */
   fontSize?: number;
-  /** outline and dashed are 54 tall, tile 44, whatever the size. */
+  /** outline and dashed are 54 tall, tile 44, whatever the size (outline `lg` is 60, to pair with an ink `lg`). */
   fixedHeight?: string;
   /** dashed: radius 18, tile: 12, instead of a pill. */
   radius?: string;
@@ -57,12 +58,24 @@ const looks: Record<ButtonVariant, Look> = {
   danger: { fill: 'bg-danger active:bg-danger-pressed', text: 'on-olive', icon: 'onOlive', weight: '900' },
 };
 
-const sizes: Record<ButtonSize, { height: string; padding: string; fontSize: number }> = {
-  sm: { height: 'h-control-md', padding: 'px-18', fontSize: 15 },
-  md: { height: 'h-control-xl', padding: 'px-24', fontSize: 17 },
-  lg: { height: 'h-[60px]', padding: 'px-24', fontSize: 18 },
-  dialog: { height: 'h-[56px]', padding: 'px-24', fontSize: 17 },
+const sizes: Record<ButtonSize, { height: string; padding: string; paddingPx: number; fontSize: number }> = {
+  sm: { height: 'h-control-md', padding: 'px-18', paddingPx: 18, fontSize: 15 },
+  md: { height: 'h-control-xl', padding: 'px-24', paddingPx: 24, fontSize: 17 },
+  lg: { height: 'h-[60px]', padding: 'px-24', paddingPx: 24, fontSize: 18 },
+  dialog: { height: 'h-[56px]', padding: 'px-24', paddingPx: 24, fontSize: 17 },
 };
+
+/** The icon (20) and its gap (10) before the label. */
+const ICON_SPACE = 30;
+
+/**
+ * Whether a label `textWidth` wide fits on one line in a button `buttonWidth` wide, with its
+ * padding on both sides and the icon if it has one. Unmeasured (0) counts as fitting.
+ */
+export function labelFits(buttonWidth: number, textWidth: number, paddingPx: number, hasIcon: boolean): boolean {
+  if (buttonWidth <= 0 || textWidth <= 0) return true;
+  return textWidth <= buttonWidth - 2 * paddingPx - (hasIcon ? ICON_SPACE : 0);
+}
 
 export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   label: string;
@@ -76,6 +89,15 @@ export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> 
   /** Keeps the width and shows `busyLabel` ("Saving…") while work runs. */
   busy?: boolean;
   busyLabel?: string;
+  /**
+   * A shorter label ("Cook") shown in place of `label` when it doesn't fit on one line, never
+   * wrapped or cut. Screen readers still read `label`.
+   */
+  shortLabel?: string;
+  /** Shows `shortLabel` whatever the width: a button beside this one went short, so both do. */
+  short?: boolean;
+  /** Whether `label` fits, once measured (to shorten a pair of buttons together). */
+  onLabelFits?: (fits: boolean) => void;
   className?: string;
 }
 
@@ -90,21 +112,46 @@ export function Button({
   disabled,
   busy,
   busyLabel,
+  shortLabel,
+  short,
+  onLabelFits,
   className,
   ...props
 }: ButtonProps) {
   const look = looks[variant];
   const s = sizes[size];
   const off = disabled === true;
+  const fontSize = look.fontSize ?? s.fontSize;
+  // With a short label: the button's width and the full label's own width, measured. Refs, as both
+  // layouts can arrive in one render.
+  const width = useRef(0);
+  const textWidth = useRef(0);
+  const [fits, setFits] = useState(true);
+  const measure = () => {
+    const next = labelFits(width.current, textWidth.current, s.paddingPx, Boolean(icon || brand));
+    setFits(next);
+    if (width.current > 0 && textWidth.current > 0) onLabelFits?.(next);
+  };
+  const shown = busy && busyLabel ? busyLabel : shortLabel && (short || !fits) ? shortLabel : label;
   return (
     <Pressable
       role="button"
       disabled={off || busy}
       aria-busy={busy || undefined}
+      aria-label={shortLabel && shown !== label ? label : undefined}
+      onLayout={
+        shortLabel
+          ? (e) => {
+              width.current = e.nativeEvent.layout.width;
+              measure();
+            }
+          : undefined
+      }
       className={cn(
         'flex-row items-center justify-center gap-10',
+        shortLabel && 'overflow-hidden',
         look.radius ?? 'rounded-pill',
-        look.fixedHeight ?? s.height,
+        (size === 'lg' && variant === 'outline' ? undefined : look.fixedHeight) ?? s.height,
         s.padding,
         off ? 'bg-on-ink' : look.fill,
         block ? 'self-stretch' : 'self-start',
@@ -114,9 +161,24 @@ export function Button({
       {...props}
     >
       {brand ? <BrandMark name={brand} /> : icon ? <Icon name={icon} color={off ? 'inkMuted' : look.icon} /> : null}
-      <Text size={look.fontSize ?? s.fontSize} weight={look.weight} color={off ? 'ink-muted' : look.text} numberOfLines={1}>
-        {busy && busyLabel ? busyLabel : label}
+      <Text size={fontSize} weight={look.weight} color={off ? 'ink-muted' : look.text} numberOfLines={1}>
+        {shown}
       </Text>
+      {shortLabel ? (
+        // The full label at its own width, out of sight, to know whether it fits.
+        <View aria-hidden pointerEvents="none" className="absolute left-0 top-0 w-[1000px] flex-row opacity-0">
+          <Text
+            size={fontSize}
+            weight={look.weight}
+            onLayout={(e) => {
+              textWidth.current = e.nativeEvent.layout.width;
+              measure();
+            }}
+          >
+            {label}
+          </Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }

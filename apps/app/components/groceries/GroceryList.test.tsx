@@ -315,7 +315,7 @@ describe('Groceries', () => {
   it('shows the empty list', () => {
     setup({ items: [] });
     expect(screen.getByText('Your list is empty.')).toBeTruthy();
-    expect(screen.getByText('Add items above, or from any recipe with “Add to groceries…”.')).toBeTruthy();
+    expect(screen.getByText('Add items above, or from any recipe with “Add groceries”.')).toBeTruthy();
     expect(screen.getByText('0 items to buy · shared with family')).toBeTruthy();
   });
 });
