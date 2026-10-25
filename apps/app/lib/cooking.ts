@@ -11,6 +11,12 @@ export const CURRENT_AT = 0.35;
 export const SCROLL_OFFSET = 8;
 /** FR-004: scroll tracking pauses this long after a programmatic scroll. */
 export const SCROLL_LOCK_MS = 700;
+/**
+ * Opened at a step: for this long, any layout change (text reflowing as fonts load, steps above
+ * growing, the page not yet tall enough to scroll that far) scrolls to the step again, unless the
+ * person has scrolled by then.
+ */
+export const OPEN_SETTLE_MS = 2000;
 
 /** 0-based: the last step whose top (in the scroll content) is above 35% of the visible height. */
 export function currentStep(stepTops: readonly number[], scrollTop: number, viewportHeight: number): number {
