@@ -30,7 +30,7 @@ import { cuisineKey, RecipeId } from './shared.js';
 /** The recipe's details as assistants send them (spec 004's RecipeInput, in their words). */
 const details = {
   name: z.string().max(80).describe('The recipe’s name.'),
-  description: z.string().max(140).nullable().optional().describe('One short line about it.'),
+  description: z.string().max(140).nullable().optional().describe('One short line about it. Never numbers that scale with the servings ("500 g of pasta"): they won’t update when the cook changes the servings.'),
   serves: z.int().min(1).max(50).describe('How many it serves. If the member didn’t say, ask them; never guess.'),
   total_minutes: z.int().min(1).max(10080).nullable().optional().describe('Total time in minutes, start to finish.'),
   prep_minutes: z.int().min(1).max(10080).nullable().optional().describe('Hands-on time in minutes.'),
@@ -87,7 +87,7 @@ export const createRecipe = defineTool({
       'You can’t see the app, so work in this order (update_recipe follows the same rules):',
       '1. Know how many it serves and each amount and unit as the member gave them. Ask rather than guess.',
       '2. Ingredients, most important first.',
-      '3. Steps, then step by step: which need a timer, a temperature check or a tip, and why.',
+      '3. Steps, then step by step: where a timer, a temperature check or a tip applies and helps.',
       '4. Variants: save the ones given; after saving, suggest others.',
     ].join('\n'),
     INGREDIENT_WRITING,

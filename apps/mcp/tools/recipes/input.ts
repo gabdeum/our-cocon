@@ -53,7 +53,7 @@ export const ThermometerCheck = z
 const stepRow = {
   name: z.string().max(60).nullable().optional().describe('A short title: "Make the sauce".'),
   text: z.string().max(2000),
-  timer_minutes: z.number().positive().max(1440).nullable().optional().describe('Only for a set wait (Step add-ons).'),
+  timer_minutes: z.number().positive().max(1440).nullable().optional().describe('Where cooking time matters (Step add-ons).'),
   timer_label: z.string().max(40).nullable().optional().describe('What it times: "Roast".'),
   tip: z.string().max(200).nullable().optional().describe('A chef’s tip (Step add-ons).'),
   thermometer_check: ThermometerCheck.nullable().optional(),
@@ -82,15 +82,15 @@ export const INGREDIENT_WRITING = [
 export const STEP_WRITING = [
   'Steps: text naming the ingredients ("Soften the leeks in the butter", or {ing:Leeks} as for_editing writes them). The app links each ingredient’s first mention and writes its amount in: don’t repeat amounts.',
   '- An ingredient is linked in one step only; later mentions ("season with more salt") stay plain text. Name a bracketed row in full in its part’s step: "Whisk {ing:All-purpose flour (tangzhong)} with {ing:Water (tangzhong)}". The step shows "30 g all-purpose flour", without the bracket.',
-  '- No amount that should scale in step text, titles or tips ("about 20 g of oil"): put it on the ingredient. Fine: sizes ("75 g balls", "a 23 cm tin"), amounts for one ("2 tbsp per serving"), ratios ("60% hydration") and times. The reply’s warnings list each amount found: check them.',
+  '- Never use numbers that would scale with the number of servings in step text, titles or tips ("about 20 g of oil"): when the cook changes the servings, they won’t update. Put the quantity on the ingredient side. Fine, as they don’t scale: sizes ("75 g balls", "a 23 cm tin"), amounts for one ("2 tbsp per serving"), ratios ("60% hydration") and times. The reply’s warnings list each amount found: check them.',
   '- Oven temperatures go in the text ("180 °C" or "350 °F"); the app shows both.',
 ].join('\n');
 
 /** What a step's add-ons are for in the app, for tool descriptions (spec 016 FR-003). */
 export const ADD_ON_WRITING = [
-  'Step add-ons: a timer, a temperature check, a chef’s tip. Each has one job: go through the steps one by one and add one only when you can say why. Most steps have none.',
-  '- Timer (timer_minutes, timer_label): a countdown button on the step, in cooking mode too, so the cook can walk away. For a set wait they could overrun: baking, roasting, simmering, resting, proving, chilling, marinating. Not for short hands-on actions ("fry for 2 minutes"), "until golden" or the total time. For a range, the shorter end. Never added for you.',
-  '- Temperature check (thermometer_check): what a food thermometer reads when it’s done ("The thickest part should read {temp}", 63 °C for salmon), for meat, fish, custard, bread, sugar, frying oil. Never the oven. Hidden for members without a thermometer, so the text still gives a visual cue ("until the juices run clear"). A reading inside the text: {temp:115:food}.',
+  'Step add-ons: a timer, a temperature check, a chef’s tip. Each has one job: go through the steps one by one and add them where they apply and help the cook.',
+  '- Timer (timer_minutes, timer_label): a countdown on steps where cooking time matters (baking, boiling, simmering, resting, proving, marinating…), so the cook launches it from the app and cooks for the exact time. The cook can easily change its time in the app if they need to. Don’t add one where time isn’t the key ("cook until golden"). For a range, the shorter end. Never added for you: send timer_minutes.',
+  '- Temperature check (thermometer_check): what a food thermometer should read when it’s done ("The thickest part should read {temp}", 63 °C for salmon), for example for meat, fish, custard, bread, sugar or frying oil. Never for the oven: its temperature goes in the text. A reading inside the text: {temp:115:food}.',
   '- Chef’s tip (tip): the app’s "something you wish you’d known the first time": why it matters, a common mistake, a rescue, what can be made ahead. Never something the cook must do (that’s the text) or a repeat. One to three per recipe.',
 ].join('\n');
 
