@@ -26,6 +26,7 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
   const server = createHttpServer(loadConfig({ SUPABASE_URL: url, SUPABASE_ANON_KEY: anonKey, APP_URL: 'http://localhost:8081' }));
   const others = randomUUID();
   let gabriel: Db;
+  let familyId: string;
   let mcp: Client;
   let ratatouille: Result;
 
@@ -35,11 +36,15 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
     const text = (result.content as { type: string; text: string }[])[0]?.text ?? '';
     return { error: result.isError ? text : null, data: result.isError ? null : (JSON.parse(text) as Result) };
   };
-  /** The database's log of assistant writes (FR-005): the newest entry for a table and action. */
+  /**
+   * The database's log of assistant writes (FR-005): the newest entry for a table and action, in
+   * this test's family (other test files write to the same database at the same time).
+   */
   const lastActivity = async (table: string, action: 'insert' | 'update' | 'delete') => {
     const { data } = await admin
       .from('activity')
       .select('action, target_kind, source, target_id, payload')
+      .eq('family_id', familyId)
       .eq('target_kind', table)
       .eq('action', action)
       .order('created_at', { ascending: false })
@@ -53,6 +58,7 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
     for (const [db, name] of [[gabriel, 'Gabriel'], [sam, 'Sam']] as const) {
       const fam = await db.rpc('create_family', { family_name: `${name}'s`, display_name: name });
       if (fam.error) throw fam.error;
+      if (db === gabriel) familyId = fam.data as string;
     }
     const theirs = await sam.from('recipes').insert({ id: others, family_id: randomUUID(), name: 'Sam’s soup', serves: 2 } as never);
     if (theirs.error) throw theirs.error;
