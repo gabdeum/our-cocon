@@ -81,6 +81,7 @@ export const createRecipe = defineTool({
   name: 'create_recipe',
   title: 'Save a new recipe',
   access: 'write',
+  needs: 'recipes_edit',
   description: [
     [
       'Save a new recipe. It shows in the app as added by the member, through you. Returns it with its link: share the link.',
@@ -139,6 +140,7 @@ export const updateRecipe = defineTool({
   name: 'update_recipe',
   title: 'Change a recipe',
   access: 'write',
+  needs: 'recipes_edit',
   description: [
     'Change a recipe. Send only what changes: details, the whole ingredient list, the whole step list, step_changes (some steps, by number: "add a tip to step 5") or the whole variant list. Write them by create_recipe’s rules.',
     '- scale_to makes it serve more or fewer by default, rescaling every amount. serves alone corrects the number only.',
@@ -268,6 +270,7 @@ export const deleteRecipe = defineTool({
   name: 'delete_recipe',
   title: 'Delete a recipe',
   access: 'delete',
+  needs: 'recipes_delete',
   description:
     'Delete a recipe. It goes to Recently deleted in the app for 30 days, where the member can restore it (Settings › Recently deleted); after that it’s gone. Make sure the member means this recipe.',
   input: z.strictObject({ id: RecipeId }),

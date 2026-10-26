@@ -2,13 +2,14 @@ import { z } from 'zod';
 import type { CallToolResult, Tool as McpTool } from '@modelcontextprotocol/sdk/types.js';
 import { QuantityError } from '@cocon/quantity';
 import type { Db } from '@cocon/data';
-import type { Tracker } from '@cocon/schemas';
+import type { AiPermission, Tracker } from '@cocon/schemas';
 
 /**
  * What a tool does to the family's data. Sets the MCP hints assistants show before running it.
- * Permissions are not checked here: an assistant's token works on Supabase's API directly too, so
- * what it may do lives in the database (the cocon_assistant role, and spec 024's per-person
- * permissions in its policies). Refusals still go through callTool, so they're tracked.
+ * What it may do lives in the database (the cocon_assistant role, and spec 024's per-person
+ * permissions, checked on every assistant write): an assistant's token works on Supabase's API
+ * directly too. callTool asks the same question first (`needs`), so the assistant gets a plain
+ * refusal, and it's tracked.
  */
 export type Access = 'read' | 'write' | 'delete';
 
@@ -30,11 +31,31 @@ export class ToolError extends Error {
   override readonly name = 'ToolError';
 }
 
+/** Spec 024 Warnings and errors: what each permission lets an assistant do, as a refusal says it. */
+const permissionWords: Record<AiPermission, string> = {
+  recipes_edit: 'create or edit recipes',
+  groceries: 'change the grocery list',
+  recipes_delete: 'delete recipes',
+};
+
+/** "This member hasn’t allowed AI to change the grocery list. They can change it in Settings › AI assistants." */
+export const notAllowedSentence = (permission: AiPermission) =>
+  `This member hasn’t allowed AI to ${permissionWords[permission]}. They can change it in Settings › AI assistants.`;
+
+/** The database's refusal (migration ai_permissions_groceries): the permission's key, hinted `ai_not_allowed`. */
+function refusedPermission(error: unknown): AiPermission | null {
+  const e = error as { code?: unknown; hint?: unknown; message?: unknown } | null;
+  if (e?.code !== '42501' || e.hint !== 'ai_not_allowed') return null;
+  return typeof e.message === 'string' && e.message in permissionWords ? (e.message as AiPermission) : null;
+}
+
 export interface Tool {
   name: string;
   title: string;
   description: string;
   access: Access;
+  /** The member's permission it needs (spec 024 FR-002); none for reads. */
+  needs?: AiPermission;
   input: z.ZodType<Record<string, unknown>>;
   run(input: Record<string, unknown>, ctx: ToolContext): Promise<unknown>;
 }
@@ -45,6 +66,7 @@ export function defineTool<S extends z.ZodObject>(tool: {
   title: string;
   description: string;
   access: Access;
+  needs?: AiPermission;
   input: S;
   run(input: z.output<S>, ctx: ToolContext): Promise<unknown>;
 }): Tool {
@@ -96,6 +118,8 @@ export function errorSentence(error: unknown): string {
   if (error instanceof ToolError) return error.message;
   if (error instanceof z.ZodError) return inputSentence(error);
   if (error instanceof QuantityError) return `${error.message.replace(/\.$/, '')}. Check the amounts and units and try again.`;
+  const refused = refusedPermission(error);
+  if (refused) return notAllowedSentence(refused);
   return "Something went wrong on Our Cocon's side. Try again in a moment.";
 }
 
@@ -105,6 +129,11 @@ export async function callTool(tool: Tool, args: unknown, ctx: ToolContext): Pro
   try {
     const parsed = tool.input.safeParse(args ?? {});
     if (!parsed.success) throw parsed.error;
+    if (tool.needs) {
+      const allowed = await ctx.db.rpc('ai_allowed', { permission: tool.needs });
+      if (allowed.error) throw allowed.error;
+      if (!allowed.data) throw new ToolError(notAllowedSentence(tool.needs));
+    }
     const result = await tool.run(parsed.data, ctx);
     ok = true;
     return {
@@ -113,7 +142,7 @@ export async function callTool(tool: Tool, args: unknown, ctx: ToolContext): Pro
     };
   } catch (error) {
     // Codes only: a database error's details can quote the row, and so the family's recipe text.
-    if (!(error instanceof ToolError || error instanceof z.ZodError || error instanceof QuantityError)) {
+    if (!(error instanceof ToolError || error instanceof z.ZodError || error instanceof QuantityError || refusedPermission(error))) {
       const e = error as { code?: unknown; name?: unknown };
       console.error(`${tool.name} failed`, { code: e?.code ?? null, name: e?.name ?? null });
     }

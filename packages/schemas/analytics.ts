@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AiPermission } from './family';
 import { FilterKey } from './recipe-filters';
 import { WriteSource } from './sources';
 
@@ -130,6 +131,8 @@ export const events = {
   // Spec 023: an assistant called an MCP tool (sent from the MCP server): which tool, which
   // assistant ('claude', 'chatgpt', 'gemini' or 'mcp') and whether it worked. Never its input.
   mcp_tool_called: z.strictObject({ tool: z.string().regex(/^[a-z][a-z_]{0,59}$/), assistant: WriteSource, ok: z.boolean() }),
+  // Spec 024: a member changed what their AI assistants may do (OC-Connect › What AI can do).
+  ai_permission_changed: z.strictObject({ permission: AiPermission, allowed: z.boolean() }),
 } as const;
 
 export type EventName = keyof typeof events;

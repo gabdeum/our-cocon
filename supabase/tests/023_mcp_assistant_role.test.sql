@@ -85,8 +85,8 @@ select pg_temp.login('00000000-0000-0000-0000-00000000000a', 'cocon_assistant', 
 select throws_ok($$ delete from public.recipe_variants where name = 'Huge' $$, '54000', null, 'a change too big to log for undo is refused');
 select pg_temp.login('00000000-0000-0000-0000-00000000000a', 'cocon_assistant', 'c1');
 select is((select catalog_key from public.match_ingredients('[{"full":"olive oil","core":"olive oil"}]'::jsonb)), 'olive_oil', 'it matches names against the catalog, as the app does');
-select throws_ok($$ select * from public.grocery_items $$, '42501', null, 'it cannot see the grocery list yet (spec 024)');
-select throws_ok($$ select * from public.grocery_recipes $$, '42501', null, 'or the servings on the list');
+select is((select count(*)::int from public.grocery_items), 1, 'it reads its family''s grocery list (spec 024)');
+select lives_ok($$ select * from public.grocery_recipes $$, 'and the servings on the list');
 select throws_ok($$ select * from public.activity $$, '42501', null, 'or the activity log');
 select throws_ok($$ select * from public.share_links $$, '42501', null, 'or share links');
 select throws_ok($$ select public.delete_family() $$, '42501', null, 'it cannot delete the family');

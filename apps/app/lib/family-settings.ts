@@ -1,21 +1,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { DEFAULT_FAMILY_SETTINGS, FamilySettings, FamilySettingsUpdate, type Tracker } from '@cocon/schemas';
+import { DEFAULT_FAMILY_SETTINGS, FamilySettingsUpdate, type FamilySettings, type Tracker } from '@cocon/schemas';
+import { loadFamilySettings } from '@cocon/data';
 import { useSession } from './session';
 import type { Client } from './supabase';
 import { optimisticWrite } from './write';
+
+export { loadFamilySettings } from '@cocon/data';
 
 /**
  * The family's settings (spec 021; 027 adds the cooking defaults). The key starts with the table's
  * name, so a change on anyone's phone refetches it (lib/sync.tsx) and every list updates.
  */
 export const familySettingsKey = (familyId: string) => ['family_settings', familyId] as const;
-
-/** The family's row (RLS returns only its own), or the defaults when nobody has changed anything. */
-export async function loadFamilySettings(client: Pick<Client, 'from'>): Promise<FamilySettings> {
-  const { data, error } = await client.from('family_settings').select('store_profile, round_to_packs').maybeSingle();
-  if (error) throw error;
-  return data ? FamilySettings.parse(data) : DEFAULT_FAMILY_SETTINGS;
-}
 
 /** Saves a change for the whole family (upsert: the first change makes the row). */
 export async function saveFamilySettings(client: Pick<Client, 'from'>, familyId: string, change: FamilySettingsUpdate): Promise<{ error: unknown }> {

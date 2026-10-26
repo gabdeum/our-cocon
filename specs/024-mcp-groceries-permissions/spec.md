@@ -41,3 +41,12 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-25: Shipped.
+  - Shipped: the six grocery tools (`apps/mcp/tools/groceries`), per-member permissions (`ai_permissions`, all Allowed until changed) checked before a tool runs and again by the database on every assistant write, whatever API it uses, and the activity log for assistant grocery writes (with the item as it was, for Undo in 026). `create_recipe`/`update_recipe` need "Create & edit recipes" and `delete_recipe` needs "Delete recipes".
+  - Shared with the app, unchanged: grocery reads and writes, Buy and Need, and the lines "Add to groceries" puts on the list, moved to `packages/data` (the app passes its strings for the wording).
+  - Deviation: "Not allowed" is enforced by a trigger, not in the policies (032-later L58), so a delete is told apart from an edit and a refusal is an error the server can name.
+  - Deviation (Warnings): the refusal adds 023's second sentence: "This member hasn't allowed AI to change the grocery list. They can change it in Settings › AI assistants." It says "This member", not the member's name (the edge case's example).
+  - Deviation: `check_grocery` also unticks (`ticked: false`); `list_groceries` returns Buy and Need as the app shows them, and the recipes on the list with their servings.
+  - Removing a member ends their sessions, so their assistants' tokens are refused before any tool runs.
+  - Tracking: `ai_permission_changed` is defined; 025's rows send it (032-later L67). From the MCP server, as the app sends them: `grocery_item_added` (`from: 'ai'`), `grocery_item_ticked`, `done_items_cleared`, `groceries_added_from_recipe`.
+  - Not built here: the "What AI can do" rows on OC-Connect (025, L67); until then a permission is changed in Supabase Studio. Restore and Undo from Home's activity card are 026's.
