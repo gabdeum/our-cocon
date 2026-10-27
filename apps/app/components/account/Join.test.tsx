@@ -86,3 +86,20 @@ describe('already in a family', () => {
     expect(api.acceptInvite).not.toHaveBeenCalled();
   });
 });
+
+it('joins as James from his own link, keeping his member (spec 033 US1.2)', async () => {
+  const api = fakeApi({
+    inviteStatus: vi.fn().mockResolvedValue({ ok: true, data: { status: 'valid', family_name: 'The Demanges', inviter_name: 'Gabriel', member_name: 'James' } }),
+    acceptInvite: vi.fn().mockResolvedValue({ ok: true, data: { days_since_sent: 1, days_since_added: 30 } }),
+  });
+  const { tracker, onJoined } = setup({ kind: 'signedIn', name: 'Jim', ownFamily: null }, api);
+  await flush();
+  expect(screen.getByText("You'll join as James, with the same color and events.")).toBeTruthy();
+  expect(screen.queryByLabelText('Your name')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Join as James' }));
+  await flush();
+  expect(api.acceptInvite).toHaveBeenCalledWith(token, 'James', false);
+  expect(tracker.track).toHaveBeenCalledWith('invite_accepted', { days_since_sent: 1 });
+  expect(tracker.track).toHaveBeenCalledWith('managed_member_linked', { days_since_added: 30 });
+  expect(onJoined).toHaveBeenCalled();
+});

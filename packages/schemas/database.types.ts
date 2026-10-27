@@ -139,14 +139,14 @@ isOneToOne: false
                   ]
                 },"families": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"id": string,"joined_count": number,"name": string,"owner_id": string,"source": string,"updated_at": string,"updated_by": string | null
+                    "created_at": string,"created_by": string | null,"id": string,"name": string,"owner_id": string,"source": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"joined_count"?: number,"name": string,"owner_id": string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string,"owner_id": string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"joined_count"?: number,"name"?: string,"owner_id"?: string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string,"owner_id"?: string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     
@@ -257,14 +257,14 @@ isOneToOne: false
                   ]
                 },"invites": {
                   Row: {
-                    "created_at": string,"created_by": string,"expires_at": string,"family_id": string,"id": string,"source": string,"token_hash": string,"used_at": string | null,"used_by": string | null
+                    "created_at": string,"created_by": string,"expires_at": string,"family_id": string,"id": string,"member_id": string | null,"source": string,"token_hash": string,"used_at": string | null,"used_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by": string,"expires_at"?: string,"family_id": string,"id"?: string,"source"?: string,"token_hash": string,"used_at"?: string | null,"used_by"?: string | null
+                    "created_at"?: string,"created_by": string,"expires_at"?: string,"family_id": string,"id"?: string,"member_id"?: string | null,"source"?: string,"token_hash": string,"used_at"?: string | null,"used_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string,"expires_at"?: string,"family_id"?: string,"id"?: string,"source"?: string,"token_hash"?: string,"used_at"?: string | null,"used_by"?: string | null
+                    "created_at"?: string,"created_by"?: string,"expires_at"?: string,"family_id"?: string,"id"?: string,"member_id"?: string | null,"source"?: string,"token_hash"?: string,"used_at"?: string | null,"used_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -273,18 +273,24 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "families"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invites_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
     }
                   ]
                 },"members": {
                   Row: {
-                    "avatar_tone": Database["public"]['Enums']["avatar_tone"],"created_at": string,"created_by": string | null,"display_name": string,"family_id": string,"joined_at": string,"role": Database["public"]['Enums']["member_role"],"source": string,"updated_at": string,"updated_by": string | null,"user_id": string
+                    "color": Database["public"]['Enums']["member_color"],"created_at": string,"created_by": string | null,"display_name": string,"family_id": string,"id": string,"joined_at": string,"managed_by": string | null,"role": Database["public"]['Enums']["member_role"],"source": string,"updated_at": string,"updated_by": string | null,"user_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "avatar_tone": Database["public"]['Enums']["avatar_tone"],"created_at"?: string,"created_by"?: string | null,"display_name": string,"family_id": string,"joined_at"?: string,"role": Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id": string
+                    "color": Database["public"]['Enums']["member_color"],"created_at"?: string,"created_by"?: string | null,"display_name": string,"family_id": string,"id"?: string,"joined_at"?: string,"managed_by"?: string | null,"role": Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
                   }
                   Update: {
-                    "avatar_tone"?: Database["public"]['Enums']["avatar_tone"],"created_at"?: string,"created_by"?: string | null,"display_name"?: string,"family_id"?: string,"joined_at"?: string,"role"?: Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string
+                    "color"?: Database["public"]['Enums']["member_color"],"created_at"?: string,"created_by"?: string | null,"display_name"?: string,"family_id"?: string,"id"?: string,"joined_at"?: string,"managed_by"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -292,6 +298,12 @@ isOneToOne: false
       columns: ["family_id"]
 isOneToOne: false
       referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "members_managed_by_fkey"
+      columns: ["managed_by"]
+isOneToOne: false
+      referencedRelation: "members"
       referencedColumns: ["id"]
     }
                   ]
@@ -481,6 +493,53 @@ isOneToOne: false
 "_load_catalog":
 { Args: { "data": Json }; Returns: undefined
                            },
+"_managed":
+{ Args: { "fam": string,"member_id": string }; Returns: {
+              "color": Database["public"]['Enums']["member_color"],
+"created_at": string,
+"created_by": string | null,
+"display_name": string,
+"family_id": string,
+"id": string,
+"joined_at": string,
+"managed_by": string | null,
+"role": Database["public"]['Enums']["member_role"],
+"source": string,
+"updated_at": string,
+"updated_by": string | null,
+"user_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "members"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"_me_locked":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "color": Database["public"]['Enums']["member_color"],
+"created_at": string,
+"created_by": string | null,
+"display_name": string,
+"family_id": string,
+"id": string,
+"joined_at": string,
+"managed_by": string | null,
+"role": Database["public"]['Enums']["member_role"],
+"source": string,
+"updated_at": string,
+"updated_by": string | null,
+"user_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "members"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"_next_color":
+{ Args: { "fam": string }; Returns: Database["public"]['Enums']["member_color"]
+                           },
 "_open_invite":
 { Args: { "lock"?: boolean,"token": string }; Returns: {
               "created_at": string,
@@ -488,6 +547,7 @@ isOneToOne: false
 "expires_at": string,
 "family_id": string,
 "id": string,
+"member_id": string | null,
 "source": string,
 "token_hash": string,
 "used_at": string | null,
@@ -517,9 +577,6 @@ isOneToOne: false
 "_token_hash":
 { Args: { "token": string }; Returns: string
                            },
-"_tone_for":
-{ Args: { "joined": number }; Returns: Database["public"]['Enums']["avatar_tone"]
-                           },
 "_valid_packs":
 { Args: { "p": Json }; Returns: boolean
                            },
@@ -527,7 +584,7 @@ isOneToOne: false
 { Args: { "changes": Json }; Returns: boolean
                            },
 "accept_invite":
-{ Args: { "display_name": string,"replace_own_family"?: boolean,"token": string }; Returns: number
+{ Args: { "display_name": string,"replace_own_family"?: boolean,"token": string }; Returns: Json
                            },
 "access_token_hook":
 { Args: { "event": Json }; Returns: Json
@@ -542,6 +599,9 @@ isOneToOne: false
               "actor_id": string,"source": string
             }[]
                            },
+"add_managed_member":
+{ Args: { "name": string,"pick"?: Database["public"]['Enums']["member_color"] }; Returns: string
+                           },
 "ai_allowed":
 { Args: { "permission": string }; Returns: boolean
                            },
@@ -555,7 +615,7 @@ isOneToOne: false
 { Args: { "display_name": string,"family_name": string }; Returns: string
                            },
 "create_invite":
-{ Args: Record<PropertyKey, never>; Returns: string
+{ Args: { "for_member"?: string }; Returns: string
                            },
 "delete_family":
 { Args: Record<PropertyKey, never>; Returns: number
@@ -596,8 +656,14 @@ isOneToOne: false
               "family_id": string,"id": string
             }[]
                            },
+"remove_managed_member":
+{ Args: { "member_id": string }; Returns: undefined
+                           },
 "remove_member":
 { Args: { "member_id": string }; Returns: undefined
+                           },
+"rename_managed_member":
+{ Args: { "member_id": string,"name": string }; Returns: undefined
                            },
 "request_source":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -613,6 +679,9 @@ isOneToOne: false
                            },
 "set_display_name":
 { Args: { "display_name": string }; Returns: undefined
+                           },
+"set_member_color":
+{ Args: { "member_id": string,"pick": Database["public"]['Enums']["member_color"] }; Returns: undefined
                            },
 "share_recipe":
 { Args: { "p_recipe_id": string }; Returns: {
@@ -653,7 +722,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "aisle": "produce"|"bakery"|"dairy_eggs"|"meat_fish"|"dry_goods"|"spices_baking"|"frozen"|"drinks"|"household"|"other","avatar_tone": "honey"|"sage"|"peach","member_role": "owner"|"editor","size_word": "small"|"medium"|"large","store_profile": "us"|"eu","unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"oz"|"lb"|"piece"|"pinch","unit_system": "metric"|"imperial","variant_kind": "option"|"version"
+            "aisle": "produce"|"bakery"|"dairy_eggs"|"meat_fish"|"dry_goods"|"spices_baking"|"frozen"|"drinks"|"household"|"other","member_color": "honey"|"rose"|"sky"|"mint"|"lilac"|"peach"|"pistachio"|"clay","member_role": "owner"|"editor","size_word": "small"|"medium"|"large","store_profile": "us"|"eu","unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"oz"|"lb"|"piece"|"pinch","unit_system": "metric"|"imperial","variant_kind": "option"|"version"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -773,7 +842,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "aisle": ["produce", "bakery", "dairy_eggs", "meat_fish", "dry_goods", "spices_baking", "frozen", "drinks", "household", "other"],"avatar_tone": ["honey", "sage", "peach"],"member_role": ["owner", "editor"],"size_word": ["small", "medium", "large"],"store_profile": ["us", "eu"],"unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "oz", "lb", "piece", "pinch"],"unit_system": ["metric", "imperial"],"variant_kind": ["option", "version"]
+            "aisle": ["produce", "bakery", "dairy_eggs", "meat_fish", "dry_goods", "spices_baking", "frozen", "drinks", "household", "other"],"member_color": ["honey", "rose", "sky", "mint", "lilac", "peach", "pistachio", "clay"],"member_role": ["owner", "editor"],"size_word": ["small", "medium", "large"],"store_profile": ["us", "eu"],"unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "oz", "lb", "piece", "pinch"],"unit_system": ["metric", "imperial"],"variant_kind": ["option", "version"]
           }
         }
 } as const

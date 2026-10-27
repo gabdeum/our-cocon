@@ -36,8 +36,8 @@ select public.create_family('Spec 021 home', 'Gabriel');
 select pg_temp.login('00000000-0000-0000-0000-00000000021f');
 select public.create_family('Spec 021 others', 'Sam');
 reset role;
-insert into public.members (user_id, family_id, display_name, role, avatar_tone)
-  values ('00000000-0000-0000-0000-00000000021b', (select family_id from public.members where user_id = '00000000-0000-0000-0000-00000000021a'), 'Alex', 'editor', 'sage');
+insert into public.members (user_id, family_id, display_name, role, color)
+  values ('00000000-0000-0000-0000-00000000021b', (select family_id from public.members where user_id = '00000000-0000-0000-0000-00000000021a'), 'Alex', 'editor', 'rose');
 
 -- A member saves the family's choice; the defaults fill the rest.
 select pg_temp.login('00000000-0000-0000-0000-00000000021a');

@@ -16,11 +16,14 @@ export interface Member {
   display_name: string;
 }
 
-/** The caller's family, for "added by" (RLS returns only their family's members). */
+/**
+ * The caller's family, for "added by" (RLS returns only their family's members). Members without
+ * the app (spec 033) never add anything, so only account members.
+ */
 export async function loadMembers(ctx: Pick<ToolContext, 'db'>): Promise<Member[]> {
   const { data, error } = await ctx.db.from('members').select('user_id, display_name').order('joined_at');
   if (error) throw error;
-  return data;
+  return data.flatMap((m) => (m.user_id === null ? [] : [{ user_id: m.user_id, display_name: m.display_name }]));
 }
 
 /** "Gabriel", or "Gabriel · via Claude" when an assistant added it (the app's wording). */

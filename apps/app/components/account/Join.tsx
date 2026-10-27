@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Callout, Dialog, TextField } from '@cocon/ui';
+import { Button, Callout, Dialog, Text, TextField } from '@cocon/ui';
 import { DisplayName, InviteToken, type InviteStatus, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { FamilyApi } from '../../lib/family';
@@ -73,15 +73,19 @@ export function Join({ token, viewer, api, auth, tracker, onJoined, onOpenApp }:
   const own = viewer.ownFamily;
   const hasMembers = blocked || (own !== null && own.memberCount > 1);
 
+  // A link for a member without the app (spec 033 FR-006): they join as that member, name included.
+  const asMember = invite.member_name;
+
   async function accept(replaceOwnFamily: boolean) {
-    const me = DisplayName.safeParse(name);
+    const me = DisplayName.safeParse(asMember ?? name);
     if (!me.success) return setWarning(strings.welcome.yourNameMissing);
     if (own && !replaceOwnFamily) return setConfirming(true);
     setConfirming(false);
     setBusy(true);
     const result = await api.acceptInvite(token, me.data, replaceOwnFamily);
     if (result.ok) {
-      tracker.track('invite_accepted', { days_since_sent: result.data });
+      tracker.track('invite_accepted', { days_since_sent: result.data.days_since_sent });
+      if (result.data.days_since_added !== undefined) tracker.track('managed_member_linked', { days_since_added: result.data.days_since_added });
       return onJoined();
     }
     setBusy(false);
@@ -102,19 +106,25 @@ export function Join({ token, viewer, api, auth, tracker, onJoined, onOpenApp }:
       ) : (
         <>
           {error ? <Callout variant="warn" text={error} /> : null}
-          <TextField
-            label={strings.welcome.yourName}
-            hint={strings.welcome.yourNameHint}
-            warning={warning}
-            value={name}
-            maxLength={40}
-            autoComplete="given-name"
-            onChangeText={(v) => {
-              setName(v);
-              setWarning(undefined);
-            }}
-          />
-          <Button label={t.join(family)} block busy={busy} busyLabel={t.joining} onPress={() => void accept(false)} />
+          {asMember ? (
+            <Text size={16} weight="700">
+              {t.asMemberLead(asMember)}
+            </Text>
+          ) : (
+            <TextField
+              label={strings.welcome.yourName}
+              hint={strings.welcome.yourNameHint}
+              warning={warning}
+              value={name}
+              maxLength={40}
+              autoComplete="given-name"
+              onChangeText={(v) => {
+                setName(v);
+                setWarning(undefined);
+              }}
+            />
+          )}
+          <Button label={asMember ? t.joinAs(asMember) : t.join(family)} block busy={busy} busyLabel={t.joining} onPress={() => void accept(false)} />
         </>
       )}
       {own ? (

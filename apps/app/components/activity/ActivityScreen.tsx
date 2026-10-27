@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { BackHeader, Button, Callout, Overline, PersonPill, Pill, PillRow, PushedScreen, RecipeItemSkeleton, Text } from '@cocon/ui';
-import type { ActivityEntry } from '@cocon/schemas';
+import { memberInitials, type ActivityEntry } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { ActivityFilter } from '../../lib/activity';
 import { assistantName } from '../../lib/recipe-format';
@@ -13,7 +13,7 @@ const a = strings.activity;
 export interface ActivityScreenProps extends Omit<ActivityEntriesProps, 'entries' | 'members'> {
   /** Undefined while loading. Newest first. */
   entries: ActivityEntry[] | undefined;
-  members: readonly Pick<Member, 'user_id' | 'display_name' | 'avatar_tone'>[];
+  members: readonly Pick<Member, 'id' | 'user_id' | 'display_name' | 'color' | 'joined_at'>[];
   /** Who and which assistants ('other' for any we can't name) have entries: the filter pills (none shown with fewer than 2). */
   actors: readonly string[];
   sources: readonly string[];
@@ -32,7 +32,8 @@ export interface ActivityScreenProps extends Omit<ActivityEntriesProps, 'entries
  * person who asked and the assistant, each with Undo for 7 days.
  */
 export function ActivityScreen({ entries, members, actors, sources, filter, onFilter, failed, onRetry, hasMore, loadingMore, onShowMore, onBack, ...rest }: ActivityScreenProps) {
-  const people = members.filter((m) => actors.includes(m.user_id));
+  const initials = memberInitials(members);
+  const people = members.filter((m): m is typeof m & { user_id: string } => m.user_id !== null && actors.includes(m.user_id));
   const filtered = Boolean(filter.actor || filter.source);
 
   let body;
@@ -79,10 +80,10 @@ export function ActivityScreen({ entries, members, actors, sources, filter, onFi
           <PillRow>
             {people.map((m) => (
               <PersonPill
-                key={m.user_id}
+                key={m.id}
                 label={m.display_name}
-                initial={m.display_name.charAt(0).toUpperCase()}
-                tone={m.avatar_tone}
+                initial={initials.get(m.id) ?? '?'}
+                color={m.color}
                 selected={filter.actor === m.user_id}
                 onPress={() => onFilter({ ...filter, actor: filter.actor === m.user_id ? null : m.user_id })}
               />

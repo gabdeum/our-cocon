@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { UndoKind } from './activity';
-import { AiPermission, CookingSetting } from './family';
+import { AiPermission, CookingSetting, MemberColor } from './family';
 import { FilterKey } from './recipe-filters';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
 
@@ -41,6 +41,10 @@ export const events = {
   invite_expired_seen: z.strictObject({}),
   member_removed: z.strictObject({}),
   family_deleted: z.strictObject({ member_count: z.int().min(1) }),
+  // Spec 033: members without the app, and member colors (the palette key, never a name).
+  member_added_without_app: z.strictObject({}),
+  member_color_changed: z.strictObject({ color: MemberColor }),
+  managed_member_linked: z.strictObject({ days_since_added: z.int().min(0) }),
   // Spec 004: the offline banner appeared on a screen (once per offline spell). Later screens join the enum.
   offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'recipes', 'recipe', 'recipe_form', 'groceries', 'settings']) }),
   // Spec 031: an ingredient that matched nothing in the catalog was saved. One event each, never

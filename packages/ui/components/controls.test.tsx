@@ -11,7 +11,8 @@ import { Pill, Choice } from './Pill';
 import { TextField } from './TextField';
 import { IconButton } from './IconButton';
 import { MonthPicker } from './MonthPicker';
-import { AvatarStack, avatarTone } from './Avatar';
+import { AvatarStack, type MemberColor } from './Avatar';
+import { ColorSwatch } from './ColorSwatch';
 
 afterEach(cleanup);
 
@@ -137,12 +138,9 @@ describe('MonthPicker', () => {
 });
 
 describe('Avatar', () => {
-  it('assigns tones honey, sage, peach, then repeats', () => {
-    expect([0, 1, 2, 3].map(avatarTone)).toEqual(['honey', 'sage', 'peach', 'honey']);
-  });
-
   it('stacks up to 4, then "+N"', () => {
-    const members = 'ABCDEF'.split('').map((initial, i) => ({ initial, tone: avatarTone(i) }));
+    const colors: MemberColor[] = ['honey', 'rose', 'sky', 'mint', 'lilac', 'peach'];
+    const members = 'ABCDEF'.split('').map((initial, i) => ({ initial, color: colors[i] ?? 'honey' }));
     render(<AvatarStack members={members} moreLabel={(n) => `+${n}`} label="Family" />);
     expect(screen.getByText('+2')).toBeTruthy();
     expect(screen.queryByText('E')).toBeNull();
@@ -169,5 +167,29 @@ describe('Button › short label', () => {
   it('without short, the full label shows', () => {
     render(<Button label="Start cooking" shortLabel="Cook" onPress={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'Start cooking' }).textContent?.startsWith('Start cooking')).toBe(true);
+  });
+});
+
+describe('ColorSwatch', () => {
+  const options = [
+    { color: 'honey', state: 'selected', initial: 'G', accessibilityLabel: 'Honey, your color' },
+    { color: 'rose', state: 'taken', initial: 'E', accessibilityLabel: 'Rose, taken' },
+    { color: 'sky', state: 'free', accessibilityLabel: 'Sky, free' },
+  ] as const;
+
+  it('names each swatch with its state, and shows who has the taken ones', () => {
+    render(<ColorSwatch label="My color" options={options} onSelect={vi.fn()} />);
+    expect(screen.getByRole('radiogroup', { name: 'My color' })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'Honey, your color' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByText('E')).toBeTruthy();
+  });
+
+  it("can't pick a taken color", () => {
+    const onSelect = vi.fn();
+    render(<ColorSwatch label="My color" options={options} onSelect={onSelect} />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Rose, taken' }));
+    expect(onSelect).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('radio', { name: 'Sky, free' }));
+    expect(onSelect).toHaveBeenCalledWith('sky');
   });
 });

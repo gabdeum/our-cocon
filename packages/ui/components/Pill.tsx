@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, View, type PressableProps } from 'react-native';
 import { cn, focusRing } from '../cn';
-import { Avatar, type AvatarTone } from './Avatar';
+import { Avatar, type AvatarColor } from './Avatar';
 import { Icon } from './Icon';
 import { Text } from './Text';
 
@@ -71,11 +71,11 @@ export function Choice({ label, selected = false, className, ...props }: ToggleP
 
 export interface PersonPillProps extends ToggleProps {
   initial: string;
-  tone: AvatarTone;
+  color: AvatarColor;
 }
 
 /** Person (Pill README › person): 32 avatar + name; honey when selected (it's a filter). */
-export function PersonPill({ label, initial, tone, selected = false, className, ...props }: PersonPillProps) {
+export function PersonPill({ label, initial, color, selected = false, className, ...props }: PersonPillProps) {
   return (
     <Pressable
       role="button"
@@ -88,7 +88,7 @@ export function PersonPill({ label, initial, tone, selected = false, className, 
       )}
       {...props}
     >
-      <Avatar initial={initial} tone={tone} size="sm" />
+      <Avatar initial={initial} color={color} size="sm" />
       <Text size={14} weight="700" numberOfLines={1}>
         {label}
       </Text>

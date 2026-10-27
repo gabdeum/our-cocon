@@ -33,7 +33,7 @@ insert into auth.sessions (id, user_id) values
 select pg_temp.login('00000000-0000-0000-0000-00000000000a');
 select lives_ok($$ select public.create_family('The Demanges', 'Gabriel') $$, 'Gabriel creates a family');
 select is((select role::text from public.members), 'owner', 'Gabriel is the Owner');
-select is((select avatar_tone::text from public.members), 'honey', 'first member is honey');
+select is((select color::text from public.members), 'honey', 'first member is honey');
 select is((select name from public.families), 'The Demanges', 'family is named');
 select throws_ok($$ select public.create_family('Second', 'Gabriel') $$, 'already_in_family', 'one family per person');
 select throws_ok($$ insert into public.families (name, owner_id) values ('x', auth.uid()) $$, '42501', null, 'no direct writes');
@@ -56,9 +56,9 @@ select is(public.invite_status('not-a-real-token'), '{"status": "expired"}'::jso
 select throws_ok($$ select public.accept_invite('x', 'Alex') $$, '42501', null, 'signed out cannot accept');
 
 select pg_temp.login('00000000-0000-0000-0000-00000000000b');
-select is(public.accept_invite((select token from tokens where name = 'alex'), 'Alex'), 0, 'Alex joins (0 days after it was sent)');
+select is(public.accept_invite((select token from tokens where name = 'alex'), 'Alex'), '{"days_since_sent": 0}'::jsonb, 'Alex joins (0 days after it was sent)');
 select is((select role::text from public.members where display_name = 'Alex'), 'editor', 'Alex can edit');
-select is((select avatar_tone::text from public.members where display_name = 'Alex'), 'sage', 'second member is sage');
+select is((select color::text from public.members where display_name = 'Alex'), 'rose', 'second member is rose');
 select is((select count(*)::int from public.members), 2, 'Alex sees both members');
 select is((select name from public.families), 'The Demanges', 'Alex sees the family');
 
@@ -76,8 +76,8 @@ update public.invites set created_at = now() - interval '8 days', expires_at = n
 select pg_temp.login('00000000-0000-0000-0000-00000000000c');
 select is(public.invite_status((select token from tokens where name = 'old')), '{"status": "expired"}'::jsonb, 'invite older than 7 days reads expired');
 select throws_ok($$ select public.accept_invite((select token from tokens where name = 'old'), 'Mia') $$, 'invite_expired');
-select is(public.accept_invite((select token from tokens where name = 'mia'), 'Mia'), 0, 'Mia joins');
-select is((select avatar_tone::text from public.members where display_name = 'Mia'), 'peach', 'third member is peach');
+select is(public.accept_invite((select token from tokens where name = 'mia'), 'Mia'), '{"days_since_sent": 0}'::jsonb, 'Mia joins');
+select is((select color::text from public.members where display_name = 'Mia'), 'sky', 'third member is sky');
 
 -- Invite clash: Sam has a family of their own.
 select pg_temp.login('00000000-0000-0000-0000-00000000000d');

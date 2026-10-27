@@ -56,7 +56,7 @@ select is(pg_temp.visible_rows(), 0::bigint, 'a signed-out visitor sees no rows'
 
 -- Only the API is callable: helpers never, and only invite_status while signed out.
 reset role;
-select ok(not has_function_privilege('anon', 'public.create_invite()', 'execute'), 'signed out cannot create invites');
+select ok(not has_function_privilege('anon', 'public.create_invite(uuid)', 'execute'), 'signed out cannot create invites');
 select ok(has_function_privilege('anon', 'public.invite_status(text)', 'execute'), 'signed out can preview an invite');
 select ok(not has_function_privilege('authenticated', 'public._open_invite(text, boolean)', 'execute'), 'helpers are not callable');
 select ok(not has_function_privilege('authenticated', 'public._require_owner()', 'execute'), 'helpers are not callable (owner check)');
