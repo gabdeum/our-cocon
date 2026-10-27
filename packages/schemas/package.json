@@ -9,6 +9,7 @@
     ".": "./index.ts",
     "./activity": "./activity.ts",
     "./analytics": "./analytics.ts",
+    "./calendar": "./calendar.ts",
     "./catalog": "./catalog.ts",
     "./family": "./family.ts",
     "./groceries": "./groceries.ts",

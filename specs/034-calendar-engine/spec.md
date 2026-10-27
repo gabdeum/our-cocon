@@ -28,11 +28,12 @@
 No new events.
 
 ## Warnings and errors
-Throws typed errors (`NonAdjacentSlots`, `InvalidRecurrence`, `EndBeforeStart`); callers show their own copy.
+Throws typed errors (`NonAdjacentSlots`, `InvalidRecurrence`, `EndBeforeStart`, and `InvalidDate` for a date that isn't one or a range over 3 years); callers show their own copy.
 
 ## Needs your attention
-None.
+- Choices made where the spec is silent (say if you want them changed): all-day events never raise the conflict warning (a birthday or a trip would warn on every event that day); short months are three letters with a period except May ("Sep.", "Jun."); 12-hour times read "2:30 PM"; week titles show no year, even across New Year ("Dec. 27 – Jan. 2").
 
 ## Changelog
 - 2026-10-25: Ready. Written from the calendar brief and the reviewed canvas (page "Our Cocon · Calendar"). Renumbered on 2026-10-26: Home and Settings for all modules are 028 and 029.
 - 2026-10-26 (later): Month titles drop the year in the current year ("October"); other years read "Jan. 2027" under 430 px and "January 2027" above (FR-007).
+- 2026-10-27: Built. `@cocon/calendar` (no React, 100% line coverage, checked in CI) with `slotsToRange`, `timeLabel`/`rangeLabel`, `monthTitle`/`weekTitle`/`dayTitle`, `expand` (exceptions included), `layoutDay`, `findConflict`, `viewFor`, `todayIn` and `weekStartFor`; the calendar Zod shapes (`Recurrence`, `SlotKey`, `EventMember`, settings) are in `packages/schemas/calendar.ts` for 035 to build on. Fields are snake_case like spec 035's columns, plus `creator_member_id` (see 032-later L80). Every 2 weeks counts weeks from the Sunday of the start's week, so all devices agree. `viewFor` builds Busy and cover views from an allowlist of fields, keeps the members on a surprise cover (for its color), and shows a surprise with no cover data as Busy. A cancelled occurrence still counts towards "after N times". A weekly repeat starts on the first chosen weekday on or after the start day. The cover view reads as a family event, so it doesn't give the surprise away. Others never conflict (they're no one in particular); a multi-day draft is checked on each of its days. The repeat is stored as `{ freq: daily|weekly|biweekly|monthly|yearly, weekdays?, ends }`. After the security review: a "this event only" change can only replace the fields in the strict `EventOverride` schema (never visibility, creator or surprise); a hidden event is Busy when the viewer or creator is unknown; dates are checked, one call covers at most 3 years, and exceptions far outside the range are skipped. Deviation: a fourth typed error, `InvalidDate`, for dates that aren't dates or a range that's too long. All-day events don't conflict (see Needs your attention).
