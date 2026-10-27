@@ -61,8 +61,8 @@ describe('AI assistants', () => {
     expect(screen.getByRole('button', { name: 'Manage Claude' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Connect Gemini' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'What AI can do' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Create & edit recipes/ }).textContent).toContain('Allowed');
-    expect(screen.getByRole('button', { name: /Delete recipes/ }).textContent).toContain('Not allowed');
+    expect(screen.getByRole('switch', { name: 'Create & edit recipes' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('switch', { name: 'Delete recipes' }).getAttribute('aria-checked')).toBe('false');
     expect(screen.getByText('Try saying')).toBeTruthy();
     expect(screen.getByText('“Save my mum\'s ratatouille to Our Cocon. It serves 4.”')).toBeTruthy();
     expect(screen.getByText('“Add what I need for the quiche to our groceries.”')).toBeTruthy();
@@ -74,7 +74,7 @@ describe('AI assistants', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Connect Gemini' }));
     expect(tracker.track).toHaveBeenCalledWith('ai_connect_started', { assistant: 'gemini' });
     expect(screen.getByText('Connect Gemini')).toBeTruthy();
-    expect(screen.getByText(/open Settings › Connected Apps/)).toBeTruthy();
+    expect(screen.getAllByRole('listitem').some((li) => li.textContent?.includes('open Settings › Connected Apps. Under Custom apps, choose Add a custom app'))).toBe(true);
     expect(screen.getByText('For now, Gemini only offers this in the US, with a personal Google account.')).toBeTruthy();
     expect(screen.getByLabelText('Our Cocon address').textContent).toBe(address);
 
@@ -138,14 +138,32 @@ describe('AI assistants', () => {
     expect(tracker.track).toHaveBeenCalledWith('ai_disconnected', { assistant: 'other' });
   });
 
-  it('FR-003: a permission changes from its row (Allowed · Not allowed)', async () => {
+  it('FR-003: a permission changes in one tap, from its switch', async () => {
     const { tracker, onSetPermission } = setup();
-    fireEvent.click(screen.getByRole('button', { name: /Delete recipes/ }));
     expect(screen.getByText('For the AI assistants you connect. Everyone in your family chooses for their own.')).toBeTruthy();
-    fireEvent.click(screen.getByRole('radio', { name: 'Allowed' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Delete recipes' }));
+    expect(screen.getByRole('switch', { name: 'Delete recipes' }).getAttribute('aria-checked')).toBe('true');
     await flush();
     expect(onSetPermission).toHaveBeenCalledWith('recipes_delete', true);
     expect(tracker.track).toHaveBeenCalledWith('ai_permission_changed', { permission: 'recipes_delete', allowed: true });
+  });
+
+  it('a switch that couldn’t save goes back and says so', async () => {
+    const { tracker } = setup({ onSetPermission: vi.fn(async () => Promise.reject(new Error('offline'))) });
+    fireEvent.click(screen.getByRole('switch', { name: 'Change the grocery list' }));
+    await flush();
+    expect(screen.getByRole('switch', { name: 'Change the grocery list' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByText("Couldn't save. Check your connection and try again.")).toBeTruthy();
+    expect(tracker.track).not.toHaveBeenCalled();
+  });
+
+  it('ChatGPT’s steps highlight what to tap, and say to retry a safety check', () => {
+    setup({ assistants: { known: {}, others: [] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Connect ChatGPT' }));
+    // Each one its own highlighted piece, as amounts are in recipe steps (StepText).
+    for (const label of ['Plugins', 'Connection', 'OAuth', 'Developer mode']) expect(screen.getByText(label)).toBeTruthy();
+    expect(screen.queryByText(/\*\*/)).toBeNull();
+    expect(screen.getByText('ChatGPT sometimes stops a request for a safety check. If that happens, just ask again.')).toBeTruthy();
   });
 
   it('an assistant that can’t connect yet reads "Not available yet", with why', () => {
@@ -158,7 +176,7 @@ describe('AI assistants', () => {
   it('offline, nothing can change', () => {
     setup({ readOnly: true, assistants: { known: {}, others: [] } });
     expect(screen.getByRole('button', { name: 'Connect Claude' }).getAttribute('aria-disabled')).toBe('true');
-    expect(screen.getByRole('button', { name: /Delete recipes/ }).getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('switch', { name: 'Delete recipes' }).getAttribute('aria-disabled')).toBe('true');
   });
 
   it('a failed Disconnect isn’t shown again on the next Manage', async () => {

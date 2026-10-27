@@ -1,4 +1,4 @@
-import type { IconTileTone } from '@cocon/ui';
+import type { IconTileTone, StepTextPart } from '@cocon/ui';
 import type { KnownAssistant } from '@cocon/schemas';
 
 export interface AssistantEntry {
@@ -23,3 +23,11 @@ export function minutesSince(then: Date, now: Date): number {
 
 /** The member's connections (spec 025): Settings' count and the AI assistants screen share it. */
 export const aiConnectionsKey = (userId: string) => ['ai_connections', userId] as const;
+
+/**
+ * A connection step's text with its menu and button names, written `**Plugins**` in the strings
+ * file, as highlighted parts: the same look as amounts in recipe steps (StepText).
+ */
+export function highlightParts(text: string): StepTextPart[] {
+  return text.split('**').flatMap((piece, i): StepTextPart[] => (piece === '' ? [] : i % 2 === 1 ? [{ amount: piece }] : [piece]));
+}

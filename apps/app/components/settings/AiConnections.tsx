@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { BackHeader, BottomSheet, Button, Callout, Card, Dialog, Link, LinkField, ListGroup, ListRow, Overline, PushedScreen, Text } from '@cocon/ui';
+import { BackHeader, BottomSheet, Button, Callout, Card, Dialog, Link, LinkField, ListGroup, ListRow, Overline, PushedScreen, SettingRow, StepText, Text } from '@cocon/ui';
 import type { AssistantConnection, AssistantConnections } from '@cocon/data';
 import { AiPermission, type AiPermissions, type ConnectionAssistant, type KnownAssistant, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
-import { ASSISTANTS, minutesSince, type AssistantEntry } from '../../lib/assistants';
+import { ASSISTANTS, highlightParts, minutesSince, type AssistantEntry } from '../../lib/assistants';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const c = strings.aiConnections;
@@ -65,7 +65,8 @@ export function AiConnections({
   const [manageOpen, setManageOpen] = useState(false);
   const [confirm, setConfirm] = useState<Managed | null>(null);
   const [disconnectFailed, setDisconnectFailed] = useState(false);
-  const [editing, setEditing] = useState<AiPermission | null>(null);
+  // A switch moves at once; the saved value takes over once it's back.
+  const [saving, setSaving] = useState<Partial<AiPermissions>>({});
   const [permissionFailed, setPermissionFailed] = useState(false);
   const ago = (date: Date) => c.timeAgo(minutesSince(date, now));
   const name = (key: KnownAssistant) => strings.assistants[key];
@@ -93,14 +94,15 @@ export function AiConnections({
   };
 
   const setPermission = async (permission: AiPermission, allowed: boolean) => {
-    setEditing(null);
-    if (permissions?.[permission] === allowed) return;
+    setSaving((v) => ({ ...v, [permission]: allowed }));
     try {
       await onSetPermission(permission, allowed);
       tracker.track('ai_permission_changed', { permission, allowed });
       setPermissionFailed(false);
     } catch {
       setPermissionFailed(true);
+    } finally {
+      setSaving(({ [permission]: _done, ...rest }) => rest);
     }
   };
 
@@ -171,20 +173,18 @@ export function AiConnections({
     );
   }
 
-  const permissionRows = (pressable: boolean) =>
-    PERMISSIONS.map((p, i) => {
-      const allowed = permissions?.[p];
-      return (
-        <ListRow
-          key={p}
-          title={c.permissions[p]}
-          trailing={allowed === undefined ? undefined : { kind: 'value', text: allowed ? c.allowed : c.notAllowed, tone: allowed ? 'olive' : undefined }}
-          onPress={pressable && permissions ? () => setEditing(p) : undefined}
-          disabled={pressable && readOnly}
-          last={i === PERMISSIONS.length - 1}
-        />
-      );
-    });
+  // The Manage sheet's summary; the screen has the switches.
+  const permissionSummary = PERMISSIONS.map((p, i) => {
+    const allowed = permissions?.[p];
+    return (
+      <ListRow
+        key={p}
+        title={c.permissions[p]}
+        trailing={allowed === undefined ? undefined : { kind: 'value', text: allowed ? c.allowed : c.notAllowed, tone: allowed ? 'olive' : undefined }}
+        last={i === PERMISSIONS.length - 1}
+      />
+    );
+  });
 
   return (
     <PushedScreen className="gap-16">
@@ -195,8 +195,22 @@ export function AiConnections({
         <Text size={18} weight="900" role="heading">
           {c.permissionsHeading}
         </Text>
+        <Text variant="caption" color="ink-muted">
+          {c.permissionLead}
+        </Text>
         {permissionFailed && !readOnly ? <Callout variant="warn" text={c.permissionFailed} /> : null}
-        <ListGroup>{permissionRows(true)}</ListGroup>
+        <ListGroup inset>
+          {PERMISSIONS.map((p, i) => (
+            <SettingRow
+              key={p}
+              label={c.permissions[p]}
+              value={saving[p] ?? permissions?.[p] ?? true}
+              onValueChange={(allowed) => void setPermission(p, allowed)}
+              disabled={readOnly || !permissions || saving[p] !== undefined}
+              last={i === PERMISSIONS.length - 1}
+            />
+          ))}
+        </ListGroup>
       </View>
       <Card tone="sage">
         <Overline className="text-olive-deep">{c.trySaying}</Overline>
@@ -224,7 +238,7 @@ export function AiConnections({
             <Text color="ink-muted" weight="700">
               {c.lastUsed(ago(managing.connection.lastUsed))}
             </Text>
-            <ListGroup title={c.permissionsHeading}>{permissionRows(false)}</ListGroup>
+            <ListGroup title={c.permissionsHeading}>{permissionSummary}</ListGroup>
             {disconnectFailed ? <Callout variant="warn" text={c.disconnectFailed} /> : null}
             <Button label={c.disconnect} variant="danger" block disabled={readOnly} onPress={() => setConfirm(managing)} />
           </View>
@@ -242,21 +256,6 @@ export function AiConnections({
         onCancel={() => setConfirm(null)}
       />
 
-      <BottomSheet visible={editing !== null} onClose={() => setEditing(null)} title={editing ? c.permissions[editing] : ''} lead={c.permissionLead} closeLabel={c.close}>
-        {editing && permissions ? (
-          <ListGroup>
-            {[true, false].map((allowed, i) => (
-              <ListRow
-                key={String(allowed)}
-                title={allowed ? c.allowed : c.notAllowed}
-                leading={{ kind: 'radio', checked: permissions[editing] === allowed }}
-                onPress={() => void setPermission(editing, allowed)}
-                last={i === 1}
-              />
-            ))}
-          </ListGroup>
-        ) : null}
-      </BottomSheet>
     </PushedScreen>
   );
 }
@@ -329,9 +328,9 @@ function ConnectSheet({
                 <Text size={16} weight="900" color="olive-deep">
                   {`${i + 1}.`}
                 </Text>
-                <Text size={16} weight="600" className="min-w-0 flex-1">
-                  {step}
-                </Text>
+                <View className="min-w-0 flex-1">
+                  <StepText parts={highlightParts(step)} />
+                </View>
               </View>
             ))}
           </View>

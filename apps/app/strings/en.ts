@@ -117,24 +117,28 @@ export const strings = {
     notYet: (step: number) => `Not connected yet. Check step ${step} and try again.`,
     /** The step the "Not connected yet" message points to: where the address is added. */
     checkStep: 2,
+    // Menu and button names in **…** are highlighted, like amounts in recipe steps.
     steps: {
       claude: [
         'Copy the Our Cocon address below.',
-        'In Claude, open Customize › Connectors, tap “+ Add”, then “Add custom connector”. Name it Our Cocon, paste the address, then tap “Continue” and “Add”.',
-        'When Claude asks, sign in to Our Cocon and tap “Allow”.',
+        'In Claude, open **Customize › Connectors**, tap **+ Add**, then **Add custom connector**. Name it **Our Cocon**, paste the address, then tap **Continue** and **Add**.',
+        'When Claude asks, sign in to Our Cocon and tap **Allow**.',
       ],
       chatgpt: [
         'Copy the Our Cocon address below.',
-        'In ChatGPT on the web, open Plugins, tap “+” and choose to add an MCP app. Name it Our Cocon, paste the address under “Connection”, keep “OAuth”, tick “I understand” and create it. No such option? Turn on Developer mode in Settings › Security and sign-in first.',
-        'When ChatGPT asks, sign in to Our Cocon and tap “Allow”.',
+        'In ChatGPT on the web, open **Plugins**, tap **+** and choose to add an MCP app. Name it **Our Cocon**, paste the address under **Connection**, keep **OAuth**, tick **I understand** and create it. No such option? Turn on **Developer mode** in **Settings › Security and sign-in** first.',
+        'When ChatGPT asks, sign in to Our Cocon and tap **Allow**.',
       ],
       gemini: [
         'Copy the Our Cocon address below.',
-        'On gemini.google.com, open Settings › Connected Apps. Under “Custom apps”, choose “Add a custom app”, paste the address and tap “Next”.',
-        'When Gemini asks, sign in to Our Cocon and tap “Allow”.',
+        'On gemini.google.com, open **Settings › Connected Apps**. Under **Custom apps**, choose **Add a custom app**, paste the address and tap **Next**.',
+        'When Gemini asks, sign in to Our Cocon and tap **Allow**.',
       ],
     },
-    notes: { gemini: 'For now, Gemini only offers this in the US, with a personal Google account.' } as Partial<Record<'claude' | 'chatgpt' | 'gemini', string>>,
+    notes: {
+      chatgpt: 'ChatGPT sometimes stops a request for a safety check. If that happens, just ask again.',
+      gemini: 'For now, Gemini only offers this in the US, with a personal Google account.',
+    } as Partial<Record<'claude' | 'chatgpt' | 'gemini', string>>,
     // Manage sheet.
     lastUsed: (timeAgo: string) => `Last used ${timeAgo}`,
     disconnect: 'Disconnect',
