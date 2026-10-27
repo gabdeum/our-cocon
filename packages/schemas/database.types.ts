@@ -69,6 +69,20 @@ isOneToOne: true
       referencedColumns: ["user_id"]
     }
                   ]
+                },"assistant_use": {
+                  Row: {
+                    "client_id": string,"last_used_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_id": string,"last_used_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "client_id"?: string,"last_used_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"catalog_ingredients": {
                   Row: {
                     "aisle": Database["public"]['Enums']["aisle"],"default_size": Database["public"]['Enums']["size_word"] | null,"density_g_per_ml": number | null,"diet": (string)[],"key": string,"names": NonNullable<Json>,"noun_plural": string | null,"noun_singular": string | null,"size_large_g": number | null,"size_medium_g": number | null,"size_small_g": number | null,"synonyms": NonNullable<Json>,"updated_at": string,"whole_only": boolean
@@ -515,6 +529,9 @@ isOneToOne: false
 "assistant_for_redirect":
 { Args: { "uri": string }; Returns: string
                            },
+"check_request":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "create_family":
 { Args: { "display_name": string,"family_name": string }; Returns: string
                            },
@@ -536,6 +553,11 @@ isOneToOne: false
 "match_ingredients":
 { Args: { "queries": Json }; Returns: {
               "aisle": Database["public"]['Enums']["aisle"],"catalog_key": string,"default_size": Database["public"]['Enums']["size_word"],"density_g_per_ml": number,"diet": (string)[],"family_ingredient_id": string,"how": string,"idx": number,"name": string,"noun_plural": string,"noun_singular": string,"plural": string,"size_large_g": number,"size_medium_g": number,"size_small_g": number,"whole_only": boolean
+            }[]
+                           },
+"my_assistants":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "assistant": string,"client_id": string,"client_name": string,"granted_at": string,"last_used_at": string
             }[]
                            },
 "my_family_id":
@@ -603,7 +625,10 @@ isOneToOne: false
         to: "ingredient_facts"
         isOneToOne: false
         isSetofReturn: true
-      } }
+      } },
+"touch_assistant":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           }
           }
           Enums: {
             "aisle": "produce"|"bakery"|"dairy_eggs"|"meat_fish"|"dry_goods"|"spices_baking"|"frozen"|"drinks"|"household"|"other","avatar_tone": "honey"|"sage"|"peach","member_role": "owner"|"editor","size_word": "small"|"medium"|"large","store_profile": "us"|"eu","unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"oz"|"lb"|"piece"|"pinch","variant_kind": "option"|"version"

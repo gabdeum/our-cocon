@@ -235,6 +235,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <PillRow>
           <IconTile icon="swap" tone="sage" />
           <IconTile icon="plus" tone="honey" />
+          <IconTile letters="C" tone="peach" />
+          <IconTile letters="Ge" tone="soft" />
         </PillRow>
       </Section>
 
@@ -492,7 +494,11 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <IngredientRow layout="compact" amount="300 ml" name="Heavy cream" last />
         </View>
         <ListGroup>
-          <ListRow title="AI assistants" leading={{ kind: 'avatar', initial: 'G', tone: 'honey' }} trailing={{ kind: 'chevron' }} onPress={noop} last />
+          <ListRow title="AI assistants" leading={{ kind: 'avatar', initial: 'G', tone: 'honey' }} trailing={{ kind: 'chevron', text: '2 connected', tone: 'olive' }} onPress={noop} last />
+        </ListGroup>
+        <ListGroup>
+          <ListRow title="Claude" sub="Connected · used 2 h ago" subTone="olive" leading={{ kind: 'tile', letters: 'C', tone: 'peach' }} trailing={{ kind: 'value', text: 'Allowed', tone: 'olive' }} />
+          <ListRow title="Gemini" sub="Not connected" leading={{ kind: 'tile', letters: 'Ge', tone: 'soft' }} trailing={{ kind: 'value', text: 'Not allowed' }} last />
         </ListGroup>
       </Section>
 

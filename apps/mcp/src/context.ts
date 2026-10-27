@@ -34,3 +34,9 @@ export async function toolContext(config: McpConfig, caller: Caller, analytics: 
   }
   return { db, userId: caller.userId, familyId, assistant, appUrl: config.appUrl, tracker: analytics.forCaller(caller.userId, familyId) };
 }
+
+/** Spec 025: "Connected · used {time}" in Settings › AI assistants. At most a write a minute (the database decides). */
+export async function touchAssistant(config: Pick<McpConfig, 'supabaseUrl' | 'supabaseAnonKey'>, caller: Caller): Promise<void> {
+  const { error } = await memberClient(config, caller.token).rpc('touch_assistant');
+  if (error) throw new Error(error.message);
+}

@@ -5,6 +5,8 @@ export const McpConfig = z.object({
   env: z.enum(['local', 'staging', 'prod']),
   commit: z.string().min(1),
   port: z.coerce.number().int().positive(),
+  /** The assistant-token check Caddy asks (032-later L62): inside Docker only, never routed. */
+  checkPort: z.coerce.number().int().positive(),
   supabaseUrl: z.url(),
   /** The public anon key: PostgREST wants it beside the member's token. */
   supabaseAnonKey: z.string().min(1),
@@ -26,6 +28,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): McpConfig {
     env: name,
     commit: env.COCON_COMMIT ?? 'dev',
     port,
+    checkPort: env.MCP_CHECK_PORT ?? 8788,
     supabaseUrl: env.SUPABASE_URL,
     supabaseAnonKey: env.SUPABASE_ANON_KEY || (local ? env.EXPO_PUBLIC_SUPABASE_ANON_KEY : undefined),
     appUrl: env.APP_URL || (local ? 'http://localhost:8081' : undefined),

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AiPermission } from './family';
 import { FilterKey } from './recipe-filters';
-import { WriteSource } from './sources';
+import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
 
 // The converter's units (spec 013, `@cocon/quantity` CONVERTER_UNITS), and its result tiles' units.
 const converterUnits = ['g', 'kg', 'oz', 'lb', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'fl_oz', 'c', 'f', 'gas_mark'] as const;
@@ -133,6 +133,12 @@ export const events = {
   mcp_tool_called: z.strictObject({ tool: z.string().regex(/^[a-z][a-z_]{0,59}$/), assistant: WriteSource, ok: z.boolean() }),
   // Spec 024: a member changed what their AI assistants may do (OC-Connect › What AI can do).
   ai_permission_changed: z.strictObject({ permission: AiPermission, allowed: z.boolean() }),
+  // Spec 025: Settings › AI assistants. Connect opened, the check found the assistant (or not:
+  // `step` is the step the message sends the member back to), and Disconnect confirmed.
+  ai_connect_started: z.strictObject({ assistant: KnownAssistant }),
+  ai_connected: z.strictObject({ assistant: KnownAssistant }),
+  ai_connect_failed: z.strictObject({ assistant: KnownAssistant, step: z.int().min(1).max(9) }),
+  ai_disconnected: z.strictObject({ assistant: ConnectionAssistant }),
 } as const;
 
 export type EventName = keyof typeof events;

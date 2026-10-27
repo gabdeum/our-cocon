@@ -10,6 +10,8 @@ export const AppConfig = z.object({
   commit: z.string().min(1),
   supabaseUrl: z.url(),
   supabaseAnonKey: z.string().min(1),
+  /** The MCP server's address, without /mcp (spec 025: members paste it into their assistant). */
+  mcpUrl: z.url(),
   posthogKey: z.string().optional(),
   posthogHost: z.url().optional(),
 });
@@ -32,6 +34,8 @@ function fromBuildEnv(): Record<string, unknown> {
     commit: process.env.EXPO_PUBLIC_COMMIT ?? 'dev',
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    // Locally the MCP server runs beside the app (pnpm dev, apps/mcp/src/config.ts).
+    mcpUrl: process.env.EXPO_PUBLIC_MCP_URL || 'http://localhost:8787',
     posthogKey: blankToUndefined(process.env.EXPO_PUBLIC_POSTHOG_KEY),
     posthogHost: blankToUndefined(process.env.EXPO_PUBLIC_POSTHOG_HOST),
   };

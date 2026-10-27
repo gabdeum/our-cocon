@@ -6,7 +6,7 @@ import { modules } from '../tools/index.js';
 import { createMcpAnalytics, type McpAnalytics } from './analytics.js';
 import { authenticate, RESOURCE_METADATA_PATH, resourceMetadata, unauthorized, type Caller } from './auth.js';
 import type { McpConfig } from './config.js';
-import { toolContext } from './context.js';
+import { toolContext, touchAssistant } from './context.js';
 import { rateLimit } from './rate-limit.js';
 import { callTool, errorSentence, listing, type Module, type ToolContext } from './tools.js';
 
@@ -51,6 +51,8 @@ export interface ServerDeps {
   analytics?: McpAnalytics;
   /** Supabase calls for checking tokens (tests pass a fake). */
   fetch?: typeof fetch;
+  /** Records the assistant's use (spec 025; tests pass a fake). */
+  touch?: (caller: Caller) => Promise<void>;
 }
 
 /**
@@ -60,6 +62,7 @@ export interface ServerDeps {
 export function createHttpServer(config: McpConfig, deps: ServerDeps = {}): HttpServer {
   const list = deps.modules ?? modules;
   const analytics = deps.analytics ?? createMcpAnalytics(config);
+  const touch = deps.touch ?? ((caller: Caller) => touchAssistant(config, caller));
   // Per member: generous for a conversation, low enough to stop a runaway loop.
   const perMember = rateLimit(120, 60_000);
   // Per address, before a token is checked: stops anyone hammering Supabase through us.
@@ -84,6 +87,8 @@ export function createHttpServer(config: McpConfig, deps: ServerDeps = {}): Http
       void authenticate(req, config, deps.fetch).then((caller: Caller | null) => {
         if (!caller) return unauthorized(res, config);
         if (!perMember.take(caller.userId)) return json(429, { error: 'Too many requests. Wait a minute and try again.' }, { 'retry-after': '60' });
+        // Never holds up or fails the request: the time shown in Settings can wait.
+        touch(caller).catch((error: unknown) => console.error('touch_assistant failed:', error instanceof Error ? error.message : error));
 
         const mcp = createMcp(config, list, (tool) => toolContext(config, caller, analytics, tool));
         const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });

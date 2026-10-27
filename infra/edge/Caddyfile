@@ -40,6 +40,22 @@
 	@oauth path /auth/v1/oauth/* /auth/v1/.well-known/*
 	request_header @oauth apikey {args[1]}
 	rewrite /.well-known/oauth-authorization-server/auth/v1 /.well-known/oauth-authorization-server
+	# Spec 025 (032-later L62): Supabase Auth ignores a token's role, so an assistant's token could
+	# sign the member out everywhere, approve or revoke assistants (undoing a Disconnect) or change
+	# the account. The MCP server's internal check answers 403 for an assistant's token.
+	# Everything under /user/ (grants, identities, a trailing slash), sign-out, approvals, MFA and
+	# reauthentication; on /user itself, anything but the GET the MCP server makes.
+	@member_only path /auth/v1/logout* /auth/v1/oauth/authorizations* /auth/v1/user/* /auth/v1/factors* /auth/v1/reauthenticate*
+	@account_change {
+		not method GET HEAD OPTIONS
+		path /auth/v1/user
+	}
+	forward_auth @member_only {args[0]}-mcp:8788 {
+		uri /assistant-check
+	}
+	forward_auth @account_change {args[0]}-mcp:8788 {
+		uri /assistant-check
+	}
 	reverse_proxy {args[0]}-api:8000
 }
 
