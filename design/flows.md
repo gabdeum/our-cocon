@@ -4,7 +4,7 @@
 
 | Screen | Route | Presentation | Spec |
 | --- | --- | --- | --- |
-| OC-Home | `/` | tab | 028 |
+| OC-Home | `/` | tab | 028 (activity card: 026) |
 | OC-Recipes | `/recipes` | tab | 006 |
 | OC-Filters | `/recipes/filters` | sheet | 007 |
 | OC-Recipe | `/recipes/[id]` (`?tab=ingredients`) | stack | 008 |
@@ -25,6 +25,7 @@
 | OC-Settings | `/settings` | tab | 029 |
 | OC-Connect | `/settings/ai` | stack | 025 |
 | OC-Timers | `/timers` | stack (reachable from anywhere) | 011 |
+| AI activity | `/activity` (Home › "See all") | stack, not designed: OC-Activity.md | 026 |
 | Recently deleted | `/settings/deleted` | stack, not designed: list per spec 018 | 018 |
 | Sign in | `/welcome` (public, no tab bar) | page, not designed: OC-Welcome.md | 003 |
 | Sign-in link | `/auth/callback` (public) | page, not designed: OC-Welcome.md | 003 |

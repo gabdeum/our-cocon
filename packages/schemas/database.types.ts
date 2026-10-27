@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "activity": {
                   Row: {
-                    "action": string,"actor_id": string | null,"created_at": string,"family_id": string,"id": string,"payload": NonNullable<Json>,"source": string,"target_id": string | null,"target_kind": string
+                    "action": string,"actor_id": string | null,"created_at": string,"family_id": string,"id": string,"payload": NonNullable<Json>,"seq": number,"source": string,"target_id": string | null,"target_kind": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "action": string,"actor_id"?: string | null,"created_at"?: string,"family_id": string,"id"?: string,"payload"?: NonNullable<Json>,"source"?: string,"target_id"?: string | null,"target_kind": string
+                    "action": string,"actor_id"?: string | null,"created_at"?: string,"family_id": string,"id"?: string,"payload"?: NonNullable<Json>,"seq"?: never,"source"?: string,"target_id"?: string | null,"target_kind": string
                   }
                   Update: {
-                    "action"?: string,"actor_id"?: string | null,"created_at"?: string,"family_id"?: string,"id"?: string,"payload"?: NonNullable<Json>,"source"?: string,"target_id"?: string | null,"target_kind"?: string
+                    "action"?: string,"actor_id"?: string | null,"created_at"?: string,"family_id"?: string,"id"?: string,"payload"?: NonNullable<Json>,"seq"?: never,"source"?: string,"target_id"?: string | null,"target_kind"?: string
                   }
                   Relationships: [
                     {
@@ -461,7 +461,13 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "_assistant_for_redirects":
+            "_activity_key":
+{ Args: { "id": string,"payload": Json }; Returns: string
+                           },
+"_activity_kind":
+{ Args: { "p_key": string }; Returns: string
+                           },
+"_assistant_for_redirects":
 { Args: { "uris": string }; Returns: string
                            },
 "_family_table":
@@ -505,6 +511,9 @@ isOneToOne: false
 "_require_user":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"_row_fingerprint":
+{ Args: { "r": Json }; Returns: string
+                           },
 "_token_hash":
 { Args: { "token": string }; Returns: string
                            },
@@ -522,6 +531,16 @@ isOneToOne: false
                            },
 "access_token_hook":
 { Args: { "event": Json }; Returns: Json
+                           },
+"activity_entries":
+{ Args: { "p_actor"?: string,"p_before"?: string,"p_limit"?: number,"p_source"?: string }; Returns: {
+              "actor_id": string,"can_restore": boolean,"can_undo": boolean,"count": number,"created_at": string,"key": string,"kind": string,"names": (string)[],"recipe_id": string,"recipe_name": string,"source": string,"undo_action": string,"undone_at": string,"undone_by": string
+            }[]
+                           },
+"activity_filters":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "actor_id": string,"source": string
+            }[]
                            },
 "ai_allowed":
 { Args: { "permission": string }; Returns: boolean
@@ -628,6 +647,9 @@ isOneToOne: false
       } },
 "touch_assistant":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"undo_ai_change":
+{ Args: { "p_key": string,"p_skip_changed"?: boolean }; Returns: Json
                            }
           }
           Enums: {

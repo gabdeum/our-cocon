@@ -71,11 +71,14 @@ with r as (
   insert into public.recipe_variants (recipe_id, position, name, kind) values (pg_temp.id('recipe'), 0, 'Vegetarian', 'version') returning id) insert into ids select 'variant', id from r;
 with r as (
   insert into public.grocery_items (name, quantity, unit, recipe_id) values ('Leeks', 2, 'piece', pg_temp.id('recipe')) returning id) insert into ids select 'grocery', id from r;
-with r as (
-  insert into public.activity (action, target_kind, target_id, actor_id) values ('undo', 'recipe', pg_temp.id('recipe'), '00000000-0000-0000-0000-00000000000f') returning id) insert into ids select 'activity', id from r;
+-- Members only add undo entries for an AI entry (spec 026); one written by the database here.
+reset role;
+insert into public.activity (family_id, action, target_kind, target_id, source) values (pg_temp.id('famA'), 'insert', 'recipes', pg_temp.id('recipe'), 'claude');
+select pg_temp.login('00000000-0000-0000-0000-00000000000a');
 select is((select family_id from public.recipe_ingredients), pg_temp.id('famA'), 'ingredient is in my family');
 select is((select family_id from public.grocery_items), pg_temp.id('famA'), 'grocery item is in my family');
-select is((select actor_id from public.activity), '00000000-0000-0000-0000-00000000000a'::uuid, 'activity actor is me, whatever actor_id says');
+select throws_ok(format($$ insert into public.activity (action, target_kind, target_id) values ('undo', 'activity', %L) $$, pg_temp.id('recipe')),
+  '42501', null, 'members cannot mark something undone that isn''t an AI entry');
 
 -- Through an MCP connection (OAuth client_id claim), the assistant's name comes from the server's
 -- list of clients, never from the row; an unknown client is just 'mcp'.
@@ -159,8 +162,8 @@ select throws_ok(format($$ insert into public.recipe_variants (recipe_id, positi
   '23503', null, 'other family: cannot add a variant to A''s recipe');
 select throws_ok(format($$ insert into public.grocery_items (name, recipe_id) values ('x', %L) $$, pg_temp.id('recipe')),
   '23503', null, 'other family: cannot link a grocery item to A''s recipe');
-insert into public.activity (action, target_kind) values ('undo', 'recipe');
-select is((select family_id from public.activity), pg_temp.id('famB'), 'other family: an activity insert lands in their own family');
+select throws_ok(format($$ insert into public.activity (action, target_kind, target_id) values ('undo', 'activity', %L) $$,
+  (select id from public.activity limit 1)), '42501', null, 'other family: cannot mark A''s AI entry undone');
 
 -- Signed out: no access at all.
 select pg_temp.login(null);

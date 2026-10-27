@@ -28,6 +28,7 @@ export { Card, HeroCard, Photo, PhotoPlaceholder, Thumb, type CardProps } from '
 export { RecipeItem, RecipeItemSkeleton, RecipeSummary, type RecipeItemProps, type RecipeSummaryProps } from './components/RecipeItem';
 export { LinkField, type LinkFieldProps } from './components/LinkField';
 export { StatTile, type StatTileProps } from './components/StatTile';
+export { ActivityCard, type ActivityCardProps } from './components/ActivityCard';
 export { Callout, type CalloutProps, type CalloutVariant } from './components/Callout';
 export { Avatar, AvatarStack, avatarTone, type AvatarTone } from './components/Avatar';
 export { StatusBanner, Presence, AwakeChip, SuccessPanel } from './components/StatusBanner';
