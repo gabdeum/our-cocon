@@ -64,6 +64,8 @@ import {
   StepText,
   Stepper,
   TabBar,
+  CalendarHeader,
+  MemberChip,
   TabHeader,
   Tag,
   Text,
@@ -107,9 +109,25 @@ const family = [
 
 const tabs = [
   { key: 'home', label: 'Home', icon: 'home' },
+  { key: 'calendar', label: 'Calendar', icon: 'calendar' },
   { key: 'recipes', label: 'Recipes', icon: 'recipes' },
   { key: 'groceries', label: 'Groceries', icon: 'groceries' },
-  { key: 'settings', label: 'Settings', icon: 'settings' },
+  { key: 'menu', label: 'Menu', icon: 'menu' },
+] as const;
+
+const calendarViews = [
+  { key: 'month', label: 'Month' },
+  { key: 'week', label: 'Week' },
+  { key: 'day', label: 'Day' },
+  { key: 'agenda', label: 'Agenda' },
+] as const;
+
+const calendarChips = [
+  { key: 'g', name: 'Gabriel', initial: 'G', color: 'honey' },
+  { key: 'e', name: 'Eva', initial: 'E', color: 'rose' },
+  { key: 'j', name: 'James', initial: 'J', color: 'sky' },
+  { key: 'everyone', name: 'Everyone', initial: 'All', color: 'everyone' },
+  { key: 'others', name: 'Others', initial: '', color: 'others' },
 ] as const;
 
 // Any image will do for the photo components; the app icon is always bundled.
@@ -131,6 +149,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
   const [photo, setPhoto] = useState<number | null>(null);
   const [sheet, setSheet] = useState(false);
   const [dialog, setDialog] = useState(false);
+  const [calendarView, setCalendarView] = useState<(typeof calendarViews)[number]['key']>('month');
+  const [calendarHidden, setCalendarHidden] = useState<string[]>(['e']);
   const [tab, setTab] = useState<(typeof tabs)[number]['key']>('recipes');
   const [cookStep, setCookStep] = useState(2);
   const [section, setSection] = useState('steps');
@@ -200,8 +220,18 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             <IconButton icon="more" label="More options" variant="square" expanded={false} />
             <IconButton icon="more" label="More options" variant="square" expanded />
             <IconButton icon="plus" label="Add item" variant="olive-square" />
+            <IconButton icon="chevron-right" label="Next month" variant="card" />
           </PillRow>
         </View>
+      </Section>
+
+      <Section group="Actions" title="MemberChip">
+        <PillRow wrap={false}>
+          <MemberChip name="Gabriel" initial="G" color="honey" pressed onPress={() => undefined} />
+          <MemberChip name="Eva" initial="E" color="rose" pressed={false} onPress={() => undefined} />
+          <MemberChip name="Everyone" initial="All" color="everyone" pressed onPress={() => undefined} />
+          <MemberChip name="Others" initial="" color="others" pressed onPress={() => undefined} />
+        </PillRow>
       </Section>
 
       <Section group="Actions" title="Pill">
@@ -646,6 +676,27 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           cancelLabel="Keep it"
           onCancel={() => setDialog(false)}
         />
+      </Section>
+
+      <Section group="Navigation" title="CalendarHeader">
+        <View className="-mx-20">
+          <CalendarHeader
+            title="October"
+            prevLabel="Previous month"
+            nextLabel="Next month"
+            onPrev={() => undefined}
+            onNext={() => undefined}
+            todayLabel="Today"
+            onToday={() => undefined}
+            views={[...calendarViews]}
+            view={calendarView}
+            onView={setCalendarView}
+            viewsLabel="Calendar view"
+            chips={calendarChips.map((c) => ({ ...c, pressed: !calendarHidden.includes(c.key) }))}
+            onToggle={(k) => setCalendarHidden((h) => (h.includes(k) ? h.filter((x) => x !== k) : [...h, k]))}
+            chipsLabel="Show events for"
+          />
+        </View>
       </Section>
 
       <Section group="Navigation" title="TabBar">

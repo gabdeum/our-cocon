@@ -7,9 +7,10 @@ export const strings = {
   tabBar: {
     label: 'Main',
     home: 'Home',
+    calendar: 'Calendar',
     recipes: 'Recipes',
     groceries: 'Groceries',
-    settings: 'Settings',
+    menu: 'Menu',
   },
   // design/ui/OC-Welcome.md (spec 003)
   welcome: {
@@ -1174,6 +1175,21 @@ export const strings = {
     offline: "You're offline. You can read, but changes need a connection.",
     recipeChanged: (name: string) => `${name} just changed this recipe`,
     reload: 'Reload',
+  },
+  // design/ui/CalHeader.md (spec 036): the header shared by the four calendar views.
+  calendar: {
+    header: {
+      today: 'Today',
+      viewsLabel: 'Calendar view',
+      views: { month: 'Month', week: 'Week', day: 'Day', agenda: 'Agenda' },
+      agendaTitle: 'Coming up',
+      previous: { month: 'Previous month', week: 'Previous week', day: 'Previous day' },
+      next: { month: 'Next month', week: 'Next week', day: 'Next day' },
+      filterLabel: 'Show events for',
+      everyone: 'Everyone',
+      everyoneInitial: 'All',
+      others: 'Others',
+    },
   },
   debug: {
     build: (commit: string) => `Build ${commit}`,

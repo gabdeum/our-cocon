@@ -27,6 +27,11 @@ export type Visibility = z.infer<typeof Visibility>;
 export const EventMember = z.union([z.uuid(), z.literal('everyone'), z.literal('others')]);
 export type EventMember = z.infer<typeof EventMember>;
 
+/** Spec 036: the calendar's four views, in the header's order. */
+export const CALENDAR_VIEWS = ['month', 'week', 'day', 'agenda'] as const;
+export const CalendarView = z.enum(CALENDAR_VIEWS);
+export type CalendarView = z.infer<typeof CalendarView>;
+
 /** Spec 041's Type choices. A birthday is a yearly all-day event (spec 035 FR-006). */
 export const EVENT_CATEGORIES = ['sport', 'school', 'work', 'health', 'social', 'travel', 'home', 'birthday', 'other'] as const;
 export const EventCategory = z.enum(EVENT_CATEGORIES);

@@ -3,11 +3,13 @@ import { cn, focusRing } from '../cn';
 import type { ColorName } from '../theme';
 import { Icon, type IconName } from './Icon';
 
-export type IconButtonVariant = 'default' | 'soft' | 'olive' | 'square' | 'olive-square' | 'soft-square';
+export type IconButtonVariant = 'default' | 'card' | 'soft' | 'olive' | 'square' | 'olive-square' | 'soft-square';
 
 // bundle.css › IconButton
 const looks: Record<IconButtonVariant, { box: string; icon: ColorName }> = {
   default: { box: 'w-[48px] h-[48px] rounded-full bg-surface-card active:bg-surface-card-pressed', icon: 'ink' },
+  // 44, white: the calendar header's ‹ › on the page background (spec 036).
+  card: { box: 'w-control-md h-control-md rounded-full bg-surface-card active:bg-surface-card-pressed', icon: 'ink' },
   soft: { box: 'w-control-md h-control-md rounded-full bg-surface-soft active:bg-surface-soft-pressed', icon: 'ink' },
   olive: { box: 'w-control-md h-control-md rounded-full bg-olive active:bg-olive-pressed', icon: 'onOlive' },
   square: { box: 'w-control-md h-control-md rounded-md bg-surface-soft active:bg-surface-soft-pressed', icon: 'ink' },

@@ -1,4 +1,5 @@
-// Calendar rules (spec 034): slots, recurrence, overlaps, conflicts, labels and visibility.
+// Calendar rules (spec 034): slots, recurrence, overlaps, conflicts, labels and visibility;
+// spec 036 adds the header's paging and member filter.
 // Used by the app and the MCP server, so both give the same answer. No React.
 export { CalendarError, type CalendarErrorCode } from './errors';
 export { addDays, daysBetween, daysInMonth, makeDate, parts, todayIn, weekRange, weekStartFor, weekday, type WeekStartsOn } from './dates';
@@ -7,6 +8,8 @@ export { WIDE_TITLE_MIN_WIDTH, dayTitle, formatTime, monthTitle, rangeLabel, tim
 export { assertValidEvent, expand } from './recurrence';
 export { layoutDay, type LaneSlot, type LayoutItem } from './layout';
 export { findConflict, type ConflictDraft } from './conflicts';
+export { VIEW_STEP, shiftAnchor } from './navigate';
+export { shownByFilter } from './filter';
 export { viewFor, type FullView, type HiddenView, type Viewed } from './visibility';
 export type { CalendarEvent, EventException, EventOverride, Occurrence, SlotTimes, SurpriseCover } from './types';
 export { en as calendarWordsEn, type CalendarWords } from './words.en';

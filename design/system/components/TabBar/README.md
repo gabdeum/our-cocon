@@ -14,6 +14,6 @@ The floating dark navigation pill with five destinations: Home, Calendar, Recipe
 
 ## Rules
 
-- Order is fixed: Home · Calendar · Recipes · Groceries · Menu. "Menu" opens Settings.
+- Order is fixed: Home · Calendar · Recipes · Groceries · Menu. "Menu" opens the Menu (`/menu`, spec 029); until 029 it opens Settings.
 - Shown on the five tab screens only; hidden on pushed screens, sheets, forms and cooking mode.
 - Icon-only items carry `aria-label` = the label.

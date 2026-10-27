@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { UndoKind } from './activity';
+import { CalendarView } from './calendar';
 import { AiPermission, CookingSetting, MemberColor } from './family';
 import { FilterKey } from './recipe-filters';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
@@ -29,8 +30,9 @@ export const events = {
     app_version: z.string().min(1),
   }),
   // Spec 002: a tab in the floating tab bar was tapped (sent only when it changes the tab).
+  // Spec 036 adds Calendar and renames Settings to Menu.
   tab_selected: z.strictObject({
-    tab: z.enum(['home', 'recipes', 'groceries', 'settings']),
+    tab: z.enum(['home', 'calendar', 'recipes', 'groceries', 'menu']),
   }),
   // Spec 003: accounts and family.
   signed_up: z.strictObject({ method: z.enum(['email', 'google']) }),
@@ -46,7 +48,7 @@ export const events = {
   member_color_changed: z.strictObject({ color: MemberColor }),
   managed_member_linked: z.strictObject({ days_since_added: z.int().min(0) }),
   // Spec 004: the offline banner appeared on a screen (once per offline spell). Later screens join the enum.
-  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'recipes', 'recipe', 'recipe_form', 'groceries', 'settings']) }),
+  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'calendar', 'recipes', 'recipe', 'recipe_form', 'groceries', 'settings']) }),
   // Spec 031: an ingredient that matched nothing in the catalog was saved. One event each, never
   // its text: the count tells us where the catalog needs to grow.
   ingredient_unmatched: z.strictObject({}),
@@ -152,6 +154,11 @@ export const events = {
   // restored a recipe an assistant deleted. Never what it was.
   ai_change_undone: z.strictObject({ kind: UndoKind }),
   ai_delete_restored: z.strictObject({}),
+  // Spec 036: the calendar was opened (from the tab bar, or Home's card in 028), its view switched,
+  // and its member filter changed (how many chips are shown, never who).
+  calendar_viewed: z.strictObject({ view: CalendarView, entry: z.enum(['nav', 'homepage']) }),
+  calendar_view_changed: z.strictObject({ from: CalendarView, to: CalendarView }),
+  calendar_member_filter_changed: z.strictObject({ members_visible: z.int().min(0) }),
 } as const;
 
 export type EventName = keyof typeof events;

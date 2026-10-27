@@ -28,6 +28,9 @@ const CONTAINER_WITH_PILL = 160;
 const CONTAINER = 100;
 const BOTTOM = 26;
 
+/** Spec 036 FR-001: the selected tab's fixed width, sized to "Groceries" plus 16 px each side. */
+export const SELECTED_TAB_WIDTH = 132;
+
 /** Active label: 15 px, one line, shrinking to 13 px at most at the largest text size. */
 export const TAB_LABEL_MIN_SCALE = 13 / 15;
 
@@ -55,7 +58,9 @@ export function TabBar<K extends string>({ items, active, onSelect, label, timer
               aria-current={on ? 'page' : undefined}
               accessibilityState={Platform.OS === 'web' ? undefined : { selected: on }}
               onPress={() => onSelect(item.key)}
-              className={cn('flex-row items-center justify-center gap-8 rounded-[26px]', on ? 'flex-[2.2] bg-honey' : 'flex-1', focusRing)}
+              // The selected tab is a fixed width and never grows; the others share the rest, min 44 (spec 036 FR-001).
+              className={cn('flex-row items-center justify-center gap-6 rounded-[26px]', on && 'bg-honey px-16', focusRing)}
+              style={on ? { width: SELECTED_TAB_WIDTH, flexGrow: 0, flexShrink: 0 } : { flexGrow: 1, flexBasis: 0, minWidth: 44 }}
             >
               <Icon name={item.icon} size="md" color={on ? 'ink' : 'onInk'} />
               {on ? (
