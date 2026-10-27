@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BottomSheet, Button, Link, ListGroup, ListRow, SheetFooter, TextField } from '@cocon/ui';
-import { AISLE_ORDER, type Aisle } from '@cocon/schemas';
+import { AISLE_ORDER, type Aisle, type UnitSystem } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { editText, type GroceryItem } from '../../lib/groceries';
 
@@ -30,6 +30,8 @@ export interface GroceryActionsProps {
   packs?: ItemPacks | null;
   /** Null text puts the usual sizes back. Resolves 'invalid' to keep the sheet open with a warning. */
   onSavePacks?: (item: GroceryItem, text: string | null) => Promise<'saved' | 'invalid' | 'failed'>;
+  /** The family's units (spec 027): the Edit field shows the amount in them. */
+  units?: UnitSystem;
 }
 
 /**
@@ -37,7 +39,7 @@ export interface GroceryActionsProps {
  * reader's actions) opens straight on Edit, which reads the text again on Save; below it, "Move to…"
  * lists the aisles and is remembered for the family, and "Remove" takes it off the list, with Undo.
  */
-export function GroceryActions({ item, view, onView, onClose, onRemove, onMove, onEdit, packs, onSavePacks }: GroceryActionsProps) {
+export function GroceryActions({ item, view, onView, onClose, onRemove, onMove, onEdit, packs, onSavePacks, units = 'metric' }: GroceryActionsProps) {
   if (!item) return null;
 
   if (view === 'packs' && packs && onSavePacks) return <PackSheet key={item.id} item={item} packs={packs} onClose={onClose} onSave={onSavePacks} />;
@@ -61,7 +63,7 @@ export function GroceryActions({ item, view, onView, onClose, onRemove, onMove, 
     );
   }
 
-  return <MenuSheet key={item.id} item={item} onView={onView} onClose={onClose} onRemove={onRemove} onEdit={onEdit} packs={packs && onSavePacks ? packs : null} />;
+  return <MenuSheet key={item.id} item={item} units={units} onView={onView} onClose={onClose} onRemove={onRemove} onEdit={onEdit} packs={packs && onSavePacks ? packs : null} />;
 }
 
 /** The first sheet: the item as one line to edit ("2 lemons", read again on Save), then Move to… and Remove. */
@@ -72,8 +74,9 @@ function MenuSheet({
   onRemove,
   onEdit,
   packs,
-}: Pick<GroceryActionsProps, 'onView' | 'onClose' | 'onRemove' | 'onEdit'> & { item: GroceryItem; packs: ItemPacks | null }) {
-  const [text, setText] = useState(() => editText(item));
+  units,
+}: Pick<GroceryActionsProps, 'onView' | 'onClose' | 'onRemove' | 'onEdit'> & { item: GroceryItem; packs: ItemPacks | null; units: UnitSystem }) {
+  const [text, setText] = useState(() => editText(item, units));
   const [saving, setSaving] = useState(false);
   const save = async () => {
     setSaving(true);
@@ -89,7 +92,7 @@ function MenuSheet({
       onClose={onClose}
       title={g.editTitle}
       closeLabel={g.close}
-      dirty={text !== editText(item)}
+      dirty={text !== editText(item, units)}
       footer={<SheetFooter cancel={{ label: g.cancel, onPress: onClose }} primary={{ label: g.save, onPress: () => void save(), disabled: !text.trim(), busy: saving }} />}
     >
       <TextField label={g.editLabel} hint={g.editHint} value={text} onChangeText={setText} onSubmitEditing={() => void save()} maxLength={200} />

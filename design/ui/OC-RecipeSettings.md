@@ -29,4 +29,12 @@ Switches save instantly. Reset clears the override. "Edit", a variant card and "
 | Loading | "Loading recipe settings" (skeleton) |
 | Couldn't load | "We couldn't open this recipe." · "It may have been deleted, or you're offline." · "Try again" |
 
+## Not drawn (spec 027 build)
+| Where | Copy and behaviour |
+| --- | --- |
+| A change failed | StatusBanner "Couldn't save. Try again." under the settings card (as OC-SettingsRecipes); the switch goes back |
+| Kitchen scale hint | As drawn, "Shows “100 g” instead of “about 1 cup”" while it follows the default; "Changed for this recipe · Reset" once changed |
+| Units | No hint: "Default" is the reset |
+| Offline | Switches and Units show, dimmed, and can't change; no Reset |
+
 Links: "Edit" → `…/edit?section=variants`; a card → `&variant={id}` (opens it); "Add a variant" → `&variant=new` (starts one).

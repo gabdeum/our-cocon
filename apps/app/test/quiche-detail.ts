@@ -1,3 +1,4 @@
+import { NO_RECIPE_OVERRIDES } from '@cocon/schemas';
 import { quiche } from '@cocon/schemas/quiche.fixture';
 import type { RecipeDetail } from '../lib/recipe';
 import { gabriel } from './fakes';
@@ -21,6 +22,7 @@ export const quicheDetail: RecipeDetail = {
   source: 'app',
   deleted_at: null,
   deleted_by: null,
+  overrides: NO_RECIPE_OVERRIDES,
   ingredients: quiche.ingredients.map((i) => ({ ...i, catalog_key: ({ Eggs: 'egg', 'Heavy cream': 'heavy_cream' } as Record<string, string>)[i.name] ?? null })),
   steps: quiche.steps,
   variants: quiche.variants,

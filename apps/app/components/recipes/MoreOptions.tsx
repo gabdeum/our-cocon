@@ -3,6 +3,7 @@ import { ListRow, SegmentedControl, SettingRow } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeChoices } from '../../lib/recipe-choices';
+import type { FormatOptions } from '@cocon/quantity';
 import { formatOf } from '../../lib/recipe-view';
 
 const more = strings.recipePage.more;
@@ -14,12 +15,15 @@ const more = strings.recipePage.more;
  */
 export function MoreOptions({
   choices,
+  settings,
   tracker,
   onChange,
   onScaleByIngredient,
   onConvert,
 }: {
   choices: RecipeChoices;
+  /** The recipe's units and kitchen scale in force (spec 027), under the toggles. */
+  settings: FormatOptions;
   tracker: Tracker;
   /** Only called when a toggle changes what's in force. */
   onChange: (next: RecipeChoices) => void;
@@ -27,7 +31,7 @@ export function MoreOptions({
   onConvert: () => void;
 }) {
   // What's in force: the toggles, else the settings.
-  const format = formatOf(choices);
+  const format = formatOf(choices, settings);
   const change = (next: RecipeChoices) => {
     // Tapping what's already in force changes nothing, and keeps following the settings.
     if (next.kitchenScale !== null && next.kitchenScale !== format.scale) tracker.track('kitchen_scale_toggled', { on: next.kitchenScale });

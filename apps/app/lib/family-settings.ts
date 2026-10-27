@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { DEFAULT_FAMILY_SETTINGS, FamilySettingsUpdate, type FamilySettings, type Tracker } from '@cocon/schemas';
+import { CookingSetting, DEFAULT_FAMILY_SETTINGS, FamilySettingsUpdate, type FamilySettings, type Tracker } from '@cocon/schemas';
 import { loadFamilySettings } from '@cocon/data';
 import { useSession } from './session';
 import type { Client } from './supabase';
@@ -23,7 +23,7 @@ export async function saveFamilySettings(client: Pick<Client, 'from'>, familyId:
 
 /**
  * Shown at once and saved; reverts on failure. A new store profile is tracked (spec 021), from
- * Settings or the Groceries toggle alike.
+ * Settings or the Groceries toggle alike, and so is each cooking default changed (027).
  */
 export async function changeFamilySettings(
   deps: { queryClient: ReturnType<typeof useQueryClient>; client: Pick<Client, 'from'>; tracker: Tracker; familyId: string; current: FamilySettings },
@@ -39,6 +39,8 @@ export async function changeFamilySettings(
   if (result === 'saved' && change.store_profile && change.store_profile !== current.store_profile) {
     tracker.track('store_profile_changed', { profile: change.store_profile });
   }
+  if (result === 'saved')
+    for (const setting of CookingSetting.options) if (setting in change && change[setting] !== current[setting]) tracker.track('family_default_changed', { setting });
   return result;
 }
 

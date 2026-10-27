@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Button, Callout, Link, ListGroup, ListRow, SheetFooter, SuccessPanel } from '@cocon/ui';
 import type { IngredientFactsInput } from '@cocon/quantity';
-import type { Tracker } from '@cocon/schemas';
+import type { Tracker, UnitSystem } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { AddedFromRecipe, RecipeGroceryLine } from '../../lib/add-from-recipe';
 import { mergeNotes } from '../../lib/add-from-recipe';
@@ -26,6 +26,8 @@ export interface AddGroceriesSheetProps {
   list: readonly GroceryItem[];
   /** The recipe's catalog facts, so the notes add up pieces and grams as the list does. */
   facts: Readonly<Record<string, IngredientFactsInput>>;
+  /** The family's units (spec 027), so "Already on the list" reads as the list does. */
+  units?: UnitSystem;
   api: AddGroceriesApi;
   tracker: Tracker;
   onClose: () => void;
@@ -33,7 +35,7 @@ export interface AddGroceriesSheetProps {
 }
 
 /** Add to groceries (spec 022; design/ui/OC-AddGroceries.md). No pantry: everything starts ticked. */
-export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, api, tracker, onClose, onSeeList }: AddGroceriesSheetProps) {
+export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, units = 'metric', api, tracker, onClose, onSeeList }: AddGroceriesSheetProps) {
   const online = useOnline();
   // FR-001: every ingredient ticked to start; ids that are unticked.
   const [off, setOff] = useState<ReadonlySet<string>>(new Set());
@@ -48,7 +50,7 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, ap
   };
 
   const ticked = useMemo(() => new Set(lines.filter((l) => !off.has(l.id)).map((l) => l.id)), [lines, off]);
-  const notes = useMemo(() => mergeNotes(list, lines, ticked, facts), [list, lines, ticked, facts]);
+  const notes = useMemo(() => mergeNotes(list, lines, ticked, facts, units), [list, lines, ticked, facts, units]);
   const count = ticked.size;
 
   const toggle = (id: string) =>

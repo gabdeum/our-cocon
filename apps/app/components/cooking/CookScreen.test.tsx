@@ -1,12 +1,14 @@
 // Spec 012: cooking mode. US1 (Next, swipe, segments), US2 (the dark timer in the step and the
 // header pill), US3 (the screen stays on), the edge cases (Finish, the recipe page's servings and
 // variants) and the events. Scrolling itself is in use-step-scroll.test.ts.
+import { NO_RECIPE_OVERRIDES } from '@cocon/schemas';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { quiche, quicheIds } from '@cocon/schemas/quiche.fixture';
 import type { RecipeDetail } from '../../lib/recipe';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
+import { defaultCooking } from '../../lib/recipe-view';
 import { TimersProvider } from '../../lib/timer-store';
 import { fakeTracker, gabriel } from '../../test/fakes';
 
@@ -36,6 +38,7 @@ const detail: RecipeDetail = {
   source: 'app',
   deleted_at: null,
   deleted_by: null,
+  overrides: NO_RECIPE_OVERRIDES,
   ingredients: quiche.ingredients,
   steps: quiche.steps,
   variants: quiche.variants,
@@ -182,7 +185,7 @@ describe('Cooking mode (spec 012)', () => {
     first.unmount();
 
     keepAwake.isAvailableAsync.mockResolvedValue(true);
-    await setup({ cooking: { thermometer: true, keepAwake: false } });
+    await setup({ cooking: { ...defaultCooking, keepAwake: false } });
     expect(keepAwake.activateKeepAwakeAsync).not.toHaveBeenCalled();
     press('Cooking options');
     expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
@@ -201,6 +204,40 @@ describe('Cooking mode (spec 012)', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Unit converter' }));
     expect(onConvert).toHaveBeenCalledOnce();
     expect(screen.queryByRole('switch', { name: 'Screen stays on' })).toBeNull();
+  });
+
+  it('L21: "Keep screen on" arriving after the recipe (the family\'s settings load) is followed', async () => {
+    keepAwake.isAvailableAsync.mockResolvedValue(true);
+    const { rerender, onClose, onOpenTimers } = await setup();
+    rerender(
+      <CookScreen
+        recipe={detail}
+        userId={gabriel.user_id}
+        storage={memoryStorage()}
+        tracker={fakeTracker()}
+        onClose={onClose}
+        onOpenTimers={onOpenTimers}
+        onScaleByIngredient={vi.fn()}
+        onConvert={vi.fn()}
+        cooking={{ ...defaultCooking, keepAwake: false }}
+      />,
+    );
+    await settle();
+    press('Cooking options');
+    expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('027 US1: with the thermometer off, the steps have no temperature check', async () => {
+    await setup();
+    expect(screen.queryAllByText(/the center should reach 71 °C/).length).toBeGreaterThan(0);
+    cleanup();
+    await setup({ cooking: { ...defaultCooking, thermometer: false } });
+    expect(screen.queryAllByText(/the center should reach/)).toHaveLength(0);
+  });
+
+  it('027 US3: a recipe set to Imperial cooks in imperial, without touching the toggle', async () => {
+    await setup({ cooking: { ...defaultCooking, system: 'imperial' } });
+    expect(within(section(0)).getByText(/350 °F \(180 °C\)/)).toBeTruthy();
   });
 
   it('Back on the first step reads Exit and leaves cooking mode, like Exit', async () => {

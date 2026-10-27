@@ -46,19 +46,68 @@ export function familyErrorOf(error: { message?: string } | null | undefined): F
   return parsed.success ? parsed.data : null;
 }
 
+/** Spec 027: units, for the family and a recipe (the database's `unit_system`). */
+export const UnitSystem = z.enum(['metric', 'imperial']);
+export type UnitSystem = z.infer<typeof UnitSystem>;
+
+/** Spec 027: the cooking settings a family sets once and a recipe can change for itself. */
+export const CookingSetting = z.enum(['keep_awake', 'has_scale', 'has_thermometer', 'units']);
+export type CookingSetting = z.infer<typeof CookingSetting>;
+
 /**
- * Spec 021: the family's settings (one `family_settings` row; spec 027 adds the cooking defaults).
- * No row means these defaults.
+ * Spec 021: the family's settings (one `family_settings` row): where it shops (021) and its cooking
+ * defaults (027). No row means these defaults.
  */
 export const FamilySettings = z.object({
   store_profile: StoreProfile,
   round_to_packs: z.boolean(),
+  keep_awake: z.boolean(),
+  has_scale: z.boolean(),
+  has_thermometer: z.boolean(),
+  units: UnitSystem,
 });
 export type FamilySettings = z.infer<typeof FamilySettings>;
-export const DEFAULT_FAMILY_SETTINGS: FamilySettings = { store_profile: 'us', round_to_packs: true };
+export const DEFAULT_FAMILY_SETTINGS: FamilySettings = {
+  store_profile: 'us',
+  round_to_packs: true,
+  keep_awake: true,
+  has_scale: true,
+  has_thermometer: true,
+  units: 'metric',
+};
 /** What a change sends: one setting or more. */
 export const FamilySettingsUpdate = FamilySettings.partial().strict();
 export type FamilySettingsUpdate = z.infer<typeof FamilySettingsUpdate>;
+
+/** Spec 027: a recipe's own cooking settings (columns on `recipes`); null means the family's default. */
+export const RecipeOverrides = z.object({
+  keep_awake: z.boolean().nullable(),
+  has_scale: z.boolean().nullable(),
+  has_thermometer: z.boolean().nullable(),
+  units: UnitSystem.nullable(),
+});
+export type RecipeOverrides = z.infer<typeof RecipeOverrides>;
+export const NO_RECIPE_OVERRIDES: RecipeOverrides = { keep_awake: null, has_scale: null, has_thermometer: null, units: null };
+/** What a change sends: one setting or more; null resets it. */
+export const RecipeOverridesUpdate = RecipeOverrides.partial().strict();
+export type RecipeOverridesUpdate = z.infer<typeof RecipeOverridesUpdate>;
+
+/** What's in force for a recipe (spec 027 FR-001): its own setting, else the family's. */
+export interface CookingSettings {
+  keepAwake: boolean;
+  scale: boolean;
+  thermometer: boolean;
+  system: UnitSystem;
+}
+
+export function resolveCooking(family: Pick<FamilySettings, CookingSetting>, recipe: Partial<RecipeOverrides> = {}): CookingSettings {
+  return {
+    keepAwake: recipe.keep_awake ?? family.keep_awake,
+    scale: recipe.has_scale ?? family.has_scale,
+    thermometer: recipe.has_thermometer ?? family.has_thermometer,
+    system: recipe.units ?? family.units,
+  };
+}
 
 /**
  * Spec 024: what a member's AI assistants may do (FR-002), each Allowed (true) or Not allowed. One

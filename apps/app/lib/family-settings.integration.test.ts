@@ -58,7 +58,7 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
   });
 
   it('US1: a new family shops in US stores, rounding up', async () => {
-    expect(await loadFamilySettings(alex)).toEqual({ store_profile: 'us', round_to_packs: true });
+    expect(await loadFamilySettings(alex)).toMatchObject({ store_profile: 'us', round_to_packs: true });
     expect(await creamRow(alex)).toEqual({ name: 'Heavy cream', detail: '1 pint carton', note: '(need 300 ml)' });
   });
 
@@ -66,13 +66,13 @@ describe.skipIf(!local)('store sizes against local Supabase', () => {
     expect((await saveFamilySettings(mia, familyId, { store_profile: 'eu' })).error).toBeNull();
     expect(await creamRow(alex)).toEqual({ name: 'Heavy cream', detail: '2 × 20 cl', note: '(need 300 ml)' });
     // Another family keeps its own.
-    expect(await loadFamilySettings(sam)).toEqual({ store_profile: 'us', round_to_packs: true });
+    expect(await loadFamilySettings(sam)).toMatchObject({ store_profile: 'us', round_to_packs: true });
   });
 
   it('US3: with round-up off, only what recipes need', async () => {
     expect((await saveFamilySettings(alex, familyId, { round_to_packs: false })).error).toBeNull();
     expect(await creamRow(mia)).toEqual({ name: 'Heavy cream', detail: '300 ml' });
-    expect(await loadFamilySettings(alex)).toEqual({ store_profile: 'eu', round_to_packs: false });
+    expect(await loadFamilySettings(alex)).toMatchObject({ store_profile: 'eu', round_to_packs: false });
     await saveFamilySettings(alex, familyId, { round_to_packs: true });
   });
 

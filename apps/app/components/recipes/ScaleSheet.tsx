@@ -6,7 +6,8 @@ import type { Unit } from '@cocon/schemas/recipes';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import type { RecipeChoices, ScaledBy } from '../../lib/recipe-choices';
-import { formatOf } from '../../lib/recipe-view';
+import type { FormatOptions } from '@cocon/quantity';
+import { defaultFormat, formatOf } from '../../lib/recipe-view';
 import { INGREDIENTS_SHOWN, parseAmount, scaleCandidates, scalePreview } from '../../lib/scale-by-ingredient';
 
 const s = strings.scaleSheet;
@@ -15,14 +16,16 @@ export interface ScaleSheetProps {
   recipe: RecipeDetail;
   /** The page's choices on this device: variants, units and kitchen scale, and any scale already applied. */
   choices: RecipeChoices;
+  /** The recipe's units and kitchen scale in force (spec 027), under the page's toggles. */
+  settings?: FormatOptions;
   tracker: Tracker;
   onApply: (scaledBy: ScaledBy) => void;
   onClose: () => void;
 }
 
 /** Scale by an ingredient (spec 013 US2; design/ui/OC-ScaleIng.md). */
-export function ScaleSheet({ recipe, choices, tracker, onApply, onClose }: ScaleSheetProps) {
-  const options = formatOf(choices);
+export function ScaleSheet({ recipe, choices, settings = defaultFormat, tracker, onApply, onClose }: ScaleSheetProps) {
+  const options = formatOf(choices, settings);
   const candidates = useMemo(() => scaleCandidates(recipe, choices, options), [recipe, choices, options.system, options.scale]); // eslint-disable-line react-hooks/exhaustive-deps
   // Opens on what was applied last, else the first ingredient.
   const applied = choices.scaledBy && candidates.find((c) => c.id === choices.scaledBy?.ingredientId) ? choices.scaledBy : null;

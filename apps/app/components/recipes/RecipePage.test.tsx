@@ -1,5 +1,6 @@
 // Spec 008: the recipe page. US1 (servings 6 → 9 at once), US2 (Vegetarian, "Make my own dough"),
 // US3 (tabs), FR-006 (choices remembered on this device), the edge cases and the events.
+import { NO_RECIPE_OVERRIDES } from '@cocon/schemas';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
@@ -9,7 +10,7 @@ import { format, scale } from '@cocon/quantity';
 import { RecipePage, SERVINGS_SETTLE_MS, type RecipePageProps } from './RecipePage';
 import type { RecipeDetail } from '../../lib/recipe';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
-import { defaultFormat } from '../../lib/recipe-view';
+import { defaultCooking, defaultFormat } from '../../lib/recipe-view';
 import { alex, fakeTracker, gabriel } from '../../test/fakes';
 import { TimersProvider } from '../../lib/timer-store';
 
@@ -37,6 +38,7 @@ const detail: RecipeDetail = {
   source: 'claude',
   deleted_at: null,
   deleted_by: null,
+  overrides: NO_RECIPE_OVERRIDES,
   ingredients: quiche.ingredients,
   steps: quiche.steps,
   variants: quiche.variants,
@@ -327,6 +329,15 @@ describe('More options (spec 013)', () => {
     expect(row('Bacon lardons')?.textContent).toContain('7.1 oz');
     expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial' });
     expect(saved(storage).system).toBe('imperial');
+  });
+
+  it('027 US3: a recipe set to Imperial opens in imperial; the panel shows it, and tapping it changes nothing', async () => {
+    const { tracker } = await setup({ cooking: { ...defaultCooking, system: 'imperial' } });
+    expect(row('Bacon lardons')?.textContent).toContain('7.1 oz');
+    tap('More options');
+    expect(screen.getByRole('button', { name: 'Imperial' }).getAttribute('aria-pressed')).toBe('true');
+    tap('Imperial');
+    expect(tracker.track).not.toHaveBeenCalledWith('units_toggled', expect.anything());
   });
 
   it('US2: scaled by lardons, servings read 7½ with a chip; Reset goes back to 6', async () => {

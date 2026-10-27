@@ -37,7 +37,7 @@ export interface CookScreenProps {
   onConvert: () => void;
   /** Changes when the screen is shown again, so choices a sheet saved are read back. */
   visit?: number;
-  /** "I have a thermometer" and "Keep screen on" (spec 027 wires them); on until then. */
+  /** The recipe's settings in force (spec 027): units, kitchen scale, thermometer checks and "Keep screen on". */
   cooking?: CookingSettings;
   now?: () => number;
 }
@@ -121,13 +121,19 @@ function Cooking({
   now = Date.now,
 }: LoadedProps & { choices: RecipeChoices; onChoices: (next: RecipeChoices) => void }) {
   // The recipe page's units, kitchen scale and scale by an ingredient too (013, 032-later L22).
-  const view = useMemo(() => recipeView(recipe, choices, choices, formatOf(choices), cooking), [recipe, choices, cooking]);
+  const view = useMemo(() => recipeView(recipe, choices, choices, formatOf(choices, cooking), cooking), [recipe, choices, cooking]);
   const steps = view.steps;
   const count = steps.length;
   // Events cap step counts (variants can add steps on top of a recipe's 100).
   const sent = (n: number) => Math.min(n, MAX_TRACKED_STEPS);
   // "Screen stays on" in the options sheet, for this visit; it starts from the setting (spec 027).
   const [keepAwake, setKeepAwake] = useState(cooking.keepAwake);
+  // The setting can arrive after the recipe (the family's load) or change live: follow it.
+  const [awakeSetting, setAwakeSetting] = useState(cooking.keepAwake);
+  if (awakeSetting !== cooking.keepAwake) {
+    setAwakeSetting(cooking.keepAwake);
+    setKeepAwake(cooking.keepAwake);
+  }
   const awake = useCookAwake(keepAwake);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const hasPill = useHasTimers();
@@ -257,7 +263,7 @@ function Cooking({
             tracker.track('cook_screen_awake_toggled', { on });
           }}
         />
-        <MoreOptions choices={choices} tracker={tracker} onChange={onChoices} onScaleByIngredient={openSheet(onScaleByIngredient)} onConvert={openSheet(onConvert)} />
+        <MoreOptions choices={choices} settings={cooking} tracker={tracker} onChange={onChoices} onScaleByIngredient={openSheet(onScaleByIngredient)} onConvert={openSheet(onConvert)} />
       </BottomSheet>
     ) : null}
     </>

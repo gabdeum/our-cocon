@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { UndoKind } from './activity';
-import { AiPermission } from './family';
+import { AiPermission, CookingSetting } from './family';
 import { FilterKey } from './recipe-filters';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
 
@@ -117,6 +117,10 @@ export const events = {
   // "Clear done items", and its Undo, with how many rows (one per thing since spec 022).
   done_items_cleared: z.strictObject({ count: z.int().min(1) }),
   clear_done_undone: z.strictObject({ count: z.int().min(1) }),
+  // Spec 027: a cooking setting changed for one recipe (Reset included), or for the whole family.
+  // Only which setting, never the recipe.
+  recipe_setting_changed: z.strictObject({ setting: CookingSetting }),
+  family_default_changed: z.strictObject({ setting: CookingSetting }),
   // Spec 021: where the family shops changed (the grocery settings sheet).
   store_profile_changed: z.strictObject({ profile: z.enum(['us', 'eu']) }),
   // "Clear all items" (confirmed), with how many rows: the whole list, ticked or not.

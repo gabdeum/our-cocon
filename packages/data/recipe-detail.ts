@@ -1,4 +1,4 @@
-import { parseVariantChanges, type IngredientRow, type RecipeVariant, type StepRow } from '@cocon/schemas';
+import { parseVariantChanges, type IngredientRow, type RecipeOverrides, type RecipeVariant, type StepRow } from '@cocon/schemas';
 import type { IngredientFactsInput } from '@cocon/quantity';
 import type { Db } from './client';
 
@@ -22,6 +22,8 @@ export interface RecipeDetail {
   /** Set when someone deleted it while it was open ("This recipe was deleted by {name}."). */
   deleted_at: string | null;
   deleted_by: string | null;
+  /** The recipe's own cooking settings (spec 027); null ones follow the family's defaults. */
+  overrides: RecipeOverrides;
   ingredients: IngredientRow[];
   steps: StepRow[];
   variants: RecipeVariant[];
@@ -33,6 +35,7 @@ const ingredientColumns =
   'id, position, name, catalog_key, quantity, unit, size_word, weight_per_piece_g, piece_noun_singular, piece_noun_plural, prep_note';
 const stepColumns = 'id, position, name, body, timer_seconds, timer_label, temp_check_c, temp_check_text, tip, photo_path';
 const columns = `id, name, description, serves, total_minutes, prep_minutes, cuisine, source_text, best_months, photo_path, created_by, source, deleted_at, deleted_by,
+  keep_awake, has_scale, has_thermometer, units,
   recipe_ingredients(${ingredientColumns}), recipe_steps(${stepColumns}), recipe_variants(id, position, name, kind, changes)`;
 
 const byPosition = (a: { position: number }, b: { position: number }) => a.position - b.position;
@@ -47,7 +50,7 @@ export async function loadRecipe(client: Pick<Db, 'from'>, id: string): Promise<
   const { data, error } = await client.from('recipes').select(columns).eq('id', id).maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  const { recipe_ingredients, recipe_steps, recipe_variants, ...recipe } = data;
+  const { recipe_ingredients, recipe_steps, recipe_variants, keep_awake, has_scale, has_thermometer, units, ...recipe } = data;
   const variants = [...recipe_variants].sort(byPosition).map((v) => ({ ...v, changes: parseVariantChanges(v.changes) }));
 
   const keys = new Set<string>();
@@ -60,6 +63,7 @@ export async function loadRecipe(client: Pick<Db, 'from'>, id: string): Promise<
 
   return {
     ...recipe,
+    overrides: { keep_awake, has_scale, has_thermometer, units },
     ingredients: [...recipe_ingredients].sort(byPosition).map(withoutPosition),
     steps: [...recipe_steps].sort(byPosition).map(withoutPosition),
     variants,
