@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { WriteSource } from './sources';
 
-/** Tables that send their changes live (spec 004 FR-002). */
-export const LiveTable = z.enum(['recipes', 'recipe_steps', 'grocery_items', 'activity']);
+/** Tables that send their changes live (spec 004 FR-002; the calendar's, spec 035 FR-003). */
+export const LiveTable = z.enum(['recipes', 'recipe_steps', 'grocery_items', 'activity', 'events', 'event_members', 'event_exceptions', 'event_checklist_items']);
 export type LiveTable = z.infer<typeof LiveTable>;
 
 /**

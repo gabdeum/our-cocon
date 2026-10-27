@@ -28,7 +28,7 @@ export interface FamilySettingsProps {
 
 type Confirm =
   | { kind: 'remove' | 'owner'; member: AccountMember }
-  | { kind: 'removeManaged'; member: Member }
+  | { kind: 'removeManaged'; member: Member; upcoming: number }
   | { kind: 'deleteFamily' }
   | { kind: 'deleteAccount' }
   | null;
@@ -100,6 +100,16 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
     if (outcome === 'dismissed') return;
     tracker.track('invite_sent', {});
     if (outcome === 'copied') setBanner(f.inviteCopied);
+  }
+
+  /** Their upcoming events move to Everyone, so the dialog says how many first (032-later L78). */
+  async function confirmRemoveManaged(member: Member) {
+    const upcoming = await api.managedMemberUpcomingEvents(member.id);
+    if (!upcoming.ok) {
+      setSelected(null);
+      return setBanner(f.actionFailed);
+    }
+    setConfirm({ kind: 'removeManaged', member, upcoming: upcoming.data });
   }
 
   async function run(action: () => Promise<{ ok: boolean }>, after?: () => void) {
@@ -195,8 +205,8 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
       case 'removeManaged':
         return {
           icon: 'trash' as const,
-          title: f.removeManagedTitle(confirm.member.display_name),
-          body: f.removeManagedBody,
+          title: confirm.upcoming > 0 ? f.removeManagedMoveTitle(confirm.member.display_name, confirm.upcoming) : f.removeManagedTitle(confirm.member.display_name),
+          body: confirm.upcoming > 0 ? f.removeManagedMoveBody : f.removeManagedBody,
           confirmLabel: f.removeConfirm,
           cancelLabel: f.removeCancel(confirm.member.display_name),
         };
@@ -303,7 +313,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
             <Button label={f.rename} variant="outline" block onPress={() => (setSelected(null), setNameSheet({ kind: 'rename', member: selected, name: selected.display_name }))} />
             <Button label={f.changeColor} variant="outline" block onPress={() => (setSelected(null), setRecoloring(selected))} />
             <Button label={f.inviteManaged(selected.display_name)} variant="outline" block onPress={() => void invite(selected)} />
-            <Link label={f.removeManaged} tone="danger" onPress={() => setConfirm({ kind: 'removeManaged', member: selected })} />
+            <Link label={f.removeManaged} tone="danger" onPress={() => void confirmRemoveManaged(selected)} />
           </View>
         ) : selected && isAccount(selected) ? (
           <View className="gap-10">

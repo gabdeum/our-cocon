@@ -9,6 +9,13 @@ export type SyncClient = Pick<Client, 'channel' | 'removeChannel' | 'realtime'>;
 
 const SyncContext = createContext<Set<Listener> | null>(null);
 
+/** Calendar screens keep one query per range under `['events', …]`: a change to who an event is for, its exceptions or its checklist refetches them too (spec 035). */
+const alsoRefetches: Partial<Record<ChangeEvent['table'], string>> = {
+  event_members: 'events',
+  event_exceptions: 'events',
+  event_checklist_items: 'events',
+};
+
 /**
  * Live changes for the signed-in family (spec 004 US1). Listens on the family's private channel;
  * each change refetches that table's queries (keys start with the table name, lib/query.ts), so
@@ -28,6 +35,8 @@ export function SyncProvider({ client, familyId, children }: { client: SyncClien
       const change = ChangeEvent.safeParse(payload);
       if (!change.success) return;
       void queryClient.invalidateQueries({ queryKey: [change.data.table] });
+      const parent = alsoRefetches[change.data.table];
+      if (parent) void queryClient.invalidateQueries({ queryKey: [parent] });
       for (const listener of listeners) listener(change.data);
     });
     // Private channels check the member's token (realtime.messages policy).

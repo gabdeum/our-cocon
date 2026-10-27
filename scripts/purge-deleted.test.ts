@@ -69,6 +69,14 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
          ($1, 'Old milk', now() - interval '2 days'), ($1, 'Fresh bread', now() - interval '1 hour')`,
       [familyId],
     );
+    // Spec 035: an event deleted 31 days ago, with an exception, and one deleted yesterday.
+    await db.query(
+      `insert into public.events (family_id, title, starts_on, ends_on, time_type, deleted_at) values
+         ($1, 'Old party', '2026-01-01', '2026-01-01', 'all_day', now() - interval '31 days'),
+         ($1, 'Recent swim', '2026-01-02', '2026-01-02', 'all_day', now() - interval '1 day')`,
+      [familyId],
+    );
+    await db.query("insert into public.event_exceptions (family_id, event_id, occurrence_date, cancelled) select family_id, id, starts_on, true from public.events where family_id = $1", [familyId]);
     for (const path of [...photos.old, photos.recent]) await upload(path);
   }, 30_000);
 
@@ -99,6 +107,13 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
   it('removes grocery items cleared more than a day ago (spec 020)', async () => {
     const { rows } = await db.query<{ name: string }>('select name from public.grocery_items where family_id = $1 and deleted_at is not null', [familyId]);
     expect(rows).toEqual([{ name: 'Fresh bread' }]);
+  });
+
+  it('removes events deleted more than 30 days ago, with their exceptions (spec 035)', async () => {
+    const { rows } = await db.query<{ title: string }>('select title from public.events where family_id = $1', [familyId]);
+    expect(rows).toEqual([{ title: 'Recent swim' }]);
+    const exceptions = await db.query('select 1 from public.event_exceptions where family_id = $1', [familyId]);
+    expect(exceptions.rowCount).toBe(1);
   });
 
   it('refuses a caller without the service key', async () => {

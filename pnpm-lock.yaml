@@ -340,12 +340,18 @@ importers:
 
   packages/data:
     dependencies:
+      '@cocon/calendar':
+        specifier: workspace:*
+        version: link:../calendar
       '@cocon/quantity':
         specifier: workspace:*
         version: link:../quantity
       '@cocon/schemas':
         specifier: workspace:*
         version: link:../schemas
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@supabase/supabase-js':
         specifier: ^2.118.0

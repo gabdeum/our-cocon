@@ -1,4 +1,4 @@
-import { InviteAccepted, InviteStatus, familyErrorOf, type FamilyError, type MemberColor } from '@cocon/schemas';
+import { InviteAccepted, InviteStatus, TimeZone, familyErrorOf, type FamilyError, type MemberColor } from '@cocon/schemas';
 import type { Client } from './supabase';
 
 export type Result<T> = { ok: true; data: T } | { ok: false; error: FamilyError | 'failed' };
@@ -35,7 +35,11 @@ export function familyApi(client: Pick<Client, 'rpc'>) {
       call(() => client.rpc('add_managed_member', color ? { name, pick: color } : { name }), String),
     renameManagedMember: (memberId: string, name: string) => call(() => client.rpc('rename_managed_member', { member_id: memberId, name }), nothing),
     removeManagedMember: (memberId: string) => call(() => client.rpc('remove_managed_member', { member_id: memberId }), nothing),
+    /** Spec 035 (032-later L78): how many of their events are still to come, for the Remove dialog. */
+    managedMemberUpcomingEvents: (memberId: string) => call(() => client.rpc('managed_member_upcoming_events', { member_id: memberId }), Number),
     setMemberColor: (memberId: string, color: MemberColor) => call(() => client.rpc('set_member_color', { member_id: memberId, pick: color }), nothing),
+    /** Spec 035: the family's home time zone, from the first device that opens the app (a no-op once set). */
+    claimHomeTimeZone: (timeZone: string) => call(() => client.rpc('claim_home_time_zone', { tz: TimeZone.parse(timeZone) }), nothing),
   };
 }
 

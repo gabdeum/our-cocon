@@ -7,3 +7,4 @@ export * from './groceries';
 export { loadFamilySettings } from './family-settings';
 export { loadAiPermissions, setAiPermission } from './ai-permissions';
 export { disconnectAssistant, groupAssistants, loadAssistants, type AssistantConnection, type AssistantConnections } from './ai-connections';
+export * from './events';
