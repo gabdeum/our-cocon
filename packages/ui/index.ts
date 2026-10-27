@@ -31,6 +31,8 @@ export { StatTile, type StatTileProps } from './components/StatTile';
 export { ActivityCard, type ActivityCardProps } from './components/ActivityCard';
 export { Callout, type CalloutProps, type CalloutVariant } from './components/Callout';
 export { Avatar, AvatarStack, type AvatarColor, type MemberColor } from './components/Avatar';
+export { MemberChip, type MemberChipColor, type MemberChipProps } from './components/MemberChip';
+export { CalendarHeader, type CalendarHeaderChip, type CalendarHeaderProps } from './components/CalendarHeader';
 export { ColorSwatch, type ColorSwatchProps, type SwatchOption } from './components/ColorSwatch';
 export { StatusBanner, Presence, AwakeChip, SuccessPanel } from './components/StatusBanner';
 export { StepCard, StepFootnote, StepRow, StepText, TimerRow, type StepTextPart, type TimerState } from './components/StepCard';

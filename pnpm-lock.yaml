@@ -157,6 +157,9 @@ importers:
 
   apps/app:
     dependencies:
+      '@cocon/calendar':
+        specifier: workspace:*
+        version: link:../../packages/calendar
       '@cocon/data':
         specifier: workspace:*
         version: link:../../packages/data

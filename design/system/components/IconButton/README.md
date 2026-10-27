@@ -7,6 +7,7 @@ Round or rounded-square buttons holding a single icon, used over photos, in step
 | Variant | Size | Fill / icon | Use |
 | --- | --- | --- | --- |
 | default | 48 circle | surface-card / ink | Over photos: back, share, recipe settings |
+| `--card` | 44 circle | surface-card / ink | Calendar header ‹ › on the page background |
 | `--soft` | 44 circle | surface-soft / ink | Stepper minus, close in sheets |
 | `--olive` | 44 circle | olive / white | Stepper plus |
 | `--square` | 44, radius 14 | surface-soft / ink; honey when `aria-expanded="true"` | "More options" (…) |

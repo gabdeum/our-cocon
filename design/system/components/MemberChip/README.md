@@ -13,7 +13,10 @@ Reference: `design/screens/CalHeader.dc.html` (inline styles are the exact value
 | Count (day view) | 36 tall, padding 0 12 0 4, white, dot 28 + "{name} {count}" 14/800 |
 | Dot | circle in member color, initial 14/900 ink; Everyone "All" 11/900 on `member-everyone`; Others person-outline icon 18 in ink-muted on `member-others` |
 
+| Filter, hidden (unpressed) | Not drawn; follows the Pill's unselected look: `surface-soft` fill, transparent border, dot at `opacity-dimmed`, name in ink-muted |
+
 ## Rules
 
+- Built in `packages/ui` (spec 036): the Filter variant. Picker (041) and Count (039) come with their specs.
 - `aria-pressed` drives selection; group has a label ("Show events for", "Who").
 - Never color alone: the initial or icon is always visible.

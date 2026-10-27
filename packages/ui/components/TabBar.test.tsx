@@ -7,18 +7,19 @@ afterEach(cleanup);
 
 const items = [
   { key: 'home', label: 'Home', icon: 'home' },
+  { key: 'calendar', label: 'Calendar', icon: 'calendar' },
   { key: 'recipes', label: 'Recipes', icon: 'recipes' },
   { key: 'groceries', label: 'Groceries', icon: 'groceries' },
-  { key: 'settings', label: 'Settings', icon: 'settings' },
+  { key: 'menu', label: 'Menu', icon: 'menu' },
 ] as const;
 
 describe('TabBar', () => {
-  it('is the main navigation with four labelled links, the active one marked as the current page', () => {
+  it('is the main navigation with five labelled links, the active one marked as the current page', () => {
     render(<TabBar label="Main" items={[...items]} active="recipes" onSelect={() => undefined} />);
     const nav = screen.getByRole('navigation', { name: 'Main' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((l) => l.getAttribute('aria-label'))).toEqual(['Home', 'Recipes', 'Groceries', 'Settings']);
-    expect(links.map((l) => l.getAttribute('aria-current'))).toEqual([null, 'page', null, null]);
+    expect(links.map((l) => l.getAttribute('aria-label'))).toEqual(['Home', 'Calendar', 'Recipes', 'Groceries', 'Menu']);
+    expect(links.map((l) => l.getAttribute('aria-current'))).toEqual([null, null, 'page', null, null]);
   });
 
   it('shows the label on the active tab only', () => {
@@ -34,11 +35,18 @@ describe('TabBar', () => {
     expect(15 * TAB_LABEL_MIN_SCALE).toBe(13);
   });
 
+  it('spec 036 FR-001: the selected tab is a fixed 132 px and never grows; the others share the rest', () => {
+    render(<TabBar label="Main" items={[...items]} active="calendar" onSelect={() => undefined} />);
+    const style = (name: string) => screen.getByRole('link', { name }).style;
+    expect(style('Calendar')).toMatchObject({ width: '132px', flexGrow: '0', flexShrink: '0' });
+    expect(style('Home')).toMatchObject({ flexGrow: '1', minWidth: '44px' });
+  });
+
   it('reports which tab was tapped', () => {
     const onSelect = vi.fn();
     render(<TabBar label="Main" items={[...items]} active="home" onSelect={onSelect} />);
-    fireEvent.click(screen.getByRole('link', { name: 'Settings' }));
-    expect(onSelect).toHaveBeenCalledWith('settings');
+    fireEvent.click(screen.getByRole('link', { name: 'Menu' }));
+    expect(onSelect).toHaveBeenCalledWith('menu');
   });
 
   it('reserves 100 px, or 160 px with the timer pill above the bar (FR-005)', () => {

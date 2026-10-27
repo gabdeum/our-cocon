@@ -69,6 +69,8 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L85 | P3 | **Slot times aren't live.** `family_calendar_settings` sends no changes on the family channel, so slot times the owner changes show on other devices at their next load. | 035 | 029 |
 | L86 | P3 | **A hidden person can sense a surprise.** Eva gets only the cover, shaped like a family event, but her own token can still notice that the events table gives her no row for it, and that saving it fails. Only fixable by moving every event read and write behind functions. | 035 | none |
 | L87 | P3 | **Surprises follow member ids.** `event_surprise.hidden_from` holds member ids; if Eva is removed and joins again she gets a new id and sees the surprise in full. Store user ids, or update hidden_from when someone rejoins. | 035 | none |
+| L88 | P2 | **Calendar opens on the member's default view.** The Calendar tab opens on Month, and re-tapping it keeps the last view and day (Expo Router keeps a tab's state). When 029 adds the default view and week start, read them in `apps/app/app/(tabs)/calendar.tsx` (`viewFrom`, `weekStartFor('automatic', …)`), and decide whether a tab tap resets to the default view. | 036 | 029 |
+| L89 | P3 | **The hidden filter chip isn't drawn.** A member chip that's toggled off follows the Pill's unselected look (soft fill, no colored border, dimmed dot, muted name; MemberChip README). Check it with Gabriel on the canvas and draw it if it should differ. | 036 | 030 |
 
 ## Changelog
 - 2026-10-19: Created. Seeded with the open items from the Needs your attention sections of 003, 004 and 006.
@@ -104,3 +106,4 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 - 2026-10-27 (033): no tasks named 033. Added L78 (removing a member without the app keeps their events, 035) and L79 (member changes aren't live).
 - 2026-10-27 (034): no tasks named 034. Added L80 (events reach `viewFor` with the creator's member id, 035), L81 (slot-time rules in the engine, 029) and L82 (agenda and detail dates, 040).
 - 2026-10-27 (035): did L78 (removing a member without the app moves their upcoming events to Everyone, past ones keep their name in grey; the Dialog says how many) and L80 (`events_visible` hands `viewFor` the creator's member id, members and surprise; exceptions checked by the strict schema; `SurpriseCover` added). Added L83 (assistants' event writes logged without secrets, 044), L84 ("after N times" counts as upcoming), L85 (slot times aren't live, 029), L86 (a hidden person can sense a surprise) and L87 (surprises follow member ids).
+- 2026-10-27 (036): no tasks named 036. Added L88 (the Calendar tab opens on the member's default view, 029) and L89 (the hidden filter chip's look, 030).

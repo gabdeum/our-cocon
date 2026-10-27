@@ -1,12 +1,16 @@
 import type { IconName } from '@cocon/ui';
 import { strings } from '../strings/en';
 
-/** The four tab destinations (spec 002, design/ui/TabBar.md), by Expo Router route name. */
+/**
+ * The five tab destinations (specs 002, 036; design/ui/TabBar.md), by Expo Router route name.
+ * Menu still opens the `settings` route until spec 029 moves it to `/menu`.
+ */
 export const TABS = [
   { key: 'home', route: 'index', icon: 'home', label: strings.tabBar.home },
+  { key: 'calendar', route: 'calendar', icon: 'calendar', label: strings.tabBar.calendar },
   { key: 'recipes', route: 'recipes', icon: 'recipes', label: strings.tabBar.recipes },
   { key: 'groceries', route: 'groceries', icon: 'groceries', label: strings.tabBar.groceries },
-  { key: 'settings', route: 'settings', icon: 'settings', label: strings.tabBar.settings },
+  { key: 'menu', route: 'settings', icon: 'menu', label: strings.tabBar.menu },
 ] as const satisfies readonly { key: string; route: string; icon: IconName; label: string }[];
 
 export type TabKey = (typeof TABS)[number]['key'];

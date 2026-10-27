@@ -12,7 +12,7 @@ import { fakeTracker } from '../test/fakes';
 
 afterEach(cleanup);
 
-const routes = ['index', 'recipes', 'groceries', 'settings'].map((name) => ({ key: `${name}-key`, name }));
+const routes = ['index', 'calendar', 'recipes', 'groceries', 'settings'].map((name) => ({ key: `${name}-key`, name }));
 
 const noStorage: ChoiceStorage = { getItem: async () => null, setItem: async () => undefined };
 
@@ -47,6 +47,23 @@ describe('AppTabBar', () => {
     expect(screen.getByText('Groceries')).toBeTruthy();
     expect(screen.queryByText('Home')).toBeNull();
     expect(t.capture).toHaveBeenCalledExactlyOnceWith('tab_selected', { tab: 'groceries' });
+  });
+
+  it('spec 036 US1: Home · Calendar · Recipes · Groceries · Menu; Calendar and Menu open their screens', () => {
+    const t = transport();
+    render(<Harness transport={t} />);
+    const nav = screen.getByRole('navigation', { name: 'Main' });
+    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('aria-label'))).toEqual(['Home', 'Calendar', 'Recipes', 'Groceries', 'Menu']);
+
+    fireEvent.click(within(nav).getByRole('link', { name: 'Calendar' }));
+    expect(within(nav).getByRole('link', { name: 'Calendar' }).getAttribute('aria-current')).toBe('page');
+    expect(t.capture).toHaveBeenLastCalledWith('tab_selected', { tab: 'calendar' });
+
+    // Menu opens the settings screen until spec 029 adds /menu.
+    fireEvent.click(within(nav).getByRole('link', { name: 'Menu' }));
+    expect(within(nav).getByRole('link', { name: 'Menu' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByText('Menu')).toBeTruthy();
+    expect(t.capture).toHaveBeenLastCalledWith('tab_selected', { tab: 'menu' });
   });
 
   it('sends nothing when the current tab is tapped again', () => {
