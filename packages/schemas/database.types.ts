@@ -179,14 +179,14 @@ isOneToOne: false
                   ]
                 },"family_settings": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"family_id": string,"id": string,"round_to_packs": boolean,"source": string,"store_profile": Database["public"]['Enums']["store_profile"],"updated_at": string,"updated_by": string | null
+                    "created_at": string,"created_by": string | null,"family_id": string,"has_scale": boolean,"has_thermometer": boolean,"id": string,"keep_awake": boolean,"round_to_packs": boolean,"source": string,"store_profile": Database["public"]['Enums']["store_profile"],"units": Database["public"]['Enums']["unit_system"],"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"round_to_packs"?: boolean,"source"?: string,"store_profile"?: Database["public"]['Enums']["store_profile"],"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"has_scale"?: boolean,"has_thermometer"?: boolean,"id"?: string,"keep_awake"?: boolean,"round_to_packs"?: boolean,"source"?: string,"store_profile"?: Database["public"]['Enums']["store_profile"],"units"?: Database["public"]['Enums']["unit_system"],"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"round_to_packs"?: boolean,"source"?: string,"store_profile"?: Database["public"]['Enums']["store_profile"],"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"has_scale"?: boolean,"has_thermometer"?: boolean,"id"?: string,"keep_awake"?: boolean,"round_to_packs"?: boolean,"source"?: string,"store_profile"?: Database["public"]['Enums']["store_profile"],"units"?: Database["public"]['Enums']["unit_system"],"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -395,14 +395,14 @@ isOneToOne: false
                   ]
                 },"recipes": {
                   Row: {
-                    "best_months": (number)[],"created_at": string,"created_by": string | null,"cuisine": string | null,"deleted_at": string | null,"deleted_by": string | null,"description": string | null,"family_id": string,"id": string,"name": string,"photo_path": string | null,"prep_minutes": number | null,"serves": number,"source": string,"source_text": string | null,"total_minutes": number | null,"updated_at": string,"updated_by": string | null
+                    "best_months": (number)[],"created_at": string,"created_by": string | null,"cuisine": string | null,"deleted_at": string | null,"deleted_by": string | null,"description": string | null,"family_id": string,"has_scale": boolean | null,"has_thermometer": boolean | null,"id": string,"keep_awake": boolean | null,"name": string,"photo_path": string | null,"prep_minutes": number | null,"serves": number,"source": string,"source_text": string | null,"total_minutes": number | null,"units": Database["public"]['Enums']["unit_system"] | null,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "best_months"?: (number)[],"created_at"?: string,"created_by"?: string | null,"cuisine"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"description"?: string | null,"family_id": string,"id"?: string,"name": string,"photo_path"?: string | null,"prep_minutes"?: number | null,"serves"?: number,"source"?: string,"source_text"?: string | null,"total_minutes"?: number | null,"updated_at"?: string,"updated_by"?: string | null
+                    "best_months"?: (number)[],"created_at"?: string,"created_by"?: string | null,"cuisine"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"description"?: string | null,"family_id": string,"has_scale"?: boolean | null,"has_thermometer"?: boolean | null,"id"?: string,"keep_awake"?: boolean | null,"name": string,"photo_path"?: string | null,"prep_minutes"?: number | null,"serves"?: number,"source"?: string,"source_text"?: string | null,"total_minutes"?: number | null,"units"?: Database["public"]['Enums']["unit_system"] | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "best_months"?: (number)[],"created_at"?: string,"created_by"?: string | null,"cuisine"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"description"?: string | null,"family_id"?: string,"id"?: string,"name"?: string,"photo_path"?: string | null,"prep_minutes"?: number | null,"serves"?: number,"source"?: string,"source_text"?: string | null,"total_minutes"?: number | null,"updated_at"?: string,"updated_by"?: string | null
+                    "best_months"?: (number)[],"created_at"?: string,"created_by"?: string | null,"cuisine"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"description"?: string | null,"family_id"?: string,"has_scale"?: boolean | null,"has_thermometer"?: boolean | null,"id"?: string,"keep_awake"?: boolean | null,"name"?: string,"photo_path"?: string | null,"prep_minutes"?: number | null,"serves"?: number,"source"?: string,"source_text"?: string | null,"total_minutes"?: number | null,"units"?: Database["public"]['Enums']["unit_system"] | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -653,7 +653,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "aisle": "produce"|"bakery"|"dairy_eggs"|"meat_fish"|"dry_goods"|"spices_baking"|"frozen"|"drinks"|"household"|"other","avatar_tone": "honey"|"sage"|"peach","member_role": "owner"|"editor","size_word": "small"|"medium"|"large","store_profile": "us"|"eu","unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"oz"|"lb"|"piece"|"pinch","variant_kind": "option"|"version"
+            "aisle": "produce"|"bakery"|"dairy_eggs"|"meat_fish"|"dry_goods"|"spices_baking"|"frozen"|"drinks"|"household"|"other","avatar_tone": "honey"|"sage"|"peach","member_role": "owner"|"editor","size_word": "small"|"medium"|"large","store_profile": "us"|"eu","unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"oz"|"lb"|"piece"|"pinch","unit_system": "metric"|"imperial","variant_kind": "option"|"version"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -773,7 +773,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "aisle": ["produce", "bakery", "dairy_eggs", "meat_fish", "dry_goods", "spices_baking", "frozen", "drinks", "household", "other"],"avatar_tone": ["honey", "sage", "peach"],"member_role": ["owner", "editor"],"size_word": ["small", "medium", "large"],"store_profile": ["us", "eu"],"unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "oz", "lb", "piece", "pinch"],"variant_kind": ["option", "version"]
+            "aisle": ["produce", "bakery", "dairy_eggs", "meat_fish", "dry_goods", "spices_baking", "frozen", "drinks", "household", "other"],"avatar_tone": ["honey", "sage", "peach"],"member_role": ["owner", "editor"],"size_word": ["small", "medium", "large"],"store_profile": ["us", "eu"],"unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "oz", "lb", "piece", "pinch"],"unit_system": ["metric", "imperial"],"variant_kind": ["option", "version"]
           }
         }
 } as const

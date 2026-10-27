@@ -3,6 +3,7 @@
 // cards and the empty list. The data rules are in lib/groceries.test.ts and the live sync in
 // lib/groceries.integration.test.ts. Spec 021 (what to buy beside each name, the settings sheet, Edit
 // and Clear all) is the last block.
+import { DEFAULT_FAMILY_SETTINGS } from '@cocon/schemas';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { onlineManager } from '@tanstack/react-query';
@@ -53,7 +54,7 @@ function setup(over: Partial<Props> = {}) {
     onMove: vi.fn(async () => true),
     onOpenRecipe: vi.fn(),
     onSetServings: vi.fn(async () => true),
-    settings: { store_profile: 'us', round_to_packs: true },
+    settings: { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'us', round_to_packs: true },
     packs: undefined,
     onChangeSettings: vi.fn(async () => 'saved' as const),
     onSavePacks: vi.fn(async () => 'saved' as const),
@@ -392,7 +393,7 @@ describe('Groceries › what to buy (spec 021)', () => {
   });
 
   it('US1: in European stores, it is 2 × 20 cl', async () => {
-    setup({ packs: await packData(keys), settings: { store_profile: 'eu', round_to_packs: true } });
+    setup({ packs: await packData(keys), settings: { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'eu', round_to_packs: true } });
     expect(line('Heavy cream')).toBe('Heavy cream: 2 × 20 cl (need 300 ml)');
     // Exactly what's needed is said once.
     expect(line('Milk')).toBe('Milk: 2 × 1 l carton');
@@ -408,7 +409,7 @@ describe('Groceries › what to buy (spec 021)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'European stores' }));
     await flush();
     expect(props.onChangeSettings).toHaveBeenCalledWith({ store_profile: 'eu' });
-    rerender({ settings: { store_profile: 'eu', round_to_packs: true } });
+    rerender({ settings: { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'eu', round_to_packs: true } });
     expect(screen.getByText('Buy 2 × 20 cl')).toBeTruthy();
     expect(line('Heavy cream')).toBe('Heavy cream: 2 × 20 cl (need 300 ml)');
   });
@@ -427,7 +428,7 @@ describe('Groceries › what to buy (spec 021)', () => {
     fireEvent.click(screen.getByRole('switch', { name: 'Round up to store sizes' }));
     await flush();
     expect(props.onChangeSettings).toHaveBeenCalledWith({ round_to_packs: false });
-    rerender({ settings: { store_profile: 'us', round_to_packs: false } });
+    rerender({ settings: { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'us', round_to_packs: false } });
     expect(line('Heavy cream')).toBe('Heavy cream: 300 ml');
   });
 
@@ -435,7 +436,7 @@ describe('Groceries › what to buy (spec 021)', () => {
     setup({
       items: [...sample, groceryItem({ id: 'zaatar', name: "Za'atar", catalog_key: null, quantity: 50, unit: 'g', aisle: 'other' })],
       packs: await packData(keys),
-      settings: { store_profile: 'eu', round_to_packs: true },
+      settings: { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'eu', round_to_packs: true },
     });
     expect(line('Apple')).toBe('Apple: 6 pieces');
     expect(line('Salt')).toBe('Salt');

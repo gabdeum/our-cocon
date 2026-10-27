@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { CookScreen } from '../../../components/cooking/CookScreen';
 import { loadRecipe, recipeKey } from '../../../lib/recipe';
 import { deviceStorage } from '../../../lib/recipe-choices';
+import { useCookingSettings } from '../../../lib/recipe-settings';
 import { useSession } from '../../../lib/session';
 
 /**
@@ -23,6 +24,7 @@ export default function CookRoute() {
     queryFn: () => (id ? loadRecipe(client, id) : null),
     enabled: familyId !== null && id !== null,
   });
+  const cooking = useCookingSettings(recipe.data?.overrides);
   const step = typeof params.step === 'string' ? params.step : undefined;
   // Back from the options' scale or converter sheet, cooking mode reads the choices they saved.
   const [visit, setVisit] = useState(0);
@@ -51,6 +53,7 @@ export default function CookRoute() {
       onScaleByIngredient={sheet('scale')}
       onConvert={sheet('convert')}
       visit={visit}
+      cooking={cooking}
     />
   );
 }

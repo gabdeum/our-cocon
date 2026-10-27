@@ -1,4 +1,4 @@
-import { applyVariants, cuisineOf, variantEffect, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
+import { applyVariants, cuisineOf, DEFAULT_FAMILY_SETTINGS, resolveCooking, variantEffect, type CookingSettings, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
 import { groupSameIngredient, renderStep, renderTemperatureCheck, type FormatOptions, type QuantityIngredient } from '@cocon/quantity';
 import { strings } from '../strings/en';
 import type { Member } from './session';
@@ -12,12 +12,12 @@ export { appliedIngredients, ingredientLine, mergedLine, rowScale, scaleRecipe, 
 
 const p = strings.recipePage;
 
-/** Metric with a kitchen scale: the settings until spec 027 lets recipes and families set them. */
+/** Metric with a kitchen scale: the family defaults before anyone changes them (the form's previews). */
 export const defaultFormat: FormatOptions = { system: 'metric', scale: true };
 
 /**
  * Units and the kitchen scale as the quantity engine takes them: the "…" panel's quick toggles on
- * this device (spec 013), else the settings (`settings`, spec 027 passes the recipe's or family's).
+ * this device (spec 013), else the settings in force (the recipe's or the family's, spec 027).
  */
 export const formatOf = (choices: Pick<RecipeChoices, 'system' | 'kitchenScale'>, settings: FormatOptions = defaultFormat): FormatOptions => ({
   system: choices.system ?? settings.system,
@@ -67,13 +67,9 @@ export function timerClock(seconds: number): string {
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
-export interface CookingSettings {
-  /** "I have a thermometer" (spec 027). Until that setting exists, it's on. */
-  thermometer: boolean;
-  /** "Keep screen on while cooking" (spec 027, used by cooking mode, 012). On until that setting exists. */
-  keepAwake: boolean;
-}
-export const defaultCooking: CookingSettings = { thermometer: true, keepAwake: true };
+export type { CookingSettings } from '@cocon/schemas';
+/** The settings in force before the family's load: all on, in metric. */
+export const defaultCooking: CookingSettings = resolveCooking(DEFAULT_FAMILY_SETTINGS);
 
 /**
  * What the page shows for the chosen servings and variants (spec 008 FR-004, SC-002; spec 009

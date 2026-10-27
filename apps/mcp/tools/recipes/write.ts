@@ -172,7 +172,7 @@ export const updateRecipe = defineTool({
     if (!changingDetails && !args.ingredients && !args.steps && !args.step_changes && !args.variants) throw new ToolError('Nothing to change: send the fields that change.');
 
     // Read and check everything before writing anything.
-    const { id: _id, ingredients: _i, steps: _s, variants: _v, facts: _f, created_by: _c, source: _src, deleted_at: _d, deleted_by: _db, ...current } = before;
+    const { id: _id, ingredients: _i, steps: _s, variants: _v, facts: _f, created_by: _c, source: _src, deleted_at: _d, deleted_by: _db, overrides: _o, ...current } = before;
     const input = changingDetails ? recipeInput(sent, current) : null;
     const warnings: string[] = [];
     let ingredients = args.ingredients ? await ingredientRows(ctx, args.ingredients, new Set(before.ingredients.map((i) => i.id)), warnings) : null;

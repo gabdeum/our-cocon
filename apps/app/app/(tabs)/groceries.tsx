@@ -73,7 +73,7 @@ export default function GroceriesTab() {
       }
       onClear={(ids) => after(clearItems(client, ids))}
       onRestore={(ids) => after(restoreItems(client, ids))}
-      onEdit={(item, text) => after(editItem(client, item, text))}
+      onEdit={(item, text) => after(editItem(client, item, text, familySettings.settings.units))}
       onMove={(item, aisle) => after(moveToAisle(client, familyId ?? '', item, items ?? [], aisle))}
       onOpenRecipe={(id) => router.push(recipePage(id))}
       servings={servings.data}

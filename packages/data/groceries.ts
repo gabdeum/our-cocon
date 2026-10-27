@@ -18,6 +18,7 @@ import {
   type IngredientFactsInput,
   type PackPlan,
   type StorePack,
+  type UnitSystem,
 } from '@cocon/quantity';
 import {
   AISLE_ORDER,
@@ -112,17 +113,20 @@ export function groupByAisle<T extends Pick<GroceryItem, 'aisle'>>(items: readon
 /** A recipe's items on the list, ticked or not (the card's menu, spec 022). */
 export const recipeItems = <T extends Pick<GroceryItem, 'recipe_id'>>(items: readonly T[], recipeId: string): T[] => items.filter((i) => i.recipe_id === recipeId);
 
-/** The amount, from @cocon/quantity: "300 ml", "1 kg", or "2" for pieces. Null with no quantity. */
-export function amountText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>): string | null {
+/**
+ * The amount, from @cocon/quantity: "300 ml", "1 kg", or "2" for pieces. Null with no quantity. In
+ * the family's units (spec 027), metric until it chooses.
+ */
+export function amountText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>, system: UnitSystem = 'metric'): string | null {
   if (item.quantity == null) return null;
-  const f = format({ id: item.id, name: item.name, quantity: item.quantity, unit: item.unit }, { system: 'metric', scale: true });
+  const f = format({ id: item.id, name: item.name, quantity: item.quantity, unit: item.unit }, { system, scale: true });
   // A count reads on its own ("Updated to 3", the Edit field's "2 Lemons"); rows say pieces (rowText).
   return item.unit == null || item.unit === 'piece' ? f.amount : `${f.amount} ${f.unit}`.trim();
 }
 
 /** The amount as a row shows it, beside the name: "300 ml", "2 pieces". Null with no quantity. */
-export function rowText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>, words: Pick<GroceryWords, 'pieces'>): string | null {
-  const amount = amountText(item);
+export function rowText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>, words: Pick<GroceryWords, 'pieces'>, system: UnitSystem = 'metric'): string | null {
+  const amount = amountText(item, system);
   if (amount === null) return null;
   return item.unit == null || item.unit === 'piece' ? words.pieces(amount) : amount;
 }
@@ -220,14 +224,20 @@ export const rowIds = (rows: readonly GroceryRow[]) => rows.flatMap((r) => r.ite
  * when they don't convert. Null when none has an amount. The list's rows and Add to groceries'
  * notes (spec 022) both read it.
  */
-export function combinedText(name: string, amounts: readonly GroceryAmount[], facts: IngredientFactsInput | null | undefined, words: GroceryWords): string | null {
+export function combinedText(
+  name: string,
+  amounts: readonly GroceryAmount[],
+  facts: IngredientFactsInput | null | undefined,
+  words: GroceryWords,
+  system: UnitSystem = 'metric',
+): string | null {
   const { parts } = combineAmounts(amounts, facts);
-  const texts = parts.flatMap((p) => rowText({ id: name, name, quantity: p.quantity, unit: p.unit }, words) ?? []);
+  const texts = parts.flatMap((p) => rowText({ id: name, name, quantity: p.quantity, unit: p.unit }, words, system) ?? []);
   return texts.length > 0 ? texts.join(words.packsJoin) : null;
 }
 
 /**
- * Each row's amounts, beside the name: "Heavy cream: 1 pint carton (need 300 ml)", or just
+ * Each row's amounts, beside the name, in the family's units (027): "Heavy cream: 1 pint carton (need 300 ml)", or just
  * "Heavy cream: 300 ml" when there's no pack, round-up is off (spec 021 US3), or the amounts don't
  * add up to one. Nothing for a row with no quantity ("Salt").
  */
@@ -239,7 +249,7 @@ export function rowAmounts(rows: readonly GroceryRow[], packs: Record<string, Pa
     const catalogName = data?.facts.name;
     // "Lemon: 2 pieces" reads as a label; a name the matcher only got close to ("Meyer lemons") stays as typed.
     const name = catalogName && normaliseName(catalogName) === normaliseName(first.name) ? catalogName : undefined;
-    const need = combinedText(first.name, row.items, data?.facts ?? null, words);
+    const need = combinedText(first.name, row.items, data?.facts ?? null, words, settings.units);
     const shown: RowAmounts = { ...(name ? { name } : {}), ...(need ? { detail: need } : {}) };
     out.set(row.id, shown);
     if (!settings.round_to_packs || !need || !data) continue;

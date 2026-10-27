@@ -4,12 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { loadRecipe, recipeKey, type RecipeDetail } from './recipe';
 import { deviceStorage, readChoices, startingChoices, writeChoices, type RecipeChoices } from './recipe-choices';
+import { useCookingSettings } from './recipe-settings';
 import { servingsMax } from './recipe-view';
 import { useSession } from './session';
 
 /**
  * A sheet over the recipe page (spec 013's scale and converter): the recipe from the page's own
- * query, and its choices on this device. `save` writes them back for the page to read on return.
+ * query, its choices on this device and its settings in force (spec 027). `save` writes the choices
+ * back for the page to read on return.
  */
 export function useRecipeSheet() {
   const params = useLocalSearchParams<{ id: string }>();
@@ -35,6 +37,7 @@ export function useRecipeSheet() {
       live = false;
     };
   }, [data, userId]);
+  const cooking = useCookingSettings(data?.overrides);
   const save = (next: RecipeChoices) => (data ? writeChoices(deviceStorage, userId, data.id, next) : Promise.resolve());
-  return { recipe: data && !data.deleted_at ? data : null, choices, tracker, save };
+  return { recipe: data && !data.deleted_at ? data : null, choices, cooking, tracker, save };
 }

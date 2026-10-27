@@ -4,18 +4,20 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AddGroceriesSheet, type AddGroceriesApi } from '../../../components/groceries/AddGroceriesSheet';
 import { addFromRecipe, recipeGroceryLines, undoAddFromRecipe } from '../../../lib/add-from-recipe';
 import { groceryListKey, groceryServingsKey, loadGroceryList } from '../../../lib/groceries';
+import { useFamilySettings } from '../../../lib/family-settings';
 import { useRecipeSheet } from '../../../lib/use-recipe-sheet';
 import { useSession } from '../../../lib/session';
 
 /** /recipes/[id]/add-to-groceries (spec 022): pick the recipe's ingredients for the list, a sheet over the recipe page. */
 export default function AddToGroceriesRoute() {
-  const { recipe, choices, tracker } = useRecipeSheet();
+  const { recipe, choices, cooking, tracker } = useRecipeSheet();
+  const { settings } = useFamilySettings();
   const { state, client } = useSession();
   const queryClient = useQueryClient();
   const familyId = state.status === 'ready' ? state.family.id : null;
   const key = groceryListKey(familyId ?? '');
   const list = useQuery({ queryKey: key, queryFn: () => loadGroceryList(client), enabled: familyId !== null });
-  const view = useMemo(() => (recipe && choices ? recipeGroceryLines(recipe, choices) : null), [recipe, choices]);
+  const view = useMemo(() => (recipe && choices ? recipeGroceryLines(recipe, choices, cooking) : null), [recipe, choices, cooking]);
   const recipeId = recipe?.id;
   const serves = view?.serves;
   const api = useMemo<AddGroceriesApi | null>(() => {
@@ -45,6 +47,7 @@ export default function AddToGroceriesRoute() {
       lines={view.lines}
       list={list.data ?? []}
       facts={recipe.facts}
+      units={settings.units}
       api={api}
       tracker={tracker}
       // Opened straight from a link there's nothing to go back to: the recipe page.

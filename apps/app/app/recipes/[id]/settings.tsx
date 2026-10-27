@@ -1,8 +1,11 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { RecipeSettings } from '../../../components/recipes/RecipeSettings';
+import { useFamilySettings } from '../../../lib/family-settings';
+import { useOnline } from '../../../lib/online';
 import { loadRecipe, recipeKey } from '../../../lib/recipe';
+import { changeRecipeOverrides } from '../../../lib/recipe-settings';
 import { useDeleteRecipe } from '../../../lib/use-delete-recipe';
 import { useSession } from '../../../lib/session';
 
@@ -17,6 +20,9 @@ export default function RecipeSettingsRoute() {
   const { state, client, tracker } = useSession();
   const familyId = state.status === 'ready' ? state.family.id : null;
   const deleteRecipe = useDeleteRecipe(client, tracker, familyId ?? '');
+  const queryClient = useQueryClient();
+  const family = useFamilySettings();
+  const online = useOnline();
   const recipe = useQuery({
     queryKey: recipeKey(familyId ?? '', id ?? ''),
     queryFn: () => (id ? loadRecipe(client, id) : null),
@@ -42,6 +48,11 @@ export default function RecipeSettingsRoute() {
             }
           : undefined
       }
+      defaults={family.settings}
+      onChangeSettings={(change) =>
+        familyId && id ? changeRecipeOverrides({ queryClient, client, tracker, familyId, recipeId: id }, change) : Promise.resolve('failed' as const)
+      }
+      readOnly={!online}
     />
   );
 }

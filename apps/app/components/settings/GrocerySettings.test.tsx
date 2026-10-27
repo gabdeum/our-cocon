@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { pickPacks } from '@cocon/quantity';
 import { facts, packsOf } from '@cocon/quantity/catalog.fixture';
-import type { FamilySettings } from '@cocon/schemas';
+import { DEFAULT_FAMILY_SETTINGS, type FamilySettings } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { buyText } from '../../lib/groceries';
 import { flush } from '../../test/fakes';
@@ -12,7 +12,7 @@ import { GrocerySettings } from './GrocerySettings';
 
 afterEach(cleanup);
 
-function setup(settings: FamilySettings = { store_profile: 'us', round_to_packs: true }, result: 'saved' | 'failed' = 'saved', readOnly = false) {
+function setup(settings: FamilySettings = { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'us', round_to_packs: true }, result: 'saved' | 'failed' = 'saved', readOnly = false) {
   const onChange = vi.fn(async () => result);
   const view = render(<GrocerySettings settings={settings} onChange={onChange} readOnly={readOnly} />);
   return { onChange, rerender: (next: FamilySettings) => view.rerender(<GrocerySettings settings={next} onChange={onChange} readOnly={readOnly} />) };
@@ -35,7 +35,7 @@ describe('Grocery settings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'European stores' }));
     await flush();
     expect(onChange).toHaveBeenCalledWith({ store_profile: 'eu' });
-    rerender({ store_profile: 'eu', round_to_packs: true });
+    rerender({ ...DEFAULT_FAMILY_SETTINGS, store_profile: 'eu', round_to_packs: true });
     expect(screen.getByText('Buy 2 × 20 cl')).toBeTruthy();
   });
 

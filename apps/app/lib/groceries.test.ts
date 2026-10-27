@@ -1,7 +1,8 @@
 // Spec 020: what the grocery list shows (aisles, source lines, Need, recipe cards, who's shopping).
 // Spec 021: what to buy beside the name (summed per catalog entry) and the family's own pack size.
+import { DEFAULT_FAMILY_SETTINGS } from '@cocon/schemas';
 import { describe, expect, it, vi } from 'vitest';
-import { amountText, buyText, byName, combineRows, editText, groupByAisle, recipeCards, rowAmounts, rowItem, rowSource, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
+import { amountText, buyText, byName, combineRows, editItem, editText, groupByAisle, recipeCards, rowAmounts, rowItem, rowSource, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
 import { alex, gabriel, groceryItem, mia, packData } from '../test/fakes';
 
 const members = [gabriel, alex, mia];
@@ -132,8 +133,8 @@ describe('shopper (US3)', () => {
 });
 
 describe('rowAmounts (spec 021)', () => {
-  const us = { store_profile: 'us', round_to_packs: true } as const;
-  const eu = { store_profile: 'eu', round_to_packs: true } as const;
+  const us = { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'us', round_to_packs: true } as const;
+  const eu = { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'eu', round_to_packs: true } as const;
   const cream = (over = {}) => groceryItem({ id: 'cream', name: 'Heavy cream', catalog_key: 'heavy_cream', quantity: 300, unit: 'ml', ...over });
 
   it('US1: what to buy, then what recipes need, per store', async () => {
@@ -146,6 +147,24 @@ describe('rowAmounts (spec 021)', () => {
     const packs = await packData(['heavy_cream']);
     expect(rowAmounts(combineRows([cream()]), packs, { ...us, round_to_packs: false }).get('cream')).toEqual({ name: 'Heavy cream', detail: '300 ml' });
     expect(rowAmounts(combineRows([cream()]), undefined, us).get('cream')).toEqual({ detail: '300 ml' });
+  });
+
+  it('L48 (027): Need follows the family’s units', async () => {
+    const packs = await packData(['heavy_cream']);
+    const imperial = { ...us, units: 'imperial' } as const;
+    expect(rowAmounts(combineRows([cream()]), packs, imperial).get('cream')).toEqual({ name: 'Heavy cream', detail: '1 pint carton', note: '(need 1¼ cups)' });
+    expect(rowAmounts(combineRows([cream()]), packs, { ...imperial, round_to_packs: false }).get('cream')).toEqual({ name: 'Heavy cream', detail: '1¼ cups' });
+    expect(editText(cream(), 'imperial')).toBe('1¼ cups Heavy cream');
+  });
+
+  it('L48: saving the Edit field as shown keeps the amount, so it never rounds', async () => {
+    const eq = vi.fn(async () => ({ error: null }));
+    const update = vi.fn(() => ({ eq }));
+    const client = { from: vi.fn(() => ({ update })), rpc: vi.fn() } as never;
+    expect(await editItem(client, cream(), '1¼ cups Heavy cream', 'imperial')).toBe('saved');
+    expect(update).toHaveBeenCalledWith({ name: 'Heavy cream', quantity: 300, unit: 'ml' });
+    await editItem(client, cream(), '2 cups Heavy cream', 'imperial');
+    expect(update).toHaveBeenLastCalledWith({ name: 'Heavy cream', quantity: 2, unit: 'cup' });
   });
 
   it('FR-002, spec 022: items of the same thing still to buy are one row, with packs for them all', async () => {

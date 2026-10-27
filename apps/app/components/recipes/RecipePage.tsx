@@ -23,7 +23,7 @@ import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
-import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type StepLine } from '../../lib/recipe-view';
+import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type CookingSettings, type StepLine } from '../../lib/recipe-view';
 import type { PhotoUrls } from '../../lib/recipe-photo';
 import type { Member } from '../../lib/session';
 import { AppTimerPill } from '../timers/AppTimerPill';
@@ -58,8 +58,8 @@ export interface RecipePageProps {
   onOpenStep: (stepId: string) => void;
   /** The TimerPill opens the Timers screen (spec 011). */
   onOpenTimers: () => void;
-  /** "I have a thermometer" (spec 027 wires the setting); on until then. */
-  thermometer?: boolean;
+  /** The recipe's settings in force (spec 027): units, kitchen scale and thermometer checks. */
+  cooking?: CookingSettings;
   /** The "…" panel's sheets (spec 013): Scale by an ingredient and Unit converter. */
   onScaleByIngredient: () => void;
   onConvert: () => void;
@@ -116,7 +116,7 @@ function LoadedRecipe({
   onStartCooking,
   onOpenStep,
   onOpenTimers,
-  thermometer = defaultCooking.thermometer,
+  cooking = defaultCooking,
   onScaleByIngredient,
   onConvert,
   visit = 0,
@@ -142,8 +142,8 @@ function LoadedRecipe({
   // A variant deleted while the page is open no longer counts.
   const current = useMemo(() => (choices ? startingChoices(choices, recipe, max) : null), [choices, recipe, max]);
   const view = useMemo(
-    () => (current ? recipeView(recipe, current, current, formatOf(current), { thermometer }) : null),
-    [recipe, current, thermometer],
+    () => (current ? recipeView(recipe, current, current, formatOf(current, cooking), cooking) : null),
+    [recipe, current, cooking],
   );
   const chips = recipeChips(recipe, members);
   const versions = recipe.variants.filter((v) => v.kind === 'version');
@@ -287,7 +287,7 @@ function LoadedRecipe({
           </View>
         ) : null}
         {moreOpen && current ? (
-          <MoreOptions choices={current} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} />
+          <MoreOptions choices={current} settings={cooking} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} />
         ) : null}
       </Card>
 

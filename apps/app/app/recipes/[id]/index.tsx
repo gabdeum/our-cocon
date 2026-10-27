@@ -6,6 +6,7 @@ import { RecipePage, type RecipeTab } from '../../../components/recipes/RecipePa
 import { loadRecipe, recipeKey } from '../../../lib/recipe';
 import { deviceStorage } from '../../../lib/recipe-choices';
 import { recipePhotoPaths, useRecipePhotoUrls } from '../../../lib/recipe-photo';
+import { useCookingSettings } from '../../../lib/recipe-settings';
 import { useSession } from '../../../lib/session';
 
 // The recipe's own pages: share, settings, add-to-groceries, cook, scale, convert.
@@ -25,6 +26,7 @@ export default function RecipeRoute() {
     queryFn: () => (id ? loadRecipe(client, id) : null),
     enabled: familyId !== null && id !== null,
   });
+  const cooking = useCookingSettings(recipe.data?.overrides);
   const photoUrls = useRecipePhotoUrls(client, familyId, recipePhotoPaths(recipe.data));
   const go = (page: string) => () => {
     if (id) router.push(recipeRoute(id, page));
@@ -57,6 +59,7 @@ export default function RecipeRoute() {
       onConvert={go('convert')}
       visit={visit}
       photoUrls={photoUrls}
+      cooking={cooking}
     />
   );
 }

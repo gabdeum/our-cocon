@@ -377,6 +377,7 @@ export function GroceryList(props: GroceryListProps) {
         onRemove={() => (menuRow ? remove(menuRow) : undefined)}
         onMove={(item, aisle) => void move(item, aisle)}
         onEdit={edit}
+        units={settings.units}
       />
 
       {menuCard ? (

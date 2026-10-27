@@ -1,4 +1,4 @@
-import { combineAmounts, groceryIdentity, parseGroceryLine, parsePackSize, type GroceryAmount, type IngredientFactsInput, type PackPlan, type StorePack } from '@cocon/quantity';
+import { combineAmounts, groceryIdentity, parseGroceryLine, parsePackSize, type GroceryAmount, type IngredientFactsInput, type PackPlan, type StorePack, type UnitSystem } from '@cocon/quantity';
 import { familyIngredientRow, GroceryItemUpdate, type Aisle, type FamilySettings, type Unit } from '@cocon/schemas';
 import * as data from '@cocon/data';
 import type { AddResult, GroceryItem, GroceryRow, GroceryServings, PackData, RowAmounts } from '@cocon/data';
@@ -112,8 +112,8 @@ export function rowItem(row: GroceryRow, packs: Record<string, PackData> | undef
  * Amounts of one thing as one, from @cocon/quantity: "300 ml", "15 pieces", or "11 pieces + 600 g"
  * when they don't convert. Null when none has an amount.
  */
-export const combinedText = (name: string, amounts: readonly GroceryAmount[], facts: IngredientFactsInput | null | undefined) =>
-  data.combinedText(name, amounts, facts, strings.groceries);
+export const combinedText = (name: string, amounts: readonly GroceryAmount[], facts: IngredientFactsInput | null | undefined, system: UnitSystem = 'metric') =>
+  data.combinedText(name, amounts, facts, strings.groceries, system);
 
 /**
  * Each row's amounts, beside the name: "Heavy cream: 1 pint carton (need 300 ml)", or just
@@ -187,15 +187,18 @@ export const addItem = (client: Pick<Client, 'from' | 'rpc'>, familyId: string, 
 /** FR-005: tick or untick. The screen shows it at once (optimisticWrite) and reverts on failure. */
 export const setChecked = (client: Pick<Client, 'from'>, id: string, checked: boolean) => data.setChecked(client, id, checked);
 
-/** What the Edit field starts with: "2 Lemons", "300 ml Heavy cream", or just "Salt". */
-export function editText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>): string {
-  const amount = data.amountText(item);
+/** What the Edit field starts with, in the family's units (027): "2 Lemons", "300 ml Heavy cream", or just "Salt". */
+export function editText(item: Pick<GroceryItem, 'id' | 'name' | 'quantity' | 'unit'>, system: UnitSystem = 'metric'): string {
+  const amount = data.amountText(item, system);
   return amount ? `${amount} ${item.name}` : item.name;
 }
 
-/** FR-006 Edit: the text is read again; a new name is matched again for its aisle. */
-export async function editItem(client: Pick<Client, 'from' | 'rpc'>, item: GroceryItem, text: string): Promise<'saved' | 'empty' | 'failed'> {
-  const parsed = parseGroceryLine(text.slice(0, 200));
+/**
+ * FR-006 Edit: the text is read again; a new name is matched again for its aisle. Saved as shown
+ * (in imperial, "10.6 oz"), it keeps the amount it had, so opening and saving never rounds it.
+ */
+export async function editItem(client: Pick<Client, 'from' | 'rpc'>, item: GroceryItem, text: string, system: UnitSystem = 'metric'): Promise<'saved' | 'empty' | 'failed'> {
+  const parsed = text.trim() === editText(item, system) ? { name: item.name, quantity: item.quantity, unit: item.unit } : parseGroceryLine(text.slice(0, 200));
   const name = parsed?.name.slice(0, 80).trim();
   if (!parsed || !name) return 'empty';
   try {

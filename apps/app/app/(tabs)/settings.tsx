@@ -12,7 +12,7 @@ import { config } from '../../lib/tracker';
 import { useSession } from '../../lib/session';
 import { strings } from '../../strings/en';
 
-/** /settings. Spec 003 builds Family and Account, 018 the Recently deleted row, 025 AI assistants; 027 and 029 add the rest. Groceries' settings are in the Groceries tab's sheet (spec 021). */
+/** /settings. Spec 003 builds Family and Account, 018 the Recently deleted row, 025 AI assistants, 027 the Recipes row; 029 adds the rest. Groceries' settings are in the Groceries tab's sheet (spec 021). */
 export default function SettingsTab() {
   const { state, api, client, tracker, refresh, signOut } = useSession();
   const online = useOnline();
@@ -39,6 +39,7 @@ export default function SettingsTab() {
           readOnly={!online}
           more={
             <>
+              <ListRow title={more.recipesSettings} sub={more.recipesSettingsSub} trailing={{ kind: 'chevron' }} onPress={() => router.push('/settings/recipes' as Href)} />
               <ListRow
                 title={more.aiAssistants}
                 trailing={{ kind: 'chevron', text: connected > 0 ? more.connected(connected) : undefined, tone: 'olive' }}
