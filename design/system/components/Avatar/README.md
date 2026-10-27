@@ -1,6 +1,6 @@
 # Avatar
 
-A family member's initial in a warm disc, alone or stacked.
+A family member's initial in their member color, alone or stacked.
 
 ## Specs
 
@@ -9,9 +9,10 @@ A family member's initial in a warm disc, alone or stacked.
 | default | 36 circle, 2 px `surface-page` ring, initial 14/900 ink |
 | `--lg` | 40, no ring, 16/900 (Settings › Family rows) |
 | `--sm` | 32, no ring (inside person pills) |
-| Tones | honey (1st member), sage (2nd), peach (3rd), then repeat |
+| Colors | the member's color (`member-honey` … `member-clay`, spec 033); `member-everyone`, `member-others` (with a 1 px `line-handle` outline) and `member-removed` for events |
+| Initials | one letter; two when an earlier member has the same one ("Ev", "El") |
 | Stack (`oc-avatars`) | overlap −10, most recent first, up to 4 then "+N" |
 
 ## Rules
 
-Tone is assigned once per member and kept everywhere. Use a photo if the member uploads one, at the same size.
+A member's color is the same everywhere (avatars, chips, events, filters) and always comes with their initial. Use a photo if the member uploads one, at the same size.

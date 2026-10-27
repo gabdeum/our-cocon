@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_FAMILY_SETTINGS, DisplayName, Email, FamilyName, InviteStatus, InviteToken, RecipeOverridesUpdate, familyErrorOf, resolveCooking } from './family';
+import {
+  DEFAULT_FAMILY_SETTINGS,
+  DisplayName,
+  Email,
+  FamilyName,
+  InviteStatus,
+  InviteToken,
+  MEMBER_COLORS,
+  RecipeOverridesUpdate,
+  familyErrorOf,
+  memberInitials,
+  memberKind,
+  nextMemberColor,
+  resolveCooking,
+} from './family';
 
 describe('family inputs', () => {
   it('trims names and keeps them within the database limits', () => {
@@ -74,5 +88,33 @@ describe('resolveCooking', () => {
     expect(RecipeOverridesUpdate.parse({ has_thermometer: null })).toEqual({ has_thermometer: null });
     expect(RecipeOverridesUpdate.safeParse({ units: 'cups' }).success).toBe(false);
     expect(RecipeOverridesUpdate.safeParse({ name: 'x' }).success).toBe(false);
+  });
+});
+
+describe('member colors and initials (spec 033)', () => {
+  it('gives the first free color, in palette order', () => {
+    expect(nextMemberColor([])).toBe('honey');
+    expect(nextMemberColor(['honey', 'sky'])).toBe('rose');
+  });
+  it('repeats the palette from the start past 8 members', () => {
+    expect(nextMemberColor([...MEMBER_COLORS])).toBe('honey');
+    expect(nextMemberColor([...MEMBER_COLORS, 'honey'])).toBe('rose');
+  });
+  it('keeps initials apart: the second member with a letter shows two', () => {
+    const at = (d: number) => `2026-10-0${d}T00:00:00Z`;
+    const initials = memberInitials([
+      { id: 'el', display_name: 'elena', joined_at: at(3) },
+      { id: 'ev', display_name: 'Eva', joined_at: at(2) },
+      { id: 'g', display_name: 'Gabriel', joined_at: at(1) },
+    ]);
+    expect(Object.fromEntries(initials)).toEqual({ g: 'G', ev: 'E', el: 'El' });
+  });
+  it('tells members without the app apart', () => {
+    expect(memberKind({ user_id: null })).toBe('managed');
+    expect(memberKind({ user_id: 'u1' })).toBe('account');
+  });
+  it('reads who a member invite is for', () => {
+    const status = InviteStatus.parse({ status: 'valid', family_name: 'The Demanges', inviter_name: 'Gabriel', member_name: 'James' });
+    expect(status.status === 'valid' && status.member_name).toBe('James');
   });
 });

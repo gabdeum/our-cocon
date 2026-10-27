@@ -28,6 +28,7 @@ After the first sign-in, when the person has no family.
 Opened from an invite link, signed in or not.
 - **Signed out:** title "Join {family}", lead "{inviter} invited you to share recipes and groceries.", then the Sign in form (Google and email). Signing in comes back here.
 - **Signed in:** same title and lead, TextField "Your name" (hint "Shown to your family"), ink button "Join {family}" (busy: "Joining…") → Home as "Can edit".
+- **A link for a member without the app** ("Invite James", spec 033): same title and lead, then "You'll join as James, with the same color and events." (16/700) in place of the name field, and ink button "Join as James" (busy: "Joining…"). The account takes over that member: same name, color and events.
 - **Already alone in a family of their own:** "Join {family}" first opens a Dialog (warning icon): title "Leave “{own}” and join “{family}”?", body "Your family “{own}” and everything in it will be deleted. This can't be undone.", buttons "Join {family}" (danger) and "Keep mine".
 - **In a family with other people:** warn Callout "You're already in a family with other people. Ask its owner to remove you, then open this link again." and ink button "Go to Our Cocon".
 

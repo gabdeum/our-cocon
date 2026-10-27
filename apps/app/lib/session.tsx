@@ -7,13 +7,15 @@ import { familyApi, type FamilyApi } from './family';
 import { suggestedName } from './auth';
 
 export type Member = Database['public']['Tables']['members']['Row'];
+/** A member who signs in (spec 033 FR-001): the signed-in person always is one. */
+export type AccountMember = Member & { user_id: string };
 export type Family = Database['public']['Tables']['families']['Row'];
 
 export type SessionState =
   | { status: 'loading' }
   | { status: 'signedOut' }
   | { status: 'noFamily'; userId: string; suggestedName: string }
-  | { status: 'ready'; userId: string; me: Member; family: Family; members: Member[] };
+  | { status: 'ready'; userId: string; me: AccountMember; family: Family; members: Member[] };
 
 interface SessionContextValue {
   state: SessionState;
@@ -27,7 +29,7 @@ interface SessionContextValue {
 
 const SessionContext = createContext<SessionContextValue | null>(null);
 
-/** Members in join order, so rows and avatar tones read the same everywhere. */
+/** Members in join order, so rows and initials read the same everywhere. */
 function byJoined(a: Member, b: Member) {
   return a.joined_at.localeCompare(b.joined_at);
 }
@@ -37,7 +39,7 @@ async function loadFamily(client: SessionContextValue['client'], session: Sessio
   // RLS returns only the caller's family and its members.
   const [members, families] = await Promise.all([client.from('members').select('*'), client.from('families').select('*')]);
   if (members.error || families.error) throw members.error ?? families.error;
-  const me = members.data.find((m) => m.user_id === userId);
+  const me = members.data.find((m): m is AccountMember => m.user_id === userId);
   const family = families.data[0];
   if (!me || !family) return { status: 'noFamily', userId, suggestedName: suggestedName(session.user) };
   return { status: 'ready', userId, me, family, members: [...members.data].sort(byJoined) };

@@ -7,6 +7,7 @@ import {
   AmountField,
   AvatarStack,
   Avatar,
+  ColorSwatch,
   AwakeChip,
   BackHeader,
   BottomSheet,
@@ -99,9 +100,9 @@ function Section({ title, group, children }: { title: string; group: string; chi
 }
 
 const family = [
-  { initial: 'G', tone: 'honey' },
-  { initial: 'A', tone: 'sage' },
-  { initial: 'M', tone: 'peach' },
+  { initial: 'G', color: 'honey' },
+  { initial: 'A', color: 'rose' },
+  { initial: 'M', color: 'sky' },
 ] as const;
 
 const tabs = [
@@ -212,7 +213,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <PillRow>
           <Choice label="Classic" selected />
           <Choice label="Vegetarian" />
-          <PersonPill label="Gabriel" initial="G" tone="honey" />
+          <PersonPill label="Gabriel" initial="G" color="honey" />
         </PillRow>
       </Section>
 
@@ -285,10 +286,23 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
       <Section group="Display" title="Avatar">
         <PillRow>
           <AvatarStack members={[...family]} moreLabel={(n) => `+${n}`} label="Gabriel, Alex and Mia" />
-          <Avatar initial="G" tone="honey" size="lg" />
-          <Avatar initial="A" tone="sage" size="lg" />
-          <Avatar initial="M" tone="peach" size="sm" />
+          <Avatar initial="G" color="honey" size="lg" />
+          <Avatar initial="Ev" color="rose" size="lg" />
+          <Avatar initial="A" color="everyone" size="sm" />
         </PillRow>
+      </Section>
+
+      <Section group="Controls" title="ColorSwatch">
+        <ColorSwatch
+          label="My color"
+          onSelect={noop}
+          options={[
+            { color: 'honey', state: 'selected', initial: 'G', accessibilityLabel: 'Honey, your color' },
+            { color: 'rose', state: 'taken', initial: 'E', accessibilityLabel: 'Rose, taken' },
+            { color: 'sky', state: 'taken', initial: 'J', accessibilityLabel: 'Sky, taken' },
+            ...(['mint', 'lilac', 'peach', 'pistachio', 'clay'] as const).map((color) => ({ color, state: 'free' as const, accessibilityLabel: `${color}, free` })),
+          ]}
+        />
       </Section>
 
       <Section group="Display" title="StatusBanner">
@@ -500,7 +514,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <IngredientRow layout="compact" amount="300 ml" name="Heavy cream" last />
         </View>
         <ListGroup>
-          <ListRow title="AI assistants" leading={{ kind: 'avatar', initial: 'G', tone: 'honey' }} trailing={{ kind: 'chevron', text: '2 connected', tone: 'olive' }} onPress={noop} last />
+          <ListRow title="AI assistants" leading={{ kind: 'avatar', initial: 'G', color: 'honey' }} trailing={{ kind: 'chevron', text: '2 connected', tone: 'olive' }} onPress={noop} last />
         </ListGroup>
         <ListGroup>
           <ListRow title="Claude" sub="Connected · used 2 h ago" subTone="olive" leading={{ kind: 'tile', letters: 'C', tone: 'peach' }} trailing={{ kind: 'value', text: 'Allowed', tone: 'olive' }} />

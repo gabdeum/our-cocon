@@ -21,13 +21,16 @@ select gen_random_uuid(), id, id::text, 'email',
   jsonb_build_object('sub', id::text, 'email', email, 'email_verified', true), now(), now(), now()
 from auth.users where email like '%@cocon.local';
 
-insert into public.families (id, name, owner_id, joined_count, created_by)
-values ('c0c0f000-0000-4000-8000-000000000001', 'The Demanges', 'c0c0a000-0000-4000-8000-00000000000a', 3, 'c0c0a000-0000-4000-8000-00000000000a');
+insert into public.families (id, name, owner_id, created_by)
+values ('c0c0f000-0000-4000-8000-000000000001', 'The Demanges', 'c0c0a000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a');
 
-insert into public.members (user_id, family_id, role, display_name, avatar_tone, joined_at, created_by) values
-  ('c0c0a000-0000-4000-8000-00000000000a', 'c0c0f000-0000-4000-8000-000000000001', 'owner', 'Gabriel', 'honey', now() - interval '3 days', 'c0c0a000-0000-4000-8000-00000000000a'),
-  ('c0c0a000-0000-4000-8000-00000000000b', 'c0c0f000-0000-4000-8000-000000000001', 'editor', 'Alex', 'sage', now() - interval '2 days', 'c0c0a000-0000-4000-8000-00000000000b'),
-  ('c0c0a000-0000-4000-8000-00000000000c', 'c0c0f000-0000-4000-8000-000000000001', 'editor', 'Mia', 'peach', now() - interval '1 day', 'c0c0a000-0000-4000-8000-00000000000c');
+insert into public.members (id, user_id, family_id, role, display_name, color, joined_at, created_by) values
+  ('c0c0b000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a', 'c0c0f000-0000-4000-8000-000000000001', 'owner', 'Gabriel', 'honey', now() - interval '3 days', 'c0c0a000-0000-4000-8000-00000000000a'),
+  ('c0c0b000-0000-4000-8000-00000000000b', 'c0c0a000-0000-4000-8000-00000000000b', 'c0c0f000-0000-4000-8000-000000000001', 'editor', 'Alex', 'rose', now() - interval '2 days', 'c0c0a000-0000-4000-8000-00000000000b'),
+  ('c0c0b000-0000-4000-8000-00000000000c', 'c0c0a000-0000-4000-8000-00000000000c', 'c0c0f000-0000-4000-8000-000000000001', 'editor', 'Mia', 'sky', now() - interval '1 day', 'c0c0a000-0000-4000-8000-00000000000c');
+-- James (spec 033): no account, added by Gabriel.
+insert into public.members (id, family_id, role, display_name, color, managed_by, joined_at, created_by) values
+  ('c0c0b000-0000-4000-8000-00000000000d', 'c0c0f000-0000-4000-8000-000000000001', 'editor', 'James', 'mint', 'c0c0b000-0000-4000-8000-00000000000a', now() - interval '12 hours', 'c0c0a000-0000-4000-8000-00000000000a');
 
 -- Leek & bacon quiche (OC-Recipe): saved by Gabriel through Claude, serves 6.
 insert into public.recipes (id, family_id, name, description, serves, total_minutes, cuisine, best_months, created_by, updated_by, source)

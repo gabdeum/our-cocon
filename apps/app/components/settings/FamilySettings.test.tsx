@@ -1,8 +1,8 @@
-// Spec 003 User Stories 2 and 3, FR-006: the Family and Account sections of Settings.
+// Spec 003 User Stories 2 and 3, FR-006, and spec 033: the Family and Account sections of Settings.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { FamilySettings, type FamilySettingsProps } from './FamilySettings';
-import { alex, fakeApi, fakeTracker, family, flush, gabriel, mia, last } from '../../test/fakes';
+import { alex, fakeApi, fakeTracker, family, flush, gabriel, james, mia, last } from '../../test/fakes';
 
 vi.mock('expo-linking', () => ({ createURL: (p: string) => p }));
 vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn() }));
@@ -27,7 +27,7 @@ it('lists members in join order with their role', () => {
   // Gabriel also shows in Account › Your name, after the list.
   const [first, , third] = ['Gabriel', 'Alex', 'Mia'].map((n) => screen.getAllByText(n)[0]);
   expect(first && third && first.compareDocumentPosition(third) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(screen.getByText('G')).toBeTruthy();
+  expect(screen.getAllByText('G').length).toBeGreaterThan(0);
 });
 
 describe('Invite someone (US2)', () => {
@@ -58,7 +58,7 @@ describe('Invite someone (US2)', () => {
 describe('managing members (US3)', () => {
   it('lets the owner remove a member after confirming', async () => {
     const { api, tracker, onChanged } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Alex, Can edit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Alex, Has the app, Can edit' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove from family' }));
     expect(screen.getByText('Remove Alex from the family?')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
@@ -70,7 +70,7 @@ describe('managing members (US3)', () => {
 
   it('lets the owner hand over ownership', async () => {
     const { api } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Mia, Can edit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mia, Has the app, Can edit' }));
     fireEvent.click(screen.getByRole('button', { name: 'Make owner' }));
     expect(screen.getByText('Make Mia the owner?')).toBeTruthy();
     const buttons = screen.getAllByRole('button', { name: 'Make owner' });
@@ -81,12 +81,12 @@ describe('managing members (US3)', () => {
 
   it("doesn't let the owner open their own row (hand over first)", () => {
     setup();
-    expect(screen.queryByRole('button', { name: 'Gabriel, Owner' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Gabriel, Has the app, Owner' })).toBeNull();
   });
 
   it('shows members without letting other members manage them', () => {
     setup({ me: alex });
-    expect(screen.queryByRole('button', { name: 'Mia, Can edit' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Mia, Has the app, Can edit' })).toBeNull();
     expect(screen.getByText('Mia')).toBeTruthy();
   });
 });
@@ -156,7 +156,7 @@ describe('when something fails', () => {
 
   it('says a removal could not be saved, and reloads nothing', async () => {
     const { onChanged, tracker } = setup({}, fakeApi({ removeMember: vi.fn().mockResolvedValue({ ok: false, error: 'failed' }) }));
-    fireEvent.click(screen.getByRole('button', { name: 'Alex, Can edit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Alex, Has the app, Can edit' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove from family' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
     await flush();
@@ -185,10 +185,87 @@ describe('Offline (spec 004)', () => {
     fireEvent.click(invite);
     expect(api.createInvite).not.toHaveBeenCalled();
     // Member rows and "Your name" can't be opened.
-    expect(screen.queryByRole('button', { name: 'Alex, Can edit' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Alex, Has the app, Can edit' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Your name/ })).toBeNull();
     expect(screen.getByRole('button', { name: 'Delete family' }).getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(onSignOut).toHaveBeenCalled();
+  });
+});
+
+describe('members without the app (spec 033)', () => {
+  const everyone = [gabriel, alex, mia, james];
+
+  it('reads "James · Added by Gabriel · No account" (US1.1)', () => {
+    setup({ members: everyone });
+    expect(screen.getByRole('button', { name: 'James, Added by Gabriel, No account' })).toBeTruthy();
+    expect(screen.getAllByText('Has the app')).toHaveLength(3);
+    expect(screen.getByText("Add kids or anyone who won't use the app. They get a color in the calendar, and you choose who takes them to things.")).toBeTruthy();
+  });
+
+  it('adds someone with the first free color, and tracks it', async () => {
+    const { api, tracker, onChanged } = setup({ members: everyone });
+    fireEvent.click(screen.getByRole('button', { name: 'Add without app' }));
+    expect(screen.getByText('Add a family member')).toBeTruthy();
+    // Honey, rose, sky and mint are taken: lilac is picked, free ones come first.
+    expect(screen.getByRole('radio', { name: 'Lilac, picked' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Rosie' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await flush();
+    expect(api.addManagedMember).toHaveBeenCalledWith('Rosie', 'lilac');
+    expect(tracker.track).toHaveBeenCalledWith('member_added_without_app', {});
+    expect(onChanged).toHaveBeenCalled();
+  });
+
+  it('asks for a name', async () => {
+    const { api } = setup({ members: everyone });
+    fireEvent.click(screen.getByRole('button', { name: 'Add without app' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await flush();
+    expect(screen.getByText('Give them a name.')).toBeTruthy();
+    expect(api.addManagedMember).not.toHaveBeenCalled();
+  });
+
+  it('lets any member manage James, and invite him as himself', async () => {
+    const { api, shareDeps } = setup({ me: alex, members: everyone });
+    fireEvent.click(screen.getByRole('button', { name: 'James, Added by Gabriel, No account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Invite James' }));
+    await flush();
+    expect(api.createInvite).toHaveBeenCalledWith('m-james');
+    expect(shareDeps.share).toHaveBeenCalledWith({ message: expect.stringContaining('Join The Demanges on Our Cocon as James: ') });
+  });
+
+  it('removes James after confirming', async () => {
+    const { api } = setup({ me: alex, members: everyone });
+    fireEvent.click(screen.getByRole('button', { name: 'James, Added by Gabriel, No account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(screen.getByText('Remove James?')).toBeTruthy();
+    fireEvent.click(last(screen.getAllByRole('button', { name: 'Remove' })));
+    await flush();
+    expect(api.removeManagedMember).toHaveBeenCalledWith('m-james');
+  });
+});
+
+describe('My color (spec 033 US3)', () => {
+  it('picks a free color; taken ones show who has them and can’t be picked', async () => {
+    const { api, tracker, onChanged } = setup({ me: alex, members: [gabriel, alex, mia, james] });
+    const group = screen.getByRole('radiogroup', { name: 'My color' });
+    expect(group).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'Rose, your color' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(screen.getByRole('radio', { name: 'Honey, taken' }));
+    expect(api.setMemberColor).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('radio', { name: 'Lilac, free' }));
+    await flush();
+    expect(api.setMemberColor).toHaveBeenCalledWith(alex.id, 'lilac');
+    expect(tracker.track).toHaveBeenCalledWith('member_color_changed', { color: 'lilac' });
+    expect(onChanged).toHaveBeenCalled();
+  });
+
+  it('says when someone else just took it', async () => {
+    const api = fakeApi({ setMemberColor: vi.fn().mockResolvedValue({ ok: false, error: 'color_taken' }) });
+    setup({}, api);
+    fireEvent.click(screen.getByRole('radio', { name: 'Lilac, free' }));
+    await flush();
+    expect(screen.getByText('Someone else just took that color. Pick another.')).toBeTruthy();
   });
 });

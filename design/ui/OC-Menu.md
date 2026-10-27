@@ -7,7 +7,7 @@ Source `screens/OC-Menu.dc.html` · Route `/menu` (`/settings` redirects here) �
 2. **Apps** (18/900): `<nav aria-label="Apps">`, 3-column grid, gap 10, of AppTile links: Calendar "{n} today" · Recipes "{n} recipes" · Groceries "{n} to buy". Each opens its tab. Future apps without a tab are added here as more tiles.
 3. **Settings** (18/900), three white cards (radius 22, padding 4 16, gap 10):
    - Family "{names} · your account" › · AI assistants "{n} connected" (olive-deep) ›
-   - Calendar "Your view, colors, times of day" › · Recipes "Cooking defaults, units" › · Groceries "Where you shop, store sizes" ›
+   - Calendar "Your view, times of day" › · Recipes "Cooking defaults, units" › · Groceries "Where you shop, store sizes" ›
    - Recently deleted "{n} item(s)" › (a plain 56 px row card, no icon)
    Rows: ListRow 64 tall, 36 px icon tile (`surface-soft`, radius 12, 20 px ink icon), title 16/800, detail 13/600 ink-muted, chevron.
 4. TabBar (Menu active).

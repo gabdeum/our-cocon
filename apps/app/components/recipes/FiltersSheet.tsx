@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Button, Link, MonthPicker, PersonPill, Pill, PillRow, Text } from '@cocon/ui';
-import { activeFilterKeys, cuisineFacets, emptyFilters, type CuisineFilter, type RecipeFilters, type TimeFilter, type Tracker } from '@cocon/schemas';
+import { activeFilterKeys, cuisineFacets, emptyFilters, memberInitials, type CuisineFilter, type RecipeFilters, type TimeFilter, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { visibleRecipes, type RecipeListItem } from '../../lib/recipes';
 import type { Member } from '../../lib/session';
@@ -57,6 +57,9 @@ export function FiltersSheet({ recipes, members, query, filters, tracker, onAppl
     onApply(draft);
   };
   const toggleCuisine = (c: CuisineFilter) => setDraft((d) => ({ ...d, cuisines: toggle(d.cuisines, c) }));
+  // Members without the app never add recipes (spec 033).
+  const initials = memberInitials(members);
+  const adders = members.filter((m): m is Member & { user_id: string } => m.user_id !== null);
 
   const footer =
     count === 0 ? (
@@ -109,12 +112,12 @@ export function FiltersSheet({ recipes, members, query, filters, tracker, onAppl
       ) : null}
       <Group title={f.addedBy}>
         <PillRow>
-          {members.map((m) => (
+          {adders.map((m) => (
             <PersonPill
-              key={m.user_id}
+              key={m.id}
               label={m.display_name}
-              initial={m.display_name.charAt(0).toUpperCase()}
-              tone={m.avatar_tone}
+              initial={initials.get(m.id) ?? '?'}
+              color={m.color}
               selected={draft.addedBy.includes(m.user_id)}
               onPress={() => setDraft((d) => ({ ...d, addedBy: toggle(d.addedBy, m.user_id) }))}
             />

@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { Animated, PanResponder, Platform, Pressable, View, type AccessibilityActionEvent } from 'react-native';
 import { cn, focusRing } from '../cn';
-import { Avatar, type AvatarTone } from './Avatar';
+import { Avatar, type AvatarColor } from './Avatar';
 import { Icon, type IconName } from './Icon';
 import { IconTile, type IconTileTone } from './IconTile';
 import { Tag, type TagTone } from './Tag';
@@ -58,7 +58,7 @@ export function Mark({ kind, checked }: { kind: 'checkbox' | 'radio'; checked: b
 
 export type ListRowLeading =
   | { kind: 'checkbox' | 'radio'; checked: boolean }
-  | { kind: 'avatar'; initial: string; tone: AvatarTone }
+  | { kind: 'avatar'; initial: string; color: AvatarColor }
   /** An assistant's letters in a 40 px square (Settings › AI assistants, spec 025). */
   | { kind: 'tile'; letters: string; tone: IconTileTone };
 
@@ -152,7 +152,7 @@ export function ListRow({
   const isCheck = leading?.kind === 'checkbox' || leading?.kind === 'radio';
   const content = (
     <>
-      {leading?.kind === 'avatar' ? <Avatar initial={leading.initial} tone={leading.tone} size="lg" /> : null}
+      {leading?.kind === 'avatar' ? <Avatar initial={leading.initial} color={leading.color} size="lg" /> : null}
       {leading?.kind === 'tile' ? <IconTile letters={leading.letters} tone={leading.tone} /> : null}
       {isCheck ? <Mark kind={leading.kind} checked={leading.checked} /> : null}
       <View className="min-w-0 flex-1">
