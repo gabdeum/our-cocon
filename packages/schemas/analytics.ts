@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UndoKind } from './activity';
 import { AiPermission } from './family';
 import { FilterKey } from './recipe-filters';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
@@ -139,6 +140,10 @@ export const events = {
   ai_connected: z.strictObject({ assistant: KnownAssistant }),
   ai_connect_failed: z.strictObject({ assistant: KnownAssistant, step: z.int().min(1).max(9) }),
   ai_disconnected: z.strictObject({ assistant: ConnectionAssistant }),
+  // Spec 026: a member undid an AI change from Home or the activity list, by what it did; and
+  // restored a recipe an assistant deleted. Never what it was.
+  ai_change_undone: z.strictObject({ kind: UndoKind }),
+  ai_delete_restored: z.strictObject({}),
 } as const;
 
 export type EventName = keyof typeof events;

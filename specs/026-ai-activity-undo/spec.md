@@ -40,3 +40,5 @@ None.
 
 ## Changelog
 - 2026-10-13: Ready. Decisions 1–34 applied; tracking added.
+- 2026-10-27: Built. Entries are the database's own log grouped by tool call (`activity_entries`); Undo and Restore are one database function run as the member (`undo_ai_change`), so positions and RLS hold, and rows changed since are skipped after "Undo the rest?". New screen OC-Activity.md (words only) for "See all", with People and Assistants filters; new component ActivityCard. Deviations: Home shows 2 cards and "See all" where OC-Home draws one card (OC-Home.md updated); the edge-case copy is a Dialog, "Undo the rest?" with "Mia ticked 2 of these items. They'll stay as they are."; an AI delete's title is "Deleted: {recipe}" with OC-Home's "Deleted by {name} via {assistant}" sub-line; Undo on a recipe the AI added moves it to Recently deleted. Home is still a placeholder around the card until 028.
+- 2026-10-27: From the security review: a call id only groups a fresh call by the same person and assistant, never one already undone; a delete is a delete by its rows, not its label; members add only one undo or restore per AI entry.

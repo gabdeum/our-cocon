@@ -68,7 +68,7 @@ export function AiConnections({
   // A switch moves at once; the saved value takes over once it's back.
   const [saving, setSaving] = useState<Partial<AiPermissions>>({});
   const [permissionFailed, setPermissionFailed] = useState(false);
-  const ago = (date: Date) => c.timeAgo(minutesSince(date, now));
+  const ago = (date: Date) => strings.time.ago(minutesSince(date, now));
   const name = (key: KnownAssistant) => strings.assistants[key];
 
   const openManage = (target: Managed) => {

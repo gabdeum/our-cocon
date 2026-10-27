@@ -12,6 +12,7 @@ import {
   BottomSheet,
   BrandHeader,
   Button,
+  ActivityCard,
   Callout,
   Card,
   Choice,
@@ -238,6 +239,11 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <IconTile letters="C" tone="peach" />
           <IconTile letters="Ge" tone="soft" />
         </PillRow>
+      </Section>
+
+      <Section group="Display" title="ActivityCard">
+        <ActivityCard badge="AI" title="New: Pumpkin soup" sub="Added by Alex via ChatGPT · 1 h ago" action={{ label: 'Undo', accessibilityLabel: 'Undo: New: Pumpkin soup', onPress: noop }} />
+        <ActivityCard badge="AI" title="6 items added to Groceries" sub="Undone by Gabriel" />
       </Section>
 
       <Section group="Display" title="StatTile">

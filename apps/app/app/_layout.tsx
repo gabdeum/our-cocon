@@ -134,6 +134,7 @@ export default function RootLayout() {
                   <Stack.Screen name="recipes/[id]/edit" options={presentation.fullScreen} />
                   <Stack.Screen name="recipes/[id]/settings" options={presentation.stack} />
                   <Stack.Screen name="timers" options={presentation.stack} />
+                  <Stack.Screen name="activity" options={presentation.stack} />
                   <Stack.Screen name="settings/deleted" options={presentation.stack} />
                   <Stack.Screen name="settings/ai" options={presentation.stack} />
                   <Stack.Screen name="dev/gallery" options={presentation.stack} />
