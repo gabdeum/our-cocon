@@ -1,6 +1,6 @@
 # Our Cocon
 
-A household app for families, run from the app or from any AI assistant through MCP. V1 covers recipes and groceries; calendar, reminders, lists, documents and expenses come later as new modules. Rules and decisions: `specs/constitution.md`. Build order: `specs/README.md`.
+A household app for families, run from the app or from any AI assistant through MCP. V1 covers recipes, groceries and the shared calendar; reminders, lists, documents and expenses come later as new modules. Rules and decisions: `specs/constitution.md`. Build order: `specs/README.md`.
 
 ## Commands (quiet: they print only failures)
 

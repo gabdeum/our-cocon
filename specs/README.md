@@ -1,6 +1,6 @@
 # Our Cocon — V1 specs
 
-Our Cocon is a household app; V1 builds its first two modules, recipes and groceries, plus the shared foundation (accounts, family, sync, MCP, Home, Settings). There are 31 specs, plus `032-later`, the living list of deferred tasks. Shared rules (stack, design system, accessibility, quantities, security, project-wide decisions) live once in `specs/constitution.md`; the specs reference it instead of repeating it. Every spec is Ready: there are no open questions.
+Our Cocon is a household app; V1 builds three modules — recipes, groceries and the shared calendar — plus the shared foundation (accounts, family, sync, MCP, Home, Menu). There are 43 specs, plus `032-later`, the living list of deferred tasks. Shared rules (stack, design system, accessibility, quantities, security, project-wide decisions) live once in `specs/constitution.md`; the specs reference it instead of repeating it. Every spec is Ready: there are no open questions.
 
 ## What Claude Code reads for each spec
 
@@ -41,7 +41,7 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | --- | --- | --- | --- |
 | 1 | 001 Project scaffold and environments | — | — |
 | 2 | 002 Design system package and app shell | 001 | TabBar |
-| 3 | 003 Accounts and family | 001, 002 | OC-Settings |
+| 3 | 003 Accounts and family | 001, 002 | OC-SettingsFamily |
 | 4 | 004 Data model, security and sync | 003 | — |
 | 5 | 031 Ingredient catalog | 004 | — |
 | 6 | 005 Quantity engine | 001, 031 | — |
@@ -60,17 +60,31 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 19 | 018 Delete and Recently deleted | 014 | OC-Delete |
 | 20 | 019 Share as view-only link | 009 | OC-Share, OC-SharedView |
 | 21 | 020 Shared grocery list | 004, 031 | OC-Groceries |
-| 22 | 021 Store profiles: need vs. buy | 005, 020, 031 | OC-Groceries, OC-Settings |
+| 22 | 021 Store profiles: need vs. buy | 005, 020, 031 | OC-Groceries, OC-SettingsGroceries |
 | 23 | 022 Add from a recipe | 008, 020, 021 | OC-AddGroceries |
 | 24 | 023 MCP server: recipes | 004, 005, 017 | — |
 | 25 | 024 MCP server: groceries and permissions | 022, 023 | — |
-| 26 | 025 AI connections screen | 023 | OC-Connect |
+| 26 | 025 AI connections screen | 023 | OC-Connect (the "Add & change events" row comes with 044) |
 | 27 | 026 AI activity and undo | 024 | OC-Home |
-| 28 | 027 Recipe settings and family defaults | 009, 012 | OC-RecipeSettings, OC-Settings |
-| 29 | 028 Home | 020, 026 | OC-Home |
-| 30 | 029 Settings screen | 021, 025, 027 | OC-Settings |
-| 31 | 030 Accessibility and hints pass | all | all |
+| 28 | 027 Recipe settings and family defaults | 009, 012 | OC-RecipeSettings, OC-SettingsRecipes |
+| 29 | 033 Family members without the app, and member colors | 003 | OC-SettingsFamily, OC-Home (avatars) |
+| 30 | 034 Calendar engine package | 001, 033 | — |
+| 31 | 035 Events: data model, security and sync | 004, 033, 034 | — |
+| 32 | 036 Tab bar v2 and calendar header | 002, 034 | TabBar, CalHeader |
+| 33 | 037 Calendar — month view | 035, 036 | OC-CalMonth |
+| 34 | 038 Calendar — week view | 035, 036 | OC-CalWeek |
+| 35 | 039 Calendar — day view | 035, 036 | OC-CalDay |
+| 36 | 040 Calendar — agenda view | 035, 036 | OC-CalAgenda |
+| 37 | 041 Add and edit an event | 033, 034, 035 | OC-CalAdd, OC-CalAddMore |
+| 38 | 042 Event detail, checklist, duplicate, share and delete | 019, 035, 041 | OC-CalEvent, OC-CalEventDelete |
+| 39 | 043 Private and surprise events | 035, 041, 042 | OC-CalAddMore, OC-CalBusy, OC-CalSurprise |
+| 40 | 044 MCP server — calendar tools and permission | 023, 024, 025, 035 | OC-Connect |
+| 41 | 028 Home (all modules) | 020, 026, 033, 035, 041 | OC-Home, CalCard, OC-CalCardWeek, OC-CalCardEmpty |
+| 42 | 029 Menu (apps and settings) and the settings pages | 018, 021, 025, 027, 033, 034, 036 | OC-Menu, OC-SettingsFamily, OC-SettingsGroceries, OC-CalSettings |
+| 43 | 030 Accessibility and hints pass | all | all |
 | — | 032 Later: deferred tasks, by priority | — | — |
+
+Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module.
 
 032 is a living list, not built in one go: each task names the spec that does it (its plan picks it up), and every build adds, edits or removes its rows.
 
@@ -117,5 +131,26 @@ All 34 open questions are answered. The specs, UI specs and screens already refl
 
 Also settled: no pantry (every ingredient starts ticked in "Add to groceries"; untick what you have), and aisles, densities, piece sizes and pack sizes come from the ingredient catalog with family corrections (031).
 
+## Calendar decisions
+
+| # | Area | Decision |
+| --- | --- | --- |
+| C1 | Scope | Calendar V1 = views, quick add, recurrence, private/surprise, Home card, settings, MCP. Push reminders, external sync, meal-plan slots, holidays and natural-language add come later. |
+| C2 | Privacy | Family (default), Private ("Busy" for others), Surprise (the hidden person sees a cover title, time, place and a note). Enforced in the database and in `@cocon/calendar`. |
+| C3 | Roles | No kids role; everyone can edit (decision 9). Only the creator changes visibility. |
+| C4 | Members | Members can be added without the app (managed by the family); "Who takes {name}?" appears only for them. |
+| C5 | Colors | 8 member colors + Everyone (coral, brighter) + Others (light sand, person icon). Always with initials. Replaces the three avatar tones. |
+| C6 | Who | "Everyone" and "Others" are always offered in the filter and the Who picker. Others needs no names. |
+| C7 | Slots | Early morning, Morning, Lunch, Afternoon, Evening (18:00–22:00). No Night slot; later times use Custom. Family-wide; the owner edits. |
+| C8 | Week start | Follows the device region; overridable per member. |
+| C9 | Time labels | Slot name only when the event starts at the slot's start, otherwise its start time. Month titles: "October" in the current year; other years "Jan. 2027" under 430 px, "January 2027" above. |
+| C10 | Month view | One continuous vertical scroll; sticky weekdays; multi-day events as pills over the grid; no ellipsis on chips. |
+| C11 | Week / Day | Week = hour grid with side-by-side overlaps; Day = time-of-day bands; both swipe left/right. |
+| C12 | Navigation | Tabs: Home · Calendar · Recipes · Groceries · Menu (Menu = Apps directory + Settings pages, spec 029); the selected tab is a fixed 132 px. |
+| C13 | Deletes | Recently deleted for 30 days, plus a 5 s Undo toast. |
+| C14 | Offline | Read-only, like the rest of the app (decision 11). |
+| C15 | MCP | New permission "Add & change events", per member, default Allowed. |
+| C16 | Home and Menu | Built last (028, 029) so they cover recipes, groceries and calendar in one pass. |
+
 ### Screens described in words only
-These have no drawn screen; their UI spec is the source of truth: Account section (OC-Settings.md), sign-in, set up a family and join (OC-Welcome.md), Recently deleted (flows.md), Connect and Manage sheets (OC-Connect.md).
+These have no drawn screen; their UI spec is the source of truth: sign-in, set up a family and join (OC-Welcome.md), Recently deleted (flows.md), Connect and Manage sheets (OC-Connect.md), the "Add without app" sheet (OC-SettingsFamily.md), the event share sheet and page (OC-CalEvent.md). Your account is drawn on OC-SettingsFamily.

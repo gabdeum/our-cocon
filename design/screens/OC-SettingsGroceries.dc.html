@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Groceries settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; padding: 50px 20px 40px; display: flex; flex-direction: column; gap: 18px">
+  <a href="OC-Menu.dc.html" style="height: 44px; align-self: flex-start; display: flex; align-items: center; gap: 4px; text-decoration: none; font-size: 16px; font-weight: 800"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>Menu</a>
+  <div>
+    <h1 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px">Groceries</h1>
+    <p style="margin: 4px 0 0; font-size: 15px; font-weight: 600; line-height: 1.45; color: #5A503A">For the whole family. You can also change these from the Groceries tab.</p>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 8px">
+    <h2 style="margin: 0; font-size: 18px; font-weight: 900">Where do you shop?</h2>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #FFF0C9; border-radius: 14px; padding: 4px">
+        <button aria-pressed="true" style="height: 44px; border-radius: 11px; border: none; background: #FFFFFF; color: #2A2414; font-size: 14px; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)">US</button>
+        <button aria-pressed="false" style="height: 44px; border-radius: 11px; border: none; background: transparent; color: #5A503A; font-size: 14px; font-weight: 700">Europe</button>
+      </div>
+      <p style="margin: 0; font-size: 14px; font-weight: 600; line-height: 1.4; color: #5A503A">Recipe needs 300 ml cream → Buy 1 pint</p>
+    </div>
+  </section>
+
+  <div style="background: #FFFFFF; border-radius: 22px; padding: 4px 16px">
+    <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0">
+      <div style="flex: 1"><div style="font-size: 16px; font-weight: 800">Round up to store sizes</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">Off: shows only what recipes need</div></div>
+      <span role="switch" aria-checked="true" aria-label="Round up to store sizes" style="width: 52px; height: 32px; flex: none; border-radius: 16px; background: #5A6820; padding: 3px; box-sizing: border-box; display: flex; justify-content: flex-end"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

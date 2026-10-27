@@ -1,22 +1,15 @@
-# TabBar — Floating tab bar
+# TabBar — tab bar v2
 
-Source `screens/TabBar.dc.html` · Shown on `/`, `/recipes`, `/groceries`, `/settings` · Specs 002, 011
+Source `screens/TabBar.dc.html` · Specs 002, 036
 
 ## Layout
-1. TimerPill, centred 10 above the bar, while any timer is running (spec 011).
-2. Dark navigation pill, 16 from the sides and 26 from the bottom (plus the home-indicator safe area), named "Main" for screen readers.
-3. Four tabs in this order: "Home" · "Recipes" · "Groceries" · "Settings".
-   - Active tab: honey fill, icon and label.
-   - Other tabs: icon only, named by their label for screen readers.
+Five destinations in this order: Home · Calendar · Recipes · Groceries · Menu. Icons: home, calendar, recipes, groceries, menu (three equal bars). Accessible names = the labels.
 
-## States
-| State | Copy |
-| --- | --- |
-| Active tab | Its label shows next to its icon; it is announced as the current page |
-| Largest text size | The active label stays on one line and may shrink to 13 px; it never wraps |
-| Timers running | TimerPill above the bar: "{n} timers running. Open timers", n counting running timers only (spec 011) |
-| No timer running (none, or all paused or done) | Bar only |
-| Pushed screen, sheet, form, cooking mode | No tab bar |
-| Web wider than 720 px | Bar stays bottom-centred inside the 720 px column |
+## Sizes
+- Bar 68 tall, radius 34, ink, padding 8, gap 4.
+- **Selected tab: fixed 132 px wide**, 16 px side padding, radius 26, honey fill, icon 24 + label 15/800, gap 6, no wrapping. It never grows or shrinks.
+- Unselected tabs share the remaining width (min 44 px), icon only in `on-ink`.
+- TimerPill above the bar when timers exist (unchanged).
 
-Tapping the current tab does nothing. Tapping another tab opens its screen and sends `tab_selected` with the tab.
+## Behaviour
+"Menu" opens `/menu` (spec 029: Apps and Settings). Calendar opens the member's default view (spec 029).

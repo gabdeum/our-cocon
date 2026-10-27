@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Add event</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+input::placeholder,textarea::placeholder{color:#5A503A;opacity:1}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+  <div role="dialog" aria-label="New event" style="{{sheetStyle}}">
+    <div style="width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4; align-self: center; flex: none"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex: none">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 900">New event</h2>
+      <a href="OC-CalMonth.dc.html" style="font-size: 16px; font-weight: 800; color: #5A503A; padding: 10px 0">Cancel</a>
+    </div>
+
+    <div style="{{bodyStyle}}">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="ev-title" style="font-size: 16px; font-weight: 900">What's happening?</label>
+        <input id="ev-title" value="{{title}}" onChange="{{onTitle}}" maxlength="60" placeholder="e.g. Poker night" style="height: 56px; box-sizing: border-box; padding: 0 16px; border-radius: 16px; border: 2px solid {{titleBorder}}; background: #FFFFFF; color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800">
+        <sc-if value="{{showTitleError}}" hint-placeholder-val="{{false}}">
+          <span role="alert" style="font-size: 14px; font-weight: 800; color: #8A4B00">Give your event a name.</span>
+        </sc-if>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 900">When</h3>
+        <div style="display: flex; gap: 8px">
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+            <button aria-pressed="{{d.on}}" onClick="{{d.pick}}" style="{{d.style}}">{{d.label}}<span style="{{d.subStyle}}">{{d.sub}}</span></button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 900">Time of day</h3>
+        <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A">Pick a time of day — no need for exact hours.</p>
+        <div role="group" aria-label="Time of day" style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px; padding: 2px 20px 4px">
+          <sc-for list="{{slots}}" as="s" hint-placeholder-count="7">
+            <button aria-pressed="{{s.on}}" onClick="{{s.pick}}" style="{{s.style}}"><span style="font-size: 15px; font-weight: 900">{{s.label}}</span><span style="{{s.hoursStyle}}">{{s.hours}}</span></button>
+          </sc-for>
+        </div>
+        <sc-if value="{{isCustom}}" hint-placeholder-val="{{false}}">
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 800">Starts<input value="18:00" style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 2px solid #EEDFB5; background: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 800; color: #2A2414"></label>
+            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 800">Ends<input value="22:00" style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 2px solid #EEDFB5; background: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 800; color: #2A2414"></label>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 900">Who</h3>
+        <div role="group" aria-label="Who" style="display: flex; gap: 8px; flex-wrap: wrap">
+          <sc-for list="{{people}}" as="p" hint-placeholder-count="5">
+            <button aria-pressed="{{p.on}}" onClick="{{p.pick}}" style="{{p.style}}"><span style="{{p.dot}}">{{p.initial}}<sc-if value="{{p.icon}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A503A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M5 21v-1a7 7 0 0 1 14 0v1"></path></svg></sc-if></span><span>{{p.name}}</span></button>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{hasConflict}}" hint-placeholder-val="{{true}}">
+        <div role="status" style="display: flex; gap: 10px; align-items: flex-start; background: #FFE3C2; border-radius: 16px; padding: 12px 14px; color: #8A4B00">
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+          <span style="font-size: 15px; font-weight: 800; line-height: 1.4">{{conflict}} Add anyway?</span>
+        </div>
+      </sc-if>
+
+      <button aria-expanded="{{moreOn}}" onClick="{{toggleMore}}" style="height: 56px; padding: 0 16px; border-radius: 16px; border: none; background: #FFF0C9; color: #2A2414; display: flex; align-items: center; justify-content: space-between; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer">More options<span style="font-size: 14px; font-weight: 700; color: #5A503A">{{moreHint}}</span></button>
+
+      <sc-if value="{{showMore}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; flex-direction: column; gap: 20px">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900">Type</h3>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <sc-for list="{{cats}}" as="c" hint-placeholder-count="9">
+                <button aria-pressed="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="ev-where" style="font-size: 16px; font-weight: 900">Where</label>
+            <input id="ev-where" value="Sam's place, 12 Oak St" placeholder="Add a place" style="height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: 16px; border: 2px solid #EEDFB5; background: #FFFFFF; color: #2A2414; font-family: inherit; font-size: 16px; font-weight: 700">
+          </div>
+
+          <sc-if value="{{needsDriver}}" hint-placeholder-val="{{true}}">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900">{{driverTitle}}</h3>
+            <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A">{{driverHint}}</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <sc-for list="{{drivers}}" as="d" hint-placeholder-count="3">
+                <button aria-pressed="{{d.on}}" onClick="{{d.pick}}" style="{{d.style}}">{{d.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900">Repeat</h3>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <sc-for list="{{repeats}}" as="r" hint-placeholder-count="6">
+                <button aria-pressed="{{r.on}}" onClick="{{r.pick}}" style="{{r.style}}">{{r.label}}</button>
+              </sc-for>
+            </div>
+            <sc-if value="{{isWeekly}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; flex-direction: column; gap: 8px; background: #FFFFFF; border-radius: 16px; padding: 12px">
+                <span style="font-size: 14px; font-weight: 800">On</span>
+                <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+                  <sc-for list="{{weekdays}}" as="w" hint-placeholder-count="7">
+                    <button aria-pressed="{{w.on}}" aria-label="{{w.name}}" onClick="{{w.pick}}" style="{{w.style}}">{{w.letter}}</button>
+                  </sc-for>
+                </div>
+                <span style="font-size: 14px; font-weight: 800">Ends</span>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                  <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; font-size: 14px; font-weight: 900">Never</span>
+                  <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700">On a date</span>
+                  <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700">After a number of times</span>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900">Reminder</h3>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <sc-for list="{{reminders}}" as="r" hint-placeholder-count="4">
+                <button aria-pressed="{{r.on}}" onClick="{{r.pick}}" style="{{r.style}}">{{r.label}}</button>
+              </sc-for>
+            </div>
+            <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A">Shows on Home for now. Phone alerts come later.</p>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 900">Who can see it?</h3>
+            <div role="group" aria-label="Who can see it" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; background: #FFF0C9; border-radius: 14px; padding: 4px">
+              <sc-for list="{{vis}}" as="v" hint-placeholder-count="3">
+                <button aria-pressed="{{v.on}}" onClick="{{v.pick}}" style="{{v.style}}">{{v.label}}</button>
+              </sc-for>
+            </div>
+            <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A">{{visHint}}</p>
+            <sc-if value="{{isSurprise}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; flex-direction: column; gap: 12px; background: #FFFFFF; border-radius: 18px; padding: 14px">
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <span style="font-size: 15px; font-weight: 900">Keep it secret from</span>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                    <sc-for list="{{secret}}" as="p" hint-placeholder-count="3">
+                      <button aria-pressed="{{p.on}}" onClick="{{p.pick}}" style="{{p.style}}"><span style="{{p.dot}}">{{p.initial}}</span>{{p.name}}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 900">What Eva sees
+                  <input value="Dinner out" style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 2px solid #EEDFB5; background: #FFF8E3; color: #2A2414; font-family: inherit; font-size: 16px; font-weight: 800">
+                </label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 900">Note for Eva
+                  <textarea rows="2" style="box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 2px solid #EEDFB5; background: #FFF8E3; color: #2A2414; font-family: inherit; font-size: 16px; font-weight: 700; resize: none">Meet at Café Lalo at 19:30. Dress nice!</textarea>
+                </label>
+                <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A">Eva sees only this title, the time, the place and this note. Everyone else sees everything.</p>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <label for="ev-notes" style="font-size: 16px; font-weight: 900">Notes</label>
+            <textarea id="ev-notes" rows="2" placeholder="Anything to remember" style="box-sizing: border-box; padding: 12px 16px; border-radius: 16px; border: 2px solid #EEDFB5; background: #FFFFFF; color: #2A2414; font-family: inherit; font-size: 16px; font-weight: 700; resize: none">Bring snacks to share.</textarea>
+            <div style="background: #FFFFFF; border-radius: 16px; padding: 4px 14px">
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1.5px solid #F2E6C4"><span aria-hidden="true" style="width: 24px; height: 24px; border-radius: 7px; border: 2px solid #CDBF95; box-sizing: border-box"></span><span style="font-size: 16px; font-weight: 700">Chips and dip</span></div>
+              <button style="width: 100%; min-height: 48px; border: none; background: none; padding: 0; display: flex; align-items: center; gap: 12px; font-family: inherit; font-size: 16px; font-weight: 800; color: #424D17; cursor: pointer">+ Add to checklist</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <button onClick="{{save}}" aria-disabled="{{saveDisabled}}" style="{{saveStyle}}">Save</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"more":{"editor":"boolean","default":false},"visibility":{"editor":"enum","options":["family","private","surprise"],"default":"family"},"who":{"editor":"text","default":"G"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      title: 'Poker night', tried: false, day: 'today', slots: ['Evening'], who: null,
+      more: null, cat: 'Social', driver: 'Not decided yet', repeat: 'Never', weekdays: ['Fri'], reminder: 'None', vis: null, secret: ['E']
+    };
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var more = s.more === null ? !!this.props.more : s.more;
+    var vis = s.vis || this.props.visibility || 'family';
+    var who = s.who || (this.props.who ? String(this.props.who).split(',') : ['G']);
+    var set = function (patch) { return function () { self.setState(patch); }; };
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478', Oth: '#EFE8D8' };
+    var NAMES = { G: 'Gabriel', E: 'Eva', J: 'James', All: 'Everyone', Oth: 'Others' };
+    var INITIAL = { All: 'All', Oth: '' };
+    var pill = function (on) {
+      return 'min-height: 44px; padding: 0 16px; border-radius: 999px; border: none; font-family: inherit; font-size: 15px; cursor: pointer; ' +
+        (on ? 'background: #5A6820; color: #FFFFFF; font-weight: 900' : 'background: #FFF0C9; color: #2A2414; font-weight: 700');
+    };
+    var seg = function (on) {
+      return 'height: 44px; border-radius: 11px; border: none; font-family: inherit; font-size: 15px; cursor: pointer; color: #2A2414; ' +
+        (on ? 'background: #FFFFFF; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)' : 'background: transparent; font-weight: 700; color: #5A503A');
+    };
+    var personChip = function (on, k) {
+      return {
+        style: 'height: 48px; padding: 0 16px 0 6px; border-radius: 999px; font-family: inherit; font-size: 15px; font-weight: 800; color: #2A2414; display: flex; align-items: center; gap: 8px; cursor: pointer; ' +
+          (on ? 'background: #FFFFFF; border: 2.5px solid #2A2414' : 'background: #FFFFFF; border: 2.5px solid transparent'),
+        dot: 'width: 34px; height: 34px; border-radius: 50%; background: ' + C[k] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (k === 'All' ? '11px' : k === 'Oth' ? '18px' : '14px') + '; font-weight: 900'
+      };
+    };
+
+    var days = [['today', 'Today', 'Sun 25'], ['tomorrow', 'Tomorrow', 'Mon 26'], ['other', 'Other day', 'Pick a date']].map(function (d) {
+      var on = s.day === d[0];
+      return {
+        label: d[1], sub: d[2], on: on ? 'true' : 'false', pick: set({ day: d[0] }),
+        style: 'flex: 1; min-height: 60px; padding: 6px 8px; border-radius: 16px; border: none; font-family: inherit; font-size: 15px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; ' + (on ? 'background: #5A6820; color: #FFFFFF' : 'background: #FFFFFF; color: #2A2414'),
+        subStyle: 'font-size: 12px; font-weight: 700; ' + (on ? 'color: #FFFFFF' : 'color: #5A503A')
+      };
+    });
+
+    var SLOTS = [['All day', ''], ['Early morning', '06–09'], ['Morning', '09–12'], ['Lunch', '12–14'], ['Afternoon', '14–18'], ['Evening', '18–22'], ['Custom', 'Pick times']];
+    var BANDS = ['Early morning', 'Morning', 'Lunch', 'Afternoon', 'Evening'];
+    var pickSlot = function (name) {
+      return function () {
+        var cur = self.state.slots;
+        if (name === 'All day' || name === 'Custom') return self.setState({ slots: [name] });
+        var bands = cur.filter(function (x) { return BANDS.indexOf(x) >= 0; });
+        if (bands.indexOf(name) >= 0) {
+          var rest = bands.filter(function (x) { return x !== name; });
+          var idx = rest.map(function (x) { return BANDS.indexOf(x); }).sort();
+          var contiguous = idx.every(function (v, i) { return i === 0 || v === idx[i - 1] + 1; });
+          return self.setState({ slots: rest.length && contiguous ? rest : [name] });
+        }
+        var all = bands.concat([name]).map(function (x) { return BANDS.indexOf(x); }).sort(function (a, b) { return a - b; });
+        var ok = all.every(function (v, i) { return i === 0 || v === all[i - 1] + 1; });
+        self.setState({ slots: ok ? all.map(function (i) { return BANDS[i]; }) : [name] });
+      };
+    };
+    var slots = SLOTS.map(function (x) {
+      var on = s.slots.indexOf(x[0]) >= 0;
+      return {
+        label: x[0], hours: x[1] || 'Whole day', on: on ? 'true' : 'false', pick: pickSlot(x[0]),
+        style: 'min-width: 92px; height: 66px; flex: none; padding: 0 12px; border-radius: 18px; border: none; font-family: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; ' + (on ? 'background: #5A6820; color: #FFFFFF' : 'background: #FFFFFF; color: #2A2414'),
+        hoursStyle: 'font-size: 12px; font-weight: 700; ' + (on ? 'color: #FFFFFF' : 'color: #5A503A')
+      };
+    });
+
+    // "Everyone" = the whole family; "Others" = the event is for people outside the family (no names needed).
+    // Others can be added to any choice; Everyone replaces individual family members.
+    var people = ['G', 'E', 'J', 'All', 'Oth'].map(function (k) {
+      var on = who.indexOf(k) >= 0;
+      var c = personChip(on, k);
+      return {
+        name: NAMES[k], initial: INITIAL[k] !== undefined ? INITIAL[k] : k, icon: k === 'Oth', on: on ? 'true' : 'false', style: c.style, dot: c.dot,
+        pick: function () {
+          var w = self.state.who || who;
+          var oth = w.indexOf('Oth') >= 0;
+          if (k === 'Oth') return self.setState({ who: oth ? (w.length > 1 ? w.filter(function (x) { return x !== 'Oth'; }) : ['G']) : w.concat(['Oth']) });
+          if (k === 'All') return self.setState({ who: oth ? ['All', 'Oth'] : ['All'] });
+          w = w.filter(function (x) { return x !== 'All'; });
+          w = w.indexOf(k) >= 0 ? w.filter(function (x) { return x !== k; }) : w.concat([k]);
+          self.setState({ who: w.length ? w : ['G'] });
+        }
+      };
+    });
+
+    var BUSY = {
+      today: { Lunch: ['All', 'Brunch at Grandma’s'], Afternoon: ['J', 'Baby swim class'], Evening: ['All', 'Movie night'] },
+      tomorrow: { 'Early morning': ['G', 'Morning run'] }
+    };
+    var conflict = '';
+    var busy = BUSY[s.day] || {};
+    s.slots.forEach(function (sl) {
+      var b = busy[sl];
+      if (!b || conflict) return;
+      var hit = b[0] === 'All' ? who.filter(function (x) { return x !== 'Oth'; })[0] : (who.indexOf(b[0]) >= 0 || who.indexOf('All') >= 0 ? b[0] : null);
+      if (!hit) return;
+      var name = hit === 'G' ? 'You' : hit === 'All' ? 'Everyone' : NAMES[hit];
+      var verb = hit === 'G' || hit === 'All' ? (hit === 'G' ? 'already have' : 'already has') : 'already has';
+      conflict = name + ' ' + verb + ' ' + b[1] + ' this ' + sl.toLowerCase() + '.';
+    });
+
+    var cats = ['Sport', 'School', 'Work', 'Health', 'Social', 'Travel', 'Home', 'Birthday', 'Other'].map(function (c) {
+      return { label: c, on: s.cat === c ? 'true' : 'false', style: pill(s.cat === c), pick: set({ cat: c }) };
+    });
+    // Family members added by hand (kids, anyone without the app) can't handle their own logistics,
+    // so the question only appears when one of them is in "Who". Only members with an account can be picked.
+    var MANAGED = { J: true };
+    var managed = who.filter(function (k) { return MANAGED[k]; }).map(function (k) { return NAMES[k]; });
+    var needsDriver = managed.length > 0;
+    var managedNames = managed.length > 1 ? managed.slice(0, -1).join(', ') + ' and ' + managed[managed.length - 1] : managed[0] || '';
+    var drivers = ['Not decided yet', 'Gabriel', 'Eva'].map(function (d) {
+      return { label: d, on: s.driver === d ? 'true' : 'false', style: pill(s.driver === d), pick: set({ driver: d }) };
+    });
+    var repeats = ['Never', 'Daily', 'Weekly', 'Every 2 weeks', 'Monthly', 'Yearly'].map(function (r) {
+      return { label: r, on: s.repeat === r ? 'true' : 'false', style: pill(s.repeat === r), pick: set({ repeat: r }) };
+    });
+    var weekdays = [['Sun', 'S'], ['Mon', 'M'], ['Tue', 'T'], ['Wed', 'W'], ['Thu', 'T'], ['Fri', 'F'], ['Sat', 'S']].map(function (w) {
+      var on = s.weekdays.indexOf(w[0]) >= 0;
+      return {
+        letter: w[1], name: w[0], on: on ? 'true' : 'false',
+        style: 'height: 44px; border-radius: 12px; border: none; font-family: inherit; font-size: 15px; font-weight: 900; cursor: pointer; ' + (on ? 'background: #5A6820; color: #FFFFFF' : 'background: #FFF0C9; color: #2A2414'),
+        pick: function () {
+          var cur = self.state.weekdays;
+          self.setState({ weekdays: on ? cur.filter(function (x) { return x !== w[0]; }) : cur.concat([w[0]]) });
+        }
+      };
+    });
+    var reminders = ['None', 'Morning of', '1 hour before', '1 day before'].map(function (r) {
+      return { label: r, on: s.reminder === r ? 'true' : 'false', style: pill(s.reminder === r), pick: set({ reminder: r }) };
+    });
+    var VIS = { family: 'Family', 'private': 'Private', surprise: 'Surprise' };
+    var visList = ['family', 'private', 'surprise'].map(function (v) {
+      return { label: VIS[v], on: vis === v ? 'true' : 'false', style: seg(vis === v), pick: set({ vis: v }) };
+    });
+    var VIS_HINT = {
+      family: 'Everyone in the family sees all the details.',
+      'private': 'Others see “Busy” at this time, and nothing else.',
+      surprise: 'Hide it from someone: they see only what you choose below.'
+    };
+    var secret = ['E'].map(function (k) {
+      var on = s.secret.indexOf(k) >= 0, c = personChip(on, k);
+      return {
+        name: NAMES[k], initial: k, on: on ? 'true' : 'false', style: c.style, dot: c.dot,
+        pick: function () {
+          var cur = self.state.secret;
+          self.setState({ secret: on ? cur.filter(function (x) { return x !== k; }) : cur.concat([k]) });
+        }
+      };
+    });
+
+    var hasTitle = s.title.trim().length > 0;
+    var tall = more;
+    return {
+      rootStyle: 'width: 390px; height: ' + (tall ? '2250px' : '844px') + '; box-sizing: border-box; background: #8C8268; color: #2A2414; font-family: \'Nunito\', sans-serif; position: relative; overflow: hidden',
+      sheetStyle: 'position: absolute; left: 0; right: 0; bottom: 0; ' + (tall ? 'top: 40px' : 'height: 790px') + '; background: #FFF8E3; border-radius: 32px 32px 0 0; padding: 12px 20px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px',
+      bodyStyle: 'flex: 1; min-height: 0; overflow-y: auto; margin: 0 -20px; padding: 0 20px 8px; display: flex; flex-direction: column; gap: 18px',
+      title: s.title, titleBorder: s.tried && !hasTitle ? '#E8A04A' : '#EEDFB5',
+      onTitle: function (e) { self.setState({ title: e.target.value }); },
+      showTitleError: s.tried && !hasTitle,
+      days: days, slots: slots, isCustom: s.slots[0] === 'Custom', people: people,
+      hasConflict: !!conflict, conflict: conflict,
+      moreOn: more ? 'true' : 'false', showMore: more, moreHint: more ? 'Hide' : 'Place, repeat, reminder…',
+      toggleMore: function () { self.setState({ more: !more }); },
+      cats: cats, drivers: drivers, needsDriver: needsDriver,
+      driverTitle: 'Who takes ' + managedNames + '?',
+      driverHint: managedNames + (managed.length > 1 ? ' were' : ' was') + ' added by the family, so someone with the app handles this.', repeats: repeats, isWeekly: s.repeat === 'Weekly', weekdays: weekdays,
+      reminders: reminders, vis: visList, visHint: VIS_HINT[vis], isSurprise: vis === 'surprise', secret: secret,
+      saveDisabled: hasTitle ? 'false' : 'true',
+      save: function () { if (!hasTitle) self.setState({ tried: true }); },
+      saveStyle: 'height: 58px; flex: none; border-radius: 999px; border: none; font-family: inherit; font-size: 17px; font-weight: 900; cursor: pointer; ' +
+        (hasTitle ? 'background: #2A2414; color: #FFFFFF' : 'background: #EEDFB5; color: #5A503A')
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home calendar card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<section aria-label="Family calendar" style="width: 350px; box-sizing: border-box; background: #FFFFFF; border-radius: 26px; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 12px; color: #2A2414; font-family: 'Nunito', sans-serif">
+  <div style="display: flex; align-items: center; gap: 10px">
+    <sc-if value="{{hasToggle}}" hint-placeholder-val="{{true}}">
+      <div role="group" aria-label="Show" style="flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #FFF0C9; border-radius: 14px; padding: 4px">
+        <button aria-pressed="{{todayOn}}" onClick="{{showToday}}" style="{{todayStyle}}">Today</button>
+        <button aria-pressed="{{weekOn}}" onClick="{{showWeek}}" style="{{weekStyle}}">This week</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{hasTitle}}" hint-placeholder-val="{{false}}">
+      <h2 style="margin: 0; flex: 1; font-size: 20px; font-weight: 900">{{title}}</h2>
+    </sc-if>
+    <a href="OC-CalAdd.dc.html" aria-label="Add event" style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </a>
+  </div>
+
+  <sc-if value="{{isToday}}" hint-placeholder-val="{{true}}">
+    <div style="display: flex; flex-direction: column">
+      <a href="OC-CalAgenda.dc.html" style="display: flex; align-items: center; gap: 10px; background: #FFF0C9; border-radius: 16px; padding: 10px 12px; margin-bottom: 4px; text-decoration: none; color: #2A2414">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4E1E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21h16v-8H4ZM4 17c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5M12 13V9M12 6.5a1.5 1.5 0 0 1-1-2.5L12 3l1 1a1.5 1.5 0 0 1-1 2.5Z"/></svg>
+        <span style="flex: 1; font-size: 15px; font-weight: 800">Eva’s birthday is on Tuesday</span>
+      </a>
+      <sc-for list="{{today}}" as="e" hint-placeholder-count="3">
+        <a href="OC-CalEvent.dc.html" style="{{e.row}}">
+          <span aria-hidden="true" style="{{e.stripe}}"></span>
+          <span style="{{e.avatar}}">{{e.initial}}</span>
+          <span style="flex: 1; min-width: 0">
+            <span style="display: block; font-size: 16px; font-weight: 800">{{e.title}}</span>
+            <span style="display: block; font-size: 13px; font-weight: 700; color: #5A503A">{{e.sub}}</span>
+          </span>
+          <sc-if value="{{e.now}}" hint-placeholder-val="{{false}}">
+            <span style="flex: none; background: #FFCF5C; font-size: 13px; font-weight: 900; padding: 5px 10px; border-radius: 999px">Now</span>
+          </sc-if>
+        </a>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isWeek}}" hint-placeholder-val="{{false}}">
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+        <sc-for list="{{strip}}" as="d" hint-placeholder-count="7">
+          <a href="OC-CalDay.dc.html" aria-label="{{d.aria}}" style="{{d.style}}">
+            <span style="font-size: 12px; font-weight: 900; color: #5A503A">{{d.letter}}</span>
+            <span style="font-size: 16px; font-weight: 900">{{d.num}}</span>
+            <span aria-hidden="true" style="display: flex; gap: 2px; height: 7px">
+              <sc-for list="{{d.dots}}" as="dot" hint-placeholder-count="2"><span style="{{dot}}"></span></sc-for>
+            </span>
+          </a>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{week}}" as="e" hint-placeholder-count="5">
+          <a href="OC-CalEvent.dc.html" style="{{e.row}}">
+            <span style="width: 40px; flex: none; font-size: 13px; font-weight: 900; color: #5A503A">{{e.day}}</span>
+            <span aria-hidden="true" style="{{e.stripe}}"></span>
+            <span style="flex: 1; min-width: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{e.title}}<span style="font-weight: 700; color: #5A503A"> · {{e.who}} · {{e.when}}</span></span>
+          </a>
+        </sc-for>
+      </div>
+      <a href="OC-CalAgenda.dc.html" style="align-self: flex-start; font-size: 15px; font-weight: 800; padding: 6px 0">See all (6 more)</a>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 4px 0 6px">
+      <p style="margin: 0; font-size: 16px; font-weight: 700; color: #5A503A">No events in the next 7 days. Add one?</p>
+      <a href="OC-CalAdd.dc.html" style="height: 56px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900">+ Add event</a>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasFooter}}" hint-placeholder-val="{{true}}">
+    <a href="OC-CalMonth.dc.html" style="border-top: 1.5px solid #F2E6C4; padding-top: 10px; min-height: 34px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; font-size: 15px; font-weight: 800">Open calendar<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["today","week","empty"],"default":"today"},"$preview":{"width":350,"height":440}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { view: null }; }
+  renderVals() {
+    var self = this;
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478' };
+    var mode = this.props.state || 'today';
+    var view = mode === 'today' ? (this.state.view || 'today') : mode;
+    var seg = function (on) {
+      return 'height: 40px; border-radius: 11px; border: none; font-family: inherit; font-size: 15px; cursor: pointer; color: #2A2414; ' +
+        (on ? 'background: #FFFFFF; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)' : 'background: transparent; font-weight: 700; color: #5A503A');
+    };
+    var avatar = function (w) {
+      return 'width: 32px; height: 32px; flex: none; border-radius: 50%; background: ' + C[w] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (w.length > 1 ? '11px' : '14px') + '; font-weight: 900';
+    };
+    var today = [
+      ['All', 'Brunch at Grandma’s', 'Lunch · Grandma’s house', true],
+      ['J', 'Baby swim class', 'Afternoon · Gabriel takes James', false],
+      ['All', 'Movie night', 'Evening', false]
+    ].map(function (x, i, arr) {
+      return {
+        initial: x[0], title: x[1], sub: x[2], now: x[3],
+        row: 'display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 6px 0; text-decoration: none; color: #2A2414' + (i < arr.length - 1 ? '; border-bottom: 1.5px solid #F2E6C4' : ''),
+        stripe: 'width: 5px; align-self: stretch; border-radius: 3px; flex: none; background: ' + C[x[0]],
+        avatar: avatar(x[0])
+      };
+    });
+    var DOTS = [['All', 'J'], ['G'], ['E'], ['E', 'J'], ['E', 'G'], ['E', 'G'], ['J', 'All', 'G']];
+    var strip = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(function (l, i) {
+      var dots = mode === 'week' && i === 0 ? [] : DOTS[i];
+      var isToday = i === 0;
+      return {
+        letter: l, num: 25 + i, aria: (isToday ? 'Today, ' : '') + 'October ' + (25 + i) + ', ' + (dots.length ? dots.length + ' people busy' : 'nothing planned'),
+        dots: dots.map(function (w) { return 'width: 7px; height: 7px; border-radius: 50%; background: ' + C[w] + '; box-shadow: inset 0 0 0 1px rgba(42,36,20,0.25)'; }),
+        style: 'min-height: 62px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #2A2414; ' +
+          (isToday ? 'background: #FFF0C9; box-shadow: inset 0 0 0 2px #5A6820' : dots.length ? 'background: #FFF8E3' : 'background: transparent; color: #5A503A')
+      };
+    });
+    var week = [
+      ['Mon', 'Morning run', 'Gabriel', '06:30', 'G'],
+      ['Tue', 'Eva’s birthday', 'Eva', 'All day', 'E'],
+      ['Tue', 'Yoga', 'Eva', 'Evening', 'E'],
+      ['Wed', 'Lyon trip', 'Eva', 'Wed–Fri', 'E'],
+      ['Wed', 'Pediatrician', 'James', '10:00', 'J']
+    ].map(function (x, i) {
+      return {
+        day: x[0], title: x[1], who: x[2], when: x[3],
+        row: 'display: flex; align-items: center; gap: 10px; min-height: 44px; text-decoration: none; color: #2A2414' + (i < 4 ? '; border-bottom: 1.5px solid #F2E6C4' : ''),
+        stripe: 'width: 5px; height: 26px; border-radius: 3px; flex: none; background: ' + C[x[4]]
+      };
+    });
+    return {
+      hasToggle: mode === 'today', hasTitle: mode !== 'today',
+      title: mode === 'week' ? 'This week' : 'Calendar',
+      todayOn: view === 'today' ? 'true' : 'false', weekOn: view === 'week' ? 'true' : 'false',
+      todayStyle: seg(view === 'today'), weekStyle: seg(view === 'week'),
+      showToday: function () { self.setState({ view: 'today' }); },
+      showWeek: function () { self.setState({ view: 'week' }); },
+      isToday: view === 'today', isWeek: view === 'week', isEmpty: mode === 'empty',
+      hasFooter: mode !== 'empty',
+      today: today, strip: strip, week: week
+    };
+  }
+}
+</script>
+</body>
+</html>

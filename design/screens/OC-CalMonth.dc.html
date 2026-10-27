@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Calendar month</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<div style="width: 390px; height: 1000px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <dc-import name="CalHeader" view="month" label="{{monthFull}}" short="{{monthShort}}" hint-size="390px,230px"></dc-import>
+
+  <div ref="{{scrollRef}}" onScroll="{{onScroll}}" style="position: absolute; left: 0; right: 0; top: 230px; bottom: 0; overflow-y: auto; padding: 4px 8px 180px; box-sizing: border-box">
+    <div style="background: #FFFFFF; border-radius: 20px">
+      <div aria-hidden="true" style="position: sticky; top: 0; z-index: 3; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); padding: 8px 0 6px; background: #FFFFFF; border-radius: 20px 20px 0 0; border-bottom: 1.5px solid #F2E6C4; box-shadow: 0 4px 8px -6px rgba(42,36,20,0.25)">
+        <sc-for list="{{weekdays}}" as="w" hint-placeholder-count="7">
+          <span style="text-align: center; font-size: 12px; font-weight: 900; color: #5A503A">{{w}}</span>
+        </sc-for>
+      </div>
+      <sc-for list="{{weeks}}" as="wk" hint-placeholder-count="17">
+      <div style="position: relative">
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr))">
+        <sc-for list="{{wk.cells}}" as="c" hint-placeholder-count="7">
+          <a href="OC-CalDay.dc.html" aria-label="{{c.aria}}" style="{{c.style}}">
+            <span style="{{c.numStyle}}">{{c.num}}</span>
+            <sc-for list="{{c.chips}}" as="e" hint-placeholder-count="2">
+              <span style="{{e.style}}"><span style="display: block; overflow: hidden; white-space: nowrap">{{e.text}}</span></span>
+            </sc-for>
+            <sc-if value="{{c.more}}" hint-placeholder-val="{{false}}">
+              <span style="font-size: 11px; font-weight: 900; color: #5A503A; padding-left: 3px">{{c.moreText}}</span>
+            </sc-if>
+          </a>
+        </sc-for>
+      </div>
+      <sc-for list="{{wk.bars}}" as="bar" hint-placeholder-count="1">
+        <a href="OC-CalEvent.dc.html" aria-label="{{bar.aria}}" style="{{bar.style}}"><span style="display: block; overflow: hidden; white-space: nowrap">{{bar.text}}</span></a>
+      </sc-for>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <sc-if value="{{showHint}}" hint-placeholder-val="{{true}}">
+    <div style="position: absolute; left: 16px; right: 92px; bottom: 112px; z-index: 4; background: #D9E3A8; border-radius: 20px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 20px rgba(42,36,20,0.2)">
+      <div style="flex: 1; font-size: 14px; font-weight: 800; line-height: 1.35">Tap a day to see details. Each color is a family member.</div>
+      <button onClick="{{dismiss}}" style="height: 44px; padding: 0 14px; flex: none; border-radius: 999px; border: none; background: #FFFFFF; color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer">Got it</button>
+    </div>
+  </sc-if>
+
+  <a href="OC-CalAdd.dc.html" aria-label="Add event" style="position: absolute; right: 20px; bottom: 112px; width: 60px; height: 60px; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(42,36,20,0.25)">
+    <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </a>
+  <div style="position: absolute; left: 0; bottom: 0; width: 390px; height: 160px">
+    <dc-import name="TabBar" active="calendar" timers="{{false}}" hint-size="390px,160px"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { hint: true, top: 4 }; }
+  renderVals() {
+    var self = this;
+    var ROW = 96, WEEKS = 22;                       // fixed row height; Aug 30, 2026 → Jan 30, 2027
+    var DAY = 86400000, START = Date.UTC(2026, 7, 30), TODAY = Date.UTC(2026, 9, 25), THIS_YEAR = 2026;
+    var MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var MSHORT = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478', Oth: '#EFE8D8' };
+    var ORDER = { 'All day': 0, 'Early morning': 1, 'Morning': 2, 'Lunch': 3, 'Afternoon': 4, 'Evening': 5 };
+    var d = function (m, day) { return Date.UTC(2026, m - 1, day); };
+    var every = function (dow, from, to) { var out = []; for (var t = from; t <= to; t += DAY) if (new Date(t).getUTCDay() === dow) out.push(t); return out; };
+    var EV = [
+      { t: 'Baby music', who: ['J'], slot: 'Morning', days: every(6, d(9, 5), d(12, 12)) },
+      { t: 'Yoga', who: ['E'], slot: 'Evening', days: every(2, d(9, 1), d(12, 15)) },
+      { t: 'Baby swim', who: ['J'], slot: 'Afternoon', days: every(0, d(10, 4), d(12, 13)) },
+      { t: 'Poker', who: ['G'], slot: 'Evening', days: [d(9, 11), d(9, 25), d(10, 9), d(10, 23), d(10, 30), d(11, 6), d(11, 20), d(12, 4)] },
+      { t: 'Book club', who: ['E'], slot: 'Evening', days: [d(9, 17), d(10, 8), d(11, 12), d(12, 10)] },
+      { t: 'Labor Day BBQ', who: ['All', 'Oth'], slot: 'Afternoon', days: [d(9, 7)] },
+      { t: 'Pediatrician', who: ['J'], slot: 'Morning', days: [d(9, 14), d(10, 28), d(11, 11)] },
+      { t: 'School night', who: ['G', 'E'], slot: 'Evening', days: [d(10, 1)] },
+      { t: 'Apple picking', who: ['All'], slot: 'All day', days: [d(10, 11)] },
+      { t: 'Vet', who: ['G'], slot: 'Early morning', days: [d(10, 15)] },
+      { t: 'Brunch', who: ['All'], slot: 'Lunch', days: [d(10, 18), d(10, 25), d(11, 15)] },
+      { t: 'Busy', who: ['E'], slot: 'Afternoon', days: [d(10, 22)] },
+      { t: 'Movie night', who: ['All'], slot: 'Evening', days: [d(10, 25)] },
+      { t: 'Run', who: ['G'], slot: 'Early morning', days: [d(10, 26)] },
+      { t: 'Eva’s bday', who: ['E'], slot: 'All day', days: [d(10, 27)] },
+      { t: 'Dentist', who: ['G'], slot: 'Morning', days: [d(10, 29)] },
+      { t: 'Halloween', who: ['All'], slot: 'Afternoon', days: [d(10, 31)] },
+      { t: 'Surprise', who: ['G', 'J'], slot: 'Evening', days: [d(10, 31)] },
+      { t: 'Dinner at Sam’s', who: ['Oth'], slot: 'Evening', days: [d(11, 21)] },
+      { t: 'Thanksgiving', who: ['All'], slot: 'All day', days: [d(11, 26)] },
+      { t: 'Grandma visits', who: ['All'], slot: 'All day', span: [d(10, 16), d(10, 19)] },
+      { t: 'Lyon trip', who: ['E'], slot: 'All day', span: [d(10, 28), d(10, 30)] },
+      { t: 'Paris for the holidays', who: ['All'], slot: 'All day', span: [d(12, 19), d(12, 26)] }
+    ];
+    var label = function (who) { return who.filter(function (w) { return w !== 'Oth'; }).slice(0, 2).join('·'); };
+    var bg = function (who) {
+      var c1 = C[who[0]], c2 = who[1] ? C[who[1]] : null;
+      return c2 ? 'linear-gradient(90deg, ' + c1 + ' 50%, ' + c2 + ' 50%)' : c1;
+    };
+    var idx = function (t) { return Math.round((t - START) / DAY); };
+    var byDay = {};
+    EV.forEach(function (e) {
+      var ds = e.days || [];
+      if (e.span) for (var t = e.span[0]; t <= e.span[1]; t += DAY) ds.push(t);
+      ds.forEach(function (t) {
+        var part = !e.span ? 'single' : t === e.span[0] ? 'start' : t === e.span[1] ? 'end' : 'mid';
+        (byDay[idx(t)] = byDay[idx(t)] || []).push({ e: e, part: part });
+      });
+    });
+    var weeks = [];
+    for (var w = 0; w < WEEKS; w++) {
+      var cells = [];
+      for (var c = 0; c < 7; c++) {
+        var i = w * 7 + c, t = START + i * DAY, dt = new Date(t);
+        var dayNum = dt.getUTCDate(), m = dt.getUTCMonth();
+        var list = (byDay[i] || []).slice().sort(function (a, b) {
+          return (a.e.span ? -1 : ORDER[a.e.slot]) - (b.e.span ? -1 : ORDER[b.e.slot]);
+        });
+        var past = t < TODAY, isToday = t === TODAY, first = dayNum === 1;
+        var shown = list.slice(0, 2).map(function (x) {
+          if (x.part !== 'single') return { text: '', style: 'display: block; height: 20px' };
+          var txt = label(x.e.who);
+          return {
+            text: (txt ? txt + ' ' : '') + x.e.t,
+            style: 'display: block; height: 20px; line-height: 20px; padding: 0 4px; border-radius: 6px; box-sizing: border-box; background: ' + bg(x.e.who) + '; font-size: 11px; font-weight: 800; color: #2A2414' + (x.e.who[0] === 'Oth' ? '; box-shadow: inset 0 0 0 1px #D8CBA4' : '')
+          };
+        });
+        var more = list.length - shown.length;
+        cells.push({
+          num: first ? MSHORT[m].replace('.', '') + ' 1' : dayNum,
+          chips: shown, more: more > 0, moreText: '+' + more,
+          aria: MON[m] + ' ' + dayNum + (list.length ? ': ' + list.map(function (x) { return x.e.t; }).join(', ') : ': nothing planned'),
+          style: 'height: ' + ROW + 'px; overflow: hidden; box-sizing: border-box; padding: 4px 4px 6px; display: flex; flex-direction: column; gap: 3px; text-decoration: none; color: #2A2414; border-right: 1px solid #F2E6C4; border-bottom: 1px solid #F2E6C4; ' +
+            (isToday ? 'box-shadow: inset 0 0 0 2.5px #5A6820; background: #FFFFFF' : past ? 'background: #FFF8E3' : 'background: #FFFFFF'),
+          numStyle: isToday
+            ? 'align-self: flex-start; min-width: 22px; height: 22px; border-radius: 11px; background: #5A6820; color: #FFFFFF; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center'
+            : first
+              ? 'align-self: flex-start; height: 22px; padding: 0 7px; border-radius: 11px; background: #2A2414; color: #FFFFFF; font-size: 12px; font-weight: 900; display: flex; align-items: center'
+              : 'height: 22px; padding-left: 3px; font-size: 12px; font-weight: 800; display: flex; align-items: center; color: ' + (past ? '#5A503A' : '#2A2414')
+        });
+      }
+      weeks.push({ cells: cells, bars: [] });
+    }
+    // multi-day events: one bar per week row, laid over the grid so the title runs the full length
+    EV.filter(function (e) { return e.span; }).forEach(function (e) {
+      var a = idx(e.span[0]), b = idx(e.span[1]);
+      while (a <= b) {
+        var wr = Math.floor(a / 7), end = Math.min(b, wr * 7 + 6), col = a % 7, n = end - a + 1;
+        var firstPart = a === idx(e.span[0]), lastPart = end === b;
+        if (wr < WEEKS) weeks[wr].bars.push({
+          text: label(e.who) + ' ' + e.t + (firstPart ? '' : ' (cont.)'),
+          aria: e.t + ', ' + MON[new Date(e.span[0]).getUTCMonth()] + ' ' + new Date(e.span[0]).getUTCDate() + ' to ' + MON[new Date(e.span[1]).getUTCMonth()] + ' ' + new Date(e.span[1]).getUTCDate(),
+          style: 'position: absolute; top: 29px; height: 20px; line-height: 20px; left: calc(' + (col * 100 / 7) + '% + 4px); width: calc(' + (n * 100 / 7) + '% - 8px); box-sizing: border-box; padding: 0 4px; border-radius: ' + (firstPart ? '6px' : '0') + ' ' + (lastPart ? '6px 6px' : '0 0') + ' ' + (firstPart ? '6px' : '0') + '; background: ' + bg(e.who) + '; color: #2A2414; text-decoration: none; font-size: 11px; font-weight: 800; z-index: 1'
+        });
+        a = end + 1;
+      }
+    });
+    // The title follows the month that fills the grid: the Wednesday of the second visible row.
+    var probe = new Date(START + (Math.min(WEEKS - 1, this.state.top + 1) * 7 + 3) * DAY);
+    return {
+      weekdays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+      weeks: weeks,
+      // This year: full month name, no year ("October"). Another year: "January 2027", or "Jan. 2027" under 430 px.
+      monthFull: MON[probe.getUTCMonth()] + (probe.getUTCFullYear() === THIS_YEAR ? '' : ' ' + probe.getUTCFullYear()),
+      monthShort: probe.getUTCFullYear() === THIS_YEAR ? MON[probe.getUTCMonth()] : MSHORT[probe.getUTCMonth()] + ' ' + probe.getUTCFullYear(),
+      scrollRef: function (el) { if (el && !self._placed) { self._placed = true; el.scrollTop = 4 * ROW; } },
+      onScroll: function (ev) {
+        var top = Math.floor((ev.currentTarget.scrollTop + 24) / ROW);
+        if (top !== self.state.top) self.setState({ top: top });
+      },
+      showHint: this.state.hint,
+      dismiss: function () { self.setState({ hint: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
