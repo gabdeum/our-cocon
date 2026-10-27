@@ -65,6 +65,9 @@ jobs:
       # Spec 005 SC-001: the quantity engine keeps over 95% line coverage.
       - name: Quantity coverage
         run: pnpm --filter @cocon/quantity coverage
+      # Spec 034 FR-001: the calendar engine is fully unit-tested.
+      - name: Calendar coverage
+        run: pnpm --filter @cocon/calendar coverage
       - name: Database tests
         run: pnpm exec supabase test db
       - name: Dependency audit
