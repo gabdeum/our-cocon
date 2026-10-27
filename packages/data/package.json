@@ -12,8 +12,10 @@
     "typecheck": "tsc --noEmit --pretty false"
   },
   "dependencies": {
+    "@cocon/calendar": "workspace:*",
     "@cocon/quantity": "workspace:*",
-    "@cocon/schemas": "workspace:*"
+    "@cocon/schemas": "workspace:*",
+    "zod": "^4.6.7"
   },
   "peerDependencies": {
     "@supabase/supabase-js": "^2.118.0"

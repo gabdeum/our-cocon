@@ -61,6 +61,24 @@ describe('SessionProvider cache', () => {
     await waitFor(() => expect(screen.getByRole('status').textContent).toBe('ready:The Demanges'));
   });
 
+  it("sets the family's home time zone from this device once the family is loaded (spec 035)", async () => {
+    const client = fakeClient(() => Promise.resolve({ data: [], error: null }));
+    client.from.mockImplementation(((table: string) => ({
+      select: vi.fn(() => Promise.resolve({ data: table === 'members' ? [gabriel] : [family], error: null })),
+    })) as never);
+    client.rpc.mockResolvedValue({ data: null, error: null });
+    setup(client);
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('ready:The Demanges'));
+    expect(client.rpc.mock.calls).toEqual([['claim_home_time_zone', { tz: Intl.DateTimeFormat().resolvedOptions().timeZone }]]);
+  });
+
+  it('sets no time zone while signed out', async () => {
+    const client = fakeClient(() => Promise.resolve({ data: [], error: null }), null);
+    setup(client);
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('signedOut'));
+    expect(client.rpc).not.toHaveBeenCalled();
+  });
+
   it('falls back to no family when the load fails online with nothing cached', async () => {
     setup(fakeClient(() => Promise.reject(new Error('boom'))));
     await waitFor(() => expect(screen.getByRole('status').textContent).toBe('noFamily'));

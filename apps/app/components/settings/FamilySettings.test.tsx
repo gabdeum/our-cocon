@@ -239,10 +239,44 @@ describe('members without the app (spec 033)', () => {
     const { api } = setup({ me: alex, members: everyone });
     fireEvent.click(screen.getByRole('button', { name: 'James, Added by Gabriel, No account' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    await flush();
+    expect(api.managedMemberUpcomingEvents).toHaveBeenCalledWith('m-james');
     expect(screen.getByText('Remove James?')).toBeTruthy();
     fireEvent.click(last(screen.getAllByRole('button', { name: 'Remove' })));
     await flush();
     expect(api.removeManagedMember).toHaveBeenCalledWith('m-james');
+  });
+
+  it("says James's upcoming events move to Everyone (spec 035, 032-later L78)", async () => {
+    const api = fakeApi({ managedMemberUpcomingEvents: vi.fn().mockResolvedValue({ ok: true, data: 4 }) });
+    setup({ me: alex, members: everyone }, api);
+    fireEvent.click(screen.getByRole('button', { name: 'James, Added by Gabriel, No account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    await flush();
+    expect(screen.getByText("Move James's 4 upcoming events to Everyone?")).toBeTruthy();
+    expect(screen.getByText('Their past events stay on the calendar. Their name and color come off the family list.')).toBeTruthy();
+    fireEvent.click(last(screen.getAllByRole('button', { name: 'Remove' })));
+    await flush();
+    expect(api.removeManagedMember).toHaveBeenCalledWith('m-james');
+  });
+
+  it('counts one upcoming event in the singular', async () => {
+    const api = fakeApi({ managedMemberUpcomingEvents: vi.fn().mockResolvedValue({ ok: true, data: 1 }) });
+    setup({ me: alex, members: everyone }, api);
+    fireEvent.click(screen.getByRole('button', { name: 'James, Added by Gabriel, No account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    await flush();
+    expect(screen.getByText("Move James's 1 upcoming event to Everyone?")).toBeTruthy();
+  });
+
+  it("doesn't ask without the count, and says it couldn't", async () => {
+    const api = fakeApi({ managedMemberUpcomingEvents: vi.fn().mockResolvedValue({ ok: false, error: 'failed' }) });
+    setup({ me: alex, members: everyone }, api);
+    fireEvent.click(screen.getByRole('button', { name: 'James, Added by Gabriel, No account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    await flush();
+    expect(screen.queryByText('Remove James?')).toBeNull();
+    expect(screen.getByText("Couldn't save. Try again.")).toBeTruthy();
   });
 });
 

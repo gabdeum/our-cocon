@@ -28,7 +28,9 @@ export function fakeApi(overrides: Partial<Record<keyof FamilyApi, unknown>> = {
     addManagedMember: vi.fn(() => ok('m-new')),
     renameManagedMember: vi.fn(() => ok(undefined)),
     removeManagedMember: vi.fn(() => ok(undefined)),
+    managedMemberUpcomingEvents: vi.fn(() => ok(0)),
     setMemberColor: vi.fn(() => ok(undefined)),
+    claimHomeTimeZone: vi.fn(() => ok(undefined)),
     ...overrides,
   } as unknown as { [K in keyof FamilyApi]: FamilyApi[K] & ReturnType<typeof vi.fn> };
 }

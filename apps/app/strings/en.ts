@@ -286,6 +286,9 @@ export const strings = {
       removeManaged: 'Remove',
       removeManagedTitle: (name: string) => `Remove ${name}?`,
       removeManagedBody: 'Their name and color come off the family list.',
+      // Spec 035 (032-later L78): when they have upcoming events.
+      removeManagedMoveTitle: (name: string, n: number) => `Move ${name}'s ${n} upcoming ${n === 1 ? 'event' : 'events'} to Everyone?`,
+      removeManagedMoveBody: 'Their past events stay on the calendar. Their name and color come off the family list.',
       colorTaken: 'Someone else just took that color. Pick another.',
       // My color (moved here from OC-CalSettings, spec 033 US3).
       myColor: 'My color',

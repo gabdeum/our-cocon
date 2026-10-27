@@ -118,6 +118,13 @@ export function SessionProvider({
     if (userId) tracker.identify(userId, familyId);
   }, [tracker, userId, familyId]);
 
+  const api = useMemo(() => familyApi(client), [client]);
+  // Spec 035: the calendar's "today" is in the family's home time zone; the first device to open
+  // the app sets it (a no-op once set, and offline it simply waits for the next start).
+  useEffect(() => {
+    if (familyId) void api.claimHomeTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, [api, familyId]);
+
   const signOut = useCallback(async () => {
     await client.auth.signOut();
     queryClient.clear();
@@ -127,7 +134,6 @@ export function SessionProvider({
     tracker.reset();
   }, [client, queryClient, persister, clearDevice, userId, tracker]);
 
-  const api = useMemo(() => familyApi(client), [client]);
   const value = useMemo(() => ({ state, client, api, tracker, refresh, signOut }), [state, client, api, tracker, refresh, signOut]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

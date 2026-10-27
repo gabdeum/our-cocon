@@ -137,6 +137,148 @@ isOneToOne: false
       referencedColumns: ["key"]
     }
                   ]
+                },"event_checklist_items": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"done": boolean,"done_by": string | null,"event_id": string,"family_id": string,"id": string,"label": string,"position": number,"source": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"done"?: boolean,"done_by"?: string | null,"event_id": string,"family_id": string,"id"?: string,"label": string,"position": number,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"done"?: boolean,"done_by"?: string | null,"event_id"?: string,"family_id"?: string,"id"?: string,"label"?: string,"position"?: number,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_checklist_items_done_by_family_id_fkey"
+      columns: ["done_by","family_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "event_checklist_items_event_id_family_id_fkey"
+      columns: ["event_id","family_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "event_checklist_items_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"event_exceptions": {
+                  Row: {
+                    "cancelled": boolean,"created_at": string,"created_by": string | null,"event_id": string,"family_id": string,"id": string,"occurrence_date": string,"override": Json | null,"source": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancelled"?: boolean,"created_at"?: string,"created_by"?: string | null,"event_id": string,"family_id": string,"id"?: string,"occurrence_date": string,"override"?: Json | null,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "cancelled"?: boolean,"created_at"?: string,"created_by"?: string | null,"event_id"?: string,"family_id"?: string,"id"?: string,"occurrence_date"?: string,"override"?: Json | null,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_exceptions_event_id_family_id_fkey"
+      columns: ["event_id","family_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "event_exceptions_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"event_members": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"event_id": string,"family_id": string,"id": string,"member_id": string | null,"removed_name": string | null,"source": string,"updated_at": string,"updated_by": string | null,"who": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"event_id": string,"family_id": string,"id"?: string,"member_id"?: string | null,"removed_name"?: string | null,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"who": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"event_id"?: string,"family_id"?: string,"id"?: string,"member_id"?: string | null,"removed_name"?: string | null,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"who"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_members_event_id_family_id_fkey"
+      columns: ["event_id","family_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "event_members_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_members_member_id_family_id_fkey"
+      columns: ["member_id","family_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
+                },"event_surprise": {
+                  Row: {
+                    "cover_note": string | null,"cover_title": string,"created_at": string,"created_by": string | null,"event_id": string,"family_id": string,"hidden_from": (string)[],"id": string,"source": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cover_note"?: string | null,"cover_title": string,"created_at"?: string,"created_by"?: string | null,"event_id": string,"family_id": string,"hidden_from": (string)[],"id"?: string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "cover_note"?: string | null,"cover_title"?: string,"created_at"?: string,"created_by"?: string | null,"event_id"?: string,"family_id"?: string,"hidden_from"?: (string)[],"id"?: string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_surprise_event_id_family_id_fkey"
+      columns: ["event_id","family_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "event_surprise_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"events": {
+                  Row: {
+                    "category": string | null,"created_at": string,"created_by": string | null,"deleted_at": string | null,"deleted_by": string | null,"end_time": string | null,"ends_on": string,"family_id": string,"id": string,"location": string | null,"notes": string | null,"recurrence": Json | null,"reminder": string,"responsible_member_id": string | null,"slots": (string)[],"source": string,"start_time": string | null,"starts_on": string,"time_type": string,"title": string,"updated_at": string,"updated_by": string | null,"visibility": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"end_time"?: string | null,"ends_on": string,"family_id": string,"id"?: string,"location"?: string | null,"notes"?: string | null,"recurrence"?: Json | null,"reminder"?: string,"responsible_member_id"?: string | null,"slots"?: (string)[],"source"?: string,"start_time"?: string | null,"starts_on": string,"time_type": string,"title": string,"updated_at"?: string,"updated_by"?: string | null,"visibility"?: string
+                  }
+                  Update: {
+                    "category"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"end_time"?: string | null,"ends_on"?: string,"family_id"?: string,"id"?: string,"location"?: string | null,"notes"?: string | null,"recurrence"?: Json | null,"reminder"?: string,"responsible_member_id"?: string | null,"slots"?: (string)[],"source"?: string,"start_time"?: string | null,"starts_on"?: string,"time_type"?: string,"title"?: string,"updated_at"?: string,"updated_by"?: string | null,"visibility"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "events_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "events_responsible_member_id_family_id_fkey"
+      columns: ["responsible_member_id","family_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
                 },"families": {
                   Row: {
                     "created_at": string,"created_by": string | null,"id": string,"name": string,"owner_id": string,"source": string,"updated_at": string,"updated_by": string | null
@@ -150,6 +292,26 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"family_calendar_settings": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"family_id": string,"home_time_zone": string | null,"id": string,"slot_times": Json | null,"source": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"home_time_zone"?: string | null,"id"?: string,"slot_times"?: Json | null,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"home_time_zone"?: string | null,"id"?: string,"slot_times"?: Json | null,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "family_calendar_settings_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: true
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"family_ingredients": {
                   Row: {
@@ -454,7 +616,15 @@ isOneToOne: false
                 }
           }
           Views: {
-            "ingredient_facts": {
+            "events_visible": {
+                  Row: {
+                    "category": string | null,"checklist": Json | null,"created_at": string | null,"created_by": string | null,"creator_member_id": string | null,"deleted_at": string | null,"deleted_by": string | null,"end_time": string | null,"ends_on": string | null,"exceptions": Json | null,"family_id": string | null,"id": string | null,"location": string | null,"members": Json | null,"notes": string | null,"recurrence": Json | null,"reminder": string | null,"removed_members": Json | null,"responsible_member_id": string | null,"slots": (string)[] | null,"source": string | null,"start_time": string | null,"starts_on": string | null,"surprise": Json | null,"time_type": string | null,"title": string | null,"updated_at": string | null,"updated_by": string | null,"visibility": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                },"ingredient_facts": {
                   Row: {
                     "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"default_size": Database["public"]['Enums']["size_word"] | null,"density_g_per_ml": number | null,"diet": (string)[] | null,"family_ingredient_id": string | null,"name": string | null,"noun_plural": string | null,"noun_singular": string | null,"plural": string | null,"size_large_g": number | null,"size_medium_g": number | null,"size_small_g": number | null,"whole_only": boolean | null
                   }
@@ -482,8 +652,19 @@ isOneToOne: false
 "_assistant_for_redirects":
 { Args: { "uris": string }; Returns: string
                            },
+"_created_event":
+{ Args: { "eid": string }; Returns: boolean
+                           },
+"_events_visible":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "category": string,"checklist": Json,"created_at": string,"created_by": string,"creator_member_id": string,"deleted_at": string,"deleted_by": string,"end_time": string,"ends_on": string,"exceptions": Json,"family_id": string,"id": string,"location": string,"members": Json,"notes": string,"recurrence": Json,"reminder": string,"removed_members": Json,"responsible_member_id": string,"slots": (string)[],"source": string,"start_time": string,"starts_on": string,"surprise": Json,"time_type": string,"title": string,"updated_at": string,"updated_by": string,"visibility": string
+            }[]
+                           },
 "_family_table":
 { Args: { "live": boolean,"t": unknown }; Returns: undefined
+                           },
+"_family_today":
+{ Args: { "fam": string }; Returns: string
                            },
 "_ingredient_facts":
 { Args: { "fam": string }; Returns: {
@@ -537,6 +718,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"_my_member_id":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "_next_color":
 { Args: { "fam": string }; Returns: Database["public"]['Enums']["member_color"]
                            },
@@ -559,6 +743,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"_override_keys_ok":
+{ Args: { "o": Json }; Returns: boolean
+                           },
 "_recipe_folder_deleted":
 { Args: { "path": string }; Returns: boolean
                            },
@@ -574,8 +761,16 @@ isOneToOne: false
 "_row_fingerprint":
 { Args: { "r": Json }; Returns: string
                            },
+"_sees_event":
+{ Args: { "eid": string }; Returns: boolean
+                           } |
+{ Args: { "creator": string,"eid": string,"vis": string }; Returns: boolean
+                           },
 "_token_hash":
 { Args: { "token": string }; Returns: string
+                           },
+"_upcoming_events_of":
+{ Args: { "fam": string,"member": string }; Returns: string[]
                            },
 "_valid_packs":
 { Args: { "p": Json }; Returns: boolean
@@ -611,6 +806,9 @@ isOneToOne: false
 "check_request":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"claim_home_time_zone":
+{ Args: { "tz": string }; Returns: undefined
+                           },
 "create_family":
 { Args: { "display_name": string,"family_name": string }; Returns: string
                            },
@@ -629,6 +827,9 @@ isOneToOne: false
 "make_owner":
 { Args: { "member_id": string }; Returns: undefined
                            },
+"managed_member_upcoming_events":
+{ Args: { "member_id": string }; Returns: number
+                           },
 "match_ingredients":
 { Args: { "queries": Json }; Returns: {
               "aisle": Database["public"]['Enums']["aisle"],"catalog_key": string,"default_size": Database["public"]['Enums']["size_word"],"density_g_per_ml": number,"diet": (string)[],"family_ingredient_id": string,"how": string,"idx": number,"name": string,"noun_plural": string,"noun_singular": string,"plural": string,"size_large_g": number,"size_medium_g": number,"size_small_g": number,"whole_only": boolean
@@ -646,6 +847,9 @@ isOneToOne: false
 { Args: { "event": Json }; Returns: Json
                            },
 "purge_cleared_groceries":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"purge_deleted_events":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
 "purge_deleted_recipes":
@@ -667,6 +871,9 @@ isOneToOne: false
                            },
 "request_source":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"save_event":
+{ Args: { "p_checklist"?: Json,"p_event": Json,"p_id"?: string,"p_members": Json,"p_surprise"?: Json }; Returns: string
                            },
 "save_recipe_ingredients":
 { Args: { "p_ingredients": Json,"p_recipe_id": string }; Returns: undefined
