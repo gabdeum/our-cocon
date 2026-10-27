@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Calendar agenda</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<div style="width: 390px; height: 1560px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <dc-import name="CalHeader" view="agenda" label="Coming up" hint-size="390px,230px"></dc-import>
+
+  <div style="padding: 4px 20px 190px; display: flex; flex-direction: column; gap: 18px">
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+      <section style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 900">{{g.label}}</h2>
+        <div style="background: #FFFFFF; border-radius: 22px; padding: 4px 14px 4px 10px">
+          <sc-for list="{{g.events}}" as="e" hint-placeholder-count="2">
+            <a href="OC-CalEvent.dc.html" style="{{e.row}}">
+              <span aria-hidden="true" style="{{e.stripe}}"></span>
+              <span style="{{e.avatar}}">{{e.initial}}</span>
+              <span style="flex: 1; min-width: 0">
+                <span style="display: block; font-size: 17px; font-weight: 800">{{e.title}}</span>
+                <span style="display: block; font-size: 14px; font-weight: 700; color: #5A503A">{{e.sub}}</span>
+              </span>
+              <sc-if value="{{e.hasTag}}" hint-placeholder-val="{{false}}">
+                <span style="{{e.tagStyle}}">{{e.tag}}</span>
+              </sc-if>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+  </div>
+
+  <a href="OC-CalAdd.dc.html" aria-label="Add event" style="position: absolute; right: 20px; bottom: 112px; width: 60px; height: 60px; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(42,36,20,0.25)">
+    <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </a>
+  <div style="position: absolute; left: 0; bottom: 0; width: 390px; height: 160px">
+    <dc-import name="TabBar" active="calendar" timers="{{false}}" hint-size="390px,160px"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478' };
+    var TAGS = {
+      now: 'background: #FFCF5C',
+      birthday: 'background: #FFF0C9',
+      surprise: 'background: #D9E3A8',
+      trip: 'background: #FFF0C9'
+    };
+    var e = function (who, title, sub, tag, tagKind) {
+      return { who: who, title: title, sub: sub, tag: tag || '', tagKind: tagKind || 'now' };
+    };
+    var groups = [
+      { label: 'Today · Sun, Oct 25', events: [e('All', 'Brunch at Grandma’s', 'Lunch · Grandma’s house', 'Now'), e('J', 'Baby swim class', '14:30 · Gabriel takes James'), e('All', 'Movie night', 'Evening'), e('G', 'Poker night', 'Evening · at Sam’s')] },
+      { label: 'Tomorrow · Mon, Oct 26', events: [e('G', 'Morning run', '06:30–07:30 · Riverside Park')] },
+      { label: 'Tue, Oct 27', events: [e('E', 'Eva’s birthday', 'All day', 'Birthday', 'birthday'), e('E', 'Yoga', 'Evening · every Tuesday')] },
+      { label: 'Wed, Oct 28', events: [e('E', 'Lyon trip', 'All day · until Fri', 'Day 1 of 3', 'trip'), e('J', 'Pediatrician', '10:00 · Gabriel takes James')] },
+      { label: 'Thu, Oct 29', events: [e('E', 'Lyon trip', 'All day', 'Day 2 of 3', 'trip'), e('G', 'Dentist', '10:30–11:15')] },
+      { label: 'Fri, Oct 30', events: [e('E', 'Lyon trip', 'All day', 'Day 3 of 3', 'trip'), e('G', 'Poker night', 'Evening')] },
+      { label: 'Sat, Oct 31', events: [e('J', 'Baby music class', 'Morning · Gabriel takes James'), e('All', 'Halloween walk', 'Afternoon'), e('G', 'Eva’s surprise dinner', 'Evening · hidden from Eva', 'Surprise', 'surprise')] }
+    ].map(function (g) {
+      g.events = g.events.map(function (x, i) {
+        var last = i === g.events.length - 1;
+        return {
+          title: x.title, sub: x.sub, initial: x.who, hasTag: !!x.tag, tag: x.tag,
+          tagStyle: 'flex: none; font-size: 13px; font-weight: 900; padding: 5px 10px; border-radius: 999px; ' + TAGS[x.tagKind],
+          row: 'display: flex; gap: 12px; align-items: center; min-height: 64px; padding: 8px 0; text-decoration: none; color: #2A2414' + (last ? '' : '; border-bottom: 1.5px solid #F2E6C4'),
+          stripe: 'width: 6px; align-self: stretch; border-radius: 3px; flex: none; background: ' + C[x.who],
+          avatar: 'width: 36px; height: 36px; flex: none; border-radius: 50%; background: ' + C[x.who] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (x.who.length > 1 ? '12px' : '15px') + '; font-weight: 900'
+        };
+      });
+      return g;
+    });
+    return { groups: groups };
+  }
+}
+</script>
+</body>
+</html>
