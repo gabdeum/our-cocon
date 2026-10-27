@@ -3,6 +3,7 @@ import { Animated, PanResponder, Platform, Pressable, View, type AccessibilityAc
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarTone } from './Avatar';
 import { Icon, type IconName } from './Icon';
+import { IconTile, type IconTileTone } from './IconTile';
 import { Tag, type TagTone } from './Tag';
 import { Text } from './Text';
 
@@ -57,13 +58,16 @@ export function Mark({ kind, checked }: { kind: 'checkbox' | 'radio'; checked: b
 
 export type ListRowLeading =
   | { kind: 'checkbox' | 'radio'; checked: boolean }
-  | { kind: 'avatar'; initial: string; tone: AvatarTone };
+  | { kind: 'avatar'; initial: string; tone: AvatarTone }
+  /** An assistant's letters in a 40 px square (Settings › AI assistants, spec 025). */
+  | { kind: 'tile'; letters: string; tone: IconTileTone };
 
 export type ListRowTrailing =
-  | { kind: 'value'; text: string }
+  /** `olive`: a setting that's on, in olive-deep ("Allowed", OC-Connect). */
+  | { kind: 'value'; text: string; tone?: 'olive' }
   | { kind: 'status'; text: string }
   /** With an optional 13/700 status before it: "1 recipe ›" (OC-Settings › More). */
-  | { kind: 'chevron'; text?: string }
+  | { kind: 'chevron'; text?: string; tone?: 'olive' }
   | { kind: 'node'; node: ReactNode };
 
 export interface ListRowProps {
@@ -74,8 +78,8 @@ export interface ListRowProps {
    */
   titleDetail?: { text: string; note?: string };
   sub?: string;
-  /** Merge notes ("Already on the list (100 ml) → will be 400 ml") in warn 700. */
-  subTone?: 'muted' | 'warn';
+  /** Merge notes ("Already on the list (100 ml) → will be 400 ml") in warn 700; `olive`: a good status in olive-deep 700 ("Connected · used 2 h ago"). */
+  subTone?: 'muted' | 'warn' | 'olive';
   /** Ticked grocery: struck through in ink-faint. */
   done?: boolean;
   /** Left out (an unticked row in Add to groceries): the title in ink-muted, still readable. */
@@ -149,6 +153,7 @@ export function ListRow({
   const content = (
     <>
       {leading?.kind === 'avatar' ? <Avatar initial={leading.initial} tone={leading.tone} size="lg" /> : null}
+      {leading?.kind === 'tile' ? <IconTile letters={leading.letters} tone={leading.tone} /> : null}
       {isCheck ? <Mark kind={leading.kind} checked={leading.checked} /> : null}
       <View className="min-w-0 flex-1">
         <Text size={16} weight="800" color={done ? 'ink-faint' : dim ? 'ink-muted' : 'ink'} strike={done}>
@@ -161,7 +166,7 @@ export function ListRow({
           ) : null}
         </Text>
         {sub ? (
-          <Text variant="caption" weight={subTone === 'warn' ? '700' : '600'} color={subTone === 'warn' ? 'warn' : 'ink-muted'} className="mt-[1px]">
+          <Text variant="caption" weight={subTone === 'muted' ? '600' : '700'} color={subTone === 'warn' ? 'warn' : subTone === 'olive' ? 'olive-deep' : 'ink-muted'} className="mt-[1px]">
             {sub}
           </Text>
         ) : null}
@@ -233,7 +238,7 @@ function Trailing({ trailing }: { trailing: ListRowTrailing }) {
   switch (trailing.kind) {
     case 'value':
       return (
-        <Text size={15} weight="800" color="ink-muted">
+        <Text size={15} weight="800" color={trailing.tone === 'olive' ? 'olive-deep' : 'ink-muted'}>
           {trailing.text}
         </Text>
       );
@@ -246,7 +251,7 @@ function Trailing({ trailing }: { trailing: ListRowTrailing }) {
     case 'chevron':
       return trailing.text ? (
         <View className="flex-row items-center gap-12">
-          <Text size={13} weight="700" color="ink-muted">
+          <Text size={13} weight="700" color={trailing.tone === 'olive' ? 'olive-deep' : 'ink-muted'}>
             {trailing.text}
           </Text>
           <Icon name="chevron-right" size={18} color="inkMuted" />

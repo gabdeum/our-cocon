@@ -25,7 +25,8 @@ const supabase = vi.fn(async (_url: string | URL | Request, init?: RequestInit) 
     ? new Response(JSON.stringify({ id: '00000000-0000-4000-8000-00000000000a' }), { status: 200 })
     : new Response('{}', { status: 401 });
 });
-const server = createHttpServer(config, { fetch: supabase as typeof fetch, modules: [] });
+const touch = vi.fn(async () => {});
+const server = createHttpServer(config, { fetch: supabase as typeof fetch, modules: [], touch });
 let base = '';
 
 beforeAll(async () => {
@@ -88,6 +89,15 @@ describe('connecting (spec 023 FR-001)', () => {
     const text = await res.text();
     expect(text).toContain('"name":"our-cocon"');
     expect(text).toContain('Our Cocon is a family household app');
+  });
+
+  it('records the assistant’s use, for "Connected · used just now" (spec 025)', async () => {
+    touch.mockClear();
+    await initialize(assistantToken);
+    expect(touch).toHaveBeenCalledWith(expect.objectContaining({ userId: '00000000-0000-4000-8000-00000000000a', clientId: 'c0ffee00-0000-4000-8000-000000000001' }));
+    touch.mockRejectedValueOnce(new Error('database down'));
+    vi.spyOn(console, 'error').mockImplementationOnce(() => {});
+    expect((await initialize(assistantToken)).status).toBe(200);
   });
 });
 

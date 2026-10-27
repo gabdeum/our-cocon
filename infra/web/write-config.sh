@@ -15,8 +15,10 @@ check() {
 case "${COCON_ENV:-}" in staging | prod) ;; *) echo "write-config: COCON_ENV must be staging or prod" >&2; exit 1 ;; esac
 : "${SUPABASE_URL:?write-config: SUPABASE_URL is not set}"
 : "${SUPABASE_ANON_KEY:?write-config: SUPABASE_ANON_KEY is not set}"
+: "${MCP_URL:?write-config: MCP_URL is not set}"
 check SUPABASE_URL "$SUPABASE_URL"
 check SUPABASE_ANON_KEY "$SUPABASE_ANON_KEY"
+check MCP_URL "$MCP_URL"
 check POSTHOG_KEY "${POSTHOG_KEY:-}"
 check POSTHOG_HOST "${POSTHOG_HOST:-}"
 
@@ -29,6 +31,7 @@ window.__COCON__ = {
   commit: "$commit",
   supabaseUrl: "$SUPABASE_URL",
   supabaseAnonKey: "$SUPABASE_ANON_KEY",
+  mcpUrl: "$MCP_URL",
   posthogKey: "${POSTHOG_KEY:-}" || undefined,
   posthogHost: "${POSTHOG_HOST:-}" || undefined
 };

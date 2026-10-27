@@ -78,6 +78,77 @@ export const strings = {
     failed: "Couldn't connect. Check your connection and try again.",
     unnamed: 'Your AI assistant',
   },
+  // design/ui/OC-Connect.md (spec 025): Settings › AI assistants, with its Connect and Manage sheets.
+  // Connection steps checked against each assistant's help pages on 2026-10-26 (spec 025 FR-005).
+  aiConnections: {
+    back: 'Settings',
+    title: 'AI assistants',
+    lead: 'Let your AI save recipes and fill the grocery list for you. Each person connects their own.',
+    connected: (timeAgo: string) => `Connected · used ${timeAgo}`,
+    notConnected: 'Not connected',
+    notAvailable: 'Not available yet',
+    notAvailableNote: (assistant: string) => `${assistant} can't connect to apps like Our Cocon yet. We'll add it here as soon as it can.`,
+    manage: 'Manage',
+    manageA11y: (assistant: string) => `Manage ${assistant}`,
+    connect: 'Connect',
+    connectA11y: (assistant: string) => `Connect ${assistant}`,
+    /** An app that connected but isn't one of the three (named by itself, so in quotes). */
+    otherName: (name: string | null) => (name ? `“${name}”` : 'Another AI app'),
+    permissionsHeading: 'What AI can do',
+    permissions: { recipes_edit: 'Create & edit recipes', groceries: 'Change the grocery list', recipes_delete: 'Delete recipes' },
+    allowed: 'Allowed',
+    notAllowed: 'Not allowed',
+    permissionLead: 'For the AI assistants you connect. Everyone in your family chooses for their own.',
+    permissionFailed: "Couldn't save. Check your connection and try again.",
+    trySaying: 'Try saying',
+    examples: ['“Save my mum\'s ratatouille to Our Cocon. It serves 4.”', '“Add what I need for the quiche to our groceries.”'],
+    loading: 'Loading your AI assistants',
+    loadFailed: "Couldn't load your AI assistants. Check your connection and try again.",
+    retry: 'Try again',
+    close: 'Close',
+    // Connect sheet.
+    connectTitle: (assistant: string) => `Connect ${assistant}`,
+    addressLabel: 'Our Cocon address',
+    copy: 'Copy',
+    copied: 'Copied ✓',
+    check: "I've done this — check connection",
+    checking: 'Checking…',
+    connectedResult: 'Connected!',
+    notYet: (step: number) => `Not connected yet. Check step ${step} and try again.`,
+    /** The step the "Not connected yet" message points to: where the address is added. */
+    checkStep: 2,
+    // Menu and button names in **…** are highlighted, like amounts in recipe steps.
+    steps: {
+      claude: [
+        'Copy the Our Cocon address below.',
+        'In Claude, open **Customize › Connectors**, tap **+ Add**, then **Add custom connector**. Name it **Our Cocon**, paste the address, then tap **Continue** and **Add**.',
+        'When Claude asks, sign in to Our Cocon and tap **Allow**.',
+      ],
+      chatgpt: [
+        'Copy the Our Cocon address below.',
+        'In ChatGPT on the web, open **Plugins**, tap **+** and choose to add an MCP app. Name it **Our Cocon**, paste the address under **Connection**, keep **OAuth**, tick **I understand** and create it. No such option? Turn on **Developer mode** in **Settings › Security and sign-in** first.',
+        'When ChatGPT asks, sign in to Our Cocon and tap **Allow**.',
+      ],
+      gemini: [
+        'Copy the Our Cocon address below.',
+        'On gemini.google.com, open **Settings › Connected Apps**. Under **Custom apps**, choose **Add a custom app**, paste the address and tap **Next**.',
+        'When Gemini asks, sign in to Our Cocon and tap **Allow**.',
+      ],
+    },
+    notes: {
+      chatgpt: 'ChatGPT sometimes stops a request for a safety check. If that happens, just ask again.',
+      gemini: 'For now, Gemini only offers this in the US, with a personal Google account.',
+    } as Partial<Record<'claude' | 'chatgpt' | 'gemini', string>>,
+    // Manage sheet.
+    lastUsed: (timeAgo: string) => `Last used ${timeAgo}`,
+    disconnect: 'Disconnect',
+    disconnectTitle: (assistant: string) => `Disconnect ${assistant}?`,
+    disconnectBody: "It won't be able to see or change your recipes and groceries.",
+    cancel: 'Cancel',
+    disconnectFailed: "Couldn't disconnect. Check your connection and try again.",
+    timeAgo: (minutes: number) =>
+      minutes < 1 ? 'just now' : minutes < 60 ? `${minutes} min ago` : minutes < 24 * 60 ? `${Math.floor(minutes / 60)} h ago` : `${Math.floor(minutes / 1440)} ${Math.floor(minutes / 1440) === 1 ? 'day' : 'days'} ago`,
+  },
   // design/ui/OC-Settings.md (spec 003 sections; the rest come with 021, 025, 027, 018 and 029)
   settings: {
     title: 'Settings',
@@ -138,9 +209,11 @@ export const strings = {
       keep: 'Keep it',
       failed: "Couldn't save. Try again.",
     },
-    // OC-Settings › More (spec 018 adds Recently deleted; AI assistants comes with 025).
+    // OC-Settings › More (spec 018 adds Recently deleted, 025 AI assistants).
     more: {
       heading: 'More',
+      aiAssistants: 'AI assistants',
+      connected: (n: number) => `${n} connected`,
       recentlyDeleted: 'Recently deleted',
       recipes: (n: number) => `${n} ${n === 1 ? 'recipe' : 'recipes'}`,
     },
