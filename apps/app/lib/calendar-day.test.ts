@@ -136,6 +136,16 @@ describe('layoutDayView', () => {
     expect(busy.map((c) => c.text)).toEqual(['Eva 1', 'James 1']);
   });
 
+  it('a surprise hidden from Gabriel shows its cover, with no Birthday tag and no driver', () => {
+    const surprise = { visibility: 'surprise' as const, creator_member_id: eva.id, surprise: { hidden_from: [gabriel.id], cover_title: 'Dinner out', cover_note: null } };
+    const { allDay, bands } = layout([
+      ev({ title: 'Gabriel’s birthday party', category: 'birthday', time_type: 'all_day', slots: [], members: [gabriel.id], recurrence: { freq: 'yearly', ends: { type: 'never' } }, ...surprise }),
+      ev({ title: 'Surprise pickup', slots: ['evening'], members: [james.id], responsible_member_id: eva.id, ...surprise }),
+    ]);
+    expect(allDay.map((a) => [a.title, a.tag])).toEqual([['Dinner out', null]]);
+    expect(bands[4]?.events.map((e) => [e.title, e.driver])).toEqual([['Dinner out', null]]);
+  });
+
   it('a person hidden in the header’s filter drops out', () => {
     const { busy, bands } = layout(sunday(), TODAY, gabriel.id, new Set([gabriel.id]));
     expect(busy.map((c) => c.text)).toEqual(['James 1', 'Everyone 2']);
