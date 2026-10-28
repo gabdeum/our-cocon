@@ -47,3 +47,26 @@ export function layoutDay(items: readonly LayoutItem[]): LaneSlot[] {
   closeGroup();
   return result;
 }
+
+export interface SpanItem {
+  id: string;
+  /** First and last day, "YYYY-MM-DD", inclusive. */
+  from: string;
+  to: string;
+}
+
+/**
+ * Rows for multi-day events drawn as bars across days (month view, spec 037; the week's all-day
+ * row, spec 038). Each takes the top free row, earliest and then longest first; events on
+ * different days share a row. Returned in the order placed.
+ */
+export function layoutSpans(items: readonly SpanItem[]): { id: string; lane: number }[] {
+  const sorted = [...items].sort((a, b) => a.from.localeCompare(b.from) || b.to.localeCompare(a.to) || a.id.localeCompare(b.id));
+  const laneEnds: string[] = [];
+  return sorted.map((item) => {
+    let lane = laneEnds.findIndex((end) => end < item.from);
+    if (lane === -1) lane = laneEnds.length;
+    laneEnds[lane] = item.to;
+    return { id: item.id, lane };
+  });
+}
