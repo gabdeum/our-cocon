@@ -25,7 +25,7 @@ Use a trusted Wi-Fi: the phone reaches local Supabase through this Mac, so anyon
 1. Install Expo Go from the App Store and join the same Wi-Fi as the Mac.
 2. Sign in to the same free Expo account (expo.dev) on both: `pnpm --filter @cocon/app exec expo login` on the Mac, and the account button at the top of Expo Go on the phone. Expo Go won't open the app otherwise. Once per Mac and phone; `pnpm --filter @cocon/app exec expo whoami` checks the Mac.
 3. Run `pnpm dev:phone` and scan its QR code with the Camera app, or enter the `exp://…:8081` address it prints in Expo Go. If the app shows an old version or a config error, run `pnpm dev:phone --clear` to rebuild Metro's cache.
-4. To sign in to the app, open Mailpit at the address it prints, copy the link and open it in Safari with `127.0.0.1` changed to the Mac's address.
+4. To sign in to the app, open Mailpit at the address it prints, copy the link and open it in Safari with `127.0.0.1` changed to the Mac's network name it prints (`<name>.local`). Supabase only sends you back to Expo Go through that name, not an IP address.
 
 ## Commands
 

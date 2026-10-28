@@ -2,9 +2,9 @@
 // On first run it writes .env.local from env.example, filled with the local Supabase URL and key.
 // Values are never printed.
 // `pnpm dev:phone` (--phone) serves the app to Expo Go on an iPhone on the same Wi-Fi instead:
-// the phone reaches local Supabase through this Mac's network address, not 127.0.0.1.
+// the phone reaches local Supabase through this Mac's network name, not 127.0.0.1.
 // Local Supabase (database, Studio, Mailpit) is then open to the whole Wi-Fi: use a trusted one.
-import { spawn, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { networkInterfaces } from 'node:os';
 
@@ -47,19 +47,20 @@ if (!existsSync('.env.local')) {
 
 let env = process.env;
 if (phone) {
-  // Wi-Fi or Ethernet first: a VPN or Docker adapter isn't reachable from the phone.
+  // The phone can only reach this Mac over a network (Wi-Fi or Ethernet).
   const nets = networkInterfaces();
-  const lan = [nets.en0, nets.en1, ...Object.values(nets)]
-    .flat()
-    .find((net) => net && net.family === 'IPv4' && !net.internal);
+  const lan = [nets.en0, nets.en1].flat().find((net) => net && net.family === 'IPv4' && !net.internal);
   if (!lan) {
     console.error('No network address found. Is this Mac on Wi-Fi?');
     process.exit(1);
   }
-  // dotenv keeps variables that are already set, so this wins over .env.local.
-  env = { ...process.env, EXPO_PUBLIC_SUPABASE_URL: `http://${lan.address}:54321` };
-  console.log(`In Expo Go, open exp://${lan.address}:8081 (or scan the QR code below).`);
-  console.log(`Sign-in emails: http://${lan.address}:54324. In the link, replace 127.0.0.1 with ${lan.address}.`);
+  // The Mac's Bonjour name (Name.local), not its IP: Supabase Auth refuses sign-in redirects to a
+  // literal IP other than 127.0.0.1, and Expo Go's address (exp://…) is built from this host.
+  const host = `${execFileSync('scutil', ['--get', 'LocalHostName'], { encoding: 'utf8' }).trim()}.local`;
+  // dotenv keeps variables that are already set, so these win over .env.local.
+  env = { ...process.env, REACT_NATIVE_PACKAGER_HOSTNAME: host, EXPO_PUBLIC_SUPABASE_URL: `http://${host}:54321` };
+  console.log(`In Expo Go, open exp://${host}:8081 (or scan the QR code below).`);
+  console.log(`Sign-in emails: http://${host}:54324. In the link, replace 127.0.0.1 with ${host}.`);
 }
 
 const child = spawn(
