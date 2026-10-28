@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Link } from './Button';
 import { srOnly } from './StepCard';
@@ -12,6 +12,16 @@ interface Adjust {
   plusA11y: string;
   onMinus: () => void;
   onPlus: () => void;
+}
+
+/**
+ * A clock whose line height equals its size. Nunito's glyphs are 1.364 em tall and the iPhone cuts
+ * what passes the line box, so there the line is that tall and negative margins keep the box `size`.
+ */
+function clockLine(size: number) {
+  if (Platform.OS === 'web') return { lineHeight: size };
+  const line = Math.ceil(size * 1.364);
+  return { lineHeight: line, marginVertical: (size - line) / 2 };
 }
 
 /** A 48 circle under the "white at 70%" look: a 70% white layer, so it follows the theme. */
@@ -47,7 +57,7 @@ export function CookTimerCard({ label, clock, actionLabel, onAction, announcemen
       </Text>
       <View className="flex-row items-center gap-8">
         <AdjustButton dark text={adj.minusLabel} a11y={adj.minusA11y} onPress={adj.onMinus} />
-        <Text variant="timer" color="surface-page" tabular align="center" className="flex-1" role="timer">
+        <Text variant="timer" color="surface-page" tabular align="center" className="flex-1" role="timer" style={clockLine(46)}>
           {clock}
         </Text>
         <AdjustButton dark text={adj.plusLabel} a11y={adj.plusA11y} onPress={adj.onPlus} />
@@ -122,7 +132,7 @@ export function TimerCard(props: TimerCardProps) {
       </View>
       <View className="flex-row items-center gap-8">
         <AdjustButton text={props.minusLabel} a11y={props.minusA11y} onPress={props.onMinus} />
-        <Text size={44} weight="900" tabular align="center" className="flex-1" role="timer" style={{ letterSpacing: -1, lineHeight: 44 }}>
+        <Text size={44} weight="900" tabular align="center" className="flex-1" role="timer" style={{ letterSpacing: -1, ...clockLine(44) }}>
           {clock}
         </Text>
         <AdjustButton text={props.plusLabel} a11y={props.plusA11y} onPress={props.onPlus} />
