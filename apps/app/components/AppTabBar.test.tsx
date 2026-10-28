@@ -18,14 +18,12 @@ const noStorage: ChoiceStorage = { getItem: async () => null, setItem: async () 
 
 function Harness({ transport, emitPrevented = false, store = createTimerStore({ storage: noStorage, userId: '', tracker: fakeTracker() }), onOpenTimers = vi.fn() }: { transport: AnalyticsTransport; emitPrevented?: boolean; store?: ReturnType<typeof createTimerStore>; onOpenTimers?: () => void }) {
   const [index, setIndex] = useState(0);
-  const navigation: TabNavigationProps['navigation'] = {
-    navigate: (name) => setIndex(routes.findIndex((r) => r.name === name)),
-    emit: () => ({ defaultPrevented: emitPrevented }),
-  };
+  const emitter: TabNavigationProps['emitter'] = { emit: () => ({ defaultPrevented: emitPrevented }) };
+  const navigateToTab = (key: string) => setIndex(routes.findIndex((r) => r.key === key));
   return (
     <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } }}>
       <TimersContext.Provider value={store}>
-        <AppTabBar state={{ index, routes }} navigation={navigation} tracker={createTracker(transport)} onOpenTimers={onOpenTimers} />
+        <AppTabBar state={{ index, routes }} emitter={emitter} navigateToTab={navigateToTab} tracker={createTracker(transport)} onOpenTimers={onOpenTimers} />
       </TimersContext.Provider>
     </SafeAreaProvider>
   );

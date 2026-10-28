@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View, type ScrollViewInstance } from 'react-native';
 import { BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, PushedScreen, SettingRow, StepText, Text } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
@@ -138,7 +138,7 @@ function Cooking({
   const [optionsOpen, setOptionsOpen] = useState(false);
   const hasPill = useHasTimers();
 
-  const scroller = useRef<ScrollView>(null);
+  const scroller = useRef<ScrollViewInstance>(null);
   const scrollTo = useCallback((y: number, animated: boolean) => scroller.current?.scrollTo({ y, animated }), []);
   const [initial] = useState(() => startIndex(steps.map((s) => s.id), stepId));
   const { current, onStepLayout, onViewport, onScroll, jump, snaps, tall } = useStepScroll(count, initial, scrollTo);

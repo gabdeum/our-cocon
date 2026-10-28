@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
-import { Modal, View } from 'react-native';
+import { Modal, View, type HostInstance } from 'react-native';
 import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
@@ -25,7 +25,7 @@ export interface DialogProps {
 export function Dialog({ visible, title, body, confirmLabel, onConfirm, cancelLabel, onCancel, icon = 'trash', emphasis }: DialogProps) {
   const titleId = useId();
   const bodyId = useId();
-  const safeRef = useRef<View>(null);
+  const safeRef = useRef<HostInstance>(null);
   const at = emphasis ? body.indexOf(emphasis) : -1;
 
   useEffect(() => {

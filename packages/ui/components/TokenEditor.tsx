@@ -1,5 +1,5 @@
 import { useId, useState, type Ref } from 'react';
-import { TextInput, View, type NativeSyntheticEvent, type TextInputSelectionChangeEventData } from 'react-native';
+import { TextInput, View, type TextInputInstance, type TextInputSelectionChangeEvent } from 'react-native';
 import { cn } from '../cn';
 import { theme } from '../theme';
 import { useThemeColors } from '../ThemeProvider';
@@ -26,7 +26,7 @@ export interface TokenEditorProps {
   /** Warns, never blocks typing: "Add instructions or remove this step". */
   warning?: string;
   maxLength?: number;
-  inputRef?: Ref<TextInput>;
+  inputRef?: Ref<TextInputInstance>;
 }
 
 // One set of metrics for the field and the chips drawn under it, so the caret lands on the letters.
@@ -77,7 +77,7 @@ export function TokenEditor({ label, parts, value, onChangeText, selection, onSe
           maxLength={maxLength}
           onChangeText={onChangeText}
           selection={selection}
-          onSelectionChange={(e: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => onSelectionChange?.(e.nativeEvent.selection)}
+          onSelectionChange={(e: TextInputSelectionChangeEvent) => onSelectionChange?.(e.nativeEvent.selection)}
           onFocus={() => {
             setFocused(true);
             onFocus?.();

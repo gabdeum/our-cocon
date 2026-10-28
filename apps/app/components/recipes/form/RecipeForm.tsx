@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { parsePastedList } from '@cocon/quantity';
@@ -164,7 +164,7 @@ export function RecipeForm({
   const [stepPhotos, setStepPhotos] = useState<Record<string, PhotoWork>>({});
   // Photos stored during this visit: whichever isn't kept is removed when the form closes.
   const uploaded = useRef<string[]>([]);
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   const fieldY = useRef<Partial<Record<DetailsField, number>>>({});
   const [scrollTo, setScrollTo] = useState<DetailsField | null>(null);
   // Spec 015: the ingredient rows and what's open over them.

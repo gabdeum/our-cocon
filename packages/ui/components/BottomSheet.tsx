@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Easing, Modal, PanResponder, Pressable, ScrollView, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Modal, PanResponder, Pressable, ScrollView, View, type HostInstance } from 'react-native';
 import { cn } from '../cn';
 import { theme } from '../theme';
 import { Button, type ButtonProps } from './Button';
@@ -43,7 +43,7 @@ function useReduceMotion() {
  */
 export function BottomSheet({ visible, onClose, title, lead, headerAction, children, footer, dirty, closeLabel }: BottomSheetProps) {
   const titleId = useId();
-  const titleRef = useRef<View>(null);
+  const titleRef = useRef<HostInstance>(null);
   const reduce = useReduceMotion();
   const [offset] = useState(() => new Animated.Value(0));
   const requestClose = useCallback(() => {

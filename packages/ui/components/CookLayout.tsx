@@ -1,5 +1,5 @@
 import type { ReactNode, Ref } from 'react';
-import { Platform, Pressable, ScrollView, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent, type ViewStyle } from 'react-native';
+import { Platform, Pressable, ScrollView, View, type LayoutChangeEvent, type ScrollViewInstance, type NativeScrollEvent, type NativeSyntheticEvent, type ViewStyle } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Button } from './Button';
 import { Icon } from './Icon';
@@ -39,7 +39,7 @@ export interface CookLayoutProps {
   onNext: () => void;
   /** On the last step Next leaves cooking mode: ink, with a check icon. */
   nextFinishes?: boolean;
-  scrollRef?: Ref<ScrollView>;
+  scrollRef?: Ref<ScrollViewInstance>;
   onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   /** The scroll area's height, measured. */
   onViewportLayout?: (height: number) => void;
