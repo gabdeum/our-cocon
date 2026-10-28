@@ -83,6 +83,8 @@ export function CookLayout(props: CookLayoutProps) {
         contentContainerClassName="px-20"
         style={snapBox}
         snapToOffsets={web ? undefined : snapOffsets}
+        // The iPhone rests on the offset past where the swipe would stop; 'fast' keeps that the next
+        // one. (`disableIntervalMomentum` only works with `snapToInterval`, not `snapToOffsets`.)
         decelerationRate={web ? undefined : 'fast'}
         scrollEventThrottle={16}
         onScroll={onScroll}
