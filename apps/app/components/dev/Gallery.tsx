@@ -75,6 +75,8 @@ import {
   Toast,
   TabHeader,
   Tag,
+  EventListGroup,
+  EventListRow,
   Text,
   TextField,
   TimerCard,
@@ -585,6 +587,14 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <ListRow title="Claude" sub="Connected · used 2 h ago" subTone="olive" leading={{ kind: 'tile', letters: 'C', tone: 'peach' }} trailing={{ kind: 'value', text: 'Allowed', tone: 'olive' }} />
           <ListRow title="Gemini" sub="Not connected" leading={{ kind: 'tile', letters: 'Ge', tone: 'soft' }} trailing={{ kind: 'value', text: 'Not allowed' }} last />
         </ListGroup>
+        <EventListGroup heading="Today · Sun, Oct 25">
+          <EventListRow
+            event={{ key: 'a', title: 'Brunch at Grandma’s', sub: 'Lunch · Grandma’s house', tag: { label: 'Now', tone: 'honey' }, initials: 'All', colors: ['everyone'], label: 'Brunch at Grandma’s, Lunch · Grandma’s house, now' }}
+            onPress={noop}
+          />
+          <EventListRow event={{ key: 'b', title: 'Baby swim class', sub: '14:30 · Gabriel takes James', tag: null, initials: 'J', colors: ['sky'], label: 'Baby swim class, 14:30 · Gabriel takes James' }} onPress={noop} />
+          <EventListRow event={{ key: 'c', title: 'Lyon trip', sub: 'All day', tag: { label: 'Day 1 of 3', tone: 'soft' }, initials: 'E', colors: ['rose'], label: 'Lyon trip, All day, Day 1 of 3' }} onPress={noop} last />
+        </EventListGroup>
       </Section>
 
       <Section group="Lists and cards" title="Card">

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SLOT_TIMES } from './slots';
-import { dayTitle, formatTime, monthTitle, rangeLabel, timeLabel, uses24h, weekTitle } from './labels';
+import { dateLabel, dayTitle, formatTime, monthTitle, rangeLabel, timeLabel, uses24h, weekTitle } from './labels';
 
 const custom = (start_time: string, end_time: string) => ({ time_type: 'custom' as const, slots: [], start_time, end_time });
 
@@ -92,5 +92,16 @@ describe('titles (FR-007, design/ui/CalHeader.md)', () => {
     ['2027-05-06', 375, 'Thu, May 6'],
   ])('day %s at %d px → %s', (date, width, title) => {
     expect(dayTitle(date, width)).toBe(title);
+  });
+});
+
+describe('dateLabel (032-later L82: no period)', () => {
+  it.each([
+    ['2026-10-25', 'short', 'Sun, Oct 25'],
+    ['2026-10-31', 'long', 'Saturday, Oct 31'],
+    ['2026-09-03', 'short', 'Thu, Sep 3'],
+    ['2027-05-06', 'short', 'Thu, May 6'],
+  ] as const)('%s (%s) → %s', (date, style, label) => {
+    expect(dateLabel(date, style)).toBe(label);
   });
 });

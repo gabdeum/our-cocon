@@ -48,6 +48,7 @@ export {
   type WeekDayHead,
 } from './components/HourGrid';
 export { Swipeable, SWIPE_COMMIT, type SwipeableProps } from './components/Swipeable';
+export { EventListGroup, EventListRow, type EventListItem } from './components/EventListRow';
 export { AllDayRow, DayEventRow, SlotBand, type DayAllDayItem, type DayBand, type DayEventItem, type SlotBandProps } from './components/SlotBand';
 export { FloatingAdd, Toast, type FloatingAddProps, type ToastProps } from './components/Toast';
 export { CalendarHeader, type CalendarHeaderChip, type CalendarHeaderProps } from './components/CalendarHeader';

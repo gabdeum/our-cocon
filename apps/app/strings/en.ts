@@ -1243,6 +1243,16 @@ export const strings = {
       /** "Lyon trip, all day, Day 2 of 3". */
       allDayLabel: (title: string, tag: string | null) => [title, 'all day', ...(tag ? [tag] : [])].join(', '),
     },
+    /** OC-CalAgenda (spec 040). Rows reuse `day`'s time line, "Now", "Birthday" and "Day N of M". */
+    agenda: {
+      /** Day headings: "Today · Sun, Oct 25", "Tomorrow · Mon, Oct 26", then "Tue, Oct 27". */
+      today: (date: string) => `Today · ${date}`,
+      tomorrow: (date: string) => `Tomorrow · ${date}`,
+      surprise: 'Surprise',
+      empty: 'Nothing planned yet. Tap + to add something.',
+      /** "Baby swim class, 14:30 · Gabriel takes James, Now". */
+      rowLabel: (title: string, sub: string, tag: string | null) => [title, sub, ...(tag ? [tag] : [])].join(', '),
+    },
   },
   debug: {
     build: (commit: string) => `Build ${commit}`,

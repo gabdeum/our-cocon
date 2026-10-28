@@ -72,3 +72,14 @@ export function dayTitle(date: string, width: number): string {
   const { month, day } = parts(date);
   return `${(wide ? en.weekdays : en.weekdaysShort)[weekday(date)]}, ${monthName(month, wide)} ${day}`;
 }
+
+/**
+ * Dates in lists and details, with no period after the month (decided 2026-10-28, 032-later
+ * L82): "Sun, Oct 25" (Agenda's day groups); `long` spells the weekday: "Saturday, Oct 31"
+ * (event detail, Busy sheet).
+ */
+export function dateLabel(date: string, style: 'short' | 'long' = 'short'): string {
+  const { month, day } = parts(date);
+  const name = (style === 'long' ? en.weekdays : en.weekdaysShort)[weekday(date)];
+  return `${name}, ${monthName(month, false).replace(/\.$/, '')} ${day}`;
+}

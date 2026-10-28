@@ -13,12 +13,16 @@ const tags: Record<TagTone, { fill: string; text: TextColor; weight: Weight }> =
   soft: { fill: 'bg-surface-soft', text: 'ink', weight: '800' },
 };
 
-/** Small non-interactive label (Tag README): "Variant", "To buy", "+1", "Latest recipe", a step's "Tip". */
-export function Tag({ label, tone = 'sage', className }: { label: string; tone?: TagTone; className?: string }) {
+/**
+ * Small non-interactive label (Tag README): "Variant", "To buy", "+1", "Latest recipe", a step's
+ * "Tip". `md` is the calendar's list tag (13/900, padding 5 10): "Now", "Birthday" (OC-CalAgenda).
+ */
+export function Tag({ label, tone = 'sage', size = 'sm', className }: { label: string; tone?: TagTone; size?: 'sm' | 'md'; className?: string }) {
   const t = tags[tone];
+  const md = size === 'md';
   return (
-    <View className={cn('self-start flex-row items-center rounded-pill px-10 py-4', t.fill, className)}>
-      <Text variant="tag" weight={t.weight} color={t.text} numberOfLines={1}>
+    <View className={cn('self-start flex-row items-center rounded-pill px-10', md ? 'py-[5px]' : 'py-4', t.fill, className)}>
+      <Text {...(md ? { size: 13, weight: '900' as const } : { variant: 'tag' as const, weight: t.weight })} color={t.text} numberOfLines={1}>
         {label}
       </Text>
     </View>

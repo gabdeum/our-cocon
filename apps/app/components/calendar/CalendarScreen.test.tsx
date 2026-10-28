@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PanResponder, type GestureResponderEvent, type PanResponderCallbacks, type PanResponderGestureState } from 'react-native';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import type { StoredEvent } from '@cocon/data';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { monthRange, weekIndexOf } from '../../lib/calendar-month';
 import { CalendarScreen, type CalendarScreenProps } from './CalendarScreen';
@@ -412,5 +413,102 @@ describe('Day view (spec 039)', () => {
     expect(onOpenEvent).toHaveBeenCalledWith(events[1]?.id, '2026-10-25');
     fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
     expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-25');
+  });
+});
+
+describe('Agenda view (spec 040)', () => {
+  const base = {
+    category: null as StoredEvent['category'],
+    location: null,
+    notes: null,
+    reminder: null,
+    recurrence: null,
+    responsible_member_id: null,
+    visibility: 'family' as const,
+    creator_member_id: gabriel.id,
+    surprise: null,
+    removed_members: [],
+    exceptions: [],
+    checklist: [],
+    created_by: null,
+    updated_by: null,
+    source: 'app',
+    created_at: '2026-10-01T00:00:00Z',
+    updated_at: '2026-10-01T00:00:00Z',
+    deleted_at: null,
+    time_type: 'slot' as const,
+    start_time: null,
+    end_time: null,
+  };
+  const on = (date: string) => ({ starts_on: date, ends_on: date });
+  const events = [
+    { ...base, ...on('2026-10-25'), id: '00000000-0000-4000-8000-000000000011', title: 'Brunch', location: 'Grandma’s house', slots: ['lunch' as const], members: ['everyone'] },
+    { ...base, ...on('2026-10-26'), id: '00000000-0000-4000-8000-000000000012', title: 'Morning run', slots: ['morning' as const], members: [gabriel.id] },
+    { ...base, ...on('2026-10-27'), id: '00000000-0000-4000-8000-000000000013', title: 'Eva’s birthday', category: 'birthday' as const, time_type: 'all_day' as const, slots: [], members: [eva.id] },
+    { ...base, ...on('2026-10-29'), id: '00000000-0000-4000-8000-000000000014', title: 'Dentist', slots: ['morning' as const], members: [gabriel.id] },
+  ];
+  const agenda = (over: Partial<CalendarScreenProps> = {}) => setup({ view: 'agenda', anchor: '2026-10-25', today: '2026-10-25', events, ...over });
+  const dayHeadings = () => screen.getAllByRole('heading').slice(1).map((h) => h.textContent);
+  const scroller = () => {
+    let el: HTMLElement | null = screen.getAllByRole('heading')[1]?.parentElement ?? null;
+    while (el && getComputedStyle(el).overflowY !== 'auto' && getComputedStyle(el).overflowY !== 'scroll') el = el.parentElement;
+    if (!el) throw new Error('no scrolling list');
+    return el;
+  };
+
+  it('US1: “Coming up”, then the days with events from today, each with its rows; empty days skipped', async () => {
+    const onEventWindow = vi.fn();
+    await agenda({ onEventWindow });
+    expect(screen.getAllByRole('heading')[0]?.textContent).toBe('Coming up');
+    expect(dayHeadings()).toEqual(['Today · Sun, Oct 25', 'Tomorrow · Mon, Oct 26', 'Tue, Oct 27', 'Thu, Oct 29']);
+    expect(screen.getByRole('link', { name: 'Brunch, Lunch · Grandma’s house' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Eva’s birthday, All day, Birthday' })).toBeTruthy();
+    expect(onEventWindow).toHaveBeenLastCalledWith({ from: '2026-10-25', to: '2026-11-21' });
+  });
+
+  it('nothing ahead: “Nothing planned yet. Tap + to add something.”', async () => {
+    await agenda({ events: [] });
+    expect(screen.getByText('Nothing planned yet. Tap + to add something.')).toBeTruthy();
+  });
+
+  it('FR-001: nearing the end of the list loads the next 4 weeks, one page until its events arrive', async () => {
+    const onEventWindow = vi.fn();
+    await agenda({ onEventWindow });
+    act(() => {
+      fireEvent.scroll(scroller());
+    });
+    expect(onEventWindow).toHaveBeenLastCalledWith({ from: '2026-10-25', to: '2026-12-19' });
+    // Scroll events are throttled to one per 16 ms.
+    await act(() => new Promise((r) => setTimeout(r, 30)));
+    act(() => {
+      fireEvent.scroll(scroller());
+    });
+    expect(onEventWindow).toHaveBeenLastCalledWith({ from: '2026-10-25', to: '2026-12-19' });
+  });
+
+  it('FR-003: ‹ › move a week; a row opens its event; + adds on the first day shown', async () => {
+    const onAddEvent = vi.fn();
+    const onOpenEvent = vi.fn();
+    const { onNavigate } = await agenda({ onAddEvent, onOpenEvent });
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(onNavigate).toHaveBeenLastCalledWith({ date: '2026-11-01' });
+    fireEvent.click(screen.getByRole('link', { name: /^Dentist/ }));
+    expect(onOpenEvent).toHaveBeenCalledWith(events[3]?.id, '2026-10-29');
+    fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
+    expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-25');
+  });
+
+  it('FR-003: switching views and back keeps the weeks loaded for this session', async () => {
+    const onEventWindow = vi.fn();
+    const props = { userId: 'u-agenda', members: [gabriel, eva], anchor: '2026-10-25', today: '2026-10-25', width: 390, weekStartsOn: 0 as const, onNavigate: vi.fn(), tracker: fakeTracker(), storage: memoryStorage(), events, onEventWindow };
+    const view = render(<CalendarScreen {...props} view="agenda" />);
+    await act(async () => undefined);
+    act(() => {
+      fireEvent.scroll(scroller());
+    });
+    view.rerender(<CalendarScreen {...props} view="day" />);
+    view.rerender(<CalendarScreen {...props} view="agenda" />);
+    await act(async () => undefined);
+    expect(onEventWindow).toHaveBeenLastCalledWith({ from: '2026-10-25', to: '2026-12-19' });
   });
 });
