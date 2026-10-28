@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
+import { monthRange, weekIndexOf } from '../../lib/calendar-month';
 import { CalendarScreen, type CalendarScreenProps } from './CalendarScreen';
 import { fakeTracker, gabriel, mia } from '../../test/fakes';
 
@@ -77,9 +78,129 @@ describe('Calendar header (spec 036)', () => {
     const nav = screen.getByRole('navigation', { name: 'Calendar view' });
     expect(within(nav).getByRole('link', { name: 'Month' }).getAttribute('aria-current')).toBe('page');
     fireEvent.click(within(nav).getByRole('link', { name: 'Day' }));
-    expect(onNavigate).toHaveBeenCalledWith({ view: 'day' });
+    // From Month, the other views open on the month in view (today, when it's this month; spec 037).
+    expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-27' });
     expect(tracker.track).toHaveBeenCalledWith('calendar_view_changed', { from: 'month', to: 'day' });
     fireEvent.click(within(nav).getByRole('link', { name: 'Month' }));
     expect(onNavigate).toHaveBeenCalledOnce();
+  });
+});
+
+// Spec 037: the Month view under the header.
+describe('Month view (spec 037)', () => {
+  const swim = {
+    id: '00000000-0000-4000-8000-000000000001',
+    title: 'Baby swim',
+    category: null,
+    location: null,
+    notes: null,
+    reminder: null,
+    starts_on: '2026-10-28',
+    ends_on: '2026-10-28',
+    time_type: 'slot' as const,
+    slots: ['afternoon' as const],
+    start_time: null,
+    end_time: null,
+    recurrence: null,
+    members: ['u-eva'],
+    responsible_member_id: null,
+    visibility: 'family' as const,
+    creator_member_id: gabriel.id,
+    surprise: null,
+    removed_members: [],
+    exceptions: [],
+    checklist: [],
+    created_by: null,
+    updated_by: null,
+    source: 'app',
+    created_at: '2026-10-01T00:00:00Z',
+    updated_at: '2026-10-01T00:00:00Z',
+    deleted_at: null,
+  };
+
+  it('US1: shows each day with its chips, and asks for the events around the month', async () => {
+    const onEventWindow = vi.fn();
+    await setup({ events: [swim], onEventWindow });
+    expect(screen.getByText('E Baby swim')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'October 28: Baby swim' })).toBeTruthy();
+    expect(onEventWindow).toHaveBeenCalledWith({ from: '2026-04-01', to: '2027-06-30' });
+  });
+
+  it('US2: scrolling into November changes the title once November fills the grid', async () => {
+    await setup();
+    const cell = screen.getByRole('link', { name: 'October 28: nothing planned' });
+    let scroller: HTMLElement | null = cell.parentElement;
+    while (scroller && getComputedStyle(scroller).overflowY !== 'auto' && getComputedStyle(scroller).overflowY !== 'scroll') scroller = scroller.parentElement;
+    if (!scroller) throw new Error('no scrolling grid');
+    // Rows are 96 tall; with Oct 25 – 31 at the top, the second row is Nov 1 – 7.
+    const range = monthRange('2026-10-27', 0);
+    const top = weekIndexOf(range, '2026-09-27') * 96;
+    act(() => {
+      scroller.scrollTop = top + 4 * 96;
+      fireEvent.scroll(scroller);
+    });
+    expect(screen.getByRole('heading').textContent).toBe('November');
+    // Scroll events are throttled to one per 16 ms.
+    await act(() => new Promise((r) => setTimeout(r, 30)));
+    act(() => {
+      scroller.scrollTop = top + 3 * 96;
+      fireEvent.scroll(scroller);
+    });
+    expect(screen.getByRole('heading').textContent).toBe('October');
+  });
+
+  it('US2: ‹ › move a month at a time and the title follows', async () => {
+    await setup();
+    expect(screen.getByRole('heading').textContent).toBe('October');
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    expect(screen.getByRole('heading').textContent).toBe('November');
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    expect(screen.getByRole('heading').textContent).toBe('Jan. 2027');
+    fireEvent.click(screen.getByRole('button', { name: 'Today' }));
+    expect(screen.getByRole('heading').textContent).toBe('October');
+  });
+
+  it('US3: tapping a day opens Day view on it; long-press and + open Add event', async () => {
+    vi.useFakeTimers();
+    try {
+      const onAddEvent = vi.fn();
+      const { onNavigate, tracker } = await setup({ onAddEvent });
+      fireEvent.click(screen.getByRole('link', { name: 'October 30: nothing planned' }));
+      expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-30' });
+      expect(tracker.track).toHaveBeenCalledWith('calendar_day_opened', { from_view: 'month' });
+
+      const day = screen.getByRole('link', { name: 'October 29: nothing planned' });
+      fireEvent.mouseDown(day, { button: 0, buttons: 1 });
+      act(() => void vi.advanceTimersByTime(800));
+      fireEvent.mouseUp(day, { button: 0 });
+      expect(onAddEvent).toHaveBeenCalledWith('2026-10-29');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
+      expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-27');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('FR-006: the hint shows on the first visit only', async () => {
+    const storage = memoryStorage();
+    const first = await setup({ storage });
+    expect(screen.getByRole('status').textContent).toContain('Tap a day to see details. Each color is a family member.');
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(first.tracker.track).toHaveBeenCalledWith('calendar_first_hint_dismissed', {});
+    await act(async () => undefined);
+    first.unmount();
+
+    await setup({ storage });
+    expect(screen.queryByText('Got it')).toBeNull();
+  });
+
+  it('switching to Week from Month opens on the month in view', async () => {
+    const { onNavigate } = await setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Calendar view' })).getByRole('link', { name: 'Week' }));
+    expect(onNavigate).toHaveBeenCalledWith({ view: 'week', date: '2026-11-01' });
   });
 });

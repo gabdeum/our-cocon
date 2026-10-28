@@ -52,3 +52,6 @@ export function deviceRegion(): string | null {
 
 /** The family's calendar settings (slot times, home time zone; spec 035), by family. */
 export const calendarSettingsKey = (familyId: string) => ['family_calendar_settings', familyId] as const;
+
+/** Spec 037: the family's events for some days. Starts with 'events', so spec 035's sync refetches it live. */
+export const eventsKey = (familyId: string, from: string, to: string) => ['events', familyId, from, to] as const;

@@ -1,9 +1,9 @@
 import { Pressable, type PressableProps } from 'react-native';
 import { cn, focusRing } from '../cn';
-import type { ColorName } from '../theme';
+import { theme, type ColorName } from '../theme';
 import { Icon, type IconName } from './Icon';
 
-export type IconButtonVariant = 'default' | 'card' | 'soft' | 'olive' | 'square' | 'olive-square' | 'soft-square';
+export type IconButtonVariant = 'default' | 'card' | 'soft' | 'olive' | 'square' | 'olive-square' | 'soft-square' | 'fab';
 
 // bundle.css › IconButton
 const looks: Record<IconButtonVariant, { box: string; icon: ColorName }> = {
@@ -16,6 +16,8 @@ const looks: Record<IconButtonVariant, { box: string; icon: ColorName }> = {
   'olive-square': { box: 'w-control-lg h-control-lg rounded-[18px] bg-olive active:bg-olive-pressed', icon: 'onOlive' },
   // The same size as olive-square, for a second button beside an input (Groceries' settings).
   'soft-square': { box: 'w-control-lg h-control-lg rounded-[18px] bg-surface-soft active:bg-surface-soft-pressed', icon: 'ink' },
+  // 60, olive, floating: the calendar's add button (spec 037).
+  fab: { box: 'w-[60px] h-[60px] rounded-full bg-olive active:bg-olive-pressed', icon: 'onOlive' },
 };
 
 export interface IconButtonProps extends Omit<PressableProps, 'children' | 'style'> {
@@ -40,6 +42,7 @@ export function IconButton({ icon, label, variant = 'default', expanded, iconSiz
       aria-expanded={variant === 'square' ? expanded === true : undefined}
       disabled={disabled}
       className={cn('items-center justify-center', look.box, variant === 'square' && expanded && 'bg-honey', focusRing, className)}
+      style={variant === 'fab' ? { boxShadow: theme.shadow.lift } : undefined}
       {...props}
     >
       <Icon name={icon} size={iconSize} color={look.icon} />

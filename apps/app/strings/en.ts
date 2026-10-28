@@ -1190,6 +1190,20 @@ export const strings = {
       everyoneInitial: 'All',
       others: 'Others',
     },
+    // design/ui/OC-CalMonth.md (spec 037).
+    month: {
+      /** From Sunday; rotated when the week starts on Monday. */
+      weekdays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+      hint: 'Tap a day to see details. Each color is a family member.',
+      gotIt: 'Got it',
+      addEvent: 'Add event',
+      more: (n: number) => `+${n}`,
+      cont: (title: string) => `${title} (cont.)`,
+      /** The 1st of a month: "Nov 1". */
+      firstOfMonth: (shortMonth: string) => `${shortMonth.replace('.', '')} 1`,
+      dayLabel: (date: string, titles: string[]) => `${date}: ${titles.length ? titles.join(', ') : 'nothing planned'}`,
+      barLabel: (title: string, from: string, to: string) => `${title}, ${from} to ${to}`,
+    },
   },
   debug: {
     build: (commit: string) => `Build ${commit}`,

@@ -65,7 +65,11 @@ import {
   Stepper,
   TabBar,
   CalendarHeader,
+  EventBar,
+  EventChip,
   MemberChip,
+  MoreCount,
+  Toast,
   TabHeader,
   Tag,
   Text,
@@ -232,6 +236,28 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <MemberChip name="Everyone" initial="All" color="everyone" pressed onPress={() => undefined} />
           <MemberChip name="Others" initial="" color="others" pressed onPress={() => undefined} />
         </PillRow>
+      </Section>
+
+      <Section group="Calendar" title="EventChip and EventBar">
+        <View className="gap-8 rounded-lg bg-surface-card p-8">
+          <EventChip text="J Baby swim" colors={['sky']} />
+          <EventChip text="G·E School night" colors={['honey', 'rose']} />
+          <EventChip text="All Labor Day BBQ" colors={['everyone', 'others']} />
+          <EventChip text="Dinner at Sam’s" colors={['others']} />
+          <MoreCount text="+2" />
+          <View className="h-control-lg">
+            <EventBar text="All Grandma visits" label="Grandma visits, October 16 to October 19" colors={['everyone']} column={5} days={2} lane={0} startsHere endsHere={false} />
+          </View>
+        </View>
+      </Section>
+
+      <Section group="Calendar" title="Toast (hint) and the add button">
+        <View className="flex-row items-center gap-12">
+          <View className="flex-1">
+            <Toast text="Tap a day to see details. Each color is a family member." actionLabel="Got it" onAction={noop} />
+          </View>
+          <IconButton variant="fab" icon="plus" iconSize={28} label="Add event" onPress={noop} />
+        </View>
       </Section>
 
       <Section group="Actions" title="Pill">

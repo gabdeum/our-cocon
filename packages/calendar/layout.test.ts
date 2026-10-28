@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { layoutDay } from './layout';
+import { layoutDay, layoutSpans } from './layout';
 
 const item = (id: string, start: string, end: string) => ({ id, start, end });
 const lanes = (result: ReturnType<typeof layoutDay>) => Object.fromEntries(result.map((r) => [r.id, [r.lane, r.lanes]]));
@@ -23,5 +23,21 @@ describe('layoutDay (FR-005)', () => {
     ],
   ])('%s', (_, items, expected) => {
     expect(lanes(layoutDay(items))).toEqual(expected);
+  });
+});
+
+describe('layoutSpans (spec 037)', () => {
+  const span = (id: string, from: string, to: string) => ({ id, from, to });
+  const rows = (result: ReturnType<typeof layoutSpans>) => Object.fromEntries(result.map((r) => [r.id, r.lane]));
+
+  it.each([
+    ['nothing', [], {}],
+    ['one event takes the top row', [span('a', '2026-10-16', '2026-10-19')], { a: 0 }],
+    ['overlapping events stack', [span('a', '2026-10-16', '2026-10-19'), span('b', '2026-10-18', '2026-10-20')], { a: 0, b: 1 }],
+    ['the longer one goes on top when they start together', [span('short', '2026-10-16', '2026-10-17'), span('long', '2026-10-16', '2026-10-20')], { long: 0, short: 1 }],
+    ['an event the day after reuses the row', [span('a', '2026-10-16', '2026-10-17'), span('b', '2026-10-18', '2026-10-20')], { a: 0, b: 0 }],
+    ['sharing a last and first day is an overlap', [span('a', '2026-10-16', '2026-10-18'), span('b', '2026-10-18', '2026-10-20')], { a: 0, b: 1 }],
+  ])('%s', (_name, items, expected) => {
+    expect(rows(layoutSpans(items))).toEqual(expected);
   });
 });

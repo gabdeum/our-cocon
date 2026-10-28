@@ -6,7 +6,7 @@ export { addDays, daysBetween, daysInMonth, makeDate, parts, todayIn, weekRange,
 export { DEFAULT_SLOT_TIMES, fromMinutes, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes } from './slots';
 export { WIDE_TITLE_MIN_WIDTH, dayTitle, formatTime, monthTitle, rangeLabel, timeLabel, uses24h, weekTitle, type LabelOptions } from './labels';
 export { assertValidEvent, expand } from './recurrence';
-export { layoutDay, type LaneSlot, type LayoutItem } from './layout';
+export { layoutDay, layoutSpans, type LaneSlot, type LayoutItem, type SpanItem } from './layout';
 export { findConflict, type ConflictDraft } from './conflicts';
 export { VIEW_STEP, shiftAnchor } from './navigate';
 export { shownByFilter } from './filter';
