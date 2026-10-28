@@ -67,7 +67,7 @@ export function Swipeable({ page, onSwipe, children }: SwipeableProps) {
 
   return (
     // NativeWind doesn't style Animated.View: it only moves; the children carry the look.
-    <Animated.View {...pan.panHandlers} style={[webTouch, { transform: [{ translateX: dx }], opacity }]}>
+    <Animated.View {...pan.panHandlers} style={[webTouch, { flex: 1, transform: [{ translateX: dx }], opacity }]}>
       {children}
     </Animated.View>
   );

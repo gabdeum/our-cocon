@@ -17,6 +17,7 @@ Reference: `design/screens/OC-CalWeek.dc.html` (inline styles are the exact valu
 ## Rules
 
 - Swipeable horizontally (see Swipeable).
+- The day row and the "All day" row stay at the top of the card (`shadow-sticky` under them, as Month's weekday row); only the hours scroll.
 - Day letters link to Day view; a block opens its event; tapping an empty part of a day opens Add event at that hour (screen readers get one "Add event, {day}" button per day).
 - The "All day" row holds all-day events and anything spanning more than one day, as week EventBars stacked 30 px apart (`layoutSpans`).
 - Blocks are never shorter than 22 px, and lanes count that drawn height, so a short block doesn't cover the next. An event before 06:00 is drawn from 06:00.

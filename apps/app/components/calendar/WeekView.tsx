@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { addDays, timeIn, weekRange, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { FloatingAdd, HourGrid, Swipeable } from '@cocon/ui';
@@ -61,7 +61,8 @@ export function WeekView({ members, myMemberId, events, slotTimes, hidden, ancho
 
   return (
     <View className="flex-1">
-      <ScrollView contentContainerClassName="px-8 pt-4" contentContainerStyle={{ paddingBottom: BOTTOM_PAD }} showsVerticalScrollIndicator={false}>
+      {/* The day and All day rows stay put; the hours scroll inside the card. */}
+      <View className="flex-1 px-8 pt-4">
         <Swipeable page={start} onSwipe={onSwipe}>
           <HourGrid
             {...grid}
@@ -69,9 +70,10 @@ export function WeekView({ members, myMemberId, events, slotTimes, hidden, ancho
             onDayPress={onOpenDay}
             onBlockPress={openEvent}
             onEmptyPress={(date, hour) => onAddEvent(date, hour === null ? undefined : `${String(hour).padStart(2, '0')}:00`)}
+            bottomInset={BOTTOM_PAD}
           />
         </Swipeable>
-      </ScrollView>
+      </View>
       <FloatingAdd label={strings.calendar.month.addEvent} onPress={() => onAddEvent(addDay)} hint={null} />
     </View>
   );

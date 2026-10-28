@@ -67,6 +67,7 @@ import {
   CalendarHeader,
   EventBar,
   EventChip,
+  GRID_HEIGHT,
   HourGrid,
   Swipeable,
   MemberChip,
@@ -254,7 +255,9 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
       </Section>
 
       <Section group="Calendar" title="HourGrid in Swipeable (swipe it)">
-        <WeekGallery />
+        <View style={{ height: GRID_HEIGHT }}>
+          <WeekGallery />
+        </View>
       </Section>
 
       <Section group="Calendar" title="Toast (hint) and the add button">
