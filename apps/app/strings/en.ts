@@ -1204,6 +1204,16 @@ export const strings = {
       dayLabel: (date: string, titles: string[]) => `${date}: ${titles.length ? titles.join(', ') : 'nothing planned'}`,
       barLabel: (title: string, from: string, to: string) => `${title}, ${from} to ${to}`,
     },
+    week: {
+      allDay: 'All day',
+      /** A day's letter and date, as OC-CalWeek reads it: "Sunday October 25". */
+      dayLabel: (weekday: string, date: string) => `${weekday} ${date}`,
+      /** "Baby swim, Sunday, 14:30 to 16:30" or "Brunch, Sunday, Lunch". */
+      blockLabel: (title: string, weekday: string, when: string) => `${title}, ${weekday}, ${when}`,
+      timeRange: (start: string, end: string) => `${start} to ${end}`,
+      /** An empty day column, for screen readers: "Add event, Sunday October 25". */
+      addAt: (day: string) => `Add event, ${day}`,
+    },
   },
   debug: {
     build: (commit: string) => `Build ${commit}`,

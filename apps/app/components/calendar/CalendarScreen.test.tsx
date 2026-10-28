@@ -1,13 +1,17 @@
 // Spec 036 User Story 2: tapping a person in the filter row hides their events (chip unpressed),
 // and the choice is remembered for that person on this device. Plus the header's paging and views.
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { PanResponder, type GestureResponderEvent, type PanResponderCallbacks, type PanResponderGestureState } from 'react-native';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { monthRange, weekIndexOf } from '../../lib/calendar-month';
 import { CalendarScreen, type CalendarScreenProps } from './CalendarScreen';
 import { fakeTracker, gabriel, mia } from '../../test/fakes';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const eva = { ...mia, id: 'u-eva', user_id: 'u-eva', display_name: 'Eva', color: 'rose' as const };
 
@@ -202,5 +206,103 @@ describe('Month view (spec 037)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Calendar view' })).getByRole('link', { name: 'Week' }));
     expect(onNavigate).toHaveBeenCalledWith({ view: 'week', date: '2026-11-01' });
+  });
+});
+
+describe('Week view (spec 038)', () => {
+  const event = (title: string, start: string, end: string, members: string[]) => ({
+    id: `00000000-0000-4000-8000-00000000000${title.length % 10}`,
+    title,
+    category: null,
+    location: null,
+    notes: null,
+    reminder: null,
+    starts_on: '2026-10-25',
+    ends_on: '2026-10-25',
+    time_type: 'custom' as const,
+    slots: [],
+    start_time: start,
+    end_time: end,
+    recurrence: null,
+    members,
+    responsible_member_id: null,
+    visibility: 'family' as const,
+    creator_member_id: gabriel.id,
+    surprise: null,
+    removed_members: [],
+    exceptions: [],
+    checklist: [],
+    created_by: null,
+    updated_by: null,
+    source: 'app',
+    created_at: '2026-10-01T00:00:00Z',
+    updated_at: '2026-10-01T00:00:00Z',
+    deleted_at: null,
+  });
+  const events = [event('Baby swim', '14:30', '16:30', ['u-eva']), event('Coffee', '16:00', '17:00', [gabriel.id])];
+
+  function captureSwipes() {
+    const configs: PanResponderCallbacks[] = [];
+    vi.spyOn(PanResponder, 'create').mockImplementation((config) => {
+      configs.push(config);
+      return { panHandlers: {} } as ReturnType<typeof PanResponder.create>;
+    });
+    return (dx: number) => {
+      const g = { dx, dy: 0 } as PanResponderGestureState;
+      act(() => configs.at(-1)?.onPanResponderRelease?.({} as GestureResponderEvent, g));
+    };
+  }
+
+  it('US1: overlapping events show side by side, each at its time', async () => {
+    const onEventWindow = vi.fn();
+    await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-25', events, onEventWindow });
+    const swim = screen.getByRole('link', { name: 'Baby swim, Sunday, 14:30 to 16:30' }).parentElement;
+    const coffee = screen.getByRole('link', { name: 'Coffee, Sunday, 16:00 to 17:00' }).parentElement;
+    expect([swim?.style.top, swim?.style.width, coffee?.style.top, coffee?.style.left]).toEqual(['307px', '50%', '361px', '50%']);
+    expect(onEventWindow).toHaveBeenCalledWith({ from: '2026-04-01', to: '2027-06-30' });
+  });
+
+  it('US2: swiping left moves to Nov. 1 – 7; right goes back; a short drag stays', async () => {
+    const release = captureSwipes();
+    const { onNavigate, tracker } = await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-25' });
+    expect(screen.getByRole('heading').textContent).toBe('Oct. 25 – 31');
+    release(-80);
+    expect(onNavigate).toHaveBeenLastCalledWith({ date: '2026-11-01' });
+    expect(tracker.track).toHaveBeenCalledWith('calendar_week_swiped', { direction: 'next' });
+    release(80);
+    expect(onNavigate).toHaveBeenLastCalledWith({ date: '2026-10-18' });
+    expect(tracker.track).toHaveBeenCalledWith('calendar_week_swiped', { direction: 'previous' });
+    vi.mocked(onNavigate).mockClear();
+    release(-40);
+    expect(onNavigate).not.toHaveBeenCalled();
+    cleanup();
+
+    await setup({ view: 'week', anchor: '2026-11-01', today: '2026-10-25' });
+    expect(screen.getByRole('heading').textContent).toBe('Nov. 1 – 7');
+    expect(screen.getByRole('link', { name: 'Sunday November 1' })).toBeTruthy();
+  });
+
+  it('FR-001: tapping a day opens Day view; FR-005: a block opens the event, + and an empty day add one', async () => {
+    const onOpenEvent = vi.fn();
+    const onAddEvent = vi.fn();
+    const { onNavigate, tracker } = await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-27', events, onOpenEvent, onAddEvent });
+    fireEvent.click(screen.getByRole('link', { name: 'Thursday October 29' }));
+    expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_opened', { from_view: 'week' });
+
+    fireEvent.click(screen.getByRole('link', { name: 'Coffee, Sunday, 16:00 to 17:00' }));
+    expect(onOpenEvent).toHaveBeenCalledWith(events[1]?.id, '2026-10-25');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
+    expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-27');
+    fireEvent.click(screen.getByRole('button', { name: 'Add event, Friday October 30' }));
+    expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-30', expect.toSatisfy((t?: string) => t === undefined || /^\d\d:00$/.test(t)));
+  });
+
+  it('the add button opens on the week’s first day when today is another week', async () => {
+    const onAddEvent = vi.fn();
+    await setup({ view: 'week', anchor: '2026-11-04', today: '2026-10-27', onAddEvent });
+    fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
+    expect(onAddEvent).toHaveBeenCalledWith('2026-11-01');
   });
 });

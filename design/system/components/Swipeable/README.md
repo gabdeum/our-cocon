@@ -16,3 +16,5 @@ Reference: `design/screens/OC-CalWeek.dc.html` (inline styles are the exact valu
 ## Rules
 
 - Header arrows trigger the same transition.
+- A move is a swipe once it's more than 8 px sideways and more sideways than vertical; it's captured from the blocks under it, so a drag that starts on an event still swipes.
+- The new page enters ±140 px from the side, then eases to 0.

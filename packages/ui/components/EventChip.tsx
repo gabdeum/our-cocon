@@ -24,7 +24,7 @@ const fills: Record<EventColor, string> = {
  * EventChip README › Fill: one color, or two split 50/50 (two flat halves: React Native has no CSS
  * gradient). Others adds a 1 px line-handle outline so it shows on white.
  */
-function Fill({ colors, rounded }: { colors: readonly EventColor[]; rounded: string }) {
+export function Fill({ colors, rounded }: { colors: readonly EventColor[]; rounded: string }) {
   const [first = 'others', second] = colors;
   return (
     <View aria-hidden className={cn('absolute inset-0 flex-row overflow-hidden', rounded)}>
@@ -85,24 +85,41 @@ export interface EventBarProps extends EventChipProps {
   startsHere: boolean;
   endsHere: boolean;
   onPress?: () => void;
+  /** Month: over a week row of the grid. Week: in the week view's "All day" row. */
+  size?: 'month' | 'week';
 }
 
 /** The month row's chip rhythm (EventBar README › Month): 29 from the top, then 20 + the cells' 3 px gap. */
 export const BAR_TOP = 29;
 export const BAR_STEP = 23;
+/** EventBar README › Week all-day row: 28 tall, stacked with the grid's 2 px gap. */
+export const WEEK_BAR_HEIGHT = 28;
+export const WEEK_BAR_STEP = 30;
 
 /**
  * A multi-day event drawn over a month week row (EventBar README › Month), from its first to its
  * last day in the row so the title runs the full width. Inset 4 px each side, above the cells.
  */
-export function EventBar({ text, colors, label, column, days, lane, startsHere, endsHere, onPress }: EventBarProps) {
-  const rounded = cn(startsHere && 'rounded-l-xs', endsHere && 'rounded-r-xs');
-  // The outer box spans the days; its 4 px padding is the inset (no calc() in React Native).
+export function EventBar({ text, colors, label, column, days, lane, startsHere, endsHere, onPress, size = 'month' }: EventBarProps) {
+  const week = size === 'week';
+  const rounded = week ? cn(startsHere && 'rounded-l-[8px]', endsHere && 'rounded-r-[8px]') : cn(startsHere && 'rounded-l-xs', endsHere && 'rounded-r-xs');
+  // The outer box spans the days; its padding is the inset (no calc() in React Native): 4 px in a
+  // month row, 1 px either side in the week row (the grid's 2 px gap).
   return (
-    <View pointerEvents="box-none" className="absolute z-10 px-4" style={{ top: BAR_TOP + lane * BAR_STEP, left: `${(column * 100) / 7}%`, width: `${(days * 100) / 7}%` }}>
-      <Pressable role="link" aria-label={label} onPress={onPress} className={cn('h-[20px] overflow-hidden px-4', rounded, focusRing)}>
+    <View
+      pointerEvents="box-none"
+      className={cn('absolute z-10', week ? 'px-[1px]' : 'px-4')}
+      style={{ top: week ? lane * WEEK_BAR_STEP : BAR_TOP + lane * BAR_STEP, left: `${(column * 100) / 7}%`, width: `${(days * 100) / 7}%` }}
+    >
+      <Pressable role="link" aria-label={label} onPress={onPress} className={cn('overflow-hidden', week ? 'h-[28px] px-6' : 'h-[20px] px-4', rounded, focusRing)}>
         <Fill colors={colors} rounded={rounded} />
-        <ChipText text={text} />
+        {week ? (
+          <Text size={11} weight="800" numberOfLines={1} ellipsizeMode="clip" style={[{ lineHeight: WEEK_BAR_HEIGHT }, clipOnWeb]}>
+            {text}
+          </Text>
+        ) : (
+          <ChipText text={text} />
+        )}
       </Pressable>
     </View>
   );
