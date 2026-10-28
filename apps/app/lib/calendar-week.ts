@@ -74,6 +74,7 @@ export function layoutWeekGrid(anchor: string, occurrences: readonly MonthOccurr
 
   const columns: WeekColumn[] = dates.map((date) => ({
     date,
+    label: w.dayLabel(dayName(date), longDate(date)),
     addLabel: w.addAt(w.dayLabel(dayName(date), longDate(date))),
     today: date === ctx.today,
     blocks: dayBlocks(inWeek.filter((o) => !inAllDayRow(o) && o.starts_on === date), date, ctx),

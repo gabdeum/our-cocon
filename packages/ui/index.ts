@@ -16,7 +16,7 @@ export { Tag, Meta, type TagTone, type MetaTone } from './components/Tag';
 export { Switch, SettingRow, type SwitchProps, type SettingRowProps } from './components/Switch';
 export { SegmentedControl, type SegmentedControlProps, type Segment } from './components/SegmentedControl';
 export { Stepper, type StepperProps } from './components/Stepper';
-export { TextField, SearchField, PickerField, type TextFieldProps, type PickerFieldProps } from './components/TextField';
+export { FieldWarning, TextField, SearchField, PickerField, type TextFieldProps, type PickerFieldProps } from './components/TextField';
 export { MonthPicker, type MonthPickerProps } from './components/MonthPicker';
 export { AmountField, type AmountFieldProps } from './components/AmountField';
 export { RadioCard, type RadioCardProps } from './components/RadioCard';

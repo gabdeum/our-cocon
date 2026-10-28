@@ -13,6 +13,7 @@ afterEach(() => {
 const dates = ['2026-10-25', '2026-10-26', '2026-10-27', '2026-10-28', '2026-10-29', '2026-10-30', '2026-10-31'];
 const columns: WeekColumn[] = dates.map((date, i) => ({
   date,
+  label: `Column ${date}`,
   addLabel: `Add event, day ${i}`,
   today: i === 0,
   blocks:
@@ -35,7 +36,7 @@ function grid(over: Partial<HourGridProps> = {}) {
     nowY: 264,
     onDayPress: vi.fn(),
     onBlockPress: vi.fn(),
-    onEmptyPress: vi.fn(),
+    onEmptyLongPress: vi.fn(),
     ...over,
   };
   render(<HourGrid {...props} />);
@@ -58,7 +59,7 @@ describe('HourGrid (spec 038)', () => {
     expect(screen.getByText('23:00')).toBeTruthy();
   });
 
-  it('FR-001, FR-005: a day opens Day view; a block opens the event; an empty hour adds an event', () => {
+  it('a day opens Day view, from its head or an empty part of it; a block opens the event; a long press adds one', () => {
     const p = grid();
     fireEvent.click(screen.getByRole('link', { name: 'Day 2026-10-27' }));
     expect(p.onDayPress).toHaveBeenCalledWith('2026-10-27');
@@ -66,8 +67,16 @@ describe('HourGrid (spec 038)', () => {
     expect(p.onBlockPress).toHaveBeenCalledWith('coffee|');
     fireEvent.click(screen.getByRole('link', { name: 'Lyon trip, October 28 to October 30' }));
     expect(p.onBlockPress).toHaveBeenCalledWith('trip|');
-    fireEvent.click(screen.getByRole('button', { name: 'Add event, day 3' }));
-    expect(p.onEmptyPress).toHaveBeenCalledWith('2026-10-28', expect.toSatisfy((h: number | null) => h === null || (h >= 6 && h <= 23)));
+    fireEvent.click(screen.getByRole('link', { name: 'Column 2026-10-28' }));
+    expect(p.onDayPress).toHaveBeenLastCalledWith('2026-10-28');
+    expect(p.onEmptyLongPress).not.toHaveBeenCalled();
+    vi.useFakeTimers();
+    const column = screen.getByRole('link', { name: 'Column 2026-10-29' });
+    fireEvent.mouseDown(column, { button: 0, buttons: 1 });
+    vi.advanceTimersByTime(600);
+    fireEvent.mouseUp(column, { button: 0 });
+    vi.useRealTimers();
+    expect(p.onEmptyLongPress).toHaveBeenCalledWith('2026-10-29', expect.toSatisfy((h: number | null) => h === null || (h >= 6 && h <= 23)));
   });
 
   it('FR-005: the hour under a tap, kept inside 06:00–23:00', () => {

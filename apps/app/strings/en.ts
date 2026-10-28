@@ -1276,8 +1276,6 @@ export const strings = {
       timeHint: 'Pick a time of day — no need for exact hours.',
       allDay: 'All day',
       wholeDay: 'Whole day',
-      custom: 'Custom',
-      pickTimes: 'Pick times',
       /** A slot chip's hours: "18–22". */
       slotHours: (start: string, end: string) => `${start.slice(0, 2)}–${end.slice(0, 2)}`,
       starts: 'Starts',
@@ -1285,6 +1283,7 @@ export const strings = {
       badTime: 'Use a time like 18:30.',
       endBeforeStart: 'Pick an end time after the start.',
       who: 'Who',
+      noOne: 'Pick at least one person.',
       everyone: 'Everyone',
       everyoneInitial: 'All',
       others: 'Others',

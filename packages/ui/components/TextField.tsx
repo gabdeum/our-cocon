@@ -22,6 +22,18 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style' | 'placehol
   className?: string;
 }
 
+/** TextField README › Warning: the message under a field or a group of choices (the add sheet's Who). */
+export function FieldWarning({ text, nativeID }: { text: string; nativeID?: string }) {
+  return (
+    <View nativeID={nativeID} role="alert" className="flex-row items-center gap-8">
+      <Icon name="warning" size={18} color="warn" />
+      <Text size={14} weight="700" color="warn" className="flex-1">
+        {text}
+      </Text>
+    </View>
+  );
+}
+
 /** Labelled input with a hint and a friendly warning (TextField README). `multiline` is the textarea. */
 export function TextField({ label, optionalLabel, hint, counter, warning, size = 'md', labelHidden, multiline, className, onFocus, onBlur, ...props }: TextFieldProps) {
   const colors = useThemeColors();
@@ -69,14 +81,7 @@ export function TextField({ label, optionalLabel, hint, counter, warning, size =
         style={text}
         {...props}
       />
-      {warning ? (
-        <View nativeID={warnId} role="alert" className="flex-row items-center gap-8">
-          <Icon name="warning" size={18} color="warn" />
-          <Text size={14} weight="700" color="warn" className="flex-1">
-            {warning}
-          </Text>
-        </View>
-      ) : null}
+      {warning ? <FieldWarning text={warning} nativeID={warnId} /> : null}
       {hint || counter ? (
         <View className="flex-row justify-between gap-8">
           {hint ? (

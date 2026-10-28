@@ -305,14 +305,18 @@ describe('Week view (spec 038)', () => {
 
     await setup({ view: 'week', anchor: '2026-11-01', today: '2026-10-25' });
     expect(screen.getByRole('heading').textContent).toBe('Nov. 1 – 7');
-    expect(screen.getByRole('link', { name: 'Sunday November 1' })).toBeTruthy();
+    expect(screen.getAllByRole('link', { name: 'Sunday November 1' })).toHaveLength(2);
   });
 
-  it('FR-001: tapping a day opens Day view; FR-005: a block opens the event, + and an empty day add one', async () => {
+  it('FR-001: tapping a day (its head or an empty part) opens Day view; a block opens the event; + adds one', async () => {
     const onOpenEvent = vi.fn();
     const onAddEvent = vi.fn();
     const { onNavigate, tracker } = await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-27', events, onOpenEvent, onAddEvent });
-    fireEvent.click(screen.getByRole('link', { name: 'Thursday October 29' }));
+    const [head, column] = screen.getAllByRole('link', { name: 'Thursday October 29' });
+    fireEvent.click(head as HTMLElement);
+    expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
+    vi.mocked(onNavigate).mockClear();
+    fireEvent.click(column as HTMLElement);
     expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
     expect(tracker.track).toHaveBeenCalledWith('calendar_day_opened', { from_view: 'week' });
 
@@ -321,8 +325,7 @@ describe('Week view (spec 038)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
     expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-27');
-    fireEvent.click(screen.getByRole('button', { name: 'Add event, Friday October 30' }));
-    expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-30', expect.toSatisfy((p?: { time: string }) => p === undefined || /^\d\d:00$/.test(p.time)));
+    expect(onAddEvent).toHaveBeenCalledTimes(1);
   });
 
   it('the add button opens on the week’s first day when today is another week', async () => {

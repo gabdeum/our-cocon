@@ -15,5 +15,5 @@ Reference: `design/screens/OC-CalMonth.dc.html` (inline styles are the exact val
 
 ## Rules
 
-- Tap = day view; long-press = add event for that day (also offered to screen readers as an "Add event" action).
+- Tap = day view; tap on an event chip = that event (2026-10-28); long-press = add event for that day (also offered to screen readers as an "Add event" action).
 - The weekday row is drawn fixed above the scrolling rows (`shadow-sticky`), which looks the same as the sticky row in the screen source.

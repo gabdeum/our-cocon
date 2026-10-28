@@ -187,16 +187,38 @@ describe('EventSheet (spec 041)', () => {
     expect(props.onClose).not.toHaveBeenCalled();
   });
 
-  it('Custom: starts on the slot’s times and checks them', async () => {
-    const props = await setup({ initial: { ...newDraft({ slot: 'afternoon' }, TODAY, gabriel.id), title: 'Swim' } });
-    fireEvent.click(button('Custom, Pick times'));
-    expect((screen.getByLabelText('Starts') as HTMLInputElement).value).toBe('14:00');
-    expect((screen.getByLabelText('Ends') as HTMLInputElement).value).toBe('18:00');
-    fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '13:00' } });
+  it('Starts and Ends always show: empty all day, a slot’s hours, then whatever is typed', async () => {
+    const props = await setup({ initial: { ...newDraft({}, TODAY, gabriel.id), title: 'Swim' } });
+    const starts = () => screen.getByLabelText('Starts') as HTMLInputElement;
+    const ends = () => screen.getByLabelText('Ends') as HTMLInputElement;
+    expect(screen.queryByRole('button', { name: /^Custom/ })).toBeNull();
+    expect([starts().value, ends().value]).toEqual(['', '']);
+    fireEvent.click(button('Afternoon, 14–18'));
+    expect([starts().value, ends().value]).toEqual(['14:00', '18:00']);
+    fireEvent.change(ends(), { target: { value: '13:00' } });
+    expect(button('Afternoon, 14–18').getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(button('Save'));
     await flush();
     expect(screen.getByText('Pick an end time after the start.')).toBeTruthy();
     expect(props.onSave).not.toHaveBeenCalled();
+    fireEvent.change(ends(), { target: { value: '16:30' } });
+    fireEvent.click(button('Save'));
+    await flush();
+    expect(saved(props)).toMatchObject({ time_type: 'custom', start_time: '14:00', end_time: '16:30', slots: [] });
+  });
+
+  it('Who can be emptied, and Save then asks for someone', async () => {
+    const props = await setup({ initial: { ...newDraft({}, TODAY, gabriel.id), title: 'Swim' } });
+    fireEvent.click(button('Gabriel'));
+    expect(button('Gabriel').getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(button('Save'));
+    await flush();
+    expect(screen.getByRole('alert').textContent).toBe('Pick at least one person.');
+    expect(props.onSave).not.toHaveBeenCalled();
+    fireEvent.click(button('Others'));
+    fireEvent.click(button('Save'));
+    await flush();
+    expect(saved(props)).toMatchObject({ members: ['others'] });
   });
 
   it('picks another day from the date sheet', async () => {

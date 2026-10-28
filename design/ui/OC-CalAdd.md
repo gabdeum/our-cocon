@@ -6,8 +6,8 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 1. Handle; title "New event" (edit: "Edit event"); muted link "Cancel".
 2. "What's happening?" — input 56, 18/800, placeholder "e.g. Poker night", max 60.
 3. "When" — three tiles: "Today" / "Sun 25", "Tomorrow" / "Mon 26", "Other day" / "Pick a date". Selected olive.
-4. "Time of day" + hint "Pick a time of day — no need for exact hours." — scrolling SlotChips (92×66): "All day" / "Whole day", "Early morning" / "06–09", "Morning" / "09–12", "Lunch" / "12–14", "Afternoon" / "14–18", "Evening" / "18–22", "Custom" / "Pick times". Custom shows "Starts" / "Ends" time inputs.
-5. "Who" — MemberChips (48): each member, "Everyone", "Others". Selected = 2.5 px ink border.
+4. "Time of day" + hint "Pick a time of day — no need for exact hours." — scrolling SlotChips (92×66): "All day" / "Whole day", "Early morning" / "06–09", "Morning" / "09–12", "Lunch" / "12–14", "Afternoon" / "14–18", "Evening" / "18–22". Under them, "Starts" / "Ends" time inputs, always shown (decided 2026-10-28, replacing the "Custom" chip): empty for All day, the picked slots' hours otherwise; typing a time makes it a custom time (no slot highlighted), and emptying both is All day.
+5. "Who" — MemberChips (48): each member, "Everyone", "Others". Selected = 2.5 px ink border. Starts on the signed-in member; anyone can be unpicked, and Save with nobody shows "Pick at least one person." (warn, `role="alert"`) under the chips.
 6. Conflict callout (warn-soft): "You already have Movie night this evening. Add anyway?"
 7. "More options" (soft button; sub-label "Place, repeat, reminder…" / "Hide").
 8. More options:
@@ -33,8 +33,9 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 | --- | --- |
 | Saved today before 18:00 | toast "{title} added for today, {time range}." |
 | Saved, all day | toast "{title} added for {Sat, Oct 31 · today · tomorrow}." (no range) |
-| Custom time not a time | "Use a time like 18:30." |
-| Custom end not after start | "Pick an end time after the start." |
+| Typed time not a time | "Use a time like 18:30." |
+| Typed end not after start | "Pick an end time after the start." |
+| Save with nobody in Who | "Pick at least one person." |
 | Ends: On a date | picker "Last day" (opens a date sheet "Ends on"); "Other day" opens "Pick a date" (DateGrid); the tile then shows the date ("Sat, Oct 31") |
 | Ends: After a number of times | field "Times", hint "Counts this one too.", error "Use a number from 1 to 1000." |
 | Checklist row | remove button "Remove {item}"; "+ Add to checklist" opens a field ("Checklist item") under the rows |
@@ -42,4 +43,4 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 | Event can't be opened | "We couldn't open this event." / "It may have been deleted, or you're offline." · "Cancel" |
 
 ## Rules
-Adjacent slots combine (Afternoon + Evening = 14:00–22:00); a non-adjacent tap starts over; All day and Custom are exclusive. Nothing picked (or the last slot unpicked) is All day. Type Birthday sets All day and Repeat Yearly (spec 035 FR-006). Ends shows for every repeat; "On" weekdays only for Weekly. "This event only" hides Repeat, Reminder and the checklist (they belong to the series). Everyone replaces members; Others adds to anything and needs no names. Member colors: `member-*` tokens; Everyone `member-everyone` (coral) with label "All"; Others `member-others` (light sand) with a person-outline icon and a `line-handle` outline. Two-member items split 50/50; initials always shown ("G·J").
+Adjacent slots combine (Afternoon + Evening = 14:00–22:00); a non-adjacent tap starts over; All day stands alone. Nothing picked (or the last slot unpicked) is All day. Type Birthday sets All day and Repeat Yearly (spec 035 FR-006). Ends shows for every repeat; "On" weekdays only for Weekly. "This event only" hides Repeat, Reminder and the checklist (they belong to the series). Everyone replaces members; Others adds to anything and needs no names. Member colors: `member-*` tokens; Everyone `member-everyone` (coral) with label "All"; Others `member-others` (light sand) with a person-outline icon and a `line-handle` outline. Two-member items split 50/50; initials always shown ("G·J").

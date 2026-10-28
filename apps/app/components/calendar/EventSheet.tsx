@@ -15,6 +15,7 @@ import {
   DateGrid,
   DayChip,
   DisclosureButton,
+  FieldWarning,
   Link,
   MemberPickerChip,
   PickerField,
@@ -39,8 +40,10 @@ import {
   takers,
   timeProblems,
   toInput,
+  shownTimes,
   toggleSlot,
   toggleWho,
+  typeTime,
   whoChips,
   type EndsChoice,
   type EventDraft,
@@ -116,6 +119,8 @@ export function EventSheet(p: EventSheetProps) {
 
   const hasTitle = d.title.trim().length > 0;
   const times = timeProblems(d.time);
+  const shown = shownTimes(d.time, slotTimes);
+  const noOne = d.who.length === 0;
   const tiles = dayTiles(today, d.date);
   const managed = managedOn(d.who, members);
   const showError = tried && !hasTitle;
@@ -127,7 +132,7 @@ export function EventSheet(p: EventSheetProps) {
 
   const save = async () => {
     setTried(true);
-    if (!hasTitle || Object.keys(times).length || endsProblem(d) || saving) return;
+    if (!hasTitle || noOne || Object.keys(times).length || endsProblem(d) || saving) return;
     setSaving(true);
     setFailed(false);
     try {
@@ -190,39 +195,38 @@ export function EventSheet(p: EventSheetProps) {
       <Section title={a.timeOfDay} hint={a.timeHint}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} role="group" aria-label={a.timeOfDay} className="-mx-20" contentContainerClassName="gap-8 px-20 pb-4 pt-2">
           {slotChips(slotTimes).map((s) => (
-            <SlotChip key={s.key} label={s.label} hours={s.hours} selected={isChipOn(d.time, s.key)} onPress={() => set({ time: toggleSlot(d.time, s.key, slotTimes) })} />
+            <SlotChip key={s.key} label={s.label} hours={s.hours} selected={isChipOn(d.time, s.key)} onPress={() => set({ time: toggleSlot(d.time, s.key) })} />
           ))}
         </ScrollView>
-        {d.time.kind === 'custom' ? (
-          <View className="flex-row gap-8">
-            <TextField
-              className="flex-1"
-              label={a.starts}
-              value={d.time.start}
-              inputMode="numeric"
-              maxLength={5}
-              onChangeText={(start) => d.time.kind === 'custom' && set({ time: { ...d.time, start } })}
-              warning={tried ? times.start : undefined}
-            />
-            <TextField
-              className="flex-1"
-              label={a.ends}
-              value={d.time.end}
-              inputMode="numeric"
-              maxLength={5}
-              onChangeText={(end) => d.time.kind === 'custom' && set({ time: { ...d.time, end } })}
-              warning={tried ? times.end : undefined}
-            />
-          </View>
-        ) : null}
+        <View className="flex-row gap-8">
+          <TextField
+            className="flex-1"
+            label={a.starts}
+            value={shown.start}
+            keyboardType="numbers-and-punctuation"
+            maxLength={5}
+            onChangeText={(start) => set({ time: typeTime(d.time, 'start', start, slotTimes) })}
+            warning={tried ? times.start : undefined}
+          />
+          <TextField
+            className="flex-1"
+            label={a.ends}
+            value={shown.end}
+            keyboardType="numbers-and-punctuation"
+            maxLength={5}
+            onChangeText={(end) => set({ time: typeTime(d.time, 'end', end, slotTimes) })}
+            warning={tried ? times.end : undefined}
+          />
+        </View>
       </Section>
 
       <Section title={a.who}>
         <View role="group" aria-label={a.who} className="flex-row flex-wrap gap-8">
           {whoChips(members).map((c) => (
-            <MemberPickerChip key={c.key} name={c.name} initial={c.initial} color={c.color} selected={d.who.includes(c.key)} onPress={() => set({ who: toggleWho(d.who, c.key, myMemberId) })} />
+            <MemberPickerChip key={c.key} name={c.name} initial={c.initial} color={c.color} selected={d.who.includes(c.key)} onPress={() => set({ who: toggleWho(d.who, c.key) })} />
           ))}
         </View>
+        {tried && noOne ? <FieldWarning text={a.noOne} /> : null}
       </Section>
 
       {conflict ? (

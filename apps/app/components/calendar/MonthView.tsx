@@ -56,6 +56,13 @@ export function MonthView({ members, myMemberId, events, slotTimes, hidden, mont
   // Opens with the month's first week at the top, and today on screen when it's this month.
   const [initialIndex] = useState(() => firstWeekOfMonth(range, month));
   const keepVisibleIndex = month === `${today.slice(0, 8)}01` ? weekIndexOf(range, today) : undefined;
+  const openEvent = useCallback(
+    (key: string) => {
+      const { id, date } = parseOccurrenceKey(key);
+      onOpenEvent(id, date);
+    },
+    [onOpenEvent],
+  );
   const gridJump = useMemo(() => (jump ? { index: firstWeekOfMonth(range, jump.month), nonce: jump.nonce } : undefined), [jump, range]);
 
   return (
@@ -70,10 +77,8 @@ export function MonthView({ members, myMemberId, events, slotTimes, hidden, mont
         onTopRowChange={(top) => onMonthShown(monthShownAt(range, top))}
         onDayPress={onOpenDay}
         onDayLongPress={onAddEvent}
-        onBarPress={(key) => {
-          const { id, date } = parseOccurrenceKey(key);
-          onOpenEvent(id, date);
-        }}
+        onBarPress={openEvent}
+        onChipPress={openEvent}
         addLabel={m.addEvent}
       />
       <FloatingAdd hidden={toastShown} label={m.addEvent} onPress={() => onAddEvent(today)} hint={showHint ? { text: m.hint, actionLabel: m.gotIt, onAction: onDismissHint } : null} />

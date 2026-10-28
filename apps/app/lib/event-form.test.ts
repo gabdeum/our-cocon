@@ -26,6 +26,8 @@ import {
   toastText,
   toggleSlot,
   toggleWho,
+  typeTime,
+  shownTimes,
   whoChips,
   type DraftTime,
   type EventDraft,
@@ -92,7 +94,7 @@ describe('the route’s prefill (FR-007, 032-later L91)', () => {
 });
 
 describe('slots (FR-002)', () => {
-  const tap = (time: DraftTime, ...keys: Parameters<typeof toggleSlot>[1][]) => keys.reduce((t, k) => toggleSlot(t, k, DEFAULT_SLOT_TIMES), time);
+  const tap = (time: DraftTime, ...keys: Parameters<typeof toggleSlot>[1][]) => keys.reduce((t, k) => toggleSlot(t, k), time);
 
   it.each([
     ['adjacent slots combine', tap(slots('afternoon'), 'evening'), slots('afternoon', 'evening')],
@@ -103,17 +105,27 @@ describe('slots (FR-002)', () => {
     ['unpicking the last one is All day', tap(slots('evening'), 'evening'), { kind: 'all_day' }],
     ['All day stands alone', tap(slots('evening'), 'all_day'), { kind: 'all_day' }],
     ['a slot after All day', tap({ kind: 'all_day' }, 'lunch'), slots('lunch')],
-    ['Custom starts on the slots’ hours', tap(slots('afternoon', 'evening'), 'custom'), { kind: 'custom', start: '14:00', end: '22:00' }],
-    ['Custom from All day starts on the evening', tap({ kind: 'all_day' }, 'custom'), { kind: 'custom', start: '18:00', end: '22:00' }],
-    ['Custom again keeps the times', tap({ kind: 'custom', start: '19:30', end: '21:00' }, 'custom'), { kind: 'custom', start: '19:30', end: '21:00' }],
-    ['a slot after Custom', tap({ kind: 'custom', start: '19:30', end: '21:00' }, 'morning'), slots('morning')],
+    ['a slot after typed times', tap({ kind: 'custom', start: '19:30', end: '21:00' }, 'morning'), slots('morning')],
+    ['All day after typed times', tap({ kind: 'custom', start: '19:30', end: '21:00' }, 'all_day'), { kind: 'all_day' }],
   ])('%s', (_, got, expected) => {
     expect(got).toEqual(expected);
   });
 
+  it('shows Starts and Ends: the slots’ hours, the typed times, or nothing all day', () => {
+    expect(shownTimes(slots('afternoon', 'evening'), DEFAULT_SLOT_TIMES)).toEqual({ start: '14:00', end: '22:00' });
+    expect(shownTimes({ kind: 'custom', start: '19:30', end: '' }, DEFAULT_SLOT_TIMES)).toEqual({ start: '19:30', end: '' });
+    expect(shownTimes({ kind: 'all_day' }, DEFAULT_SLOT_TIMES)).toEqual({ start: '', end: '' });
+  });
+
+  it('typing a time makes it custom from what was shown; emptying both is All day', () => {
+    expect(typeTime(slots('evening'), 'end', '23:00', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'custom', start: '18:00', end: '23:00' });
+    expect(typeTime({ kind: 'all_day' }, 'start', '10', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'custom', start: '10', end: '' });
+    expect(typeTime({ kind: 'custom', start: '10', end: '' }, 'start', '', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'all_day' });
+  });
+
   it('shows the chips with the family’s hours, and which are on', () => {
     const chips = slotChips(DEFAULT_SLOT_TIMES);
-    expect(chips.map((c) => `${c.label} ${c.hours}`)).toEqual(['All day Whole day', 'Early morning 06–09', 'Morning 09–12', 'Lunch 12–14', 'Afternoon 14–18', 'Evening 18–22', 'Custom Pick times']);
+    expect(chips.map((c) => `${c.label} ${c.hours}`)).toEqual(['All day Whole day', 'Early morning 06–09', 'Morning 09–12', 'Lunch 12–14', 'Afternoon 14–18', 'Evening 18–22']);
     expect(isChipOn(slots('evening'), 'evening')).toBe(true);
     expect(isChipOn(slots('evening'), 'all_day')).toBe(false);
     expect(isChipOn({ kind: 'all_day' }, 'all_day')).toBe(true);
@@ -133,7 +145,7 @@ describe('Who (FR-003)', () => {
   it.each([
     ['adds a member', [ME], alex.id, [ME, alex.id]],
     ['removes one', [ME, alex.id], alex.id, [ME]],
-    ['nobody left is me again', [alex.id], alex.id, [ME]],
+    ['the last member can be unpicked', [alex.id], alex.id, []],
     ['Everyone replaces members', [ME, alex.id], 'everyone', ['everyone']],
     ['a member replaces Everyone', ['everyone'], alex.id, [alex.id]],
     ['Others goes with anything', ['everyone'], 'others', ['everyone', 'others']],
@@ -141,9 +153,10 @@ describe('Who (FR-003)', () => {
     ['a member keeps Others', ['everyone', 'others'], alex.id, ['others', alex.id]],
     ['Others alone is fine', [ME, 'others'], ME, ['others']],
     ['unpicking Others', [ME, 'others'], 'others', [ME]],
-    ['unpicking Others alone is me again', ['others'], 'others', [ME]],
+    ['unpicking Everyone', ['everyone', 'others'], 'everyone', ['others']],
+    ['nobody left is allowed (Save asks for someone)', ['others'], 'others', []],
   ] as const)('%s', (_, who, key, expected) => {
-    expect(toggleWho(who, key, ME)).toEqual(expected);
+    expect(toggleWho(who, key)).toEqual(expected);
   });
 
   it('offers every member, then Everyone and Others', () => {

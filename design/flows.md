@@ -61,7 +61,7 @@
 | OC-CalWeek | `/calendar?view=week&date=` | tab (same screen) | 038 |
 | OC-CalDay | `/calendar?view=day&date=` | tab (same screen) | 039 |
 | OC-CalAgenda | `/calendar?view=agenda` | tab (same screen) | 040 |
-| OC-CalAdd / OC-CalAddMore | `/calendar/new` (`?date=&slot=`, or `&time=HH:MM` from the week grid: Custom from that hour, one hour long) · `/calendar/[id]/edit` (`?date=` for one occurrence) | sheet | 041, 043 |
+| OC-CalAdd / OC-CalAddMore | `/calendar/new` (`?date=&slot=`, or `&time=HH:MM` from a long press in the week grid: Starts at that hour, one hour long) · `/calendar/[id]/edit` (`?date=` for one occurrence) | sheet | 041, 043 |
 | OC-CalEvent | `/calendar/[id]` (`?date=` for one occurrence) | stack | 042 |
 | OC-CalEventDelete | dialog over OC-CalEvent | dialog | 042 |
 | OC-CalBusy | sheet over any calendar view | sheet | 043 |

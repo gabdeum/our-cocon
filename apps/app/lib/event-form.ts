@@ -153,20 +153,12 @@ const adjacent = (slots: readonly SlotKey[]) => {
   return idx.every((v, i) => i === 0 || v === (idx[i - 1] as number) + 1);
 };
 
-/** Custom's starting times: the picked slots' hours, or the Evening's when nothing was picked. */
-function customFrom(time: DraftTime, slotTimes: SlotTimes): DraftTime {
-  if (time.kind === 'custom') return time;
-  const range = time.kind === 'slot' ? slotsToRange(time.slots, slotTimes) : slotTimes.evening;
-  return { kind: 'custom', start: range.start, end: range.end };
-}
-
 /**
- * FR-002: adjacent slots combine; a tap that isn't next to the picked ones starts over; All day and
- * Custom stand alone, and Custom starts on the picked slots' times. Unpicking the last slot is All day.
+ * FR-002: adjacent slots combine; a tap that isn't next to the picked ones starts over; All day
+ * stands alone. Unpicking the last slot is All day. (The Starts and Ends fields show the result.)
  */
-export function toggleSlot(time: DraftTime, key: SlotKey | 'all_day' | 'custom', slotTimes: SlotTimes): DraftTime {
+export function toggleSlot(time: DraftTime, key: SlotKey | 'all_day'): DraftTime {
   if (key === 'all_day') return { kind: 'all_day' };
-  if (key === 'custom') return customFrom(time, slotTimes);
   if (time.kind !== 'slot') return { kind: 'slot', slots: [key] };
   if (time.slots.includes(key)) {
     const rest = time.slots.filter((s) => s !== key);
@@ -178,20 +170,29 @@ export function toggleSlot(time: DraftTime, key: SlotKey | 'all_day' | 'custom',
 }
 
 /**
- * FR-003: Everyone replaces individual members; Others goes with anything and needs no names.
- * With nobody left, the event is mine again.
+ * The Starts and Ends fields (always shown, decided 2026-10-28): the picked slots' hours, the
+ * typed times, or empty for All day.
  */
-export function toggleWho(who: readonly EventMember[], key: EventMember, myMemberId: string): EventMember[] {
-  const others = who.includes('others');
-  if (key === 'others') {
-    if (!others) return [...who, 'others'];
-    const rest = who.filter((m) => m !== 'others');
-    return rest.length ? rest : [myMemberId];
-  }
-  if (key === 'everyone') return others ? ['everyone', 'others'] : ['everyone'];
-  const named = who.filter((m) => m !== 'everyone');
-  const next = named.includes(key) ? named.filter((m) => m !== key) : [...named, key];
-  return next.length ? next : [myMemberId];
+export function shownTimes(time: DraftTime, slotTimes: SlotTimes): { start: string; end: string } {
+  if (time.kind === 'all_day') return { start: '', end: '' };
+  return time.kind === 'slot' ? slotsToRange(time.slots, slotTimes) : { start: time.start, end: time.end };
+}
+
+/** Typing a time makes it a custom time, starting from what was shown; both fields emptied is All day. */
+export function typeTime(time: DraftTime, field: 'start' | 'end', value: string, slotTimes: SlotTimes): DraftTime {
+  const next = { ...shownTimes(time, slotTimes), [field]: value };
+  return next.start.trim() === '' && next.end.trim() === '' ? { kind: 'all_day' } : { kind: 'custom', ...next };
+}
+
+/**
+ * FR-003: Everyone replaces individual members; Others goes with anything and needs no names.
+ * Anyone can be unpicked, even the last one: Save then asks for someone (`noOne`).
+ */
+export function toggleWho(who: readonly EventMember[], key: EventMember): EventMember[] {
+  if (who.includes(key)) return who.filter((m) => m !== key);
+  if (key === 'others') return [...who, 'others'];
+  if (key === 'everyone') return who.includes('others') ? ['everyone', 'others'] : ['everyone'];
+  return [...who.filter((m) => m !== 'everyone'), key];
 }
 
 /** The Who row's chips: every member, then Everyone and Others (FR-003). */
@@ -229,15 +230,14 @@ export function dayTiles(today: string, date: string): { today: string; tomorrow
 }
 
 /** The slot chips, in order, with the family's hours ("18–22"). */
-export function slotChips(slotTimes: SlotTimes): { key: SlotKey | 'all_day' | 'custom'; label: string; hours: string }[] {
+export function slotChips(slotTimes: SlotTimes): { key: SlotKey | 'all_day'; label: string; hours: string }[] {
   return [
     { key: 'all_day', label: a.allDay, hours: a.wholeDay },
     ...SLOT_KEYS.map((s) => ({ key: s, label: calendarWordsEn.slots[s], hours: a.slotHours(slotTimes[s].start, slotTimes[s].end) })),
-    { key: 'custom', label: a.custom, hours: a.pickTimes },
   ];
 }
 
-export const isChipOn = (time: DraftTime, key: SlotKey | 'all_day' | 'custom') => (key === 'all_day' || key === 'custom' ? time.kind === key : time.kind === 'slot' && time.slots.includes(key));
+export const isChipOn = (time: DraftTime, key: SlotKey | 'all_day') => (key === 'all_day' ? time.kind === 'all_day' : time.kind === 'slot' && time.slots.includes(key));
 
 /** Custom times' warnings: a time that isn't "HH:MM", or an end that isn't after the start. */
 export function timeProblems(time: DraftTime): { start?: string; end?: string } {

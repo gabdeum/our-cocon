@@ -27,6 +27,7 @@ describe('MonthGrid (spec 037)', () => {
     const onDayPress = vi.fn();
     const onDayLongPress = vi.fn();
     const onBarPress = vi.fn();
+    const onChipPress = vi.fn();
     render(
       <MonthGrid
         weekdays={['S', 'M', 'T', 'W', 'T', 'F', 'S']}
@@ -36,6 +37,7 @@ describe('MonthGrid (spec 037)', () => {
         onTopRowChange={vi.fn()}
         onDayPress={onDayPress}
         onDayLongPress={onDayLongPress}
+        onChipPress={onChipPress}
         onBarPress={onBarPress}
         addLabel="Add event"
       />,
@@ -47,6 +49,11 @@ describe('MonthGrid (spec 037)', () => {
     expect(onDayPress).toHaveBeenCalledWith('2026-10-04');
     fireEvent.click(screen.getByRole('link', { name: 'Grandma visits, October 5 to October 7' }));
     expect(onBarPress).toHaveBeenCalledWith('e1:2026-10-05');
+    // A chip opens its event, not the day (decided 2026-10-28).
+    onDayPress.mockClear();
+    fireEvent.click(screen.getByRole('link', { name: 'J Baby swim' }));
+    expect(onChipPress).toHaveBeenCalledWith('c');
+    expect(onDayPress).not.toHaveBeenCalled();
   });
 });
 

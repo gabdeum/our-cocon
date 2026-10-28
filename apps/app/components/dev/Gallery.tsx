@@ -861,6 +861,7 @@ function WeekGallery() {
         ]}
         columns={dates.map((date, i) => ({
           date,
+          label: `Day ${first + i}`,
           addLabel: `Add event, day ${i}`,
           today: week === 0 && i === 0,
           blocks:
@@ -880,7 +881,7 @@ function WeekGallery() {
         nowY={week === 0 ? 264 : null}
         onDayPress={noop}
         onBlockPress={noop}
-        onEmptyPress={noop}
+        onEmptyLongPress={noop}
       />
     </Swipeable>
   );
