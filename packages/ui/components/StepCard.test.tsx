@@ -2,7 +2,7 @@
 // the announcement is said once, politely (OC-RecipeSteps › Accessibility labels).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { TimerRow, type TimerRowProps } from './StepCard';
+import { stepWords, TimerRow, type TimerRowProps } from './StepCard';
 
 afterEach(cleanup);
 
@@ -43,5 +43,22 @@ describe('TimerRow', () => {
     expect(p.onPress).toHaveBeenCalledTimes(1);
     expect(p.onMinus).toHaveBeenCalledTimes(1);
     expect(p.onPlus).toHaveBeenCalledTimes(1);
+  });
+});
+
+// The iPhone lays step text out word by word so an amount's highlight is rounded and stops where its text does.
+describe('stepWords', () => {
+  const words = stepWords(['Add ', { amount: '200 g onion' }, ', then ', { missing: 'leek' }, '.']);
+  const text = (w: { text: string }[]) => w.map((r) => r.text).join('');
+
+  it('splits at spaces, each word keeping its space, and keeps punctuation with its word', () => {
+    expect(words.map(text)).toEqual(['Add ', '200 ', 'g ', 'onion, ', 'then ', 'leek.']);
+  });
+
+  it("highlights the spaces inside an amount, not the one after it, and rounds only the amount's ends", () => {
+    expect(words[1]).toEqual([{ text: '200', kind: 'amount', first: true, last: false }, { text: ' ', kind: 'amount' }]);
+    expect(words[2]).toEqual([{ text: 'g', kind: 'amount', first: false, last: false }, { text: ' ', kind: 'amount' }]);
+    expect(words[3]).toEqual([{ text: 'onion', kind: 'amount', first: false, last: true }, { text: ',', kind: 'plain' }, { text: ' ', kind: 'plain' }]);
+    expect(words[5]).toEqual([{ text: 'leek', kind: 'missing' }, { text: '.', kind: 'plain' }]);
   });
 });

@@ -1,16 +1,93 @@
 import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Icon } from './Icon';
 import { Tag } from './Tag';
 import { Photo } from './Card';
 import { Text } from './Text';
+import { theme } from '../theme';
 
 /**
  * Step text split into plain text, amounts from @cocon/quantity ("20 g butter"), and names of
  * ingredients that are gone (`missing`: plain weight, muted, no highlight).
  */
 export type StepTextPart = string | { amount: string } | { missing: string };
+
+/** A piece of a word: an amount's first and last pieces carry its rounded ends. */
+export interface StepRun {
+  text: string;
+  kind: 'plain' | 'amount' | 'missing';
+  first?: boolean;
+  last?: boolean;
+}
+
+/**
+ * The step text as words (split at spaces, each keeping its following space), for the iPhone's
+ * word-by-word layout. A space inside an amount stays highlighted; runs of spaces become one.
+ */
+export function stepWords(parts: StepTextPart[]): StepRun[][] {
+  const words: StepRun[][] = [];
+  let word: StepRun[] = [];
+  for (const p of parts) {
+    const kind = typeof p === 'string' ? 'plain' : 'missing' in p ? 'missing' : 'amount';
+    const text = typeof p === 'string' ? p : 'missing' in p ? p.missing : p.amount;
+    const tokens = text.split(/(\s+)/).filter((t) => t !== '');
+    const firstWord = tokens.findIndex((t) => t.trim() !== '');
+    const lastWord = tokens.findLastIndex((t) => t.trim() !== '');
+    tokens.forEach((t, i) => {
+      if (t.trim() !== '') {
+        word.push(kind === 'amount' ? { text: t, kind, first: i === firstWord, last: i === lastWord } : { text: t, kind });
+        return;
+      }
+      if (word.length === 0) return;
+      word.push({ text: ' ', kind: kind === 'amount' && i > firstWord && i < lastWord ? 'amount' : 'plain' });
+      words.push(word);
+      word = [];
+    });
+  }
+  if (word.length > 0) words.push(word);
+  return words;
+}
+
+// Nunito's glyphs are 1.364 em tall: a highlight covers that (plus `pad`), as an inline one does on the web.
+const GLYPH_HEIGHT = 1.364;
+
+/**
+ * The iPhone can't round or pad a highlight inside text, and fills a wrapped one to the line's end,
+ * so there the words are laid out one by one and each amount piece is its own rounded box.
+ */
+function NativeStepText({ parts, cook }: { parts: StepTextPart[]; cook?: boolean }) {
+  const variant = cook ? 'bodyCook' : 'bodyLg';
+  const { fontSize, lineHeight } = theme.text[variant];
+  const pad = cook ? 0 : 1;
+  const inset = (lineHeight - fontSize * GLYPH_HEIGHT) / 2 - pad;
+  const label = parts.map((p) => (typeof p === 'string' ? p : 'missing' in p ? p.missing : p.amount)).join('');
+  return (
+    <View accessible accessibilityRole="text" aria-label={label} className="flex-row flex-wrap">
+      {stepWords(parts).map((word, i) => (
+        <View key={i} className="flex-row">
+          {word.map((r, j) =>
+            r.kind === 'amount' ? (
+              <View
+                key={j}
+                className={cn(cook ? 'bg-honey' : 'bg-surface-soft', r.first && 'rounded-l-xs pl-4', r.last && 'rounded-r-xs pr-4')}
+                style={{ marginVertical: inset, paddingVertical: pad }}
+              >
+                <Text variant={variant} weight="900" style={{ lineHeight: lineHeight - 2 * (inset + pad) }}>
+                  {r.text}
+                </Text>
+              </View>
+            ) : (
+              <Text key={j} variant={variant} color={r.kind === 'missing' ? 'ink-muted' : 'ink'}>
+                {r.text}
+              </Text>
+            ),
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
 
 /**
  * Step text with highlighted amounts (bundle.css › oc-amount). `cook`: honey highlight, 21 px text.
@@ -37,6 +114,7 @@ export function StepText({ parts, cook, compact }: { parts: StepTextPart[]; cook
       </Text>
     );
   }
+  if (Platform.OS !== 'web') return <NativeStepText parts={parts} cook={cook} />;
   return (
     <Text variant={cook ? 'bodyCook' : 'bodyLg'}>
       {parts.map((p, i) =>
