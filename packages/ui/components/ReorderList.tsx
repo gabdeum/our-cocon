@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { PanResponder, View, type AccessibilityActionEvent, type LayoutChangeEvent } from 'react-native';
+import { PanResponder, View, type AccessibilityActionEvent, type KeyDownEvent, type LayoutChangeEvent } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Text } from './Text';
 
@@ -134,10 +134,11 @@ export function ReorderList<T>({ items, keyOf, renderItem, onMove, handleLabel, 
             {...{
               // react-native-web: the arrow keys on the focused handle.
               tabIndex: 0,
-              onKeyDown: (e: { key: string; preventDefault: () => void }) => {
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+              onKeyDown: (e: KeyDownEvent) => {
+                const { key } = e.nativeEvent;
+                if (key === 'ArrowUp' || key === 'ArrowDown') {
                   e.preventDefault();
-                  move(index, e.key === 'ArrowUp' ? index - 1 : index + 1);
+                  move(index, key === 'ArrowUp' ? index - 1 : index + 1);
                 }
               },
             }}

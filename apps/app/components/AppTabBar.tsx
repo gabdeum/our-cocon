@@ -5,17 +5,17 @@ import { TABS, type TabKey } from '../lib/navigation';
 import { strings } from '../strings/en';
 import { AppTimerPill, useHasTimers } from './timers/AppTimerPill';
 
-/** The parts of Expo Router's tab-bar props this uses (React Navigation's BottomTabBarProps). */
+/** The parts of Expo Router's tab-bar props this uses (its BottomTabBarProps). */
 export interface TabNavigationProps {
   state: { index: number; routes: { key: string; name: string }[] };
-  navigation: {
-    navigate: (name: string) => void;
+  emitter: {
     emit: (event: { type: 'tabPress'; target: string; canPreventDefault: true }) => { defaultPrevented: boolean };
   };
+  navigateToTab: (routeKey: string) => void;
 }
 
 /** Connects the design-system TabBar to Expo Router's tabs and sends `tab_selected` (spec 002), with the TimerPill (011). */
-export function AppTabBar({ state, navigation, tracker, onOpenTimers }: TabNavigationProps & { tracker: Tracker; onOpenTimers: () => void }) {
+export function AppTabBar({ state, emitter, navigateToTab, tracker, onOpenTimers }: TabNavigationProps & { tracker: Tracker; onOpenTimers: () => void }) {
   const insets = useSafeAreaInsets();
   const hasTimers = useHasTimers();
   const current = state.routes[state.index]?.name;
@@ -25,9 +25,9 @@ export function AppTabBar({ state, navigation, tracker, onOpenTimers }: TabNavig
     const tab = TABS.find((t) => t.key === key);
     const route = state.routes.find((r) => r.name === tab?.route);
     if (!tab || !route) return;
-    const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+    const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
     if (key === active || event.defaultPrevented) return;
-    navigation.navigate(route.name);
+    navigateToTab(route.key);
     tracker.track('tab_selected', { tab: key });
   };
 

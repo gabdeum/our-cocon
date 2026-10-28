@@ -7,6 +7,7 @@ A household app for families, run from the app or from any AI assistant through 
 | Command | Does |
 | --- | --- |
 | `pnpm dev` | Local Supabase (CLI) + Expo web + MCP server |
+| `pnpm dev:phone` | Same, served to Expo Go on an iPhone (same, trusted Wi-Fi) |
 | `pnpm check` | Lint, type check and tests for changed packages. Run before saying a task is done |
 | `pnpm test <path>` | Tests for one file or folder while iterating |
 | `pnpm test:all` | Full suite, once before opening a PR (CI runs it too) |

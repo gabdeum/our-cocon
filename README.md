@@ -23,6 +23,7 @@ The first run starts a local Supabase (database, sign-in, storage) in Docker and
 | Command | Does |
 | --- | --- |
 | `pnpm dev` | Local Supabase + web app + MCP server |
+| `pnpm dev:phone` | Same, but serves the app to Expo Go on an iPhone on the same Wi-Fi (trusted Wi-Fi only) |
 | `pnpm check` | Lint, type check and tests for what changed |
 | `pnpm test <path>` | Tests for one file or folder |
 | `pnpm test:all` | Every test (needs local Supabase running) |

@@ -1,5 +1,5 @@
 import type { ReactNode, Ref } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { cn } from '../cn';
 import { theme } from '../theme';
 import { Logo } from './Icon';
@@ -43,7 +43,7 @@ export function PushedScreen({ children, className }: { children: ReactNode; cla
  * fields scroll under them (4 20 30, 18 apart). `scrollRef` lets Save bring a warned field into view;
  * `scrollEnabled` false holds the page still while a row is dragged.
  */
-export function FormScreen({ bar, children, scrollRef, scrollEnabled = true }: { bar: ReactNode; children: ReactNode; scrollRef?: Ref<ScrollView>; scrollEnabled?: boolean }) {
+export function FormScreen({ bar, children, scrollRef, scrollEnabled = true }: { bar: ReactNode; children: ReactNode; scrollRef?: Ref<ScrollViewInstance>; scrollEnabled?: boolean }) {
   return (
     <View className="flex-1 bg-surface-page">
       <View className="px-16 pb-[14px] pt-[50px]">{bar}</View>

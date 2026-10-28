@@ -5,6 +5,7 @@ import { COPIED_MS, ShareSheet, type ShareSheetApi } from './ShareSheet';
 import { fakeTracker } from '../../test/fakes';
 
 vi.mock('expo-linking', () => ({ createURL: (p: string) => `ourcocon://${p}` }));
+vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn() }));
 
 afterEach(() => {
   cleanup();

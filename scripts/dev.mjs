@@ -1,8 +1,14 @@
 // `pnpm dev`: local Supabase (Supabase CLI, in Docker), then the web app and MCP server.
 // On first run it writes .env.local from env.example, filled with the local Supabase URL and key.
 // Values are never printed.
+// `pnpm dev:phone` (--phone) serves the app to Expo Go on an iPhone on the same Wi-Fi instead:
+// the phone reaches local Supabase through this Mac's network address, not 127.0.0.1.
+// Local Supabase (database, Studio, Mailpit) is then open to the whole Wi-Fi: use a trusted one.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { networkInterfaces } from 'node:os';
+
+const phone = process.argv.includes('--phone');
 
 // Supabase reads its Google sign-in credentials from .env.local when it exists (spec 003).
 const supabaseStart = existsSync('.env.local') ? ['exec', 'dotenv', '-e', '.env.local', '--', 'supabase', 'start'] : ['exec', 'supabase', 'start'];
@@ -37,13 +43,30 @@ if (!existsSync('.env.local')) {
   writeFileSync('.env.local', env, { mode: 0o600 });
 }
 
+let env = process.env;
+if (phone) {
+  // Wi-Fi or Ethernet first: a VPN or Docker adapter isn't reachable from the phone.
+  const nets = networkInterfaces();
+  const lan = [nets.en0, nets.en1, ...Object.values(nets)]
+    .flat()
+    .find((net) => net && net.family === 'IPv4' && !net.internal);
+  if (!lan) {
+    console.error('No network address found. Is this Mac on Wi-Fi?');
+    process.exit(1);
+  }
+  // dotenv keeps variables that are already set, so this wins over .env.local.
+  env = { ...process.env, EXPO_PUBLIC_SUPABASE_URL: `http://${lan.address}:54321` };
+  console.log(`In Expo Go, open exp://${lan.address}:8081 (or scan the QR code below).`);
+  console.log(`Sign-in emails: http://${lan.address}:54324. In the link, replace 127.0.0.1 with ${lan.address}.`);
+}
+
 const child = spawn(
   'pnpm',
   [
     'exec', 'dotenv', '-e', '.env.local', '--',
     'concurrently', '-n', 'app,mcp', '-c', 'yellow,cyan',
-    'pnpm --filter @cocon/app web', 'pnpm --filter @cocon/mcp dev',
+    phone ? 'pnpm --filter @cocon/app start' : 'pnpm --filter @cocon/app web', 'pnpm --filter @cocon/mcp dev',
   ],
-  { stdio: 'inherit' },
+  { stdio: 'inherit', env },
 );
 child.on('exit', (code) => process.exit(code ?? 0));
