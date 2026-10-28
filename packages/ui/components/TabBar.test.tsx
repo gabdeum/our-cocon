@@ -38,8 +38,14 @@ describe('TabBar', () => {
   it('spec 036 FR-001: the selected tab is a fixed 132 px and never grows; the others share the rest', () => {
     render(<TabBar label="Main" items={[...items]} active="calendar" onSelect={() => undefined} />);
     const style = (name: string) => screen.getByRole('link', { name }).style;
-    expect(style('Calendar')).toMatchObject({ width: '132px', flexGrow: '0', flexShrink: '0' });
+    expect(style('Calendar')).toMatchObject({ flexBasis: '132px', minWidth: '132px', flexGrow: '0', flexShrink: '0' });
     expect(style('Home')).toMatchObject({ flexGrow: '1', minWidth: '44px' });
+  });
+
+  it('a tab that was selected goes back to sharing the rest (the iPhone kept it 132 wide)', () => {
+    const { rerender } = render(<TabBar label="Main" items={[...items]} active="home" onSelect={() => undefined} />);
+    rerender(<TabBar label="Main" items={[...items]} active="calendar" onSelect={() => undefined} />);
+    expect(screen.getByRole('link', { name: 'Home' }).style).toMatchObject({ flexBasis: '0px', flexGrow: '1', minWidth: '44px', paddingLeft: '0px' });
   });
 
   it('reports which tab was tapped', () => {

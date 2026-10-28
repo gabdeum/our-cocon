@@ -6,7 +6,7 @@ The floating dark navigation pill with five destinations: Home, Calendar, Recipe
 
 | Part | Spec |
 | --- | --- |
-| Bar | 68 tall, radius 34, ink, padding 8, gap 4, `shadow-nav`; 16 from the sides, 26 from the bottom (plus the safe area) |
+| Bar | 68 tall, radius 34, ink, padding 8, gap 4, `shadow-nav`; 16 from the sides, 26 from the bottom or the safe area if larger (34 on the iPhone) |
 | Item | flex 1 1 0, min-width 44, radius 26, icon 24 in `on-ink`, label hidden |
 | Active item | **fixed 132 wide** (fits "Groceries"), padding 0 16, honey fill, ink icon + label 15/800, gap 6, no wrap (`aria-current="page"`) |
 | Icons | home, calendar, recipes, groceries, menu (three equal bars) |
