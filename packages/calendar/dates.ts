@@ -50,6 +50,11 @@ export function todayIn(timeZone: string, now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 }
 
+/** The time now in the home time zone, "HH:MM" in 24-hour (the week view's now line, spec 038). */
+export function timeIn(timeZone: string, now: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now);
+}
+
 /** Regions whose weeks start on Sunday (CLDR); everywhere else starts on Monday. */
 const SUNDAY_REGIONS = new Set([
   'AG', 'AS', 'BD', 'BR', 'BS', 'BT', 'BW', 'BZ', 'CA', 'CN', 'CO', 'DM', 'DO', 'ET', 'GT', 'GU', 'HK', 'HN', 'ID', 'IL', 'IN',

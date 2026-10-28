@@ -38,7 +38,6 @@ export interface MemberChipProps {
  * initial or icon always stays visible.
  */
 export function MemberChip({ name, initial, color, pressed, onPress }: MemberChipProps) {
-  const others = color === 'others';
   return (
     <Pressable
       role="button"
@@ -50,18 +49,44 @@ export function MemberChip({ name, initial, color, pressed, onPress }: MemberChi
         focusRing,
       )}
     >
-      <View aria-hidden className={cn('h-[30px] w-[30px] items-center justify-center rounded-full', avatarFills[color], !pressed && 'opacity-dimmed')}>
-        {others ? (
-          <Icon name="person" size={18} color="inkMuted" />
-        ) : (
-          <Text size={initial.length > 1 ? 11 : 14} weight="900">
-            {initial}
-          </Text>
-        )}
-      </View>
+      <MemberDot initial={initial} color={color} size={30} dimmed={!pressed} />
       <Text size={14} weight="800" color={pressed ? 'ink' : 'ink-muted'} numberOfLines={1}>
         {name}
       </Text>
     </Pressable>
+  );
+}
+
+/** MemberChip README › Dot: the member color with the initial; "All" smaller; Others a person icon. */
+function MemberDot({ initial, color, size, dimmed = false }: { initial: string; color: MemberChipColor; size: 28 | 30; dimmed?: boolean }) {
+  return (
+    <View aria-hidden className={cn('items-center justify-center rounded-full', size === 28 ? 'h-[28px] w-[28px]' : 'h-[30px] w-[30px]', avatarFills[color], dimmed && 'opacity-dimmed')}>
+      {color === 'others' ? (
+        <Icon name="person" size={18} color="inkMuted" />
+      ) : (
+        <Text size={initial.length > 1 ? 11 : size === 28 ? 13 : 14} weight="900">
+          {initial}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+export interface MemberCountProps {
+  /** "Gabriel 2", "Everyone 1". */
+  text: string;
+  initial: string;
+  color: MemberChipColor;
+}
+
+/** MemberChip README › Count: who's busy in the day view (spec 039). Not a control. */
+export function MemberCount({ text, initial, color }: MemberCountProps) {
+  return (
+    <View className="h-[36px] flex-none flex-row items-center gap-6 rounded-pill bg-surface-card pl-4 pr-12">
+      <MemberDot initial={initial} color={color} size={28} />
+      <Text size={14} weight="800" numberOfLines={1}>
+        {text}
+      </Text>
+    </View>
   );
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Easing, Modal, PanResponder, Pressable, ScrollView, View, type HostInstance } from 'react-native';
+import { Animated, Easing, Modal, PanResponder, Pressable, ScrollView, View, type HostInstance } from 'react-native';
 import { cn } from '../cn';
+import { useReduceMotion } from '../reduceMotion';
 import { theme } from '../theme';
 import { Button, type ButtonProps } from './Button';
 import { Text } from './Text';
@@ -23,18 +24,6 @@ export interface BottomSheetProps {
 
 const SWIPE_CLOSE = 80;
 const DURATION = 250;
-
-function useReduceMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    void AccessibilityInfo.isReduceMotionEnabled?.().then((v) => alive && setReduce(v));
-    return () => {
-      alive = false;
-    };
-  }, []);
-  return reduce;
-}
 
 /**
  * A sheet over a dimmed screen for one focused task (BottomSheet README). Hugs its content up to

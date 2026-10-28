@@ -67,6 +67,9 @@ import {
   CalendarHeader,
   EventBar,
   EventChip,
+  GRID_HEIGHT,
+  HourGrid,
+  Swipeable,
   MemberChip,
   MoreCount,
   Toast,
@@ -248,6 +251,12 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <View className="h-control-lg">
             <EventBar text="All Grandma visits" label="Grandma visits, October 16 to October 19" colors={['everyone']} column={5} days={2} lane={0} startsHere endsHere={false} />
           </View>
+        </View>
+      </Section>
+
+      <Section group="Calendar" title="HourGrid in Swipeable (swipe it)">
+        <View style={{ height: GRID_HEIGHT }}>
+          <WeekGallery />
         </View>
       </Section>
 
@@ -764,6 +773,48 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
 }
 
 /** ReorderList with three rows that really move (drag the handle, or the arrow keys on it). */
+/** HourGrid with OC-CalWeek's Sunday, swiped week to week (only the dates change). */
+function WeekGallery() {
+  const [week, setWeek] = useState(0);
+  const first = 25 + week * 7;
+  const dates = Array.from({ length: 7 }, (_, i) => `w${week}-${i}`);
+  const hourLabels = Array.from({ length: 18 }, (_, i) => `${String(i + 6).padStart(2, '0')}:00`);
+  return (
+    <Swipeable page={String(1000 + week)} onSwipe={(d) => setWeek((w) => w + d)}>
+      <HourGrid
+        days={dates.map((date, i) => ({ date, letter: 'SMTWTFS'[i] ?? '', num: String(first + i), label: `Day ${first + i}`, today: week === 0 && i === 0 }))}
+        allDayLabel="All day"
+        bars={[
+          { key: 'b', text: 'E Birthday', label: 'Birthday', colors: ['rose'], column: 3, days: 1, lane: 0, startsHere: true, endsHere: true },
+          { key: 'l', text: 'E Lyon trip', label: 'Lyon trip', colors: ['rose'], column: 4, days: 3, lane: 0, startsHere: true, endsHere: true },
+        ]}
+        columns={dates.map((date, i) => ({
+          date,
+          addLabel: `Add event, day ${i}`,
+          today: week === 0 && i === 0,
+          blocks:
+            i === 0
+              ? [
+                  { key: 'br', top: 'All Lunch', title: 'Brunch', label: 'Brunch', colors: ['everyone'], kind: 'slot', y: 217, height: 70, lane: 0, lanes: 1 },
+                  { key: 'sw', top: 'J', title: 'Baby swim', label: 'Baby swim', colors: ['sky'], kind: 'custom', y: 307, height: 70, lane: 0, lanes: 2 },
+                  { key: 'co', top: 'G', title: 'Coffee', label: 'Coffee', colors: ['honey'], kind: 'custom', y: 361, height: 34, lane: 1, lanes: 2 },
+                  { key: 'mv', top: 'All', title: 'Movie night', label: 'Movie night', colors: ['everyone'], kind: 'slot', y: 433, height: 142, lane: 0, lanes: 2 },
+                  { key: 'pk', top: 'G', title: 'Poker', label: 'Poker', colors: ['honey'], kind: 'custom', y: 469, height: 142, lane: 1, lanes: 2 },
+                ]
+              : i === 1
+                ? [{ key: 'yg', top: 'E·J 08:00', title: 'Baby yoga', label: 'Baby yoga', colors: ['rose', 'sky'], kind: 'custom', y: 73, height: 52, lane: 0, lanes: 1 }]
+                : [],
+        }))}
+        hourLabels={hourLabels}
+        nowY={week === 0 ? 264 : null}
+        onDayPress={noop}
+        onBlockPress={noop}
+        onEmptyPress={noop}
+      />
+    </Swipeable>
+  );
+}
+
 function ReorderGallery() {
   const [rows, setRows] = useState(['Leeks', 'Bacon lardons', 'Heavy cream']);
   return (

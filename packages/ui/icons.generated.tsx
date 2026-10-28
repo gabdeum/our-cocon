@@ -15,6 +15,9 @@ export const iconShapes = {
   "camera": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><Path d="M4 8h3l2-3h6l2 3h3v11H4Z" /><Circle cx="12" cy="13" r="3.5" /></Svg>
   ),
+  "car": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M5 17h14v-5l-2-5H7l-2 5Z" /><Circle cx="8" cy="17" r="2" /><Circle cx="16" cy="17" r="2" /></Svg>
+  ),
   "check": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><Path d="m5 12 5 5 9-10" /></Svg>
   ),

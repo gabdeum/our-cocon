@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, daysBetween, daysInMonth, makeDate, todayIn, weekRange, weekStartFor, weekday } from './dates';
+import { addDays, daysBetween, daysInMonth, makeDate, timeIn, todayIn, weekRange, weekStartFor, weekday } from './dates';
 
 describe('dates', () => {
   it('adds days across months, years and daylight saving', () => {
@@ -30,6 +30,13 @@ describe('dates', () => {
     const now = new Date('2027-01-01T03:00:00Z');
     expect(todayIn('Europe/Paris', now)).toBe('2027-01-01');
     expect(todayIn('America/New_York', now)).toBe('2026-12-31');
+  });
+
+  it('knows the time now in the home time zone (spec 038 now line)', () => {
+    const now = new Date('2027-01-01T03:05:00Z');
+    expect(timeIn('Europe/Paris', now)).toBe('04:05');
+    expect(timeIn('America/New_York', now)).toBe('22:05');
+    expect(timeIn('UTC', new Date('2027-01-01T00:00:00Z'))).toBe('00:00');
   });
 
   it.each([

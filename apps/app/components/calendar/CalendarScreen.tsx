@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { memberInitials, type Tracker } from '@cocon/schemas';
-import type { CalendarView } from '@cocon/schemas/calendar';
+import type { CalendarView, SlotKey } from '@cocon/schemas/calendar';
 import { DEFAULT_SLOT_TIMES, shiftAnchor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { CalendarHeader, type CalendarHeaderChip } from '@cocon/ui';
@@ -13,9 +13,14 @@ import type { ChoiceStorage } from '../../lib/recipe-choices';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
+import { DayView } from './DayView';
 import { MonthView } from './MonthView';
+import { WeekView } from './WeekView';
 
 const h = strings.calendar.header;
+
+/** What Add event opens with besides the day: Week's tapped hour ("15:00") or Day's empty slot. */
+export type AddPrefill = { time: string } | { slot: SlotKey };
 
 export interface CalendarScreenProps {
   userId: string;
@@ -26,6 +31,8 @@ export interface CalendarScreenProps {
   anchor: string;
   /** Today in the family's home time zone. */
   today: string;
+  /** The family's home time zone (the week's now line). */
+  timeZone?: string;
   /** Screen width, for the title's short or long month names. */
   width: number;
   weekStartsOn: WeekStartsOn;
@@ -38,21 +45,22 @@ export interface CalendarScreenProps {
   /** The days whose events the screen needs; the route loads them into `events`. */
   onEventWindow?: (window: { from: string; to: string }) => void;
   slotTimes?: SlotTimes;
-  /** Add event for a day (spec 041). */
-  onAddEvent?: (date: string) => void;
+  /** Add event for a day (spec 041), at an hour when Week's grid was tapped there, in a slot from Day's bands. */
+  onAddEvent?: (date: string, prefill?: AddPrefill) => void;
   /** An event, on one of its days (spec 042). */
   onOpenEvent?: (id: string, date: string) => void;
 }
 
 const noop = () => undefined;
 
-/** Spec 036: the Calendar tab's header; spec 037 the Month view under it. Week, Day and Agenda come with 038–040. */
+/** Spec 036: the Calendar tab's header; spec 037 the Month view under it, 038 the Week view, 039 the Day view. Agenda comes with 040. */
 export function CalendarScreen({
   userId,
   members,
   view,
   anchor,
   today,
+  timeZone = 'UTC',
   width,
   weekStartsOn,
   onNavigate,
@@ -76,7 +84,8 @@ export function CalendarScreen({
     setLastView(view);
     if (view === 'month') setShown(firstOfMonth(anchor));
   }
-  const { from, to } = eventWindow(shown);
+  // Week and the other views load around the month of the day they show.
+  const { from, to } = eventWindow(view === 'month' ? shown : firstOfMonth(anchor));
   useEffect(() => onEventWindow({ from, to }), [from, to, onEventWindow]);
   const initials = memberInitials(members);
   const chips: CalendarHeaderChip[] = [
@@ -167,6 +176,51 @@ export function CalendarScreen({
             hint.dismiss();
             tracker.track('calendar_first_hint_dismissed', {});
           }}
+        />
+      ) : null}
+      {view === 'week' ? (
+        <WeekView
+          members={members}
+          myMemberId={myMemberId}
+          events={events}
+          slotTimes={slotTimes}
+          hidden={hidden}
+          anchor={anchor}
+          today={today}
+          timeZone={timeZone}
+          weekStartsOn={weekStartsOn}
+          onSwipe={(direction) => {
+            onNavigate({ date: shiftAnchor('week', anchor, direction) });
+            tracker.track('calendar_week_swiped', { direction: direction === 1 ? 'next' : 'previous' });
+          }}
+          onOpenDay={(date) => {
+            onNavigate({ view: 'day', date });
+            tracker.track('calendar_day_opened', { from_view: 'week' });
+          }}
+          onAddEvent={onAddEvent}
+          onOpenEvent={onOpenEvent}
+        />
+      ) : null}
+      {view === 'day' ? (
+        <DayView
+          members={members}
+          myMemberId={myMemberId}
+          events={events}
+          slotTimes={slotTimes}
+          hidden={hidden}
+          date={anchor}
+          today={today}
+          timeZone={timeZone}
+          onSwipe={(direction) => {
+            onNavigate({ date: shiftAnchor('day', anchor, direction) });
+            tracker.track('calendar_day_swiped', { direction: direction === 1 ? 'next' : 'previous' });
+          }}
+          onAddEvent={(date) => onAddEvent(date)}
+          onAddInSlot={(date, slot) => {
+            onAddEvent(date, { slot });
+            tracker.track('calendar_slot_add_tapped', { slot });
+          }}
+          onOpenEvent={onOpenEvent}
         />
       ) : null}
     </View>
