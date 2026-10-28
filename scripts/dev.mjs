@@ -9,6 +9,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { networkInterfaces } from 'node:os';
 
 const phone = process.argv.includes('--phone');
+// --clear rebuilds Metro's cache, with .env.local loaded (a bare `expo start -c` would inline no Supabase address).
+const clear = process.argv.includes('--clear') ? ' --clear' : '';
 
 // Supabase reads its Google sign-in credentials from .env.local when it exists (spec 003).
 const supabaseStart = existsSync('.env.local') ? ['exec', 'dotenv', '-e', '.env.local', '--', 'supabase', 'start'] : ['exec', 'supabase', 'start'];
@@ -65,7 +67,7 @@ const child = spawn(
   [
     'exec', 'dotenv', '-e', '.env.local', '--',
     'concurrently', '-n', 'app,mcp', '-c', 'yellow,cyan',
-    phone ? 'pnpm --filter @cocon/app start' : 'pnpm --filter @cocon/app web', 'pnpm --filter @cocon/mcp dev',
+    (phone ? 'pnpm --filter @cocon/app start' : 'pnpm --filter @cocon/app web') + clear, 'pnpm --filter @cocon/mcp dev',
   ],
   { stdio: 'inherit', env },
 );
