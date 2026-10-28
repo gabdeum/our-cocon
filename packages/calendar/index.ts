@@ -4,7 +4,7 @@
 export { CalendarError, type CalendarErrorCode } from './errors';
 export { addDays, daysBetween, daysInMonth, makeDate, parts, timeIn, todayIn, weekRange, weekStartFor, weekday, type WeekStartsOn } from './dates';
 export { DEFAULT_SLOT_TIMES, fromMinutes, slotAt, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes } from './slots';
-export { WIDE_TITLE_MIN_WIDTH, dayTitle, formatTime, monthTitle, rangeLabel, timeLabel, uses24h, weekTitle, type LabelOptions } from './labels';
+export { WIDE_TITLE_MIN_WIDTH, dateLabel, dayTitle, formatTime, monthTitle, rangeLabel, timeLabel, uses24h, weekTitle, type LabelOptions } from './labels';
 export { assertValidEvent, expand } from './recurrence';
 export { layoutDay, layoutSpans, type LaneSlot, type LayoutItem, type SpanItem } from './layout';
 export { findConflict, type ConflictDraft } from './conflicts';

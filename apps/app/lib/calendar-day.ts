@@ -33,7 +33,7 @@ export interface DayLayout {
 }
 
 /** Like the week's All day row: all-day events and anything spanning more than one day. */
-const inAllDay = (o: MonthOccurrence) => o.time_type === 'all_day' || o.ends_on > o.starts_on;
+export const inAllDay = (o: MonthOccurrence) => o.time_type === 'all_day' || o.ends_on > o.starts_on;
 
 /** "Sunday October 25", as the week reads a day. */
 export const dayName = (date: string) => strings.calendar.week.dayLabel(words.weekdays[weekday(date)] ?? '', longDate(date));
@@ -49,8 +49,7 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
   const onDay = occurrences.filter((o) => o.starts_on <= date && o.ends_on >= date);
 
   const allDay: DayAllDayItem[] = onDay.filter(inAllDay).map((o) => {
-    const total = daysBetween(o.starts_on, o.ends_on) + 1;
-    const tag = total > 1 ? d.dayOf(daysBetween(o.starts_on, date) + 1, total) : o.view === 'full' && o.category === 'birthday' ? d.birthday : null;
+    const tag = dayOf(o, date) ?? (isBirthday(o) ? d.birthday : null);
     return { key: occurrenceKey(o), title: o.title, tag, colors: eventLook(o.members, ctx.look).colors, label: d.allDayLabel(o.title, tag) };
   });
 
@@ -89,7 +88,7 @@ function eventRow(o: MonthOccurrence, range: { start: string; end: string }, dat
   const when = timeLabel(o, { use24h: true, slotTimes: ctx.slotTimes });
   const time = o.location ? d.at(when, o.location) : when;
   const driver = o.view === 'full' ? driverLine(o.responsible_member_id, o.members, ctx.members) : null;
-  const now = date === ctx.today && toMinutes(ctx.now) >= toMinutes(range.start) && toMinutes(ctx.now) < toMinutes(range.end);
+  const now = isNow(date, range, ctx);
   return {
     key: occurrenceKey(o),
     title: o.title,
@@ -102,8 +101,22 @@ function eventRow(o: MonthOccurrence, range: { start: string; end: string }, dat
   };
 }
 
+/** "Day 2 of 3" on each day of an event spanning several days; null for a one-day event. */
+export function dayOf(o: MonthOccurrence, date: string): string | null {
+  const total = daysBetween(o.starts_on, o.ends_on) + 1;
+  return total > 1 ? d.dayOf(daysBetween(o.starts_on, date) + 1, total) : null;
+}
+
+/** "Birthday" only for those who see the event itself (not "Busy" or a surprise's cover). */
+export const isBirthday = (o: MonthOccurrence) => o.view === 'full' && o.category === 'birthday';
+
+/** "Now": today, between the event's start and end (in the home time zone). */
+export function isNow(date: string, range: { start: string; end: string }, { today, now }: { today: string; now: string }): boolean {
+  return date === today && toMinutes(now) >= toMinutes(range.start) && toMinutes(now) < toMinutes(range.end);
+}
+
 /** "Gabriel takes James": the member responsible, and the members without the app on the event. */
-function driverLine(responsible: string | null | undefined, eventMembers: readonly string[], members: readonly Member[]): string | null {
+export function driverLine(responsible: string | null | undefined, eventMembers: readonly string[], members: readonly Member[]): string | null {
   const driver = members.find((m) => m.id === responsible);
   const taken = members.filter((m) => m.user_id === null && eventMembers.includes(m.id)).map((m) => m.display_name);
   return driver && taken.length ? d.takes(driver.display_name, taken) : null;

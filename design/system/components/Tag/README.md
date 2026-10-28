@@ -11,6 +11,7 @@ Small non-interactive labels: status tags (12 px) and meta chips (14 px) that de
 | `oc-tag--honey` | honey / ink 900 | "+1" counts, "Tip" counts |
 | `oc-tag--soft` | surface-soft / ink 800 | A collapsed step's add-ons in the recipe form: "12 min", "Temp check", "Tip", "Photo" (StepEditCard) |
 | `oc-tag--white` | white / ink | "Latest recipe" over a photo |
+| `oc-tag--md` | 13/900, padding 5 10, same tones | Calendar list rows (OC-CalAgenda): "Now" honey, "Surprise" sage, "Birthday" and "Day 1 of 3" soft |
 | `oc-meta` | 14/700, padding 6 12, surface-soft | Recipe meta: "1 h 10", "Best Oct – Mar" |
 | `oc-meta--white` / `--sage` / `--warn` | white (on soft cards) / sage (author "· via Claude") / warn-soft + warn 800 ("2 to buy") | |
 

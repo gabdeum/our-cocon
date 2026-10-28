@@ -8,10 +8,11 @@ Reference: `design/screens/CalHeader.dc.html` (inline styles are the exact value
 
 | Part | Spec |
 | --- | --- |
-| Title row | title 28/900 one line + IconButton ‹ › (44, white) + soft pill "Today" (44) |
-| View switcher | SegmentedControl links: Month · Week · Day · Agenda |
-| Filter row | MemberChip (filter) per member + Everyone + Others, horizontal scroll |
-| Padding | 54 top, 20 sides, 10 bottom; gap 12 |
+| Row 1 | title 28/900 one line (flex) + soft pill "Today" (44) |
+| Row 2 | view button (white pill, label + chevron) · people button (dot stack + "All" / "{n} of {total}" + chevron; sage when filtered) · spacer · IconButton ‹ › (44, white) |
+| View menu | Popover: Month · Week · Day · Agenda, 48 px rows, check on current |
+| People filter | Popover: "Show events for" + "Show all", MemberChip (row) per member + Everyone + Others with checkboxes |
+| Padding | 54 top, 20 sides, 10 bottom; gap 10; total 162 |
 
 ## Rules
 

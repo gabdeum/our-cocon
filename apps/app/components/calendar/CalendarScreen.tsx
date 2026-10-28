@@ -13,6 +13,7 @@ import type { ChoiceStorage } from '../../lib/recipe-choices';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
+import { AgendaView } from './AgendaView';
 import { DayView } from './DayView';
 import { MonthView } from './MonthView';
 import { WeekView } from './WeekView';
@@ -53,7 +54,7 @@ export interface CalendarScreenProps {
 
 const noop = () => undefined;
 
-/** Spec 036: the Calendar tab's header; spec 037 the Month view under it, 038 the Week view, 039 the Day view. Agenda comes with 040. */
+/** Spec 036: the Calendar tab's header; spec 037 the Month view under it, 038 the Week view, 039 the Day view, 040 the Agenda. */
 export function CalendarScreen({
   userId,
   members,
@@ -72,7 +73,7 @@ export function CalendarScreen({
   onAddEvent = noop,
   onOpenEvent = noop,
 }: CalendarScreenProps) {
-  const { hidden, toggle } = useCalendarFilter(userId, storage);
+  const { hidden, toggle, showAll } = useCalendarFilter(userId, storage);
   const hint = useMonthHint(userId, storage);
   const myMemberId = members.find((m) => m.user_id === userId)?.id ?? '';
   // Month view: the month that fills the grid (FR-005), and ‹ › / Today's scroll requests.
@@ -84,9 +85,14 @@ export function CalendarScreen({
     setLastView(view);
     if (view === 'month') setShown(firstOfMonth(anchor));
   }
-  // Week and the other views load around the month of the day they show.
+  // Week and Day load around the month of the day they show; Agenda asks for its own weeks.
   const { from, to } = eventWindow(view === 'month' ? shown : firstOfMonth(anchor));
-  useEffect(() => onEventWindow({ from, to }), [from, to, onEventWindow]);
+  const agenda = view === 'agenda';
+  useEffect(() => {
+    if (!agenda) onEventWindow({ from, to });
+  }, [agenda, from, to, onEventWindow]);
+  // Agenda: "Today" on today's list goes back to the top.
+  const [agendaTop, setAgendaTop] = useState(0);
   const initials = memberInitials(members);
   const chips: CalendarHeaderChip[] = [
     ...members.map((m) => ({
@@ -104,6 +110,13 @@ export function CalendarScreen({
   const onToggle = (key: string) => {
     const next = toggle(key);
     tracker.track('calendar_member_filter_changed', { members_visible: chips.filter((c) => !next.has(c.key)).length });
+  };
+  const shownChips = chips.filter((c) => c.pressed);
+  const filtered = shownChips.length < chips.length;
+  const onShowAll = () => {
+    if (!filtered) return;
+    showAll();
+    tracker.track('calendar_member_filter_changed', { members_visible: chips.length });
   };
   const onView = (next: CalendarView) => {
     if (next === view) return;
@@ -129,7 +142,7 @@ export function CalendarScreen({
           title: headerTitle(view, anchor, today, width, weekStartsOn),
           onPrev: () => onNavigate({ date: shiftAnchor(view, anchor, -1) }),
           onNext: () => onNavigate({ date: shiftAnchor(view, anchor, 1) }),
-          onToday: () => onNavigate({ date: today }),
+          onToday: () => (agenda && anchor === today ? setAgendaTop((n) => n + 1) : onNavigate({ date: today })),
         };
 
   return (
@@ -146,9 +159,15 @@ export function CalendarScreen({
         view={view}
         onView={onView}
         viewsLabel={h.viewsLabel}
+        viewButtonLabel={h.viewButton(h.views[view])}
         chips={chips}
         onToggle={onToggle}
-        chipsLabel={h.filterLabel}
+        onShowAll={onShowAll}
+        peopleLabel={filtered ? h.peopleCount(shownChips.length, chips.length) : h.peopleAll}
+        peopleButtonLabel={h.peopleButton(filtered ? shownChips.map((c) => c.name) : null)}
+        filterLabel={h.filterLabel}
+        showAllLabel={h.showAll}
+        closeLabel={h.close}
       />
       <View className="px-20">
         <OfflineBanner screen="calendar" tracker={tracker} />
@@ -220,6 +239,24 @@ export function CalendarScreen({
             onAddEvent(date, { slot });
             tracker.track('calendar_slot_add_tapped', { slot });
           }}
+          onOpenEvent={onOpenEvent}
+        />
+      ) : null}
+      {agenda ? (
+        <AgendaView
+          key={anchor}
+          userId={userId}
+          members={members}
+          myMemberId={myMemberId}
+          events={events}
+          slotTimes={slotTimes}
+          hidden={hidden}
+          anchor={anchor}
+          today={today}
+          timeZone={timeZone}
+          top={agendaTop}
+          onEventWindow={onEventWindow}
+          onAddEvent={(date) => onAddEvent(date)}
           onOpenEvent={onOpenEvent}
         />
       ) : null}

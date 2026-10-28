@@ -243,7 +243,8 @@ module.exports = {
       "float": "0 6px 20px rgba(42, 36, 20, 0.22)",
       "nav": "0 8px 24px rgba(42, 36, 20, 0.25)",
       "lift": "0 8px 20px rgba(42, 36, 20, 0.25)",
-      "sticky": "0 4px 8px -6px rgba(42, 36, 20, 0.25)"
+      "sticky": "0 4px 8px -6px rgba(42, 36, 20, 0.25)",
+      "popover": "0 12px 28px rgba(42, 36, 20, 0.22)"
     },
     "extend": {
       "opacity": {
