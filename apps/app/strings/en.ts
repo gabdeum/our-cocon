@@ -1214,6 +1214,28 @@ export const strings = {
       /** An empty day column, for screen readers: "Add event, Sunday October 25". */
       addAt: (day: string) => `Add event, ${day}`,
     },
+    // design/ui/OC-CalDay.md (spec 039).
+    day: {
+      busyLabel: 'Who’s busy this day',
+      count: (name: string, n: number) => `${name} ${n}`,
+      allDay: 'All day',
+      birthday: 'Birthday',
+      dayOf: (n: number, total: number) => `Day ${n} of ${total}`,
+      hours: (start: string, end: string) => `${start}–${end}`,
+      /** The time line: "Lunch · Grandma’s house", "14:30 · Aquatic Center". */
+      at: (when: string, place: string) => `${when} · ${place}`,
+      takes: (driver: string, names: string[]) => `${driver} takes ${names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : (names[0] ?? '')}`,
+      now: 'Now',
+      /** An empty band's row: "+ Add in the morning", "+ Add in the lunch slot". */
+      addIn: (band: string) => `+ Add in the ${band}`,
+      bands: { early_morning: 'early morning', morning: 'morning', lunch: 'lunch slot', afternoon: 'afternoon', evening: 'evening' },
+      /** For screen readers: "Add event in the morning, Sunday October 25". */
+      addInLabel: (band: string, day: string) => `Add event in the ${band}, ${day}`,
+      /** "Baby swim class, 14:30 · Aquatic Center, Gabriel takes James, happening now". */
+      rowLabel: (parts: string[], now: boolean) => [...parts, ...(now ? ['happening now'] : [])].join(', '),
+      /** "Lyon trip, all day, Day 2 of 3". */
+      allDayLabel: (title: string, tag: string | null) => [title, 'all day', ...(tag ? [tag] : [])].join(', '),
+    },
   },
   debug: {
     build: (commit: string) => `Build ${commit}`,

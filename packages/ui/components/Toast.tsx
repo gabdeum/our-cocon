@@ -37,13 +37,16 @@ export interface FloatingAddProps {
   onPress: () => void;
   /** A hint card to its left (the month's first-visit hint). */
   hint?: ToastProps | null;
+  /** Toast README: the add button hides while a toast shows (spec 041's save toast). */
+  hidden?: boolean;
 }
 
 /**
  * The calendar's floating olive add button, 20 from the right and 112 from the bottom (above the
  * tab bar), with an optional hint card to its left (OC-CalMonth). Place it last in a full-height screen.
  */
-export function FloatingAdd({ label, onPress, hint }: FloatingAddProps) {
+export function FloatingAdd({ label, onPress, hint, hidden = false }: FloatingAddProps) {
+  if (hidden) return null;
   return (
     <>
       {hint ? <Toast {...hint} className="absolute bottom-[112px] left-16 right-[92px] z-20" /> : null}

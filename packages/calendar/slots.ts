@@ -47,6 +47,19 @@ export function slotStartingAt(time: string, slotTimes: SlotTimes = DEFAULT_SLOT
   return SLOT_KEYS.find((s) => slotTimes[s].start === time) ?? null;
 }
 
+/**
+ * The slot a time falls in, for the day view's bands (spec 039): the slot holding it; before the
+ * first slot, the first one; otherwise the last slot starting at or before it (after the evening,
+ * Evening; in a gap between edited slot times, the slot before).
+ */
+export function slotAt(time: string, slotTimes: SlotTimes = DEFAULT_SLOT_TIMES): SlotKey {
+  const at = toMinutes(time);
+  const byStart = [...SLOT_KEYS].sort((a, b) => toMinutes(slotTimes[a].start) - toMinutes(slotTimes[b].start));
+  const holding = byStart.find((s) => at >= toMinutes(slotTimes[s].start) && at < toMinutes(slotTimes[s].end));
+  if (holding) return holding;
+  return byStart.filter((s) => toMinutes(slotTimes[s].start) <= at).pop() ?? (byStart[0] as SlotKey);
+}
+
 type Timed = Pick<CalendarEvent, 'time_type' | 'slots' | 'start_time' | 'end_time'>;
 
 /**

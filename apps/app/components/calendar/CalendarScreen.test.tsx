@@ -39,6 +39,18 @@ async function setup(over: Partial<CalendarScreenProps> = {}) {
   return { ...props, unmount: view.unmount };
 }
 
+function captureSwipes() {
+  const configs: PanResponderCallbacks[] = [];
+  vi.spyOn(PanResponder, 'create').mockImplementation((config) => {
+    configs.push(config);
+    return { panHandlers: {} } as ReturnType<typeof PanResponder.create>;
+  });
+  return (dx: number) => {
+    const g = { dx, dy: 0 } as PanResponderGestureState;
+    act(() => configs.at(-1)?.onPanResponderRelease?.({} as GestureResponderEvent, g));
+  };
+}
+
 const chip = (name: string) => within(screen.getByRole('group', { name: 'Show events for' })).getByRole('button', { name: new RegExp(name) });
 
 describe('Calendar header (spec 036)', () => {
@@ -241,18 +253,6 @@ describe('Week view (spec 038)', () => {
   });
   const events = [event('Baby swim', '14:30', '16:30', ['u-eva']), event('Coffee', '16:00', '17:00', [gabriel.id])];
 
-  function captureSwipes() {
-    const configs: PanResponderCallbacks[] = [];
-    vi.spyOn(PanResponder, 'create').mockImplementation((config) => {
-      configs.push(config);
-      return { panHandlers: {} } as ReturnType<typeof PanResponder.create>;
-    });
-    return (dx: number) => {
-      const g = { dx, dy: 0 } as PanResponderGestureState;
-      act(() => configs.at(-1)?.onPanResponderRelease?.({} as GestureResponderEvent, g));
-    };
-  }
-
   it('US1: overlapping events show side by side, each at its time', async () => {
     const onEventWindow = vi.fn();
     await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-25', events, onEventWindow });
@@ -296,7 +296,7 @@ describe('Week view (spec 038)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
     expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-27');
     fireEvent.click(screen.getByRole('button', { name: 'Add event, Friday October 30' }));
-    expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-30', expect.toSatisfy((t?: string) => t === undefined || /^\d\d:00$/.test(t)));
+    expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-30', expect.toSatisfy((p?: { time: string }) => p === undefined || /^\d\d:00$/.test(p.time)));
   });
 
   it('the add button opens on the week’s first day when today is another week', async () => {
@@ -304,5 +304,88 @@ describe('Week view (spec 038)', () => {
     await setup({ view: 'week', anchor: '2026-11-04', today: '2026-10-27', onAddEvent });
     fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
     expect(onAddEvent).toHaveBeenCalledWith('2026-11-01');
+  });
+});
+
+describe('Day view (spec 039)', () => {
+  const base = {
+    category: null,
+    notes: null,
+    reminder: null,
+    starts_on: '2026-10-25',
+    ends_on: '2026-10-25',
+    recurrence: null,
+    responsible_member_id: null,
+    visibility: 'family' as const,
+    creator_member_id: gabriel.id,
+    surprise: null,
+    removed_members: [],
+    exceptions: [],
+    checklist: [],
+    created_by: null,
+    updated_by: null,
+    source: 'app',
+    created_at: '2026-10-01T00:00:00Z',
+    updated_at: '2026-10-01T00:00:00Z',
+    deleted_at: null,
+  };
+  const events = [
+    { ...base, id: '00000000-0000-4000-8000-000000000001', title: 'Brunch', location: 'Grandma’s house', time_type: 'slot' as const, slots: ['lunch' as const], start_time: null, end_time: null, members: ['everyone'] },
+    { ...base, id: '00000000-0000-4000-8000-000000000002', title: 'Coffee', location: null, time_type: 'custom' as const, slots: [], start_time: '16:00', end_time: '17:00', members: [gabriel.id] },
+  ];
+  const headerTitle = () => screen.getAllByRole('heading')[0]?.textContent;
+
+  it('US1: who’s busy, then the bands with their events or an add row', async () => {
+    await setup({ view: 'day', anchor: '2026-10-25', today: '2026-10-25', events });
+    expect(headerTitle()).toBe('Sun, Oct. 25');
+    expect(within(screen.getByRole('group', { name: 'Who’s busy this day' })).getByText('Gabriel 1')).toBeTruthy();
+    expect(screen.getByText('Everyone 1')).toBeTruthy();
+    expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual([
+      'Sun, Oct. 25',
+      'Early morning06:00–09:00',
+      'Morning09:00–12:00',
+      'Lunch12:00–14:00',
+      'Afternoon14:00–18:00',
+      'Evening18:00–22:00',
+    ]);
+    expect(screen.getByRole('link', { name: /^Brunch, Lunch · Grandma’s house/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Add event in the lunch slot, Sunday October 25' })).toBeNull();
+    expect(screen.getByText('+ Add in the early morning')).toBeTruthy();
+  });
+
+  it('US2: swiping left shows Mon, Oct. 26; right goes back; the arrows don’t count as swipes', async () => {
+    const release = captureSwipes();
+    const { onNavigate, tracker } = await setup({ view: 'day', anchor: '2026-10-25', today: '2026-10-25' });
+    release(-80);
+    expect(onNavigate).toHaveBeenLastCalledWith({ date: '2026-10-26' });
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_swiped', { direction: 'next' });
+    release(80);
+    expect(onNavigate).toHaveBeenLastCalledWith({ date: '2026-10-24' });
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_swiped', { direction: 'previous' });
+    vi.mocked(onNavigate).mockClear();
+    release(-40);
+    expect(onNavigate).not.toHaveBeenCalled();
+    vi.mocked(tracker.track).mockClear();
+    fireEvent.click(screen.getByRole('button', { name: 'Next day' }));
+    expect(onNavigate).toHaveBeenLastCalledWith({ date: '2026-10-26' });
+    expect(tracker.track).not.toHaveBeenCalledWith('calendar_day_swiped', expect.anything());
+    cleanup();
+
+    await setup({ view: 'day', anchor: '2026-10-26', today: '2026-10-25' });
+    expect(headerTitle()).toBe('Mon, Oct. 26');
+  });
+
+  it('FR-004: an empty band adds in its slot; a row opens its event; + adds on the day shown', async () => {
+    const onAddEvent = vi.fn();
+    const onOpenEvent = vi.fn();
+    const { tracker } = await setup({ view: 'day', anchor: '2026-10-25', today: '2026-10-27', events, onAddEvent, onOpenEvent });
+    fireEvent.click(screen.getByRole('button', { name: 'Add event in the morning, Sunday October 25' }));
+    expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-25', { slot: 'morning' });
+    expect(tracker.track).toHaveBeenCalledWith('calendar_slot_add_tapped', { slot: 'morning' });
+    expect(screen.getByText('+ Add in the morning')).toBeTruthy();
+    fireEvent.click(screen.getByRole('link', { name: 'Coffee, 16:00' }));
+    expect(onOpenEvent).toHaveBeenCalledWith(events[1]?.id, '2026-10-25');
+    fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
+    expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-25');
   });
 });

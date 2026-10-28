@@ -1,7 +1,7 @@
 import type { SlotKey } from '@cocon/schemas/calendar';
 import { describe, expect, it } from 'vitest';
 import { timeLabel } from './labels';
-import { DEFAULT_SLOT_TIMES, fromMinutes, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes } from './slots';
+import { DEFAULT_SLOT_TIMES, fromMinutes, slotAt, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes } from './slots';
 
 describe('slotsToRange (US2, FR-002)', () => {
   it.each([
@@ -47,6 +47,25 @@ describe('slot helpers', () => {
   it('finds the slot that starts at a time', () => {
     expect(slotStartingAt('12:00')).toBe('lunch');
     expect(slotStartingAt('12:30')).toBeNull();
+  });
+
+  it.each([
+    ['05:30', 'early_morning'],
+    ['06:00', 'early_morning'],
+    ['08:59', 'early_morning'],
+    ['09:00', 'morning'],
+    ['12:00', 'lunch'],
+    ['14:30', 'afternoon'],
+    ['18:00', 'evening'],
+    ['22:00', 'evening'],
+    ['23:30', 'evening'],
+  ] as [string, SlotKey][])('a time of %s sits in %s (spec 039)', (time, slot) => {
+    expect(slotAt(time)).toBe(slot);
+  });
+
+  it('puts a time in a gap between edited slots in the slot before it', () => {
+    const slotTimes = { ...DEFAULT_SLOT_TIMES, morning: { start: '09:00', end: '11:00' } };
+    expect(slotAt('11:30', slotTimes)).toBe('morning');
   });
 
   it('gives each kind of event its hours', () => {

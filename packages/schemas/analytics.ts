@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { UndoKind } from './activity';
-import { CalendarView } from './calendar';
+import { CalendarView, SlotKey } from './calendar';
 import { AiPermission, CookingSetting, MemberColor } from './family';
 import { FilterKey } from './recipe-filters';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
@@ -165,6 +165,9 @@ export const events = {
   calendar_first_hint_dismissed: z.strictObject({}),
   // Spec 038: a week swiped left (next) or right (previous); the header's arrows don't count.
   calendar_week_swiped: z.strictObject({ direction: z.enum(['next', 'previous']) }),
+  // Spec 039: a day swiped (the arrows don't count), and an empty band's "+ Add in the …" tapped.
+  calendar_day_swiped: z.strictObject({ direction: z.enum(['next', 'previous']) }),
+  calendar_slot_add_tapped: z.strictObject({ slot: SlotKey }),
 } as const;
 
 export type EventName = keyof typeof events;

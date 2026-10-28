@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { View } from 'react-native';
-import { addDays, timeIn, weekRange, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
+import { addDays, weekRange, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { FloatingAdd, HourGrid, Swipeable } from '@cocon/ui';
 import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { layoutWeekGrid } from '../../lib/calendar-week';
+import { useNow } from '../../lib/use-now';
 import type { Member } from '../../lib/session';
+import type { AddPrefill } from './CalendarScreen';
 import { strings } from '../../strings/en';
 
 const w = strings.calendar.week;
@@ -30,18 +32,8 @@ export interface WeekViewProps {
   onSwipe: (direction: 1 | -1) => void;
   onOpenDay: (date: string) => void;
   /** Add event on a day, at an hour ("15:00") when one was tapped. */
-  onAddEvent: (date: string, time?: string) => void;
+  onAddEvent: (date: string, prefill?: AddPrefill) => void;
   onOpenEvent: (id: string, date: string) => void;
-}
-
-/** The time now in the home time zone, moving each minute (FR-003's now line). */
-function useNow(timeZone: string): string {
-  const [clock, setClock] = useState(() => new Date());
-  useEffect(() => {
-    const t = setInterval(() => setClock(new Date()), 60_000);
-    return () => clearInterval(t);
-  }, []);
-  return timeIn(timeZone, clock);
 }
 
 /** Spec 038 (OC-CalWeek): the week's hour grid, swiped left and right, and the add button. */
@@ -69,7 +61,7 @@ export function WeekView({ members, myMemberId, events, slotTimes, hidden, ancho
             allDayLabel={w.allDay}
             onDayPress={onOpenDay}
             onBlockPress={openEvent}
-            onEmptyPress={(date, hour) => onAddEvent(date, hour === null ? undefined : `${String(hour).padStart(2, '0')}:00`)}
+            onEmptyPress={(date, hour) => onAddEvent(date, hour === null ? undefined : { time: `${String(hour).padStart(2, '0')}:00` })}
             bottomInset={BOTTOM_PAD}
           />
         </Swipeable>
