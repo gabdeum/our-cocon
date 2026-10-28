@@ -17,8 +17,6 @@ Items share the width equally (pill: hug content).
 | Disabled (offline) | track at `opacity-dimmed`, not tappable; the choice still shows (spec 021) |
 | Pill touch area | 36 tall, with a 4 px hit slop above and below so it reaches 44 |
 
-| Links (light) | Pages of one screen (calendar Month · Week · Day · Agenda): a `navigation` of links, current one `aria-current="page"`, labels 15 (spec 036) |
-
 ## Rules
 
 - Use `--tabs` only to switch the view of the same content (Ingredients · 9 / Steps · 6). Counts follow a middle dot.

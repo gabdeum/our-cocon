@@ -727,9 +727,15 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             view={calendarView}
             onView={setCalendarView}
             viewsLabel="Calendar view"
+            viewButtonLabel={`View: ${calendarViews.find((v) => v.key === calendarView)?.label}`}
             chips={calendarChips.map((c) => ({ ...c, pressed: !calendarHidden.includes(c.key) }))}
             onToggle={(k) => setCalendarHidden((h) => (h.includes(k) ? h.filter((x) => x !== k) : [...h, k]))}
-            chipsLabel="Show events for"
+            onShowAll={() => setCalendarHidden([])}
+            peopleLabel={calendarHidden.length ? `${calendarChips.length - calendarHidden.length} of ${calendarChips.length}` : 'All'}
+            peopleButtonLabel="Show events for"
+            filterLabel="Show events for"
+            showAllLabel="Show all"
+            closeLabel="Close"
           />
         </View>
       </Section>

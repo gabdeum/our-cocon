@@ -1,5 +1,5 @@
-// Spec 036 User Story 2: tapping a person in the filter row hides their events (chip unpressed),
-// and the choice is remembered for that person on this device. Plus the header's paging and views.
+// Spec 036 User Story 2: unticking a person in the people filter hides their events, and the choice
+// is remembered for that person on this device. Plus the header's paging and view menu.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PanResponder, type GestureResponderEvent, type PanResponderCallbacks, type PanResponderGestureState } from 'react-native';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
@@ -51,18 +51,31 @@ function captureSwipes() {
   };
 }
 
-const chip = (name: string) => within(screen.getByRole('group', { name: 'Show events for' })).getByRole('button', { name: new RegExp(name) });
+const people = () => screen.getByRole('button', { name: /^Show events for:/ });
+const filter = () => {
+  if (people().getAttribute('aria-expanded') !== 'true') fireEvent.click(people());
+  return screen.getByRole('group', { name: 'Show events for' });
+};
+const chip = (name: string) => within(filter()).getByRole('button', { name: new RegExp(name) });
+const viewMenu = () => {
+  fireEvent.click(screen.getByRole('button', { name: /^View: / }));
+  return screen.getByRole('navigation', { name: 'Calendar view' });
+};
 
 describe('Calendar header (spec 036)', () => {
-  it('US2: tapping Eva hides her events, and the choice is kept for Gabriel on this device', async () => {
+  it('US2: unticking Eva hides her events, and the choice is kept for Gabriel on this device', async () => {
     const storage = memoryStorage();
     const first = await setup({ storage });
-    const chips = within(screen.getByRole('group', { name: 'Show events for' })).getAllByRole('button');
+    expect(people().getAttribute('aria-label')).toBe('Show events for: everyone');
+    expect(people().textContent).toContain('All');
+    const chips = within(filter()).getAllByRole('button').filter((b) => b.hasAttribute('aria-pressed'));
     expect(chips.map((c) => c.textContent)).toEqual(['GGabriel', 'EEva', 'AllEveryone', 'Others']);
     expect(chips.every((c) => c.getAttribute('aria-pressed') === 'true')).toBe(true);
 
     fireEvent.click(chip('Eva'));
     expect(chip('Eva').getAttribute('aria-pressed')).toBe('false');
+    expect(people().textContent).toContain('3 of 4');
+    expect(people().getAttribute('aria-label')).toBe('Show events for: Gabriel, Everyone, Others');
     expect(first.tracker.track).toHaveBeenCalledWith('calendar_member_filter_changed', { members_visible: 3 });
     await act(async () => undefined);
     expect(JSON.parse(storage.data.get('cocon.calendar.filter.u-gabriel') ?? '')).toEqual({ hidden: ['u-eva'] });
@@ -78,6 +91,18 @@ describe('Calendar header (spec 036)', () => {
     expect(chip('Eva').getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('Show all shows everyone again, remembered and tracked', async () => {
+    const storage = memoryStorage();
+    const { tracker } = await setup({ storage });
+    fireEvent.click(chip('Eva'));
+    fireEvent.click(chip('Others'));
+    fireEvent.click(within(filter()).getByRole('button', { name: 'Show all' }));
+    expect(tracker.track).toHaveBeenLastCalledWith('calendar_member_filter_changed', { members_visible: 4 });
+    expect(people().textContent).toContain('All');
+    await act(async () => undefined);
+    expect(JSON.parse(storage.data.get('cocon.calendar.filter.u-gabriel') ?? '')).toEqual({ hidden: [] });
+  });
+
   it('pages with ‹ › and Today, named by the view', async () => {
     const { onNavigate } = await setup({ view: 'week', anchor: '2026-11-03' });
     expect(screen.getByRole('heading').textContent).toBe('Nov. 1 – 7');
@@ -91,13 +116,13 @@ describe('Calendar header (spec 036)', () => {
 
   it('switches view keeping the day, and tracks the change', async () => {
     const { onNavigate, tracker } = await setup();
-    const nav = screen.getByRole('navigation', { name: 'Calendar view' });
+    const nav = viewMenu();
     expect(within(nav).getByRole('link', { name: 'Month' }).getAttribute('aria-current')).toBe('page');
     fireEvent.click(within(nav).getByRole('link', { name: 'Day' }));
     // From Month, the other views open on the month in view (today, when it's this month; spec 037).
     expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-27' });
     expect(tracker.track).toHaveBeenCalledWith('calendar_view_changed', { from: 'month', to: 'day' });
-    fireEvent.click(within(nav).getByRole('link', { name: 'Month' }));
+    fireEvent.click(within(viewMenu()).getByRole('link', { name: 'Month' }));
     expect(onNavigate).toHaveBeenCalledOnce();
   });
 });
@@ -216,7 +241,7 @@ describe('Month view (spec 037)', () => {
   it('switching to Week from Month opens on the month in view', async () => {
     const { onNavigate } = await setup();
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Calendar view' })).getByRole('link', { name: 'Week' }));
+    fireEvent.click(within(viewMenu()).getByRole('link', { name: 'Week' }));
     expect(onNavigate).toHaveBeenCalledWith({ view: 'week', date: '2026-11-01' });
   });
 });

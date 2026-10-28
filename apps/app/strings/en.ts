@@ -1182,6 +1182,7 @@ export const strings = {
       today: 'Today',
       viewsLabel: 'Calendar view',
       views: { month: 'Month', week: 'Week', day: 'Day', agenda: 'Agenda' },
+      viewButton: (view: string) => `View: ${view}`,
       agendaTitle: 'Coming up',
       previous: { month: 'Previous month', week: 'Previous week', day: 'Previous day' },
       next: { month: 'Next month', week: 'Next week', day: 'Next day' },
@@ -1189,6 +1190,12 @@ export const strings = {
       everyone: 'Everyone',
       everyoneInitial: 'All',
       others: 'Others',
+      peopleAll: 'All',
+      peopleCount: (shown: number, total: number) => `${shown} of ${total}`,
+      /** The people button's name: who is shown, or everyone. */
+      peopleButton: (shownNames: string[] | null) => `Show events for: ${shownNames ? shownNames.join(', ') : 'everyone'}`,
+      showAll: 'Show all',
+      close: 'Close',
     },
     // design/ui/OC-CalMonth.md (spec 037).
     month: {

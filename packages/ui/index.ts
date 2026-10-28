@@ -31,7 +31,7 @@ export { StatTile, type StatTileProps } from './components/StatTile';
 export { ActivityCard, type ActivityCardProps } from './components/ActivityCard';
 export { Callout, type CalloutProps, type CalloutVariant } from './components/Callout';
 export { Avatar, AvatarStack, type AvatarColor, type MemberColor } from './components/Avatar';
-export { MemberChip, MemberCount, type MemberChipColor, type MemberChipProps, type MemberCountProps } from './components/MemberChip';
+export { MemberChip, MemberCount, MemberStack, type MemberChipColor, type MemberChipProps, type MemberCountProps } from './components/MemberChip';
 export { EventBar, EventChip, Fill, MoreCount, BAR_STEP, BAR_TOP, WEEK_BAR_STEP, type EventBarProps, type EventChipProps, type EventColor } from './components/EventChip';
 export { MonthGrid, MONTH_ROW_HEIGHT, type MonthBar, type MonthCell, type MonthCellItem, type MonthGridProps, type MonthWeek } from './components/MonthGrid';
 export {

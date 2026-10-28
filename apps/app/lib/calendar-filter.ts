@@ -32,7 +32,7 @@ export async function writeHidden(storage: ChoiceStorage, userId: string, hidden
   }
 }
 
-/** The hidden chips for this person, and a toggle that remembers them. */
+/** The hidden chips for this person, with a toggle and Show all that remember them. */
 export function useCalendarFilter(userId: string, storage: ChoiceStorage = deviceStorage) {
   // Kept with whose it is, so another person signing in never sees the last one's choice.
   const [stored, setStored] = useState<{ userId: string; hidden: ReadonlySet<string> } | null>(null);
@@ -57,5 +57,10 @@ export function useCalendarFilter(userId: string, storage: ChoiceStorage = devic
     [hidden, storage, userId],
   );
 
-  return { hidden, toggle };
+  const showAll = useCallback(() => {
+    setStored({ userId, hidden: NONE });
+    void writeHidden(storage, userId, NONE);
+  }, [storage, userId]);
+
+  return { hidden, toggle, showAll };
 }

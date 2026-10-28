@@ -72,7 +72,7 @@ export function CalendarScreen({
   onAddEvent = noop,
   onOpenEvent = noop,
 }: CalendarScreenProps) {
-  const { hidden, toggle } = useCalendarFilter(userId, storage);
+  const { hidden, toggle, showAll } = useCalendarFilter(userId, storage);
   const hint = useMonthHint(userId, storage);
   const myMemberId = members.find((m) => m.user_id === userId)?.id ?? '';
   // Month view: the month that fills the grid (FR-005), and ‹ › / Today's scroll requests.
@@ -104,6 +104,13 @@ export function CalendarScreen({
   const onToggle = (key: string) => {
     const next = toggle(key);
     tracker.track('calendar_member_filter_changed', { members_visible: chips.filter((c) => !next.has(c.key)).length });
+  };
+  const shownChips = chips.filter((c) => c.pressed);
+  const filtered = shownChips.length < chips.length;
+  const onShowAll = () => {
+    if (!filtered) return;
+    showAll();
+    tracker.track('calendar_member_filter_changed', { members_visible: chips.length });
   };
   const onView = (next: CalendarView) => {
     if (next === view) return;
@@ -146,9 +153,15 @@ export function CalendarScreen({
         view={view}
         onView={onView}
         viewsLabel={h.viewsLabel}
+        viewButtonLabel={h.viewButton(h.views[view])}
         chips={chips}
         onToggle={onToggle}
-        chipsLabel={h.filterLabel}
+        onShowAll={onShowAll}
+        peopleLabel={filtered ? h.peopleCount(shownChips.length, chips.length) : h.peopleAll}
+        peopleButtonLabel={h.peopleButton(filtered ? shownChips.map((c) => c.name) : null)}
+        filterLabel={h.filterLabel}
+        showAllLabel={h.showAll}
+        closeLabel={h.close}
       />
       <View className="px-20">
         <OfflineBanner screen="calendar" tracker={tracker} />

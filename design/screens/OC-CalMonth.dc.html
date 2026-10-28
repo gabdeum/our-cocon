@@ -15,9 +15,9 @@ a{color:#5A6820}a:hover{color:#424D17}
 </style>
 </helmet>
 <div style="width: 390px; height: 1000px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
-  <dc-import name="CalHeader" view="month" label="{{monthFull}}" short="{{monthShort}}" hint-size="390px,230px"></dc-import>
+  <dc-import name="CalHeader" view="month" label="{{monthFull}}" short="{{monthShort}}" hint-size="390px,162px"></dc-import>
 
-  <div ref="{{scrollRef}}" onScroll="{{onScroll}}" style="position: absolute; left: 0; right: 0; top: 230px; bottom: 0; overflow-y: auto; padding: 4px 8px 180px; box-sizing: border-box">
+  <div ref="{{scrollRef}}" onScroll="{{onScroll}}" style="position: absolute; left: 0; right: 0; top: 162px; bottom: 0; overflow-y: auto; padding: 4px 8px 180px; box-sizing: border-box">
     <div style="background: #FFFFFF; border-radius: 20px">
       <div aria-hidden="true" style="position: sticky; top: 0; z-index: 3; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); padding: 8px 0 6px; background: #FFFFFF; border-radius: 20px 20px 0 0; border-bottom: 1.5px solid #F2E6C4; box-shadow: 0 4px 8px -6px rgba(42,36,20,0.25)">
         <sc-for list="{{weekdays}}" as="w" hint-placeholder-count="7">
