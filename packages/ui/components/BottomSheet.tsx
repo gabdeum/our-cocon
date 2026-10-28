@@ -20,6 +20,8 @@ export interface BottomSheetProps {
   dirty?: boolean;
   /** Screen-reader name of the scrim: "Close". */
   closeLabel: string;
+  /** A field inside takes focus on open (`autoFocus`), so the title doesn't: the add sheet's keyboard opens at once. */
+  fieldFocus?: boolean;
 }
 
 const SWIPE_CLOSE = 80;
@@ -30,7 +32,7 @@ const DURATION = 250;
  * 92% of the screen; the body scrolls, the footer doesn't. Swipe down closes; focus moves to the
  * title on open; Reduce Motion skips the slide.
  */
-export function BottomSheet({ visible, onClose, title, lead, headerAction, children, footer, dirty, closeLabel }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, title, lead, headerAction, children, footer, dirty, closeLabel, fieldFocus = false }: BottomSheetProps) {
   const titleId = useId();
   const titleRef = useRef<HostInstance>(null);
   const reduce = useReduceMotion();
@@ -56,9 +58,10 @@ export function BottomSheet({ visible, onClose, title, lead, headerAction, child
     if (!visible) return;
     offset.setValue(reduce ? 0 : 600);
     if (!reduce) Animated.timing(offset, { toValue: 0, duration: DURATION, easing: Easing.out(Easing.ease), useNativeDriver: false }).start();
+    if (fieldFocus) return;
     const t = setTimeout(() => (titleRef.current as unknown as { focus?: () => void } | null)?.focus?.(), 0);
     return () => clearTimeout(t);
-  }, [visible, reduce, offset]);
+  }, [visible, reduce, offset, fieldFocus]);
 
   return (
     <Modal transparent visible={visible} animationType={reduce ? 'none' : 'fade'} onRequestClose={requestClose}>

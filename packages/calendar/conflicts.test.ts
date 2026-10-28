@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findConflict } from './conflicts';
+import { conflictWho, findConflict } from './conflicts';
 import { EVA, GABRIEL, JAMES, event } from './event.fixture';
 import { viewFor } from './visibility';
 
@@ -42,5 +42,33 @@ describe('findConflict (FR-006)', () => {
   it('names a private event "Busy" when the events went through viewFor (spec 043 FR-004)', () => {
     const yoga = event({ id: 'yoga', title: 'Therapy', members: [EVA], visibility: 'private', creator_member_id: EVA });
     expect(findConflict(draft({ members: [EVA] }), [viewFor(yoga, GABRIEL)])?.title).toBe('Busy');
+  });
+});
+
+describe('conflictWho (spec 041 FR-006)', () => {
+  const movie = event({ id: 'movie', title: 'Movie night', slots: ['evening'], members: ['everyone'] });
+  const swim = event({ id: 'swim', slots: ['morning'], members: [JAMES] });
+
+  it.each([
+    ['you, on an Everyone event', draft({ slots: ['evening'], members: [GABRIEL] }), movie, 'me', 'evening'],
+    ['the member on an Everyone event', draft({ slots: ['evening'], members: [EVA, 'others'] }), movie, EVA, 'evening'],
+    ['Everyone on both', draft({ slots: ['evening'], members: ['everyone'] }), movie, 'everyone', 'evening'],
+    ['you, when you add for Everyone', draft({ slots: ['evening'], members: ['everyone'] }), event({ slots: ['evening'], members: [JAMES, GABRIEL] }), 'me', 'evening'],
+    ['the member, when you add for Everyone', draft({ members: ['everyone'] }), swim, JAMES, 'morning'],
+    ['the shared member', draft({ members: [GABRIEL, JAMES] }), swim, JAMES, 'morning'],
+    ['you among shared members', draft({ members: [JAMES, GABRIEL] }), event({ members: [JAMES, GABRIEL] }), 'me', 'morning'],
+  ])('%s', (_, d, other, who, slot) => {
+    expect(conflictWho(d, other, GABRIEL)).toEqual({ who, slot });
+  });
+
+  it('names the draft’s slot where the clash starts', () => {
+    const d = draft({ slots: ['afternoon', 'evening'], members: [GABRIEL] });
+    expect(conflictWho(d, movie, GABRIEL).slot).toBe('evening');
+    const late = draft({ time_type: 'custom', slots: [], start_time: '19:30', end_time: '21:00', members: [GABRIEL] });
+    expect(conflictWho(late, movie, GABRIEL).slot).toBe('evening');
+  });
+
+  it('falls back to Everyone and the first slot when there’s no time', () => {
+    expect(conflictWho(draft({ time_type: 'all_day', slots: [], members: [] }), event({ time_type: 'all_day', slots: [], members: [] }), GABRIEL)).toEqual({ who: 'everyone', slot: 'early_morning' });
   });
 });

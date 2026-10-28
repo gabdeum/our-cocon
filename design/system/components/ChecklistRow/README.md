@@ -15,3 +15,4 @@ Reference: `design/screens/OC-CalEvent.dc.html` (inline styles are the exact val
 ## Rules
 
 - Anyone in the family can tick; syncs in real time.
+- In the add sheet (spec 041) rows are listed, not ticked: no checkbox role, and a 44 `--card` IconButton (close icon, "Remove {item}") at the right. "+ Add to checklist" (olive-deep 16/800, 48 tall) opens a field under the rows.

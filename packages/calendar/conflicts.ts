@@ -1,5 +1,5 @@
-import type { EventMember } from '@cocon/schemas/calendar';
-import { DEFAULT_SLOT_TIMES, timeRange, toMinutes } from './slots';
+import type { EventMember, SlotKey } from '@cocon/schemas/calendar';
+import { DEFAULT_SLOT_TIMES, fromMinutes, slotAt, timeRange, toMinutes } from './slots';
 import type { CalendarEvent, SlotTimes } from './types';
 
 type Timed = Pick<CalendarEvent, 'starts_on' | 'ends_on' | 'time_type' | 'slots' | 'start_time' | 'end_time' | 'members'>;
@@ -38,4 +38,24 @@ export function findConflict<T extends Timed & { id: string }>(draft: ConflictDr
     if (!first || otherStart < first.start) first = { event, start: otherStart };
   }
   return first?.event ?? null;
+}
+
+/** Who the conflict line names: you, a member's id, or Everyone. */
+export type ConflictWho = 'me' | 'everyone' | (string & {});
+
+/**
+ * The person and slot spec 041's warning names ("{Name} already has {title} this {slot}."): you
+ * when you're on both, otherwise the first member they share (Everyone on both: "everyone"); the
+ * slot is the draft's slot where the clash starts. `other` is what `findConflict` returned.
+ */
+export function conflictWho(draft: ConflictDraft, other: Timed, myMemberId: string, slotTimes: SlotTimes = DEFAULT_SLOT_TIMES): { who: ConflictWho; slot: SlotKey } {
+  const named = (list: readonly EventMember[]) => list.filter((m) => m !== 'others');
+  const mine = named(draft.members);
+  const theirs = named(other.members);
+  const shared = mine.includes('everyone') ? theirs : theirs.includes('everyone') ? mine : mine.filter((m) => theirs.includes(m));
+  const who = shared.includes(myMemberId) || (shared.includes('everyone') && mine.includes(myMemberId)) ? 'me' : (shared[0] ?? 'everyone');
+  const a = timeRange(draft, slotTimes);
+  const b = timeRange(other, slotTimes);
+  const start = Math.max(a ? toMinutes(a.start) : 0, b ? toMinutes(b.start) : 0);
+  return { who, slot: slotAt(fromMinutes(start), slotTimes) };
 }

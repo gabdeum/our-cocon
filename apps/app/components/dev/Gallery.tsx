@@ -71,8 +71,17 @@ import {
   HourGrid,
   Swipeable,
   MemberChip,
+  MemberPickerChip,
   MoreCount,
   Toast,
+  UndoToast,
+  SlotChip,
+  DayChip,
+  ChecklistAdd,
+  ChecklistRow,
+  DateGrid,
+  DisclosureButton,
+  WeekdayPicker,
   TabHeader,
   Tag,
   EventListGroup,
@@ -268,6 +277,52 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             <Toast text="Tap a day to see details. Each color is a family member." actionLabel="Got it" onAction={noop} />
           </View>
           <IconButton variant="fab" icon="plus" iconSize={28} label="Add event" onPress={noop} />
+        </View>
+      </Section>
+
+      <Section group="Calendar" title="Add sheet: DayChip, SlotChip, MemberPickerChip (spec 041)">
+        <View className="flex-row gap-8">
+          <DayChip label="Today" sub="Sun 25" selected onPress={noop} />
+          <DayChip label="Tomorrow" sub="Mon 26" selected={false} onPress={noop} />
+          <DayChip label="Other day" sub="Pick a date" selected={false} onPress={noop} />
+        </View>
+        <PillRow wrap={false}>
+          <SlotChip label="All day" hours="Whole day" selected={false} onPress={noop} />
+          <SlotChip label="Afternoon" hours="14–18" selected onPress={noop} />
+          <SlotChip label="Evening" hours="18–22" selected onPress={noop} />
+        </PillRow>
+        <PillRow>
+          <MemberPickerChip name="Gabriel" initial="G" color="honey" selected onPress={noop} />
+          <MemberPickerChip name="Everyone" initial="All" color="everyone" selected={false} onPress={noop} />
+          <MemberPickerChip name="Others" initial="" color="others" selected onPress={noop} />
+        </PillRow>
+        <DisclosureButton label="More options" sub="Place, repeat, reminder…" expanded={false} onPress={noop} />
+        <WeekdayPicker label="On" letters={['S', 'M', 'T', 'W', 'T', 'F', 'S']} names={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} value={[6]} onToggle={noop} />
+        <View className="rounded-lg bg-surface-card px-14 py-4">
+          <ChecklistRow label="Chips and dip" done={false} remove={{ label: 'Remove Chips and dip', onPress: noop }} />
+          <ChecklistRow label="Cake" done onToggle={noop} />
+          <ChecklistAdd label="+ Add to checklist" onPress={noop} />
+        </View>
+      </Section>
+
+      <Section group="Calendar" title="DateGrid (spec 041)">
+        <DateGrid
+          title="October 2026"
+          weekdays={['S', 'M', 'T', 'W', 'T', 'F', 'S']}
+          weeks={[
+            [null, null, null, null, 1, 2, 3],
+            [4, 5, 6, 7, 8, 9, 10],
+          ].map((w) => w.map((d) => (d === null ? null : { date: `2026-10-${String(d).padStart(2, '0')}`, day: d, label: `October ${d}`, today: d === 8, disabled: d < 3 })))}
+          selected="2026-10-10"
+          onSelect={noop}
+          previous={{ label: 'Previous month', onPress: noop }}
+          next={{ label: 'Next month', onPress: noop }}
+        />
+      </Section>
+
+      <Section group="Calendar" title="UndoToast (spec 041)">
+        <View className="h-control-xl">
+          <UndoToast text="Poker night added for tonight, 18:00–22:00." undoLabel="Undo" onUndo={noop} className="bottom-0 left-0 right-0" />
         </View>
       </Section>
 

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { expand, viewFor } from '@cocon/calendar';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
-import { deleteEvent, loadCalendarSettings, loadEvents, removeException, restoreEvent, saveEvent, saveException, storedEvent } from './events';
+import { deleteEvent, loadCalendarSettings, loadEvents, removeException, restoreEvent, saveEvent, saveException, splitEvent, storedEvent, undoCreateEvent } from './events';
 
 const EVA = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a10';
 const GABRIEL = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a11';
@@ -94,6 +94,41 @@ describe('events data (spec 035)', () => {
     await expect(saveEvent({ rpc } as never, { ...yoga, slots: ['morning', 'evening'] })).rejects.toThrow('Slots must be next to each other');
     await expect(saveEvent({ rpc } as never, { ...yoga, recurrence: { freq: 'weekly', ends: { type: 'on', date: '2026-10-01' } } })).rejects.toThrow();
     expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('splits a series in one call, checked first (spec 041)', async () => {
+    const rpc = vi.fn(async () => ({ data: EVENT, error: null }));
+    const weekly = { freq: 'weekly', ends: { type: 'never' } };
+    const before = { freq: 'weekly', ends: { type: 'on', date: '2026-11-09' } };
+    await expect(splitEvent({ rpc } as never, EVENT, '2026-11-10', before, { ...yoga, recurrence: weekly, checklist: [{ label: 'Towel' }] })).resolves.toBe(EVENT);
+    expect(rpc).toHaveBeenCalledWith('split_event', {
+      p_id: EVENT,
+      p_from: '2026-11-10',
+      p_before: before,
+      p_event: { title: 'Yoga', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'slot', slots: ['evening'], recurrence: weekly, visibility: 'family' },
+      p_members: [EVA],
+      p_checklist: [{ label: 'Towel' }],
+    });
+    rpc.mockClear();
+    await expect(splitEvent({ rpc } as never, EVENT, '2026-11-10', { freq: 'hourly' }, yoga)).rejects.toThrow();
+    await expect(splitEvent({ rpc } as never, 'x', '2026-11-10', before, yoga)).rejects.toThrow();
+    expect(rpc).not.toHaveBeenCalled();
+    const failing = vi.fn(async () => ({ data: null, error: new Error('event_not_found') }));
+    await expect(splitEvent({ rpc: failing } as never, EVENT, '2026-11-10', before, yoga)).rejects.toThrow('event_not_found');
+  });
+
+  it('undoes an add: deleted, then removed for good (spec 041 FR-009)', async () => {
+    const calls: string[] = [];
+    const client = {
+      from: () => ({
+        update: () => (calls.push('update'), { eq: () => ({ select: async () => ({ data: [{ id: EVENT }], error: null }) }) }),
+        delete: () => (calls.push('delete'), { eq: () => ({ not: async (...args: unknown[]) => (calls.push(JSON.stringify(args)), { error: null }) }) }),
+      }),
+    };
+    await undoCreateEvent(client as never, EVENT);
+    expect(calls).toEqual(['update', 'delete', '["deleted_at","is",null]']);
+    const failing = { from: () => ({ ...client.from(), delete: () => ({ eq: () => ({ not: async () => ({ error: new Error('nope') }) }) }) }) };
+    await expect(undoCreateEvent(failing as never, EVENT)).rejects.toThrow('nope');
   });
 
   it('refuses an exception that changes who can see the event (L80)', async () => {

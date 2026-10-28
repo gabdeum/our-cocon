@@ -18,3 +18,4 @@ Reference: `design/screens/OC-CalDay.dc.html` (inline styles are the exact value
 
 - Hint: one first-visit tip, then gone for good for that person.
 - Text format: "{title} added for {when}, {time range}."
+- Built in `packages/ui`: `UndoToast` (the ink toast, spec 041; the caller times it), `Toast` (the hint) and `FloatingAdd` (`hidden` while a toast shows).

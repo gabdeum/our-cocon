@@ -15,7 +15,8 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style' | 'placehol
   counter?: string;
   /** Warns, never blocks typing: "Pick a unit so we can convert and scale it." */
   warning?: string;
-  size?: 'md' | 'sm';
+  /** `title`: 56 tall, 18/800, the add sheet's "What's happening?" (OC-CalAdd). */
+  size?: 'md' | 'sm' | 'title';
   /** Read by screen readers only: rows whose design labels them by place (OC-EditIngredients). */
   labelHidden?: boolean;
   className?: string;
@@ -30,7 +31,9 @@ export function TextField({ label, optionalLabel, hint, counter, warning, size =
   const sm = size === 'sm';
   const text = multiline
     ? { fontFamily: theme.font[600], fontSize: 16, lineHeight: 16 * 1.45 }
-    : { fontFamily: theme.font[700], fontSize: sm ? 16 : 17 };
+    : size === 'title'
+      ? { fontFamily: theme.font[800], fontSize: 18 }
+      : { fontFamily: theme.font[700], fontSize: sm ? 16 : 17 };
   return (
     <View className={cn('gap-6', className)}>
       {labelHidden ? null : (
@@ -60,14 +63,14 @@ export function TextField({ label, optionalLabel, hint, counter, warning, size =
         }}
         className={cn(
           'w-full border-2 web:outline-none',
-          multiline ? 'min-h-[76px] rounded-lg px-16 py-12' : sm ? 'h-[46px] rounded-[12px] px-12' : 'h-control-lg rounded-lg px-16',
+          multiline ? 'min-h-[76px] rounded-lg px-16 py-12' : sm ? 'h-[46px] rounded-[12px] px-12' : size === 'title' ? 'h-[56px] rounded-lg px-16' : 'h-control-lg rounded-lg px-16',
           warning ? 'border-warn-border bg-warn-soft text-warn' : cn('bg-surface-card text-ink', focused ? 'border-olive' : 'border-line-strong'),
         )}
         style={text}
         {...props}
       />
       {warning ? (
-        <View nativeID={warnId} className="flex-row items-center gap-8">
+        <View nativeID={warnId} role="alert" className="flex-row items-center gap-8">
           <Icon name="warning" size={18} color="warn" />
           <Text size={14} weight="700" color="warn" className="flex-1">
             {warning}

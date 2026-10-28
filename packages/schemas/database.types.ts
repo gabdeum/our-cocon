@@ -898,6 +898,9 @@ isOneToOne: false
 "shared_recipe":
 { Args: { "p_token": string }; Returns: Json
                            },
+"split_event":
+{ Args: { "p_before": Json,"p_checklist"?: Json,"p_event": Json,"p_from": string,"p_id": string,"p_members": Json,"p_surprise"?: Json }; Returns: string
+                           },
 "suggest_ingredients":
 { Args: { "lim"?: number,"q": string }; Returns: {
               "aisle": Database["public"]['Enums']["aisle"] | null,

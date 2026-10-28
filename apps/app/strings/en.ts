@@ -1,4 +1,8 @@
 // Every user-facing string, keyed by screen (constitution III). Check copy against design/ui/ here.
+
+/** "James", "James and Lou", "James, Lou and Mia". */
+const andList = (names: readonly string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : (names[0] ?? ''));
+
 export const strings = {
   app: {
     name: 'Our Cocon',
@@ -1252,6 +1256,100 @@ export const strings = {
       empty: 'Nothing planned yet. Tap + to add something.',
       /** "Baby swim class, 14:30 · Gabriel takes James, Now". */
       rowLabel: (title: string, sub: string, tag: string | null) => [title, sub, ...(tag ? [tag] : [])].join(', '),
+    },
+    /** design/ui/OC-CalAdd.md (spec 041): the add and edit sheet. */
+    add: {
+      titleNew: 'New event',
+      titleEdit: 'Edit event',
+      cancel: 'Cancel',
+      what: "What's happening?",
+      whatPlaceholder: 'e.g. Poker night',
+      noTitle: 'Give your event a name.',
+      when: 'When',
+      today: 'Today',
+      tomorrow: 'Tomorrow',
+      otherDay: 'Other day',
+      pickDate: 'Pick a date',
+      /** A day tile's date: "Sun 25". */
+      tileDate: (weekdayShort: string, day: number) => `${weekdayShort} ${day}`,
+      timeOfDay: 'Time of day',
+      timeHint: 'Pick a time of day — no need for exact hours.',
+      allDay: 'All day',
+      wholeDay: 'Whole day',
+      custom: 'Custom',
+      pickTimes: 'Pick times',
+      /** A slot chip's hours: "18–22". */
+      slotHours: (start: string, end: string) => `${start.slice(0, 2)}–${end.slice(0, 2)}`,
+      starts: 'Starts',
+      ends: 'Ends',
+      badTime: 'Use a time like 18:30.',
+      endBeforeStart: 'Pick an end time after the start.',
+      who: 'Who',
+      everyone: 'Everyone',
+      everyoneInitial: 'All',
+      others: 'Others',
+      /** "You already have Movie night this evening." / "Eva already has …" */
+      conflict: (name: string | null, title: string, slot: string) => `${name === null ? 'You already have' : `${name} already has`} ${title} this ${slot}.`,
+      addAnyway: 'Add anyway?',
+      /** The conflict line's slot words. */
+      slotWords: { early_morning: 'early morning', morning: 'morning', lunch: 'lunch', afternoon: 'afternoon', evening: 'evening' },
+      more: 'More options',
+      moreHint: 'Place, repeat, reminder…',
+      hide: 'Hide',
+      type: 'Type',
+      types: { sport: 'Sport', school: 'School', work: 'Work', health: 'Health', social: 'Social', travel: 'Travel', home: 'Home', birthday: 'Birthday', other: 'Other' },
+      where: 'Where',
+      wherePlaceholder: 'Add a place',
+      /** "Who takes James?", "Who takes James and Lou?" */
+      whoTakes: (names: string[]) => `Who takes ${andList(names)}?`,
+      whoTakesHint: (names: string[]) => `${andList(names)} ${names.length > 1 ? 'were' : 'was'} added by the family, so someone with the app handles this.`,
+      notDecided: 'Not decided yet',
+      repeat: 'Repeat',
+      repeats: { never: 'Never', daily: 'Daily', weekly: 'Weekly', biweekly: 'Every 2 weeks', monthly: 'Monthly', yearly: 'Yearly' },
+      on: 'On',
+      /** From Sunday, as the weekday picker reads them. */
+      weekdayLetters: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+      weekdayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      endsLabel: 'Ends',
+      endsNever: 'Never',
+      endsOn: 'On a date',
+      endsAfter: 'After a number of times',
+      lastDay: 'Last day',
+      times: 'Times',
+      timesHint: 'Counts this one too.',
+      timesProblem: 'Use a number from 1 to 1000.',
+      reminder: 'Reminder',
+      reminders: { none: 'None', morning_of: 'Morning of', hour_before: '1 hour before', day_before: '1 day before' },
+      reminderHint: 'Shows on Home for now. Phone alerts come later.',
+      notes: 'Notes',
+      notesPlaceholder: 'Anything to remember',
+      addToChecklist: '+ Add to checklist',
+      checklistItem: 'Checklist item',
+      removeItem: (label: string) => `Remove ${label}`,
+      save: 'Save',
+      saving: 'Saving…',
+      saveFailed: "Couldn't save. Check your connection and try again.",
+      close: 'Close',
+      previousMonth: 'Previous month',
+      nextMonth: 'Next month',
+      /** The date sheet's title, for "Other day" and "Ends: On a date". */
+      pickDateTitle: 'Pick a date',
+      endsOnTitle: 'Ends on',
+      /** The toast: "Poker night added for tonight, 18:00–22:00."; all day: "… added for Sat, Oct 31." */
+      added: (title: string, when: string, range: string | null) => `${title} added for ${when}${range ? `, ${range}` : ''}.`,
+      tonight: 'tonight',
+      todayWord: 'today',
+      tomorrowWord: 'tomorrow',
+      undo: 'Undo',
+      /** The edit's scope question (OC-CalEvent.md › Edit a repeating event). */
+      scopeTitle: 'This event repeats',
+      scopeBody: (date: string, every: string) => `Change only ${date}, or ${every} from now on?`,
+      /** "every Saturday", "every day", "every other Saturday", "every month", "every year". */
+      every: { daily: () => 'every day', weekly: (day: string) => `every ${day}`, biweekly: (day: string) => `every other ${day}`, monthly: () => 'every month', yearly: () => 'every year' },
+      thisOnly: 'This event only',
+      allFuture: 'All future events',
+      loadFailedTitle: "We couldn't open this event.",
+      loadFailedBody: "It may have been deleted, or you're offline.",
     },
   },
   debug: {

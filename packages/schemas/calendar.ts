@@ -54,6 +54,7 @@ export const RecurrenceEnds = z.discriminatedUnion('type', [
   z.object({ type: z.literal('on'), date: CalendarDate }),
   z.object({ type: z.literal('after'), count: z.int().min(1).max(1000) }),
 ]);
+export type RecurrenceEnds = z.infer<typeof RecurrenceEnds>;
 export const Recurrence = z
   .object({
     freq: z.enum(['daily', 'weekly', 'biweekly', 'monthly', 'yearly']),

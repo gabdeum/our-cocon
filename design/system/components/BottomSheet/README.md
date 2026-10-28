@@ -17,3 +17,4 @@ A sheet that slides up over a dimmed screen for focused tasks: filters, scaling,
 
 - One task per sheet. The primary button states the result: "Show 12 recipes", "Apply to recipe", "Add 3 items".
 - Swipe down closes. Focus moves to the title on open.
+- A sheet whose field takes focus on open (`fieldFocus`, the add sheet's title so the keyboard opens at once) doesn't move focus to its title.

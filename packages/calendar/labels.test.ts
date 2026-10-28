@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SLOT_TIMES } from './slots';
-import { dateLabel, dayTitle, formatTime, monthTitle, rangeLabel, timeLabel, uses24h, weekTitle } from './labels';
+import { dateLabel, dayTitle, formatTime, monthTitle, rangeLabel, timeLabel, uses24h, weekTitle, whenWord } from './labels';
 
 const custom = (start_time: string, end_time: string) => ({ time_type: 'custom' as const, slots: [], start_time, end_time });
 
@@ -103,5 +103,18 @@ describe('dateLabel (032-later L82: no period)', () => {
     ['2027-05-06', 'short', 'Thu, May 6'],
   ] as const)('%s (%s) → %s', (date, style, label) => {
     expect(dateLabel(date, style)).toBe(label);
+  });
+});
+
+describe('whenWord (spec 041 FR-009)', () => {
+  it.each([
+    ['tonight: today from 18:00', '2026-10-28', '18:00', 'tonight'],
+    ['today before 18:00', '2026-10-28', '17:59', 'today'],
+    ['today, all day', '2026-10-28', null, 'today'],
+    ['tomorrow', '2026-10-29', '18:00', 'tomorrow'],
+    ['another day', '2026-10-31', '09:00', null],
+    ['a past day', '2026-10-27', '09:00', null],
+  ])('%s', (_, date, start, expected) => {
+    expect(whenWord(date, '2026-10-28', start)).toBe(expected);
   });
 });

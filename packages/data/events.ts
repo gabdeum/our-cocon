@@ -133,6 +133,28 @@ export async function saveEvent(client: Pick<Db, 'rpc'>, input: unknown, id?: st
 }
 
 /**
+ * Spec 041 "All future events": the series `id` ends the day before `from` (`before`, from the
+ * engine's `splitSeries`), and `input` is saved as a new series from `from`, in one go; the old
+ * series' exceptions from then on move to it. Checked like `saveEvent`. Returns the new id.
+ */
+export async function splitEvent(client: Pick<Db, 'rpc'>, id: string, from: string, before: unknown, input: unknown): Promise<string> {
+  const { members, surprise, checklist, ...fields } = EventInput.parse(input);
+  const event = { ...fields, slots: fields.slots ?? [], visibility: fields.visibility ?? 'family' };
+  assertValidEvent({ ...event, id: 'new', members, creator_member_id: '' });
+  const { data, error } = await client.rpc('split_event', {
+    p_id: z.uuid().parse(id),
+    p_from: CalendarDate.parse(from),
+    p_before: Recurrence.parse(before),
+    p_event: event,
+    p_members: members,
+    ...(surprise ? { p_surprise: surprise } : {}),
+    ...(checklist ? { p_checklist: checklist } : {}),
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
  * A "this event only" change or cancellation (spec 034). Strict (032-later L80): an occurrence
  * can't change who created the event, who can see it or its surprise.
  */
@@ -163,6 +185,16 @@ async function setDeleted(client: Pick<Db, 'from'>, id: string, deleted: boolean
 }
 export const deleteEvent = (client: Pick<Db, 'from'>, id: string) => setDeleted(client, id, true);
 export const restoreEvent = (client: Pick<Db, 'from'>, id: string) => setDeleted(client, id, false);
+
+/**
+ * Spec 041 FR-009: Undo right after adding. Deleted, then removed for good (the database only
+ * removes deleted events), so it leaves no trace in Recently deleted.
+ */
+export async function undoCreateEvent(client: Pick<Db, 'from'>, id: string): Promise<void> {
+  await setDeleted(client, id, true);
+  const { error } = await client.from('events').delete().eq('id', z.uuid().parse(id)).not('deleted_at', 'is', null);
+  if (error) throw error;
+}
 
 /** Ticks or unticks a checklist item; the database records who ticked it. */
 export async function setChecklistDone(client: Pick<Db, 'from'>, itemId: string, done: boolean): Promise<void> {

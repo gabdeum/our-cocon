@@ -8,6 +8,7 @@ import { memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/cale
 import { getAgendaPlace, setAgendaPlace } from '../../lib/agenda-session';
 import { useNow } from '../../lib/use-now';
 import type { Member } from '../../lib/session';
+import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 
 /** TabBar README: screens pad 180 under their content for the floating tab bar. */
@@ -41,6 +42,8 @@ export interface AgendaViewProps {
  * session when you switch views (FR-003).
  */
 export function AgendaView({ userId, members, myMemberId, events, slotTimes, hidden, anchor, today, timeZone, top, onEventWindow, onAddEvent, onOpenEvent }: AgendaViewProps) {
+  // Toast README: the add button hides while the save toast shows (032-later L96).
+  const { visible: toastShown } = useToast();
   const now = useNow(timeZone);
   const look = useMemo(() => memberLook(members), [members]);
   const [place] = useState(() => getAgendaPlace(userId, anchor));
@@ -121,7 +124,7 @@ export function AgendaView({ userId, members, myMemberId, events, slotTimes, hid
           </Text>
         ) : null}
       </ScrollView>
-      <FloatingAdd label={strings.calendar.month.addEvent} onPress={() => onAddEvent(anchor)} hint={null} />
+      <FloatingAdd hidden={toastShown} label={strings.calendar.month.addEvent} onPress={() => onAddEvent(anchor)} hint={null} />
     </View>
   );
 }

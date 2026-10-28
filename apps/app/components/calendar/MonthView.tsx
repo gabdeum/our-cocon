@@ -16,6 +16,7 @@ import {
   weekdayLetters,
 } from '../../lib/calendar-month';
 import type { Member } from '../../lib/session';
+import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 
 const m = strings.calendar.month;
@@ -45,6 +46,8 @@ export interface MonthViewProps {
 
 /** Spec 037 (OC-CalMonth): the continuous month grid, the first-visit hint and the add button. */
 export function MonthView({ members, myMemberId, events, slotTimes, hidden, month, today, weekStartsOn, jump, onMonthShown, onOpenDay, onAddEvent, onOpenEvent, showHint, onDismissHint }: MonthViewProps) {
+  // Toast README: the add button hides while the save toast shows (032-later L96).
+  const { visible: toastShown } = useToast();
   const range = useMemo(() => monthRange(today, weekStartsOn), [today, weekStartsOn]);
   const look = useMemo(() => memberLook(members), [members]);
   const { from, to } = eventWindow(month);
@@ -73,7 +76,7 @@ export function MonthView({ members, myMemberId, events, slotTimes, hidden, mont
         }}
         addLabel={m.addEvent}
       />
-      <FloatingAdd label={m.addEvent} onPress={() => onAddEvent(today)} hint={showHint ? { text: m.hint, actionLabel: m.gotIt, onAction: onDismissHint } : null} />
+      <FloatingAdd hidden={toastShown} label={m.addEvent} onPress={() => onAddEvent(today)} hint={showHint ? { text: m.hint, actionLabel: m.gotIt, onAction: onDismissHint } : null} />
     </View>
   );
 }

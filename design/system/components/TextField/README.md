@@ -21,3 +21,4 @@ Labelled inputs for forms and search, with a hint line and a friendly warning st
 - Always a visible label (search: visually hidden label + placeholder). Exception: rows the design labels by place (IngredientEditCard) hide it with `labelHidden` and keep it for screen readers.
 - Warn, don't block typing. Explain the fix: "Pick a unit so we can convert and scale it."
 - Numeric fields use `inputmode="decimal"`.
+- Title (`size="title"`, spec 041): 56 tall, 18/800, for the add sheet's "What's happening?". The warning line is `role="alert"`.

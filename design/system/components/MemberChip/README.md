@@ -16,6 +16,6 @@ Reference: `design/screens/CalHeader.dc.html` (inline styles are the exact value
 
 ## Rules
 
-- Built in `packages/ui` (spec 036): the Filter row (`MemberChip`) and the Stack (`MemberStack`). Picker (041) and Count (039) come with their specs.
+- Built in `packages/ui`: the Filter row (`MemberChip`) and the Stack (`MemberStack`) (spec 036), Count (`MemberCount`, 039) and Picker (`MemberPickerChip`, 041).
 - `aria-pressed` drives selection; group has a label ("Show events for", "Who").
 - Never color alone: the initial or icon is always visible.

@@ -14,7 +14,7 @@ export interface ToastProps {
 
 /**
  * Toast README › Hint: a sage card with one line of help and a white "Got it" button, floating
- * over the screen (the month view's first-visit hint, spec 037). The ink Undo toast comes with 041.
+ * over the screen (the month view's first-visit hint, spec 037). The ink Undo toast is `UndoToast`.
  */
 export function Toast({ text, actionLabel, onAction, className }: ToastProps) {
   return (
@@ -25,6 +25,39 @@ export function Toast({ text, actionLabel, onAction, className }: ToastProps) {
       <Pressable role="button" onPress={onAction} className={cn('h-control-md flex-none items-center justify-center rounded-pill bg-surface-card px-14 active:bg-surface-card-pressed', focusRing)}>
         <Text size={15} weight="900">
           {actionLabel}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+export interface UndoToastProps {
+  /** "Poker night added for tonight, 18:00–22:00." */
+  text: string;
+  /** "Undo". */
+  undoLabel: string;
+  onUndo: () => void;
+  className?: string;
+}
+
+/**
+ * Toast README › Toast: the ink confirmation with a honey Undo, 16 from the sides and 108 from the
+ * bottom (above the tab bar). The caller times it (5 s) and hides the floating add button meanwhile.
+ */
+export function UndoToast({ text, undoLabel, onUndo, className }: UndoToastProps) {
+  return (
+    <View
+      role="status"
+      aria-live="polite"
+      className={cn('absolute bottom-[108px] left-16 right-16 z-30 min-h-[56px] flex-row items-center gap-10 rounded-[18px] bg-ink py-8 pl-16 pr-8', className)}
+      style={{ boxShadow: theme.shadow.lift }}
+    >
+      <Text size={15} weight="700" color="on-olive" className="min-w-0 flex-1">
+        {text}
+      </Text>
+      <Pressable role="button" onPress={onUndo} className={cn('h-control-md flex-none items-center justify-center rounded-pill bg-honey px-16 active:bg-honey-pressed', focusRing)}>
+        <Text size={15} weight="900">
+          {undoLabel}
         </Text>
       </Pressable>
     </View>

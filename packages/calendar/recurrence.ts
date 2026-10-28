@@ -1,4 +1,4 @@
-import { CalendarDate, EventOverride, Recurrence } from '@cocon/schemas/calendar';
+import { CalendarDate, EventOverride, Recurrence, type RecurrenceEnds } from '@cocon/schemas/calendar';
 import { addDays, daysBetween, daysInMonth, makeDate, parts, weekday } from './dates';
 import { CalendarError } from './errors';
 import { timeRange, toMinutes } from './slots';
@@ -116,4 +116,27 @@ export function expand(event: CalendarEvent, from: string, to: string, exception
     if (occurrence.starts_on <= to && occurrence.ends_on >= from) result.push(occurrence);
   }
   return result.sort((a, b) => (a.starts_on === b.starts_on ? 0 : a.starts_on < b.starts_on ? -1 : 1));
+}
+
+/**
+ * Spec 041 "All future events" from the series date `from`: the old series now ends the day
+ * before (`before`), and the new one keeps what's left of the end (`ends`: the same date, or the
+ * count minus the times already gone). Null when `from` is the first date: edit the whole series.
+ * Throws `InvalidDate` when `from` isn't one of the series' dates.
+ */
+export function splitSeries(event: CalendarEvent, from: string): { before: Recurrence; ends: RecurrenceEnds } | null {
+  assertValidEvent(event);
+  const rule = event.recurrence;
+  if (!rule) throw new CalendarError('InvalidRecurrence', 'Only a repeating event can be split');
+  assertDate(from, 'Split');
+  let gone = 0;
+  let found = false;
+  for (const date of seriesDates(event, from)) {
+    if (date === from) found = true;
+    else gone += 1;
+  }
+  if (!found) throw new CalendarError('InvalidDate', `${from} is not one of this event's dates`);
+  if (gone === 0) return null;
+  const ends: RecurrenceEnds = rule.ends.type === 'after' ? { type: 'after', count: rule.ends.count - gone } : rule.ends;
+  return { before: { ...rule, ends: { type: 'on', date: addDays(from, -1) } }, ends };
 }
