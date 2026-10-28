@@ -32,8 +32,22 @@ export { ActivityCard, type ActivityCardProps } from './components/ActivityCard'
 export { Callout, type CalloutProps, type CalloutVariant } from './components/Callout';
 export { Avatar, AvatarStack, type AvatarColor, type MemberColor } from './components/Avatar';
 export { MemberChip, type MemberChipColor, type MemberChipProps } from './components/MemberChip';
-export { EventBar, EventChip, MoreCount, BAR_STEP, BAR_TOP, type EventBarProps, type EventChipProps, type EventColor } from './components/EventChip';
+export { EventBar, EventChip, Fill, MoreCount, BAR_STEP, BAR_TOP, WEEK_BAR_STEP, type EventBarProps, type EventChipProps, type EventColor } from './components/EventChip';
 export { MonthGrid, MONTH_ROW_HEIGHT, type MonthBar, type MonthCell, type MonthCellItem, type MonthGridProps, type MonthWeek } from './components/MonthGrid';
+export {
+  HourGrid,
+  GRID_FIRST_HOUR,
+  GRID_HEIGHT,
+  GRID_HOURS,
+  HOUR_HEIGHT,
+  hourAt,
+  type HourGridProps,
+  type WeekAllDayBar,
+  type WeekBlock,
+  type WeekColumn,
+  type WeekDayHead,
+} from './components/HourGrid';
+export { Swipeable, SWIPE_COMMIT, type SwipeableProps } from './components/Swipeable';
 export { FloatingAdd, Toast, type FloatingAddProps, type ToastProps } from './components/Toast';
 export { CalendarHeader, type CalendarHeaderChip, type CalendarHeaderProps } from './components/CalendarHeader';
 export { ColorSwatch, type ColorSwatchProps, type SwatchOption } from './components/ColorSwatch';

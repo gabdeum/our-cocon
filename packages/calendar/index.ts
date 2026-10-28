@@ -2,7 +2,7 @@
 // spec 036 adds the header's paging and member filter.
 // Used by the app and the MCP server, so both give the same answer. No React.
 export { CalendarError, type CalendarErrorCode } from './errors';
-export { addDays, daysBetween, daysInMonth, makeDate, parts, todayIn, weekRange, weekStartFor, weekday, type WeekStartsOn } from './dates';
+export { addDays, daysBetween, daysInMonth, makeDate, parts, timeIn, todayIn, weekRange, weekStartFor, weekday, type WeekStartsOn } from './dates';
 export { DEFAULT_SLOT_TIMES, fromMinutes, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes } from './slots';
 export { WIDE_TITLE_MIN_WIDTH, dayTitle, formatTime, monthTitle, rangeLabel, timeLabel, uses24h, weekTitle, type LabelOptions } from './labels';
 export { assertValidEvent, expand } from './recurrence';

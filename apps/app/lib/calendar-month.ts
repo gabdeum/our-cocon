@@ -114,10 +114,10 @@ export function memberLook(members: readonly Member[]): MemberLook {
 }
 
 /**
- * FR-003: "{initials} {title}" and the fill. Up to two initials joined by "·" ("G·E"), "All" for
- * Everyone, none for Others. Two members split the fill; a member who left is grey.
+ * FR-003: up to two initials joined by "·" ("G·E"), "All" for Everyone, none for Others, and the
+ * fill. Two members split the fill; a member who left is grey. Also the week view's blocks (038).
  */
-export function chipLook(members: readonly EventMember[], title: string, look: MemberLook): { text: string; colors: EventColor[] } {
+export function eventLook(members: readonly EventMember[], look: MemberLook): { initials: string; colors: EventColor[] } {
   const colors = members.map((id): EventColor => (id === 'everyone' ? 'everyone' : id === 'others' ? 'others' : (look.colors.get(id) ?? 'removed'))).slice(0, 2);
   const initials = members
     .filter((id) => id !== 'others')
@@ -125,6 +125,12 @@ export function chipLook(members: readonly EventMember[], title: string, look: M
     .filter((i): i is string => Boolean(i))
     .slice(0, 2)
     .join('·');
+  return { initials, colors };
+}
+
+/** FR-003: "{initials} {title}" and the fill. */
+export function chipLook(members: readonly EventMember[], title: string, look: MemberLook): { text: string; colors: EventColor[] } {
+  const { initials, colors } = eventLook(members, look);
   return { text: initials ? `${initials} ${title}` : title, colors };
 }
 
@@ -140,7 +146,8 @@ function startMinutes(o: MonthOccurrence, slotTimes: SlotTimes): number {
   }
 }
 
-const longDate = (date: string) => {
+/** "October 25". */
+export const longDate = (date: string) => {
   const { month, day } = parts(date);
   return `${words.months[month - 1]} ${day}`;
 };
