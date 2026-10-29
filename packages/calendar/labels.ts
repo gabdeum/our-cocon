@@ -1,6 +1,6 @@
 import type { TimeFormatSetting } from '@cocon/schemas/calendar';
-import { parts, weekday } from './dates';
-import { DEFAULT_SLOT_TIMES, slotStartingAt, timeRange } from './slots';
+import { addDays, parts, weekday } from './dates';
+import { DEFAULT_SLOT_TIMES, slotStartingAt, timeRange, toMinutes } from './slots';
 import type { CalendarEvent, SlotTimes } from './types';
 import { en } from './words.en';
 
@@ -82,4 +82,17 @@ export function dateLabel(date: string, style: 'short' | 'long' = 'short'): stri
   const { month, day } = parts(date);
   const name = (style === 'long' ? en.weekdays : en.weekdaysShort)[weekday(date)];
   return `${name}, ${monthName(month, false).replace(/\.$/, '')} ${day}`;
+}
+
+/** From this time, an event today is "tonight" (the Evening slot's default start). */
+const TONIGHT_FROM = '18:00';
+
+/**
+ * Spec 041 FR-009's "added for …": "tonight" (today from 18:00), "today", "tomorrow"; null for any
+ * other day, which then reads as its `dateLabel` ("Sat, Oct 31"). `start` is null for all day.
+ */
+export function whenWord(date: string, today: string, start: string | null): 'tonight' | 'today' | 'tomorrow' | null {
+  if (date === addDays(today, 1)) return 'tomorrow';
+  if (date !== today) return null;
+  return start !== null && toMinutes(start) >= toMinutes(TONIGHT_FROM) ? 'tonight' : 'today';
 }

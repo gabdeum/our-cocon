@@ -2,18 +2,20 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { memberInitials, type Tracker } from '@cocon/schemas';
 import type { CalendarView, SlotKey } from '@cocon/schemas/calendar';
-import { DEFAULT_SLOT_TIMES, shiftAnchor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
+import { DEFAULT_SLOT_TIMES, shiftAnchor, viewFor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { CalendarHeader, type CalendarHeaderChip } from '@cocon/ui';
 import { arrowLabels, headerTitle, viewSegments } from '../../lib/calendar-header';
 import { useCalendarFilter } from '../../lib/calendar-filter';
 import { useMonthHint } from '../../lib/calendar-hint';
 import { eventWindow, firstOfMonth } from '../../lib/calendar-month';
+import { eventOccurrence } from '../../lib/event-detail';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
 import { AgendaView } from './AgendaView';
+import { BusySheet } from './BusySheet';
 import { DayView } from './DayView';
 import { MonthView } from './MonthView';
 import { WeekView } from './WeekView';
@@ -71,11 +73,19 @@ export function CalendarScreen({
   onEventWindow = noop,
   slotTimes = DEFAULT_SLOT_TIMES,
   onAddEvent = noop,
-  onOpenEvent = noop,
+  onOpenEvent: openEventPage = noop,
 }: CalendarScreenProps) {
   const { hidden, toggle, showAll } = useCalendarFilter(userId, storage);
   const hint = useMonthHint(userId, storage);
   const myMemberId = members.find((m) => m.user_id === userId)?.id ?? '';
+  // OC-CalBusy (spec 043): someone else's private event opens a sheet here, not the event page.
+  const [busy, setBusy] = useState<StoredEvent | null>(null);
+  const onOpenEvent = (id: string, date: string) => {
+    const event = events?.find((e) => e.id === id);
+    const occurrence = event ? eventOccurrence(event, date) : null;
+    if (occurrence && viewFor(occurrence, myMemberId).view === 'busy') setBusy(occurrence);
+    else openEventPage(id, date);
+  };
   // Month view: the month that fills the grid (FR-005), and ‹ › / Today's scroll requests.
   const [shown, setShown] = useState(() => firstOfMonth(anchor));
   const [jump, setJump] = useState<{ month: string; nonce: number }>();
@@ -260,6 +270,7 @@ export function CalendarScreen({
           onOpenEvent={onOpenEvent}
         />
       ) : null}
+      {busy ? <BusySheet occurrence={busy} members={members} slotTimes={slotTimes} onClose={() => setBusy(null)} /> : null}
     </View>
   );
 }

@@ -64,6 +64,8 @@ export interface MonthGridProps {
   onDayPress: (date: string) => void;
   onDayLongPress: (date: string) => void;
   onBarPress: (key: string) => void;
+  /** A chip tapped: its event opens (decided 2026-10-28); anywhere else in the cell opens the day. */
+  onChipPress: (key: string) => void;
   /** Screen readers can't long-press: the same action, named "Add event". */
   addLabel: string;
   /** Past days on surface-page with muted dates (the setting comes with spec 029). */
@@ -89,7 +91,7 @@ function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
   );
 }
 
-function Cell({ cell, mutePast, addLabel, onPress, onLongPress }: { cell: MonthCell; mutePast: boolean; addLabel: string; onPress: () => void; onLongPress: () => void }) {
+function Cell({ cell, mutePast, addLabel, onPress, onLongPress, onChipPress }: { cell: MonthCell; mutePast: boolean; addLabel: string; onPress: () => void; onLongPress: () => void; onChipPress: (key: string) => void }) {
   const muted = mutePast && cell.past && !cell.today;
   return (
     <Pressable
@@ -102,19 +104,19 @@ function Cell({ cell, mutePast, addLabel, onPress, onLongPress }: { cell: MonthC
       className={cn('h-[96px] min-w-0 flex-1 gap-[3px] overflow-hidden border-b border-r border-line px-4 pb-6 pt-4', muted ? 'bg-surface-page' : 'bg-surface-card', focusRing)}
     >
       <DateMark cell={cell} muted={muted} />
-      {cell.items.map((item) => (item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} /> : <View key={item.key} className="h-[20px]" />))}
+      {cell.items.map((item) => (item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} onPress={() => onChipPress(item.key)} /> : <View key={item.key} className="h-[20px]" />))}
       {cell.more ? <MoreCount text={cell.more} /> : null}
       {cell.today ? <View aria-hidden pointerEvents="none" className="absolute inset-0 border-olive" style={{ borderWidth: 2.5 }} /> : null}
     </Pressable>
   );
 }
 
-function Week({ week, ...p }: { week: MonthWeek } & Pick<MonthGridProps, 'onDayPress' | 'onDayLongPress' | 'onBarPress' | 'addLabel'> & { mutePast: boolean }) {
+function Week({ week, ...p }: { week: MonthWeek } & Pick<MonthGridProps, 'onDayPress' | 'onDayLongPress' | 'onBarPress' | 'onChipPress' | 'addLabel'> & { mutePast: boolean }) {
   return (
     <View className="h-[96px] bg-surface-card">
       <View className="flex-row">
         {week.cells.map((cell) => (
-          <Cell key={cell.date} cell={cell} mutePast={p.mutePast} addLabel={p.addLabel} onPress={() => p.onDayPress(cell.date)} onLongPress={() => p.onDayLongPress(cell.date)} />
+          <Cell key={cell.date} cell={cell} mutePast={p.mutePast} addLabel={p.addLabel} onPress={() => p.onDayPress(cell.date)} onLongPress={() => p.onDayLongPress(cell.date)} onChipPress={p.onChipPress} />
         ))}
       </View>
       {week.bars.map((bar) => (
@@ -160,8 +162,8 @@ export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisib
   };
 
   const renderItem = useCallback(
-    ({ item }: { item: number }): ReactElement => <Week week={weekAt(item)} mutePast={mutePast} onDayPress={p.onDayPress} onDayLongPress={p.onDayLongPress} onBarPress={p.onBarPress} addLabel={p.addLabel} />,
-    [weekAt, mutePast, p.onDayPress, p.onDayLongPress, p.onBarPress, p.addLabel],
+    ({ item }: { item: number }): ReactElement => <Week week={weekAt(item)} mutePast={mutePast} onDayPress={p.onDayPress} onDayLongPress={p.onDayLongPress} onBarPress={p.onBarPress} onChipPress={p.onChipPress} addLabel={p.addLabel} />,
+    [weekAt, mutePast, p.onDayPress, p.onDayLongPress, p.onBarPress, p.onChipPress, p.addLabel],
   );
 
   return (

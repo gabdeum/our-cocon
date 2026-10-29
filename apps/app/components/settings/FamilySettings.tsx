@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Button, ColorSwatch, Dialog, Link, ListGroup, ListRow, SheetFooter, StatusBanner, Text, TextField, type SwatchOption } from '@cocon/ui';
+import { BottomSheet, Button, ColorSwatch, Dialog, Link, ListGroup, ListRow, SheetFooter, Text, TextField, type SwatchOption } from '@cocon/ui';
 import { DisplayName, MEMBER_COLORS, memberInitials, memberKind, nextMemberColor, type MemberColor, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
+import { useToast } from '../../lib/toast';
 import type { FamilyApi } from '../../lib/family';
 import type { AccountMember, Family, Member } from '../../lib/session';
 import { shareInvite, type ShareDeps } from '../../lib/invite';
@@ -67,7 +68,7 @@ function swatches(members: readonly Member[], initials: Map<string, string>, tar
 export function FamilySettings({ me, family, members, api, tracker, onChanged, onSignOut, shareDeps, readOnly = false, more }: FamilySettingsProps) {
   const isOwner = me.role === 'owner';
   const initials = memberInitials(members);
-  const [banner, setBanner] = useState<string | null>(null);
+  const toast = useToast();
   const [inviting, setInviting] = useState(false);
   const [selected, setSelected] = useState<Member | null>(null);
   const [confirm, setConfirm] = useState<Confirm>(null);
@@ -87,19 +88,18 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
   };
 
   async function invite(forMember?: Member) {
-    setBanner(null);
     setSelected(null);
     setInviting(true);
     const token = await api.createInvite(forMember?.id);
     if (!token.ok) {
       setInviting(false);
-      return setBanner(token.error === 'rate_limited' ? f.inviteRateLimited : f.inviteFailed);
+      return toast.show({ text: token.error === 'rate_limited' ? f.inviteRateLimited : f.inviteFailed, tone: 'warn' });
     }
     const outcome = await shareInvite(token.data, family.name, shareDeps, forMember?.display_name);
     setInviting(false);
     if (outcome === 'dismissed') return;
     tracker.track('invite_sent', {});
-    if (outcome === 'copied') setBanner(f.inviteCopied);
+    if (outcome === 'copied') toast.show({ text: f.inviteCopied });
   }
 
   /** Their upcoming events move to Everyone, so the dialog says how many first (032-later L78). */
@@ -107,7 +107,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
     const upcoming = await api.managedMemberUpcomingEvents(member.id);
     if (!upcoming.ok) {
       setSelected(null);
-      return setBanner(f.actionFailed);
+      return toast.show({ text: f.actionFailed, tone: 'warn' });
     }
     setConfirm({ kind: 'removeManaged', member, upcoming: upcoming.data });
   }
@@ -116,23 +116,21 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
     setConfirm(null);
     setSelected(null);
     const result = await action();
-    if (!result.ok) return setBanner(f.actionFailed);
+    if (!result.ok) return toast.show({ text: f.actionFailed, tone: 'warn' });
     after?.();
     await onChanged();
   }
 
   async function setColor(member: Member, color: MemberColor) {
     if (color === member.color) return;
-    setBanner(null);
     setRecoloring(null);
     const result = await api.setMemberColor(member.id, color);
-    if (!result.ok) return setBanner(result.error === 'color_taken' ? f.colorTaken : f.actionFailed);
+    if (!result.ok) return toast.show({ text: result.error === 'color_taken' ? f.colorTaken : f.actionFailed, tone: 'warn' });
     tracker.track('member_color_changed', { color });
     await onChanged();
   }
 
   function startAdd() {
-    setBanner(null);
     setNameSheet({ kind: 'add', name: '', color: nextMemberColor(members.map((m) => m.color)) });
   }
 
@@ -167,7 +165,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
         return void (async () => {
           setConfirm(null);
           const result = await api.deleteFamily();
-          if (!result.ok) return setBanner(a.failed);
+          if (!result.ok) return toast.show({ text: a.failed, tone: 'warn' });
           tracker.track('family_deleted', { member_count: result.data });
           await onChanged();
         })();
@@ -175,7 +173,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
         return void (async () => {
           setConfirm(null);
           const result = await api.deleteMyAccount();
-          if (!result.ok) return setBanner(a.failed);
+          if (!result.ok) return toast.show({ text: a.failed, tone: 'warn' });
           await onSignOut();
         })();
     }
@@ -262,8 +260,6 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
         <Text size={14} weight="600" color="ink-muted">
           {f.withoutAppHint}
         </Text>
-        {/* Never stack two banners: offline, the offline banner replaces this one. */}
-        {banner && !readOnly ? <StatusBanner message={banner} /> : null}
       </View>
 
       <View className="gap-8">

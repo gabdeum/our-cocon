@@ -3,6 +3,7 @@
 // removing an ingredient a step uses), plus reorder, catalog suggestions and new ingredients.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { ToastProvider } from '../../../lib/toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { format } from '@cocon/quantity';
 import type { IngredientFacts, RecipeFormSection } from '@cocon/schemas';
@@ -114,7 +115,7 @@ function setup(over: Partial<Props> = {}) {
       />
     </QueryClientProvider>
   );
-  const view = render(ui());
+  const view = render(ui(), { wrapper: ToastProvider });
   return { tracker, insert, update, upsert, rpc, onSaved, onSectionChange };
 }
 

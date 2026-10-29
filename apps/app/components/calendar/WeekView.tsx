@@ -61,7 +61,7 @@ export function WeekView({ members, myMemberId, events, slotTimes, hidden, ancho
             allDayLabel={w.allDay}
             onDayPress={onOpenDay}
             onBlockPress={openEvent}
-            onEmptyPress={(date, hour) => onAddEvent(date, hour === null ? undefined : { time: `${String(hour).padStart(2, '0')}:00` })}
+            onEmptyLongPress={(date, hour) => onAddEvent(date, hour === null ? undefined : { time: `${String(hour).padStart(2, '0')}:00` })}
             bottomInset={BOTTOM_PAD}
           />
         </Swipeable>

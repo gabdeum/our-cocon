@@ -25,6 +25,7 @@ Pill-shaped buttons for actions, from the one main step on a screen (ink) down t
 | `dashed` | transparent, 2 px dashed line-dashed / olive-deep | Add a step, Add ingredient, Invite someone, Add a variant |
 | `tile` | surface-card, 2 px line-strong / ink 14/800 | A choice in a two-column grid of actions: "Add a change" (OC-EditVariants). Pressed: surface-soft |
 | `danger` | danger / white | Delete recipe (in a Dialog only) |
+| `danger-outline` | white, 2 px danger / danger 16/900 | A Dialog's second destructive choice: "This and all future ones" (spec 042) |
 | link | text olive 15/800 (danger, warn and muted versions; warn for "Stop sharing this link"); optional 18 px icon 8 before the label, in its colour | Tertiary: Clear all, See all, Stop sharing, Delete this recipe (trash icon) |
 
 ## States
@@ -36,3 +37,5 @@ Pressed: darken the fill about 6%. Focus: 3 px olive outline, offset 2. Disabled
 - One ink button per screen. Button pairs in a footer: soft secondary on the left (about a third of the width), the primary on the right.
 - Labels are verbs and can carry a count: "Add 3 items".
 - A label stays on one line. Where it may not fit (two buttons side by side), give a short label ("Cook", "Groceries"): it shows when the full one doesn't fit, and buttons in a pair go short together. Screen readers keep the full label.
+- Disclosure (`DisclosureButton`, spec 041): soft, 56 tall, radius 16, padding 0 16; label 16/900 on the left, sub-label 14/700 ink-muted on the right ("Place, repeat, reminder…", "Hide" when open); `aria-expanded`.
+- `inactive` (spec 041 FR-005): the disabled look, but it still takes the tap so the screen can say what's missing (the add sheet's Save before a title).

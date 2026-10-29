@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { expand, viewFor } from '@cocon/calendar';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
-import { deleteEvent, loadCalendarSettings, loadEvents, removeException, restoreEvent, saveEvent, saveException, storedEvent } from './events';
+import { deleteEvent, loadCalendarSettings, loadDeletedEvents, loadEvents, removeException, restoreEvent, saveEvent, saveException, splitEvent, storedEvent, undoCreateEvent } from './events';
 
 const EVA = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a10';
 const GABRIEL = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a11';
@@ -38,6 +38,7 @@ const busyRow = {
   updated_at: '2026-10-27T10:00:00Z',
   deleted_at: null,
   deleted_by: null,
+  view: 'busy',
 };
 
 const yoga = { title: 'Yoga', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'slot', slots: ['evening'], members: [EVA] };
@@ -49,7 +50,8 @@ describe('events data (spec 035)', () => {
     expect(occurrences.map((o) => o.starts_on)).toEqual(['2026-11-03', '2026-11-11']);
     const forGabriel = occurrences.map((o) => viewFor(o, GABRIEL));
     expect(forGabriel[1]).toMatchObject({ view: 'busy', title: 'Busy', members: [EVA], location: null, notes: null });
-    expect(occurrences.map((o) => viewFor(o, EVA).view)).toEqual(['full', 'full']);
+    // The row says the database masked it (spec 043), so nothing in the app unmasks it.
+    expect(occurrences.map((o) => viewFor(o, EVA).view)).toEqual(['busy', 'busy']);
   });
 
   it('shows a hidden event as Busy when its creator has left the family', () => {
@@ -76,6 +78,24 @@ describe('events data (spec 035)', () => {
     await expect(loadEvents({ from: () => query } as never, '2026-11-01),id.eq.(x', '2026-11-30')).rejects.toThrow();
   });
 
+  it('asks for events deleted since a time, newest first (spec 042)', async () => {
+    const calls: [string, ...unknown[]][] = [];
+    const query = new Proxy({} as Record<string, unknown>, {
+      get: (_target, name: string) =>
+        name === 'then'
+          ? (resolve: (value: unknown) => void) => resolve({ data: [{ ...busyRow, deleted_at: '2026-10-28T10:00:00Z' }], error: null })
+          : (...args: unknown[]) => {
+              calls.push([name, ...args]);
+              return query;
+            },
+    });
+    const events = await loadDeletedEvents({ from: () => query } as never, '2026-09-28T10:00:00.000Z');
+    expect(events[0]?.deleted_at).toBe('2026-10-28T10:00:00Z');
+    expect(calls).toContainEqual(['gt', 'deleted_at', '2026-09-28T10:00:00.000Z']);
+    expect(calls).toContainEqual(['order', 'deleted_at', { ascending: false }]);
+    await expect(loadDeletedEvents({ from: () => query } as never, 'x),id.eq.(y')).rejects.toThrow();
+  });
+
   it('saves a whole event in one call', async () => {
     const rpc = vi.fn(async () => ({ data: EVENT, error: null }));
     await expect(saveEvent({ rpc } as never, { ...yoga, checklist: [{ label: 'Towel' }] })).resolves.toBe(EVENT);
@@ -94,6 +114,41 @@ describe('events data (spec 035)', () => {
     await expect(saveEvent({ rpc } as never, { ...yoga, slots: ['morning', 'evening'] })).rejects.toThrow('Slots must be next to each other');
     await expect(saveEvent({ rpc } as never, { ...yoga, recurrence: { freq: 'weekly', ends: { type: 'on', date: '2026-10-01' } } })).rejects.toThrow();
     expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('splits a series in one call, checked first (spec 041)', async () => {
+    const rpc = vi.fn(async () => ({ data: EVENT, error: null }));
+    const weekly = { freq: 'weekly', ends: { type: 'never' } };
+    const before = { freq: 'weekly', ends: { type: 'on', date: '2026-11-09' } };
+    await expect(splitEvent({ rpc } as never, EVENT, '2026-11-10', before, { ...yoga, recurrence: weekly, checklist: [{ label: 'Towel' }] })).resolves.toBe(EVENT);
+    expect(rpc).toHaveBeenCalledWith('split_event', {
+      p_id: EVENT,
+      p_from: '2026-11-10',
+      p_before: before,
+      p_event: { title: 'Yoga', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'slot', slots: ['evening'], recurrence: weekly, visibility: 'family' },
+      p_members: [EVA],
+      p_checklist: [{ label: 'Towel' }],
+    });
+    rpc.mockClear();
+    await expect(splitEvent({ rpc } as never, EVENT, '2026-11-10', { freq: 'hourly' }, yoga)).rejects.toThrow();
+    await expect(splitEvent({ rpc } as never, 'x', '2026-11-10', before, yoga)).rejects.toThrow();
+    expect(rpc).not.toHaveBeenCalled();
+    const failing = vi.fn(async () => ({ data: null, error: new Error('event_not_found') }));
+    await expect(splitEvent({ rpc: failing } as never, EVENT, '2026-11-10', before, yoga)).rejects.toThrow('event_not_found');
+  });
+
+  it('undoes an add: deleted, then removed for good (spec 041 FR-009)', async () => {
+    const calls: string[] = [];
+    const client = {
+      from: () => ({
+        update: () => (calls.push('update'), { eq: () => ({ select: async () => ({ data: [{ id: EVENT }], error: null }) }) }),
+        delete: () => (calls.push('delete'), { eq: () => ({ not: async (...args: unknown[]) => (calls.push(JSON.stringify(args)), { error: null }) }) }),
+      }),
+    };
+    await undoCreateEvent(client as never, EVENT);
+    expect(calls).toEqual(['update', 'delete', '["deleted_at","is",null]']);
+    const failing = { from: () => ({ ...client.from(), delete: () => ({ eq: () => ({ not: async () => ({ error: new Error('nope') }) }) }) }) };
+    await expect(undoCreateEvent(failing as never, EVENT)).rejects.toThrow('nope');
   });
 
   it('refuses an exception that changes who can see the event (L80)', async () => {

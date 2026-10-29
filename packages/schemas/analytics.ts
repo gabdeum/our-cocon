@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { UndoKind } from './activity';
-import { CalendarView, SlotKey } from './calendar';
+import { CalendarView, SlotKey, TimeType, Visibility } from './calendar';
 import { AiPermission, CookingSetting, MemberColor } from './family';
 import { FilterKey } from './recipe-filters';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
@@ -11,6 +11,9 @@ const ConverterUnitEvent = z.enum(converterUnits);
 /** The recipe form's sections (spec 014 FR-001), in order. */
 export const RecipeFormSection = z.enum(['details', 'ingredients', 'steps', 'variants']);
 export type RecipeFormSection = z.infer<typeof RecipeFormSection>;
+/** What an event edit changed (spec 041 `event_updated`): field names only, never their values. */
+export const EventField = z.enum(['title', 'type', 'place', 'notes', 'date', 'time', 'who', 'responsible', 'repeat', 'reminder', 'checklist']);
+export type EventField = z.infer<typeof EventField>;
 const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 'fan_f']);
 
 /**
@@ -168,6 +171,30 @@ export const events = {
   // Spec 039: a day swiped (the arrows don't count), and an empty band's "+ Add in the …" tapped.
   calendar_day_swiped: z.strictObject({ direction: z.enum(['next', 'previous']) }),
   calendar_slot_add_tapped: z.strictObject({ slot: SlotKey }),
+  // Spec 041: an event added (`slot` is the first slot picked; how long the sheet was open), edited
+  // ("this", "future" or "all" of a repeating event; a one-off is "all"), saved or left while the
+  // soft conflict warning showed, and an add undone from its toast.
+  event_created: z.strictObject({
+    source: z.enum(['app', 'assistant']),
+    time_type: TimeType,
+    slot: SlotKey.nullable(),
+    member_count: z.int().min(0),
+    has_repeat: z.boolean(),
+    used_more_options: z.boolean(),
+    seconds_to_save: z.int().min(0),
+  }),
+  event_updated: z.strictObject({ fields_changed: z.array(EventField), scope: z.enum(['all', 'this', 'future']) }),
+  event_conflict_shown: z.strictObject({ proceeded: z.boolean() }),
+  event_create_undone: z.strictObject({}),
+  // Spec 042: an event deleted from its page ("this" date, "future" dates, or "all" of it; a
+  // one-off is "all"), by its creator or not, and again when the toast's Undo brings it back; a
+  // copy made with Duplicate; a view-only link made (not reopened); a checklist item ticked.
+  event_deleted: z.strictObject({ scope: z.enum(['all', 'this', 'future']), own_event: z.boolean(), undone: z.boolean() }),
+  event_duplicated: z.strictObject({}),
+  event_shared: z.strictObject({}),
+  event_checklist_ticked: z.strictObject({}),
+  // Spec 043: who can see an event, sent when a save changes it (a new event: Private or Surprise).
+  event_visibility_set: z.strictObject({ visibility: Visibility }),
 } as const;
 
 export type EventName = keyof typeof events;

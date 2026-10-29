@@ -5,7 +5,7 @@ import type { ColorName } from '../theme';
 import { BrandMark, Icon, type BrandName, type IconName } from './Icon';
 import { Text, type TextColor, type Weight } from './Text';
 
-export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'tile' | 'danger';
+export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'tile' | 'danger' | 'danger-outline';
 /** sm 44 · md 58 · lg 60 (cooking mode, recipe CTA) · dialog 56 (Dialog README). */
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'dialog';
 
@@ -56,6 +56,8 @@ const looks: Record<ButtonVariant, Look> = {
     fixedHeight: 'h-control-md',
   },
   danger: { fill: 'bg-danger active:bg-danger-pressed', text: 'on-olive', icon: 'onOlive', weight: '900' },
+  // The second destructive choice in a Dialog: "This and all future ones" (OC-CalEventDelete, spec 042).
+  'danger-outline': { fill: 'bg-surface-card border-2 border-danger active:bg-surface-card-pressed', text: 'danger', icon: 'danger', weight: '900' },
 };
 
 const sizes: Record<ButtonSize, { height: string; padding: string; paddingPx: number; fontSize: number }> = {
@@ -86,6 +88,11 @@ export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> 
   icon?: IconName;
   /** A sign-in provider's mark in place of the icon: "Continue with Google" (outline). */
   brand?: BrandName;
+  /**
+   * Looks disabled but still takes taps, so the screen can explain what's missing (the add sheet's
+   * Save before a title, spec 041 FR-005). No `aria-disabled`: react-native-web would block the tap.
+   */
+  inactive?: boolean;
   /** Keeps the width and shows `busyLabel` ("Saving…") while work runs. */
   busy?: boolean;
   busyLabel?: string;
@@ -110,6 +117,7 @@ export function Button({
   icon,
   brand,
   disabled,
+  inactive,
   busy,
   busyLabel,
   shortLabel,
@@ -120,7 +128,7 @@ export function Button({
 }: ButtonProps) {
   const look = looks[variant];
   const s = sizes[size];
-  const off = disabled === true;
+  const off = disabled === true || inactive === true;
   const fontSize = look.fontSize ?? s.fontSize;
   // With a short label: the button's width and the full label's own width, measured. Refs, as both
   // layouts can arrive in one render.
@@ -136,7 +144,7 @@ export function Button({
   return (
     <Pressable
       role="button"
-      disabled={off || busy}
+      disabled={disabled === true || busy}
       aria-busy={busy || undefined}
       aria-label={shortLabel && shown !== label ? label : undefined}
       onLayout={
@@ -207,6 +215,36 @@ export function Link({ label, tone = 'olive', size = 15, underline, weight = '80
       {icon ? <Icon name={icon} size={18} color={props.disabled ? 'inkMuted' : linkIconColor[tone]} /> : null}
       <Text size={size} weight={weight} color={props.disabled ? 'ink-muted' : linkColor[tone]} underline={underline}>
         {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+export interface DisclosureButtonProps extends Omit<PressableProps, 'children' | 'style'> {
+  /** "More options". */
+  label: string;
+  /** On the right: "Place, repeat, reminder…" closed, "Hide" open. */
+  sub: string;
+  expanded: boolean;
+  className?: string;
+}
+
+/** Button README › disclosure: a soft 56 tall block that opens a section below (the add sheet's "More options"). */
+export function DisclosureButton({ label, sub, expanded, className, ...props }: DisclosureButtonProps) {
+  return (
+    <Pressable
+      role="button"
+      // The sub-label repeats what `aria-expanded` says, so the name is the label alone.
+      aria-label={label}
+      aria-expanded={expanded}
+      className={cn('h-[56px] flex-row items-center justify-between gap-12 rounded-lg bg-surface-soft px-16 active:bg-surface-soft-pressed', focusRing, className)}
+      {...props}
+    >
+      <Text size={16} weight="900">
+        {label}
+      </Text>
+      <Text size={14} weight="700" color="ink-muted" numberOfLines={1} className="min-w-0 shrink">
+        {sub}
       </Text>
     </Pressable>
   );

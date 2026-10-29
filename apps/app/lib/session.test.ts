@@ -8,6 +8,7 @@ describe('gateRedirect', () => {
     expect(gateRedirect('signedOut', ['join', '[token]'])).toBeNull();
     expect(gateRedirect('signedOut', ['auth', 'callback'])).toBeNull();
     expect(gateRedirect('signedOut', ['r', '[token]'])).toBeNull();
+    expect(gateRedirect('signedOut', ['e', '[token]'])).toBeNull();
     expect(gateRedirect('signedOut', ['oauth', 'consent'])).toBeNull();
     expect(gateRedirect('signedOut', ['welcome', 'family'])).toBe('/welcome');
   });
@@ -18,6 +19,7 @@ describe('gateRedirect', () => {
     expect(gateRedirect('noFamily', ['welcome', 'family'])).toBeNull();
     expect(gateRedirect('noFamily', ['join', '[token]'])).toBeNull();
     expect(gateRedirect('noFamily', ['r', '[token]'])).toBeNull();
+    expect(gateRedirect('noFamily', ['e', '[token]'])).toBeNull();
     expect(gateRedirect('noFamily', ['oauth', 'consent'])).toBeNull();
   });
 
@@ -26,6 +28,7 @@ describe('gateRedirect', () => {
     expect(gateRedirect('ready', ['(tabs)', 'settings'])).toBeNull();
     expect(gateRedirect('ready', ['join', '[token]'])).toBeNull();
     expect(gateRedirect('ready', ['r', '[token]'])).toBeNull();
+    expect(gateRedirect('ready', ['e', '[token]'])).toBeNull();
   });
 
   it('waits while loading', () => {

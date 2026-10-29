@@ -19,6 +19,7 @@ A row inside a white list group: grocery items, picker items, settings links and
 | Ingredient row (`oc-ingredient`) | no card; padding 12 0, divider `line`; amount column 104 wide 17/900; name 16/700; weight sub-line 13/600; optional Tag at the end |
 | Compact ingredient row (`oc-ingredient--compact`) | the shared recipe page (OC-SharedView): padding 10 0, divider `line`; name 16/400 on the left (optional Tag after it), "{amount} · {weight}" 16/900 on the right |
 | Event row (`EventListRow`, OC-CalAgenda) | a day's white card (`EventListGroup`: radius 22, padding 4 14 4 10) under an 18/900 heading ("Today · Sun, Oct 25"); rows min 64, padding 8 0, gap 12, 1.5 px `line` divider: 6 px stripe and 36 avatar in the member colors (as SlotBand's event row), title 17/800, sub-line 14/700 ink-muted ("14:30 · Gabriel takes James"), optional Tag `md` at the end: "Now" honey, "Surprise" sage, "Birthday" / "Day 1 of 3" soft. The row is a link to the event |
+| Icon row (`IconRow`, OC-CalEvent, spec 042) | facts about an event in a `ListGroup inset` card (padding 4 16): olive icon 22, gap 12, title 16/800, optional sub-line 14/700 ink-muted, optional olive link at the end ("Open in Maps"); min 56 tall, 60 with a sub-line or a link; 1.5 px `line` divider. Not pressable; only its link is |
 
 ## Rules
 

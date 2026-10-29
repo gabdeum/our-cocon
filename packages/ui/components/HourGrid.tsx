@@ -58,7 +58,9 @@ export interface WeekBlock {
 
 export interface WeekColumn {
   date: string;
-  /** For screen readers, who can't pick an hour: "Add event, Sunday October 25". */
+  /** The day, for screen readers: "Sunday October 25" (a tap opens it). */
+  label: string;
+  /** Screen readers' stand-in for the long press: "Add event, Sunday October 25". */
   addLabel: string;
   today: boolean;
   blocks: WeekBlock[];
@@ -76,8 +78,11 @@ export interface HourGridProps {
   nowY: number | null;
   onDayPress: (date: string) => void;
   onBlockPress: (key: string) => void;
-  /** An empty part of a day: the hour tapped (6–23), or null when there's no position (screen readers). */
-  onEmptyPress: (date: string, hour: number | null) => void;
+  /**
+   * A long press on an empty part of a day adds an event: the hour pressed (6–23), or null when
+   * there's no position (screen readers). A tap there opens the day (`onDayPress`, decided 2026-10-28).
+   */
+  onEmptyLongPress: (date: string, hour: number | null) => void;
   /** Room under the last hour, for the floating tab bar (TabBar README: screens pad 180). */
   bottomInset?: number;
 }
@@ -187,13 +192,14 @@ function Column({
   column,
   nowY,
   onBlockPress,
-  onEmptyPress,
+  onDayPress,
+  onEmptyLongPress,
 }: { column: WeekColumn; nowY: number | null } & Pick<
   HourGridProps,
-  "onBlockPress" | "onEmptyPress"
+  "onBlockPress" | "onDayPress" | "onEmptyLongPress"
 >) {
-  const onEmpty = (e: GestureResponderEvent) =>
-    onEmptyPress(column.date, hourAt(e.nativeEvent?.locationY));
+  const onLongPress = (e: GestureResponderEvent) =>
+    onEmptyLongPress(column.date, hourAt(e.nativeEvent?.locationY));
   return (
     <View
       className={cn(
@@ -203,9 +209,15 @@ function Column({
       style={{ height: GRID_HEIGHT }}
     >
       <Pressable
-        role="button"
-        aria-label={column.addLabel}
-        onPress={onEmpty}
+        role="link"
+        aria-label={column.label}
+        accessibilityActions={[{ name: "longpress", label: column.addLabel }]}
+        onAccessibilityAction={(e) =>
+          e.nativeEvent.actionName === "longpress" &&
+          onEmptyLongPress(column.date, null)
+        }
+        onPress={() => onDayPress(column.date)}
+        onLongPress={onLongPress}
         className={cn("absolute inset-0", focusRing)}
       />
       {column.blocks.map((b) => (
@@ -238,7 +250,7 @@ export function HourGrid({
   nowY,
   onDayPress,
   onBlockPress,
-  onEmptyPress,
+  onEmptyLongPress,
   bottomInset = 0,
 }: HourGridProps) {
   const barRows = bars.reduce((n, b) => Math.max(n, b.lane + 1), 1);
@@ -319,7 +331,8 @@ export function HourGrid({
                 column={c}
                 nowY={nowY}
                 onBlockPress={onBlockPress}
-                onEmptyPress={onEmptyPress}
+                onDayPress={onDayPress}
+                onEmptyLongPress={onEmptyLongPress}
               />
             ))}
           </View>

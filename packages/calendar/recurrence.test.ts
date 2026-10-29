@@ -1,7 +1,7 @@
 import type { EventOverride, Recurrence } from '@cocon/schemas/calendar';
 import { describe, expect, it } from 'vitest';
 import { event } from './event.fixture';
-import { expand } from './recurrence';
+import { expand, occurrenceOn, splitSeries } from './recurrence';
 
 const days = (occurrences: { starts_on: string }[]) => occurrences.map((o) => o.starts_on);
 const repeat = (starts_on: string, recurrence: Recurrence) => event({ starts_on, ends_on: starts_on, recurrence });
@@ -137,5 +137,60 @@ describe('expand (FR-004)', () => {
     ])('%s throws %s', (_, run, code) => {
       expect(run).toThrow(expect.objectContaining({ code }));
     });
+  });
+});
+
+describe('occurrenceOn (spec 042 event page)', () => {
+  const weekly = repeat('2026-10-03', { freq: 'weekly', weekdays: [6], ends: { type: 'never' } });
+
+  it('finds a series date and keeps its length', () => {
+    expect(occurrenceOn(weekly, '2026-10-31')).toMatchObject({ starts_on: '2026-10-31', ends_on: '2026-10-31', occurrence_date: '2026-10-31' });
+  });
+
+  it('finds a one-off event only on its day', () => {
+    expect(occurrenceOn(event(), '2026-10-31')?.starts_on).toBe('2026-10-31');
+    expect(occurrenceOn(event(), '2026-11-01')).toBeNull();
+  });
+
+  it('is null for a day that is not in the series, or cancelled', () => {
+    expect(occurrenceOn(weekly, '2026-11-01')).toBeNull();
+    expect(occurrenceOn(weekly, '2026-10-31', [{ occurrence_date: '2026-10-31', cancelled: true }])).toBeNull();
+  });
+
+  it('follows a date moved to another day, earlier or later', () => {
+    const later = [{ occurrence_date: '2026-10-31', override: { starts_on: '2026-11-02', ends_on: '2026-11-02', title: 'Moved' } }];
+    expect(occurrenceOn(weekly, '2026-10-31', later)).toMatchObject({ starts_on: '2026-11-02', title: 'Moved', occurrence_date: '2026-10-31' });
+    const earlier = [{ occurrence_date: '2026-10-31', override: { starts_on: '2026-10-29', ends_on: '2026-10-29' } }];
+    expect(occurrenceOn(weekly, '2026-10-31', earlier)?.starts_on).toBe('2026-10-29');
+  });
+});
+
+describe('splitSeries (spec 041 "All future events")', () => {
+  const weekly = (ends: Recurrence['ends']) => repeat('2026-10-03', { freq: 'weekly', weekdays: [6], ends });
+
+  it('ends the old series the day before and keeps the end date', () => {
+    expect(splitSeries(weekly({ type: 'on', date: '2026-12-26' }), '2026-10-31')).toEqual({
+      before: { freq: 'weekly', weekdays: [6], ends: { type: 'on', date: '2026-10-30' } },
+      ends: { type: 'on', date: '2026-12-26' },
+    });
+  });
+
+  it('keeps a series that never ends going', () => {
+    expect(splitSeries(weekly({ type: 'never' }), '2026-10-17')?.ends).toEqual({ type: 'never' });
+  });
+
+  it('counts the times already gone', () => {
+    // Oct 3, 10, 17, 24 are gone; 31 is the fifth of ten.
+    expect(splitSeries(weekly({ type: 'after', count: 10 }), '2026-10-31')?.ends).toEqual({ type: 'after', count: 6 });
+  });
+
+  it('is null on the first date: the whole series changes', () => {
+    expect(splitSeries(weekly({ type: 'never' }), '2026-10-03')).toBeNull();
+  });
+
+  it('refuses a date the series doesn’t have, and a one-off event', () => {
+    expect(() => splitSeries(weekly({ type: 'never' }), '2026-10-30')).toThrow('not one of');
+    expect(() => splitSeries(weekly({ type: 'after', count: 2 }), '2026-10-17')).toThrow('not one of');
+    expect(() => splitSeries(event(), '2026-10-31')).toThrow('Only a repeating event');
   });
 });

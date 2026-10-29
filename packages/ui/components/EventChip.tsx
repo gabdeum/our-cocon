@@ -54,13 +54,25 @@ export interface EventChipProps {
   colors: readonly EventColor[];
 }
 
-/** A one-line event in a month cell (EventChip README): 20 tall, radius 6, padding 0 4. */
-export function EventChip({ text, colors }: EventChipProps) {
+/**
+ * A one-line event in a month cell (EventChip README): 20 tall, radius 6, padding 0 4. With
+ * `onPress` it opens the event (a tap beside it opens the day), reaching into the gaps between chips.
+ */
+export function EventChip({ text, colors, onPress }: EventChipProps & { onPress?: () => void }) {
+  const look = 'h-[20px] overflow-hidden rounded-xs px-4';
+  if (!onPress) {
+    return (
+      <View className={look}>
+        <Fill colors={colors} rounded="rounded-xs" />
+        <ChipText text={text} />
+      </View>
+    );
+  }
   return (
-    <View className="h-[20px] overflow-hidden rounded-xs px-4">
+    <Pressable role="link" aria-label={text} onPress={onPress} hitSlop={{ top: 1, bottom: 2 }} className={cn(look, focusRing)}>
       <Fill colors={colors} rounded="rounded-xs" />
       <ChipText text={text} />
-    </View>
+    </Pressable>
   );
 }
 

@@ -28,6 +28,11 @@ export interface CalendarEvent {
   /** The member who created it: only they see a private event's details. */
   creator_member_id: string;
   surprise?: SurpriseCover | null;
+  /**
+   * How `events_visible` already masked the row for the caller (spec 043): a cover's fields are
+   * the cover's, and it reads as a family event. Left out by callers that hold the real event.
+   */
+  view?: 'full' | 'busy' | 'cover';
 }
 
 export interface SurpriseCover {

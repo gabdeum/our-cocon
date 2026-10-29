@@ -1,4 +1,8 @@
 // Every user-facing string, keyed by screen (constitution III). Check copy against design/ui/ here.
+
+/** "James", "James and Lou", "James, Lou and Mia". */
+const andList = (names: readonly string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : (names[0] ?? ''));
+
 export const strings = {
   app: {
     name: 'Our Cocon',
@@ -349,7 +353,8 @@ export const strings = {
       // Spec 027, as OC-Menu draws it (until 029 builds the Menu).
       recipesSettings: 'Recipes',
       recipesSettingsSub: 'Cooking defaults, units',
-      recipes: (n: number) => `${n} ${n === 1 ? 'recipe' : 'recipes'}`,
+      /** Recently deleted's count: recipes and events (spec 042; OC-Menu.md). */
+      items: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
     },
   },
   // design/ui/OC-Recipes.md (spec 006; the filter logic comes with 007)
@@ -848,9 +853,12 @@ export const strings = {
     deleteNowBody: "Its photos and variants go with it. This can't be undone.",
     keep: 'Keep it',
     restored: (name: string) => `“${name}” is back in your recipes.`,
+    // Spec 042: deleted events are listed too.
+    eventRestored: (title: string) => `“${title}” is back in your calendar.`,
+    eventDeleteNowBody: "This can't be undone.",
     emptyTitle: 'Nothing here.',
-    emptyBody: 'Recipes you delete stay here for 30 days.',
-    loading: 'Loading recently deleted recipes',
+    emptyBody: 'Recipes and events you delete stay here for 30 days.',
+    loading: 'Loading recently deleted items',
     loadFailed: "Couldn't load. Try again.",
     retry: 'Try again',
     restoreFailed: "Couldn't restore. Try again.",
@@ -1176,6 +1184,12 @@ export const strings = {
     recipeChanged: (name: string) => `${name} just changed this recipe`,
     reload: 'Reload',
   },
+  // design/system/components/Toast: the one toast, on every screen.
+  toast: {
+    undo: 'Undo',
+    // When an Undo fails (032-later L99), unless the screen says it its own way.
+    undoFailed: "Couldn't undo. Check your connection and try again.",
+  },
   // design/ui/CalHeader.md (spec 036): the header shared by the four calendar views.
   calendar: {
     header: {
@@ -1252,6 +1266,193 @@ export const strings = {
       empty: 'Nothing planned yet. Tap + to add something.',
       /** "Baby swim class, 14:30 · Gabriel takes James, Now". */
       rowLabel: (title: string, sub: string, tag: string | null) => [title, sub, ...(tag ? [tag] : [])].join(', '),
+    },
+    /** design/ui/OC-CalAdd.md (spec 041): the add and edit sheet. */
+    add: {
+      titleNew: 'New event',
+      titleEdit: 'Edit event',
+      cancel: 'Cancel',
+      what: "What's happening?",
+      whatPlaceholder: 'e.g. Poker night',
+      noTitle: 'Give your event a name.',
+      when: 'When',
+      today: 'Today',
+      tomorrow: 'Tomorrow',
+      otherDay: 'Other day',
+      pickDate: 'Pick a date',
+      /** A day tile's date: "Sun 25". */
+      tileDate: (weekdayShort: string, day: number) => `${weekdayShort} ${day}`,
+      timeOfDay: 'Time of day',
+      timeHint: 'Pick a time of day — no need for exact hours.',
+      allDay: 'All day',
+      wholeDay: 'Whole day',
+      /** A slot chip's hours: "18–22". */
+      slotHours: (start: string, end: string) => `${start.slice(0, 2)}–${end.slice(0, 2)}`,
+      starts: 'Starts',
+      ends: 'Ends',
+      badTime: 'Use a time like 18:30.',
+      endBeforeStart: 'Pick an end time after the start.',
+      who: 'Who',
+      noOne: 'Pick at least one person.',
+      everyone: 'Everyone',
+      everyoneInitial: 'All',
+      others: 'Others',
+      /** "You already have Movie night this evening." / "Eva already has …" */
+      conflict: (name: string | null, title: string, slot: string) => `${name === null ? 'You already have' : `${name} already has`} ${title} this ${slot}.`,
+      addAnyway: 'Add anyway?',
+      /** The conflict line's slot words. */
+      slotWords: { early_morning: 'early morning', morning: 'morning', lunch: 'lunch', afternoon: 'afternoon', evening: 'evening' },
+      more: 'More options',
+      moreHint: 'Place, repeat, reminder…',
+      hide: 'Hide',
+      type: 'Type',
+      types: { sport: 'Sport', school: 'School', work: 'Work', health: 'Health', social: 'Social', travel: 'Travel', home: 'Home', birthday: 'Birthday', other: 'Other' },
+      where: 'Where',
+      wherePlaceholder: 'Add a place',
+      /** "Who takes James?", "Who takes James and Lou?" */
+      whoTakes: (names: string[]) => `Who takes ${andList(names)}?`,
+      whoTakesHint: (names: string[]) => `${andList(names)} ${names.length > 1 ? 'were' : 'was'} added by the family, so someone with the app handles this.`,
+      notDecided: 'Not decided yet',
+      repeat: 'Repeat',
+      repeats: { never: 'Never', daily: 'Daily', weekly: 'Weekly', biweekly: 'Every 2 weeks', monthly: 'Monthly', yearly: 'Yearly' },
+      on: 'On',
+      /** From Sunday, as the weekday picker reads them. */
+      weekdayLetters: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+      weekdayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      endsLabel: 'Ends',
+      endsNever: 'Never',
+      endsOn: 'On a date',
+      endsAfter: 'After a number of times',
+      lastDay: 'Last day',
+      times: 'Times',
+      timesHint: 'Counts this one too.',
+      timesProblem: 'Use a number from 1 to 1000.',
+      reminder: 'Reminder',
+      reminders: { none: 'None', morning_of: 'Morning of', hour_before: '1 hour before', day_before: '1 day before' },
+      reminderHint: 'Shows on Home for now. Phone alerts come later.',
+      notes: 'Notes',
+      notesPlaceholder: 'Anything to remember',
+      addToChecklist: '+ Add to checklist',
+      checklistItem: 'Checklist item',
+      removeItem: (label: string) => `Remove ${label}`,
+      save: 'Save',
+      saving: 'Saving…',
+      saveFailed: "Couldn't save. Check your connection and try again.",
+      close: 'Close',
+      previousMonth: 'Previous month',
+      nextMonth: 'Next month',
+      /** The date sheet's title, for "Other day" and "Ends: On a date". */
+      pickDateTitle: 'Pick a date',
+      endsOnTitle: 'Ends on',
+      /** The toast: "Poker night added for tonight, 18:00–22:00."; all day: "… added for Sat, Oct 31." */
+      added: (title: string, when: string, range: string | null) => `${title} added for ${when}${range ? `, ${range}` : ''}.`,
+      tonight: 'tonight',
+      todayWord: 'today',
+      tomorrowWord: 'tomorrow',
+      undo: 'Undo',
+      /** The edit's scope question (OC-CalEvent.md › Edit a repeating event). */
+      scopeTitle: 'This event repeats',
+      scopeBody: (date: string, every: string) => `Change only ${date}, or ${every} from now on?`,
+      /** "every Saturday", "every day", "every other Saturday", "every month", "every year". */
+      every: { daily: () => 'every day', weekly: (day: string) => `every ${day}`, biweekly: (day: string) => `every other ${day}`, monthly: () => 'every month', yearly: () => 'every year' },
+      thisOnly: 'This event only',
+      allFuture: 'All future events',
+      loadFailedTitle: "We couldn't open this event.",
+      loadFailedBody: "It may have been deleted, or you're offline.",
+      // Not drawn (032-later L99, added to OC-CalAdd.md): when a toast's Undo fails.
+      undoFailed: "Couldn't undo. Check your connection and try again.",
+      /** design/ui/OC-CalSurprise.md (spec 043): "Who can see it?" and the surprise card. */
+      whoCanSee: 'Who can see it?',
+      whoCanSeeLabel: 'Who can see it',
+      visibilities: { family: 'Family', private: 'Private', surprise: 'Surprise' },
+      visibilityHints: {
+        family: 'Everyone in the family sees all the details.',
+        private: 'Others see “Busy” at this time, and nothing else.',
+        surprise: 'Hide it from someone: they see only what you choose below.',
+      },
+      keepSecretFrom: 'Keep it secret from',
+      /** "What Eva sees"; with nobody picked yet, "What they see" (not drawn). */
+      coverTitle: (names: string[]) => (names.length ? `What ${andList(names)} ${names.length > 1 ? 'see' : 'sees'}` : 'What they see'),
+      coverNote: (names: string[]) => `Note for ${names.length ? andList(names) : 'them'}`,
+      surpriseSummary: (names: string[]) =>
+        `${names.length ? andList(names) : 'They'} ${names.length === 1 ? 'sees' : 'see'} only this title, the time, the place and this note. Everyone else sees everything.`,
+      noCover: (names: string[]) => `Add what ${names.length ? andList(names) : 'they'} will see.`,
+      // Not drawn (spec 043, added to OC-CalSurprise.md).
+      noSecretFrom: 'Pick who to keep it secret from.',
+    },
+    /** OC-CalBusy (spec 043): someone else's private event, as a sheet over the calendar. */
+    busy: {
+      title: (name: string) => `${name} is busy`,
+      /** "Thursday, Oct 22 · Afternoon". */
+      when: (date: string, time: string) => `${date} · ${time}`,
+      body: (name: string) => `${name} keeps the details of this one private.`,
+      // Not drawn (spec 043): the creator has left the family.
+      someone: 'Someone',
+      bodySomeone: 'They keep the details of this one private.',
+      ok: 'OK',
+    },
+    /** design/ui/OC-CalEvent.md (spec 042): the event page, its dialogs, the share sheet and the shared page. */
+    event: {
+      back: 'Calendar',
+      /** "Morning · about 09:00–12:00"; a custom time shows its hours: "14:30–15:30". */
+      slotTime: (slot: string, range: string) => `${slot} · about ${range}`,
+      allDay: 'All day',
+      /** A multi-day event's dates: "Sat, Oct 31 – Mon, Nov 2". */
+      span: (from: string, to: string) => `${from} – ${to}`,
+      /** "Every Saturday", "Every Tuesday and Thursday", "Every other Saturday", "Every day". */
+      every: {
+        daily: () => 'Every day',
+        weekly: (days: string[]) => `Every ${andList(days)}`,
+        biweekly: (days: string[]) => `Every other ${andList(days)}`,
+        monthly: () => 'Every month',
+        yearly: () => 'Every year',
+      },
+      openInMaps: 'Open in Maps',
+      openInMapsA11y: (place: string) => `Open ${place} in Maps`,
+      drives: (name: string) => `${name} drives`,
+      /** The reminder's sub-line: the members with the app on the event. */
+      showsOnHome: (names: string[]) => `Shows on Home for ${andList(names)}`,
+      bring: 'Bring',
+      bringHint: 'Anyone in the family can tick these.',
+      tickFailed: "Couldn't change that. Try again.",
+      addedBy: (name: string, ago: string) => `Added by ${name} · ${ago}`,
+      addedVia: (assistant: string, ago: string) => `Added via ${assistant} · ${ago}`,
+      edit: 'Edit',
+      duplicate: 'Duplicate',
+      share: 'Share a view-only link',
+      delete: 'Delete event',
+      deleteTitle: (title: string) => `Delete “${title}”?`,
+      /** Put before the body for someone else's event. */
+      addedThis: (name: string) => `${name} added this.`,
+      deleteOneBody: 'This removes it for the whole family.',
+      deleteRepeatBody: "Delete only this one, or this and all future ones? It's removed for the whole family.",
+      deleteConfirm: 'Delete',
+      onlyThis: 'Only this one',
+      thisAndFuture: 'This and all future ones',
+      keep: 'Keep it',
+      deleted: 'Event deleted',
+      /** "Copied to Sat, Nov 7". */
+      copied: (day: string) => `Copied to ${day}`,
+      // Not drawn (written for spec 042, added to OC-CalEvent.md).
+      deleteFailed: "Couldn't delete. Check your connection and try again.",
+      duplicateFailed: "Couldn't copy. Check your connection and try again.",
+      shareTitle: 'Share this event',
+      shareLead: 'People with the link see the title, day, time and place. No notes or checklist.',
+      /** The shared page (`/e/[token]`): who it's for, first names only. */
+      with: (names: string[]) => `With ${andList(names)}`,
+      withEveryone: 'the whole family',
+      withOthers: 'others',
+      noLongerTitle: 'This event is no longer shared.',
+      noLongerBody: 'Ask the person who sent it for a new link.',
+      sharedLoadFailedTitle: "We couldn't open this event.",
+      sharedLoadFailedBody: 'Check your connection and try again.',
+      retry: 'Try again',
+      /** OC-CalSurprise (spec 043): the cover's note, as the hidden person sees it. */
+      noteFrom: (name: string) => `Note from ${name}`,
+      /** For those in on it: the sage tag, and "hidden from Eva" in agenda and day rows. */
+      surprise: 'Surprise',
+      hiddenFrom: (names: string[]) => `hidden from ${andList(names)}`,
+      loading: 'Loading the event',
     },
   },
   debug: {

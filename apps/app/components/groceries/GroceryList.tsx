@@ -11,7 +11,6 @@ import {
   ListRow,
   Overline,
   Presence,
-  StatusBanner,
   TabHeader,
   TabScreen,
   Text,
@@ -42,6 +41,7 @@ import {
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
 import { OfflineBanner } from '../sync/OfflineBanner';
+import { useToast } from '../../lib/toast';
 import { GrocerySettings } from '../settings/GrocerySettings';
 import { GroceryActions, type ActionView } from './GroceryActions';
 import { RecipeCardSheet } from './RecipeCardSheet';
@@ -49,7 +49,7 @@ import { RecipeCardSheet } from './RecipeCardSheet';
 const g = strings.groceries;
 
 /** What an Undo brings back: ticked items cleared, the whole list, one removed row, or a recipe's items. */
-type Banner = { message: string; tone: 'sage' | 'warn'; undo?: { ids: string[]; count: number; kind: 'done' | 'all' | 'removed' | 'recipe' } };
+type Cleared = { ids: string[]; count: number; kind: 'done' | 'all' | 'removed' | 'recipe' };
 
 export interface GroceryListProps {
   /** Undefined while loading (lib/groceries.ts › loadGroceryList). */
@@ -108,7 +108,7 @@ export function GroceryList(props: GroceryListProps) {
   const now = useClock(props.now);
   const [text, setText] = useState('');
   const [adding, setAdding] = useState(false);
-  const [banner, setBanner] = useState<Banner | null>(null);
+  const toast = useToast();
   // `rest`: the row's other items when the menu opened, so an Edit clears only what was seen.
   const [menu, setMenu] = useState<{ id: string; view: ActionView; rest: string[] } | null>(null);
   // Only a row that adds up to one amount is edited as a whole; otherwise Edit changes the first item.
@@ -151,16 +151,13 @@ export function GroceryList(props: GroceryListProps) {
       const result = await props.onAdd(text);
       if (result.status === 'empty') return;
       if (result.status === 'failed') {
-        setBanner({ message: g.addFailed, tone: 'warn' });
+        toast.show({ text: g.addFailed, tone: 'warn' });
         return;
       }
       tracker.track('grocery_item_added', { from: 'app' });
       setText('');
-      if (result.status === 'merged') setBanner({ message: result.total ? g.merged(result.total) : g.mergedNoAmount, tone: 'sage' });
-      else {
-        setBanner(null);
-        if (result.unmatched) tracker.track('ingredient_unmatched', {});
-      }
+      if (result.status === 'merged') toast.show({ text: result.total ? g.merged(result.total) : g.mergedNoAmount });
+      else if (result.unmatched) tracker.track('ingredient_unmatched', {});
     } finally {
       setAdding(false);
     }
@@ -169,39 +166,37 @@ export function GroceryList(props: GroceryListProps) {
   const toggle = async (row: GroceryRow) => {
     const checked = !row.checked;
     const results = await Promise.all(row.items.map((item) => props.onToggle(item, checked)));
-    if (results.includes('failed')) setBanner({ message: g.syncFailed, tone: 'warn' });
+    if (results.includes('failed')) toast.show({ text: g.syncFailed, tone: 'warn' });
     else if (checked) tracker.track('grocery_item_ticked', {});
   };
 
-  /** `count` is the rows the person saw go, for the banner and events. */
-  const clear = async (ids: string[], count: number, message: string, kind: NonNullable<Banner['undo']>['kind']) => {
+  /** `count` is the rows the person saw go, for the toast and events. */
+  const clear = async (ids: string[], count: number, message: string, kind: Cleared['kind']) => {
     setMenu(null);
     if (await props.onClear(ids)) {
       if (kind === 'done') tracker.track('done_items_cleared', { count });
       if (kind === 'all') tracker.track('all_items_cleared', { count });
       if (kind === 'recipe') tracker.track('grocery_recipe_removed', { item_count: Math.min(count, 500) });
-      setBanner({ message, tone: 'sage', undo: { ids, count, kind } });
-    } else setBanner({ message: g.syncFailed, tone: 'warn' });
+      toast.show({ text: message, onUndo: () => undo({ ids, count, kind }), undoFailed: g.syncFailed });
+    } else toast.show({ text: g.syncFailed, tone: 'warn' });
   };
 
-  const undo = async (u: NonNullable<Banner['undo']>) => {
-    if (await props.onRestore(u.ids)) {
-      if (u.kind === 'done') tracker.track('clear_done_undone', { count: u.count });
-      setBanner(null);
-    } else setBanner({ message: g.syncFailed, tone: 'warn' });
+  const undo = async (u: Cleared) => {
+    if (!(await props.onRestore(u.ids))) throw new Error('restore failed');
+    if (u.kind === 'done') tracker.track('clear_done_undone', { count: u.count });
   };
 
   const move = async (item: GroceryItem, aisle: Aisle) => {
     setMenu(null);
     if (await props.onMove(item, aisle)) tracker.track('catalog_override_saved', { field: 'aisle' });
-    else setBanner({ message: g.syncFailed, tone: 'warn' });
+    else toast.show({ text: g.syncFailed, tone: 'warn' });
   };
 
   const savePacks = async (item: GroceryItem, value: string | null) => {
     const result = await props.onSavePacks(item, value);
     if (result === 'invalid') return result;
     setMenu(null);
-    if (result === 'failed') setBanner({ message: g.syncFailed, tone: 'warn' });
+    if (result === 'failed') toast.show({ text: g.syncFailed, tone: 'warn' });
     // A correction saved; putting the usual sizes back isn't one.
     else if (value !== null) tracker.track('catalog_override_saved', { field: 'packs' });
     return result;
@@ -220,7 +215,7 @@ export function GroceryList(props: GroceryListProps) {
     setMenu(null);
     const rest = menu?.rest ?? [];
     const merged = result === 'saved' && (rest.length === 0 || (await props.onClear(rest)));
-    if (!merged) setBanner({ message: g.syncFailed, tone: 'warn' });
+    if (!merged) toast.show({ text: g.syncFailed, tone: 'warn' });
     return true;
   };
 
@@ -240,18 +235,9 @@ export function GroceryList(props: GroceryListProps) {
       return true;
     }
     setCardMenu(null);
-    setBanner({ message: g.syncFailed, tone: 'warn' });
+    toast.show({ text: g.syncFailed, tone: 'warn' });
     return false;
   };
-
-  const statusBanner = banner ? (
-    <StatusBanner
-      message={banner.message}
-      tone={banner.tone}
-      actionLabel={banner.undo ? g.undo : undefined}
-      onAction={banner.undo ? () => void undo(banner.undo as NonNullable<Banner['undo']>) : undefined}
-    />
-  ) : null;
 
   if (items === undefined) {
     return (
@@ -296,7 +282,6 @@ export function GroceryList(props: GroceryListProps) {
         <IconButton icon="plus" label={g.addButton} variant="olive-square" onPress={() => void add()} disabled={!online || adding || !text.trim()} />
         <IconButton icon="settings" label={g.settingsButton} variant="soft-square" onPress={() => setSettingsOpen(true)} />
       </View>
-      {statusBanner}
 
       {cards.map((card) => (
         <Card key={card.id} tone="soft" className="flex-row items-center gap-8 py-10 pl-12 pr-4">

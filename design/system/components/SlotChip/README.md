@@ -15,4 +15,4 @@ Reference: `design/screens/OC-CalAdd.dc.html` (inline styles are the exact value
 
 ## Rules
 
-- Adjacent slots combine; All day and Custom are exclusive.
+- Adjacent slots combine; All day stands alone. No Custom chip (2026-10-28): the Starts / Ends fields under the row are always shown and take typed times.

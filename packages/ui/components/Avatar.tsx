@@ -5,7 +5,7 @@ import { Text } from './Text';
 /** The member palette (tokens `member-*`, spec 033), plus Everyone, Others and a member who left. */
 export type MemberColor = 'honey' | 'rose' | 'sky' | 'mint' | 'lilac' | 'peach' | 'pistachio' | 'clay';
 export type AvatarColor = MemberColor | 'everyone' | 'others' | 'removed';
-export type AvatarSize = 'md' | 'lg' | 'sm';
+export type AvatarSize = 'md' | 'lg' | 'xl' | 'sm';
 
 export const avatarFills: Record<AvatarColor, string> = {
   honey: 'bg-member-honey',
@@ -22,10 +22,11 @@ export const avatarFills: Record<AvatarColor, string> = {
   removed: 'bg-member-removed',
 };
 
-// bundle.css › Avatar: 36 with a 2 px surface-page ring · lg 40 · sm 32, no ring.
+// bundle.css › Avatar: 36 with a 2 px surface-page ring · lg 40 · xl 48 · sm 32, no ring.
 const sizes: Record<AvatarSize, { box: string; px: number; font: number }> = {
   md: { box: 'h-[36px] w-[36px] border-2 border-surface-page', px: 36, font: 14 },
   lg: { box: 'h-[40px] w-[40px]', px: 40, font: 16 },
+  xl: { box: 'h-[48px] w-[48px]', px: 48, font: 18 },
   sm: { box: 'h-[32px] w-[32px]', px: 32, font: 14 },
 };
 

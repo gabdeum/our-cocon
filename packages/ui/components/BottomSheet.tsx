@@ -5,12 +5,15 @@ import { useReduceMotion } from '../reduceMotion';
 import { theme } from '../theme';
 import { Button, type ButtonProps } from './Button';
 import { Text } from './Text';
+import { ToastHost } from './Toast';
 
 export interface BottomSheetProps {
   visible: boolean;
   onClose: () => void;
   title: string;
   lead?: string;
+  /** Before the title, centred on it: OC-CalBusy's 48 avatar (spec 043). */
+  leading?: ReactNode;
   /** Close IconButton (soft) or a "Clear all" Link on the right of the title. */
   headerAction?: ReactNode;
   children: ReactNode;
@@ -20,6 +23,8 @@ export interface BottomSheetProps {
   dirty?: boolean;
   /** Screen-reader name of the scrim: "Close". */
   closeLabel: string;
+  /** A field inside takes focus on open (`autoFocus`), so the title doesn't: the add sheet's keyboard opens at once. */
+  fieldFocus?: boolean;
 }
 
 const SWIPE_CLOSE = 80;
@@ -30,7 +35,7 @@ const DURATION = 250;
  * 92% of the screen; the body scrolls, the footer doesn't. Swipe down closes; focus moves to the
  * title on open; Reduce Motion skips the slide.
  */
-export function BottomSheet({ visible, onClose, title, lead, headerAction, children, footer, dirty, closeLabel }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, title, lead, leading, headerAction, children, footer, dirty, closeLabel, fieldFocus = false }: BottomSheetProps) {
   const titleId = useId();
   const titleRef = useRef<HostInstance>(null);
   const reduce = useReduceMotion();
@@ -56,9 +61,10 @@ export function BottomSheet({ visible, onClose, title, lead, headerAction, child
     if (!visible) return;
     offset.setValue(reduce ? 0 : 600);
     if (!reduce) Animated.timing(offset, { toValue: 0, duration: DURATION, easing: Easing.out(Easing.ease), useNativeDriver: false }).start();
+    if (fieldFocus) return;
     const t = setTimeout(() => (titleRef.current as unknown as { focus?: () => void } | null)?.focus?.(), 0);
     return () => clearTimeout(t);
-  }, [visible, reduce, offset]);
+  }, [visible, reduce, offset, fieldFocus]);
 
   return (
     <Modal transparent visible={visible} animationType={reduce ? 'none' : 'fade'} onRequestClose={requestClose}>
@@ -69,7 +75,8 @@ export function BottomSheet({ visible, onClose, title, lead, headerAction, child
           <View role="dialog" aria-modal aria-labelledby={titleId} className="max-h-full gap-16 rounded-t-sheet bg-surface-page px-20 pb-28 pt-12">
             <View {...pan.panHandlers} className="gap-16">
               <View aria-hidden className="h-[5px] w-[44px] self-center rounded-[3px] bg-line-handle" />
-              <View className="flex-row items-start gap-12">
+              <View className={cn('flex-row gap-12', leading ? 'items-center' : 'items-start')}>
+                {leading}
                 <View ref={titleRef} tabIndex={-1} className="min-w-0 flex-1 web:outline-none">
                   <Text variant="titleLg" role="heading" nativeID={titleId}>
                     {title}
@@ -89,6 +96,7 @@ export function BottomSheet({ visible, onClose, title, lead, headerAction, child
             {footer}
           </View>
         </Animated.View>
+        {visible ? <ToastHost /> : null}
       </View>
     </Modal>
   );

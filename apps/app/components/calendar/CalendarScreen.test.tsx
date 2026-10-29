@@ -305,14 +305,18 @@ describe('Week view (spec 038)', () => {
 
     await setup({ view: 'week', anchor: '2026-11-01', today: '2026-10-25' });
     expect(screen.getByRole('heading').textContent).toBe('Nov. 1 – 7');
-    expect(screen.getByRole('link', { name: 'Sunday November 1' })).toBeTruthy();
+    expect(screen.getAllByRole('link', { name: 'Sunday November 1' })).toHaveLength(2);
   });
 
-  it('FR-001: tapping a day opens Day view; FR-005: a block opens the event, + and an empty day add one', async () => {
+  it('FR-001: tapping a day (its head or an empty part) opens Day view; a block opens the event; + adds one', async () => {
     const onOpenEvent = vi.fn();
     const onAddEvent = vi.fn();
     const { onNavigate, tracker } = await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-27', events, onOpenEvent, onAddEvent });
-    fireEvent.click(screen.getByRole('link', { name: 'Thursday October 29' }));
+    const [head, column] = screen.getAllByRole('link', { name: 'Thursday October 29' });
+    fireEvent.click(head as HTMLElement);
+    expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
+    vi.mocked(onNavigate).mockClear();
+    fireEvent.click(column as HTMLElement);
     expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
     expect(tracker.track).toHaveBeenCalledWith('calendar_day_opened', { from_view: 'week' });
 
@@ -321,8 +325,7 @@ describe('Week view (spec 038)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
     expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-27');
-    fireEvent.click(screen.getByRole('button', { name: 'Add event, Friday October 30' }));
-    expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-30', expect.toSatisfy((p?: { time: string }) => p === undefined || /^\d\d:00$/.test(p.time)));
+    expect(onAddEvent).toHaveBeenCalledTimes(1);
   });
 
   it('the add button opens on the week’s first day when today is another week', async () => {
@@ -510,5 +513,70 @@ describe('Agenda view (spec 040)', () => {
     view.rerender(<CalendarScreen {...props} view="agenda" />);
     await act(async () => undefined);
     expect(onEventWindow).toHaveBeenLastCalledWith({ from: '2026-10-25', to: '2026-12-19' });
+  });
+});
+
+// Spec 043: someone else's private event opens OC-CalBusy over the view; a surprise says who it's
+// hidden from to those in on it.
+describe('Private and surprise events (spec 043)', () => {
+  const base = {
+    category: null as StoredEvent['category'],
+    location: null,
+    notes: null,
+    reminder: null,
+    recurrence: null,
+    responsible_member_id: null,
+    removed_members: [],
+    exceptions: [],
+    checklist: null,
+    created_by: null,
+    updated_by: null,
+    source: 'app',
+    created_at: '2026-10-01T00:00:00Z',
+    updated_at: '2026-10-01T00:00:00Z',
+    deleted_at: null,
+    starts_on: '2026-10-22',
+    ends_on: '2026-10-22',
+    time_type: 'slot' as const,
+    start_time: null,
+    end_time: null,
+  };
+  // Eva's private afternoon, as events_visible gives it to Gabriel.
+  const busy = { ...base, id: '00000000-0000-4000-8000-000000000021', title: 'Busy', slots: ['afternoon' as const], members: [eva.id], visibility: 'private' as const, creator_member_id: eva.id, surprise: null, view: 'busy' as const };
+  // Gabriel's surprise for Eva, as Alex (in on it) gets it.
+  const alex = { ...mia, id: 'u-alex', user_id: 'u-alex', display_name: 'Alex', color: 'sky' as const };
+  const dinner = {
+    ...base,
+    id: '00000000-0000-4000-8000-000000000022',
+    title: 'Eva’s surprise dinner',
+    location: 'Café Lalo',
+    slots: ['evening' as const],
+    members: [eva.id],
+    visibility: 'surprise' as const,
+    creator_member_id: gabriel.id,
+    surprise: { hidden_from: [eva.id], cover_title: 'Dinner out', cover_note: null },
+    view: 'full' as const,
+  };
+  const agenda = (over: Partial<CalendarScreenProps> = {}) => setup({ view: 'agenda', anchor: '2026-10-22', today: '2026-10-22', events: [busy, dinner], ...over });
+
+  it('US1: tapping Eva’s Busy event opens “Eva is busy” instead of the event', async () => {
+    const onOpenEvent = vi.fn();
+    await agenda({ onOpenEvent });
+    fireEvent.click(screen.getByRole('link', { name: /^Busy, Afternoon/ }));
+    expect(onOpenEvent).not.toHaveBeenCalled();
+    const sheet = screen.getByRole('dialog');
+    expect(within(sheet).getByRole('heading', { name: 'Eva is busy' })).toBeTruthy();
+    expect(within(sheet).getByText('Thursday, Oct 22 · Afternoon')).toBeTruthy();
+    expect(within(sheet).getByText('Eva keeps the details of this one private.')).toBeTruthy();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'OK' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('US2: those in on a surprise see it tagged, and who it’s hidden from', async () => {
+    const onOpenEvent = vi.fn();
+    await agenda({ userId: 'u-alex', members: [gabriel, eva, alex], onOpenEvent });
+    const row = screen.getByRole('link', { name: 'Eva’s surprise dinner, Evening · Café Lalo · hidden from Eva, Surprise' });
+    fireEvent.click(row);
+    expect(onOpenEvent).toHaveBeenCalledWith(dinner.id, '2026-10-22');
   });
 });

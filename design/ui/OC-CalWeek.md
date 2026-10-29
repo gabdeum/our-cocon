@@ -10,4 +10,4 @@ Source `screens/OC-CalWeek.dc.html` (interactive: swipe it) · Route `/calendar?
 5. Floating add button; TabBar.
 
 ## Interactions
-Swipe left/right (or ‹ ›): next/previous week; content follows the finger and slides in (220 ms); < 60 px snaps back. "Today" → this week. Tap a day letter → OC-CalDay. Tap a block → OC-CalEvent. Tap an empty hour → OC-CalAdd for that day and time.
+Swipe left/right (or ‹ ›): next/previous week; content follows the finger and slides in (220 ms); < 60 px snaps back. "Today" → this week. Tap a day letter → OC-CalDay. Tap a block → OC-CalEvent. Tap an empty part of a day → OC-CalDay (decided 2026-10-28). Long-press an empty hour → OC-CalAdd for that day and time.

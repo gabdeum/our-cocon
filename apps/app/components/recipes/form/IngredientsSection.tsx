@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { amountInput } from '@cocon/quantity';
 import { View } from 'react-native';
 import type { IngredientFacts } from '@cocon/schemas';
-import { Button, IngredientEditCard, Link, ListRow, ReorderList, StatusBanner, Text, type IngredientEditField } from '@cocon/ui';
+import { Button, IngredientEditCard, Link, ListRow, ReorderList, Text, type IngredientEditField } from '@cocon/ui';
 import { strings } from '../../../strings/en';
 import type { IngredientDraft, IngredientWarning } from '../../../lib/recipe-ingredients';
 import { unitText } from './IngredientSheets';
@@ -22,8 +22,6 @@ export interface IngredientsSectionProps {
   warnings: Record<string, IngredientWarning>;
   /** "For {n} servings", from Details. */
   servings: number;
-  /** "Added 3 ingredients. Check the amounts." after a paste. */
-  banner: string | null;
   /** The row whose name is focused, with what the catalog suggests for it. */
   suggestions: { key: string; items: IngredientFacts[] } | null;
   onChangeRow: (key: string, patch: Partial<Pick<IngredientDraft, 'quantity' | 'weight'>>) => void;
@@ -60,7 +58,6 @@ export function IngredientsSection(p: IngredientsSectionProps) {
       <Text size={14} weight="600" color="ink-muted">
         {ing.lead}
       </Text>
-      {p.banner ? <StatusBanner message={p.banner} /> : null}
 
       <View
         onLayout={(e) => setListY(e.nativeEvent.layout.y)}

@@ -71,8 +71,19 @@ import {
   HourGrid,
   Swipeable,
   MemberChip,
+  MemberPickerChip,
+  MemberBadge,
+  IconRow,
+  BackLink,
   MoreCount,
   Toast,
+  SlotChip,
+  DayChip,
+  ChecklistAdd,
+  ChecklistRow,
+  DateGrid,
+  DisclosureButton,
+  WeekdayPicker,
   TabHeader,
   Tag,
   EventListGroup,
@@ -158,6 +169,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
   const [photo, setPhoto] = useState<number | null>(null);
   const [sheet, setSheet] = useState(false);
   const [dialog, setDialog] = useState(false);
+  const [scopeDialog, setScopeDialog] = useState(false);
   const [calendarView, setCalendarView] = useState<(typeof calendarViews)[number]['key']>('month');
   const [calendarHidden, setCalendarHidden] = useState<string[]>(['e']);
   const [tab, setTab] = useState<(typeof tabs)[number]['key']>('recipes');
@@ -203,6 +215,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <Button label="Continue with Google" variant="outline" brand="google" />
           <Button label="+ Add a step" variant="dashed" />
           <Button label="Delete recipe" variant="danger" />
+          <Button label="This and all future ones" variant="danger-outline" />
         </PillRow>
         <PillRow>
           <Button label="Swap ingredient" variant="tile" />
@@ -269,6 +282,66 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           </View>
           <IconButton variant="fab" icon="plus" iconSize={28} label="Add event" onPress={noop} />
         </View>
+      </Section>
+
+      <Section group="Calendar" title="Add sheet: DayChip, SlotChip, MemberPickerChip (spec 041)">
+        <View className="flex-row gap-8">
+          <DayChip label="Today" sub="Sun 25" selected onPress={noop} />
+          <DayChip label="Tomorrow" sub="Mon 26" selected={false} onPress={noop} />
+          <DayChip label="Other day" sub="Pick a date" selected={false} onPress={noop} />
+        </View>
+        <PillRow wrap={false}>
+          <SlotChip label="All day" hours="Whole day" selected={false} onPress={noop} />
+          <SlotChip label="Afternoon" hours="14–18" selected onPress={noop} />
+          <SlotChip label="Evening" hours="18–22" selected onPress={noop} />
+        </PillRow>
+        <PillRow>
+          <MemberPickerChip name="Gabriel" initial="G" color="honey" selected onPress={noop} />
+          <MemberPickerChip name="Everyone" initial="All" color="everyone" selected={false} onPress={noop} />
+          <MemberPickerChip name="Others" initial="" color="others" selected onPress={noop} />
+        </PillRow>
+        <DisclosureButton label="More options" sub="Place, repeat, reminder…" expanded={false} onPress={noop} />
+        <WeekdayPicker label="On" letters={['S', 'M', 'T', 'W', 'T', 'F', 'S']} names={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} value={[6]} onToggle={noop} />
+        <View className="rounded-lg bg-surface-card px-14 py-4">
+          <ChecklistRow label="Chips and dip" done={false} remove={{ label: 'Remove Chips and dip', onPress: noop }} />
+          <ChecklistRow label="Cake" done onToggle={noop} />
+          <ChecklistAdd label="+ Add to checklist" onPress={noop} />
+        </View>
+      </Section>
+
+      <Section group="Calendar" title="DateGrid (spec 041)">
+        <DateGrid
+          title="October 2026"
+          weekdays={['S', 'M', 'T', 'W', 'T', 'F', 'S']}
+          weeks={[
+            [null, null, null, null, 1, 2, 3],
+            [4, 5, 6, 7, 8, 9, 10],
+          ].map((w) => w.map((d) => (d === null ? null : { date: `2026-10-${String(d).padStart(2, '0')}`, day: d, label: `October ${d}`, today: d === 8, disabled: d < 3 })))}
+          selected="2026-10-10"
+          onSelect={noop}
+          previous={{ label: 'Previous month', onPress: noop }}
+          next={{ label: 'Next month', onPress: noop }}
+        />
+      </Section>
+
+      <Section group="Calendar" title="Event page: BackLink, MemberBadge, IconRow, ChecklistRow (spec 042)">
+        <BackLink label="Calendar" onPress={noop} />
+        <View className="flex-row gap-8">
+          <MemberBadge name="James" initial="J" color="sky" />
+          <MemberBadge name="Everyone" initial="All" color="everyone" />
+          <MemberBadge name="Others" initial="" color="others" />
+        </View>
+        <ListGroup inset>
+          <IconRow icon="clock" title="Saturday, Oct 31" sub="Morning · about 09:00–12:00" />
+          <IconRow icon="repeat" title="Every Saturday" />
+          <IconRow icon="pin" title="Little Notes studio, 4 Elm St" action={{ label: 'Open in Maps', onPress: noop }} />
+          <IconRow icon="car" title="Gabriel takes James" />
+          <IconRow icon="bell" title="1 hour before" sub="Shows on Home for Gabriel" last />
+        </ListGroup>
+        <ListGroup inset>
+          <ChecklistRow label="Diaper bag" done onToggle={noop} />
+          <ChecklistRow label="Bottle (offline)" done={false} onToggle={noop} disabled last />
+        </ListGroup>
       </Section>
 
       <Section group="Actions" title="Pill">
@@ -355,6 +428,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <AvatarStack members={[...family]} moreLabel={(n) => `+${n}`} label="Gabriel, Alex and Mia" />
           <Avatar initial="G" color="honey" size="lg" />
           <Avatar initial="Ev" color="rose" size="lg" />
+          <Avatar initial="E" color="rose" size="xl" />
           <Avatar initial="A" color="everyone" size="sm" />
         </PillRow>
       </Section>
@@ -374,6 +448,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
 
       <Section group="Display" title="StatusBanner">
         <StatusBanner message="Added to the family list" actionLabel="Undo" onAction={noop} />
+        <StatusBanner tone="warn" message="Couldn't undo. Check your connection and try again." />
         <StatusBanner tone="warn" message="You're offline. You can read, but changes need a connection." />
         <PillRow>
           <Presence label="Mia is shopping" />
@@ -723,6 +798,21 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         />
       </Section>
 
+      <Section group="Overlays" title="Dialog with a second choice (spec 042)">
+        <Button label="Open delete repeating" variant="soft" onPress={() => setScopeDialog(true)} />
+        <Dialog
+          visible={scopeDialog}
+          title="Delete “Baby music class”?"
+          body="Eva added this. Delete only this one, or this and all future ones? It's removed for the whole family."
+          confirmLabel="Only this one"
+          onConfirm={() => setScopeDialog(false)}
+          secondaryLabel="This and all future ones"
+          onSecondary={() => setScopeDialog(false)}
+          cancelLabel="Keep it"
+          onCancel={() => setScopeDialog(false)}
+        />
+      </Section>
+
       <Section group="Navigation" title="CalendarHeader">
         <View className="-mx-20">
           <CalendarHeader
@@ -806,6 +896,7 @@ function WeekGallery() {
         ]}
         columns={dates.map((date, i) => ({
           date,
+          label: `Day ${first + i}`,
           addLabel: `Add event, day ${i}`,
           today: week === 0 && i === 0,
           blocks:
@@ -825,7 +916,7 @@ function WeekGallery() {
         nowY={week === 0 ? 264 : null}
         onDayPress={noop}
         onBlockPress={noop}
-        onEmptyPress={noop}
+        onEmptyLongPress={noop}
       />
     </Swipeable>
   );

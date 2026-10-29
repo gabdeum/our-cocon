@@ -19,4 +19,4 @@ Source `screens/OC-CalMonth.dc.html` (interactive: scroll it) · Route `/calenda
 | Private event of someone else | chip "Busy" in their color |
 
 ## Interactions
-Tap day → OC-CalDay for that day. Long-press day → OC-CalAdd for that day. Tap a pill → OC-CalEvent. "+" → OC-CalAdd (today).
+Tap a day (anywhere but on an event) → OC-CalDay for that day. Tap an event chip → OC-CalEvent (decided 2026-10-28). Long-press day → OC-CalAdd for that day. Tap a pill → OC-CalEvent. "+" → OC-CalAdd (today).

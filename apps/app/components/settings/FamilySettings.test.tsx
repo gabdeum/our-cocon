@@ -1,6 +1,7 @@
 // Spec 003 User Stories 2 and 3, FR-006, and spec 033: the Family and Account sections of Settings.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { ToastProvider } from '../../lib/toast';
 import { FamilySettings, type FamilySettingsProps } from './FamilySettings';
 import { alex, fakeApi, fakeTracker, family, flush, gabriel, james, mia, last } from '../../test/fakes';
 
@@ -15,6 +16,7 @@ function setup(props: Partial<FamilySettingsProps> = {}, api = fakeApi()) {
   const shareDeps = { share: vi.fn().mockResolvedValue(undefined), copy: vi.fn() };
   render(
     <FamilySettings me={gabriel} family={family} members={[gabriel, alex, mia]} api={api} tracker={tracker} onChanged={onChanged} onSignOut={onSignOut} shareDeps={shareDeps} {...props} />,
+    { wrapper: ToastProvider },
   );
   return { api, tracker, onChanged, onSignOut, shareDeps };
 }

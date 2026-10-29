@@ -25,15 +25,15 @@ Source `screens/OC-Menu.dc.html` · Route `/menu` (`/settings` redirects here) �
 Tiles switch tabs (the tab bar selection follows). Rows push the settings pages; each has the back link "Menu".
 
 ## Recently deleted (spec 018, not drawn)
-Route `/settings/deleted`, pushed from the "Recently deleted" row ("{n} recipe(s) ›", recipes deleted in the last 30 days). Built from ScreenHeader (back link "Menu", title "Recently deleted") and one ListGroup, newest first.
+Route `/settings/deleted`, pushed from the "Recently deleted" row ("{n} item(s) ›", recipes and (spec 042) events deleted in the last 30 days). Built from ScreenHeader (back link "Menu", title "Recently deleted") and one ListGroup, newest first.
 
 | Element | Copy and behaviour |
 | --- | --- |
-| Row | Title: the recipe name. Sub-line "Deleted by {name} · {n} days ago · {n} days left" ("today" on the day; "1 day ago"; "Last day" on the 30th; "Former member" once that person left). Trailing olive link "Restore" (screen reader: "Restore {name}"). |
-| "Restore" | Puts it back as it was, for everyone. StatusBanner "“{name}” is back in your recipes." |
+| Row | Title: the recipe name or the event's title (recipes and events together, newest first). Sub-line "Deleted by {name} · {n} days ago · {n} days left" ("today" on the day; "1 day ago"; "Last day" on the 30th; "Former member" once that person left). Trailing olive link "Restore" (screen reader: "Restore {name}"). |
+| "Restore" | Puts it back as it was, for everyone. StatusBanner "“{name}” is back in your recipes." (an event: "“{title}” is back in your calendar.") |
 | Tap a row | BottomSheet titled with the recipe name: olive "Restore", danger link "Delete now". |
-| "Delete now" | Dialog: "Delete “{name}” for good?" / "Its photos and variants go with it. This can't be undone." · "Delete now" · "Keep it" |
-| Empty | "Nothing here." / "Recipes you delete stay here for 30 days." |
+| "Delete now" | Dialog: "Delete “{name}” for good?" / "Its photos and variants go with it. This can't be undone." (an event: "This can't be undone.") · "Delete now" · "Keep it" |
+| Empty | "Nothing here." / "Recipes and events you delete stay here for 30 days." |
 | Couldn't load | Callout "Couldn't load. Try again." + soft "Try again" |
 | Restore failed / Delete now failed | StatusBanner "Couldn't restore. Try again." / "Couldn't delete. Try again." |
 | Offline | Readable; "Restore" and the row's sheet are off (Patterns.md › Offline) |

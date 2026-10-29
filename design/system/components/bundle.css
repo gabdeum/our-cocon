@@ -91,6 +91,7 @@ body { margin: 0; font-family: var(--font-sans); color: var(--ink); background: 
 .oc-input--sm { height: 46px; padding: 0 12px; border-radius: 12px; font-size: 16px; }
 textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-size: 16px; font-weight: 600; line-height: 1.45; resize: none; }
 .oc-field__hint { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.oc-field--on-card .oc-input { background: var(--surface-page); }
 .oc-field--warn .oc-input { border-color: var(--warn-border); background: var(--warn-soft); color: var(--warn); }
 .oc-field__warn { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--warn); }
 .oc-search { box-sizing: border-box; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; border: 2px solid var(--line-strong); border-radius: 18px; background: var(--surface-card); }
@@ -223,6 +224,7 @@ textarea.oc-input { height: auto; min-height: 76px; padding: 12px 16px; font-siz
 .oc-avatar--sage { background: var(--sage); }
 .oc-avatar--peach { background: var(--peach); }
 .oc-avatar--lg { width: 40px; height: 40px; border: none; font-size: 16px; }
+.oc-avatar--xl { width: 48px; height: 48px; border: none; font-size: 18px; }
 .oc-avatar--sm { width: 32px; height: 32px; border: none; }
 .oc-avatars { display: inline-flex; }
 .oc-avatars .oc-avatar + .oc-avatar { margin-left: -10px; }
