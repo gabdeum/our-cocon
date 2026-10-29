@@ -12,6 +12,8 @@ export interface BottomSheetProps {
   onClose: () => void;
   title: string;
   lead?: string;
+  /** Before the title, centred on it: OC-CalBusy's 48 avatar (spec 043). */
+  leading?: ReactNode;
   /** Close IconButton (soft) or a "Clear all" Link on the right of the title. */
   headerAction?: ReactNode;
   children: ReactNode;
@@ -33,7 +35,7 @@ const DURATION = 250;
  * 92% of the screen; the body scrolls, the footer doesn't. Swipe down closes; focus moves to the
  * title on open; Reduce Motion skips the slide.
  */
-export function BottomSheet({ visible, onClose, title, lead, headerAction, children, footer, dirty, closeLabel, fieldFocus = false }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, title, lead, leading, headerAction, children, footer, dirty, closeLabel, fieldFocus = false }: BottomSheetProps) {
   const titleId = useId();
   const titleRef = useRef<HostInstance>(null);
   const reduce = useReduceMotion();
@@ -73,7 +75,8 @@ export function BottomSheet({ visible, onClose, title, lead, headerAction, child
           <View role="dialog" aria-modal aria-labelledby={titleId} className="max-h-full gap-16 rounded-t-sheet bg-surface-page px-20 pb-28 pt-12">
             <View {...pan.panHandlers} className="gap-16">
               <View aria-hidden className="h-[5px] w-[44px] self-center rounded-[3px] bg-line-handle" />
-              <View className="flex-row items-start gap-12">
+              <View className={cn('flex-row gap-12', leading ? 'items-center' : 'items-start')}>
+                {leading}
                 <View ref={titleRef} tabIndex={-1} className="min-w-0 flex-1 web:outline-none">
                   <Text variant="titleLg" role="heading" nativeID={titleId}>
                     {title}

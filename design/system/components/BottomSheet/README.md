@@ -9,7 +9,7 @@ A sheet that slides up over a dimmed screen for focused tasks: filters, scaling,
 | Scrim | `scrim` over the whole screen; tapping it closes the sheet (unless there are unsaved changes) |
 | Sheet | surface-page, top radius 32, padding 12 20 28, gap 16; hugs content up to 92% of the screen height |
 | Handle | 44 × 5, radius 3, line-handle, centred |
-| Header | title 24/900; optional lead 15/600 muted; optional close IconButton `--soft` or a "Clear all" link on the right |
+| Header | title 24/900; optional lead 15/600 muted; optional close IconButton `--soft` or a "Clear all" link on the right; optional leading Avatar 48 before the title, centred on it (OC-CalBusy, spec 043) |
 | Body | scrolls if it overflows; sections start with 15–16/900 headings ("1. Which ingredient?") |
 | Footer | fixed: one full-width ink button, or soft Cancel (≈110) + ink primary |
 

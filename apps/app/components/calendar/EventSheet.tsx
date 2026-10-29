@@ -3,7 +3,7 @@ import { ScrollView, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { addDays, dateLabel, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import { loadEvents, type Db, type StoredEvent } from '@cocon/data';
-import { EVENT_CATEGORIES, type EventInput, type Reminder } from '@cocon/schemas/calendar';
+import { EVENT_CATEGORIES, type EventInput, type Reminder, type Visibility } from '@cocon/schemas/calendar';
 import type { Tracker } from '@cocon/schemas';
 import {
   BottomSheet,
@@ -20,6 +20,7 @@ import {
   MemberPickerChip,
   PickerField,
   PillRow,
+  SegmentedControl,
   SlotChip,
   Text,
   TextField,
@@ -33,10 +34,13 @@ import {
   dayTiles,
   endsProblem,
   hasMoreOptions,
+  hiddenNames,
   isChipOn,
   managedOn,
   shiftMonth,
+  secretChips,
   slotChips,
+  surpriseProblems,
   takers,
   timeProblems,
   toInput,
@@ -56,6 +60,7 @@ import { strings } from '../../strings/en';
 const a = strings.calendar.add;
 const REPEATS: RepeatChoice[] = ['never', 'daily', 'weekly', 'biweekly', 'monthly', 'yearly'];
 const REMINDERS: Reminder[] = ['none', 'morning_of', 'hour_before', 'day_before'];
+const VISIBILITIES: Visibility[] = ['family', 'private', 'surprise'];
 const MAX_CHECKLIST = 50;
 
 export interface SaveMeta {
@@ -70,6 +75,8 @@ export interface EventSheetProps {
   occurrenceOnly?: boolean;
   /** The event being edited, so it doesn't conflict with itself. */
   editingId?: string;
+  /** "Who can see it?" is only for the event's creator (spec 043 FR-005); a new event is yours. */
+  canChangeVisibility?: boolean;
   client: Pick<Db, 'from'>;
   familyId: string;
   members: readonly Member[];
@@ -124,6 +131,9 @@ export function EventSheet(p: EventSheetProps) {
   const tiles = dayTiles(today, d.date);
   const managed = managedOn(d.who, members);
   const showError = tried && !hasTitle;
+  const secret = surpriseProblems(d, members);
+  const hidden = hiddenNames(d.hiddenFrom, members);
+  const showVisibility = (p.canChangeVisibility ?? true) && !p.occurrenceOnly;
 
   const close = () => {
     if (conflictSeen.current) p.tracker.track('event_conflict_shown', { proceeded: false });
@@ -132,12 +142,13 @@ export function EventSheet(p: EventSheetProps) {
 
   const save = async () => {
     setTried(true);
-    if (!hasTitle || noOne || Object.keys(times).length || endsProblem(d) || saving) return;
+    if (!hasTitle || noOne || Object.keys(times).length || endsProblem(d) || Object.keys(secret).length || saving) return;
     setSaving(true);
     setFailed(false);
     try {
       await p.onSave(toInput(d, members, { occurrence: p.occurrenceOnly }), { usedMoreOptions: more || p.mode === 'edit', secondsToSave: Math.round((Date.now() - opened.current) / 1000) });
       if (conflictSeen.current) p.tracker.track('event_conflict_shown', { proceeded: conflict !== null });
+      if (d.visibility !== initial.visibility) p.tracker.track('event_visibility_set', { visibility: d.visibility });
     } catch {
       setFailed(true);
       setSaving(false);
@@ -294,7 +305,49 @@ export function EventSheet(p: EventSheetProps) {
             </Section>
           )}
 
-          {/* "Who can see it?" comes here with spec 043. */}
+          {showVisibility ? (
+            <Section title={a.whoCanSee}>
+              <SegmentedControl
+                label={a.whoCanSeeLabel}
+                segments={VISIBILITIES.map((v) => ({ key: v, label: a.visibilities[v] }))}
+                value={d.visibility}
+                onChange={(visibility) => set({ visibility })}
+              />
+              <Hint text={a.visibilityHints[d.visibility]} />
+              {d.visibility === 'surprise' ? (
+                <View className="gap-12 rounded-lg bg-surface-card p-14">
+                  <View className="gap-8">
+                    <Text size={15} weight="900">
+                      {a.keepSecretFrom}
+                    </Text>
+                    <View role="group" aria-label={a.keepSecretFrom} className="flex-row flex-wrap gap-8">
+                      {secretChips(members, myMemberId).map((c) => (
+                        <MemberPickerChip
+                          key={c.key}
+                          name={c.name}
+                          initial={c.initial}
+                          color={c.color}
+                          selected={d.hiddenFrom.includes(c.key)}
+                          onPress={() => set({ hiddenFrom: d.hiddenFrom.includes(c.key) ? d.hiddenFrom.filter((x) => x !== c.key) : [...d.hiddenFrom, c.key] })}
+                        />
+                      ))}
+                    </View>
+                    {tried && secret.hiddenFrom ? <FieldWarning text={secret.hiddenFrom} /> : null}
+                  </View>
+                  <TextField
+                    label={a.coverTitle(hidden)}
+                    onCard
+                    value={d.coverTitle}
+                    onChangeText={(coverTitle) => set({ coverTitle })}
+                    maxLength={60}
+                    warning={tried ? secret.coverTitle : undefined}
+                  />
+                  <TextField label={a.coverNote(hidden)} onCard multiline value={d.coverNote} onChangeText={(coverNote) => set({ coverNote })} maxLength={200} />
+                  <Hint text={a.surpriseSummary(hidden)} />
+                </View>
+              ) : null}
+            </Section>
+          ) : null}
 
           <View className="gap-8">
             <TextField label={a.notes} value={d.notes} onChangeText={(notes) => set({ notes })} maxLength={2000} placeholder={a.notesPlaceholder} multiline />

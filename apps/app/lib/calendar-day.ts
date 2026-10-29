@@ -86,7 +86,9 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
 function eventRow(o: MonthOccurrence, range: { start: string; end: string }, date: string, ctx: DayViewContext): DayEventItem {
   const { initials, colors } = eventLook(o.members, ctx.look);
   const when = timeLabel(o, { use24h: true, slotTimes: ctx.slotTimes });
-  const time = o.location ? d.at(when, o.location) : when;
+  const placed = o.location ? d.at(when, o.location) : when;
+  const hidden = hiddenFromLine(o, ctx.members);
+  const time = hidden ? d.at(placed, hidden) : placed;
   const driver = o.view === 'full' ? driverLine(o.responsible_member_id, o.members, ctx.members) : null;
   const now = isNow(date, range, ctx);
   return {
@@ -99,6 +101,13 @@ function eventRow(o: MonthOccurrence, range: { start: string; end: string }, dat
     colors,
     label: d.rowLabel([o.title, time, ...(driver ? [driver] : [])], now),
   };
+}
+
+/** For those in on a surprise (spec 043): "hidden from Eva", added to the row's time line. Null otherwise. */
+export function hiddenFromLine(o: MonthOccurrence, members: readonly Member[]): string | null {
+  const hidden = o.view === 'full' && o.is_surprise ? (o.surprise?.hidden_from ?? []) : [];
+  const names = members.filter((m) => hidden.includes(m.id)).map((m) => m.display_name);
+  return names.length ? strings.calendar.event.hiddenFrom(names) : null;
 }
 
 /** "Day 2 of 3" on each day of an event spanning several days; null for a one-day event. */

@@ -1,10 +1,11 @@
 // Spec 041: the add sheet. US1 three taps, US2 details, US3 the soft conflict, Save with no title,
-// a failed save, and the edit of one occurrence.
+// a failed save, and the edit of one occurrence. Spec 043: who can see it.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
-import { newDraft, toastText } from '../../lib/event-form';
+import { storedEvent } from '@cocon/data';
+import { draftFromEvent, newDraft, toastText } from '../../lib/event-form';
 import { EventSheet, type EventSheetProps } from './EventSheet';
 import { alex as alexFake, fakeTracker, flush, gabriel as gabrielFake, james as jamesFake } from '../../test/fakes';
 
@@ -44,6 +45,7 @@ const movieNight = {
   created_at: '2026-10-27T10:00:00Z',
   updated_at: '2026-10-27T10:00:00Z',
   deleted_at: null,
+  view: 'full',
 };
 
 /** A client whose events_visible holds `rows`, whatever the query. */
@@ -284,5 +286,81 @@ describe('EventSheet (spec 041)', () => {
     expect(screen.queryByRole('heading', { name: 'Reminder' })).toBeNull();
     expect(screen.queryByRole('button', { name: '+ Add to checklist' })).toBeNull();
     expect(screen.getByLabelText('Notes')).toBeTruthy();
+  });
+});
+
+describe('Who can see it? (spec 043)', () => {
+  const open = async (over: Partial<EventSheetProps> = {}) => {
+    const props = await setup(over);
+    fireEvent.change(title(), { target: { value: 'Eva’s surprise dinner' } });
+    fireEvent.click(button('More options'));
+    return props;
+  };
+
+  it('offers Family, Private and Surprise, Family first, with a hint for each', async () => {
+    await open();
+    expect(screen.getByRole('heading', { name: 'Who can see it?' })).toBeTruthy();
+    expect(button('Family').getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText('Everyone in the family sees all the details.')).toBeTruthy();
+    fireEvent.click(button('Private'));
+    expect(screen.getByText('Others see “Busy” at this time, and nothing else.')).toBeTruthy();
+    fireEvent.click(button('Surprise'));
+    expect(screen.getByText('Hide it from someone: they see only what you choose below.')).toBeTruthy();
+  });
+
+  it('US1: saves a private event and says so to analytics', async () => {
+    const props = await open();
+    fireEvent.click(button('Private'));
+    fireEvent.click(button('Save'));
+    await flush();
+    expect(saved(props)).toMatchObject({ visibility: 'private', surprise: null });
+    expect(props.tracker.track).toHaveBeenCalledWith('event_visibility_set', { visibility: 'private' });
+  });
+
+  it('US2: keeps it secret from Eva, with what she sees and a note', async () => {
+    const props = await open();
+    fireEvent.click(button('Surprise'));
+    expect(screen.getByText('Keep it secret from')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Keep it secret from' }).textContent).toBe('EEva');
+    expect(screen.getByLabelText('What they see')).toBeTruthy();
+    const secretFrom = screen.getByRole('group', { name: 'Keep it secret from' }).querySelector('button') as HTMLElement;
+    fireEvent.click(secretFrom);
+    fireEvent.change(screen.getByLabelText('What Eva sees'), { target: { value: 'Dinner out' } });
+    fireEvent.change(screen.getByLabelText('Note for Eva'), { target: { value: 'Meet at Café Lalo at 19:30. Dress nice!' } });
+    expect(screen.getByText('Eva sees only this title, the time, the place and this note. Everyone else sees everything.')).toBeTruthy();
+    fireEvent.click(button('Save'));
+    await flush();
+    expect(saved(props)).toMatchObject({
+      visibility: 'surprise',
+      surprise: { hidden_from: [eva.id], cover_title: 'Dinner out', cover_note: 'Meet at Café Lalo at 19:30. Dress nice!' },
+    });
+    expect(props.tracker.track).toHaveBeenCalledWith('event_visibility_set', { visibility: 'surprise' });
+  });
+
+  it('a surprise needs someone to keep it from and what they see', async () => {
+    const props = await open();
+    fireEvent.click(button('Surprise'));
+    fireEvent.click(button('Save'));
+    await flush();
+    expect(screen.getAllByRole('alert').map((a) => a.textContent)).toEqual(['Pick who to keep it secret from.', 'Add what they will see.']);
+    fireEvent.click(screen.getByRole('group', { name: 'Keep it secret from' }).querySelector('button') as HTMLElement);
+    expect(screen.getByRole('alert').textContent).toBe('Add what Eva will see.');
+    expect(props.onSave).not.toHaveBeenCalled();
+  });
+
+  it('only the creator sees it when editing (FR-005)', async () => {
+    const initial = draftFromEvent(storedEvent(movieNight));
+    await setup({ mode: 'edit', initial, editingId: movieNight.id, canChangeVisibility: false });
+    fireEvent.click(button('More options'));
+    expect(screen.getByRole('heading', { name: 'Reminder' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Who can see it?' })).toBeNull();
+  });
+
+  it('an edit that keeps who can see it sends nothing', async () => {
+    const initial = { ...draftFromEvent(storedEvent(movieNight)), visibility: 'private' as const };
+    const props = await setup({ mode: 'edit', initial, editingId: movieNight.id });
+    fireEvent.click(button('Save'));
+    await flush();
+    expect(props.tracker.track).not.toHaveBeenCalledWith('event_visibility_set', expect.anything());
   });
 });

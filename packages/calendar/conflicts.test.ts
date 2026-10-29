@@ -43,6 +43,11 @@ describe('findConflict (FR-006)', () => {
     const yoga = event({ id: 'yoga', title: 'Therapy', members: [EVA], visibility: 'private', creator_member_id: EVA });
     expect(findConflict(draft({ members: [EVA] }), [viewFor(yoga, GABRIEL)])?.title).toBe('Busy');
   });
+
+  it('names a surprise by its cover for the person it’s hidden from (spec 043 FR-004)', () => {
+    const cover = event({ id: 'dinner', title: 'Dinner out', members: [EVA], view: 'cover' });
+    expect(findConflict(draft({ members: [EVA] }), [viewFor(cover, EVA)])?.title).toBe('Dinner out');
+  });
 });
 
 describe('conflictWho (spec 041 FR-006)', () => {

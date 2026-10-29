@@ -121,7 +121,7 @@ describe('layoutAgenda', () => {
     ]);
   });
 
-  it('"Surprise" for those in on it; the hidden person sees the cover, with no tag', () => {
+  it('"Surprise" and who it’s hidden from for those in on it (spec 043); the hidden person sees the cover, with no tag', () => {
     const surprise = ev({
       title: 'Eva’s surprise dinner',
       slots: ['evening'],
@@ -130,7 +130,7 @@ describe('layoutAgenda', () => {
       visibility: 'surprise',
       surprise: { hidden_from: [eva.id], cover_title: 'Dinner out', cover_note: null },
     });
-    expect(rows([surprise], gabriel.id)).toEqual([['Eva’s surprise dinner', 'Evening', 'Surprise', 'sage']]);
+    expect(rows([surprise], gabriel.id)).toEqual([['Eva’s surprise dinner', 'Evening · hidden from Eva', 'Surprise', 'sage']]);
     expect(rows([surprise], eva.id)).toEqual([['Dinner out', 'Evening', null, null]]);
   });
 

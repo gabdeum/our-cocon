@@ -38,6 +38,7 @@ const busyRow = {
   updated_at: '2026-10-27T10:00:00Z',
   deleted_at: null,
   deleted_by: null,
+  view: 'busy',
 };
 
 const yoga = { title: 'Yoga', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'slot', slots: ['evening'], members: [EVA] };
@@ -49,7 +50,8 @@ describe('events data (spec 035)', () => {
     expect(occurrences.map((o) => o.starts_on)).toEqual(['2026-11-03', '2026-11-11']);
     const forGabriel = occurrences.map((o) => viewFor(o, GABRIEL));
     expect(forGabriel[1]).toMatchObject({ view: 'busy', title: 'Busy', members: [EVA], location: null, notes: null });
-    expect(occurrences.map((o) => viewFor(o, EVA).view)).toEqual(['full', 'full']);
+    // The row says the database masked it (spec 043), so nothing in the app unmasks it.
+    expect(occurrences.map((o) => viewFor(o, EVA).view)).toEqual(['busy', 'busy']);
   });
 
   it('shows a hidden event as Busy when its creator has left the family', () => {

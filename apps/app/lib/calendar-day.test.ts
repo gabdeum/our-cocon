@@ -146,6 +146,12 @@ describe('layoutDayView', () => {
     expect(bands[4]?.events.map((e) => [e.title, e.driver])).toEqual([['Dinner out', null]]);
   });
 
+  it('says who a surprise is hidden from to those in on it (spec 043)', () => {
+    const pickup = ev({ title: 'Surprise pickup', slots: ['evening'], location: 'Station', members: [james.id], visibility: 'surprise', creator_member_id: eva.id, surprise: { hidden_from: [gabriel.id], cover_title: 'Dinner out', cover_note: null } });
+    expect(layout([pickup], TODAY, eva.id).bands[4]?.events.map((e) => e.time)).toEqual(['Evening · Station · hidden from Gabriel']);
+    expect(layout([pickup], TODAY, gabriel.id).bands[4]?.events.map((e) => e.time)).toEqual(['Evening · Station']);
+  });
+
   it('a person hidden in the header’s filter drops out', () => {
     const { busy, bands } = layout(sunday(), TODAY, gabriel.id, new Set([gabriel.id]));
     expect(busy.map((c) => c.text)).toEqual(['James 1', 'Everyone 2']);

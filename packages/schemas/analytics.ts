@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { UndoKind } from './activity';
-import { CalendarView, SlotKey, TimeType } from './calendar';
+import { CalendarView, SlotKey, TimeType, Visibility } from './calendar';
 import { AiPermission, CookingSetting, MemberColor } from './family';
 import { FilterKey } from './recipe-filters';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
@@ -193,6 +193,8 @@ export const events = {
   event_duplicated: z.strictObject({}),
   event_shared: z.strictObject({}),
   event_checklist_ticked: z.strictObject({}),
+  // Spec 043: who can see an event, sent when a save changes it (a new event: Private or Surprise).
+  event_visibility_set: z.strictObject({ visibility: Visibility }),
 } as const;
 
 export type EventName = keyof typeof events;

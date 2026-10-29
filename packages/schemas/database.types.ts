@@ -644,7 +644,7 @@ isOneToOne: false
           Views: {
             "events_visible": {
                   Row: {
-                    "category": string | null,"checklist": Json | null,"created_at": string | null,"created_by": string | null,"creator_member_id": string | null,"deleted_at": string | null,"deleted_by": string | null,"end_time": string | null,"ends_on": string | null,"exceptions": Json | null,"family_id": string | null,"id": string | null,"location": string | null,"members": Json | null,"notes": string | null,"recurrence": Json | null,"reminder": string | null,"removed_members": Json | null,"responsible_member_id": string | null,"slots": (string)[] | null,"source": string | null,"start_time": string | null,"starts_on": string | null,"surprise": Json | null,"time_type": string | null,"title": string | null,"updated_at": string | null,"updated_by": string | null,"visibility": string | null
+                    "category": string | null,"checklist": Json | null,"created_at": string | null,"created_by": string | null,"creator_member_id": string | null,"deleted_at": string | null,"deleted_by": string | null,"end_time": string | null,"ends_on": string | null,"exceptions": Json | null,"family_id": string | null,"id": string | null,"location": string | null,"members": Json | null,"notes": string | null,"recurrence": Json | null,"reminder": string | null,"removed_members": Json | null,"responsible_member_id": string | null,"slots": (string)[] | null,"source": string | null,"start_time": string | null,"starts_on": string | null,"surprise": Json | null,"time_type": string | null,"title": string | null,"updated_at": string | null,"updated_by": string | null,"view": string | null,"visibility": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -683,7 +683,7 @@ isOneToOne: false
                            },
 "_events_visible":
 { Args: Record<PropertyKey, never>; Returns: {
-              "category": string,"checklist": Json,"created_at": string,"created_by": string,"creator_member_id": string,"deleted_at": string,"deleted_by": string,"end_time": string,"ends_on": string,"exceptions": Json,"family_id": string,"id": string,"location": string,"members": Json,"notes": string,"recurrence": Json,"reminder": string,"removed_members": Json,"responsible_member_id": string,"slots": (string)[],"source": string,"start_time": string,"starts_on": string,"surprise": Json,"time_type": string,"title": string,"updated_at": string,"updated_by": string,"visibility": string
+              "category": string,"checklist": Json,"created_at": string,"created_by": string,"creator_member_id": string,"deleted_at": string,"deleted_by": string,"end_time": string,"ends_on": string,"exceptions": Json,"family_id": string,"id": string,"location": string,"members": Json,"notes": string,"recurrence": Json,"reminder": string,"removed_members": Json,"responsible_member_id": string,"slots": (string)[],"source": string,"start_time": string,"starts_on": string,"surprise": Json,"time_type": string,"title": string,"updated_at": string,"updated_by": string,"view": string,"visibility": string
             }[]
                            },
 "_family_table":

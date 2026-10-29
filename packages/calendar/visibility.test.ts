@@ -94,4 +94,24 @@ describe('viewFor (FR-009)', () => {
     expect(viewFor({ ...secret, creator_member_id: undefined as unknown as string }, undefined as unknown as string)).toMatchObject({ view: 'busy' });
     expect(viewFor(event(), '')).toMatchObject({ view: 'full' });
   });
+
+  describe("a row events_visible already masked (spec 043)", () => {
+    // Eva's copy of Gabriel's surprise: the database put the cover's fields in and says so.
+    const cover = event({ title: 'Dinner out', location: 'Café Lalo', notes: 'Dress nice!', category: null, members: [EVA], view: 'cover' });
+
+    it('keeps a cover a cover, with only its title, place and note', () => {
+      const v = viewFor(cover, EVA);
+      expect(v).toMatchObject({ view: 'cover', visibility: 'family', title: 'Dinner out', location: 'Café Lalo', notes: 'Dress nice!', is_surprise: false });
+      expect(v).not.toHaveProperty('category');
+      expect(v).not.toHaveProperty('responsible_member_id');
+    });
+
+    it('keeps Busy as Busy', () => {
+      expect(viewFor(event({ visibility: 'private', creator_member_id: EVA, view: 'busy' }), GABRIEL)).toMatchObject({ view: 'busy', title: 'Busy', location: null });
+    });
+
+    it('decides the rest as before', () => {
+      expect(viewFor(event({ view: 'full' }), EVA)).toMatchObject({ view: 'full', title: 'Football' });
+    });
+  });
 });

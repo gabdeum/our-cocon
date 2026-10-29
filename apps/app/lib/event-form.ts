@@ -66,9 +66,12 @@ export interface EventDraft {
   reminder: Reminder;
   notes: string;
   checklist: { id?: string; label: string }[];
-  /** Spec 043 sets these; an edit keeps them as they are. */
+  /** "Who can see it?" (spec 043): only the creator changes it. */
   visibility: Visibility;
-  surprise: SurpriseCover | null;
+  /** A surprise's "Keep it secret from" (account members), "What {name} sees" and "Note for {name}". */
+  hiddenFrom: string[];
+  coverTitle: string;
+  coverNote: string;
 }
 
 /** The route's prefill (FR-007, 032-later L91): a day, and a slot (Day view) or an hour (Week view). */
@@ -114,7 +117,9 @@ export function newDraft(prefill: Prefill, today: string, myMemberId: string): E
     notes: '',
     checklist: [],
     visibility: 'family',
-    surprise: null,
+    hiddenFrom: [],
+    coverTitle: '',
+    coverNote: '',
   };
 }
 
@@ -143,7 +148,9 @@ export function draftFromEvent(event: StoredEvent, date: string = event.starts_o
     notes: event.notes ?? '',
     checklist: (event.checklist ?? []).map((c) => ({ id: c.id, label: c.label })),
     visibility: event.visibility,
-    surprise: event.surprise ?? null,
+    hiddenFrom: [...(event.surprise?.hidden_from ?? [])],
+    coverTitle: event.surprise?.cover_title ?? '',
+    coverNote: event.surprise?.cover_note ?? '',
   };
 }
 
@@ -222,6 +229,32 @@ export function takers(members: readonly Member[]): Member[] {
   return members.filter((m) => memberKind(m) !== 'managed');
 }
 
+/** "Keep it secret from"'s choices (spec 043 FR-002): the members with the app, except me. */
+export function secretChips(members: readonly Member[], myMemberId: string): WhoChip[] {
+  const initials = memberInitials(members);
+  return members
+    .filter((m) => memberKind(m) === 'account' && m.id !== myMemberId)
+    .map((m) => ({ key: m.id, name: m.display_name, initial: initials.get(m.id) ?? '', color: m.color as MemberChipColor }));
+}
+
+/** The names in the surprise card's labels ("What Eva sees"), in family order. */
+export function hiddenNames(hiddenFrom: readonly string[], members: readonly Member[]): string[] {
+  return members.filter((m) => hiddenFrom.includes(m.id)).map((m) => m.display_name);
+}
+
+/** Why a surprise can't be saved yet: nobody to keep it from, or nothing for them to see. */
+export function surpriseProblems(draft: EventDraft, members: readonly Member[]): { hiddenFrom?: string; coverTitle?: string } {
+  if (draft.visibility !== 'surprise') return {};
+  return {
+    ...(draft.hiddenFrom.length ? {} : { hiddenFrom: a.noSecretFrom }),
+    ...(draft.coverTitle.trim() ? {} : { coverTitle: a.noCover(hiddenNames(draft.hiddenFrom, members)) }),
+  };
+}
+
+function surpriseOf(draft: EventDraft): SurpriseCover {
+  return { hidden_from: draft.hiddenFrom, cover_title: draft.coverTitle.trim(), cover_note: draft.coverNote.trim() || null };
+}
+
 /** The three "When" tiles' dates (FR-001): "Sun 25", "Mon 26", and the other day once picked. */
 export function dayTiles(today: string, date: string): { today: string; tomorrow: string; other: string; picked: 'today' | 'tomorrow' | 'other' } {
   const tile = (d: string) => a.tileDate(calendarWordsEn.weekdaysShort[weekday(d)] ?? '', parts(d).day);
@@ -297,7 +330,7 @@ export function toInput(draft: EventDraft, members: readonly Member[], { occurre
     members: draft.who,
     responsible_member_id: responsible,
     visibility: draft.visibility,
-    surprise: draft.surprise,
+    surprise: draft.visibility === 'surprise' ? surpriseOf(draft) : null,
     checklist: draft.checklist.filter((c) => c.label.trim()).map((c) => ({ ...(c.id ? { id: c.id } : {}), label: c.label.trim() })),
   };
 }
@@ -393,7 +426,7 @@ export function scopeBody(event: StoredEvent, date: string): string {
 
 /** An edit opens More options when anything in it is set (FR-008: the same sheet, filled in). */
 export function hasMoreOptions(draft: EventDraft): boolean {
-  return draft.category !== null || draft.location !== '' || draft.responsible !== null || draft.repeat !== 'never' || draft.reminder !== 'none' || draft.notes !== '' || draft.checklist.length > 0;
+  return draft.category !== null || draft.location !== '' || draft.responsible !== null || draft.repeat !== 'never' || draft.reminder !== 'none' || draft.notes !== '' || draft.checklist.length > 0 || draft.visibility !== 'family';
 }
 
 /** The date sheet's month (DateGrid): "November 2026" and its days in weeks; days before `min` are off. */

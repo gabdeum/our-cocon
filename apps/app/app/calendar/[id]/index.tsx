@@ -6,8 +6,9 @@ import { loadEvent, setChecklistDone } from '@cocon/data';
 import { CalendarDate } from '@cocon/schemas/calendar';
 import { BackLink, PushedScreen, Text } from '@cocon/ui';
 import { EventDetail } from '../../../components/calendar/EventDetail';
+import { SurpriseDetail } from '../../../components/calendar/SurpriseDetail';
 import { deleteOccurrences, duplicateEvent, duplicateInput } from '../../../lib/event-delete';
-import { eventOccurrence, seesInFull } from '../../../lib/event-detail';
+import { eventOccurrence, isCover, seesInFull } from '../../../lib/event-detail';
 import { useOnline } from '../../../lib/online';
 import { useEventSheet } from '../../../lib/use-event-sheet';
 import { strings } from '../../../strings/en';
@@ -17,9 +18,9 @@ const a = strings.calendar.add;
 
 /**
  * /calendar/[id]?date= (spec 042, OC-CalEvent): one date of an event, from any calendar view. The
- * same query as the edit route, so ticks and edits from others show live (lib/sync.tsx). Only an
- * event this member sees in full opens here; a date that isn't one of the event's says it couldn't
- * open (the Busy and surprise pages are spec 043).
+ * same query as the edit route, so ticks and edits from others show live (lib/sync.tsx). An event
+ * this member sees in full opens here; a surprise's cover opens OC-CalSurprise (spec 043); Busy, or
+ * a date that isn't one of the event's, says it couldn't open (Busy opens as a sheet over the views).
  */
 export default function EventRoute() {
   const params = useLocalSearchParams<{ id: string; date?: string }>();
@@ -33,6 +34,10 @@ export default function EventRoute() {
 
   const ev = event.data;
   const date = CalendarDate.safeParse(params.date).success ? (params.date as string) : ev?.starts_on;
+  const cover = ev && date && isCover(ev, myMemberId) ? eventOccurrence(ev, date) : null;
+  if (cover) {
+    return <SurpriseDetail occurrence={cover} members={state.members} slotTimes={page.slotTimes} os={Platform.OS} onBack={page.close} onOpenUrl={(url) => void Linking.openURL(url)} />;
+  }
   const occurrence = ev && date && seesInFull(ev, myMemberId) ? eventOccurrence(ev, date) : null;
   if (!ev || !date || !occurrence) {
     return (

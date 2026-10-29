@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { dateLabel, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
+import { dateLabel, viewFor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import type { Tracker } from '@cocon/schemas';
 import { BackLink, BottomSheet, Button, ChecklistRow, DateGrid, Dialog, IconRow, Link, ListGroup, MemberBadge, PushedScreen, Tag, Text } from '@cocon/ui';
@@ -70,6 +70,7 @@ export function EventDetail(p: EventDetailProps) {
   const checklist = event.checklist ?? [];
   const ownEvent = event.creator_member_id === p.myMemberId;
   const shareable = event.visibility === 'family' && o.ends_on >= p.today;
+  const surprise = viewFor(o, p.myMemberId).is_surprise;
   const off = p.readOnly || busy;
 
   const rows = [
@@ -134,9 +135,11 @@ export function EventDetail(p: EventDetailProps) {
       <OfflineBanner screen="calendar" tracker={p.tracker} />
 
       <View className="gap-10">
-        {o.category ? (
-          <View className="self-start">
-            <Tag label={a.types[o.category]} tone="soft" size="md" />
+        {o.category || surprise ? (
+          <View className="flex-row gap-8 self-start">
+            {o.category ? <Tag label={a.types[o.category]} tone="soft" size="md" /> : null}
+            {/* Spec 043: only those in on it see the event itself, so they're the ones who get the tag. */}
+            {surprise ? <Tag label={e.surprise} tone="sage" size="md" /> : null}
           </View>
         ) : null}
         <Text size={30} weight="900" role="heading" aria-level={1}>
