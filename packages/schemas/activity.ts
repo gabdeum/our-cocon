@@ -27,11 +27,18 @@ export const ActivityKind = z.enum([
   'event_created',
   'event_edited',
   'event_deleted',
+  'event_date_deleted',
   'other',
 ]);
 export type ActivityKind = z.infer<typeof ActivityKind>;
-/** The kinds Undo applies to; an AI delete is Restored instead (FR-004). */
-export const UndoKind = ActivityKind.exclude(['recipe_deleted']);
+/**
+ * An AI delete that sent a recipe, or an event (spec 044), to Recently deleted: Restored for 30
+ * days, not undone (FR-004).
+ */
+export const RestoreKind = ActivityKind.extract(['recipe_deleted', 'event_deleted']);
+export type RestoreKind = z.infer<typeof RestoreKind>;
+/** The kinds Undo applies to, for 7 days. */
+export const UndoKind = ActivityKind.exclude(RestoreKind.options);
 export type UndoKind = z.infer<typeof UndoKind>;
 
 /** One AI tool call as Home and the activity list show it (`activity_entries`, spec 026 FR-001). */

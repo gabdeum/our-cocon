@@ -55,6 +55,7 @@ it.each([
   ['event_created', 'Added'],
   ['event_edited', 'Changed'],
   ['event_deleted', 'Deleted'],
+  ['event_date_deleted', 'Deleted'],
 ] as const)('spec 044: %s reads "%s by …"', (kind, verb) => {
   expect(describeEntry(entry({ kind, event_name: 'Swim' }), members, now).sub).toBe(`${verb} by Alex via ChatGPT · 4 h ago`);
 });
@@ -71,6 +72,7 @@ describe('entryTitle', () => {
     [{ kind: 'event_created', count: 2, event_name: 'Pediatrician' }, 'New event: Pediatrician'],
     [{ kind: 'event_edited', count: 1, event_name: 'Baby music class' }, 'Edited event: Baby music class'],
     [{ kind: 'event_deleted', count: 1, event_name: 'Swim' }, 'Deleted event: Swim'],
+    [{ kind: 'event_date_deleted', count: 1, event_name: 'Swim' }, 'Deleted one date: Swim'],
     [{ kind: 'other', count: 3 }, '3 changes'],
   ] as [Partial<ActivityEntry>, string][])('%o reads "%s"', (over, title) => {
     expect(entryTitle(entry(over))).toBe(title);

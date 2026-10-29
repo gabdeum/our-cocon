@@ -211,8 +211,8 @@ begin
     'tool', case when tool ~ '^[a-z][a-z_]{0,39}$' then tool end,
     'name', case when tg_table_name in ('recipes', 'grocery_items') then r ->> 'name' when tg_table_name = 'events' then r ->> 'title' end,
     'after_hash', case when tg_op <> 'DELETE' then public._row_fingerprint(r) end,
-    -- A recipe going to Recently deleted: what makes an entry a delete (Restore), not its label.
-    'deleted', case when tg_table_name = 'recipes' and tg_op = 'UPDATE' and was ->> 'deleted_at' is null and r ->> 'deleted_at' is not null then true end,
+    -- A recipe or an event going to Recently deleted: what makes an entry a delete (Restore), not its label.
+    'deleted', case when tg_table_name in ('recipes', 'events') and tg_op = 'UPDATE' and was ->> 'deleted_at' is null and r ->> 'deleted_at' is not null then true end,
     'before', was)) as e (k, v)
   where v <> 'null'::jsonb;
   -- The log keeps payloads under 64 KB. A change it couldn't undo (a variant's long change list) is
@@ -259,7 +259,9 @@ alter policy "members read their family's activity" on public.activity
     or (payload ->> 'event_id' ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
       and public._sees_logged_event((payload ->> 'event_id')::uuid, payload -> 'secret' = 'true'::jsonb, actor_id))));
 
--- What an entry did: spec 026's kinds, plus the calendar tools'.
+-- What an entry did: spec 026's kinds, plus the calendar tools'. A delete that sent an event to
+-- Recently deleted (the whole event, or its dates from one on) is restored like a recipe; one date
+-- cancelled is undone.
 create or replace function public._activity_kind(p_key uuid) returns text
 language sql stable security invoker set search_path = '' as $$
   with logged as (
@@ -281,13 +283,16 @@ language sql stable security invoker set search_path = '' as $$
     when 'clear_done_groceries' then 'groceries_cleared'
     when 'create_event' then 'event_created'
     when 'update_event' then 'event_edited'
-    when 'delete_event' then 'event_deleted'
+    when 'delete_event' then
+      case when exists (select 1 from logged where target_kind = 'events' and coalesce((payload ->> 'deleted')::boolean, false))
+        then 'event_deleted' else 'event_date_deleted' end
     else 'other'
   end;
 $$;
 
 -- As in spec 026, plus the event an entry changed and its title (as the caller sees it now, else
--- as it was logged). The return type changes, so it's made again.
+-- as it was logged), and Restore for an event an assistant sent to Recently deleted, while it's
+-- there (30 days), as for a recipe. The return type changes, so it's made again.
 drop function public.activity_entries(int, timestamptz, uuid, text);
 create function public.activity_entries(
   p_limit int default 20,
@@ -330,7 +335,8 @@ language sql stable security invoker set search_path = '' as $$
       (array_agg((r.payload ->> 'recipe_id')::uuid order by r.seq) filter (where r.target_kind = 'recipes'))[1] as recipe_id,
       (array_agg(r.payload ->> 'name' order by r.seq desc) filter (where r.target_kind = 'recipes'))[1] as logged_name,
       (array_agg((r.payload ->> 'event_id')::uuid order by r.seq) filter (where r.payload ? 'event_id'))[1] as event_id,
-      (array_agg(r.payload ->> 'name' order by r.seq) filter (where r.target_kind = 'events'))[1] as logged_event_name
+      (array_agg(r.payload ->> 'name' order by r.seq) filter (where r.target_kind = 'events'))[1] as logged_event_name,
+      (array_agg(r.target_id order by r.seq) filter (where r.target_kind = 'events' and coalesce((r.payload ->> 'deleted')::boolean, false)))[1] as deleted_event
     from logged r
     group by k
     having (p_actor is null or (array_agg(r.actor_id order by r.seq))[1] = p_actor)
@@ -359,12 +365,14 @@ language sql stable security invoker set search_path = '' as $$
     u.actor_id,
     u.created_at,
     u.action,
-    u.id is null and kind.v <> 'recipe_deleted' and p.created_at > now() - interval '7 days',
-    u.id is null and kind.v = 'recipe_deleted' and rec.deleted_at is not null and rec.deleted_at > now() - interval '30 days'
+    u.id is null and kind.v not in ('recipe_deleted', 'event_deleted') and p.created_at > now() - interval '7 days',
+    u.id is null and (kind.v = 'recipe_deleted' and rec.deleted_at is not null and rec.deleted_at > now() - interval '30 days'
+      or kind.v = 'event_deleted' and dev.deleted_at is not null and dev.deleted_at > now() - interval '30 days')
   from page p
   cross join lateral (select public._activity_kind(p.k) as v) kind
   left join public.recipes rec on rec.id = p.recipe_id
   left join public.events ev on ev.id = p.event_id
+  left join public.events dev on dev.id = p.deleted_event
   left join lateral (
     select a.id, a.actor_id, a.created_at, a.action from public.activity a
     where a.target_id = p.k and a.action in ('undo', 'restore')
@@ -439,7 +447,7 @@ begin
     raise exception 'already_undone' using errcode = '22023';
   end if;
   kind := public._activity_kind(p_key);
-  lasts := case when kind = 'recipe_deleted' then interval '30 days' else interval '7 days' end;
+  lasts := case when kind in ('recipe_deleted', 'event_deleted') then interval '30 days' else interval '7 days' end;
   if started < now() - lasts then
     raise exception 'expired' using errcode = '22023';
   end if;
@@ -546,7 +554,7 @@ begin
   end loop;
 
   insert into public.activity (family_id, actor_id, action, target_kind, target_id, payload)
-  values (public.my_family_id(), auth.uid(), case when kind = 'recipe_deleted' then 'restore' else 'undo' end, 'activity', p_key,
+  values (public.my_family_id(), auth.uid(), case when kind in ('recipe_deleted', 'event_deleted') then 'restore' else 'undo' end, 'activity', p_key,
     jsonb_build_object('kind', kind, 'skipped', (select coalesce(sum((c ->> 'count')::int), 0) from jsonb_array_elements(conflicts) c)));
   return jsonb_build_object('applied', true, 'kind', kind, 'done', done, 'conflicts', conflicts);
 end;

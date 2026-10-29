@@ -87,6 +87,7 @@ export function entryTitle(entry: Pick<ActivityEntry, 'kind' | 'count' | 'names'
     case 'event_created':
     case 'event_edited':
     case 'event_deleted':
+    case 'event_date_deleted':
       return entry.event_name ? t[kind](entry.event_name) : t.other(entry.count);
     case 'other':
       return t.other(entry.count);

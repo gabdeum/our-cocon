@@ -24,7 +24,8 @@ One per AI tool call (spec 026 FR-001). A private event's entries are seen only 
 | Done items cleared | "{n} done items cleared" · "1 done item cleared" | Cleared |
 | Event added (spec 044) | "New event: {title}" | Added |
 | Event changed | "Edited event: {title}" | Changed |
-| Event deleted (one date, the dates after, or the whole event) | "Deleted event: {title}" (Undo for 7 days; a whole event also stays in Recently deleted for 30) | Deleted |
+| Event deleted (the whole event, or its dates from one on) | "Deleted event: {title}" (link "Restore" while it's in Recently deleted, 30 days) | Deleted |
+| One date of a repeating event deleted | "Deleted one date: {title}" | Deleted |
 | Anything else | "{n} changes" · "1 change" | Changed |
 
 Sub-line: "{verb} by {name} via {assistant} · {timeAgo}" ("just now", "12 min ago", "4 h ago", "2 days ago"); "Former member" for someone who left, "an AI assistant" for an assistant we can't name. Undo and its states as on OC-Home (States).

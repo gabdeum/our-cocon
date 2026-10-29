@@ -171,6 +171,7 @@ export const strings = {
       event_created: (event: string) => `New event: ${event}`,
       event_edited: (event: string) => `Edited event: ${event}`,
       event_deleted: (event: string) => `Deleted event: ${event}`,
+      event_date_deleted: (event: string) => `Deleted one date: ${event}`,
       other: (n: number) => (n === 1 ? '1 change' : `${n} changes`),
     },
     /** The sub-line's verb, by kind: "Added by Alex via ChatGPT · 4 h ago". */
@@ -186,6 +187,7 @@ export const strings = {
       event_created: 'Added',
       event_edited: 'Changed',
       event_deleted: 'Deleted',
+      event_date_deleted: 'Deleted',
       other: 'Changed',
     },
     sub: (verb: string, name: string, assistant: string, timeAgo: string) => `${verb} by ${name} via ${assistant} · ${timeAgo}`,

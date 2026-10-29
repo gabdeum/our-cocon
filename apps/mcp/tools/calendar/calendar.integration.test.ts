@@ -218,17 +218,36 @@ describe.skipIf(!local)('calendar tools and permission against local Supabase', 
     const one = await call('delete_event', { id: music, date: '2026-11-21', scope: 'this' });
     expect(one.data).toEqual({ deleted: 'Baby music class', dates: 'Saturday, Nov 21', in_recently_deleted: false });
     expect((await loadEvent(gabriel, music))?.exceptions).toContainEqual(expect.objectContaining({ occurrence_date: '2026-11-21', cancelled: true }));
+    // One date is undone from AI activity, for 7 days.
+    expect((await entries(gabriel))[0]).toMatchObject({ kind: 'event_date_deleted', event_name: 'Baby music class', can_undo: true, can_restore: false });
 
     const all = await call('delete_event', { id: music, scope: 'all' });
     expect(all.data).toEqual({ deleted: 'Baby music class', dates: 'the whole event', in_recently_deleted: true });
     expect((await loadDeletedEvents(gabriel, new Date(Date.now() - 60_000).toISOString())).map((e) => e.id)).toContain(music);
     expect((await call('update_event', { id: music, patch: { title: 'Back' } })).error).toBe('That event isn’t in the calendar any more. Use list_events to find it.');
 
-    // Undo from the activity list puts it back.
+    // The whole event is restored from AI activity while it's in Recently deleted, as a recipe is.
     const deleted = (await entries(gabriel)).find((e) => e.kind === 'event_deleted' && e.event_id === music);
-    const { error } = await gabriel.rpc('undo_ai_change', { p_key: deleted?.key as string });
+    expect(deleted).toMatchObject({ event_name: 'Baby music class', can_undo: false, can_restore: true });
+    const { data: restored, error } = await gabriel.rpc('undo_ai_change', { p_key: deleted?.key as string });
     expect(error).toBeNull();
+    expect(restored).toMatchObject({ applied: true, kind: 'event_deleted' });
     expect((await loadEvent(gabriel, music))?.deleted_at).toBeNull();
+    expect((await entries(gabriel)).find((e) => e.key === deleted?.key)).toMatchObject({ undo_action: 'restore', can_restore: false });
+  });
+
+  it('deleting the dates from one on is restored too, and the series is whole again', async () => {
+    const { data } = await call('create_event', { title: 'Swim club', date: '2026-11-04', slots: ['afternoon'], members: ['Eva'], repeat: { freq: 'weekly' } });
+    const swim = data?.id as string;
+    const gone = await call('delete_event', { id: swim, date: '2026-11-18', scope: 'future' });
+    expect(gone.data).toEqual({ deleted: 'Swim club', dates: 'Wednesday, Nov 18 and every date after', in_recently_deleted: true });
+    expect((await loadEvent(gabriel, swim))?.recurrence?.ends).toEqual({ type: 'on', date: '2026-11-17' });
+    const entry = (await entries(gabriel)).find((e) => e.kind === 'event_deleted' && e.event_id === swim);
+    expect(entry).toMatchObject({ event_name: 'Swim club', can_restore: true });
+    const { error } = await gabriel.rpc('undo_ai_change', { p_key: entry?.key as string });
+    expect(error).toBeNull();
+    expect((await loadEvent(gabriel, swim))?.recurrence?.ends).toEqual({ type: 'never' });
+    expect((await loadDeletedEvents(gabriel, new Date(Date.now() - 60_000).toISOString())).map((e) => e.title)).not.toContain('Swim club');
   });
 
   it('FR-003: with "Add & change events" off, the assistant reads but can’t change the calendar', async () => {

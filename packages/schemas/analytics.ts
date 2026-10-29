@@ -154,7 +154,7 @@ export const events = {
   ai_connect_failed: z.strictObject({ assistant: KnownAssistant, step: z.int().min(1).max(9) }),
   ai_disconnected: z.strictObject({ assistant: ConnectionAssistant }),
   // Spec 026: a member undid an AI change from Home or the activity list, by what it did; and
-  // restored a recipe an assistant deleted. Never what it was.
+  // restored a recipe or an event (spec 044) an assistant deleted. Never what it was.
   ai_change_undone: z.strictObject({ kind: UndoKind }),
   ai_delete_restored: z.strictObject({}),
   // Spec 036: the calendar was opened (from the tab bar, or Home's card in 028), its view switched,
