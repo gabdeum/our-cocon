@@ -5,7 +5,6 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Dialog } from './Dialog';
 import { IconRow, ListGroup } from './ListRow';
 import { MemberBadge } from './MemberChip';
-import { UndoToast } from './Toast';
 
 afterEach(cleanup);
 
@@ -56,13 +55,5 @@ describe('Dialog with a second choice', () => {
     fireEvent.click(screen.getByRole('button', { name: 'This and all future ones' }));
     expect(onSecondary).toHaveBeenCalledOnce();
     expect(onConfirm).not.toHaveBeenCalled();
-  });
-});
-
-describe('UndoToast without Undo', () => {
-  it('only tells', () => {
-    render(<UndoToast text="Couldn't undo. Check your connection and try again." undoLabel="Undo" />);
-    expect(screen.getByRole('status').textContent).toBe("Couldn't undo. Check your connection and try again.");
-    expect(screen.queryByRole('button')).toBeNull();
   });
 });

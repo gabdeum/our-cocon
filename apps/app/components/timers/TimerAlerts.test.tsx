@@ -7,7 +7,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TimersProvider, useTimerStore, type TimerStore } from '../../lib/timer-store';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { fakeTracker } from '../../test/fakes';
-import { BANNER_MS, CHIME_GAP_MS, TimerAlerts } from './TimerAlerts';
+import { TOAST_ACTION_MS, ToastProvider } from '../../lib/toast';
+import { CHIME_GAP_MS, TimerAlerts } from './TimerAlerts';
 
 const T0 = 1_760_000_000_000;
 
@@ -42,9 +43,11 @@ async function setup(storage: ChoiceStorage = memoryStorage()) {
   }
   const Wrap = ({ children }: { children: ReactNode }) => (
     <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 0 } }}>
-      <TimersProvider userId="u1" storage={storage} tracker={fakeTracker()}>
-        {children}
-      </TimersProvider>
+      <ToastProvider>
+        <TimersProvider userId="u1" storage={storage} tracker={fakeTracker()}>
+          {children}
+        </TimersProvider>
+      </ToastProvider>
     </SafeAreaProvider>
   );
   render(
@@ -73,12 +76,12 @@ describe('TimerAlerts (spec 010 US3)', () => {
     act(() => vi.advanceTimersByTime(CHIME_GAP_MS));
     expect(chime).toHaveBeenCalledTimes(2);
 
-    act(() => vi.advanceTimersByTime(BANNER_MS));
+    act(() => vi.advanceTimersByTime(TOAST_ACTION_MS));
     expect(screen.queryByText('Blind bake is done')).toBeNull();
     expect(chime).toHaveBeenCalledTimes(2);
   });
 
-  it('a newer banner replaces the old one', async () => {
+  it('a newer toast replaces the old one', async () => {
     const { store } = await setup();
     act(() => {
       store.start('Blind bake', 2, 'step');
@@ -89,8 +92,8 @@ describe('TimerAlerts (spec 010 US3)', () => {
     act(() => vi.advanceTimersByTime(2000));
     expect(screen.getAllByRole('status')).toHaveLength(1);
     expect(screen.getByText('Soften leeks is done')).toBeTruthy();
-    // The first banner's 8 s don't cut the second one short.
-    act(() => vi.advanceTimersByTime(BANNER_MS - 3000));
+    // The first toast's 8 s don't cut the second one short.
+    act(() => vi.advanceTimersByTime(TOAST_ACTION_MS - 3000));
     expect(screen.getByText('Soften leeks is done')).toBeTruthy();
   });
 
@@ -104,7 +107,7 @@ describe('TimerAlerts (spec 010 US3)', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
-  it('spec 011 (L17): "Open timers" on the banner opens the Timers screen and closes the banner', async () => {
+  it('spec 011 (L17): "Open timers" on the toast opens the Timers screen and closes the toast', async () => {
     const { store, onOpenTimers } = await setup();
     act(() => void store.start('Blind bake', 60, 'step'));
     act(() => vi.advanceTimersByTime(60 * 1000));

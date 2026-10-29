@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { ActivityCard, Dialog, StatusBanner } from '@cocon/ui';
+import { ActivityCard, Dialog } from '@cocon/ui';
 import type { ActivityEntry, Tracker, UndoConflict } from '@cocon/schemas';
 import { strings } from '../../strings/en';
+import { useToast } from '../../lib/toast';
 import { conflictText, describeEntry, type UndoOutcome } from '../../lib/activity';
 import type { Member } from '../../lib/session';
 
@@ -25,7 +26,7 @@ export interface ActivityEntriesProps {
  */
 export function ActivityEntries({ entries, members, tracker, onUndo, readOnly, now = new Date() }: ActivityEntriesProps) {
   const [busy, setBusy] = useState<string | null>(null);
-  const [banner, setBanner] = useState<{ message: string; tone: 'sage' | 'warn' } | null>(null);
+  const toast = useToast();
   const [asking, setAsking] = useState<{ entry: ActivityEntry; conflicts: UndoConflict[] } | null>(null);
 
   const run = async (entry: ActivityEntry, skipChanged: boolean) => {
@@ -38,27 +39,26 @@ export function ActivityEntries({ entries, members, tracker, onUndo, readOnly, n
       case 'done':
         if (outcome.result.kind === 'recipe_deleted') tracker.track('ai_delete_restored', {});
         else tracker.track('ai_change_undone', { kind: outcome.result.kind });
-        setBanner({ message: restoring ? a.restored : a.undone, tone: 'sage' });
+        toast.show({ text: restoring ? a.restored : a.undone });
         break;
       case 'conflicts':
-        setBanner(null);
+        toast.hide();
         setAsking({ entry, conflicts: outcome.conflicts });
         break;
       case 'nothing':
-        setBanner({ message: a.nothingLeft, tone: 'warn' });
+        toast.show({ text: a.nothingLeft, tone: 'warn' });
         break;
       case 'expired':
-        setBanner({ message: a.expired, tone: 'warn' });
+        toast.show({ text: a.expired, tone: 'warn' });
         break;
       case 'failed':
-        setBanner({ message: restoring ? a.restoreFailed : a.undoFailed, tone: 'warn' });
+        toast.show({ text: restoring ? a.restoreFailed : a.undoFailed, tone: 'warn' });
         break;
     }
   };
 
   return (
     <View className="gap-12">
-      {banner ? <StatusBanner tone={banner.tone} message={banner.message} /> : null}
       {entries.map((entry) => {
         const view = describeEntry(entry, members, now);
         return (

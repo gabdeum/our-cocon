@@ -55,7 +55,7 @@ export {
 export { Swipeable, SWIPE_COMMIT, type SwipeableProps } from './components/Swipeable';
 export { EventListGroup, EventListRow, type EventListItem } from './components/EventListRow';
 export { AllDayRow, DayEventRow, SlotBand, type DayAllDayItem, type DayBand, type DayEventItem, type SlotBandProps } from './components/SlotBand';
-export { FloatingAdd, Toast, UndoToast, type FloatingAddProps, type ToastProps, type UndoToastProps } from './components/Toast';
+export { FloatingAdd, Toast, ToastHost, ToastProvider, useToast, TOAST_MS, TOAST_ACTION_MS, type FloatingAddProps, type ToastProps, type ToastRequest } from './components/Toast';
 export { CalendarHeader, type CalendarHeaderChip, type CalendarHeaderProps } from './components/CalendarHeader';
 export { ColorSwatch, type ColorSwatchProps, type SwatchOption } from './components/ColorSwatch';
 export { StatusBanner, Presence, AwakeChip, SuccessPanel } from './components/StatusBanner';

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { BackHeader, BottomSheet, Button, Callout, Dialog, Link, ListGroup, ListRow, PushedScreen, RecipeItemSkeleton, StatusBanner, Text } from '@cocon/ui';
+import { BackHeader, BottomSheet, Button, Callout, Dialog, Link, ListGroup, ListRow, PushedScreen, RecipeItemSkeleton, Text } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
+import { useToast } from '../../lib/toast';
 import { daysLeft, daysSinceDelete } from '../../lib/recipe-delete';
 import type { DeletedItem } from '../../lib/recently-deleted';
 import type { Member } from '../../lib/session';
@@ -34,7 +35,7 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
   const [selected, setSelected] = useState<DeletedItem | null>(null);
   const [confirm, setConfirm] = useState<DeletedItem | null>(null);
   const [busy, setBusy] = useState(false);
-  const [banner, setBanner] = useState<{ message: string; tone: 'sage' | 'warn' } | null>(null);
+  const toast = useToast();
 
   const nameOf = (userId: string | null) => members.find((m) => m.user_id === userId)?.display_name ?? strings.recipe.formerMember;
 
@@ -44,9 +45,9 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
     try {
       await onRestore(item);
       if (item.kind === 'recipe') tracker.track('recipe_restored', { days_since_delete: daysSinceDelete(item.deleted_at) });
-      setBanner({ message: item.kind === 'recipe' ? d.restored(item.name) : d.eventRestored(item.name), tone: 'sage' });
+      toast.show({ text: item.kind === 'recipe' ? d.restored(item.name) : d.eventRestored(item.name) });
     } catch {
-      setBanner({ message: d.restoreFailed, tone: 'warn' });
+      toast.show({ text: d.restoreFailed, tone: 'warn' });
     } finally {
       setBusy(false);
     }
@@ -58,9 +59,9 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
     setBusy(true);
     try {
       await onDeleteNow(item);
-      setBanner(null);
+      toast.hide();
     } catch {
-      setBanner({ message: d.deleteFailed, tone: 'warn' });
+      toast.show({ text: d.deleteFailed, tone: 'warn' });
     } finally {
       setBusy(false);
     }
@@ -116,7 +117,6 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
     <PushedScreen className="gap-18">
       {header}
       <OfflineBanner screen="settings" tracker={tracker} />
-      {banner && !readOnly ? <StatusBanner tone={banner.tone} message={banner.message} /> : null}
       {body}
       <BottomSheet visible={selected !== null} onClose={() => setSelected(null)} title={selected?.name ?? ''} closeLabel={strings.settings.family.close}>
         {selected ? (

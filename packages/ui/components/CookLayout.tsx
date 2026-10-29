@@ -5,6 +5,7 @@ import { Button } from './Button';
 import { Icon } from './Icon';
 import { IconButton } from './IconButton';
 import { Text } from './Text';
+import { ToastHost } from './Toast';
 
 const web = Platform.OS === 'web';
 // CSS scroll snapping on the web; `snapToOffsets` does it on the iPhone. Mandatory, and a swipe
@@ -102,6 +103,7 @@ export function CookLayout(props: CookLayoutProps) {
         <Button label={backLabel} variant={backExits ? 'ink' : 'soft'} icon={backExits ? 'close' : undefined} size="lg" block className="flex-1" onPress={onBack} />
         <Button label={nextLabel} variant={nextFinishes ? 'ink' : 'olive'} icon={nextFinishes ? 'check' : undefined} size="lg" block className="flex-[2]" onPress={onNext} />
       </View>
+      <ToastHost />
     </View>
   );
 }

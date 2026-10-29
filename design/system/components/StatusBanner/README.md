@@ -1,6 +1,6 @@
 # StatusBanner
 
-Short live feedback: a confirmation with Undo, and small presence or "screen on" chips.
+Short live feedback: the card the Toast floats (a confirmation with Undo), the offline notice, and small presence or "screen on" chips.
 
 ## Specs
 
@@ -14,6 +14,6 @@ Short live feedback: a confirmation with Undo, and small presence or "screen on"
 
 ## Rules
 
-- Undo stays available for 8 s on banners; for AI changes it stays available for 7 days from the activity feed.
-- Never stack two banners. A new one replaces the old.
-- The trailing button is "Undo", or "Reload" when someone else just changed what you're looking at ("Alex just changed this recipe").
+- Confirmations and failures are shown with the Toast (Toast README): the card floats at the top and goes after 5 s, or 8 s with Undo. For AI changes, Undo stays available for 7 days from the activity feed.
+- In the layout, only states that last: offline, and "Alex just changed this recipe" with "Reload".
+- Never stack two. A new one replaces the old.

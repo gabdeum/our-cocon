@@ -1,6 +1,7 @@
 // Spec 019 US1 and US3 on the share sheet (design/ui/OC-Share.md).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { ToastProvider } from '../../lib/toast';
 import { COPIED_MS, ShareSheet, type ShareSheetApi } from './ShareSheet';
 import { fakeTracker } from '../../test/fakes';
 
@@ -29,7 +30,7 @@ function fakeApi(over: Partial<ShareSheetApi> = {}) {
 async function setup(api = fakeApi()) {
   const tracker = fakeTracker();
   const onClose = vi.fn();
-  render(<ShareSheet recipeName="Leek & bacon quiche" familyName="The Demanges" api={api} tracker={tracker} onClose={onClose} />);
+  render(<ShareSheet recipeName="Leek & bacon quiche" familyName="The Demanges" api={api} tracker={tracker} onClose={onClose} />, { wrapper: ToastProvider });
   await act(async () => undefined);
   return { api, tracker, onClose };
 }
@@ -55,7 +56,7 @@ describe('Share sheet', () => {
     let resolve: (v: Opened) => void = () => undefined;
     const api = fakeApi({ open: vi.fn(() => new Promise<Opened>((r) => (resolve = r))) });
     const tracker = fakeTracker();
-    render(<ShareSheet recipeName="Quiche" familyName="F" api={api} tracker={tracker} onClose={vi.fn()} />);
+    render(<ShareSheet recipeName="Quiche" familyName="F" api={api} tracker={tracker} onClose={vi.fn()} />, { wrapper: ToastProvider });
     expect(screen.getByText('Creating link…')).toBeTruthy();
     await act(async () => resolve({ ...link, created: true }));
     expect(screen.getByText(url)).toBeTruthy();

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Button, Callout, Card, Dialog, IconButton, Link, LinkField, RecipeSummary, SettingRow, ShareTile, StatusBanner } from '@cocon/ui';
+import { BottomSheet, Button, Callout, Card, Dialog, IconButton, Link, LinkField, RecipeSummary, SettingRow, ShareTile } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
+import { useToast } from '../../lib/toast';
 import { daysActive, shareLinkUrl, type ShareLink } from '../../lib/share';
 
 const s = strings.share;
@@ -34,7 +35,7 @@ type LinkState = { kind: 'creating' } | { kind: 'failed' } | { kind: 'shared'; l
 export function ShareSheet({ recipeName, familyName, photoUri, api, tracker, onClose }: ShareSheetProps) {
   const [state, setState] = useState<LinkState>({ kind: 'creating' });
   const [copied, setCopied] = useState(false);
-  const [banner, setBanner] = useState<string | null>(null);
+  const toast = useToast();
   const [confirmStop, setConfirmStop] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(copiedTimer.current), []);
@@ -68,7 +69,7 @@ export function ShareSheet({ recipeName, familyName, photoUri, api, tracker, onC
     if (!url) return;
     await api.copy(url);
     setCopied(true);
-    setBanner(s.copiedBanner);
+    toast.show({ text: s.copiedBanner });
     clearTimeout(copiedTimer.current);
     copiedTimer.current = setTimeout(() => setCopied(false), COPIED_MS);
   };
@@ -81,7 +82,7 @@ export function ShareSheet({ recipeName, familyName, photoUri, api, tracker, onC
     } catch {
       // Changes apply instantly; a failed one goes back, and says so.
       setState({ kind: 'shared', link });
-      setBanner(s.changeFailed);
+      toast.show({ text: s.changeFailed, tone: 'warn' });
     }
   };
 
@@ -93,9 +94,9 @@ export function ShareSheet({ recipeName, familyName, photoUri, api, tracker, onC
       tracker.track('share_link_stopped', { days_active: daysActive(link.created_at) });
       setState({ kind: 'stopped' });
       setCopied(false);
-      setBanner(null);
+      toast.hide();
     } catch {
-      setBanner(s.changeFailed);
+      toast.show({ text: s.changeFailed, tone: 'warn' });
     }
   };
 
@@ -104,7 +105,6 @@ export function ShareSheet({ recipeName, familyName, photoUri, api, tracker, onC
   return (
     <>
       <BottomSheet visible title={s.title} closeLabel={s.close} onClose={onClose} headerAction={<IconButton icon="close" label={s.close} variant="soft" onPress={onClose} />}>
-        {banner ? <StatusBanner message={banner} /> : null}
 
         <RecipeSummary name={recipeName} sub={s.fromFamily(familyName)} photoUri={photoUri} photoLabel={s.photo} />
 

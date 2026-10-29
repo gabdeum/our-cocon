@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { dateLabel, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import type { Tracker } from '@cocon/schemas';
-import { BackLink, BottomSheet, Button, ChecklistRow, DateGrid, Dialog, IconRow, Link, ListGroup, MemberBadge, PushedScreen, StatusBanner, Tag, Text } from '@cocon/ui';
+import { BackLink, BottomSheet, Button, ChecklistRow, DateGrid, Dialog, IconRow, Link, ListGroup, MemberBadge, PushedScreen, Tag, Text } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import type { DeleteScope } from '../../lib/event-delete';
 import { addedLine, deleteBody, mapsUrl, memberBadges, reminderLines, repeatLine, responsibleLine, whenLines } from '../../lib/event-detail';
@@ -56,7 +56,6 @@ export function EventDetail(p: EventDetailProps) {
   const toast = useToast();
   const [dialog, setDialog] = useState(false);
   const [picking, setPicking] = useState<string | null>(null);
-  const [banner, setBanner] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // Ticks shown at once, until the next load (a new checklist) brings them back from the database.
   const [pending, setPending] = useState<{ of: StoredEvent['checklist']; done: Record<string, boolean> }>({ of: event.checklist, done: {} });
@@ -90,7 +89,7 @@ export function EventDetail(p: EventDetailProps) {
       if (done) p.tracker.track('event_checklist_ticked', {});
     } catch {
       setTick(id, !done);
-      setBanner(e.tickFailed);
+      toast.show({ text: e.tickFailed, tone: 'warn' });
     }
   };
 
@@ -109,7 +108,7 @@ export function EventDetail(p: EventDetailProps) {
       });
     } catch {
       setBusy(false);
-      setBanner(e.deleteFailed);
+      toast.show({ text: e.deleteFailed, tone: 'warn' });
     }
   };
 
@@ -121,7 +120,7 @@ export function EventDetail(p: EventDetailProps) {
       p.tracker.track('event_duplicated', {});
       toast.show({ text: e.copied(dateLabel(date)), onUndo: () => undo().finally(p.onChanged) });
     } catch {
-      setBanner(e.duplicateFailed);
+      toast.show({ text: e.duplicateFailed, tone: 'warn' });
     } finally {
       setBusy(false);
     }
@@ -133,7 +132,6 @@ export function EventDetail(p: EventDetailProps) {
     <PushedScreen className="gap-16">
       <BackLink label={e.back} onPress={p.onBack} />
       <OfflineBanner screen="calendar" tracker={p.tracker} />
-      {banner && !p.readOnly ? <StatusBanner tone="warn" message={banner} /> : null}
 
       <View className="gap-10">
         {o.category ? (

@@ -6,6 +6,7 @@
 import { DEFAULT_FAMILY_SETTINGS } from '@cocon/schemas';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { ToastProvider } from '../../lib/toast';
 import { onlineManager } from '@tanstack/react-query';
 import { alex, fakeTracker, flush, gabriel, groceryItem, mia, packData } from '../../test/fakes';
 import type { GroceryItem } from '../../lib/groceries';
@@ -61,7 +62,7 @@ function setup(over: Partial<Props> = {}) {
     now,
     ...over,
   };
-  const view = render(<GroceryList {...props} />);
+  const view = render(<GroceryList {...props} />, { wrapper: ToastProvider });
   return { tracker, props, rerender: (next: Partial<Props>) => view.rerender(<GroceryList {...props} {...next} />) };
 }
 

@@ -1,6 +1,7 @@
 // Spec 042 FR-005: the event share sheet (OC-CalEvent.md › Share): OC-Share's layout and states.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { ToastProvider } from '../../lib/toast';
 import { EventShareSheet, type EventShareSheetApi } from './EventShareSheet';
 import { fakeTracker, last } from '../../test/fakes';
 
@@ -24,7 +25,7 @@ function fakeApi(over: Partial<EventShareSheetApi> = {}) {
 
 async function setup(api = fakeApi()) {
   const tracker = fakeTracker();
-  render(<EventShareSheet api={api} tracker={tracker} onClose={vi.fn()} />);
+  render(<EventShareSheet api={api} tracker={tracker} onClose={vi.fn()} />, { wrapper: ToastProvider });
   await act(async () => undefined);
   return { api, tracker };
 }

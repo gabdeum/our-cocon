@@ -2,6 +2,7 @@
 // "Mia ticked 2 of these items. Undo the rest?" edge case.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { ToastProvider } from '../../lib/toast';
 import type { ActivityEntry } from '@cocon/schemas';
 import { alex, fakeTracker, flush, gabriel, mia } from '../../test/fakes';
 import type { UndoOutcome } from '../../lib/activity';
@@ -32,7 +33,7 @@ function setup(onUndo: (entry: ActivityEntry, skip: boolean) => Promise<UndoOutc
   const tracker = fakeTracker();
   const onSeeAll = vi.fn();
   const undo = vi.fn(onUndo);
-  render(<ActivitySection entries={entries} members={[gabriel, alex, mia]} tracker={tracker} onUndo={undo} onSeeAll={onSeeAll} now={now} readOnly={readOnly} />);
+  render(<ActivitySection entries={entries} members={[gabriel, alex, mia]} tracker={tracker} onUndo={undo} onSeeAll={onSeeAll} now={now} readOnly={readOnly} />, { wrapper: ToastProvider });
   return { tracker, onSeeAll, undo };
 }
 const done = (kind: ActivityEntry['kind']): UndoOutcome => ({ status: 'done', result: { applied: true, kind, done: 6, conflicts: [] } });

@@ -58,6 +58,7 @@ import {
 import type { Client } from '../../../lib/supabase';
 import { createdVariantEvents, draftsFromVariants, emptyVariant, readVariants, variantsChanged, type VariantDraft, type VariantSaveRow, type VariantWarnings } from '../../../lib/recipe-variants';
 import { OfflineBanner } from '../../sync/OfflineBanner';
+import { useToast } from '../../../lib/toast';
 import { DeleteRecipe } from '../DeleteRecipe';
 import { CuisineSheet } from './CuisineSheet';
 import { DetailsSection } from './DetailsSection';
@@ -177,7 +178,7 @@ export function RecipeForm({
   const [unitFor, setUnitFor] = useState<string | null>(null);
   const [aisleFor, setAisleFor] = useState<string | null>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
-  const [banner, setBanner] = useState<string | null>(null);
+  const toast = useToast();
   const [removeAsk, setRemoveAsk] = useState<{ key: string; name: string; steps: number[] } | null>(null);
   const [dragging, setDragging] = useState(false);
   // A new recipe whose details saved but whose ingredients didn't: Save again updates it.
@@ -310,7 +311,6 @@ export function RecipeForm({
 
   const addRow = () => {
     setDrafts((now) => [...now, emptyDraft(newId())]);
-    setBanner(null);
     tracker.track('ingredient_line_added', { parsed: false });
   };
 
@@ -318,12 +318,12 @@ export function RecipeForm({
     setPasteOpen(false);
     const rows = parsePastedList(text).map((line) => draftFromParsed(line, newId()));
     if (rows.length === 0) {
-      setBanner(ing.pastedNothing);
+      toast.show({ text: ing.pastedNothing });
       return;
     }
     // Empty rows (a new recipe's first) make way for the pasted ones.
     setDrafts((now) => [...now.filter((d) => d.name.trim() || d.quantity.trim() || d.weight.trim()), ...rows]);
-    setBanner(ing.pasted(rows.length));
+    toast.show({ text: ing.pasted(rows.length) });
     for (const _row of rows) tracker.track('ingredient_line_added', { parsed: true });
     void match(rows);
   };
@@ -683,7 +683,6 @@ export function RecipeForm({
             drafts={drafts}
             warnings={ingWarnings}
             servings={servingsOf(form.serves)}
-            banner={banner}
             suggestions={suggestions}
             onChangeRow={(key, patch) => updateRow(key, (d) => ({ ...d, ...patch }))}
             onNameChange={nameChange}

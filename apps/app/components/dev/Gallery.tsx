@@ -77,7 +77,6 @@ import {
   BackLink,
   MoreCount,
   Toast,
-  UndoToast,
   SlotChip,
   DayChip,
   ChecklistAdd,
@@ -325,13 +324,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         />
       </Section>
 
-      <Section group="Calendar" title="UndoToast (spec 041)">
-        <View className="h-control-xl">
-          <UndoToast text="Poker night added for tonight, 18:00–22:00." undoLabel="Undo" onUndo={noop} className="bottom-0 left-0 right-0" />
-        </View>
-      </Section>
-
-      <Section group="Calendar" title="Event page: BackLink, MemberBadge, IconRow, ChecklistRow, UndoToast that only tells (spec 042)">
+      <Section group="Calendar" title="Event page: BackLink, MemberBadge, IconRow, ChecklistRow (spec 042)">
         <BackLink label="Calendar" onPress={noop} />
         <View className="flex-row gap-8">
           <MemberBadge name="James" initial="J" color="sky" />
@@ -349,9 +342,6 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <ChecklistRow label="Diaper bag" done onToggle={noop} />
           <ChecklistRow label="Bottle (offline)" done={false} onToggle={noop} disabled last />
         </ListGroup>
-        <View className="h-control-xl">
-          <UndoToast text="Couldn't undo. Check your connection and try again." undoLabel="Undo" className="bottom-0 left-0 right-0" />
-        </View>
       </Section>
 
       <Section group="Actions" title="Pill">
@@ -457,6 +447,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
 
       <Section group="Display" title="StatusBanner">
         <StatusBanner message="Added to the family list" actionLabel="Undo" onAction={noop} />
+        <StatusBanner tone="warn" message="Couldn't undo. Check your connection and try again." />
         <StatusBanner tone="warn" message="You're offline. You can read, but changes need a connection." />
         <PillRow>
           <Presence label="Mia is shopping" />

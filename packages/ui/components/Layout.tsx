@@ -5,6 +5,7 @@ import { theme } from '../theme';
 import { Logo } from './Icon';
 import { Tag } from './Tag';
 import { Text } from './Text';
+import { ToastHost } from './Toast';
 
 /**
  * The app's frame: cream ground, and on the web the mobile layout centred at max 720 wide
@@ -50,6 +51,7 @@ export function FormScreen({ bar, children, scrollRef, scrollEnabled = true }: {
       <ScrollView ref={scrollRef} scrollEnabled={scrollEnabled} className="flex-1" contentContainerClassName="gap-18 px-20 pb-[30px] pt-4" keyboardShouldPersistTaps="handled">
         {children}
       </ScrollView>
+      <ToastHost />
     </View>
   );
 }

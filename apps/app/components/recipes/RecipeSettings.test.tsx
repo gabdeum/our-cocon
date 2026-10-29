@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { ToastProvider } from '../../lib/toast';
 import { DEFAULT_FAMILY_SETTINGS, type FamilySettings, type RecipeOverrides, type RecipeOverridesUpdate } from '@cocon/schemas';
 import { quicheIds } from '@cocon/schemas/quiche.fixture';
 import { flush } from '../../test/fakes';
@@ -25,6 +26,7 @@ function setup(props: Partial<RecipeSettingsProps> = {}) {
       onChangeSettings={vi.fn().mockResolvedValue('saved')}
       {...props}
     />,
+    { wrapper: ToastProvider },
   );
   return { onEditRecipe, onEditVariants, onBack };
 }
@@ -50,7 +52,7 @@ function settingsScreen(defaults: FamilySettings, result: 'saved' | 'failed' = '
       />
     );
   }
-  render(<Screen />);
+  render(<Screen />, { wrapper: ToastProvider });
   return saved;
 }
 

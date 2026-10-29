@@ -5,6 +5,7 @@ import { useReduceMotion } from '../reduceMotion';
 import { theme } from '../theme';
 import { Button, type ButtonProps } from './Button';
 import { Text } from './Text';
+import { ToastHost } from './Toast';
 
 export interface BottomSheetProps {
   visible: boolean;
@@ -92,6 +93,7 @@ export function BottomSheet({ visible, onClose, title, lead, headerAction, child
             {footer}
           </View>
         </Animated.View>
+        {visible ? <ToastHost /> : null}
       </View>
     </Modal>
   );

@@ -3,6 +3,7 @@ import { Modal, View, type HostInstance } from 'react-native';
 import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
+import { ToastHost } from './Toast';
 
 export interface DialogProps {
   visible: boolean;
@@ -74,6 +75,7 @@ export function Dialog({ visible, title, body, confirmLabel, onConfirm, secondar
             </View>
           </View>
         </View>
+        {visible ? <ToastHost /> : null}
       </View>
     </Modal>
   );
