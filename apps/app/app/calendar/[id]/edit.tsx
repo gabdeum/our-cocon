@@ -3,12 +3,12 @@ import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
-import { loadEvent, saveEvent, saveException, splitEvent } from '@cocon/data';
+import { loadEvent, saveEventChange } from '@cocon/data';
 import { CalendarDate, type EventInput } from '@cocon/schemas/calendar';
 import { BottomSheet, Button, Link } from '@cocon/ui';
 import { EventSheet } from '../../../components/calendar/EventSheet';
 import { eventOccurrence, seesInFull } from '../../../lib/event-detail';
-import { changedFields, draftFromEvent, futureSplit, overrideFor, scopeBody, toInput } from '../../../lib/event-form';
+import { changedFields, draftFromEvent, scopeBody, toInput } from '../../../lib/event-form';
 import { useEventSheet } from '../../../lib/use-event-sheet';
 import { strings } from '../../../strings/en';
 
@@ -58,23 +58,7 @@ export default function EditEventRoute() {
   const initial = draftFromEvent(occurrence, occurrence.starts_on);
   const before = toInput(initial, state.members, { occurrence: chosen === 'this' });
 
-  const save = async (input: EventInput): Promise<Scope> => {
-    if (chosen === 'this') {
-      const override = overrideFor(before, input);
-      if (Object.keys(override).length === 0) return 'this';
-      const existing = e.exceptions.find((x) => x.occurrence_date === date)?.override ?? {};
-      await saveException(client, familyId, e.id, { occurrence_date: date, override: { ...existing, ...override } });
-      return 'this';
-    }
-    const split = chosen === 'future' ? futureSplit(e, date, input) : null;
-    if (split) {
-      await splitEvent(client, e.id, date, split.before, split.input);
-      return 'future';
-    }
-    // A one-off event, or "All future events" from the series' first date: the whole event.
-    await saveEvent(client, input, e.id);
-    return 'all';
-  };
+  const save = (input: EventInput): Promise<Scope> => saveEventChange(client, { event: e, date, scope: chosen, familyId, before, input });
 
   return (
     <EventSheet

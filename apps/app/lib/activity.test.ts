@@ -16,6 +16,8 @@ const entry = (over: Partial<ActivityEntry> = {}): ActivityEntry => ({
   names: ['Bread', 'Butter', 'Carrots'],
   recipe_id: null,
   recipe_name: null,
+  event_id: null,
+  event_name: null,
   undone_by: null,
   undone_at: null,
   undo_action: null,
@@ -49,6 +51,15 @@ describe('describeEntry', () => {
   });
 });
 
+it.each([
+  ['event_created', 'Added'],
+  ['event_edited', 'Changed'],
+  ['event_deleted', 'Deleted'],
+  ['event_date_deleted', 'Deleted'],
+] as const)('spec 044: %s reads "%s by …"', (kind, verb) => {
+  expect(describeEntry(entry({ kind, event_name: 'Swim' }), members, now).sub).toBe(`${verb} by Alex via ChatGPT · 4 h ago`);
+});
+
 describe('entryTitle', () => {
   it.each([
     [{ kind: 'recipe_created', recipe_name: 'Pumpkin soup' }, 'New: Pumpkin soup'],
@@ -58,6 +69,10 @@ describe('entryTitle', () => {
     [{ kind: 'groceries_unticked', count: 1, names: ['Milk'] }, 'Milk put back on the list'],
     [{ kind: 'groceries_removed', count: 1, names: ['Milk'] }, 'Milk removed from Groceries'],
     [{ kind: 'groceries_cleared', count: 4 }, '4 done items cleared'],
+    [{ kind: 'event_created', count: 2, event_name: 'Pediatrician' }, 'New event: Pediatrician'],
+    [{ kind: 'event_edited', count: 1, event_name: 'Baby music class' }, 'Edited event: Baby music class'],
+    [{ kind: 'event_deleted', count: 1, event_name: 'Swim' }, 'Deleted event: Swim'],
+    [{ kind: 'event_date_deleted', count: 1, event_name: 'Swim' }, 'Deleted one date: Swim'],
     [{ kind: 'other', count: 3 }, '3 changes'],
   ] as [Partial<ActivityEntry>, string][])('%o reads "%s"', (over, title) => {
     expect(entryTitle(entry(over))).toBe(title);

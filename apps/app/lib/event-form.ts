@@ -8,7 +8,6 @@ import {
   rangeLabel,
   slotsToRange,
   sortSlots,
-  splitSeries,
   toMinutes,
   weekday,
   whenWord,
@@ -18,8 +17,8 @@ import {
   type SlotTimes,
   type WeekStartsOn,
 } from '@cocon/calendar';
-import type { StoredEvent } from '@cocon/data';
-import { memberInitials, memberKind, type EventField } from '@cocon/schemas';
+import { firstRepeatDay, type StoredEvent } from '@cocon/data';
+import { memberInitials, memberKind } from '@cocon/schemas';
 import {
   ClockTime,
   CalendarDate,
@@ -28,7 +27,6 @@ import {
   type EventCategory,
   type EventInput,
   type EventMember,
-  type EventOverride,
   type Recurrence,
   type Reminder,
   type SurpriseCover,
@@ -315,8 +313,7 @@ const timeFields = (time: DraftTime) => ({
 export function toInput(draft: EventDraft, members: readonly Member[], { occurrence = false }: { occurrence?: boolean } = {}): EventInput {
   const responsible = managedOn(draft.who, members).length && draft.responsible && takers(members).some((m) => m.id === draft.responsible) ? draft.responsible : null;
   const recurrence = recurrenceOf(draft);
-  let starts = draft.date;
-  if (recurrence?.weekdays && !occurrence) while (!recurrence.weekdays.includes(weekday(starts))) starts = addDays(starts, 1);
+  const starts = occurrence ? draft.date : firstRepeatDay(draft.date, recurrence);
   return {
     title: draft.title.trim(),
     category: draft.category,
@@ -335,56 +332,7 @@ export function toInput(draft: EventDraft, members: readonly Member[], { occurre
   };
 }
 
-const same = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
-
-/** `event_updated`'s field names: what the edit changed, never the values. */
-export function changedFields(before: EventInput, after: EventInput): EventField[] {
-  const fields: [EventField, unknown, unknown][] = [
-    ['title', before.title, after.title],
-    ['type', before.category ?? null, after.category ?? null],
-    ['place', before.location ?? null, after.location ?? null],
-    ['notes', before.notes ?? null, after.notes ?? null],
-    ['date', [before.starts_on, before.ends_on], [after.starts_on, after.ends_on]],
-    ['time', timeOf(before), timeOf(after)],
-    ['who', [...before.members].sort(), [...after.members].sort()],
-    ['responsible', before.responsible_member_id ?? null, after.responsible_member_id ?? null],
-    ['repeat', before.recurrence ?? null, after.recurrence ?? null],
-    ['reminder', before.reminder ?? 'none', after.reminder ?? 'none'],
-    ['checklist', before.checklist?.map((c) => c.label) ?? [], after.checklist?.map((c) => c.label) ?? []],
-  ];
-  return fields.filter(([, x, y]) => !same(x, y)).map(([name]) => name);
-}
-
-const timeOf = (e: EventInput) => [e.time_type, e.slots ?? [], e.start_time ?? null, e.end_time ?? null];
-
-/** "This event only": the changed fields an occurrence can replace (event_exceptions' override). */
-export function overrideFor(before: EventInput, after: EventInput): EventOverride {
-  const changed = new Set(changedFields(before, after));
-  return {
-    ...(changed.has('title') ? { title: after.title } : {}),
-    ...(changed.has('type') ? { category: after.category ?? null } : {}),
-    ...(changed.has('place') ? { location: after.location ?? null } : {}),
-    ...(changed.has('notes') ? { notes: after.notes ?? null } : {}),
-    ...(changed.has('date') ? { starts_on: after.starts_on, ends_on: after.ends_on } : {}),
-    ...(changed.has('time') ? timeFields(timeKindOf(after)) : {}),
-    ...(changed.has('who') ? { members: after.members } : {}),
-    ...(changed.has('responsible') ? { responsible_member_id: after.responsible_member_id ?? null } : {}),
-  };
-}
-
-const timeKindOf = (e: EventInput): DraftTime =>
-  e.time_type === 'all_day' ? { kind: 'all_day' } : e.time_type === 'slot' ? { kind: 'slot', slots: e.slots ?? [] } : { kind: 'custom', start: e.start_time ?? '', end: e.end_time ?? '' };
-
-/**
- * "All future events" from the occurrence `from` (its series date): the old series' new repeat and
- * the new series, which keeps what's left of the end. Null on the series' first date: edit it all.
- */
-export function futureSplit(event: StoredEvent, from: string, after: EventInput): { before: Recurrence; input: EventInput } | null {
-  const split = splitSeries(event, from);
-  if (!split) return null;
-  const recurrence = after.recurrence ? { ...after.recurrence, ends: after.recurrence.ends.type === event.recurrence?.ends.type && same(after.recurrence.ends, event.recurrence.ends) ? split.ends : after.recurrence.ends } : null;
-  return { before: split.before, input: { ...after, recurrence } };
-}
+export { changedFields, futureSplit, overrideFor } from '@cocon/data';
 
 /**
  * FR-006: "You already have Movie night this evening." when the draft shares a time with someone's

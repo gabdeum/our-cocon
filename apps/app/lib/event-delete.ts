@@ -1,38 +1,14 @@
-import { deleteEvent, removeException, restoreEvent, saveEvent, saveException, splitEvent, undoCreateEvent, type StoredEvent } from '@cocon/data';
+import { deleteOccurrences as deleteDates, saveEvent, undoCreateEvent, type StoredEvent } from '@cocon/data';
 import type { EventInput } from '@cocon/schemas';
-import { draftFromEvent, futureSplit, toInput } from './event-form';
+import { draftFromEvent, toInput } from './event-form';
 import type { Member } from './session';
 import type { Client } from './supabase';
 
-/** What a delete removed (`event_deleted`'s scope): one date, that date and after, or the whole event. */
-export type DeleteScope = 'this' | 'future' | 'all';
+export type { DeleteScope } from '@cocon/data';
 
-/**
- * Spec 042 FR-004: deletes the event `event` (the series, as loaded) for `scope` from its series
- * date `date`, and returns the Undo. Whole events go to Recently deleted for 30 days (spec 018).
- * - "all": the event is deleted.
- * - "this": that date is cancelled, keeping any change made to it, so Undo puts it back as it was.
- * - "future": the series is split at `date` (as "All future events" edits it) and the new part
- *   deleted, so those dates sit in Recently deleted under the event's title; on the series' first
- *   date, the whole event is.
- */
-export async function deleteOccurrences(
-  client: Pick<Client, 'from' | 'rpc'>,
-  { event, date, scope, familyId, members }: { event: StoredEvent; date: string; scope: DeleteScope; familyId: string; members: readonly Member[] },
-): Promise<() => Promise<void>> {
-  if (scope === 'this') {
-    const before = event.exceptions.find((x) => x.occurrence_date === date);
-    await saveException(client, familyId, event.id, { occurrence_date: date, cancelled: true, override: before?.override ?? null });
-    return () => (before ? saveException(client, familyId, event.id, before) : removeException(client, event.id, date));
-  }
-  const split = scope === 'future' ? futureSplit(event, date, toInput(draftFromEvent(event, date), members)) : null;
-  if (!split) {
-    await deleteEvent(client, event.id);
-    return () => restoreEvent(client, event.id);
-  }
-  const tail = await splitEvent(client, event.id, date, split.before, split.input);
-  await deleteEvent(client, tail);
-  return () => restoreEvent(client, tail);
+/** Spec 042 FR-004: deletes the dates `scope` covers (the rule lives in @cocon/data) and returns the Undo. */
+export async function deleteOccurrences(client: Pick<Client, 'from' | 'rpc'>, args: Parameters<typeof deleteDates>[1]): Promise<() => Promise<void>> {
+  return (await deleteDates(client, args)).undo;
 }
 
 /**

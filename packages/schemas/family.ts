@@ -156,11 +156,11 @@ export function resolveCooking(family: Pick<FamilySettings, CookingSetting>, rec
 }
 
 /**
- * Spec 024: what a member's AI assistants may do (FR-002), each Allowed (true) or Not allowed. One
+ * Spec 024: what a member's AI assistants may do (FR-002; `events` from spec 044), each Allowed (true) or Not allowed. One
  * `ai_permissions` row per member; no row means all Allowed. Keys match the database's `ai_allowed`.
  */
-export const AiPermission = z.enum(['recipes_edit', 'groceries', 'recipes_delete']);
+export const AiPermission = z.enum(['recipes_edit', 'groceries', 'events', 'recipes_delete']);
 export type AiPermission = z.infer<typeof AiPermission>;
-export const AiPermissions = z.object({ recipes_edit: z.boolean(), groceries: z.boolean(), recipes_delete: z.boolean() });
+export const AiPermissions = z.object({ recipes_edit: z.boolean(), groceries: z.boolean(), events: z.boolean(), recipes_delete: z.boolean() });
 export type AiPermissions = z.infer<typeof AiPermissions>;
-export const DEFAULT_AI_PERMISSIONS: AiPermissions = { recipes_edit: true, groceries: true, recipes_delete: true };
+export const DEFAULT_AI_PERMISSIONS: AiPermissions = { recipes_edit: true, groceries: true, events: true, recipes_delete: true };

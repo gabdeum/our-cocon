@@ -1,13 +1,13 @@
 # OC-Connect — AI assistants
 
-Source `screens/OC-Connect.dc.html` · Route `/settings/ai` · Specs 025, 024
+Source `screens/OC-Connect.dc.html` · Route `/settings/ai` · Specs 025, 024, 044
 
 ## Layout
 1. Back link "Menu".
-2. Title "AI assistants"; lead "Let your AI save recipes and fill the grocery list for you. Each person connects their own."
+2. Title "AI assistants"; lead "Let your AI save recipes, fill the grocery list and add events for you. Each person connects their own." (spec 044; the canvas still shows the earlier lead)
 3. One row per assistant: initial tile, name, status ("Connected · used {timeAgo}" in olive-deep, or "Not connected"), action "Manage" (muted link) or olive sm "Connect".
-4. "What AI can do": caption "For the AI assistants you connect. Everyone in your family chooses for their own.", then a SettingRow with a switch per permission: "Create & edit recipes", "Change the grocery list", "Delete recipes" (on = allowed). One tap changes it (changed 2026-10-26 from the drawn "Allowed" values, which opened a choice). Settings are per person (apply to this member's assistants only).
-5. Sage card "Try saying": “Save my mum's ratatouille to Our Cocon. It serves 4.” and “Add what I need for the quiche to our groceries.”
+4. "What AI can do": caption "For the AI assistants you connect. Everyone in your family chooses for their own.", then a SettingRow with a switch per permission: "Create & edit recipes", "Change the grocery list", "Add & change events" (spec 044, not drawn: a row like the others), "Delete recipes" (on = allowed). One tap changes it (changed 2026-10-26 from the drawn "Allowed" values, which opened a choice). Settings are per person (apply to this member's assistants only).
+5. Sage card "Try saying": “Save my mum's ratatouille to Our Cocon. It serves 4.”, “Add what I need for the quiche to our groceries.” and “Add James’s pediatrician on Wednesday morning.” (spec 044, a third line like the others)
 
 ## Connect sheet (not drawn; BottomSheet)
 Title "Connect {assistant}" · numbered steps (from spec 025) · read-only field with the Our Cocon address + "Copy" · ink "I've done this — check connection" · results "Connected!" (sage) or warn "Not connected yet. Check step 2 and try again."
@@ -19,7 +19,7 @@ Steps (checked against each assistant's help pages on 2026-10-26, spec 025 FR-00
 - After "Connected!", the footer button reads "Close".
 
 ## Manage sheet (not drawn)
-Title "{assistant}" · "Last used {timeAgo}" · the "What AI can do" rows (read-only; changed on the screen) · danger "Disconnect" → Dialog "Disconnect {assistant}?" · "It won't be able to see or change your recipes and groceries." · "Disconnect" / "Cancel".
+Title "{assistant}" · "Last used {timeAgo}" · the "What AI can do" rows (read-only; changed on the screen) · danger "Disconnect" → Dialog "Disconnect {assistant}?" · "It won't be able to see or change your recipes, groceries and calendar." · "Disconnect" / "Cancel".
 
 ## States
 | State | Shows |

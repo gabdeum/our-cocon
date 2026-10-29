@@ -85,7 +85,7 @@ describe.skipIf(!local)('event page actions against local Supabase', () => {
 
   it('US2 "Only this one": that date goes, and Undo brings it back as it was', async () => {
     const id = await music();
-    const undo = await deleteOccurrences(gabriel, { event: await load(id), date: '2026-10-31', scope: 'this', familyId, members });
+    const undo = await deleteOccurrences(gabriel, { event: await load(id), date: '2026-10-31', scope: 'this', familyId });
     expect(days(await load(id), '2026-10-24', '2026-11-07')).toEqual(['2026-10-24', '2026-11-07']);
     await undo();
     const back = await load(id);
@@ -95,7 +95,7 @@ describe.skipIf(!local)('event page actions against local Supabase', () => {
 
   it('US2 "This and all future ones": the dates from then on sit in Recently deleted, and Undo brings them back', async () => {
     const id = await music('Music, future');
-    const undo = await deleteOccurrences(gabriel, { event: await load(id), date: '2026-11-14', scope: 'future', familyId, members });
+    const undo = await deleteOccurrences(gabriel, { event: await load(id), date: '2026-11-14', scope: 'future', familyId });
     const shown = await loadEvents(gabriel, '2026-11-01', '2026-11-30');
     expect(shown.filter((e) => e.title === 'Music, future').flatMap((e) => days(e, '2026-11-01', '2026-11-30'))).toEqual(['2026-11-07']);
     const deleted = await loadDeletedEventItems(gabriel, gabrielMember);
@@ -107,13 +107,13 @@ describe.skipIf(!local)('event page actions against local Supabase', () => {
 
   it('"This and all future ones" on the first date deletes the whole event', async () => {
     const id = await music();
-    await deleteOccurrences(gabriel, { event: await load(id), date: '2026-10-03', scope: 'future', familyId, members });
+    await deleteOccurrences(gabriel, { event: await load(id), date: '2026-10-03', scope: 'future', familyId });
     expect((await load(id)).deleted_at).not.toBeNull();
   });
 
   it('a one-off event goes to Recently deleted with who deleted it; Undo restores it', async () => {
     const id = await saveEvent(eva, { title: 'Dentist', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'all_day', members: [evaMember] });
-    const undo = await deleteOccurrences(gabriel, { event: await load(id), date: '2026-11-03', scope: 'all', familyId, members });
+    const undo = await deleteOccurrences(gabriel, { event: await load(id), date: '2026-11-03', scope: 'all', familyId });
     const listed = (await loadDeletedEventItems(eva, evaMember)).find((d) => d.id === id);
     const { data: me } = await gabriel.auth.getUser();
     expect(listed).toMatchObject({ kind: 'event', name: 'Dentist', deleted_by: me.user?.id });

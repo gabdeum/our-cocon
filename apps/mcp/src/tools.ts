@@ -35,6 +35,7 @@ export class ToolError extends Error {
 const permissionWords: Record<AiPermission, string> = {
   recipes_edit: 'create or edit recipes',
   groceries: 'change the grocery list',
+  events: 'change the calendar',
   recipes_delete: 'delete recipes',
 };
 

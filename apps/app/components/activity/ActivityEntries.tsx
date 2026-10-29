@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { ActivityCard, Dialog } from '@cocon/ui';
-import type { ActivityEntry, Tracker, UndoConflict } from '@cocon/schemas';
+import { RestoreKind, UndoKind, type ActivityEntry, type Tracker, type UndoConflict } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useToast } from '../../lib/toast';
 import { conflictText, describeEntry, type UndoOutcome } from '../../lib/activity';
@@ -32,13 +32,13 @@ export function ActivityEntries({ entries, members, tracker, onUndo, readOnly, n
   const run = async (entry: ActivityEntry, skipChanged: boolean) => {
     setAsking(null);
     setBusy(entry.key);
-    const restoring = entry.kind === 'recipe_deleted';
+    const restoring = RestoreKind.safeParse(entry.kind).success;
     const outcome = await onUndo(entry, skipChanged);
     setBusy(null);
     switch (outcome.status) {
       case 'done':
-        if (outcome.result.kind === 'recipe_deleted') tracker.track('ai_delete_restored', {});
-        else tracker.track('ai_change_undone', { kind: outcome.result.kind });
+        if (restoring) tracker.track('ai_delete_restored', {});
+        else tracker.track('ai_change_undone', { kind: UndoKind.parse(outcome.result.kind) });
         toast.show({ text: restoring ? a.restored : a.undone });
         break;
       case 'conflicts':

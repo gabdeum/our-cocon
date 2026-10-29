@@ -6,7 +6,7 @@ import type { Db } from './client';
  * one else's), or all Allowed when they've never changed anything. OC-Connect shows them (025).
  */
 export async function loadAiPermissions(client: Pick<Db, 'from'>): Promise<AiPermissions> {
-  const { data, error } = await client.from('ai_permissions').select('recipes_edit, groceries, recipes_delete').maybeSingle();
+  const { data, error } = await client.from('ai_permissions').select('recipes_edit, groceries, events, recipes_delete').maybeSingle();
   if (error) throw error;
   return data ? AiPermissions.parse(data) : DEFAULT_AI_PERMISSIONS;
 }

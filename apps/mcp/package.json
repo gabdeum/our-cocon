@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit --pretty false"
   },
   "dependencies": {
+    "@cocon/calendar": "workspace:*",
     "@cocon/data": "workspace:*",
     "@cocon/quantity": "workspace:*",
     "@cocon/schemas": "workspace:*",

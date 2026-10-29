@@ -21,6 +21,8 @@ const groceries: ActivityEntry = {
   names: ['Bread', 'Butter', 'Carrots'],
   recipe_id: null,
   recipe_name: null,
+  event_id: null,
+  event_name: null,
   undone_by: null,
   undone_at: null,
   undo_action: null,

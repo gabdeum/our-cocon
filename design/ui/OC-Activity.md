@@ -10,7 +10,7 @@ No drawn screen: this spec is the source of truth (built from ActivityCard, Pers
 5. ActivityCards, newest first, gap 12: every AI change, 50 at a time, then a soft button "Show more".
 
 ## Entries
-One per AI tool call (spec 026 FR-001). Titles:
+One per AI tool call (spec 026 FR-001). A private event's entries are seen only by its creator, and a surprise's never by the people it's kept from (spec 044). Titles:
 
 | Change | Title | Sub-line verb |
 | --- | --- | --- |
@@ -22,6 +22,10 @@ One per AI tool call (spec 026 FR-001). Titles:
 | Unticked | "{n} items put back on the list" · "{item} put back on the list" | Changed |
 | Removed | "{n} items removed from Groceries" · "{item} removed from Groceries" | Removed |
 | Done items cleared | "{n} done items cleared" · "1 done item cleared" | Cleared |
+| Event added (spec 044) | "New event: {title}" | Added |
+| Event changed | "Edited event: {title}" | Changed |
+| Event deleted (the whole event, or its dates from one on) | "Deleted event: {title}" (link "Restore" while it's in Recently deleted, 30 days) | Deleted |
+| One date of a repeating event deleted | "Deleted one date: {title}" | Deleted |
 | Anything else | "{n} changes" · "1 change" | Changed |
 
 Sub-line: "{verb} by {name} via {assistant} · {timeAgo}" ("just now", "12 min ago", "4 h ago", "2 days ago"); "Former member" for someone who left, "an AI assistant" for an assistant we can't name. Undo and its states as on OC-Home (States).
