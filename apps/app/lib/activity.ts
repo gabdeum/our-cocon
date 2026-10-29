@@ -66,8 +66,8 @@ export async function undoActivity(client: Pick<Client, 'rpc'>, key: string, ski
 type Members = readonly Pick<Member, 'user_id' | 'display_name'>[];
 const nameOf = (id: string | null, members: Members) => members.find((m) => m.user_id === id)?.display_name ?? strings.recipe.formerMember;
 
-/** "6 items added to Groceries", "New: Pumpkin soup". */
-export function entryTitle(entry: Pick<ActivityEntry, 'kind' | 'count' | 'names' | 'recipe_name'>): string {
+/** "6 items added to Groceries", "New: Pumpkin soup", "New event: Pediatrician". */
+export function entryTitle(entry: Pick<ActivityEntry, 'kind' | 'count' | 'names' | 'recipe_name' | 'event_name'>): string {
   const t = strings.activity.title;
   const recipe = entry.recipe_name ?? '';
   const first = entry.names[0] ?? '';
@@ -84,6 +84,10 @@ export function entryTitle(entry: Pick<ActivityEntry, 'kind' | 'count' | 'names'
       return t[kind](entry.count, first);
     case 'groceries_cleared':
       return t.groceries_cleared(entry.count);
+    case 'event_created':
+    case 'event_edited':
+    case 'event_deleted':
+      return entry.event_name ? t[kind](entry.event_name) : t.other(entry.count);
     case 'other':
       return t.other(entry.count);
   }

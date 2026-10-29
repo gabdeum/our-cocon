@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"ai_permissions": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"family_id": string,"groceries": boolean,"id": string,"recipes_delete": boolean,"recipes_edit": boolean,"source": string,"updated_at": string,"updated_by": string | null,"user_id": string
+                    "created_at": string,"created_by": string | null,"events": boolean,"family_id": string,"groceries": boolean,"id": string,"recipes_delete": boolean,"recipes_edit": boolean,"source": string,"updated_at": string,"updated_by": string | null,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id": string
+                    "created_at"?: string,"created_by"?: string | null,"events"?: boolean,"family_id": string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string
+                    "created_at"?: string,"created_by"?: string | null,"events"?: boolean,"family_id"?: string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -792,6 +792,9 @@ isOneToOne: false
                            } |
 { Args: { "creator": string,"eid": string,"vis": string }; Returns: boolean
                            },
+"_sees_logged_event":
+{ Args: { "actor": string,"eid": string,"secret": boolean }; Returns: boolean
+                           },
 "_token_hash":
 { Args: { "token": string }; Returns: string
                            },
@@ -812,7 +815,7 @@ isOneToOne: false
                            },
 "activity_entries":
 { Args: { "p_actor"?: string,"p_before"?: string,"p_limit"?: number,"p_source"?: string }; Returns: {
-              "actor_id": string,"can_restore": boolean,"can_undo": boolean,"count": number,"created_at": string,"key": string,"kind": string,"names": (string)[],"recipe_id": string,"recipe_name": string,"source": string,"undo_action": string,"undone_at": string,"undone_by": string
+              "actor_id": string,"can_restore": boolean,"can_undo": boolean,"count": number,"created_at": string,"event_id": string,"event_name": string,"key": string,"kind": string,"names": (string)[],"recipe_id": string,"recipe_name": string,"source": string,"undo_action": string,"undone_at": string,"undone_by": string
             }[]
                            },
 "activity_filters":

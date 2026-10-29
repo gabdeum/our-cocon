@@ -75,7 +75,7 @@ export default function EventRoute() {
         page.refreshEvents();
       }}
       onDelete={async (scope) => {
-        const undo = await deleteOccurrences(client, { event: ev, date, scope, familyId, members: state.members });
+        const undo = await deleteOccurrences(client, { event: ev, date, scope, familyId });
         page.refreshEvents();
         page.close();
         return undo;

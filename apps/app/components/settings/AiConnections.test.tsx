@@ -54,7 +54,7 @@ describe('AI assistants', () => {
   it('lists Claude, ChatGPT and Gemini with their status, then permissions and phrases to try', () => {
     setup();
     expect(screen.getByRole('heading', { name: 'AI assistants' })).toBeTruthy();
-    expect(screen.getByText('Let your AI save recipes and fill the grocery list for you. Each person connects their own.')).toBeTruthy();
+    expect(screen.getByText('Let your AI save recipes, fill the grocery list and add events for you. Each person connects their own.')).toBeTruthy();
     expect(screen.getByText('Connected · used 2 h ago')).toBeTruthy();
     expect(screen.getByText('Connected · used 1 h ago')).toBeTruthy();
     expect(screen.getByText('Not connected')).toBeTruthy();
@@ -63,9 +63,17 @@ describe('AI assistants', () => {
     expect(screen.getByRole('heading', { name: 'What AI can do' })).toBeTruthy();
     expect(screen.getByRole('switch', { name: 'Create & edit recipes' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('switch', { name: 'Delete recipes' }).getAttribute('aria-checked')).toBe('false');
+    // Spec 044: "Add & change events" sits between the grocery list and deleting recipes.
+    expect(screen.getAllByRole('switch').map((s) => s.getAttribute('aria-label'))).toEqual([
+      'Create & edit recipes',
+      'Change the grocery list',
+      'Add & change events',
+      'Delete recipes',
+    ]);
     expect(screen.getByText('Try saying')).toBeTruthy();
     expect(screen.getByText('“Save my mum\'s ratatouille to Our Cocon. It serves 4.”')).toBeTruthy();
     expect(screen.getByText('“Add what I need for the quiche to our groceries.”')).toBeTruthy();
+    expect(screen.getByText('“Add James’s pediatrician on Wednesday morning.”')).toBeTruthy();
   });
 
   it('US1: Connect guides through the steps, copies the address, and checks the connection', async () => {
@@ -110,7 +118,7 @@ describe('AI assistants', () => {
     expect(screen.getByText('Last used 2 h ago')).toBeTruthy();
     expect(screen.getAllByText('Change the grocery list')).toHaveLength(2);
     fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
-    expect(screen.getByRole('alertdialog', { name: 'Disconnect Claude?' }).textContent).toContain("It won't be able to see or change your recipes and groceries.");
+    expect(screen.getByRole('alertdialog', { name: 'Disconnect Claude?' }).textContent).toContain("It won't be able to see or change your recipes, groceries and calendar.");
     expect(onDisconnect).not.toHaveBeenCalled();
     fireEvent.click(last(screen.getAllByRole('button', { name: 'Disconnect' })));
     await flush();
@@ -146,6 +154,14 @@ describe('AI assistants', () => {
     await flush();
     expect(onSetPermission).toHaveBeenCalledWith('recipes_delete', true);
     expect(tracker.track).toHaveBeenCalledWith('ai_permission_changed', { permission: 'recipes_delete', allowed: true });
+  });
+
+  it('spec 044 FR-003: "Add & change events" turns off like the others', async () => {
+    const { tracker, onSetPermission } = setup();
+    fireEvent.click(screen.getByRole('switch', { name: 'Add & change events' }));
+    await flush();
+    expect(onSetPermission).toHaveBeenCalledWith('events', false);
+    expect(tracker.track).toHaveBeenCalledWith('ai_permission_changed', { permission: 'events', allowed: false });
   });
 
   it('a switch that couldn’t save goes back and says so', async () => {

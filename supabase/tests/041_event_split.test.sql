@@ -75,7 +75,7 @@ reset role;
 set local role anon;
 select throws_ok($$ select public.split_event(pg_temp.id('music'), '2026-10-24', '{}', '{}', '[]') $$, '42501', null, 'nor can someone signed out');
 select pg_temp.login('00000000-0000-0000-0000-00000000041a', 'cocon_assistant');
-select throws_ok($$ select public.split_event(pg_temp.id('music'), '2026-10-24', '{}', '{}', '[]') $$, '42501', null, 'nor can an assistant');
+select throws_ok($$ select public.split_event(pg_temp.id('music'), '2026-10-24', '{}', '{}', '[]') $$, '22023', 'split_overlaps', 'an assistant goes through the same checks (spec 044)');
 
 -- Gabriel can't make Eva's series his own private one, nor overlap the two series.
 select pg_temp.login('00000000-0000-0000-0000-00000000041a');

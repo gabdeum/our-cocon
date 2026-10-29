@@ -116,9 +116,10 @@ select pg_temp.login('00000000-0000-0000-0000-00000000035a', 'cocon_assistant', 
 select is((select title from public.events_visible where id = pg_temp.id('yoga')), 'Busy', 'Gabriel''s assistant gets Busy');
 select is((select row(location, notes, checklist::text)::text from public.events_visible where id = pg_temp.id('yoga')), '(,,)', 'and no details');
 select is((select title from public.events_visible where id = pg_temp.id('dinner')), 'Eva''s birthday dinner', 'it sees what Gabriel sees in full');
-select throws_ok($$ select * from public.events $$, '42501', null, 'it has no events table to read past the view');
-select throws_ok($$ select * from public.event_checklist_items $$, '42501', null, 'nor the checklists');
-select throws_ok($$ select public.save_event('{}', '[]') $$, '42501', null, 'and it can''t save events yet (spec 044)');
+-- Since spec 044 it saves events, so it reads their tables too, through Gabriel's own policies.
+select is((select count(*)::int from public.events where id = pg_temp.id('yoga')), 0, 'the tables never show it a private event past the view');
+select is((select count(*)::int from public.event_checklist_items c where c.event_id = pg_temp.id('yoga')), 0, 'nor its checklist');
+select throws_ok($$ delete from public.events $$, '42501', null, 'and it never removes an event for good');
 
 -- Surprise: Eva gets the cover, read as a family event, and nothing else.
 select pg_temp.login('00000000-0000-0000-0000-00000000035b');

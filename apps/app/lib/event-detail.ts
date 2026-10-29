@@ -1,4 +1,4 @@
-import { calendarWordsEn, dateLabel, occurrenceOn, rangeLabel, timeLabel, viewFor, weekday, type CalendarEvent, type SlotTimes } from '@cocon/calendar';
+import { calendarWordsEn, dateLabel, rangeLabel, timeLabel, viewFor, weekday, type CalendarEvent, type SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { memberInitials, memberKind, type EventMember } from '@cocon/schemas';
 import type { MemberChipColor } from '@cocon/ui';
@@ -9,20 +9,7 @@ import type { Member } from './session';
 
 const e = strings.calendar.event;
 
-/**
- * The occurrence an event route shows (`?date=`, its series date), merged into the event so it
- * keeps the event's id, checklist and exceptions; null when that date isn't one of the event's,
- * is cancelled, or the event can't be placed. Spec 042 FR-001, and spec 041's edit route.
- */
-export function eventOccurrence(event: StoredEvent, date: string): StoredEvent | null {
-  try {
-    const found = occurrenceOn(event, date, event.exceptions);
-    // An override's type is checked by EventOverride, so it's one of the event types.
-    return found ? { ...event, ...found, category: found.category as StoredEvent['category'] } : null;
-  } catch {
-    return null;
-  }
-}
+export { eventOccurrence } from '@cocon/data';
 
 /** Whether this member sees the event itself, not "Busy" (the Busy and surprise pages are spec 043). */
 export const seesInFull = (event: StoredEvent, myMemberId: string) => !event.deleted_at && viewFor(event, myMemberId).view === 'full';
