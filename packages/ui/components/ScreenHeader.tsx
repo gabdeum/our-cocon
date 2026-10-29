@@ -78,16 +78,23 @@ export interface BackHeaderProps {
   aside?: string;
 }
 
+/** ScreenHeader README › Back link on its own: "‹ Calendar" over a page with its own title (OC-CalEvent). */
+export function BackLink({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable role="link" onPress={onPress} className={cn('h-control-md flex-row items-center gap-4 self-start', focusRing)}>
+      <Icon name="back" size={22} color="olive" />
+      <Text size={16} weight="800" color="olive">
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 /** Pushed screen without a photo (ScreenHeader README › Back link). */
 export function BackHeader({ backLabel, onBack, title, lead, aside }: BackHeaderProps) {
   return (
     <View className={aside ? 'gap-8' : 'gap-[2px]'}>
-      <Pressable role="link" onPress={onBack} className={cn('h-control-md flex-row items-center gap-4 self-start', focusRing)}>
-        <Icon name="back" size={22} color="olive" />
-        <Text size={16} weight="800" color="olive">
-          {backLabel}
-        </Text>
-      </Pressable>
+      <BackLink label={backLabel} onPress={onBack} />
       {aside ? (
         <View className="flex-row items-baseline justify-between gap-12">
           <Text variant="displayXl" role="heading" aria-level={1}>

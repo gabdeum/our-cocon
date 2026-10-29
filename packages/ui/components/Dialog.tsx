@@ -15,6 +15,9 @@ export interface DialogProps {
   /** "Delete recipe". */
   confirmLabel: string;
   onConfirm: () => void;
+  /** A second, wider destructive choice under the first, as a danger outline: "This and all future ones" (OC-CalEventDelete). */
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   /** "Keep it": the safe choice, focused first. */
   cancelLabel: string;
   onCancel: () => void;
@@ -22,7 +25,7 @@ export interface DialogProps {
 }
 
 /** Centred confirmation for destructive or irreversible actions only (Dialog README). */
-export function Dialog({ visible, title, body, confirmLabel, onConfirm, cancelLabel, onCancel, icon = 'trash', emphasis }: DialogProps) {
+export function Dialog({ visible, title, body, confirmLabel, onConfirm, secondaryLabel, onSecondary, cancelLabel, onCancel, icon = 'trash', emphasis }: DialogProps) {
   const titleId = useId();
   const bodyId = useId();
   const safeRef = useRef<HostInstance>(null);
@@ -65,6 +68,7 @@ export function Dialog({ visible, title, body, confirmLabel, onConfirm, cancelLa
           </Text>
           <View className="gap-10 self-stretch">
             <Button label={confirmLabel} variant="danger" size="dialog" block onPress={onConfirm} />
+            {secondaryLabel && onSecondary ? <Button label={secondaryLabel} variant="danger-outline" size="dialog" block onPress={onSecondary} /> : null}
             <View ref={safeRef} tabIndex={-1} className="web:outline-none">
               <Button label={cancelLabel} variant="soft" size="dialog" block onPress={onCancel} />
             </View>

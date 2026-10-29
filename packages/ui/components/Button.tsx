@@ -5,7 +5,7 @@ import type { ColorName } from '../theme';
 import { BrandMark, Icon, type BrandName, type IconName } from './Icon';
 import { Text, type TextColor, type Weight } from './Text';
 
-export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'tile' | 'danger';
+export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'tile' | 'danger' | 'danger-outline';
 /** sm 44 · md 58 · lg 60 (cooking mode, recipe CTA) · dialog 56 (Dialog README). */
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'dialog';
 
@@ -56,6 +56,8 @@ const looks: Record<ButtonVariant, Look> = {
     fixedHeight: 'h-control-md',
   },
   danger: { fill: 'bg-danger active:bg-danger-pressed', text: 'on-olive', icon: 'onOlive', weight: '900' },
+  // The second destructive choice in a Dialog: "This and all future ones" (OC-CalEventDelete, spec 042).
+  'danger-outline': { fill: 'bg-surface-card border-2 border-danger active:bg-surface-card-pressed', text: 'danger', icon: 'danger', weight: '900' },
 };
 
 const sizes: Record<ButtonSize, { height: string; padding: string; paddingPx: number; fontSize: number }> = {

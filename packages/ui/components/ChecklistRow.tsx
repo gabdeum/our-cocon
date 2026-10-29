@@ -9,6 +9,8 @@ export interface ChecklistRowProps {
   done: boolean;
   /** Ticks or unticks it (the event page, spec 042). Left out in the add sheet, where rows are only listed. */
   onToggle?: () => void;
+  /** Offline: the checkbox keeps its look and its tick, `aria-disabled`, not pressable (as ListRow). */
+  disabled?: boolean;
   /** The add sheet: a remove button, labelled "Remove {label}" by the caller. */
   remove?: { label: string; onPress: () => void };
   /** The last row: no divider under it. */
@@ -27,7 +29,7 @@ function Box({ done }: { done: boolean }) {
  * ChecklistRow README: a checklist item with its box. Tickable (a full-width checkbox, spec 042),
  * or listed with a remove button in the add sheet (OC-CalAddMore).
  */
-export function ChecklistRow({ label, done, onToggle, remove, last = false }: ChecklistRowProps) {
+export function ChecklistRow({ label, done, onToggle, disabled, remove, last = false }: ChecklistRowProps) {
   const row = cn('min-h-[52px] w-full flex-row items-center gap-12', !last && 'border-b-[1.5px] border-line');
   const text = (
     <Text size={16} weight="700" color={done ? 'ink-muted' : 'ink'} strike={done} className="min-w-0 flex-1">
@@ -36,7 +38,14 @@ export function ChecklistRow({ label, done, onToggle, remove, last = false }: Ch
   );
   if (onToggle) {
     return (
-      <Pressable role="checkbox" aria-checked={done} onPress={onToggle} className={cn(row, 'active:bg-surface-card-pressed', focusRing)}>
+      <Pressable
+        role="checkbox"
+        aria-checked={done}
+        disabled={disabled}
+        aria-disabled={disabled || undefined}
+        onPress={onToggle}
+        className={cn(row, !disabled && 'active:bg-surface-card-pressed', focusRing)}
+      >
         <Box done={done} />
         {text}
       </Pressable>

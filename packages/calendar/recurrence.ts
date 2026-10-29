@@ -119,6 +119,20 @@ export function expand(event: CalendarEvent, from: string, to: string, exception
 }
 
 /**
+ * Spec 042: the occurrence whose series date is `date` (an event page's `?date=`), wherever a
+ * "this event only" change moved it. Null when `date` isn't one of the event's dates or is
+ * cancelled. Throws like `expand` for an event the engine can't place.
+ */
+export function occurrenceOn(event: CalendarEvent, date: string, exceptions: readonly EventException[] = []): Occurrence | null {
+  assertDate(date, 'Date');
+  const exception = exceptions.find((e) => e.occurrence_date === date);
+  const moved = (exception?.override as Record<string, unknown> | null | undefined)?.starts_on;
+  const to = typeof moved === 'string' && CalendarDate.safeParse(moved).success ? moved : date;
+  const [from, until] = to < date ? [to, date] : [date, to];
+  return expand(event, from, until, exception ? [exception] : []).find((o) => o.occurrence_date === date) ?? null;
+}
+
+/**
  * Spec 041 "All future events" from the series date `from`: the old series now ends the day
  * before (`before`), and the new one keeps what's left of the end (`ends`: the same date, or the
  * count minus the times already gone). Null when `from` is the first date: edit the whole series.

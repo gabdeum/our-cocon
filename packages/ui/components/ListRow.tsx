@@ -5,6 +5,7 @@ import { Avatar, type AvatarColor } from './Avatar';
 import { Icon, type IconName } from './Icon';
 import { IconTile, type IconTileTone } from './IconTile';
 import { Tag, type TagTone } from './Tag';
+import { Link } from './Button';
 import { Text } from './Text';
 
 /** Uppercase group label above a list (bundle.css › oc-overline). Write it in sentence case. */
@@ -262,6 +263,41 @@ function Trailing({ trailing }: { trailing: ListRowTrailing }) {
     case 'node':
       return <>{trailing.node}</>;
   }
+}
+
+export interface IconRowProps {
+  /** Olive, 22: clock, repeat, pin, car, bell on the event page. */
+  icon: IconName;
+  /** 16/800: "Saturday, Oct 31". */
+  title: string;
+  /** 14/700 muted: "Morning · about 09:00–12:00". */
+  sub?: string;
+  /** A link at the end: "Open in Maps". */
+  action?: { label: string; accessibilityLabel?: string; onPress: () => void };
+  last?: boolean;
+}
+
+/**
+ * ListRow README › Icon row (spec 042, OC-CalEvent): a fact with an olive icon, inside a white
+ * `ListGroup inset` card. Min 56 tall, 60 with a sub-line or a link. Not pressable; its link is.
+ */
+export function IconRow({ icon, title, sub, action, last }: IconRowProps) {
+  return (
+    <View className={cn('flex-row items-center gap-12 py-8', sub || action ? 'min-h-[60px]' : 'min-h-[56px]', !last && 'border-b-[1.5px] border-line')}>
+      <Icon name={icon} size={22} color="olive" />
+      <View className="min-w-0 flex-1">
+        <Text size={16} weight="800">
+          {title}
+        </Text>
+        {sub ? (
+          <Text size={14} weight="700" color="ink-muted">
+            {sub}
+          </Text>
+        ) : null}
+      </View>
+      {action ? <Link label={action.label} accessibilityLabel={action.accessibilityLabel} onPress={action.onPress} /> : null}
+    </View>
+  );
 }
 
 export interface IngredientRowProps {

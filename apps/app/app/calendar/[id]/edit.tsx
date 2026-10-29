@@ -3,11 +3,11 @@ import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
-import { expand, viewFor } from '@cocon/calendar';
-import { loadEvent, saveEvent, saveException, splitEvent, type StoredEvent } from '@cocon/data';
+import { loadEvent, saveEvent, saveException, splitEvent } from '@cocon/data';
 import { CalendarDate, type EventInput } from '@cocon/schemas/calendar';
 import { BottomSheet, Button, Link } from '@cocon/ui';
 import { EventSheet } from '../../../components/calendar/EventSheet';
+import { eventOccurrence, seesInFull } from '../../../lib/event-detail';
 import { changedFields, draftFromEvent, futureSplit, overrideFor, scopeBody, toInput } from '../../../lib/event-form';
 import { useEventSheet } from '../../../lib/use-event-sheet';
 import { strings } from '../../../strings/en';
@@ -34,7 +34,7 @@ export default function EditEventRoute() {
 
   const e = event.data;
   const date = CalendarDate.safeParse(params.date).success ? (params.date as string) : e?.starts_on;
-  const occurrence = e && date && !e.deleted_at && viewFor(e, myMemberId).view === 'full' ? occurrenceOf(e, date) : null;
+  const occurrence = e && date && seesInFull(e, myMemberId) ? eventOccurrence(e, date) : null;
   if (!e || !date || !occurrence) {
     return (
       <BottomSheet visible onClose={sheet.close} title={a.loadFailedTitle} lead={a.loadFailedBody} closeLabel={a.close} footer={<Button label={a.cancel} variant="soft" block onPress={sheet.close} />}>
@@ -100,16 +100,4 @@ export default function EditEventRoute() {
       }}
     />
   );
-}
-
-/** The occurrence on its series date `date` (with its "this event only" changes); null if there's none. */
-function occurrenceOf(event: StoredEvent, date: string): StoredEvent | null {
-  if (!event.recurrence) return date === event.starts_on ? event : null;
-  try {
-    const found = expand(event, date, date, event.exceptions).find((o) => o.occurrence_date === date);
-    // An override's type is checked by EventOverride, so it's one of the event types.
-    return found ? { ...event, ...found, category: found.category as StoredEvent['category'] } : null;
-  } catch {
-    return null;
-  }
 }

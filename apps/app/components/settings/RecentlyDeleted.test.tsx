@@ -1,9 +1,10 @@
 // Spec 018 US2 and FR-003: Settings › Recently deleted lists deleted recipes newest first, with who
 // deleted them, when and how long they stay; Restore brings one back, "Delete now" asks first.
+// Spec 042: deleted events are listed with them.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { fakeTracker, flush, gabriel, mia } from '../../test/fakes';
-import type { DeletedRecipe } from '../../lib/recipe-delete';
+import type { DeletedItem } from '../../lib/recently-deleted';
 
 vi.mock('expo-image-picker', () => ({}));
 vi.mock('expo-image-manipulator', () => ({ ImageManipulator: {}, SaveFormat: { JPEG: 'jpeg' } }));
@@ -16,8 +17,9 @@ afterEach(cleanup);
 
 const now = new Date('2026-10-21T12:00:00Z');
 const daysAgo = (d: number) => new Date(now.getTime() - (d * 24 + 2) * 60 * 60 * 1000).toISOString();
-const quiche: DeletedRecipe = { id: 'r1', name: 'Leek & bacon quiche', deleted_at: daysAgo(3), deleted_by: gabriel.user_id };
-const soup: DeletedRecipe = { id: 'r2', name: 'Pumpkin soup', deleted_at: daysAgo(10), deleted_by: 'someone-who-left' };
+const quiche: DeletedItem = { kind: 'recipe', id: 'r1', name: 'Leek & bacon quiche', deleted_at: daysAgo(3), deleted_by: gabriel.user_id };
+const music: DeletedItem = { kind: 'event', id: 'e1', name: 'Baby music class', deleted_at: daysAgo(5), deleted_by: mia.user_id };
+const soup: DeletedItem = { kind: 'recipe', id: 'r2', name: 'Pumpkin soup', deleted_at: daysAgo(10), deleted_by: 'someone-who-left' };
 
 function setup(over: Partial<Props> = {}) {
   const tracker = fakeTracker();
@@ -25,7 +27,7 @@ function setup(over: Partial<Props> = {}) {
   const onDeleteNow = vi.fn(async () => undefined);
   render(
     <RecentlyDeleted
-      recipes={[quiche, soup]}
+      items={[quiche, music, soup]}
       members={[gabriel, mia]}
       tracker={tracker}
       onRetry={vi.fn()}
@@ -80,15 +82,32 @@ describe('Recently deleted', () => {
     expect(onDeleteNow).toHaveBeenCalledWith(soup);
   });
 
+  it('lists deleted events too, and brings one back to the calendar (spec 042)', async () => {
+    const { tracker, onRestore, onDeleteNow } = setup();
+    expect(screen.getByText('Deleted by Mia · 5 days ago · 25 days left')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Restore Baby music class' }));
+    await flush();
+    expect(onRestore).toHaveBeenCalledWith(music);
+    expect(tracker.track).not.toHaveBeenCalled();
+    expect(screen.getByText('“Baby music class” is back in your calendar.')).toBeTruthy();
+    fireEvent.click(screen.getByText('Baby music class'));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete now' }));
+    expect(screen.getByRole('alertdialog', { name: 'Delete “Baby music class” for good?' }).textContent).toContain("This can't be undone.");
+    const buttons = screen.getAllByRole('button', { name: 'Delete now' });
+    fireEvent.click(buttons[buttons.length - 1] as HTMLElement);
+    await flush();
+    expect(onDeleteNow).toHaveBeenCalledWith(music);
+  });
+
   it('says when there is nothing to bring back', () => {
-    setup({ recipes: [] });
+    setup({ items: [] });
     expect(screen.getByText('Nothing here.')).toBeTruthy();
-    expect(screen.getByText('Recipes you delete stay here for 30 days.')).toBeTruthy();
+    expect(screen.getByText('Recipes and events you delete stay here for 30 days.')).toBeTruthy();
   });
 
   it('offers Try again when the list could not load', () => {
     const onRetry = vi.fn();
-    setup({ recipes: undefined, failed: true, onRetry });
+    setup({ items: undefined, failed: true, onRetry });
     expect(screen.getByText("Couldn't load. Try again.")).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(onRetry).toHaveBeenCalled();

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CalendarDate, ClockTime, EventOverride, Recurrence, SlotKey, SlotTimes, TimeType } from './calendar';
 import { CatalogKey, PhotoPath, SizeWord, Unit, VariantKind, type IngredientRow, type StepRow } from './recipes';
 import { parseVariantChanges, type RecipeVariant } from './variants';
 
@@ -101,3 +102,33 @@ export function parseSharedRecipe(body: unknown, supabaseUrl: string): { recipe:
     photoUrls: Object.fromEntries(Object.entries(signedPhotos).map(([path, link]) => [path, base + link])),
   };
 }
+
+/**
+ * Spec 042 FR-005: what the share endpoint returns for a shared event date: the title, the date
+ * and time fields, the place and first names ("everyone" and "others" as words). Never the notes,
+ * checklist, reminder, who drives or any id. The page works the day out with @cocon/calendar's
+ * `occurrenceOn` from `event`, `occurrence_date` and `exception`.
+ */
+export const SharedEventResponse = z.object({
+  occurrence_date: CalendarDate,
+  event: z.object({
+    title: z.string().min(1).max(60),
+    location: z.string().max(200).optional(),
+    starts_on: CalendarDate,
+    ends_on: CalendarDate,
+    time_type: TimeType,
+    slots: z.array(SlotKey),
+    start_time: ClockTime.optional(),
+    end_time: ClockTime.optional(),
+    recurrence: Recurrence.optional(),
+  }),
+  exception: z
+    .object({
+      occurrence_date: CalendarDate,
+      override: EventOverride.pick({ title: true, location: true, starts_on: true, ends_on: true, time_type: true, slots: true, start_time: true, end_time: true }),
+    })
+    .nullable(),
+  who: z.array(z.string().min(1).max(40)).max(50),
+  slot_times: SlotTimes.nullable(),
+});
+export type SharedEventResponse = z.infer<typeof SharedEventResponse>;

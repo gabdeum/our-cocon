@@ -82,11 +82,11 @@ The script is safe to run again at any time (`infra/bootstrap-from-laptop.sh <se
    `https://app.ourcocon.com/version.json`, `https://mcp.ourcocon.com/health`, `https://api.ourcocon.com/auth/v1/health` (expect 401), and the same three with `-staging`.
 3. **HSTS** (tells browsers to always use HTTPS): Cloudflare → SSL/TLS → Edge Certificates → HSTS → on, 12 months, include subdomains.
 4. **Branch protection**: GitHub → Settings → Branches → add a rule for `main`: require a pull request, and require the status check **Check** to pass.
-5. **Rate limit for signed-out pages** (constitution VI; spec 019, 032-later L2). A *rate-limiting rule* makes Cloudflare block a visitor (by IP address) for a few seconds when they send too many requests to some addresses. The free plan has one rule; it covers what anyone can call without signing in: the invite preview, shared recipe pages and the share endpoint behind them, and (spec 023) the addresses AI assistants use to register themselves and get a sign-in token.
+5. **Rate limit for signed-out pages** (constitution VI; spec 019, 032-later L2). A *rate-limiting rule* makes Cloudflare block a visitor (by IP address) for a few seconds when they send too many requests to some addresses. The free plan has one rule; it covers what anyone can call without signing in: the invite preview, shared recipe and (spec 042) event pages and the share endpoints behind them, and (spec 023) the addresses AI assistants use to register themselves and get a sign-in token.
    Cloudflare → ourcocon.com → Security → WAF → Rate limiting rules → Create rule:
    - Name: `Signed-out pages`
-   - Field **URI Path**, *equals* `/functions/v1/shared-recipe`; **Or** URI Path *contains* `/r/`; **Or** URI Path *equals* `/rest/v1/rpc/invite_status`; **Or** URI Path *equals* `/auth/v1/oauth/clients/register`; **Or** URI Path *equals* `/auth/v1/oauth/token`
-   - Already made the rule before spec 023? Edit it and add the last two lines.
+   - Field **URI Path**, *equals* `/functions/v1/shared-recipe`; **Or** URI Path *contains* `/r/`; **Or** URI Path *equals* `/rest/v1/rpc/invite_status`; **Or** URI Path *equals* `/auth/v1/oauth/clients/register`; **Or** URI Path *equals* `/auth/v1/oauth/token`; **Or** URI Path *equals* `/functions/v1/shared-event`; **Or** URI Path *contains* `/e/`
+   - Already made the rule before spec 023? Edit it and add the OAuth lines. Before spec 042? Add the last two (shared events).
    - Same characteristics: **IP**. When rate exceeds: **30** requests per **10 seconds**. Action: **Block** for **10 seconds**.
    - Deploy. A shared recipe page costs a visitor two requests (the page and its data), and connecting an assistant a few, so people never hit it; a script trying links or registering clients does. The page's link preview asks the endpoint from inside the server (`SHARE_ENDPOINT_URL`), so it isn't counted.
 

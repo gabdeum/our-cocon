@@ -3,47 +3,48 @@ import { View } from 'react-native';
 import { BackHeader, BottomSheet, Button, Callout, Dialog, Link, ListGroup, ListRow, PushedScreen, RecipeItemSkeleton, StatusBanner, Text } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
-import { daysLeft, daysSinceDelete, type DeletedRecipe } from '../../lib/recipe-delete';
+import { daysLeft, daysSinceDelete } from '../../lib/recipe-delete';
+import type { DeletedItem } from '../../lib/recently-deleted';
 import type { Member } from '../../lib/session';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const d = strings.recentlyDeleted;
 
 export interface RecentlyDeletedProps {
-  /** Undefined while loading. Newest first (lib/recipe-delete.ts › loadDeleted). */
-  recipes: DeletedRecipe[] | undefined;
+  /** Undefined while loading. Recipes and events, newest first (lib/recently-deleted.ts). */
+  items: DeletedItem[] | undefined;
   members: readonly Pick<Member, 'user_id' | 'display_name'>[];
   tracker: Tracker;
   failed?: boolean;
   onRetry: () => void;
   onBack: () => void;
-  onRestore: (recipe: DeletedRecipe) => Promise<void>;
-  onDeleteNow: (recipe: DeletedRecipe) => Promise<void>;
+  onRestore: (item: DeletedItem) => Promise<void>;
+  onDeleteNow: (item: DeletedItem) => Promise<void>;
   /** Offline: the list stays readable, Restore and Delete now are off. */
   readOnly?: boolean;
   now?: Date;
 }
 
 /**
- * Settings › Recently deleted (spec 018, design/flows.md): the family's deleted recipes, newest
- * first, each with who deleted it, when, and how long it stays. "Restore" brings one back; tapping
+ * Settings › Recently deleted (spec 018, design/flows.md): the family's deleted recipes and (spec
+ * 042) events, newest first, each with who deleted it, when, and how long it stays. "Restore" brings one back; tapping
  * a row also offers "Delete now", which removes it for good after a Dialog.
  */
-export function RecentlyDeleted({ recipes, members, tracker, failed, onRetry, onBack, onRestore, onDeleteNow, readOnly, now = new Date() }: RecentlyDeletedProps) {
-  const [selected, setSelected] = useState<DeletedRecipe | null>(null);
-  const [confirm, setConfirm] = useState<DeletedRecipe | null>(null);
+export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBack, onRestore, onDeleteNow, readOnly, now = new Date() }: RecentlyDeletedProps) {
+  const [selected, setSelected] = useState<DeletedItem | null>(null);
+  const [confirm, setConfirm] = useState<DeletedItem | null>(null);
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState<{ message: string; tone: 'sage' | 'warn' } | null>(null);
 
   const nameOf = (userId: string | null) => members.find((m) => m.user_id === userId)?.display_name ?? strings.recipe.formerMember;
 
-  const restore = async (recipe: DeletedRecipe) => {
+  const restore = async (item: DeletedItem) => {
     setSelected(null);
     setBusy(true);
     try {
-      await onRestore(recipe);
-      tracker.track('recipe_restored', { days_since_delete: daysSinceDelete(recipe.deleted_at) });
-      setBanner({ message: d.restored(recipe.name), tone: 'sage' });
+      await onRestore(item);
+      if (item.kind === 'recipe') tracker.track('recipe_restored', { days_since_delete: daysSinceDelete(item.deleted_at) });
+      setBanner({ message: item.kind === 'recipe' ? d.restored(item.name) : d.eventRestored(item.name), tone: 'sage' });
     } catch {
       setBanner({ message: d.restoreFailed, tone: 'warn' });
     } finally {
@@ -51,12 +52,12 @@ export function RecentlyDeleted({ recipes, members, tracker, failed, onRetry, on
     }
   };
 
-  const deleteNow = async (recipe: DeletedRecipe) => {
+  const deleteNow = async (item: DeletedItem) => {
     setConfirm(null);
     setSelected(null);
     setBusy(true);
     try {
-      await onDeleteNow(recipe);
+      await onDeleteNow(item);
       setBanner(null);
     } catch {
       setBanner({ message: d.deleteFailed, tone: 'warn' });
@@ -69,20 +70,20 @@ export function RecentlyDeleted({ recipes, members, tracker, failed, onRetry, on
   const off = readOnly || busy;
 
   let body;
-  if (recipes === undefined && failed) {
+  if (items === undefined && failed) {
     body = (
       <View className="gap-12">
         <Callout variant="warn" text={d.loadFailed} />
         <Button label={d.retry} variant="soft" onPress={onRetry} />
       </View>
     );
-  } else if (recipes === undefined) {
+  } else if (items === undefined) {
     body = (
       <View role="progressbar" aria-label={d.loading}>
         <RecipeItemSkeleton />
       </View>
     );
-  } else if (recipes.length === 0) {
+  } else if (items.length === 0) {
     body = (
       <View className="gap-6">
         <Text size={17} weight="900">
@@ -94,17 +95,17 @@ export function RecentlyDeleted({ recipes, members, tracker, failed, onRetry, on
   } else {
     body = (
       <ListGroup>
-        {recipes.map((recipe, i) => (
+        {items.map((item, i) => (
           <ListRow
-            key={recipe.id}
-            title={recipe.name}
-            sub={d.sub(nameOf(recipe.deleted_by), daysSinceDelete(recipe.deleted_at, now), daysLeft(recipe.deleted_at, now))}
-            onPress={off ? undefined : () => setSelected(recipe)}
+            key={`${item.kind}-${item.id}`}
+            title={item.name}
+            sub={d.sub(nameOf(item.deleted_by), daysSinceDelete(item.deleted_at, now), daysLeft(item.deleted_at, now))}
+            onPress={off ? undefined : () => setSelected(item)}
             trailing={{
               kind: 'node',
-              node: <Link label={d.restore} accessibilityLabel={d.restoreA11y(recipe.name)} disabled={off} onPress={() => void restore(recipe)} />,
+              node: <Link label={d.restore} accessibilityLabel={d.restoreA11y(item.name)} disabled={off} onPress={() => void restore(item)} />,
             }}
-            last={i === recipes.length - 1}
+            last={i === items.length - 1}
           />
         ))}
       </ListGroup>
@@ -128,7 +129,7 @@ export function RecentlyDeleted({ recipes, members, tracker, failed, onRetry, on
       <Dialog
         visible={confirm !== null}
         title={d.deleteNowTitle(confirm?.name ?? '')}
-        body={d.deleteNowBody}
+        body={confirm?.kind === 'event' ? d.eventDeleteNowBody : d.deleteNowBody}
         confirmLabel={d.deleteNow}
         onConfirm={() => {
           if (confirm) void deleteNow(confirm);

@@ -90,9 +90,9 @@ export default function RootLayout() {
 
   useEffect(() => watchConnection(), []);
 
-  // Opened straight onto a shared recipe, nothing identified is sent (constitution VI, spec 019).
+  // Opened straight onto a shared recipe or event, nothing identified is sent (constitution VI, specs 019 and 042).
   const [firstSegment] = useSegments();
-  const openedOnShared = useRef(firstSegment === 'r');
+  const openedOnShared = useRef(['r', 'e'].includes(firstSegment ?? ''));
   useEffect(() => {
     if (!openedOnShared.current) trackAppOpened(tracker, Platform.OS, Constants.expoConfig?.version ?? '0.0.0');
   }, []);
@@ -124,6 +124,7 @@ export default function RootLayout() {
                   <Stack.Screen name="auth/callback" />
                   <Stack.Screen name="join/[token]" />
                   <Stack.Screen name="r/[token]" />
+                  <Stack.Screen name="e/[token]" />
                   <Stack.Screen name="oauth/consent" />
                   <Stack.Screen name="recipes/filters" options={presentation.sheet} />
                   <Stack.Screen name="recipes/new" options={presentation.fullScreen} />
@@ -136,7 +137,9 @@ export default function RootLayout() {
                   <Stack.Screen name="recipes/[id]/edit" options={presentation.fullScreen} />
                   <Stack.Screen name="recipes/[id]/settings" options={presentation.stack} />
                   <Stack.Screen name="calendar/new" options={presentation.sheet} />
+                  <Stack.Screen name="calendar/[id]/index" options={presentation.stack} />
                   <Stack.Screen name="calendar/[id]/edit" options={presentation.sheet} />
+                  <Stack.Screen name="calendar/[id]/share" options={presentation.sheet} />
                   <Stack.Screen name="timers" options={presentation.stack} />
                   <Stack.Screen name="activity" options={presentation.stack} />
                   <Stack.Screen name="settings/deleted" options={presentation.stack} />

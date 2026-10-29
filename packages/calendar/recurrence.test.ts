@@ -1,7 +1,7 @@
 import type { EventOverride, Recurrence } from '@cocon/schemas/calendar';
 import { describe, expect, it } from 'vitest';
 import { event } from './event.fixture';
-import { expand, splitSeries } from './recurrence';
+import { expand, occurrenceOn, splitSeries } from './recurrence';
 
 const days = (occurrences: { starts_on: string }[]) => occurrences.map((o) => o.starts_on);
 const repeat = (starts_on: string, recurrence: Recurrence) => event({ starts_on, ends_on: starts_on, recurrence });
@@ -137,6 +137,31 @@ describe('expand (FR-004)', () => {
     ])('%s throws %s', (_, run, code) => {
       expect(run).toThrow(expect.objectContaining({ code }));
     });
+  });
+});
+
+describe('occurrenceOn (spec 042 event page)', () => {
+  const weekly = repeat('2026-10-03', { freq: 'weekly', weekdays: [6], ends: { type: 'never' } });
+
+  it('finds a series date and keeps its length', () => {
+    expect(occurrenceOn(weekly, '2026-10-31')).toMatchObject({ starts_on: '2026-10-31', ends_on: '2026-10-31', occurrence_date: '2026-10-31' });
+  });
+
+  it('finds a one-off event only on its day', () => {
+    expect(occurrenceOn(event(), '2026-10-31')?.starts_on).toBe('2026-10-31');
+    expect(occurrenceOn(event(), '2026-11-01')).toBeNull();
+  });
+
+  it('is null for a day that is not in the series, or cancelled', () => {
+    expect(occurrenceOn(weekly, '2026-11-01')).toBeNull();
+    expect(occurrenceOn(weekly, '2026-10-31', [{ occurrence_date: '2026-10-31', cancelled: true }])).toBeNull();
+  });
+
+  it('follows a date moved to another day, earlier or later', () => {
+    const later = [{ occurrence_date: '2026-10-31', override: { starts_on: '2026-11-02', ends_on: '2026-11-02', title: 'Moved' } }];
+    expect(occurrenceOn(weekly, '2026-10-31', later)).toMatchObject({ starts_on: '2026-11-02', title: 'Moved', occurrence_date: '2026-10-31' });
+    const earlier = [{ occurrence_date: '2026-10-31', override: { starts_on: '2026-10-29', ends_on: '2026-10-29' } }];
+    expect(occurrenceOn(weekly, '2026-10-31', earlier)?.starts_on).toBe('2026-10-29');
   });
 });
 

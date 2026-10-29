@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { expand, viewFor } from '@cocon/calendar';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
-import { deleteEvent, loadCalendarSettings, loadEvents, removeException, restoreEvent, saveEvent, saveException, splitEvent, storedEvent, undoCreateEvent } from './events';
+import { deleteEvent, loadCalendarSettings, loadDeletedEvents, loadEvents, removeException, restoreEvent, saveEvent, saveException, splitEvent, storedEvent, undoCreateEvent } from './events';
 
 const EVA = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a10';
 const GABRIEL = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a11';
@@ -74,6 +74,24 @@ describe('events data (spec 035)', () => {
     expect(calls).toContainEqual(['lte', 'starts_on', '2026-11-30']);
     expect(calls).toContainEqual(['or', 'ends_on.gte.2026-11-01,recurrence.not.is.null']);
     await expect(loadEvents({ from: () => query } as never, '2026-11-01),id.eq.(x', '2026-11-30')).rejects.toThrow();
+  });
+
+  it('asks for events deleted since a time, newest first (spec 042)', async () => {
+    const calls: [string, ...unknown[]][] = [];
+    const query = new Proxy({} as Record<string, unknown>, {
+      get: (_target, name: string) =>
+        name === 'then'
+          ? (resolve: (value: unknown) => void) => resolve({ data: [{ ...busyRow, deleted_at: '2026-10-28T10:00:00Z' }], error: null })
+          : (...args: unknown[]) => {
+              calls.push([name, ...args]);
+              return query;
+            },
+    });
+    const events = await loadDeletedEvents({ from: () => query } as never, '2026-09-28T10:00:00.000Z');
+    expect(events[0]?.deleted_at).toBe('2026-10-28T10:00:00Z');
+    expect(calls).toContainEqual(['gt', 'deleted_at', '2026-09-28T10:00:00.000Z']);
+    expect(calls).toContainEqual(['order', 'deleted_at', { ascending: false }]);
+    await expect(loadDeletedEvents({ from: () => query } as never, 'x),id.eq.(y')).rejects.toThrow();
   });
 
   it('saves a whole event in one call', async () => {

@@ -26,6 +26,7 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 | Save with no title | input border warn-border; "Give your event a name." (warn, `role="alert"`) |
 | Saved | sheet closes; toast "{title} added for tonight, 18:00–22:00." (or "for tomorrow", "for Sat, Oct 31"; all-day: "for Sat, Oct 31") with "Undo" |
 | Save failed | "Couldn't save. Check your connection and try again." (warn callout; sheet stays) |
+| Undo failed (032-later L99, spec 042) | toast "Couldn't undo. Check your connection and try again." (no button); the event stays |
 | Conflict | "{Name} already has {title} this {slot}. Add anyway?" ("You already have …" for yourself) |
 
 ## Copy not in the drawings (spec 041 build)

@@ -353,7 +353,8 @@ export const strings = {
       // Spec 027, as OC-Menu draws it (until 029 builds the Menu).
       recipesSettings: 'Recipes',
       recipesSettingsSub: 'Cooking defaults, units',
-      recipes: (n: number) => `${n} ${n === 1 ? 'recipe' : 'recipes'}`,
+      /** Recently deleted's count: recipes and events (spec 042; OC-Menu.md). */
+      items: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
     },
   },
   // design/ui/OC-Recipes.md (spec 006; the filter logic comes with 007)
@@ -852,9 +853,12 @@ export const strings = {
     deleteNowBody: "Its photos and variants go with it. This can't be undone.",
     keep: 'Keep it',
     restored: (name: string) => `“${name}” is back in your recipes.`,
+    // Spec 042: deleted events are listed too.
+    eventRestored: (title: string) => `“${title}” is back in your calendar.`,
+    eventDeleteNowBody: "This can't be undone.",
     emptyTitle: 'Nothing here.',
-    emptyBody: 'Recipes you delete stay here for 30 days.',
-    loading: 'Loading recently deleted recipes',
+    emptyBody: 'Recipes and events you delete stay here for 30 days.',
+    loading: 'Loading recently deleted items',
     loadFailed: "Couldn't load. Try again.",
     retry: 'Try again',
     restoreFailed: "Couldn't restore. Try again.",
@@ -1349,6 +1353,66 @@ export const strings = {
       allFuture: 'All future events',
       loadFailedTitle: "We couldn't open this event.",
       loadFailedBody: "It may have been deleted, or you're offline.",
+      // Not drawn (032-later L99, added to OC-CalAdd.md): when a toast's Undo fails.
+      undoFailed: "Couldn't undo. Check your connection and try again.",
+    },
+    /** design/ui/OC-CalEvent.md (spec 042): the event page, its dialogs, the share sheet and the shared page. */
+    event: {
+      back: 'Calendar',
+      /** "Morning · about 09:00–12:00"; a custom time shows its hours: "14:30–15:30". */
+      slotTime: (slot: string, range: string) => `${slot} · about ${range}`,
+      allDay: 'All day',
+      /** A multi-day event's dates: "Sat, Oct 31 – Mon, Nov 2". */
+      span: (from: string, to: string) => `${from} – ${to}`,
+      /** "Every Saturday", "Every Tuesday and Thursday", "Every other Saturday", "Every day". */
+      every: {
+        daily: () => 'Every day',
+        weekly: (days: string[]) => `Every ${andList(days)}`,
+        biweekly: (days: string[]) => `Every other ${andList(days)}`,
+        monthly: () => 'Every month',
+        yearly: () => 'Every year',
+      },
+      openInMaps: 'Open in Maps',
+      openInMapsA11y: (place: string) => `Open ${place} in Maps`,
+      drives: (name: string) => `${name} drives`,
+      /** The reminder's sub-line: the members with the app on the event. */
+      showsOnHome: (names: string[]) => `Shows on Home for ${andList(names)}`,
+      bring: 'Bring',
+      bringHint: 'Anyone in the family can tick these.',
+      tickFailed: "Couldn't change that. Try again.",
+      addedBy: (name: string, ago: string) => `Added by ${name} · ${ago}`,
+      addedVia: (assistant: string, ago: string) => `Added via ${assistant} · ${ago}`,
+      edit: 'Edit',
+      duplicate: 'Duplicate',
+      share: 'Share a view-only link',
+      delete: 'Delete event',
+      deleteTitle: (title: string) => `Delete “${title}”?`,
+      /** Put before the body for someone else's event. */
+      addedThis: (name: string) => `${name} added this.`,
+      deleteOneBody: 'This removes it for the whole family.',
+      deleteRepeatBody: "Delete only this one, or this and all future ones? It's removed for the whole family.",
+      deleteConfirm: 'Delete',
+      onlyThis: 'Only this one',
+      thisAndFuture: 'This and all future ones',
+      keep: 'Keep it',
+      deleted: 'Event deleted',
+      /** "Copied to Sat, Nov 7". */
+      copied: (day: string) => `Copied to ${day}`,
+      // Not drawn (written for spec 042, added to OC-CalEvent.md).
+      deleteFailed: "Couldn't delete. Check your connection and try again.",
+      duplicateFailed: "Couldn't copy. Check your connection and try again.",
+      shareTitle: 'Share this event',
+      shareLead: 'People with the link see the title, day, time and place. No notes or checklist.',
+      /** The shared page (`/e/[token]`): who it's for, first names only. */
+      with: (names: string[]) => `With ${andList(names)}`,
+      withEveryone: 'the whole family',
+      withOthers: 'others',
+      noLongerTitle: 'This event is no longer shared.',
+      noLongerBody: 'Ask the person who sent it for a new link.',
+      sharedLoadFailedTitle: "We couldn't open this event.",
+      sharedLoadFailedBody: 'Check your connection and try again.',
+      retry: 'Try again',
+      loading: 'Loading the event',
     },
   },
   debug: {
