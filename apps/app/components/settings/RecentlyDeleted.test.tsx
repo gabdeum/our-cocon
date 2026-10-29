@@ -3,6 +3,7 @@
 // Spec 042: deleted events are listed with them.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { ToastProvider } from '../../lib/toast';
 import { fakeTracker, flush, gabriel, mia } from '../../test/fakes';
 import type { DeletedItem } from '../../lib/recently-deleted';
 
@@ -37,6 +38,7 @@ function setup(over: Partial<Props> = {}) {
       now={now}
       {...over}
     />,
+    { wrapper: ToastProvider },
   );
   return { tracker, onRestore, onDeleteNow };
 }

@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { View } from 'react-native';
-import { SegmentedControl, SettingRow, StatusBanner, Text } from '@cocon/ui';
+import { SegmentedControl, SettingRow, Text } from '@cocon/ui';
 import type { FamilySettings, FamilySettingsUpdate, StoreProfile } from '@cocon/schemas';
 import { strings } from '../../strings/en';
+import { useToast } from '../../lib/toast';
 
 const s = strings.settings.groceries;
 
@@ -19,9 +19,9 @@ export interface GrocerySettingsProps {
  * SettingRow. Saved at once for the whole family; a failed save reverts and says so.
  */
 export function GrocerySettings({ settings, onChange, readOnly }: GrocerySettingsProps) {
-  const [failed, setFailed] = useState(false);
+  const toast = useToast();
   const change = async (update: FamilySettingsUpdate) => {
-    setFailed((await onChange(update)) === 'failed');
+    if ((await onChange(update)) === 'failed') toast.show({ text: s.saveFailed, tone: 'warn' });
   };
   return (
     <View className="gap-16">
@@ -65,7 +65,6 @@ export function GrocerySettings({ settings, onChange, readOnly }: GrocerySetting
         onValueChange={(round_to_packs) => void change({ round_to_packs })}
         disabled={readOnly}
       />
-      {failed && !readOnly ? <StatusBanner tone="warn" message={s.saveFailed} /> : null}
     </View>
   );
 }

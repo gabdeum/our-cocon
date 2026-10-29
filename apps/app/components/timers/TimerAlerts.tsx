@@ -1,12 +1,8 @@
-import { useEffect, useState } from 'react';
-import { View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StatusBanner } from '@cocon/ui';
+import { useEffect, useRef } from 'react';
 import { strings } from '../../strings/en';
 import { useTimerStore } from '../../lib/timer-store';
+import { useToast } from '../../lib/toast';
 
-/** Banners stay 8 s (StatusBanner README › Rules). */
-export const BANNER_MS = 8000;
 /** The chime plays twice (FR-005), this far apart. */
 export const CHIME_GAP_MS = 1400;
 
@@ -15,61 +11,46 @@ export interface TimerAlertsProps {
   chime: () => void;
   vibrate: () => void;
   /**
-   * "Open timers" on the banner (spec 011): opens the Timers screen. Left out on the shared recipe
-   * page (019), which has no Timers screen: the banner then has no button.
+   * "Open timers" on the toast (spec 011): opens the Timers screen. Left out on the shared recipe
+   * page (019), which has no Timers screen: the toast then has no button.
    */
   onOpenTimers?: () => void;
 }
 
 /**
- * When a timer reaches zero, on any screen (spec 010 US3): the chime twice, a vibration, and a
- * StatusBanner "Blind bake is done" at the top. A newer banner replaces the old one.
- * "Open timers" joins the banner with the Timers screen (spec 011).
+ * When a timer reaches zero, on any screen (spec 010 US3): the chime twice, a vibration, and the
+ * toast "Blind bake is done". A newer one replaces the old one. "Open timers" joins the toast with
+ * the Timers screen (spec 011).
  */
 export function TimerAlerts({ chime, vibrate, onOpenTimers }: TimerAlertsProps) {
   const store = useTimerStore();
-  const insets = useSafeAreaInsets();
-  const [banner, setBanner] = useState<{ message: string; key: number } | null>(null);
+  const toast = useToast();
+  // The latest button, without listening again when it changes.
+  const open = useRef(onOpenTimers);
+  useEffect(() => {
+    open.current = onOpenTimers;
+  });
 
   useEffect(() => {
     const timeouts = new Set<ReturnType<typeof setTimeout>>();
-    const later = (f: () => void, ms: number) => {
-      const t = setTimeout(() => {
-        timeouts.delete(t);
-        f();
-      }, ms);
-      timeouts.add(t);
-    };
     const off = store.onFinished((timer) => {
       chime();
-      later(chime, CHIME_GAP_MS);
+      const t = setTimeout(() => {
+        timeouts.delete(t);
+        chime();
+      }, CHIME_GAP_MS);
+      timeouts.add(t);
       vibrate();
-      const key = Date.now();
-      setBanner({ message: strings.timers.done(timer.label), key });
-      later(() => setBanner((b) => (b?.key === key ? null : b)), BANNER_MS);
+      toast.show({
+        text: strings.timers.done(timer.label),
+        action: open.current ? { label: strings.timers.openTimers, onPress: () => open.current?.() } : undefined,
+      });
     });
     return () => {
       off();
       timeouts.forEach(clearTimeout);
     };
-  }, [store, chime, vibrate]);
+  }, [store, chime, vibrate, toast]);
 
-  if (!banner) return null;
-  return (
-    // Below the status bar on any screen, over the content.
-    <View pointerEvents="box-none" className="absolute left-16 right-16 top-12 z-10" style={{ marginTop: insets.top }}>
-      <StatusBanner
-        message={banner.message}
-        actionLabel={onOpenTimers ? strings.timers.openTimers : undefined}
-        onAction={
-          onOpenTimers
-            ? () => {
-                setBanner(null);
-                onOpenTimers();
-              }
-            : undefined
-        }
-      />
-    </View>
-  );
+  return null;
 }

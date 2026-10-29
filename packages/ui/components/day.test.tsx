@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemberCount } from './MemberChip';
 import { AllDayRow, SlotBand, type DayBand } from './SlotBand';
-import { FloatingAdd } from './Toast';
 
 afterEach(cleanup);
 
@@ -54,12 +53,5 @@ describe('MemberCount', () => {
     render(<MemberCount text="Gabriel 2" initial="G" color="honey" />);
     expect(screen.getByText('Gabriel 2')).toBeTruthy();
     expect(screen.queryByRole('button')).toBeNull();
-  });
-});
-
-describe('FloatingAdd', () => {
-  it('hides while a toast shows', () => {
-    render(<FloatingAdd label="Add event" onPress={vi.fn()} hidden />);
-    expect(screen.queryByRole('button', { name: 'Add event' })).toBeNull();
   });
 });

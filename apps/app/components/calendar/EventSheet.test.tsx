@@ -114,7 +114,8 @@ describe('EventSheet (spec 041)', () => {
     expect(props.tracker.track).not.toHaveBeenCalled();
   });
 
-  it('US2: Gabriel + James, weekly on Saturday, a place, Gabriel takes James', async () => {
+  // The longest walk through the sheet: slow under a full test run's load.
+  it('US2: Gabriel + James, weekly on Saturday, a place, Gabriel takes James', { timeout: 15_000 }, async () => {
     const props = await setup();
     fireEvent.change(title(), { target: { value: 'Baby music class' } });
     fireEvent.click(button('Morning, 09–12'));

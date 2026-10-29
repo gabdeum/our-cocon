@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Button, Callout, Dialog, IconButton, Link, LinkField, ShareTile, StatusBanner } from '@cocon/ui';
+import { BottomSheet, Button, Callout, Dialog, IconButton, Link, LinkField, ShareTile } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
+import { useToast } from '../../lib/toast';
 import { eventShareUrl, type EventShareLink } from '../../lib/event-share';
 import { COPIED_MS } from '../recipes/ShareSheet';
 
@@ -28,7 +29,7 @@ type LinkState = { kind: 'creating' } | { kind: 'failed' } | { kind: 'shared'; l
 export function EventShareSheet({ api, tracker, onClose }: { api: EventShareSheetApi; tracker: Tracker; onClose: () => void }) {
   const [state, setState] = useState<LinkState>({ kind: 'creating' });
   const [copied, setCopied] = useState(false);
-  const [banner, setBanner] = useState<string | null>(null);
+  const toast = useToast();
   const [confirmStop, setConfirmStop] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(copiedTimer.current), []);
@@ -62,7 +63,7 @@ export function EventShareSheet({ api, tracker, onClose }: { api: EventShareShee
     if (!url) return;
     await api.copy(url);
     setCopied(true);
-    setBanner(s.copiedBanner);
+    toast.show({ text: s.copiedBanner });
     clearTimeout(copiedTimer.current);
     copiedTimer.current = setTimeout(() => setCopied(false), COPIED_MS);
   };
@@ -74,9 +75,9 @@ export function EventShareSheet({ api, tracker, onClose }: { api: EventShareShee
       await api.stop(link.token);
       setState({ kind: 'stopped' });
       setCopied(false);
-      setBanner(null);
+      toast.hide();
     } catch {
-      setBanner(s.changeFailed);
+      toast.show({ text: s.changeFailed, tone: 'warn' });
     }
   };
 
@@ -85,7 +86,6 @@ export function EventShareSheet({ api, tracker, onClose }: { api: EventShareShee
   return (
     <>
       <BottomSheet visible title={e.shareTitle} lead={e.shareLead} closeLabel={s.close} onClose={onClose} headerAction={<IconButton icon="close" label={s.close} variant="soft" onPress={onClose} />}>
-        {banner ? <StatusBanner message={banner} /> : null}
 
         {state.kind === 'failed' ? (
           <View className="gap-10">

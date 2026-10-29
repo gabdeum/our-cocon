@@ -7,7 +7,6 @@ import { DateGrid } from './DateGrid';
 import { DayChip } from './DayChip';
 import { MemberPickerChip } from './MemberChip';
 import { SlotChip } from './SlotChip';
-import { UndoToast } from './Toast';
 
 afterEach(cleanup);
 
@@ -35,16 +34,6 @@ describe('MemberPickerChip', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Others' }));
     expect(screen.getByRole('button', { name: 'Others' }).getAttribute('aria-pressed')).toBe('true');
     expect(onPress).toHaveBeenCalled();
-  });
-});
-
-describe('UndoToast', () => {
-  it('is a status with its text and an Undo button', () => {
-    const onUndo = vi.fn();
-    render(<UndoToast text="Poker night added for tonight, 18:00–22:00." undoLabel="Undo" onUndo={onUndo} />);
-    expect(screen.getByRole('status').textContent).toContain('Poker night added for tonight, 18:00–22:00.');
-    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
-    expect(onUndo).toHaveBeenCalled();
   });
 });
 

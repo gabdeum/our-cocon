@@ -2,6 +2,7 @@
 // store sizes. The rows that follow these settings, and the sheet itself, are in GroceryList.test.tsx.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { ToastProvider } from '../../lib/toast';
 import { pickPacks } from '@cocon/quantity';
 import { facts, packsOf } from '@cocon/quantity/catalog.fixture';
 import { DEFAULT_FAMILY_SETTINGS, type FamilySettings } from '@cocon/schemas';
@@ -14,7 +15,7 @@ afterEach(cleanup);
 
 function setup(settings: FamilySettings = { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'us', round_to_packs: true }, result: 'saved' | 'failed' = 'saved', readOnly = false) {
   const onChange = vi.fn(async () => result);
-  const view = render(<GrocerySettings settings={settings} onChange={onChange} readOnly={readOnly} />);
+  const view = render(<GrocerySettings settings={settings} onChange={onChange} readOnly={readOnly} />, { wrapper: ToastProvider });
   return { onChange, rerender: (next: FamilySettings) => view.rerender(<GrocerySettings settings={next} onChange={onChange} readOnly={readOnly} />) };
 }
 

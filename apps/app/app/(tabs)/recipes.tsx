@@ -3,7 +3,7 @@ import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { RecipeList } from '../../components/recipes/RecipeList';
-import { UndoDelete } from '../../components/recipes/UndoDelete';
+import { useUndoDelete } from '../../components/recipes/UndoDelete';
 import { DebugFooter } from '../../components/DebugFooter';
 import { config } from '../../lib/tracker';
 import { useRecipePhotoUrls } from '../../lib/recipe-photo';
@@ -35,36 +35,33 @@ export default function RecipesTab() {
     enabled: familyId !== null,
   });
   const photoUrls = useRecipePhotoUrls(client, familyId, list.data?.map((r) => r.photo_path) ?? []);
+  useUndoDelete({
+    deleted,
+    tracker,
+    onUndo: async () => {
+      if (!deleted) return;
+      await restoreRecipe(client, deleted);
+      await queryClient.invalidateQueries({ queryKey: ['recipes', familyId] });
+    },
+    onShown: clearDeleted,
+  });
   return (
-    <>
-      <RecipeList
-        recipes={list.data}
-        members={state.status === 'ready' ? state.members : []}
-        tracker={tracker}
-        failed={list.isError && !list.data}
-        onRetry={() => void list.refetch()}
-        onOpen={(id) => router.push(recipePage(id))}
-        onNew={() => router.push(newRecipe)}
-        filters={filters}
-        onFiltersChange={(next) => setRecipeFilters(scope, next)}
-        onOpenFilters={(query) => {
-          setSheetSearch(scope, query);
-          router.push('/recipes/filters');
-        }}
-        footer={<DebugFooter config={config} />}
-        photoUrls={photoUrls}
-      />
-      {deleted ? (
-        <UndoDelete
-          key={deleted}
-          tracker={tracker}
-          onUndo={async () => {
-            await restoreRecipe(client, deleted);
-            await queryClient.invalidateQueries({ queryKey: ['recipes', familyId] });
-          }}
-          onDone={clearDeleted}
-        />
-      ) : null}
-    </>
+    <RecipeList
+      recipes={list.data}
+      members={state.status === 'ready' ? state.members : []}
+      tracker={tracker}
+      failed={list.isError && !list.data}
+      onRetry={() => void list.refetch()}
+      onOpen={(id) => router.push(recipePage(id))}
+      onNew={() => router.push(newRecipe)}
+      filters={filters}
+      onFiltersChange={(next) => setRecipeFilters(scope, next)}
+      onOpenFilters={(query) => {
+        setSheetSearch(scope, query);
+        router.push('/recipes/filters');
+      }}
+      footer={<DebugFooter config={config} />}
+      photoUrls={photoUrls}
+    />
   );
 }

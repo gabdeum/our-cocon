@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { View } from 'react-native';
 import { MAX_VARIANTS, resolveCooking, type FamilySettings, type RecipeOverrides, type RecipeOverridesUpdate } from '@cocon/schemas';
-import { BackHeader, Button, Card, IconTile, Link, ListGroup, ListRow, PushedScreen, SegmentedControl, SettingRow, StatusBanner, Text } from '@cocon/ui';
+import { BackHeader, Button, Card, IconTile, Link, ListGroup, ListRow, PushedScreen, SegmentedControl, SettingRow, Text } from '@cocon/ui';
 import { strings } from '../../strings/en';
+import { useToast } from '../../lib/toast';
 import type { RecipeDetail } from '../../lib/recipe';
 import { variantSummary, type SummaryBase } from '../../lib/recipe-variants';
 import { DeleteRecipe } from './DeleteRecipe';
@@ -121,9 +121,9 @@ function CookingSettingsCard({
   onChange: RecipeSettingsProps['onChangeSettings'];
   readOnly?: boolean;
 }) {
-  const [saveFailed, setSaveFailed] = useState(false);
+  const toast = useToast();
   const change = async (update: RecipeOverridesUpdate) => {
-    setSaveFailed((await onChange(update)) === 'failed');
+    if ((await onChange(update)) === 'failed') toast.show({ text: r.saveFailed, tone: 'warn' });
   };
   const inForce = resolveCooking(defaults, overrides);
   const row = (setting: 'keep_awake' | 'has_scale' | 'has_thermometer', label: string, value: boolean, hint: string = r.sameAsDefault) => {
@@ -166,7 +166,6 @@ function CookingSettingsCard({
           />
         </View>
       </Card>
-      {saveFailed && !readOnly ? <StatusBanner tone="warn" message={r.saveFailed} /> : null}
     </View>
   );
 }

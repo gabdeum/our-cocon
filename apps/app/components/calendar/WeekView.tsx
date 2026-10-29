@@ -7,7 +7,6 @@ import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenc
 import { layoutWeekGrid } from '../../lib/calendar-week';
 import { useNow } from '../../lib/use-now';
 import type { Member } from '../../lib/session';
-import { useToast } from '../../lib/toast';
 import type { AddPrefill } from './CalendarScreen';
 import { strings } from '../../strings/en';
 
@@ -39,8 +38,6 @@ export interface WeekViewProps {
 
 /** Spec 038 (OC-CalWeek): the week's hour grid, swiped left and right, and the add button. */
 export function WeekView({ members, myMemberId, events, slotTimes, hidden, anchor, today, timeZone, weekStartsOn, onSwipe, onOpenDay, onAddEvent, onOpenEvent }: WeekViewProps) {
-  // Toast README: the add button hides while the save toast shows (032-later L96).
-  const { visible: toastShown } = useToast();
   const now = useNow(timeZone);
   const look = useMemo(() => memberLook(members), [members]);
   const { start } = weekRange(anchor, weekStartsOn);
@@ -69,7 +66,7 @@ export function WeekView({ members, myMemberId, events, slotTimes, hidden, ancho
           />
         </Swipeable>
       </View>
-      <FloatingAdd hidden={toastShown} label={strings.calendar.month.addEvent} onPress={() => onAddEvent(addDay)} hint={null} />
+      <FloatingAdd label={strings.calendar.month.addEvent} onPress={() => onAddEvent(addDay)} hint={null} />
     </View>
   );
 }

@@ -1184,6 +1184,12 @@ export const strings = {
     recipeChanged: (name: string) => `${name} just changed this recipe`,
     reload: 'Reload',
   },
+  // design/system/components/Toast: the one toast, on every screen.
+  toast: {
+    undo: 'Undo',
+    // When an Undo fails (032-later L99), unless the screen says it its own way.
+    undoFailed: "Couldn't undo. Check your connection and try again.",
+  },
   // design/ui/CalHeader.md (spec 036): the header shared by the four calendar views.
   calendar: {
     header: {

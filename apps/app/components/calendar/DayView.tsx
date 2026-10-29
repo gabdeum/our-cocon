@@ -8,7 +8,6 @@ import { layoutDayView } from '../../lib/calendar-day';
 import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { useNow } from '../../lib/use-now';
 import type { Member } from '../../lib/session';
-import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 
 const d = strings.calendar.day;
@@ -39,8 +38,6 @@ export interface DayViewProps {
 
 /** Spec 039 (OC-CalDay): who's busy, All day, and the five bands of one day, swiped left and right. */
 export function DayView({ members, myMemberId, events, slotTimes, hidden, date, today, timeZone, onSwipe, onAddEvent, onAddInSlot, onOpenEvent }: DayViewProps) {
-  // Toast README: the add button hides while the save toast shows (032-later L96).
-  const { visible: toastShown } = useToast();
   const now = useNow(timeZone);
   const look = useMemo(() => memberLook(members), [members]);
   const { from, to } = eventWindow(firstOfMonth(date));
@@ -77,7 +74,7 @@ export function DayView({ members, myMemberId, events, slotTimes, hidden, date, 
           ))}
         </ScrollView>
       </Swipeable>
-      <FloatingAdd hidden={toastShown} label={strings.calendar.month.addEvent} onPress={() => onAddEvent(date)} hint={null} />
+      <FloatingAdd label={strings.calendar.month.addEvent} onPress={() => onAddEvent(date)} hint={null} />
     </View>
   );
 }
