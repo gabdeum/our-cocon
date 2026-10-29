@@ -18,4 +18,5 @@ Reference: `design/screens/OC-CalDay.dc.html` (inline styles are the exact value
 
 - Hint: one first-visit tip, then gone for good for that person.
 - Text format: "{title} added for {when}, {time range}."
-- Built in `packages/ui`: `UndoToast` (the ink toast, spec 041; the caller times it), `Toast` (the hint) and `FloatingAdd` (`hidden` while a toast shows).
+- A toast without Undo only tells: "Couldn't undo. Check your connection and try again." when an Undo fails (spec 042, 032-later L99).
+- Built in `packages/ui`: `UndoToast` (the ink toast, spec 041; the caller times it; `onUndo` left out for one that only tells), `Toast` (the hint) and `FloatingAdd` (`hidden` while a toast shows).

@@ -439,3 +439,7 @@ enabled = true
 # Spec 019: the share endpoint is public (signed out); it checks the share token itself.
 [functions.shared-recipe]
 verify_jwt = false
+
+# Spec 042: the event share endpoint, public the same way.
+[functions.shared-event]
+verify_jwt = false

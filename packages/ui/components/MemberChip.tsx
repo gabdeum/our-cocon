@@ -94,11 +94,12 @@ export function MemberStack({ people, filtered }: MemberStackProps) {
   );
 }
 
-type DotSize = 26 | 28 | 34;
+type DotSize = 26 | 28 | 32 | 34;
 // The screens' dots: box, initial (one letter / "All"), Others' icon.
 const dots: Record<DotSize, { box: string; text: number; all: number; icon: number }> = {
   26: { box: 'h-[26px] w-[26px]', text: 12, all: 9, icon: 14 },
   28: { box: 'h-[28px] w-[28px]', text: 13, all: 11, icon: 18 },
+  32: { box: 'h-[32px] w-[32px]', text: 14, all: 11, icon: 18 },
   34: { box: 'h-[34px] w-[34px]', text: 14, all: 11, icon: 18 },
 };
 
@@ -132,6 +133,25 @@ export function MemberCount({ text, initial, color }: MemberCountProps) {
       <MemberDot initial={initial} color={color} size={28} />
       <Text size={14} weight="800" numberOfLines={1}>
         {text}
+      </Text>
+    </View>
+  );
+}
+
+export interface MemberBadgeProps {
+  /** "James", "Everyone", "Others". */
+  name: string;
+  initial: string;
+  color: MemberChipColor;
+}
+
+/** MemberChip README › Badge: who an event is for, on the event page (spec 042). Not a control. */
+export function MemberBadge({ name, initial, color }: MemberBadgeProps) {
+  return (
+    <View role="listitem" className="h-[40px] flex-none flex-row items-center gap-8 rounded-pill bg-surface-card pl-4 pr-14">
+      <MemberDot initial={initial} color={color} size={32} />
+      <Text size={15} weight="800" numberOfLines={1}>
+        {name}
       </Text>
     </View>
   );

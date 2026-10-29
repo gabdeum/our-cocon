@@ -72,6 +72,9 @@ import {
   Swipeable,
   MemberChip,
   MemberPickerChip,
+  MemberBadge,
+  IconRow,
+  BackLink,
   MoreCount,
   Toast,
   UndoToast,
@@ -167,6 +170,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
   const [photo, setPhoto] = useState<number | null>(null);
   const [sheet, setSheet] = useState(false);
   const [dialog, setDialog] = useState(false);
+  const [scopeDialog, setScopeDialog] = useState(false);
   const [calendarView, setCalendarView] = useState<(typeof calendarViews)[number]['key']>('month');
   const [calendarHidden, setCalendarHidden] = useState<string[]>(['e']);
   const [tab, setTab] = useState<(typeof tabs)[number]['key']>('recipes');
@@ -212,6 +216,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <Button label="Continue with Google" variant="outline" brand="google" />
           <Button label="+ Add a step" variant="dashed" />
           <Button label="Delete recipe" variant="danger" />
+          <Button label="This and all future ones" variant="danger-outline" />
         </PillRow>
         <PillRow>
           <Button label="Swap ingredient" variant="tile" />
@@ -323,6 +328,29 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
       <Section group="Calendar" title="UndoToast (spec 041)">
         <View className="h-control-xl">
           <UndoToast text="Poker night added for tonight, 18:00–22:00." undoLabel="Undo" onUndo={noop} className="bottom-0 left-0 right-0" />
+        </View>
+      </Section>
+
+      <Section group="Calendar" title="Event page: BackLink, MemberBadge, IconRow, ChecklistRow, UndoToast that only tells (spec 042)">
+        <BackLink label="Calendar" onPress={noop} />
+        <View className="flex-row gap-8">
+          <MemberBadge name="James" initial="J" color="sky" />
+          <MemberBadge name="Everyone" initial="All" color="everyone" />
+          <MemberBadge name="Others" initial="" color="others" />
+        </View>
+        <ListGroup inset>
+          <IconRow icon="clock" title="Saturday, Oct 31" sub="Morning · about 09:00–12:00" />
+          <IconRow icon="repeat" title="Every Saturday" />
+          <IconRow icon="pin" title="Little Notes studio, 4 Elm St" action={{ label: 'Open in Maps', onPress: noop }} />
+          <IconRow icon="car" title="Gabriel takes James" />
+          <IconRow icon="bell" title="1 hour before" sub="Shows on Home for Gabriel" last />
+        </ListGroup>
+        <ListGroup inset>
+          <ChecklistRow label="Diaper bag" done onToggle={noop} />
+          <ChecklistRow label="Bottle (offline)" done={false} onToggle={noop} disabled last />
+        </ListGroup>
+        <View className="h-control-xl">
+          <UndoToast text="Couldn't undo. Check your connection and try again." undoLabel="Undo" className="bottom-0 left-0 right-0" />
         </View>
       </Section>
 
@@ -775,6 +803,21 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           onConfirm={() => setDialog(false)}
           cancelLabel="Keep it"
           onCancel={() => setDialog(false)}
+        />
+      </Section>
+
+      <Section group="Overlays" title="Dialog with a second choice (spec 042)">
+        <Button label="Open delete repeating" variant="soft" onPress={() => setScopeDialog(true)} />
+        <Dialog
+          visible={scopeDialog}
+          title="Delete “Baby music class”?"
+          body="Eva added this. Delete only this one, or this and all future ones? It's removed for the whole family."
+          confirmLabel="Only this one"
+          onConfirm={() => setScopeDialog(false)}
+          secondaryLabel="This and all future ones"
+          onSecondary={() => setScopeDialog(false)}
+          cancelLabel="Keep it"
+          onCancel={() => setScopeDialog(false)}
         />
       </Section>
 

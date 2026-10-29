@@ -7,8 +7,11 @@ export const TOAST_MS = 5000;
 
 export interface ToastRequest {
   text: string;
-  /** Undo; the toast closes as soon as it's tapped. */
-  onUndo: () => void;
+  /**
+   * Undo; the toast closes as soon as it's tapped. When its promise fails, a toast says so
+   * (032-later L99). Without it the toast only tells.
+   */
+  onUndo?: () => Promise<unknown>;
 }
 
 interface ToastApi {
@@ -21,7 +24,8 @@ const ToastContext = createContext<ToastApi>({ show: () => undefined, visible: f
 
 /**
  * The ink Undo toast above the tab bar (spec 041 FR-009), shown by a screen that's closing (the
- * add sheet), so it stays up over whatever screen is under it. One at a time: a new one replaces it.
+ * add sheet, the event page), so it stays up over whatever screen is under it. One at a time: a new
+ * one replaces it.
  */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<(ToastRequest & { key: number }) | null>(null);
@@ -43,10 +47,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           key={toast.key}
           text={toast.text}
           undoLabel={strings.calendar.add.undo}
-          onUndo={() => {
-            setToast(null);
-            toast.onUndo();
-          }}
+          onUndo={
+            toast.onUndo
+              ? () => {
+                  setToast(null);
+                  toast.onUndo?.().catch(() => show({ text: strings.calendar.add.undoFailed }));
+                }
+              : undefined
+          }
         />
       ) : null}
     </ToastContext.Provider>

@@ -45,12 +45,10 @@ export default function NewEventRoute() {
         sheet.refreshEvents();
         toast.show({
           text: toastText(input, today, slotTimes),
-          onUndo: () => {
-            void undoCreateEvent(client, id)
+          onUndo: () =>
+            undoCreateEvent(client, id)
               .then(() => tracker.track('event_create_undone', {}))
-              .catch(() => undefined)
-              .finally(sheet.refreshEvents);
-          },
+              .finally(sheet.refreshEvents),
         });
         sheet.close();
       }}

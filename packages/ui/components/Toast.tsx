@@ -34,9 +34,9 @@ export function Toast({ text, actionLabel, onAction, className }: ToastProps) {
 export interface UndoToastProps {
   /** "Poker night added for tonight, 18:00–22:00." */
   text: string;
-  /** "Undo". */
+  /** "Undo". Without `onUndo` the toast only tells: "Couldn't undo. Check your connection and try again." */
   undoLabel: string;
-  onUndo: () => void;
+  onUndo?: () => void;
   className?: string;
 }
 
@@ -55,11 +55,13 @@ export function UndoToast({ text, undoLabel, onUndo, className }: UndoToastProps
       <Text size={15} weight="700" color="on-olive" className="min-w-0 flex-1">
         {text}
       </Text>
-      <Pressable role="button" onPress={onUndo} className={cn('h-control-md flex-none items-center justify-center rounded-pill bg-honey px-16 active:bg-honey-pressed', focusRing)}>
-        <Text size={15} weight="900">
-          {undoLabel}
-        </Text>
-      </Pressable>
+      {onUndo ? (
+        <Pressable role="button" onPress={onUndo} className={cn('h-control-md flex-none items-center justify-center rounded-pill bg-honey px-16 active:bg-honey-pressed', focusRing)}>
+          <Text size={15} weight="900">
+            {undoLabel}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

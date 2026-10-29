@@ -7,18 +7,19 @@ import { DebugFooter } from '../../components/DebugFooter';
 import { OfflineBanner } from '../../components/sync/OfflineBanner';
 import { aiConnectionsKey } from '../../lib/assistants';
 import { useOnline } from '../../lib/online';
-import { deletedRecipesKey, loadDeleted } from '../../lib/recipe-delete';
+import { useDeletedItems } from '../../lib/recently-deleted';
 import { config } from '../../lib/tracker';
 import { useSession } from '../../lib/session';
 import { strings } from '../../strings/en';
 
-/** /settings. Spec 003 builds Family and Account, 018 the Recently deleted row, 025 AI assistants, 027 the Recipes row; 029 adds the rest. Groceries' settings are in the Groceries tab's sheet (spec 021). */
+/** /settings. Spec 003 builds Family and Account, 018 the Recently deleted row (042 counts events too), 025 AI assistants, 027 the Recipes row; 029 adds the rest. Groceries' settings are in the Groceries tab's sheet (spec 021). */
 export default function SettingsTab() {
   const { state, api, client, tracker, refresh, signOut } = useSession();
   const online = useOnline();
   const familyId = state.status === 'ready' ? state.family.id : null;
-  // The same query as Recently deleted, so the count and the list agree.
-  const deleted = useQuery({ queryKey: deletedRecipesKey(familyId ?? ''), queryFn: () => loadDeleted(client), enabled: familyId !== null });
+  const myMemberId = state.status === 'ready' ? (state.members.find((m) => m.user_id === state.userId)?.id ?? state.me.id) : null;
+  // The same queries as Recently deleted, so the count and the list agree.
+  const deleted = useDeletedItems(client, familyId, myMemberId);
   const userId = state.status === 'ready' ? state.userId : '';
   const assistants = useQuery({ queryKey: aiConnectionsKey(userId), queryFn: () => loadAssistants(client), enabled: userId !== '' });
   const connected = assistants.data ? Object.keys(assistants.data.known).length + assistants.data.others.length : 0;
@@ -47,7 +48,7 @@ export default function SettingsTab() {
               />
               <ListRow
                 title={more.recentlyDeleted}
-                trailing={{ kind: 'chevron', text: deleted.data ? more.recipes(deleted.data.length) : undefined }}
+                trailing={{ kind: 'chevron', text: deleted.items ? more.items(deleted.items.length) : undefined }}
                 onPress={() => router.push('/settings/deleted' as Href)}
                 last
               />

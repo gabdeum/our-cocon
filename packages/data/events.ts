@@ -47,6 +47,8 @@ export interface StoredEvent extends CalendarEvent {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  /** Who deleted it (Recently deleted, spec 042). */
+  deleted_by?: string | null;
 }
 
 const Row = z.object({
@@ -78,6 +80,7 @@ const Row = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   deleted_at: z.string().nullable(),
+  deleted_by: z.uuid().nullable().default(null),
 });
 
 /** Parses one `events_visible` row. */
@@ -155,6 +158,22 @@ export async function splitEvent(client: Pick<Db, 'rpc'>, id: string, from: stri
 }
 
 /**
+ * Spec 042: the events deleted since `since` (an ISO time: 30 days ago for Recently deleted),
+ * newest first, as the caller may see them.
+ */
+export async function loadDeletedEvents(client: Pick<Db, 'from'>, since: string): Promise<StoredEvent[]> {
+  const { data, error } = await client
+    .from('events_visible')
+    .select('*')
+    .not('deleted_at', 'is', null)
+    .gt('deleted_at', z.iso.datetime({ offset: true }).parse(since))
+    .order('deleted_at', { ascending: false })
+    .order('id');
+  if (error) throw error;
+  return data.map(storedEvent);
+}
+
+/**
  * A "this event only" change or cancellation (spec 034). Strict (032-later L80): an occurrence
  * can't change who created the event, who can see it or its surprise.
  */
@@ -185,6 +204,13 @@ async function setDeleted(client: Pick<Db, 'from'>, id: string, deleted: boolean
 }
 export const deleteEvent = (client: Pick<Db, 'from'>, id: string) => setDeleted(client, id, true);
 export const restoreEvent = (client: Pick<Db, 'from'>, id: string) => setDeleted(client, id, false);
+
+/** Recently deleted's "Delete now" (spec 042): a deleted event, removed for good. */
+export async function deleteEventNow(client: Pick<Db, 'from'>, id: string): Promise<void> {
+  const { data, error } = await client.from('events').delete().eq('id', z.uuid().parse(id)).not('deleted_at', 'is', null).select('id');
+  if (error) throw error;
+  if (data.length === 0) throw new Error('event_not_found');
+}
 
 /**
  * Spec 041 FR-009: Undo right after adding. Deleted, then removed for good (the database only

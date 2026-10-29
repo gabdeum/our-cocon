@@ -186,6 +186,13 @@ export const events = {
   event_updated: z.strictObject({ fields_changed: z.array(EventField), scope: z.enum(['all', 'this', 'future']) }),
   event_conflict_shown: z.strictObject({ proceeded: z.boolean() }),
   event_create_undone: z.strictObject({}),
+  // Spec 042: an event deleted from its page ("this" date, "future" dates, or "all" of it; a
+  // one-off is "all"), by its creator or not, and again when the toast's Undo brings it back; a
+  // copy made with Duplicate; a view-only link made (not reopened); a checklist item ticked.
+  event_deleted: z.strictObject({ scope: z.enum(['all', 'this', 'future']), own_event: z.boolean(), undone: z.boolean() }),
+  event_duplicated: z.strictObject({}),
+  event_shared: z.strictObject({}),
+  event_checklist_ticked: z.strictObject({}),
 } as const;
 
 export type EventName = keyof typeof events;

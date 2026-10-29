@@ -12,10 +12,11 @@ Reference: `design/screens/CalHeader.dc.html` (inline styles are the exact value
 | Stack (header button) | dots 26, overlap 8, 2 px ring in the button fill, up to 3 |
 | Picker (add sheet) | 48 tall, padding 0 16 0 6, white, 2.5 px border: ink when selected, transparent otherwise; dot 34 + name 15/800 |
 | Count (day view) | 36 tall, padding 0 12 0 4, white, dot 28 + "{name} {count}" 14/800 |
+| Badge (event page) | 40 tall, padding 0 14 0 4, white, gap 8, dot 32 + name 15/800; not a control, listed under the event's title (OC-CalEvent, spec 042) |
 | Dot | circle in member color, initial 14/900 ink; Everyone "All" 11/900 on `member-everyone`; Others person-outline icon 18 in ink-muted on `member-others` |
 
 ## Rules
 
-- Built in `packages/ui`: the Filter row (`MemberChip`) and the Stack (`MemberStack`) (spec 036), Count (`MemberCount`, 039) and Picker (`MemberPickerChip`, 041).
+- Built in `packages/ui`: the Filter row (`MemberChip`) and the Stack (`MemberStack`) (spec 036), Count (`MemberCount`, 039), Picker (`MemberPickerChip`, 041) and Badge (`MemberBadge`, 042).
 - `aria-pressed` drives selection; group has a label ("Show events for", "Who").
 - Never color alone: the initial or icon is always visible.
