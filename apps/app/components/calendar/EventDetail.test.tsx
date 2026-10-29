@@ -208,6 +208,12 @@ describe('Event detail', () => {
     expect(screen.queryByRole('button', { name: 'Share a view-only link' })).toBeNull();
   });
 
+  it('spec 043: a surprise is tagged "Surprise" for those in on it', () => {
+    setup(babyMusic({ visibility: 'surprise', surprise: { hidden_from: [members[1]?.id ?? ''], cover_title: 'Music', cover_note: null } }));
+    expect(screen.getByText('Surprise')).toBeTruthy();
+    expect(screen.getByText('Social')).toBeTruthy();
+  });
+
   it('offline: readable, nothing changes', () => {
     const { onTick } = setup(babyMusic(), { readOnly: true });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Bottle' }));

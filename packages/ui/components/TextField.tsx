@@ -19,6 +19,8 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style' | 'placehol
   size?: 'md' | 'sm' | 'title';
   /** Read by screen readers only: rows whose design labels them by place (OC-EditIngredients). */
   labelHidden?: boolean;
+  /** Inside a white card (OC-CalAddMore's surprise card): the input takes the page's cream. */
+  onCard?: boolean;
   className?: string;
 }
 
@@ -35,7 +37,7 @@ export function FieldWarning({ text, nativeID }: { text: string; nativeID?: stri
 }
 
 /** Labelled input with a hint and a friendly warning (TextField README). `multiline` is the textarea. */
-export function TextField({ label, optionalLabel, hint, counter, warning, size = 'md', labelHidden, multiline, className, onFocus, onBlur, ...props }: TextFieldProps) {
+export function TextField({ label, optionalLabel, hint, counter, warning, size = 'md', labelHidden, multiline, onCard, className, onFocus, onBlur, ...props }: TextFieldProps) {
   const colors = useThemeColors();
   const [focused, setFocused] = useState(false);
   const hintId = useId();
@@ -76,7 +78,7 @@ export function TextField({ label, optionalLabel, hint, counter, warning, size =
         className={cn(
           'w-full border-2 web:outline-none',
           multiline ? 'min-h-[76px] rounded-lg px-16 py-12' : sm ? 'h-[46px] rounded-[12px] px-12' : size === 'title' ? 'h-[56px] rounded-lg px-16' : 'h-control-lg rounded-lg px-16',
-          warning ? 'border-warn-border bg-warn-soft text-warn' : cn('bg-surface-card text-ink', focused ? 'border-olive' : 'border-line-strong'),
+          warning ? 'border-warn-border bg-warn-soft text-warn' : cn(onCard ? 'bg-surface-page text-ink' : 'bg-surface-card text-ink', focused ? 'border-olive' : 'border-line-strong'),
         )}
         style={text}
         {...props}

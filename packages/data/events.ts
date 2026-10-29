@@ -81,6 +81,8 @@ const Row = z.object({
   updated_at: z.string(),
   deleted_at: z.string().nullable(),
   deleted_by: z.uuid().nullable().default(null),
+  // How the database masked it for the caller (spec 043): `viewFor` keeps a cover a cover.
+  view: z.enum(['full', 'busy', 'cover']),
 });
 
 /** Parses one `events_visible` row. */

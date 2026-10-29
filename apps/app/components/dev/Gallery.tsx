@@ -428,6 +428,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <AvatarStack members={[...family]} moreLabel={(n) => `+${n}`} label="Gabriel, Alex and Mia" />
           <Avatar initial="G" color="honey" size="lg" />
           <Avatar initial="Ev" color="rose" size="lg" />
+          <Avatar initial="E" color="rose" size="xl" />
           <Avatar initial="A" color="everyone" size="sm" />
         </PillRow>
       </Section>

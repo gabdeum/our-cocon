@@ -105,3 +105,17 @@ export function deleteBody(event: StoredEvent, myMemberId: string, members: read
   const creator = event.creator_member_id !== myMemberId ? members.find((m) => m.id === event.creator_member_id) : undefined;
   return creator ? `${e.addedThis(creator.display_name)} ${body}` : body;
 }
+
+/**
+ * OC-CalBusy (spec 043): someone else's private event, as the sheet says it: "Eva is busy",
+ * "Thursday, Oct 22 · Afternoon" (the slot, the start time or "All day"), and the creator's avatar.
+ * `creator` is null when they've left the family ("Someone is busy").
+ */
+export function busyLines(o: StoredEvent, members: readonly Member[], slotTimes: SlotTimes): { creator: { name: string; initial: string; color: MemberChipColor } | null; when: string } {
+  const m = members.find((x) => x.id === o.creator_member_id);
+  const when = strings.calendar.busy.when(dateLabel(o.starts_on, 'long'), timeLabel(o, { use24h: true, slotTimes }));
+  return { creator: m ? { name: m.display_name, initial: memberInitials(members).get(m.id) ?? '', color: m.color as MemberChipColor } : null, when };
+}
+
+/** Whether this member gets a surprise's cover (OC-CalSurprise), as the database masked it. */
+export const isCover = (event: StoredEvent, myMemberId: string) => !event.deleted_at && viewFor(event, myMemberId).view === 'cover';

@@ -18,9 +18,9 @@ type Scope = 'all' | 'this' | 'future';
 /**
  * /calendar/[id]/edit?date= (spec 041 FR-008): the add sheet filled in. A repeating event asks
  * first: "This event only" (an exception for `date`) or "All future events" (the series splits
- * there). Only an event this member sees as theirs to see in full is offered; the database refuses
- * the rest (a surprise's hidden person gets a cover shaped like a family event, so its save fails).
- * Only the creator splits a private or surprise series; anyone else edits that date only.
+ * there). Only an event this member sees in full opens; a surprise's cover, or Busy, says it couldn't
+ * open (032-later L101). Only the creator splits a private or surprise series, or changes who can
+ * see it (spec 043 FR-005); anyone else edits that date only.
  */
 export default function EditEventRoute() {
   const params = useLocalSearchParams<{ id: string; date?: string }>();
@@ -82,6 +82,7 @@ export default function EditEventRoute() {
       initial={initial}
       occurrenceOnly={chosen === 'this'}
       editingId={e.id}
+      canChangeVisibility={e.creator_member_id === myMemberId}
       client={client}
       familyId={familyId}
       members={state.members}

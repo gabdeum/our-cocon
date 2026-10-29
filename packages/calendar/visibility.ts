@@ -45,9 +45,13 @@ function publicFields(event: CalendarEvent): PublicFields {
  * else. Surprise: the people it's hidden from get the cover title, the time, the place and the
  * cover note. Hidden views are built from an allowlist, so no other field (checklist, category,
  * who takes them, anything a caller adds) can reach them. A surprise without its cover data is
- * shown to others as "Busy", and so is a hidden event when the viewer or creator is unknown.
+ * shown to others as "Busy", and so is a hidden event when the viewer or creator is unknown. A row
+ * from `events_visible` says how the database masked it (`view`), which this follows.
  */
 export function viewFor<T extends CalendarEvent>(event: T, viewerMemberId: string): Viewed<T> {
+  // A row the database already masked keeps its view: a cover's title, place and notes are the cover's.
+  if (event.view === 'cover') return { ...publicFields(event), visibility: 'family', view: 'cover', title: event.title, location: event.location ?? null, notes: event.notes ?? null, is_surprise: false };
+  if (event.view === 'busy') return busy(event);
   if (event.visibility !== 'family' && (!viewerMemberId || !event.creator_member_id)) return busy(event);
   if (event.creator_member_id === viewerMemberId || event.visibility === 'family') return { ...event, view: 'full', is_surprise: event.visibility === 'surprise' };
   const cover = event.visibility === 'surprise' ? event.surprise : null;

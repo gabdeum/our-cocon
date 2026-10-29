@@ -1,5 +1,5 @@
 // Spec 041: the add sheet's rules: the route's prefill, slots and Who, what Save sends, what an edit
-// changed, the conflict line, the toast and the scope question.
+// changed, the conflict line, the toast and the scope question. Spec 043: who can see it.
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import { storedEvent, type StoredEvent } from '@cocon/data';
@@ -28,6 +28,8 @@ import {
   toggleWho,
   typeTime,
   shownTimes,
+  secretChips,
+  surpriseProblems,
   whoChips,
   type DraftTime,
   type EventDraft,
@@ -74,6 +76,7 @@ function stored(over: Record<string, unknown> = {}): StoredEvent {
     created_at: '2026-10-27T10:00:00Z',
     updated_at: '2026-10-27T10:00:00Z',
     deleted_at: null,
+    view: 'full',
     ...over,
   });
 }
@@ -390,5 +393,40 @@ describe('the toast (FR-009)', () => {
     ['all day', { date: '2026-10-31' }, 'Poker night added for Sat, Oct 31.'],
   ] as const)('%s', (_, over, text) => {
     expect(toastText(input(over), TODAY, DEFAULT_SLOT_TIMES)).toBe(text);
+  });
+});
+
+describe('who can see it (spec 043)', () => {
+  const eva = { ...alex, display_name: 'Eva' };
+  const family = [gabriel, eva, james];
+
+  it('offers the members with the app, except me, to keep it secret from', () => {
+    expect(secretChips(family, ME).map((c) => c.name)).toEqual(['Eva']);
+  });
+
+  it('US1: a private event saves as private, with no cover', () => {
+    expect(toInput(draft({ visibility: 'private', coverTitle: 'left over' }), family)).toMatchObject({ visibility: 'private', surprise: null });
+  });
+
+  it('US2: a surprise saves who it is kept from, the cover title and the note', () => {
+    const d = draft({ title: 'Eva’s surprise dinner', visibility: 'surprise', hiddenFrom: [eva.id], coverTitle: ' Dinner out ', coverNote: 'Meet at Café Lalo at 19:30. Dress nice!' });
+    expect(surpriseProblems(d, family)).toEqual({});
+    expect(toInput(d, family)).toMatchObject({
+      visibility: 'surprise',
+      surprise: { hidden_from: [eva.id], cover_title: 'Dinner out', cover_note: 'Meet at Café Lalo at 19:30. Dress nice!' },
+    });
+    expect(toInput({ ...d, coverNote: '  ' }, family).surprise?.cover_note).toBeNull();
+  });
+
+  it('says what a surprise is missing', () => {
+    expect(surpriseProblems(draft({ visibility: 'surprise', hiddenFrom: [eva.id] }), family)).toEqual({ coverTitle: 'Add what Eva will see.' });
+    expect(surpriseProblems(draft({ visibility: 'surprise', coverTitle: 'Dinner out' }), family)).toEqual({ hiddenFrom: 'Pick who to keep it secret from.' });
+    expect(surpriseProblems(draft({ visibility: 'private' }), family)).toEqual({});
+  });
+
+  it('an edit starts from the saved surprise, with More options open', () => {
+    const d = draftFromEvent(stored({ visibility: 'surprise', surprise: { hidden_from: [eva.id], cover_title: 'Dinner out', cover_note: null } }));
+    expect(d).toMatchObject({ visibility: 'surprise', hiddenFrom: [eva.id], coverTitle: 'Dinner out', coverNote: '' });
+    expect(hasMoreOptions(d)).toBe(true);
   });
 });

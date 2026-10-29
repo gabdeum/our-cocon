@@ -1361,6 +1361,35 @@ export const strings = {
       loadFailedBody: "It may have been deleted, or you're offline.",
       // Not drawn (032-later L99, added to OC-CalAdd.md): when a toast's Undo fails.
       undoFailed: "Couldn't undo. Check your connection and try again.",
+      /** design/ui/OC-CalSurprise.md (spec 043): "Who can see it?" and the surprise card. */
+      whoCanSee: 'Who can see it?',
+      whoCanSeeLabel: 'Who can see it',
+      visibilities: { family: 'Family', private: 'Private', surprise: 'Surprise' },
+      visibilityHints: {
+        family: 'Everyone in the family sees all the details.',
+        private: 'Others see “Busy” at this time, and nothing else.',
+        surprise: 'Hide it from someone: they see only what you choose below.',
+      },
+      keepSecretFrom: 'Keep it secret from',
+      /** "What Eva sees"; with nobody picked yet, "What they see" (not drawn). */
+      coverTitle: (names: string[]) => (names.length ? `What ${andList(names)} ${names.length > 1 ? 'see' : 'sees'}` : 'What they see'),
+      coverNote: (names: string[]) => `Note for ${names.length ? andList(names) : 'them'}`,
+      surpriseSummary: (names: string[]) =>
+        `${names.length ? andList(names) : 'They'} ${names.length === 1 ? 'sees' : 'see'} only this title, the time, the place and this note. Everyone else sees everything.`,
+      noCover: (names: string[]) => `Add what ${names.length ? andList(names) : 'they'} will see.`,
+      // Not drawn (spec 043, added to OC-CalSurprise.md).
+      noSecretFrom: 'Pick who to keep it secret from.',
+    },
+    /** OC-CalBusy (spec 043): someone else's private event, as a sheet over the calendar. */
+    busy: {
+      title: (name: string) => `${name} is busy`,
+      /** "Thursday, Oct 22 · Afternoon". */
+      when: (date: string, time: string) => `${date} · ${time}`,
+      body: (name: string) => `${name} keeps the details of this one private.`,
+      // Not drawn (spec 043): the creator has left the family.
+      someone: 'Someone',
+      bodySomeone: 'They keep the details of this one private.',
+      ok: 'OK',
     },
     /** design/ui/OC-CalEvent.md (spec 042): the event page, its dialogs, the share sheet and the shared page. */
     event: {
@@ -1418,6 +1447,11 @@ export const strings = {
       sharedLoadFailedTitle: "We couldn't open this event.",
       sharedLoadFailedBody: 'Check your connection and try again.',
       retry: 'Try again',
+      /** OC-CalSurprise (spec 043): the cover's note, as the hidden person sees it. */
+      noteFrom: (name: string) => `Note from ${name}`,
+      /** For those in on it: the sage tag, and "hidden from Eva" in agenda and day rows. */
+      surprise: 'Surprise',
+      hiddenFrom: (names: string[]) => `hidden from ${andList(names)}`,
       loading: 'Loading the event',
     },
   },
