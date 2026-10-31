@@ -29,6 +29,14 @@ services:
       GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_SECRET:-}
       GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${API_EXTERNAL_URL}/callback
+      # Spec 045: GOOGLE_CLIENT_ID lists the web client, then the iPhone's ("<web>,<ios>"): the
+      # iPhone signs in with an ID token issued to its own client. Google's iOS library can't pass a
+      # nonce (FR-010), so Supabase doesn't check one for Google; Apple's is always checked.
+      GOTRUE_EXTERNAL_GOOGLE_SKIP_NONCE_CHECK: "true"
+      # Spec 045: Sign in with Apple, iPhone only (ID tokens issued to the app's bundle ID).
+      GOTRUE_EXTERNAL_APPLE_ENABLED: ${APPLE_SIGN_IN:-false}
+      GOTRUE_EXTERNAL_APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_APPLE_REDIRECT_URI: ${API_EXTERNAL_URL}/callback
       GOTRUE_SESSIONS_INACTIVITY_TIMEOUT: 2160h
       GOTRUE_MAILER_OTP_EXP: "3600"
       GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Our Cocon sign-in link
@@ -70,8 +78,15 @@ services:
   meta:
     container_name: !reset null
 
+  # Spec 045 FR-009: the Sign in with Apple key, for the apple-sign-in and delete-account functions
+  # (set by provision.sh; empty until then, and the functions then leave Apple alone).
   functions:
     container_name: !reset null
+    environment:
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      APPLE_KEY_ID: ${APPLE_KEY_ID:-}
+      APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY:-}
 
   db:
     container_name: !reset null

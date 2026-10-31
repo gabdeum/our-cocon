@@ -122,6 +122,7 @@ export default function RootLayout() {
                   <Stack.Screen name="welcome/index" />
                   <Stack.Screen name="welcome/family" options={presentation.stack} />
                   <Stack.Screen name="auth/callback" />
+                  <Stack.Screen name="auth/confirm" />
                   <Stack.Screen name="join/[token]" />
                   <Stack.Screen name="r/[token]" />
                   <Stack.Screen name="e/[token]" />

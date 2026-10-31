@@ -65,18 +65,20 @@ describe('createTracker', () => {
     tracker.track('invite_accepted', { days_since_sent: 2 });
     tracker.track('family_deleted', { member_count: 3 });
     tracker.track('family_created', {});
+    tracker.track('signed_in', { method: 'apple' });
     expect(t.capture.mock.calls).toEqual([
       ['signed_up', { method: 'google' }],
       ['invite_accepted', { days_since_sent: 2 }],
       ['family_deleted', { member_count: 3 }],
       ['family_created', {}],
+      ['signed_in', { method: 'apple' }],
     ]);
   });
 
   it('refuses names or emails on the spec 003 events', () => {
     const tracker = createTracker(fakeTransport());
     expect(() => tracker.track('family_created', { name: 'The Demanges' } as never)).toThrow();
-    expect(() => tracker.track('signed_in', { method: 'apple' } as never)).toThrow();
+    expect(() => tracker.track('signed_in', { method: 'facebook' } as never)).toThrow();
     expect(() => tracker.track('invite_accepted', { days_since_sent: 1.5 })).toThrow();
   });
 

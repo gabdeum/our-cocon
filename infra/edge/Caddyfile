@@ -27,7 +27,9 @@
 }
 
 # Supabase's public API only. Studio, /pg/ (database admin) and Supabase's own /mcp stay private.
-# Of the Edge Functions, only the share endpoints are public (specs 019 and 042).
+# Of the Edge Functions, only the share endpoints are public (specs 019 and 042), plus the two that
+# check a member's token themselves (spec 045: apple-sign-in, delete-account). An assistant's token
+# is refused by both (role cocon_assistant), so they need no assistant check here.
 # (Plain respond/reverse_proxy, not handle blocks: Caddy runs handle before the abort above.)
 # Spec 023: AI assistants sign in through Supabase's OAuth server. They send no apikey, which the
 # gateway wants on /auth/v1/*, so the OAuth and discovery routes get this environment's anon key
@@ -35,7 +37,7 @@
 # with a path (RFC 8414: /.well-known/oauth-authorization-server/auth/v1); Supabase answers it
 # without the suffix.
 (api) {
-	@private not path /auth/v1/* /rest/v1/* /realtime/v1/* /storage/v1/* /graphql/v1 /graphql/v1/* /.well-known/oauth-authorization-server* /functions/v1/shared-recipe /functions/v1/shared-event
+	@private not path /auth/v1/* /rest/v1/* /realtime/v1/* /storage/v1/* /graphql/v1 /graphql/v1/* /.well-known/oauth-authorization-server* /functions/v1/shared-recipe /functions/v1/shared-event /functions/v1/apple-sign-in /functions/v1/delete-account
 	respond @private 404
 	@oauth path /auth/v1/oauth/* /auth/v1/.well-known/*
 	request_header @oauth apikey {args[1]}

@@ -1,11 +1,15 @@
-<!-- Spec 003: the sign-in email (magic link). Supabase Auth fills {{ .ConfirmationURL }}. Copy: design/ui/OC-Welcome.md. -->
+<!-- Spec 003: the sign-in email (magic link). Copy: design/ui/OC-Welcome.md. -->
+<!-- Spec 045 FR-001: the link goes straight to the app's /auth/confirm (which opens the iPhone app), not Supabase's
+     /auth/v1/verify. The app asks with redirect "<app>/auth/confirm?next=…", always with a "?", so the token is appended.
+     A redirect Supabase doesn't allow comes back as the bare site address: then the link is built from it, so the token
+     never ends up in a malformed address. -->
 <!-- Email clients need inline styles; values are the design tokens written out (design/README.md). -->
 <html lang="en">
 <body style="margin:0;padding:24px 16px;background:#FFF8E3;font-family:Nunito,Arial,sans-serif;color:#2A2414">
   <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border-radius:22px;padding:28px 24px">
     <h1 style="margin:0 0 12px;font-size:24px;font-weight:900">Sign in to Our Cocon</h1>
     <p style="margin:0 0 20px;font-size:16px;line-height:1.45;color:#5A503A">Tap the button to sign in. The link works once, for 1 hour.</p>
-    <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#2A2414;color:#FFFFFF;text-decoration:none;font-size:17px;font-weight:900;padding:16px 28px;border-radius:999px">Sign in</a>
+    <a href="{{ if eq .RedirectTo .SiteURL }}{{ .SiteURL }}/auth/confirm?next=%2F&token_hash={{ .TokenHash }}&type=email{{ else }}{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email{{ end }}" style="display:inline-block;background:#2A2414;color:#FFFFFF;text-decoration:none;font-size:17px;font-weight:900;padding:16px 28px;border-radius:999px">Sign in</a>
     <p style="margin:20px 0 0;font-size:13px;line-height:1.45;color:#5A503A">Open it on the device where you asked for it. If you didn't ask to sign in, you can ignore this email.</p>
   </div>
 </body>

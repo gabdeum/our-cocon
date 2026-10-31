@@ -25,4 +25,11 @@ describe('loadConfig', () => {
     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'local-anon';
     expect(loadConfig(undefined)).toMatchObject({ env: 'local', commit: 'dev', supabaseUrl: 'http://127.0.0.1:54321', mcpUrl: 'http://localhost:8787' });
   });
+
+  it("gives iPhone builds the web app's address, and local dev none (spec 045 FR-003)", () => {
+    process.env.EXPO_PUBLIC_APP_URL = 'https://app.ourcocon.com';
+    expect(loadConfig(undefined).appUrl).toBe('https://app.ourcocon.com');
+    process.env.EXPO_PUBLIC_APP_URL = '';
+    expect(loadConfig(undefined).appUrl).toBeUndefined();
+  });
 });

@@ -2,5 +2,5 @@
 # except tests/, docker/ and web/). CI deploys never install these, so cocon-deploy refuses a commit
 # whose version is newer than the server's: run bootstrap-from-laptop.sh from main first.
 # Changed one of those files? Add 1 to version; infra/tests/version.test.ts prints the fingerprint.
-version=4
-fingerprint=4ba5e1fc9d10eb52
+version=5
+fingerprint=683ef4a085c455ec

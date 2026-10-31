@@ -29,6 +29,7 @@
 | Recently deleted | `/settings/deleted` | stack, not designed: list per spec 018 | 018 |
 | Sign in | `/welcome` (public, no tab bar) | page, not designed: OC-Welcome.md | 003 |
 | Sign-in link | `/auth/callback` (public) | page, not designed: OC-Welcome.md | 003 |
+| Sign-in email link | `/auth/confirm` (public; opens the iPhone app) | page, not designed: OC-Welcome.md | 045 |
 | Set up your family | `/welcome/family` | page, not designed: OC-Welcome.md | 003 |
 | Join | `/join/[token]` (public, no tab bar) | page, not designed: OC-Welcome.md | 003 |
 | Approve access | `/oauth/consent?authorization_id=…` (public, no tab bar) | page, not designed: OC-Connect.md › Approve access | 023 |

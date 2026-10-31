@@ -86,7 +86,7 @@ export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> 
   /** Full width. */
   block?: boolean;
   icon?: IconName;
-  /** A sign-in provider's mark in place of the icon: "Continue with Google" (outline). */
+  /** A sign-in provider's mark in place of the icon: "Continue with Google" (outline). Apple's label is ink, the colour of its mark (Apple's rules). */
   brand?: BrandName;
   /**
    * Looks disabled but still takes taps, so the screen can explain what's missing (the add sheet's
@@ -169,7 +169,7 @@ export function Button({
       {...props}
     >
       {brand ? <BrandMark name={brand} /> : icon ? <Icon name={icon} color={off ? 'inkMuted' : look.icon} /> : null}
-      <Text size={fontSize} weight={look.weight} color={off ? 'ink-muted' : look.text} numberOfLines={1}>
+      <Text size={fontSize} weight={look.weight} color={off ? 'ink-muted' : brand === 'apple' ? 'ink' : look.text} numberOfLines={1}>
         {shown}
       </Text>
       {shortLabel ? (

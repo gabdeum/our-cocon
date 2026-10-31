@@ -10,20 +10,20 @@ import { WelcomeHeader } from './WelcomeHeader';
 const t = strings.welcome;
 
 export interface AuthCallbackProps {
-  auth: Pick<Client['auth'], 'exchangeCodeForSession'>;
+  auth: Pick<Client['auth'], 'exchangeCodeForSession' | 'verifyOtp'>;
   tracker: Tracker;
   params: CallbackParams;
   onSignedIn: (next: string) => void;
   onBackToSignIn: () => void;
 }
 
-/** Where the magic link and Google come back to (spec 003; OC-Welcome.md › Link errors). */
+/** Where the email link (spec 045: /auth/confirm) and Google come back to (spec 003; OC-Welcome.md › States). */
 export function AuthCallback({ auth, tracker, params, onSignedIn, onBackToSignIn }: AuthCallbackProps) {
   const [failure, setFailure] = useState<string | null>(null);
   const started = useRef(false);
 
   useEffect(() => {
-    // A code works once, so StrictMode's second run must not use it again.
+    // A code or token works once, so StrictMode's second run must not use it again.
     if (started.current) return;
     started.current = true;
     void completeSignIn(auth, params).then((result) => {

@@ -55,8 +55,23 @@ hidden() { # hidden <question> → stdout
   [ -n "$value" ] || die "nothing entered"
   printf '%s' "$value"
 }
+hidden_key() { # hidden_key <question> → stdout: a pasted key (.p8, several lines), as base64 on one line
+  local line key=
+  printf '   %s\n' "$1" >/dev/tty
+  while IFS= read -r -s line </dev/tty; do
+    line=${line%$'\r'}
+    key+="$line"$'\n'
+    [ "$line" = "-----END PRIVATE KEY-----" ] && break
+  done
+  echo >/dev/tty
+  case $key in "-----BEGIN PRIVATE KEY-----"*) ;; *) die "that isn't a .p8 key: paste the whole file, from -----BEGIN PRIVATE KEY----- to -----END PRIVATE KEY-----" ;; esac
+  printf '%s' "$key" | base64 | tr -d '\n'
+}
 
 [ "$(id -u)" = 0 ] || die "run as root (bootstrap-from-laptop.sh does this for you)"
+# Opened (decrypted) settings files, removed however the script stops (a wrong paste, Ctrl+C).
+opened=()
+trap 'rm -f "${opened[@]}"' EXIT
 # shellcheck source=/dev/null
 . /etc/os-release
 case "${ID:-}-${VERSION_ID:-}" in
@@ -394,6 +409,7 @@ EOF
   # Spec 003: Sign in with Google and the app's sign-in redirects, asked once per environment
   # (docs/operations.md › Google sign-in). Change them later with `cocon-secrets edit <env>-supabase.env`.
   settings=$(mktemp)
+  opened+=("$settings")
   if [ $dry = 1 ] && ! has_secret "$env-supabase.env"; then :
   elif cocon-secrets open "$env-supabase.env" "$settings" && grep -q '^GOOGLE_SIGN_IN=' "$settings"; then
     note "Google sign-in: already set"
@@ -409,6 +425,51 @@ EOF
     fi
     set_env "$settings" ADDITIONAL_REDIRECT_URLS "https://$(host_for app "$env")/**"
     cocon-secrets seal "$env-supabase.env" "$settings"
+  fi
+  rm -f "$settings"
+
+  # Spec 045: signing in on the iPhone, asked once per environment, also on servers set up before
+  # (docs/operations.md › First-time setup, step 5). Google gets the iPhone's own client ID after the
+  # web one; Sign in with Apple gets its key, which deleting an account needs to revoke it at Apple.
+  # Every run also checks that sign-in only returns to the web app: never to a custom scheme
+  # (ourcocon://, exp://), which any app on a phone could claim to receive the tokens.
+  settings=$(mktemp)
+  opened+=("$settings")
+  if [ $dry = 1 ] && ! has_secret "$env-supabase.env"; then :
+  elif ! cocon-secrets open "$env-supabase.env" "$settings"; then die "could not open $env's Supabase settings"
+  else
+    changed=0
+    allowed="https://$(host_for app "$env")/**"
+    if [ "$(sed -n 's/^ADDITIONAL_REDIRECT_URLS=//p' "$settings")" != "$allowed" ]; then
+      if [ $dry = 1 ]; then note "would allow sign-in to return only to $allowed"
+      else set_env "$settings" ADDITIONAL_REDIRECT_URLS "$allowed"; changed=1; note "sign-in now returns only to $allowed"; fi
+    fi
+    if grep -q '^APPLE_SIGN_IN=' "$settings"; then note "iPhone sign-in: already set"
+    elif [ $dry = 1 ]; then note "would ask for the iPhone's Google client and the Sign in with Apple key of $env"
+    else
+      if grep -q '^GOOGLE_SIGN_IN=true' "$settings"; then
+        ios_id=$(hidden "Google iOS client ID for $env (ends in .apps.googleusercontent.com, or - to skip)")
+        if [ "$ios_id" != - ]; then
+          web_id=$(sed -n 's/^GOOGLE_CLIENT_ID=//p' "$settings" | cut -d, -f1)
+          set_env "$settings" GOOGLE_CLIENT_ID "$web_id,$ios_id"
+        fi
+      fi
+      key_id=$(hidden "Sign in with Apple Key ID for $env (10 letters and digits, or - to skip Apple)")
+      if [ "$key_id" = - ]; then
+        set_env "$settings" APPLE_SIGN_IN false
+      else
+        set_env "$settings" APPLE_SIGN_IN true
+        # Not secrets: the Apple Developer team, and the app's bundle ID (apps/app/app.json).
+        set_env "$settings" APPLE_TEAM_ID 59TR87TBX2
+        set_env "$settings" APPLE_CLIENT_ID com.ourcocon.app
+        set_env "$settings" APPLE_KEY_ID "$key_id"
+        # Assigned first, so a wrong paste stops the setup (set -e) instead of storing nothing.
+        apple_key=$(hidden_key "Sign in with Apple key for $env: paste the whole .p8 file (it won't show)")
+        set_env "$settings" APPLE_PRIVATE_KEY "$apple_key"
+      fi
+      changed=1
+    fi
+    [ $changed = 0 ] || cocon-secrets seal "$env-supabase.env" "$settings"
   fi
   rm -f "$settings"
 

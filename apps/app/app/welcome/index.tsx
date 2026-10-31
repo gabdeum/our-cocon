@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { PushedScreen } from '@cocon/ui';
 import { SignIn } from '../../components/account/SignIn';
 import { safeNext } from '../../lib/links';
@@ -9,12 +9,16 @@ import { useSession } from '../../lib/session';
  * after signing in: "Save to my Our Cocon" on a shared recipe (spec 019).
  */
 export default function WelcomeRoute() {
-  const { client } = useSession();
+  const { client, tracker } = useSession();
   const { next } = useLocalSearchParams<{ next?: string }>();
   const back = safeNext(next);
   return (
     <PushedScreen>
-      <SignIn auth={client.auth} next={back === '/' ? undefined : back} />
+      <SignIn
+        auth={client.auth}
+        next={back === '/' ? undefined : back}
+        native={{ client, tracker, onSignedIn: (to) => router.replace(to as never) }}
+      />
     </PushedScreen>
   );
 }
