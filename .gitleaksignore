@@ -1,0 +1,3 @@
+# Not a key: provision.sh's error message for a wrong .p8 paste named both marker lines (spec 045).
+# Reworded in the next commit; this is the old commit's line.
+6924573cbf5b4fe614167624316acf61752229bd:infra/provision.sh:private-key:67
