@@ -97,6 +97,44 @@ The script is safe to run again at any time (`infra/bootstrap-from-laptop.sh <se
 - **If a deploy fails** the previous version keeps running: images that don't download or migrations that fail stop the deploy before anything changes, and an app that doesn't answer within a minute is replaced by the previous one. The error is in the GitHub Actions log.
 - **Going back** to an older version: release its commit again (tag it `v1.0.1`). Database migrations only go forward, so a migration must never break the version before it.
 
+### iPhone app
+
+The iPhone app is built by **EAS** (Expo Application Services, Expo's cloud build service, free plan) and reaches phones in one of two ways:
+
+- A **build** is a new copy of the whole app. It goes to **App Store Connect** (appstoreconnect.apple.com, Apple's site for managing the app), then **TestFlight** (Apple's beta app, where you install it before anyone else), then App Store review, then the App Store.
+- An **update** (EAS Update) replaces only the JavaScript inside builds already on phones: screens, copy, logic. It reaches phones in minutes without Apple's review. A phone downloads it on launch and uses it from the next launch.
+
+There is one app, and it talks to prod. Check changes beforehand on staging (the web app at `app-staging.ourcocon.com`) and on your iPhone with `pnpm dev:phone`. Which of the two a change needs: CLAUDE.md, "Releasing (iOS)".
+
+**Once, before the first build** (in `apps/app`):
+
+1. `pnpm exec eas login` with your Expo account, then `pnpm exec eas init`. It links the app to an EAS project and writes the project ID into `app.json`.
+2. `pnpm exec eas update:configure`: writes the address phones download updates from into `app.json`.
+3. Store the keys (the same values prod's web app uses): `pnpm exec eas env:create --environment production --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value <key> --visibility plaintext`, and the same with `EXPO_PUBLIC_POSTHOG_KEY`. They are built into the app, so "plaintext" is right: they are not secrets.
+4. Commit the `app.json` changes.
+5. In App Store Connect, when the first build arrives: App Information → fill in the category and privacy policy link; App Privacy → fill in what data the app collects.
+
+**Releasing a build**
+
+1. Release the backend first (`## 2.` above, Prod), so prod's database already has what the new app needs.
+2. Once an App Store version is out, raise `version` in `apps/app/app.json` (use the same number as the prod tag, without the `v`: `0.2.0`) and commit. Apple refuses new builds of a version it has already released. The build number goes up by itself.
+3. `pnpm release:ios`. The first time it asks for your Apple ID and creates the signing certificates; say yes to each. It builds (about 15–30 minutes, longer when the free plan's queue is busy), then uploads to App Store Connect. That only puts the build in TestFlight: nobody else sees it yet.
+4. **Test it:** when Apple emails "has completed processing" (5–30 minutes), open TestFlight on your iPhone and install it. It replaces the App Store version on your phone and uses prod: test with your own family, not fake data. To add other testers: App Store Connect → the app → TestFlight → Internal Testing → add people from Users and Access (no review needed, up to 100).
+5. **Send it for review:** App Store Connect → the app → Distribution → "+" next to iOS App to add the version (same number as step 2) → fill in "What's New" → Build → choose the build you tested → set **App Store Version Release** to "Manually release this version" → Add for Review → Submit. Review takes about a day; Apple emails the result. If it's rejected, the reason is in App Store Connect → the app → App Review; fix, build again and choose the new build.
+6. **Release it:** when the status is "Pending Developer Release", click Release This Version. With **Phased Release** turned on (same page, before submitting), phones that update automatically get it over 7 days and you can pause it; anyone can still download it right away.
+
+**Shipping an update** (JS only)
+
+1. Merge to `main`, check staging, and make sure the backend it needs is on prod.
+2. On an up-to-date `main` with nothing uncommitted: `pnpm update:prod`. It doesn't stop a change that needs a build: phones whose build doesn't match just ignore the update. So if the CLAUDE.md list says build, run `pnpm release:ios` instead.
+3. Check: open the app twice on your phone (it downloads on the first launch and uses it on the second). Every update is listed at expo.dev → the project → Updates.
+
+**Going back**
+
+- **A bad update:** `pnpm --dir apps/app exec eas update:roll-back-to-embedded --channel production` puts phones back on the JavaScript that came with their build, from their next launch. Or ship a fix with `pnpm update:prod`. An update that crashes on launch is dropped by the phone on its own.
+- **A bad build not yet released:** in App Store Connect, on the version page, Remove from Review (or don't click Release); choose a new build.
+- **A bad build already released:** the App Store can't go back to an older build. If the bug is in JavaScript, fix it with an update (fastest). Otherwise release a fixed build with a higher version; when it's urgent, ask for an expedited review at developer.apple.com/contact/app-store/?topic=expedite. With Phased Release on, pause it meanwhile (version page → Pause Phased Release). As a last resort, Pricing and Availability → Remove from sale stops new downloads; installed apps keep working.
+
 ## 3. Secrets
 
 All secrets are sealed in `/etc/cocon/creds` on the server. To change one, log in (`ssh gabriel@<server-ip>`), then:

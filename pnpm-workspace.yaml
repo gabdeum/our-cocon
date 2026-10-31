@@ -2,7 +2,9 @@ packages:
   - 'apps/*'
   - 'packages/*'
 allowBuilds:
+  dtrace-provider: false
   esbuild: true
+  protobufjs: false
 # High advisories with no fixed release yet, only in Expo's build tooling (not shipped in the app
 # bundle or run on the server). Review when Expo updates; remove each once a fix exists.
 auditConfig:

@@ -3,13 +3,24 @@
     "name": "Our Cocon",
     "slug": "our-cocon",
     "scheme": "ourcocon",
-    "version": "0.1.0",
+    "version": "0.8.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/d1d31ef9-da74-4f0a-9630-6f1d92fa3e27"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "bundleIdentifier": "com.ourcocon.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "web": {
       "bundler": "metro",
@@ -34,6 +45,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d1d31ef9-da74-4f0a-9630-6f1d92fa3e27"
+      }
+    },
+    "owner": "gabdeum"
   }
 }

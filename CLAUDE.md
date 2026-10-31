@@ -34,6 +34,22 @@ A household app for families, run from the app or from any AI assistant through 
 - Secrets live only in `.env.local` (never read or print it). The committed template is `env.example`.
 - After `pnpm add` in a workspace package, if a module can't be found, run `pnpm install --fix-lockfile` (pnpm can leave broken links).
 
+## Releasing (iOS)
+
+The web app ships through the server (`docs/operations.md`). The iPhone app ships through EAS (Expo's build service, free plan): a **build** is a new binary that goes through TestFlight and App Store review; an **update** sends only the JavaScript to phones already running a compatible build, in minutes, with no review. There is one app, on prod (`production` profile and channel in `apps/app/eas.json`); it is tested in TestFlight before release, and changes are checked on staging (web) and `pnpm dev:phone` first. The full process (first-time setup, TestFlight testing, App Store Connect review and release, rollback) is in `docs/operations.md`, "iPhone app": follow it, or walk Gabriel through it step by step.
+
+| Command | Does |
+| --- | --- |
+| `pnpm release:ios` | Production build on EAS, uploaded to App Store Connect: lands in TestFlight, not the App Store (build number goes up by itself) |
+| `pnpm update:prod` | Publish the committed JS to production phones (refuses with uncommitted changes) |
+| `pnpm --dir apps/app exec eas update:roll-back-to-embedded --channel production` | Undo updates: phones go back to their build's own JS |
+
+- **Needs a new build**: adding, removing or upgrading a package with native code (anything `npx expo install` touches, expo SDK upgrades), changes to `app.json` (plugins, permissions, icon, splash, bundle id, scheme), new fonts or assets loaded by a config plugin. A change to the user-facing `version` in `app.json` also needs a build; raise it before each App Store release once one is out.
+- **An update is enough**: screens, components, copy, styles, logic in `apps/app` and `packages/*`, images imported from JS.
+- When unsure, the runtime version decides: it is a fingerprint of the native project (`runtimeVersion.policy: "fingerprint"`), and an update only reaches builds with the same fingerprint. Compare with `pnpm --dir apps/app exec eas fingerprint:compare`; if it differs from the last build, run `pnpm release:ios`.
+- An update's database calls must work against the database the channel's builds talk to: release the backend to prod first.
+- Keys live in the EAS environment `production`, never in eas.json.
+
 ## Workflow
 
 - One spec per session: run `/build-spec NNN` in plan mode, wait for approval, then build.
