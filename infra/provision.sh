@@ -64,7 +64,9 @@ hidden_key() { # hidden_key <question> → stdout: a pasted key (.p8, several li
     [ "$line" = "-----END PRIVATE KEY-----" ] && break
   done
   echo >/dev/tty
-  case $key in "-----BEGIN PRIVATE KEY-----"*) ;; *) die "that isn't a .p8 key: paste the whole file, from -----BEGIN PRIVATE KEY----- to -----END PRIVATE KEY-----" ;; esac
+  case $key in "-----BEGIN PRIVATE KEY-----"*) ;;
+    *) die "that isn't a .p8 key: paste the whole file, its first and last lines included" ;;
+  esac
   printf '%s' "$key" | base64 | tr -d '\n'
 }
 
