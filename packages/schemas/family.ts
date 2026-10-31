@@ -11,7 +11,7 @@ export const Email = z.string().trim().toLowerCase().pipe(z.email());
 /** 32 random bytes, base64url without padding (create_invite). */
 export const InviteToken = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 export const MemberRole = z.enum(['owner', 'editor']);
-export const SignInMethod = z.enum(['email', 'google']);
+export const SignInMethod = z.enum(['email', 'google', 'apple']);
 
 export type MemberRole = z.infer<typeof MemberRole>;
 export type SignInMethod = z.infer<typeof SignInMethod>;

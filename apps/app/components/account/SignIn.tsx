@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Button, Callout, Link, StatusBanner, Text, TextField } from '@cocon/ui';
+import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
-import { sendMagicLink, signInWithProvider, type SendLinkResult } from '../../lib/auth';
+import { sendMagicLink, signInNatively, signInWithProvider, type SendLinkResult, type SignInOptions } from '../../lib/auth';
+import { signInOptions } from '../../lib/native-sign-in';
 import type { Client } from '../../lib/supabase';
 import { WelcomeHeader } from './WelcomeHeader';
 
@@ -20,10 +22,18 @@ export interface SignInProps {
   next?: string;
   title?: string;
   lead?: string;
+  /** Google's redirect on the web; the iPhone's own Apple and Google sheets in a build (spec 045). */
+  options?: SignInOptions;
+  /** What the iPhone's sheets need: they sign in here, so this page tracks it and moves on. */
+  native?: {
+    client: { auth: Pick<Client['auth'], 'signInWithIdToken' | 'updateUser'>; functions: Pick<Client['functions'], 'invoke'> };
+    tracker: Tracker;
+    onSignedIn: (next: string) => void;
+  };
 }
 
-/** Sign in or sign up, with Google or a magic link (spec 003 FR-001; OC-Welcome.md › Sign in). */
-export function SignIn({ auth, next, title = t.title, lead = t.lead }: SignInProps) {
+/** Sign in or sign up, with Apple (iPhone), Google or a magic link (specs 003 FR-001, 045; OC-Welcome.md › Sign in). */
+export function SignIn({ auth, next, title = t.title, lead = t.lead, options = signInOptions, native }: SignInProps) {
   const [email, setEmail] = useState('');
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | undefined>();
@@ -53,6 +63,19 @@ export function SignIn({ auth, next, title = t.title, lead = t.lead }: SignInPro
     if (!ok) setError(t.googleFailed);
   }
 
+  const sheets = native ? options.native : null;
+  async function signInWith(provider: 'apple' | 'google') {
+    if (!native || !sheets) return;
+    setError(null);
+    const result = await signInNatively(native.client, sheets, provider, next);
+    if (result.ok) {
+      native.tracker.track(result.event, { method: result.method });
+      native.onSignedIn(result.next);
+    } else if (result.reason === 'failed') {
+      setError(provider === 'apple' ? t.appleFailed : t.googleFailed);
+    }
+  }
+
   if (sentTo) {
     return (
       <View className="gap-18">
@@ -76,10 +99,14 @@ export function SignIn({ auth, next, title = t.title, lead = t.lead }: SignInPro
     <View className="gap-18">
       <WelcomeHeader title={title} lead={lead} />
       {error ? <Callout variant="warn" text={error} /> : null}
-      <Button label={t.google} variant="outline" brand="google" block onPress={() => void google()} />
-      <Text size={15} weight="700" color="ink-muted" align="center">
-        {t.or}
-      </Text>
+      {sheets ? <Button label={t.apple} variant="outline" brand="apple" block onPress={() => void signInWith('apple')} /> : null}
+      {sheets?.google ? <Button label={t.google} variant="outline" brand="google" block onPress={() => void signInWith('google')} /> : null}
+      {options.webGoogle ? <Button label={t.google} variant="outline" brand="google" block onPress={() => void google()} /> : null}
+      {sheets || options.webGoogle ? (
+        <Text size={15} weight="700" color="ink-muted" align="center">
+          {t.or}
+        </Text>
+      ) : null}
       <TextField
         label={t.emailLabel}
         hint={t.emailHint}

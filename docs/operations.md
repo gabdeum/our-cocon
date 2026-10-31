@@ -32,7 +32,11 @@ Save each result in your password manager. Nothing here goes into a chat.
    - Create a project "Our Cocon". In APIs & Services → OAuth consent screen: type External, app name "Our Cocon", your email as support and developer contact, scopes `email`, `profile` and `openid` only. Then Publish the app (no Google review is needed for these scopes).
    - APIs & Services → Credentials → Create credentials → OAuth client ID → Web application, named "Our Cocon". Authorized JavaScript origins: `https://app.ourcocon.com`, `https://app-staging.ourcocon.com`, `http://localhost:8081`. Authorized redirect URIs: `https://api.ourcocon.com/auth/v1/callback`, `https://api-staging.ourcocon.com/auth/v1/callback`, `http://127.0.0.1:54321/auth/v1/callback`.
    - Save the client ID and secret in your password manager. The setup asks for them for each environment (paste the same pair, or `-` to skip Google there). For your Mac, paste them into `.env.local` as `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`, then `pnpm exec supabase stop` and `pnpm dev`.
-6. **CI keys, one per environment.** GitHub logs into the server with an SSH key; staging and prod each get their own, so the staging key can never touch prod.
+   - **For the iPhone app** (spec 045): Credentials → Create credentials → OAuth client ID → **iOS**, named "Our Cocon iPhone", bundle ID `com.ourcocon.app`. It gives a client ID and an **iOS URL scheme** (the client ID backwards, `com.googleusercontent.apps.…`), no secret. Both are already in the app (`apps/app/app.json`, `apps/app/eas.json`: they aren't secrets); the setup asks for the client ID once per environment, so Supabase accepts the iPhone's sign-ins.
+6. **Sign in with Apple** (spec 045, about 10 minutes). The App Store asks for it next to Google. Apple Developer (developer.apple.com) → Certificates, Identifiers & Profiles:
+   - **Keys** → "+" → name "Our Cocon Sign in with Apple", tick **Sign in with Apple** → Configure → primary App ID `com.ourcocon.app` → Save → Continue → Register → **Download** the `.p8` file (Apple lets you download it only once) and note its **Key ID** (10 characters). Save both in your password manager. The server uses this key to revoke a person's Sign in with Apple when they delete their account (App Store rule).
+   - Nothing else to set up by hand: the next `pnpm release:ios` turns on Sign in with Apple and Associated Domains (the link from the sign-in email opening the app) for the app ID.
+7. **CI keys, one per environment.** GitHub logs into the server with an SSH key; staging and prod each get their own, so the staging key can never touch prod.
    - Staging: the key you already have. Download its public half, `cocon-deploy.pub`, from your password manager to `~/Downloads/cocon-deploy-staging.pub`.
    - Prod: make a new one on your Mac: `ssh-keygen -t ed25519 -N "" -C cocon-deploy-prod -f ~/Downloads/cocon-deploy-prod`. Save both files in your password manager. Paste the private one (`cocon-deploy-prod`, no `.pub`) into GitHub → Settings → Environments → **production** → `SSH_PRIVATE_KEY`, replacing the old value. Staging keeps the old key.
 
@@ -57,6 +61,9 @@ It copies `infra/` to the server and runs `infra/provision.sh`, which installs D
 | Photo backup passphrase | Step 2 above |
 | Your age public key | Step 1 above (`age1…`) |
 | PostHog project key, staging then prod | Step 3 above |
+| Google OAuth client ID and secret, per environment | Step 5 above (the web client; `-` skips Google there) |
+| Google iOS client ID, per environment | Step 5 above (the iOS client; `-` skips it) |
+| Sign in with Apple Key ID, then the key, per environment | Step 6 above: the Key ID, then paste the whole `.p8` file, from `-----BEGIN PRIVATE KEY-----` to `-----END PRIVATE KEY-----` (`-` at the Key ID skips Apple) |
 
 Last, it checks you can log in as `gabriel`, and only then turns off root and password logins. From then on: `ssh gabriel@<server-ip>`.
 
@@ -85,10 +92,11 @@ The script is safe to run again at any time (`infra/bootstrap-from-laptop.sh <se
 5. **Rate limit for signed-out pages** (constitution VI; spec 019, 032-later L2). A *rate-limiting rule* makes Cloudflare block a visitor (by IP address) for a few seconds when they send too many requests to some addresses. The free plan has one rule; it covers what anyone can call without signing in: the invite preview, shared recipe and (spec 042) event pages and the share endpoints behind them, and (spec 023) the addresses AI assistants use to register themselves and get a sign-in token.
    Cloudflare → ourcocon.com → Security → WAF → Rate limiting rules → Create rule:
    - Name: `Signed-out pages`
-   - Field **URI Path**, *equals* `/functions/v1/shared-recipe`; **Or** URI Path *contains* `/r/`; **Or** URI Path *equals* `/rest/v1/rpc/invite_status`; **Or** URI Path *equals* `/auth/v1/oauth/clients/register`; **Or** URI Path *equals* `/auth/v1/oauth/token`; **Or** URI Path *equals* `/functions/v1/shared-event`; **Or** URI Path *contains* `/e/`
-   - Already made the rule before spec 023? Edit it and add the OAuth lines. Before spec 042? Add the last two (shared events).
+   - Field **URI Path**, *equals* `/functions/v1/shared-recipe`; **Or** URI Path *contains* `/r/`; **Or** URI Path *equals* `/rest/v1/rpc/invite_status`; **Or** URI Path *equals* `/auth/v1/oauth/clients/register`; **Or** URI Path *equals* `/auth/v1/oauth/token`; **Or** URI Path *equals* `/functions/v1/shared-event`; **Or** URI Path *contains* `/e/`; **Or** URI Path *equals* `/functions/v1/apple-sign-in`; **Or** URI Path *equals* `/functions/v1/delete-account`
+   - Already made the rule before spec 023? Edit it and add the OAuth lines. Before spec 042? Add the shared event lines. Before spec 045? Add the last two (signed in, but each Apple sign-in calls Apple).
    - Same characteristics: **IP**. When rate exceeds: **30** requests per **10 seconds**. Action: **Block** for **10 seconds**.
    - Deploy. A shared recipe page costs a visitor two requests (the page and its data), and connecting an assistant a few, so people never hit it; a script trying links or registering clients does. The page's link preview asks the endpoint from inside the server (`SHARE_ENDPOINT_URL`), so it isn't counted.
+6. **Let Apple read the app's link file** (spec 045). iPhones learn that the sign-in email's link opens the app from `https://app.ourcocon.com/.well-known/apple-app-site-association`, which Apple's servers download. Cloudflare must hand it over without a challenge: if Bot Fight Mode or a WAF rule is on, add a skip for URI Path *equals* `/.well-known/apple-app-site-association`. Check: `curl -sI https://app.ourcocon.com/.well-known/apple-app-site-association` answers `200` with `content-type: application/json`, and Apple's copy at `https://app-site-association.cdn-apple.com/a/v1/app.ourcocon.com` shows the same file (it can take a day to refresh).
 
 ## 2. Deploying and releasing
 
@@ -143,7 +151,8 @@ All secrets are sealed in `/etc/cocon/creds` on the server. To change one, log i
 | --- | --- | --- |
 | A Supabase setting (SMTP, URLs, …) | `sudo cocon-secrets edit staging-supabase.env` | `sudo cocon-stack staging up -d` |
 | App settings (PostHog key, …) | `sudo cocon-secrets edit prod-app.env` | Redeploy (re-run the last workflow) |
-| Google sign-in (`GOOGLE_SIGN_IN`, `GOOGLE_CLIENT_ID`, `GOOGLE_SECRET`) | `sudo cocon-secrets edit prod-supabase.env` | `sudo cocon-stack prod up -d` |
+| Google sign-in (`GOOGLE_SIGN_IN`, `GOOGLE_CLIENT_ID` as `<web>,<ios>`, `GOOGLE_SECRET`) | `sudo cocon-secrets edit prod-supabase.env` | `sudo cocon-stack prod up -d` |
+| Sign in with Apple (`APPLE_SIGN_IN`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`: the `.p8` file as base64 on one line, `base64 -i AuthKey_….p8`) | `sudo cocon-secrets edit prod-supabase.env` | `sudo cocon-stack prod up -d` |
 | Resend key | `sudo rm /etc/cocon/creds/resend-api-key.cred` and re-run the setup | Also update `SMTP_PASS` in both Supabase settings |
 | Origin certificate | `sudo rm /etc/cocon/creds/origin.*.cred` and re-run the setup | |
 

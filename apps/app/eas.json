@@ -23,7 +23,9 @@
         "EXPO_PUBLIC_ENV": "prod",
         "EXPO_PUBLIC_SUPABASE_URL": "https://api.ourcocon.com",
         "EXPO_PUBLIC_MCP_URL": "https://mcp.ourcocon.com",
-        "EXPO_PUBLIC_POSTHOG_HOST": "https://eu.i.posthog.com"
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://eu.i.posthog.com",
+        "EXPO_PUBLIC_APP_URL": "https://app.ourcocon.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "1056584882565-1kosa2us2rv00lqvn9mbif6uf6se267d.apps.googleusercontent.com"
       }
     }
   },

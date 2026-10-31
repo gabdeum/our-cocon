@@ -1,5 +1,9 @@
 {
   "extends": "../tsconfig.base.json",
-  "compilerOptions": { "types": ["node"] },
+  "compilerOptions": {
+    "types": ["node"],
+    // The Edge Functions' handlers import each other with Deno's `.ts` extensions (spec 045).
+    "allowImportingTsExtensions": true
+  },
   "include": ["**/*.ts"]
 }

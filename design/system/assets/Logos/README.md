@@ -4,4 +4,6 @@ The Our Cocon mark is a house with a heart, drawn in ink on a honey rounded squa
 
 ## Sign-in provider marks
 
-`google.svg` is Google's own "G", used only inside the "Continue with Google" button (Button README). It keeps Google's colours as Google's branding rules require; they are not design tokens and appear nowhere else. Apple's mark joins it with the iPhone app (V2).
+`google.svg` is Google's own "G", used only inside the "Continue with Google" button (Button README). It keeps Google's colours as Google's branding rules require; they are not design tokens and appear nowhere else.
+
+`apple.svg` is Apple's logo, in black, used only inside the "Continue with Apple" button on the iPhone (spec 045). Apple's rules want the logo and the label in the same colour (black or white), so that button's label is ink. Like Google's, it is not a design token.

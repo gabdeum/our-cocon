@@ -15,8 +15,21 @@ async function call<T>(run: () => PromiseLike<{ data: unknown; error: { message?
 
 const nothing = () => undefined;
 
+/**
+ * Spec 045 FR-009: deleting an account goes through the delete-account Edge Function, which runs
+ * `delete_my_account` as the member and then revokes their Sign in with Apple. Its refusals carry
+ * the database's message, as the RPC's do.
+ */
+async function deleteAccount(client: Pick<Client, 'functions'>) {
+  const { error } = await client.functions.invoke('delete-account', { method: 'POST' });
+  if (!error) return { data: null, error: null };
+  const context = (error as { context?: { json?: () => Promise<unknown> } }).context;
+  const body = (await context?.json?.().catch(() => null)) as { message?: unknown } | null | undefined;
+  return { data: null, error: { message: typeof body?.message === 'string' ? body.message : error.message } };
+}
+
 /** The family functions of spec 003 (supabase/migrations, accounts_family). Each checks the caller. */
-export function familyApi(client: Pick<Client, 'rpc'>) {
+export function familyApi(client: Pick<Client, 'rpc' | 'functions'>) {
   return {
     createFamily: (familyName: string, displayName: string) =>
       call(() => client.rpc('create_family', { family_name: familyName, display_name: displayName }), String),
@@ -29,7 +42,7 @@ export function familyApi(client: Pick<Client, 'rpc'>) {
     makeOwner: (userId: string) => call(() => client.rpc('make_owner', { member_id: userId }), nothing),
     setDisplayName: (name: string) => call(() => client.rpc('set_display_name', { display_name: name }), nothing),
     deleteFamily: () => call(() => client.rpc('delete_family'), Number),
-    deleteMyAccount: () => call(() => client.rpc('delete_my_account'), nothing),
+    deleteMyAccount: () => call(() => deleteAccount(client), nothing),
     // Spec 033: members without the app (any member) and member colors.
     addManagedMember: (name: string, color?: MemberColor) =>
       call(() => client.rpc('add_managed_member', color ? { name, pick: color } : { name }), String),

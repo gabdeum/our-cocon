@@ -116,6 +116,11 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
     expect(exceptions.rowCount).toBe(1);
   });
 
+  it('retries the Apple revokes; without Apple set up (locally) they stay queued (spec 045)', async () => {
+    const result = await purgeDeleted({ url, serviceKey });
+    expect(result.apple).toEqual({ revoked: 0, left: expect.any(Number) });
+  });
+
   it('refuses a caller without the service key', async () => {
     await expect(purgeDeleted({ url, serviceKey: 'not-a-key' })).rejects.toThrow();
   });

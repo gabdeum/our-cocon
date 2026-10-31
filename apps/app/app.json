@@ -20,7 +20,11 @@
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "usesAppleSignIn": true,
+      "associatedDomains": [
+        "applinks:app.ourcocon.com"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -41,7 +45,14 @@
         }
       ],
       "expo-status-bar",
-      "expo-asset"
+      "expo-asset",
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.1056584882565-1kosa2us2rv00lqvn9mbif6uf6se267d"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

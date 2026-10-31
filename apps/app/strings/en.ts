@@ -21,6 +21,8 @@ export const strings = {
     title: 'Welcome to Our Cocon',
     lead: 'Recipes and groceries your whole family shares.',
     google: 'Continue with Google',
+    // Spec 045: iPhone only.
+    apple: 'Continue with Apple',
     or: 'or',
     emailLabel: 'Your email',
     emailHint: "We'll send you a link to sign in. No password needed.",
@@ -29,6 +31,7 @@ export const strings = {
     invalidEmail: 'Check your email address. It should look like name@example.com.',
     sendFailed: "Couldn't send the link. Check your connection and try again.",
     googleFailed: "Couldn't open Google sign-in. Check your connection and try again.",
+    appleFailed: "Couldn't sign in with Apple. Try again, or use your email.",
     rateLimited: 'Too many tries. Wait a minute, then try again.',
     checkTitle: 'Check your email',
     checkBody: (email: string) => `We sent a link to ${email}. Open it on this device to sign in. It works for 1 hour.`,

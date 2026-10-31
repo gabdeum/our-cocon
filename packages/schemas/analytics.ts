@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UndoKind } from './activity';
 import { CalendarView, SlotKey, TimeType, Visibility } from './calendar';
-import { AiPermission, CookingSetting, MemberColor } from './family';
+import { AiPermission, CookingSetting, MemberColor, SignInMethod } from './family';
 import { FilterKey } from './recipe-filters';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
 
@@ -38,8 +38,9 @@ export const events = {
     tab: z.enum(['home', 'calendar', 'recipes', 'groceries', 'menu']),
   }),
   // Spec 003: accounts and family.
-  signed_up: z.strictObject({ method: z.enum(['email', 'google']) }),
-  signed_in: z.strictObject({ method: z.enum(['email', 'google']) }),
+  // Spec 045: Sign in with Apple on the iPhone.
+  signed_up: z.strictObject({ method: SignInMethod }),
+  signed_in: z.strictObject({ method: SignInMethod }),
   family_created: z.strictObject({}),
   invite_sent: z.strictObject({}),
   invite_accepted: z.strictObject({ days_since_sent: z.int().min(0) }),

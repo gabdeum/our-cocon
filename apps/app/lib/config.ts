@@ -12,6 +12,8 @@ export const AppConfig = z.object({
   supabaseAnonKey: z.string().min(1),
   /** The MCP server's address, without /mcp (spec 025: members paste it into their assistant). */
   mcpUrl: z.url(),
+  /** Spec 045: the web app's address, for links an iPhone build makes (sign-in, share, invite). Unset in local dev. */
+  appUrl: z.url().optional(),
   posthogKey: z.string().optional(),
   posthogHost: z.url().optional(),
 });
@@ -36,6 +38,7 @@ function fromBuildEnv(): Record<string, unknown> {
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
     // Locally the MCP server runs beside the app (pnpm dev, apps/mcp/src/config.ts).
     mcpUrl: process.env.EXPO_PUBLIC_MCP_URL || 'http://localhost:8787',
+    appUrl: blankToUndefined(process.env.EXPO_PUBLIC_APP_URL),
     posthogKey: blankToUndefined(process.env.EXPO_PUBLIC_POSTHOG_KEY),
     posthogHost: blankToUndefined(process.env.EXPO_PUBLIC_POSTHOG_HOST),
   };

@@ -69,6 +69,34 @@ isOneToOne: true
       referencedColumns: ["user_id"]
     }
                   ]
+                },"apple_revocations": {
+                  Row: {
+                    "attempts": number,"created_at": string,"id": number,"refresh_token": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attempts"?: number,"created_at"?: string,"id"?: never,"refresh_token": string,"user_id": string
+                  }
+                  Update: {
+                    "attempts"?: number,"created_at"?: string,"id"?: never,"refresh_token"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"apple_tokens": {
+                  Row: {
+                    "refresh_token": string,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "refresh_token": string,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "refresh_token"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"assistant_use": {
                   Row: {
                     "client_id": string,"last_used_at": string,"user_id": string
@@ -681,6 +709,9 @@ isOneToOne: false
 "_created_event":
 { Args: { "eid": string }; Returns: boolean
                            },
+"_event_changed_outside":
+{ Args: { "at": string,"eid": string,"p_key": string }; Returns: Json
+                           },
 "_events_visible":
 { Args: Record<PropertyKey, never>; Returns: {
               "category": string,"checklist": Json,"created_at": string,"created_by": string,"creator_member_id": string,"deleted_at": string,"deleted_by": string,"end_time": string,"ends_on": string,"exceptions": Json,"family_id": string,"id": string,"location": string,"members": Json,"notes": string,"recurrence": Json,"reminder": string,"removed_members": Json,"responsible_member_id": string,"slots": (string)[],"source": string,"start_time": string,"starts_on": string,"surprise": Json,"time_type": string,"title": string,"updated_at": string,"updated_by": string,"view": string,"visibility": string
@@ -828,6 +859,17 @@ isOneToOne: false
                            },
 "ai_allowed":
 { Args: { "permission": string }; Returns: boolean
+                           },
+"apple_keep_token":
+{ Args: { "p_token": string,"p_user": string }; Returns: undefined
+                           },
+"apple_revocation_tried":
+{ Args: { "p_id": number,"p_revoked": boolean }; Returns: undefined
+                           },
+"apple_tokens_to_revoke":
+{ Args: { "p_user"?: string }; Returns: {
+              "id": number,"refresh_token": string
+            }[]
                            },
 "assistant_for_redirect":
 { Args: { "uri": string }; Returns: string

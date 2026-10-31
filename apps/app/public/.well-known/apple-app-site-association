@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["59TR87TBX2.com.ourcocon.app"],
+        "components": [{ "/": "/auth/confirm", "comment": "Spec 045 FR-002: only the sign-in email's link opens the app." }]
+      }
+    ]
+  }
+}

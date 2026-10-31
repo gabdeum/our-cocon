@@ -443,3 +443,12 @@ verify_jwt = false
 # Spec 042: the event share endpoint, public the same way.
 [functions.shared-event]
 verify_jwt = false
+
+# Spec 045 FR-009: Sign in with Apple's refresh token (a member's token, or the service key for the
+# nightly retry) and "Delete my account". Each checks its token itself, as the self-hosted
+# functions do (they don't verify JWTs), so local and server behave the same.
+[functions.apple-sign-in]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false

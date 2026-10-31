@@ -11,7 +11,7 @@ Pill-shaped buttons for actions, from the one main step on a screen (ink) down t
 | Padding | 0 24 (sm: 0 18); full width with `--block` |
 | Label | Nunito 17/900 (sm 15/900, lg 18/900; soft, outline and dashed 15–16/800) |
 | Icon | optional, 20 px, 10 before the label |
-| Provider mark | sign-in only: the provider's own 20 px mark in place of the icon, on `outline` ("Continue with Google", spec 003; Logos/README.md) |
+| Provider mark | sign-in only: the provider's own 20 px mark in place of the icon, on `outline` ("Continue with Google", spec 003; "Continue with Apple", spec 045; Logos/README.md). Apple's label is ink, the colour of its mark, as Apple's rules ask; Google's keeps the outline's olive-deep |
 
 ## Variants
 
