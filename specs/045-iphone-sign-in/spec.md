@@ -1,6 +1,6 @@
 # Feature Specification: iPhone sign-in
 
-**Feature Branch**: `045-iphone-sign-in` · **Status**: Draft · **Depends on**: 003, the iOS release setup (CLAUDE.md › Releasing (iOS))
+**Feature Branch**: `045-iphone-sign-in` · **Status**: Ready · **Depends on**: 003, the iOS release setup (CLAUDE.md › Releasing (iOS))
 **Input**: People sign in to the iPhone app the same ways as on the web (email link, Google), plus Sign in with Apple, which the App Store requires next to Google (decision 8, spec 003 FR-001).
 **Design**: `design/ui/OC-Welcome.md` (Sign in, Check your email, link states); components Button (outline, `brand` marks), Callout. Add to OC-Welcome.md; don't replace it.
 
@@ -39,6 +39,8 @@ Gabriel types his email in the iPhone app, opens the email on the same iPhone an
 - **FR-005 Apple on iPhone**: `expo-apple-authentication` (`ios.usesAppleSignIn: true`) returns an identity token for a SHA-256 nonce the app makes; the app signs in with `signInWithIdToken({ provider: 'apple', token, nonce })`. Supabase's Apple provider is turned on for staging and prod with client ID `com.ourcocon.app`. Apple only, iPhone only: the web doesn't show it (see Needs your attention).
 - **FR-006 Sign in screen on iPhone**: "Continue with Apple" (Apple mark, added to the design system as a Button `brand` mark like Google's "G"), then "Continue with Google", then the email form. Same size and style for both, following Apple's guidelines for the Apple button. On the web: unchanged.
 - **FR-007 Server settings**: `infra/provision.sh` adds the Apple provider and the second Google client ID to each environment's sealed Supabase settings, and updates servers that already have them (as it does for `MCP_URL`). It never adds a custom scheme to `ADDITIONAL_REDIRECT_URLS`. `infra/VERSION` goes up. Ask for the values at hidden prompts; document them in docs/operations.md › First-time setup.
+- **FR-009 Deleting an account made with Apple**: "Delete my account" (spec 003) revokes the person's Apple sign-in at Apple (`POST https://appleid.apple.com/auth/revoke`), as App Store rules ask. The server keeps what that needs: the refresh token from Apple's first sign-in (exchanged once from the authorization code, stored per user where only the server can read it), and a client secret signed with the Sign in with Apple key (.p8, Key ID, Team ID `59TR87TBX2`), a server secret sealed like the others. If Apple can't be reached, the account is still deleted and the revoke is tried again later; never block the deletion.
+- **FR-010 Decided** (Gabriel, 2026-10-31): the email link works in whichever browser or app opens it, once, for 1 hour (FR-001 replaces spec 003's same-browser rule). Apple is iPhone only. If Google's library can't pass a nonce on iOS, turn on "skip nonce check" for Google in Supabase and say so in the Changelog.
 - **FR-008 Keep the shared code shared**: `SignInProvider` and `SignInMethod` gain `apple`; the sign-in rules stay in `apps/app/lib/auth.ts` (no second copy for iPhone).
 
 ## Success Criteria
@@ -63,11 +65,12 @@ New copy goes in OC-Welcome.md's States table and `strings/en.ts` first:
 "Link opened in another browser" no longer happens for new links (FR-001); keep it for links sent before this ships, then remove it in 032-later.
 
 ## Needs your attention
-- **The email link no longer has to be opened in the browser that asked for it.** Spec 003 chose PKCE, so a link worked only in that browser. With FR-001 it works wherever it's opened, like most apps' sign-in links. That's what lets the iPhone app open it, and it removes the "other browser" error. The protection left is the same as today's email: the link works once, for 1 hour. Confirm, or keep PKCE on the web and use the new link only for iPhone requests (two templates, more code).
-- **Apple on the web.** FR-005 shows Apple only in the iPhone app; App Store rules only ask for it there. Adding it to the web later needs an Apple "Services ID" and a return address set up in your Apple Developer account.
-- **Deleting an account made with Apple.** Apple asks apps to revoke the person's Apple sign-in when they delete their account ("Delete my account", spec 003). That needs a Sign in with Apple key (.p8 file) from your Apple Developer account, stored as a server secret, and a call to Apple when the account is deleted. Do it in this spec (more setup) or list it in 032-later before the App Store release.
-- **Google's nonce.** If the Google library can't pass a nonce on iOS, Supabase's Google provider needs "skip nonce check", which weakens replay protection of Google's token. The build says which it is.
-- **Your setup steps** (the build writes them in docs/operations.md): Google Cloud → new iOS OAuth client for `com.ourcocon.app`; Apple Developer → nothing by hand (EAS turns on Sign in with Apple and Associated Domains for the app ID at the next build); then run `bootstrap-from-laptop.sh` and `pnpm release:ios`.
+- **Your setup steps** (the build writes them in docs/operations.md):
+  - Google Cloud: an iOS OAuth client for `com.ourcocon.app` (its client ID and iOS URL scheme).
+  - Apple Developer: a Sign in with Apple key (.p8 file and its Key ID), for FR-009.
+  - EAS turns on Sign in with Apple and Associated Domains for the app ID at the next build.
+  - Then run `bootstrap-from-laptop.sh` (it asks for the new values) and `pnpm release:ios`.
 
 ## Changelog
 - 2026-10-31: Draft. Written after the first TestFlight build (0.8.0), where signing in couldn't work: prod's Supabase only allows sign-in to return to `https://app.ourcocon.com`, and the security review rejected allowing `ourcocon://`.
+- 2026-10-31: Ready. Decided with Gabriel: the email link works in any browser (replaces spec 003's same-browser rule); Apple on iPhone only; revoke Apple sign-in when an account is deleted, in this spec (FR-009); skip Google's nonce check only if the library needs it.
