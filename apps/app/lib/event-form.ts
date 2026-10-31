@@ -66,7 +66,7 @@ export interface EventDraft {
   checklist: { id?: string; label: string }[];
   /** "Who can see it?" (spec 043): only the creator changes it. */
   visibility: Visibility;
-  /** A surprise's "Keep it secret from" (account members), "What {name} sees" and "Note for {name}". */
+  /** A surprise's hidden people (the sheet sets them from Who on save), "What {name} sees" and "Note for {name}". */
   hiddenFrom: string[];
   coverTitle: string;
   coverNote: string;
@@ -96,15 +96,15 @@ const plusHour = (time: string) => {
   return `${String(Math.floor(end / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`;
 };
 
-/** A new event: today (or the prefilled day), All day unless a slot or hour was given, for me. */
-export function newDraft(prefill: Prefill, today: string, myMemberId: string): EventDraft {
+/** A new event: today (or the prefilled day), All day unless a slot or hour was given, for everyone. */
+export function newDraft(prefill: Prefill, today: string): EventDraft {
   const time: DraftTime = prefill.slot ? { kind: 'slot', slots: [prefill.slot] } : prefill.time ? { kind: 'custom', start: prefill.time, end: plusHour(prefill.time) } : { kind: 'all_day' };
   return {
     title: '',
     date: prefill.date ?? today,
     span: 0,
     time,
-    who: [myMemberId],
+    who: ['everyone'],
     category: null,
     location: '',
     responsible: null,
@@ -200,7 +200,7 @@ export function toggleWho(who: readonly EventMember[], key: EventMember): EventM
   return [...who.filter((m) => m !== 'everyone'), key];
 }
 
-/** The Who row's chips: every member, then Everyone and Others (FR-003). */
+/** The Who row's chips: Everyone, every member, then Others (FR-003; Everyone first, decided 2026-10-29). */
 export interface WhoChip {
   key: EventMember;
   name: string;
@@ -211,8 +211,8 @@ export interface WhoChip {
 export function whoChips(members: readonly Member[]): WhoChip[] {
   const initials = memberInitials(members);
   return [
-    ...members.map((m) => ({ key: m.id, name: m.display_name, initial: initials.get(m.id) ?? '', color: m.color as MemberChipColor })),
     { key: 'everyone', name: a.everyone, initial: a.everyoneInitial, color: 'everyone' },
+    ...members.map((m) => ({ key: m.id, name: m.display_name, initial: initials.get(m.id) ?? '', color: m.color as MemberChipColor })),
     { key: 'others', name: a.others, initial: '', color: 'others' },
   ];
 }
@@ -227,12 +227,34 @@ export function takers(members: readonly Member[]): Member[] {
   return members.filter((m) => memberKind(m) !== 'managed');
 }
 
-/** "Keep it secret from"'s choices (spec 043 FR-002): the members with the app, except me. */
-export function secretChips(members: readonly Member[], myMemberId: string): WhoChip[] {
-  const initials = memberInitials(members);
-  return members
-    .filter((m) => memberKind(m) === 'account' && m.id !== myMemberId)
-    .map((m) => ({ key: m.id, name: m.display_name, initial: initials.get(m.id) ?? '', color: m.color as MemberChipColor }));
+/**
+ * A surprise is kept from the people in Who (decided 2026-10-29): the members with the app, except
+ * the event's creator. "Everyone" keeps it from all of them.
+ */
+export function secretFrom(who: readonly EventMember[], members: readonly Member[], creatorId: string): string[] {
+  return members.filter((m) => memberKind(m) === 'account' && m.id !== creatorId && (who.includes('everyone') || who.includes(m.id))).map((m) => m.id);
+}
+
+const sameWho = (x: readonly EventMember[], y: readonly EventMember[]) => x.length === y.length && x.every((m) => y.includes(m));
+
+/**
+ * Who a surprise is kept from on save. It follows Who when it's new, or when its creator changes Who
+ * on the whole event. Otherwise the saved list stays: the database lets only the creator change it,
+ * and one occurrence can't have its own. `revealed` is who would now see it in full: people added
+ * to Who that the saved list doesn't hide it from.
+ */
+export function surpriseHiddenFrom(
+  draft: EventDraft,
+  initial: EventDraft,
+  members: readonly Member[],
+  creatorId: string,
+  { canChange, occurrence }: { canChange: boolean; occurrence: boolean },
+): { hiddenFrom: string[]; revealed: string[] } {
+  const derived = secretFrom(draft.who, members, creatorId);
+  const follows = canChange && !occurrence && (initial.visibility !== 'surprise' || !sameWho(draft.who, initial.who));
+  if (follows || draft.visibility !== 'surprise') return { hiddenFrom: derived, revealed: [] };
+  const before = secretFrom(initial.who, members, creatorId);
+  return { hiddenFrom: initial.hiddenFrom, revealed: derived.filter((id) => !before.includes(id) && !initial.hiddenFrom.includes(id)) };
 }
 
 /** The names in the surprise card's labels ("What Eva sees"), in family order. */

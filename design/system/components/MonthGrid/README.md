@@ -10,7 +10,7 @@ Reference: `design/screens/OC-CalMonth.dc.html` (inline styles are the exact val
 | --- | --- |
 | Weekday row | sticky top, white, 12/900 ink-muted, padding 8 0 6, bottom `line` + soft shadow |
 | Cell | fixed 96 tall, padding 4 4 6, gap 3, 1 px `line` right/bottom; past days `surface-page` |
-| Date | 12/800; today: 22 olive circle white 12/900 + 2.5 px olive inset outline on the cell; 1st of month: ink pill "Nov 1" (padding 0 7, white 12/900) |
+| Date | 12/800; today: 22 olive circle white 12/900 + 2.5 px olive inset outline on the cell; 1st of month: dark beige (`line-handle`) banner across the top of the cell, edge to edge (26 tall over the cell padding, padding 0 7), "Nov 1" ink 12/900, one line clipped with no "…"; olive when the 1st is today |
 | Scroll | virtualised weeks, ±6 months; header title follows the Wednesday of the second visible row |
 
 ## Rules

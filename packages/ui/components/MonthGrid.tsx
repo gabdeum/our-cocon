@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
-import { FlatList, Pressable, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { FlatList, Platform, Pressable, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent, type TextStyle } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
 import { EventBar, EventChip, MoreCount, type EventColor } from './EventChip';
@@ -18,7 +18,7 @@ export interface MonthCell {
   date: string;
   /** "October 25: Baby swim, Movie night" or "October 25: nothing planned". */
   label: string;
-  /** "25", or "Nov 1" on the 1st (an ink pill). */
+  /** "25", or "Nov 1" on the 1st (a beige banner across the top of the cell). */
   dateText: string;
   first: boolean;
   today: boolean;
@@ -72,10 +72,24 @@ export interface MonthGridProps {
   mutePast?: boolean;
 }
 
+// react-native-web always adds an ellipsis to one-line text, but lets the style override it (iOS uses ellipsizeMode).
+const clipOnWeb = (Platform.OS === 'web' ? { textOverflow: 'clip' } : {}) as TextStyle;
+
 function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
-  if (cell.today || cell.first) {
+  // The 1st opens its month with a beige banner from edge to edge, clipped like a chip with no "…"
+  // (decided 2026-10-29). It reaches over the cell's top padding, so the rows below don't move.
+  if (cell.first) {
     return (
-      <View className={cn('h-[22px] items-center justify-center self-start rounded-sm', cell.today ? 'min-w-[22px] bg-olive' : 'bg-ink px-[7px]')}>
+      <View className={cn('-mx-4 -mt-4 h-[26px] justify-center px-[7px] pt-4', cell.today ? 'bg-olive' : 'bg-line-handle')}>
+        <Text size={12} weight="900" color={cell.today ? 'on-olive' : 'ink'} numberOfLines={1} ellipsizeMode="clip" style={clipOnWeb}>
+          {cell.dateText}
+        </Text>
+      </View>
+    );
+  }
+  if (cell.today) {
+    return (
+      <View className="h-[22px] min-w-[22px] items-center justify-center self-start rounded-sm bg-olive">
         <Text size={12} weight="900" color="on-olive" numberOfLines={1}>
           {cell.dateText}
         </Text>

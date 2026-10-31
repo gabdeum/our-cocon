@@ -7,7 +7,7 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 2. "What's happening?" — input 56, 18/800, placeholder "e.g. Poker night", max 60.
 3. "When" — three tiles: "Today" / "Sun 25", "Tomorrow" / "Mon 26", "Other day" / "Pick a date". Selected olive.
 4. "Time of day" + hint "Pick a time of day — no need for exact hours." — scrolling SlotChips (92×66): "All day" / "Whole day", "Early morning" / "06–09", "Morning" / "09–12", "Lunch" / "12–14", "Afternoon" / "14–18", "Evening" / "18–22". Under them, "Starts" / "Ends" time inputs, always shown (decided 2026-10-28, replacing the "Custom" chip): empty for All day, the picked slots' hours otherwise; typing a time makes it a custom time (no slot highlighted), and emptying both is All day.
-5. "Who" — MemberChips (48): each member, "Everyone", "Others". Selected = 2.5 px ink border. Starts on the signed-in member; anyone can be unpicked, and Save with nobody shows "Pick at least one person." (warn, `role="alert"`) under the chips.
+5. "Who" — MemberChips (48): "Everyone", each member, "Others". Selected = 2.5 px ink border. Starts on Everyone (decided 2026-10-29, replacing the signed-in member); anyone can be unpicked, and Save with nobody shows "Pick at least one person." (warn, `role="alert"`) under the chips.
 6. Conflict callout (warn-soft): "You already have Movie night this evening. Add anyway?"
 7. "More options" (soft button; sub-label "Place, repeat, reminder…" / "Hide").
 8. More options:

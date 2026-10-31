@@ -1,6 +1,6 @@
 # Our Cocon — V1 specs
 
-Our Cocon is a household app; V1 builds three modules — recipes, groceries and the shared calendar — plus the shared foundation (accounts, family, sync, MCP, Home, Menu). There are 43 specs, plus `032-later`, the living list of deferred tasks. Shared rules (stack, design system, accessibility, quantities, security, project-wide decisions) live once in `specs/constitution.md`; the specs reference it instead of repeating it. Every spec is Ready: there are no open questions.
+Our Cocon is a household app; V1 builds three modules — recipes, groceries and the shared calendar — plus the shared foundation (accounts, family, sync, MCP, Home, Menu). There are 44 specs, plus `032-later`, the living list of deferred tasks. Shared rules (stack, design system, accessibility, quantities, security, project-wide decisions) live once in `specs/constitution.md`; the specs reference it instead of repeating it. Every spec is Ready: there are no open questions.
 
 ## What Claude Code reads for each spec
 
@@ -82,6 +82,7 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 41 | 028 Home (all modules) | 020, 026, 033, 035, 041 | OC-Home, CalCard, OC-CalCardWeek, OC-CalCardEmpty |
 | 42 | 029 Menu (apps and settings) and the settings pages | 018, 021, 025, 027, 033, 034, 036 | OC-Menu, OC-SettingsFamily, OC-SettingsGroceries, OC-CalSettings |
 | 43 | 030 Accessibility and hints pass | all | all |
+| 44 | 045 iPhone sign-in (email link that opens the app, Google, Apple) | 003, iOS release setup | OC-Welcome |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
 Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module.

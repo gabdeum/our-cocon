@@ -82,3 +82,4 @@ All copy (labels, hints, error, conflict, toast) is in `design/ui/OC-CalAdd.md`.
     - Tests cover assistants, the hidden person and other events' exceptions.
     - A hidden person reaching the edit sheet by its link is left to 043 (032-later L101).
 - 2026-10-28 (after review with Gabriel): no Custom chip. Starts / Ends always show under the slots (empty for All day, the slots' hours otherwise), and typing there makes a custom time. Who can be emptied; Save then says "Pick at least one person." Who already starts on the signed-in member. Copy added to OC-CalAdd.md.
+- 2026-10-29: Who starts on Everyone (was the signed-in member) and lists Everyone first.

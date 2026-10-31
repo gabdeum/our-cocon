@@ -38,7 +38,7 @@ import {
   isChipOn,
   managedOn,
   shiftMonth,
-  secretChips,
+  surpriseHiddenFrom,
   slotChips,
   surpriseProblems,
   takers,
@@ -77,6 +77,8 @@ export interface EventSheetProps {
   editingId?: string;
   /** "Who can see it?" is only for the event's creator (spec 043 FR-005); a new event is yours. */
   canChangeVisibility?: boolean;
+  /** Who made the event (a new one is mine): a surprise is kept from everyone else in Who. */
+  creatorMemberId?: string;
   client: Pick<Db, 'from'>;
   familyId: string;
   members: readonly Member[];
@@ -131,8 +133,18 @@ export function EventSheet(p: EventSheetProps) {
   const tiles = dayTiles(today, d.date);
   const managed = managedOn(d.who, members);
   const showError = tried && !hasTitle;
-  const secret = surpriseProblems(d, members);
-  const hidden = hiddenNames(d.hiddenFrom, members);
+  // A surprise is kept from the people in Who (decided 2026-10-29), so there's nobody to pick twice.
+  const creatorId = p.creatorMemberId ?? myMemberId;
+  const canChange = p.canChangeVisibility ?? true;
+  const surprise = useMemo(
+    () => surpriseHiddenFrom(d, initial, members, creatorId, { canChange, occurrence: !!p.occurrenceOnly }),
+    [d, initial, members, creatorId, canChange, p.occurrenceOnly],
+  );
+  const out = useMemo<EventDraft>(() => ({ ...d, hiddenFrom: surprise.hiddenFrom }), [d, surprise.hiddenFrom]);
+  // The one editing already sees it in full (they could be added when the creator has left).
+  const revealed = hiddenNames(surprise.revealed.filter((id) => id !== myMemberId), members);
+  const secret = surpriseProblems(out, members);
+  const hidden = hiddenNames(out.hiddenFrom, members);
   const showVisibility = (p.canChangeVisibility ?? true) && !p.occurrenceOnly;
 
   const close = () => {
@@ -142,11 +154,11 @@ export function EventSheet(p: EventSheetProps) {
 
   const save = async () => {
     setTried(true);
-    if (!hasTitle || noOne || Object.keys(times).length || endsProblem(d) || Object.keys(secret).length || saving) return;
+    if (!hasTitle || noOne || Object.keys(times).length || endsProblem(d) || Object.keys(secret).length || revealed.length || saving) return;
     setSaving(true);
     setFailed(false);
     try {
-      await p.onSave(toInput(d, members, { occurrence: p.occurrenceOnly }), { usedMoreOptions: more || p.mode === 'edit', secondsToSave: Math.round((Date.now() - opened.current) / 1000) });
+      await p.onSave(toInput(out, members, { occurrence: p.occurrenceOnly }), { usedMoreOptions: more || p.mode === 'edit', secondsToSave: Math.round((Date.now() - opened.current) / 1000) });
       if (conflictSeen.current) p.tracker.track('event_conflict_shown', { proceeded: conflict !== null });
       if (d.visibility !== initial.visibility) p.tracker.track('event_visibility_set', { visibility: d.visibility });
     } catch {
@@ -238,6 +250,7 @@ export function EventSheet(p: EventSheetProps) {
           ))}
         </View>
         {tried && noOne ? <FieldWarning text={a.noOne} /> : null}
+        {revealed.length ? <FieldWarning text={a.surpriseRevealed(revealed)} /> : null}
       </Section>
 
       {conflict ? (
@@ -316,24 +329,7 @@ export function EventSheet(p: EventSheetProps) {
               <Hint text={a.visibilityHints[d.visibility]} />
               {d.visibility === 'surprise' ? (
                 <View className="gap-12 rounded-lg bg-surface-card p-14">
-                  <View className="gap-8">
-                    <Text size={15} weight="900">
-                      {a.keepSecretFrom}
-                    </Text>
-                    <View role="group" aria-label={a.keepSecretFrom} className="flex-row flex-wrap gap-8">
-                      {secretChips(members, myMemberId).map((c) => (
-                        <MemberPickerChip
-                          key={c.key}
-                          name={c.name}
-                          initial={c.initial}
-                          color={c.color}
-                          selected={d.hiddenFrom.includes(c.key)}
-                          onPress={() => set({ hiddenFrom: d.hiddenFrom.includes(c.key) ? d.hiddenFrom.filter((x) => x !== c.key) : [...d.hiddenFrom, c.key] })}
-                        />
-                      ))}
-                    </View>
-                    {tried && secret.hiddenFrom ? <FieldWarning text={secret.hiddenFrom} /> : null}
-                  </View>
+                  {tried && secret.hiddenFrom ? <FieldWarning text={secret.hiddenFrom} /> : null}
                   <TextField
                     label={a.coverTitle(hidden)}
                     onCard

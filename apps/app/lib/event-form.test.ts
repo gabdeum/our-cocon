@@ -28,7 +28,8 @@ import {
   toggleWho,
   typeTime,
   shownTimes,
-  secretChips,
+  secretFrom,
+  surpriseHiddenFrom,
   surpriseProblems,
   whoChips,
   type DraftTime,
@@ -44,7 +45,7 @@ const ME = gabriel.id;
 const members = [gabriel, alex, james];
 const TODAY = '2026-10-28';
 const slots = (...s: Extract<DraftTime, { kind: 'slot' }>['slots']): DraftTime => ({ kind: 'slot', slots: s });
-const draft = (over: Partial<EventDraft> = {}): EventDraft => ({ ...newDraft({}, TODAY, ME), title: 'Poker night', ...over });
+const draft = (over: Partial<EventDraft> = {}): EventDraft => ({ ...newDraft({}, TODAY), who: [ME], title: 'Poker night', ...over });
 
 /** A saved event as events_visible gives it. */
 function stored(over: Record<string, unknown> = {}): StoredEvent {
@@ -88,11 +89,11 @@ describe('the route’s prefill (FR-007, 032-later L91)', () => {
     expect(prefillFrom({ date: ['2026-10-31'], time: '9:00' })).toEqual({});
   });
 
-  it('starts on that day and slot, or a custom hour, and for me', () => {
-    expect(newDraft({ date: '2026-10-31', slot: 'evening' }, TODAY, ME)).toMatchObject({ date: '2026-10-31', time: slots('evening'), who: [ME] });
-    expect(newDraft({ time: '14:00' }, TODAY, ME).time).toEqual({ kind: 'custom', start: '14:00', end: '15:00' });
-    expect(newDraft({ time: '23:30' }, TODAY, ME).time).toEqual({ kind: 'custom', start: '23:30', end: '24:00' });
-    expect(newDraft({}, TODAY, ME)).toMatchObject({ date: TODAY, time: { kind: 'all_day' } });
+  it('starts on that day and slot, or a custom hour, and for everyone', () => {
+    expect(newDraft({ date: '2026-10-31', slot: 'evening' }, TODAY)).toMatchObject({ date: '2026-10-31', time: slots('evening'), who: ['everyone'] });
+    expect(newDraft({ time: '14:00' }, TODAY).time).toEqual({ kind: 'custom', start: '14:00', end: '15:00' });
+    expect(newDraft({ time: '23:30' }, TODAY).time).toEqual({ kind: 'custom', start: '23:30', end: '24:00' });
+    expect(newDraft({}, TODAY)).toMatchObject({ date: TODAY, time: { kind: 'all_day' } });
   });
 });
 
@@ -162,8 +163,8 @@ describe('Who (FR-003)', () => {
     expect(toggleWho(who, key)).toEqual(expected);
   });
 
-  it('offers every member, then Everyone and Others', () => {
-    expect(whoChips(members).map((c) => `${c.name}:${c.initial}:${c.color}`)).toEqual(['Gabriel:G:honey', 'Alex:A:rose', 'James:J:mint', 'Everyone:All:everyone', 'Others::others']);
+  it('offers Everyone, every member, then Others', () => {
+    expect(whoChips(members).map((c) => `${c.name}:${c.initial}:${c.color}`)).toEqual(['Everyone:All:everyone', 'Gabriel:G:honey', 'Alex:A:rose', 'James:J:mint', 'Others::others']);
   });
 
   it('asks who takes members without the app, from members with it', () => {
@@ -400,8 +401,11 @@ describe('who can see it (spec 043)', () => {
   const eva = { ...alex, display_name: 'Eva' };
   const family = [gabriel, eva, james];
 
-  it('offers the members with the app, except me, to keep it secret from', () => {
-    expect(secretChips(family, ME).map((c) => c.name)).toEqual(['Eva']);
+  it('keeps it secret from the members with the app in Who, except the creator', () => {
+    expect(secretFrom([ME, eva.id, james.id], family, ME)).toEqual([eva.id]);
+    expect(secretFrom(['everyone'], family, ME)).toEqual([eva.id]);
+    expect(secretFrom(['everyone'], family, eva.id)).toEqual([ME]);
+    expect(secretFrom([ME, james.id, 'others'], family, ME)).toEqual([]);
   });
 
   it('US1: a private event saves as private, with no cover', () => {
@@ -418,9 +422,33 @@ describe('who can see it (spec 043)', () => {
     expect(toInput({ ...d, coverNote: '  ' }, family).surprise?.cover_note).toBeNull();
   });
 
+  describe('who a saved surprise is kept from', () => {
+    const lea = { ...alex, id: '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a77', display_name: 'Léa' };
+    const fam = [gabriel, eva, lea, james];
+    const saved = draft({ visibility: 'surprise', who: [ME, eva.id], hiddenFrom: [lea.id], coverTitle: 'Dinner out' });
+    const whole = { canChange: true, occurrence: false };
+
+    it('follows Who for a new surprise, or when its creator changes Who on the whole event', () => {
+      const fresh = draft({ visibility: 'surprise', who: [eva.id] });
+      expect(surpriseHiddenFrom(fresh, draft(), fam, ME, whole)).toEqual({ hiddenFrom: [eva.id], revealed: [] });
+      expect(surpriseHiddenFrom({ ...saved, who: [lea.id] }, saved, fam, ME, whole)).toEqual({ hiddenFrom: [lea.id], revealed: [] });
+    });
+
+    it('keeps the saved list when Who is untouched, even if they differ', () => {
+      expect(surpriseHiddenFrom({ ...saved, title: 'Renamed' }, saved, fam, ME, whole)).toEqual({ hiddenFrom: [lea.id], revealed: [] });
+    });
+
+    it('keeps it for one date or someone else editing, and names who Who would reveal it to', () => {
+      const added = { ...saved, who: [ME, eva.id, lea.id, james.id] };
+      expect(surpriseHiddenFrom(added, saved, fam, ME, { canChange: true, occurrence: true })).toEqual({ hiddenFrom: [lea.id], revealed: [] });
+      const toEva = draft({ ...saved, who: [ME, james.id] });
+      expect(surpriseHiddenFrom({ ...toEva, who: [ME, james.id, eva.id] }, toEva, fam, ME, { canChange: false, occurrence: false })).toEqual({ hiddenFrom: [lea.id], revealed: [eva.id] });
+    });
+  });
+
   it('says what a surprise is missing', () => {
     expect(surpriseProblems(draft({ visibility: 'surprise', hiddenFrom: [eva.id] }), family)).toEqual({ coverTitle: 'Add what Eva will see.' });
-    expect(surpriseProblems(draft({ visibility: 'surprise', coverTitle: 'Dinner out' }), family)).toEqual({ hiddenFrom: 'Pick who to keep it secret from.' });
+    expect(surpriseProblems(draft({ visibility: 'surprise', coverTitle: 'Dinner out' }), family)).toEqual({ hiddenFrom: 'Pick who the surprise is for in Who: someone with the app, other than you.' });
     expect(surpriseProblems(draft({ visibility: 'private' }), family)).toEqual({});
   });
 

@@ -16,7 +16,7 @@ export default function NewEventRoute() {
   const toast = useToast();
   const { state, client, tracker, familyId, myMemberId, today, slotTimes } = sheet;
   // The draft starts once, on the day the sheet opened; later renders keep what's been typed.
-  const [initial] = useState(() => (myMemberId ? newDraft(prefillFrom(params), today, myMemberId) : null));
+  const [initial] = useState(() => (myMemberId ? newDraft(prefillFrom(params), today) : null));
   if (state.status !== 'ready' || !familyId || !myMemberId || !initial) return null;
   return (
     <EventSheet
