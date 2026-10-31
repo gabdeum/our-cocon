@@ -9,6 +9,9 @@ import { monthRange, weekIndexOf } from '../../lib/calendar-month';
 import { CalendarScreen, type CalendarScreenProps } from './CalendarScreen';
 import { fakeTracker, gabriel, mia } from '../../test/fakes';
 
+// "Now" follows the real clock: pin it before every slot so labels don't depend on when tests run.
+vi.mock('../../lib/use-now', () => ({ useNow: () => '03:00' }));
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
