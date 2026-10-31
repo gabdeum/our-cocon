@@ -1378,15 +1378,16 @@ export const strings = {
         private: 'Others see “Busy” at this time, and nothing else.',
         surprise: 'Hide it from someone: they see only what you choose below.',
       },
-      keepSecretFrom: 'Keep it secret from',
       /** "What Eva sees"; with nobody picked yet, "What they see" (not drawn). */
       coverTitle: (names: string[]) => (names.length ? `What ${andList(names)} ${names.length > 1 ? 'see' : 'sees'}` : 'What they see'),
       coverNote: (names: string[]) => `Note for ${names.length ? andList(names) : 'them'}`,
       surpriseSummary: (names: string[]) =>
         `${names.length ? andList(names) : 'They'} ${names.length === 1 ? 'sees' : 'see'} only this title, the time, the place and this note. Everyone else sees everything.`,
       noCover: (names: string[]) => `Add what ${names.length ? andList(names) : 'they'} will see.`,
-      // Not drawn (spec 043, added to OC-CalSurprise.md).
-      noSecretFrom: 'Pick who to keep it secret from.',
+      // Not drawn (spec 043, added to OC-CalSurprise.md). The surprise is kept from the people in Who.
+      noSecretFrom: 'Pick who the surprise is for in Who: someone with the app, other than you.',
+      /** Adding someone to a surprise's Who where it can't be kept from them: one date, or not its creator. */
+      surpriseRevealed: (names: string[]) => `${andList(names)} would see this surprise. Only its creator can add ${names.length > 1 ? 'them' : 'someone'} to it, on the whole event.`,
     },
     /** OC-CalBusy (spec 043): someone else's private event, as a sheet over the calendar. */
     busy: {

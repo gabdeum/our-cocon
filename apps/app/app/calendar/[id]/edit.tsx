@@ -67,6 +67,7 @@ export default function EditEventRoute() {
       occurrenceOnly={chosen === 'this'}
       editingId={e.id}
       canChangeVisibility={e.creator_member_id === myMemberId}
+      creatorMemberId={e.creator_member_id}
       client={client}
       familyId={familyId}
       members={state.members}

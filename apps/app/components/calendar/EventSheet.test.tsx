@@ -60,7 +60,7 @@ function fakeClient(rows: unknown[]) {
 async function setup(over: Partial<EventSheetProps> = {}, rows: unknown[] = []) {
   const props: EventSheetProps = {
     mode: 'new',
-    initial: newDraft({}, TODAY, gabriel.id),
+    initial: newDraft({}, TODAY),
     client: fakeClient(rows),
     familyId: 'f',
     members: [gabriel, eva, james],
@@ -95,8 +95,8 @@ describe('EventSheet (spec 041)', () => {
     expect(button('Today, Wed 28').getAttribute('aria-pressed')).toBe('true');
     expect(button('Other day, Pick a date')).toBeTruthy();
     expect(button('All day, Whole day').getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByRole('group', { name: 'Who' }).textContent).toBe('GGabrielEEvaJJamesAllEveryoneOthers');
-    expect(button('Gabriel').getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('group', { name: 'Who' }).textContent).toBe('AllEveryoneGGabrielEEvaJJamesOthers');
+    expect(button('Everyone').getAttribute('aria-pressed')).toBe('true');
     expect(button('More options').getAttribute('aria-expanded')).toBe('false');
     expect(screen.getByText('Place, repeat, reminder…')).toBeTruthy();
     expect(button('Save').getAttribute('aria-disabled')).toBeNull();
@@ -110,7 +110,7 @@ describe('EventSheet (spec 041)', () => {
     fireEvent.click(button('Save'));
     await flush();
     const input = saved(props);
-    expect(input).toMatchObject({ title: 'Poker night', starts_on: TODAY, time_type: 'slot', slots: ['evening'], members: [gabriel.id], recurrence: null });
+    expect(input).toMatchObject({ title: 'Poker night', starts_on: TODAY, time_type: 'slot', slots: ['evening'], members: ['everyone'], recurrence: null });
     expect(toastText(input, TODAY, DEFAULT_SLOT_TIMES)).toBe('Poker night added for tonight, 18:00–22:00.');
     expect((props.onSave as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]).toMatchObject({ usedMoreOptions: false, secondsToSave: expect.any(Number) });
     expect(props.tracker.track).not.toHaveBeenCalled();
@@ -121,6 +121,7 @@ describe('EventSheet (spec 041)', () => {
     const props = await setup();
     fireEvent.change(title(), { target: { value: 'Baby music class' } });
     fireEvent.click(button('Morning, 09–12'));
+    fireEvent.click(button('Gabriel'));
     fireEvent.click(button('James'));
     fireEvent.click(button('More options'));
     expect(screen.getByText('Hide')).toBeTruthy();
@@ -151,6 +152,7 @@ describe('EventSheet (spec 041)', () => {
     const props = await setup({}, [movieNight]);
     fireEvent.change(title(), { target: { value: 'Poker night' } });
     expect(screen.queryByRole('status')).toBeNull();
+    fireEvent.click(button('Gabriel'));
     fireEvent.click(button('Evening, 18–22'));
     await flush();
     expect(screen.getByRole('status').textContent).toBe('You already have Movie night this evening. Add anyway?');
@@ -161,7 +163,7 @@ describe('EventSheet (spec 041)', () => {
   });
 
   it('tells Cancel the conflict was seen and not taken', async () => {
-    const props = await setup({ initial: newDraft({ slot: 'evening' }, TODAY, gabriel.id) }, [movieNight]);
+    const props = await setup({ initial: newDraft({ slot: 'evening' }, TODAY) }, [movieNight]);
     await flush();
     fireEvent.click(button('Cancel'));
     expect(props.tracker.track).toHaveBeenCalledWith('event_conflict_shown', { proceeded: false });
@@ -191,7 +193,7 @@ describe('EventSheet (spec 041)', () => {
   });
 
   it('Starts and Ends always show: empty all day, a slot’s hours, then whatever is typed', async () => {
-    const props = await setup({ initial: { ...newDraft({}, TODAY, gabriel.id), title: 'Swim' } });
+    const props = await setup({ initial: { ...newDraft({}, TODAY), title: 'Swim' } });
     const starts = () => screen.getByLabelText('Starts') as HTMLInputElement;
     const ends = () => screen.getByLabelText('Ends') as HTMLInputElement;
     expect(screen.queryByRole('button', { name: /^Custom/ })).toBeNull();
@@ -211,9 +213,9 @@ describe('EventSheet (spec 041)', () => {
   });
 
   it('Who can be emptied, and Save then asks for someone', async () => {
-    const props = await setup({ initial: { ...newDraft({}, TODAY, gabriel.id), title: 'Swim' } });
-    fireEvent.click(button('Gabriel'));
-    expect(button('Gabriel').getAttribute('aria-pressed')).toBe('false');
+    const props = await setup({ initial: { ...newDraft({}, TODAY), title: 'Swim' } });
+    fireEvent.click(button('Everyone'));
+    expect(button('Everyone').getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(button('Save'));
     await flush();
     expect(screen.getByRole('alert').textContent).toBe('Pick at least one person.');
@@ -225,7 +227,7 @@ describe('EventSheet (spec 041)', () => {
   });
 
   it('picks another day from the date sheet', async () => {
-    const props = await setup({ initial: { ...newDraft({}, TODAY, gabriel.id), title: 'Trip' } });
+    const props = await setup({ initial: { ...newDraft({}, TODAY), title: 'Trip' } });
     fireEvent.click(button('Other day, Pick a date'));
     fireEvent.click(button('Next month'));
     fireEvent.click(button('Saturday, Nov 7'));
@@ -238,7 +240,7 @@ describe('EventSheet (spec 041)', () => {
   });
 
   it('Birthday makes it all day, every year; repeats end after a number of times', async () => {
-    const props = await setup({ initial: { ...newDraft({ slot: 'lunch' }, TODAY, gabriel.id), title: 'Eva' } });
+    const props = await setup({ initial: { ...newDraft({ slot: 'lunch' }, TODAY), title: 'Eva' } });
     fireEvent.click(button('More options'));
     fireEvent.click(button('Birthday'));
     expect(button('Yearly').getAttribute('aria-pressed')).toBe('true');
@@ -254,7 +256,7 @@ describe('EventSheet (spec 041)', () => {
   });
 
   it('adds and removes checklist items', async () => {
-    const props = await setup({ initial: { ...newDraft({}, TODAY, gabriel.id), title: 'Picnic' } });
+    const props = await setup({ initial: { ...newDraft({}, TODAY), title: 'Picnic' } });
     fireEvent.click(button('More options'));
     fireEvent.click(button('+ Add to checklist'));
     const field = screen.getByLabelText('Checklist item');
@@ -274,13 +276,13 @@ describe('EventSheet (spec 041)', () => {
   });
 
   it('an edit opens More options when anything in it is set', async () => {
-    await setup({ mode: 'edit', initial: { ...newDraft({}, TODAY, gabriel.id), title: 'Dentist', location: 'Elm St' } });
+    await setup({ mode: 'edit', initial: { ...newDraft({}, TODAY), title: 'Dentist', location: 'Elm St' } });
     expect(button('More options').getAttribute('aria-expanded')).toBe('true');
     expect((screen.getByLabelText('Where') as HTMLInputElement).value).toBe('Elm St');
   });
 
   it('editing one occurrence: no repeat, reminder or checklist to change', async () => {
-    await setup({ mode: 'edit', occurrenceOnly: true, initial: { ...newDraft({ slot: 'morning' }, TODAY, gabriel.id), title: 'Swim', repeat: 'weekly' } });
+    await setup({ mode: 'edit', occurrenceOnly: true, initial: { ...newDraft({ slot: 'morning' }, TODAY), title: 'Swim', repeat: 'weekly' } });
     expect(screen.getByRole('heading', { name: 'Edit event' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Repeat' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Reminder' })).toBeNull();
@@ -317,14 +319,11 @@ describe('Who can see it? (spec 043)', () => {
     expect(props.tracker.track).toHaveBeenCalledWith('event_visibility_set', { visibility: 'private' });
   });
 
-  it('US2: keeps it secret from Eva, with what she sees and a note', async () => {
+  it('US2: keeps it secret from Eva, the one in Who, with what she sees and a note', async () => {
     const props = await open();
+    fireEvent.click(button('Eva'));
     fireEvent.click(button('Surprise'));
-    expect(screen.getByText('Keep it secret from')).toBeTruthy();
-    expect(screen.getByRole('group', { name: 'Keep it secret from' }).textContent).toBe('EEva');
-    expect(screen.getByLabelText('What they see')).toBeTruthy();
-    const secretFrom = screen.getByRole('group', { name: 'Keep it secret from' }).querySelector('button') as HTMLElement;
-    fireEvent.click(secretFrom);
+    expect(screen.queryByText('Keep it secret from')).toBeNull();
     fireEvent.change(screen.getByLabelText('What Eva sees'), { target: { value: 'Dinner out' } });
     fireEvent.change(screen.getByLabelText('Note for Eva'), { target: { value: 'Meet at Café Lalo at 19:30. Dress nice!' } });
     expect(screen.getByText('Eva sees only this title, the time, the place and this note. Everyone else sees everything.')).toBeTruthy();
@@ -337,13 +336,14 @@ describe('Who can see it? (spec 043)', () => {
     expect(props.tracker.track).toHaveBeenCalledWith('event_visibility_set', { visibility: 'surprise' });
   });
 
-  it('a surprise needs someone to keep it from and what they see', async () => {
+  it('a surprise needs someone with the app in Who, and what they see', async () => {
     const props = await open();
+    fireEvent.click(button('Gabriel'));
     fireEvent.click(button('Surprise'));
     fireEvent.click(button('Save'));
     await flush();
-    expect(screen.getAllByRole('alert').map((a) => a.textContent)).toEqual(['Pick who to keep it secret from.', 'Add what they will see.']);
-    fireEvent.click(screen.getByRole('group', { name: 'Keep it secret from' }).querySelector('button') as HTMLElement);
+    expect(screen.getAllByRole('alert').map((a) => a.textContent)).toEqual(['Pick who the surprise is for in Who: someone with the app, other than you.', 'Add what they will see.']);
+    fireEvent.click(button('Eva'));
     expect(screen.getByRole('alert').textContent).toBe('Add what Eva will see.');
     expect(props.onSave).not.toHaveBeenCalled();
   });

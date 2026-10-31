@@ -47,7 +47,7 @@ describe.skipIf(!local)('add and edit an event against local Supabase', () => {
   });
 
   it('US2: every Saturday shows the class for Gabriel and James, with Gabriel taking James', async () => {
-    const draft = { ...newDraft({ slot: 'morning' }, '2026-10-28', me), title: 'Baby music class', who: [me, james], repeat: 'weekly' as const, weekdays: [6], location: 'Little Notes studio', responsible: me };
+    const draft = { ...newDraft({ slot: 'morning' }, '2026-10-28'), title: 'Baby music class', who: [me, james], repeat: 'weekly' as const, weekdays: [6], location: 'Little Notes studio', responsible: me };
     await saveEvent(gabriel, toInput(draft, members));
     const days = monthOccurrences(await loadEvents(gabriel, '2026-10-25', '2026-11-21'), '2026-10-25', '2026-11-21', me, new Set());
     expect(days.map((o) => o.starts_on)).toEqual(['2026-10-31', '2026-11-07', '2026-11-14', '2026-11-21']);
@@ -55,7 +55,7 @@ describe.skipIf(!local)('add and edit an event against local Supabase', () => {
   });
 
   it('FR-009: Undo removes the new event for good, not to Recently deleted', async () => {
-    const id = await saveEvent(gabriel, toInput({ ...newDraft({ slot: 'evening' }, '2026-10-28', me), title: 'Poker night' }, members));
+    const id = await saveEvent(gabriel, toInput({ ...newDraft({ slot: 'evening' }, '2026-10-28'), title: 'Poker night' }, members));
     await undoCreateEvent(gabriel, id);
     expect(await loadEvent(gabriel, id)).toBeNull();
     const left = await admin.from('events').select('id').eq('id', id);
@@ -63,7 +63,7 @@ describe.skipIf(!local)('add and edit an event against local Supabase', () => {
   });
 
   it('FR-008: "This event only" changes one Wednesday; "All future events" moves the rest', async () => {
-    const id = await saveEvent(gabriel, toInput({ ...newDraft({ slot: 'evening' }, '2026-11-04', me), title: 'Choir', repeat: 'weekly' }, members));
+    const id = await saveEvent(gabriel, toInput({ ...newDraft({ slot: 'evening' }, '2026-11-04'), title: 'Choir', repeat: 'weekly' }, members));
     const series = await loadEvent(gabriel, id);
     if (!series) throw new Error('Choir not saved');
 
