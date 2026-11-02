@@ -6,8 +6,8 @@ A small square with one icon that leads a card and says what kind of thing the c
 
 | Part | Spec |
 | --- | --- |
-| Shape | 40 × 40, radius 12, never shrinks |
-| Fill | `--sage` or `--honey`; assistants: `--peach` (Claude), `--sage` (ChatGPT), `--soft` (surface-soft, Gemini) |
+| Shape | 40 × 40, radius 12, never shrinks. `sm` 36 × 36 radius 12 (the Menu's settings rows, OC-Menu); `lg` 44 × 44 radius 14 with a 24 px icon (AppTile) |
+| Fill | `--sage` or `--honey`; Menu rows and app tiles `--soft`; assistants: `--peach` (Claude), `--sage` (ChatGPT), `--soft` (surface-soft, Gemini) |
 | Icon | 20 px (`icon-sm`), ink |
 | Letters | instead of the icon: 16/900 ink, one or two letters ("C", "Ge") |
 | Layout | first in a card's row, gap 12 to the text, aligned to the top |

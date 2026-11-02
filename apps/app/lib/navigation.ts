@@ -3,14 +3,14 @@ import { strings } from '../strings/en';
 
 /**
  * The five tab destinations (specs 002, 036; design/ui/TabBar.md), by Expo Router route name.
- * Menu still opens the `settings` route until spec 029 moves it to `/menu`.
+ * Menu is `/menu` (spec 029).
  */
 export const TABS = [
   { key: 'home', route: 'index', icon: 'home', label: strings.tabBar.home },
   { key: 'calendar', route: 'calendar', icon: 'calendar', label: strings.tabBar.calendar },
   { key: 'recipes', route: 'recipes', icon: 'recipes', label: strings.tabBar.recipes },
   { key: 'groceries', route: 'groceries', icon: 'groceries', label: strings.tabBar.groceries },
-  { key: 'menu', route: 'settings', icon: 'menu', label: strings.tabBar.menu },
+  { key: 'menu', route: 'menu', icon: 'menu', label: strings.tabBar.menu },
 ] as const satisfies readonly { key: string; route: string; icon: IconName; label: string }[];
 
 export type TabKey = (typeof TABS)[number]['key'];

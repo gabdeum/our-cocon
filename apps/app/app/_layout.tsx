@@ -25,6 +25,7 @@ import { createQueryClient, persistMaxAge, queryPersister, shouldPersistQuery } 
 import { watchConnection } from '../lib/online';
 import { SyncProvider } from '../lib/sync';
 import { clearTimers, TimersProvider } from '../lib/timer-store';
+import { CalendarPrefsProvider } from '../lib/calendar-prefs';
 import { deviceStorage } from '../lib/recipe-choices';
 import { clearPendingSave } from '../lib/pending-save';
 import { ToastProvider } from '../lib/toast';
@@ -116,6 +117,7 @@ export default function RootLayout() {
             <AppFrame>
               <ToastProvider>
               <Timers>
+              <CalendarPrefsProvider>
                 <SessionGate />
                 <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
                   <Stack.Screen name="(tabs)" />
@@ -143,6 +145,10 @@ export default function RootLayout() {
                   <Stack.Screen name="calendar/[id]/share" options={presentation.sheet} />
                   <Stack.Screen name="timers" options={presentation.stack} />
                   <Stack.Screen name="activity" options={presentation.stack} />
+                  <Stack.Screen name="settings/index" />
+                  <Stack.Screen name="settings/family" options={presentation.stack} />
+                  <Stack.Screen name="settings/calendar" options={presentation.stack} />
+                  <Stack.Screen name="settings/groceries" options={presentation.stack} />
                   <Stack.Screen name="settings/deleted" options={presentation.stack} />
                   <Stack.Screen name="settings/ai" options={presentation.stack} />
                   <Stack.Screen name="settings/recipes" options={presentation.stack} />
@@ -150,6 +156,7 @@ export default function RootLayout() {
                   <Stack.Screen name="dev/sheet" options={presentation.sheet} />
                   <Stack.Screen name="dev/modal" options={presentation.fullScreen} />
                 </Stack>
+              </CalendarPrefsProvider>
               </Timers>
               </ToastProvider>
             </AppFrame>

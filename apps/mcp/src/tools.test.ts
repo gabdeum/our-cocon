@@ -82,7 +82,7 @@ describe('permissions (spec 024 FR-002)', () => {
     const ctx = context(false);
     vi.mocked(tick.run).mockClear();
     const result = await callTool(tick, {}, ctx);
-    expect(result).toMatchObject({ isError: true, content: [{ type: 'text', text: 'This member hasn’t allowed AI to change the grocery list. They can change it in Settings › AI assistants.' }] });
+    expect(result).toMatchObject({ isError: true, content: [{ type: 'text', text: 'This member hasn’t allowed AI to change the grocery list. They can change it in Menu › AI assistants.' }] });
     expect(tick.run).not.toHaveBeenCalled();
     expect(ctx.track).toHaveBeenCalledWith('mcp_tool_called', { tool: 'tick_thing', assistant: 'claude', ok: false });
   });
@@ -95,9 +95,9 @@ describe('permissions (spec 024 FR-002)', () => {
 
   it('turns the database’s own refusal into the same sentence', () => {
     expect(errorSentence({ code: '42501', hint: 'ai_not_allowed', message: 'recipes_delete' })).toBe(notAllowedSentence('recipes_delete'));
-    expect(notAllowedSentence('recipes_edit')).toBe('This member hasn’t allowed AI to create or edit recipes. They can change it in Settings › AI assistants.');
+    expect(notAllowedSentence('recipes_edit')).toBe('This member hasn’t allowed AI to create or edit recipes. They can change it in Menu › AI assistants.');
     // Spec 044 Warnings and errors.
-    expect(errorSentence({ code: '42501', hint: 'ai_not_allowed', message: 'events' })).toBe('This member hasn’t allowed AI to change the calendar. They can change it in Settings › AI assistants.');
+    expect(errorSentence({ code: '42501', hint: 'ai_not_allowed', message: 'events' })).toBe('This member hasn’t allowed AI to change the calendar. They can change it in Menu › AI assistants.');
     expect(errorSentence({ code: '42501', message: 'permission denied for table recipes' })).toBe("Something went wrong on Our Cocon's side. Try again in a moment.");
   });
 });

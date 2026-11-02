@@ -254,7 +254,7 @@ describe.skipIf(!local)('calendar tools and permission against local Supabase', 
     const off = await setAiPermission(gabriel, familyId, userIds[0] as string, 'events', false);
     expect(off.error).toBeNull();
     const refused = await call('create_event', { title: 'Swim', date: '2026-11-08', slots: ['morning'], members: ['everyone'] });
-    expect(refused.error).toBe('This member hasn’t allowed AI to change the calendar. They can change it in Settings › AI assistants.');
+    expect(refused.error).toBe('This member hasn’t allowed AI to change the calendar. They can change it in Menu › AI assistants.');
     expect((await call('delete_event', { id: music, scope: 'all' })).error).toBe(refused.error);
     expect((await call('get_day', { date: '2026-11-10' })).error).toBeNull();
     // Eva's own setting is hers.

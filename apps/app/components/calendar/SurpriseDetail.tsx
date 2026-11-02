@@ -4,6 +4,7 @@ import type { StoredEvent } from '@cocon/data';
 import { BackLink, Card, IconRow, ListGroup, MemberBadge, PushedScreen, Text } from '@cocon/ui';
 import { addedLine, mapsUrl, memberBadges, whenLines } from '../../lib/event-detail';
 import type { Member } from '../../lib/session';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { strings } from '../../strings/en';
 
 const e = strings.calendar.event;
@@ -27,7 +28,7 @@ export interface SurpriseDetailProps {
  * (they don't know there's anything else, FR-005).
  */
 export function SurpriseDetail({ occurrence: o, members, slotTimes, os, now, onBack, onOpenUrl }: SurpriseDetailProps) {
-  const when = whenLines(o, slotTimes);
+  const when = whenLines(o, slotTimes, useCalendarDisplay().prefs.use24h);
   const badges = memberBadges(o, members);
   const creator = members.find((m) => m.id === o.creator_member_id)?.display_name ?? strings.recipe.formerMember;
   const rows = [

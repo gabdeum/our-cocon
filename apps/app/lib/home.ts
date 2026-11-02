@@ -59,6 +59,10 @@ export interface CardContext {
   members: readonly Member[];
   /** The signed-in member: what they may see, and whose reminders show. */
   me: Member;
+  /** The member's Time format (spec 029); 24-hour when not given. */
+  use24h?: boolean;
+  /** "Show birthdays" (spec 029, L111): off hides the birthday banner. */
+  showBirthdays?: boolean;
 }
 
 export interface CardBirthday {
@@ -99,10 +103,10 @@ function whoLine(o: MonthOccurrence, members: readonly Member[]): string {
 }
 
 /** "All day", "Evening", "10:00", or "Wed–Fri" for an event over several days. */
-function whenLine(o: MonthOccurrence, slotTimes: SlotTimes): string {
+function whenLine(o: MonthOccurrence, slotTimes: SlotTimes, use24h = true): string {
   if (o.ends_on > o.starts_on) return `${words.weekdaysShort[weekday(o.starts_on)]}–${words.weekdaysShort[weekday(o.ends_on)]}`;
   if (inAllDay(o)) return words.allDay;
-  return timeLabel(o, { use24h: true, slotTimes });
+  return timeLabel(o, { use24h, slotTimes });
 }
 
 function safeRow(o: MonthOccurrence, date: string, ctx: CardContext) {
@@ -130,7 +134,7 @@ export function layoutCalendarCard(events: readonly StoredEvent[], ctx: CardCont
 
   // FR-004: birthdays from today to 3 days ahead, in the banner rather than the rows.
   const birthdays = occurrences
-    .filter((o) => isBirthday(o) && o.starts_on >= today && o.starts_on <= addDays(today, BIRTHDAY_DAYS_AHEAD))
+    .filter((o) => ctx.showBirthdays !== false && isBirthday(o) && o.starts_on >= today && o.starts_on <= addDays(today, BIRTHDAY_DAYS_AHEAD))
     .sort((a, b) => a.starts_on.localeCompare(b.starts_on))
     .map((o) => ({
       key: occurrenceKey(o),
@@ -171,7 +175,7 @@ export function layoutCalendarCard(events: readonly StoredEvent[], ctx: CardCont
         const row = safeRow(o, date, ctx);
         if (!row) return [];
         const day = words.weekdaysShort[weekday(date)] ?? '';
-        const detail = c.detail(whoLine(o, ctx.members), whenLine(o, ctx.slotTimes));
+        const detail = c.detail(whoLine(o, ctx.members), whenLine(o, ctx.slotTimes, ctx.use24h));
         return [{ order: row.order, item: { key: occurrenceKey(o), day, title: o.title, detail, colors: eventColors(o, ctx.look).slice(0, 2), label: c.rowLabel([day, o.title, detail]) } }];
       })
       .sort((x, y) => x.order - y.order || x.item.title.localeCompare(y.item.title))

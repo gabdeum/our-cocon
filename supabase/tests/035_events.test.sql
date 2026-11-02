@@ -193,7 +193,8 @@ select throws_ok($$ select * from public.family_calendar_settings $$, '42501', n
 reset role;
 select is((select array_agg(tgrelid::regclass::text order by tgrelid::regclass::text) from pg_trigger
   where tgname like '%\_broadcast' and tgrelid::regclass::text in ('events', 'event_members', 'event_exceptions', 'event_checklist_items', 'event_surprise', 'family_calendar_settings')),
-  array['event_checklist_items', 'event_exceptions', 'event_members', 'events'], 'events, members, exceptions and checklists are live');
+  array['event_checklist_items', 'event_exceptions', 'event_members', 'events', 'family_calendar_settings'],
+  'events, members, exceptions, checklists and (since spec 029) slot times are live');
 select ok(not has_function_privilege('anon', 'public.save_event(jsonb, jsonb, uuid, jsonb, jsonb)', 'execute'), 'signed out: no saving');
 select ok(not has_function_privilege('authenticated', 'public.purge_deleted_events()', 'execute'), 'members can''t purge');
 select ok(not has_function_privilege('cocon_assistant', 'public.claim_home_time_zone(text)', 'execute'), 'assistants don''t set the time zone');

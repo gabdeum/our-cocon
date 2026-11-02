@@ -3,6 +3,7 @@ import type { SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { Avatar, BottomSheet, Button, Icon, Text } from '@cocon/ui';
 import { busyLines } from '../../lib/event-detail';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
 
@@ -14,7 +15,7 @@ const b = strings.calendar.busy;
  * database sends "Busy").
  */
 export function BusySheet({ occurrence, members, slotTimes, onClose }: { occurrence: StoredEvent; members: readonly Member[]; slotTimes: SlotTimes; onClose: () => void }) {
-  const { creator, when } = busyLines(occurrence, members, slotTimes);
+  const { creator, when } = busyLines(occurrence, members, slotTimes, useCalendarDisplay().prefs.use24h);
   return (
     <BottomSheet
       visible

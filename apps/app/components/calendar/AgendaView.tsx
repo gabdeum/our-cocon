@@ -7,6 +7,7 @@ import { AGENDA_EMPTY_PAGES, AGENDA_MAX_PAGES, agendaWindow, layoutAgenda } from
 import { memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { getAgendaPlace, setAgendaPlace } from '../../lib/agenda-session';
 import { useNow } from '../../lib/use-now';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
 
@@ -42,6 +43,7 @@ export interface AgendaViewProps {
  */
 export function AgendaView({ userId, members, myMemberId, events, slotTimes, hidden, anchor, today, timeZone, top, onEventWindow, onAddEvent, onOpenEvent }: AgendaViewProps) {
   const now = useNow(timeZone);
+  const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
   const [place] = useState(() => getAgendaPlace(userId, anchor));
   const [pages, setPages] = useState(place.pages);
@@ -54,7 +56,7 @@ export function AgendaView({ userId, members, myMemberId, events, slotTimes, hid
   useEffect(() => setAgendaPlace(userId, anchor, { pages, offset: offset.current }), [userId, anchor, pages]);
 
   const occurrences = useMemo(() => monthOccurrences(events ?? [], from, to, myMemberId, hidden), [events, from, to, myMemberId, hidden]);
-  const groups = useMemo(() => layoutAgenda(from, to, occurrences, { today, now, look, slotTimes, members }), [from, to, occurrences, today, now, look, slotTimes, members]);
+  const groups = useMemo(() => layoutAgenda(from, to, occurrences, { today, now, look, slotTimes, members, use24h }), [from, to, occurrences, today, now, look, slotTimes, members, use24h]);
 
   // Nothing in the weeks loaded: look further, up to a year ahead, each time new events arrive.
   const empty = events !== undefined && groups.length === 0;

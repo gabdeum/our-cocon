@@ -140,6 +140,15 @@ describe('week grid (spec 038)', () => {
     expect(hourLabels).toEqual(['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00']);
   });
 
+  it('spec 029 Time format (L95): 12-hour hour labels and start times', () => {
+    const events = [ev(custom('Therapy', '14:30', '15:30', [eva.id]))];
+    const g = grid(events, TODAY, { use24h: false });
+    expect(g.hourLabels.slice(0, 2)).toEqual(['6 AM', '7 AM']);
+    expect(g.hourLabels.at(-1)).toBe('11 PM');
+    expect(block(g, 0, 'Therapy')?.top).toContain('2:30 PM');
+    expect(block(g, 0, 'Therapy')?.label).toContain('2:30 PM to 3:30 PM');
+  });
+
   it('privacy and the filter: Eva’s private event reads Busy; hiding Eva removes her events', () => {
     const events = [ev({ ...custom('Therapy', '10:00', '11:00', [eva.id]), visibility: 'private', creator_member_id: eva.id })];
     expect(block(grid(events), 0, 'Busy')?.label).toBe('Busy, Sunday, 10:00 to 11:00');

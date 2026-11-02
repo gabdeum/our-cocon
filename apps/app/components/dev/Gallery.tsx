@@ -8,6 +8,7 @@ import {
   AvatarStack,
   Avatar,
   ColorSwatch,
+  AppGrid,
   AwakeChip,
   BackHeader,
   BottomSheet,
@@ -396,6 +397,19 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <StatTile icon="groceries" value={7} label="to buy" tone="honey" onPress={noop} className="flex-1" />
           <StatTile icon="recipes" value={32} label="family recipes" tone="sage" onPress={noop} className="flex-1" />
         </View>
+      </Section>
+
+      <Section group="Display" title="AppTile">
+        <AppGrid
+          label="Apps"
+          apps={[
+            { key: 'calendar', icon: 'calendar', name: 'Calendar', detail: '3 today', onPress: noop },
+            { key: 'recipes', icon: 'recipes', name: 'Recipes', detail: '48 recipes', onPress: noop },
+            { key: 'groceries', icon: 'groceries', name: 'Groceries', detail: '7 to buy', onPress: noop },
+            { key: 'timers', icon: 'timer', name: 'Timers', detail: 'None running', onPress: noop },
+            { key: 'future', icon: 'more', name: 'A future app', detail: 'Wraps to a new row', onPress: noop },
+          ]}
+        />
       </Section>
 
       <Section group="Display" title="ResultTile">

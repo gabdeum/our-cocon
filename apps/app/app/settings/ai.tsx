@@ -8,7 +8,7 @@ import { useSession } from '../../lib/session';
 import { systemShare } from '../../lib/system-share';
 import { config } from '../../lib/tracker';
 
-/** /settings/ai (spec 025, OC-Connect): the member's AI assistants, pushed from Settings › More. */
+/** /settings/ai (spec 025, OC-Connect): the member's AI assistants, pushed from the Menu. */
 export default function AiConnectionsRoute() {
   const { state, client, tracker } = useSession();
   const online = useOnline();
@@ -25,7 +25,7 @@ export default function AiConnectionsRoute() {
       tracker={tracker}
       failed={assistants.isError || permissions.isError}
       onRetry={() => void Promise.all([assistants.refetch(), permissions.refetch()])}
-      onBack={() => (router.canGoBack() ? router.back() : router.replace('/settings'))}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace('/menu'))}
       onCheck={async () => {
         const { data, error } = await assistants.refetch();
         if (error || !data) throw error ?? new Error('No connections');

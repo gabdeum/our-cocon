@@ -119,7 +119,7 @@ describe('Recipe settings (OC-RecipeSettings › Layout)', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Leek & bacon quiche' }));
     expect(onBack).toHaveBeenCalled();
     expect(screen.getByRole('heading', { name: 'Recipe settings' })).toBeTruthy();
-    expect(screen.getByText('These only change this recipe. Your family defaults are in Settings.')).toBeTruthy();
+    expect(screen.getByText('These only change this recipe. Your family defaults are in Menu › Recipes.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Variants' })).toBeTruthy();
     expect(screen.getByText('Variants are versions of this recipe. They swap ingredients or add steps without making a copy.')).toBeTruthy();
   });

@@ -55,6 +55,7 @@ import {
 } from '../../lib/event-form';
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { strings } from '../../strings/en';
 
 const a = strings.calendar.add;
@@ -106,6 +107,7 @@ export function EventSheet(p: EventSheetProps) {
     opened.current = Date.now();
   }, []);
   const [d, setD] = useState<EventDraft>(initial);
+  const { use24h } = useCalendarDisplay().prefs;
   const [more, setMore] = useState(p.mode === 'edit' && hasMoreOptions(initial));
   const [tried, setTried] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -217,7 +219,7 @@ export function EventSheet(p: EventSheetProps) {
 
       <Section title={a.timeOfDay} hint={a.timeHint}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} role="group" aria-label={a.timeOfDay} className="-mx-20" contentContainerClassName="gap-8 px-20 pb-4 pt-2">
-          {slotChips(slotTimes).map((s) => (
+          {slotChips(slotTimes, use24h).map((s) => (
             <SlotChip key={s.key} label={s.label} hours={s.hours} selected={isChipOn(d.time, s.key)} onPress={() => set({ time: toggleSlot(d.time, s.key) })} />
           ))}
         </ScrollView>

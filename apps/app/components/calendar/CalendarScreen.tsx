@@ -7,7 +7,7 @@ import type { StoredEvent } from '@cocon/data';
 import { CalendarHeader, type CalendarHeaderChip } from '@cocon/ui';
 import { arrowLabels, headerTitle, viewSegments } from '../../lib/calendar-header';
 import { useCalendarFilter } from '../../lib/calendar-filter';
-import { useMonthHint } from '../../lib/calendar-hint';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { eventWindow, firstOfMonth } from '../../lib/calendar-month';
 import { eventOccurrence } from '../../lib/event-detail';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
@@ -52,6 +52,8 @@ export interface CalendarScreenProps {
   onAddEvent?: (date: string, prefill?: AddPrefill) => void;
   /** An event, on one of its days (spec 042). */
   onOpenEvent?: (id: string, date: string) => void;
+  /** OC-CalMonth's first-visit hint (spec 037), kept in the member's settings (spec 029, L94). */
+  monthHint?: { show: boolean; onDismiss: () => void };
 }
 
 const noop = () => undefined;
@@ -69,14 +71,17 @@ export function CalendarScreen({
   onNavigate,
   tracker,
   storage,
-  events,
   onEventWindow = noop,
   slotTimes = DEFAULT_SLOT_TIMES,
   onAddEvent = noop,
   onOpenEvent: openEventPage = noop,
+  monthHint = { show: false, onDismiss: noop },
+  events: allEvents,
 }: CalendarScreenProps) {
   const { hidden, toggle, showAll } = useCalendarFilter(userId, storage);
-  const hint = useMonthHint(userId, storage);
+  // "Show birthdays" off (spec 029): birthdays leave every view.
+  const showBirthdays = useCalendarDisplay().prefs.show_birthdays;
+  const events = showBirthdays ? allEvents : allEvents?.filter((e) => e.category !== 'birthday');
   const myMemberId = members.find((m) => m.user_id === userId)?.id ?? '';
   // OC-CalBusy (spec 043): someone else's private event opens a sheet here, not the event page.
   const [busy, setBusy] = useState<StoredEvent | null>(null);
@@ -198,9 +203,9 @@ export function CalendarScreen({
           onDaySheetOpened={(count) => tracker.track('calendar_day_sheet_opened', { events: count })}
           onAddEvent={onAddEvent}
           onOpenEvent={onOpenEvent}
-          showHint={hint.show}
+          showHint={monthHint.show}
           onDismissHint={() => {
-            hint.dismiss();
+            monthHint.onDismiss();
             tracker.track('calendar_first_hint_dismissed', {});
           }}
         />

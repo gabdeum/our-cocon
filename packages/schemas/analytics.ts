@@ -55,8 +55,18 @@ export const events = {
   member_added_without_app: z.strictObject({}),
   member_color_changed: z.strictObject({ color: MemberColor }),
   managed_member_linked: z.strictObject({ days_since_added: z.int().min(0) }),
+  // Spec 029: the Menu tab. A tile in Apps, a row in Settings, and signing out from Family.
+  menu_app_opened: z.strictObject({ app: z.enum(['calendar', 'recipes', 'groceries', 'timers']) }),
+  settings_row_opened: z.strictObject({ row: z.enum(['family', 'ai', 'calendar', 'recipes', 'groceries', 'deleted']) }),
+  signed_out: z.strictObject({}),
+  // Spec 029: a calendar setting changed. Its new value (on/off for switches), the slot changed for
+  // times of day, "phone" for the home time zone: never the zone's name or the hours.
+  calendar_settings_changed: z.strictObject({
+    setting: z.enum(['opens_on', 'week_start', 'time_format', 'show_birthdays', 'fade_past', 'times_of_day', 'home_time_zone']),
+    value: z.enum([...CalendarView.options, 'automatic', 'sunday', 'monday', '24h', '12h', ...SlotKey.options, 'on', 'off', 'phone']),
+  }),
   // Spec 004: the offline banner appeared on a screen (once per offline spell). Later screens join the enum.
-  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'calendar', 'recipes', 'recipe', 'recipe_form', 'groceries', 'settings']) }),
+  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'calendar', 'recipes', 'recipe', 'recipe_form', 'groceries', 'settings', 'menu']) }),
   // Spec 031: an ingredient that matched nothing in the catalog was saved. One event each, never
   // its text: the count tells us where the catalog needs to grow.
   ingredient_unmatched: z.strictObject({}),
