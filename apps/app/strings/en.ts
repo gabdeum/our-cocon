@@ -1283,6 +1283,14 @@ export const strings = {
       firstOfMonth: (shortMonth: string) => `${shortMonth.replace('.', '')} 1`,
       dayLabel: (date: string, titles: string[]) => `${date}: ${titles.length ? titles.join(', ') : 'nothing planned'}`,
       barLabel: (title: string, from: string, to: string) => `${title}, ${from} to ${to}`,
+      // OC-CalMonth.md › Day sheet (spec 037 FR-009).
+      sheet: {
+        title: (weekday: string, date: string) => `${weekday}, ${date}`,
+        count: (n: number) => (n === 0 ? 'Nothing planned' : n === 1 ? '1 event' : `${n} events`),
+        empty: 'Nothing planned yet.',
+        addLabel: (day: string) => `Add event on ${day}`,
+        close: 'Close',
+      },
     },
     week: {
       allDay: 'All day',

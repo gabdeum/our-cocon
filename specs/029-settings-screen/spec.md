@@ -1,13 +1,13 @@
 # Feature Specification: Menu tab (apps and settings) and the settings pages
 
 **Feature Branch**: `029-settings-screen` · **Status**: Ready · **Depends on**: 018, 021, 025, 027, 033, 034, 036
-**Input**: The Menu tab replaces the Settings screen. It has two sections: **Apps**, a directory of every part of the app (Calendar, Recipes, Groceries for now; later, parts that have no tab), and **Settings**, with one page each for the family, AI assistants, and each app (Calendar, Recipes, Groceries).
+**Input**: The Menu tab replaces the Settings screen. It has two sections: **Apps**, a directory of every part of the app (Calendar, Recipes, Groceries, Timers; later, other parts that have no tab), and **Settings**, with one page each for the family, AI assistants, and each app (Calendar, Recipes, Groceries).
 **Design**: `design/ui/OC-Menu.md`, `OC-SettingsFamily.md`, `OC-SettingsRecipes.md`, `OC-SettingsGroceries.md`, `OC-CalSettings.md`, `OC-Connect.md`; screens `OC-Menu`, `OC-SettingsFamily`, `OC-SettingsRecipes`, `OC-SettingsGroceries`, `OC-CalSettings`; components ScreenHeader, ListRow (with icon tile), AppTile (new), SettingRow (switch), SegmentedControl, Avatar, Button (dashed), ColorSwatch, BottomSheet, Dialog, TabBar.
 
 ## User Scenarios & Testing
 
 ### User Story 1 — Get anywhere from the Menu (P1)
-**Acceptance**: **Given** the Menu tab, **Then** it shows the title "Menu", then **Apps** (tiles Calendar "3 today", Recipes "48 recipes", Groceries "7 to buy"), then **Settings**: Family, AI assistants; Calendar, Recipes, Groceries; Recently deleted. **When** I tap the Recipes tile, **Then** the Recipes tab opens and is selected in the tab bar.
+**Acceptance**: **Given** the Menu tab, **Then** it shows the title "Menu", then **Apps** (tiles Calendar "3 today", Recipes "48 recipes", Groceries "7 to buy", Timers "None running"), then **Settings**: Family, AI assistants; Calendar, Recipes, Groceries; Recently deleted. **When** I tap the Recipes tile, **Then** the Recipes tab opens and is selected in the tab bar.
 
 ### User Story 2 — Each app's settings on its own page (P1)
 **Given** Menu › Settings › Groceries, **Then** I see "Where do you shop?" (US · Europe, with its example) and "Round up to store sizes"; changing them here or in the Groceries tab's "Grocery settings" sheet changes the same family settings.
@@ -25,13 +25,13 @@
 **Given** the owner, **When** Gabriel changes Evening to 18:30–22:00, **Then** new Evening events use it for the whole family; existing events keep their times.
 
 ### Edge cases
-- A future app with no tab (Timers, 032 L20, if Gabriel decides so) is added as one more tile in Apps; the grid wraps to new rows of three.
+- A future app with no tab is added as one more tile in Apps; the grid wraps to new rows of two.
 - Offline: settings show their saved values and controls are disabled (SegmentedControl `disabled`, spec 021), with the app's usual offline banner.
 
 ## Requirements
 
 - **FR-001 Routes**: Menu `/menu` (the tab's root). Settings pages are pushed screens: `/settings/family`, `/settings/ai` (spec 025), `/settings/calendar`, `/settings/recipes` (built in spec 027), `/settings/groceries`, `/settings/deleted` (spec 018). The old `/settings` redirects to `/menu`. Every settings page has the back link "Menu".
-- **FR-002 Apps**: a 3-column grid of AppTile links (white, radius 22, icon tile 44 on `surface-soft`, name 16/900, live detail 13/700 ink-muted): Calendar "{n} today" (or "Nothing today"), Recipes "{n} recipes", Groceries "{n} to buy" (or "All done"). Tapping a tile switches to that tab. The list of apps is data (`APPS` in `@cocon/ui` or the app shell), so a new app is one entry.
+- **FR-002 Apps**: a 2-column grid (2 × 2 today) of AppTile links (white, radius 22, icon tile 44 on `surface-soft`, name 16/900, live detail 13/700 ink-muted): Calendar "{n} today" (or "Nothing today"), Recipes "{n} recipes", Groceries "{n} to buy" (or "All done"), Timers "{n} running" / "{n} paused" / "None running" (opens `/timers`, spec 011 — the entry point for 032-later L20). Tapping Calendar, Recipes or Groceries switches to that tab. The list of apps is data (`APPS` in `@cocon/ui` or the app shell), so a new app is one entry.
 - **FR-003 Settings**: three white cards: (1) Family "{names} · your account" › and AI assistants "{n} connected" › (or "Not connected"); (2) Calendar "Your view, times of day" ›, Recipes "Cooking defaults, units" ›, Groceries "Where you shop, store sizes" ›; (3) Recently deleted "{n} item(s)" › (counts recipes and events). Rows are ListRows with a 36 px icon tile.
 - **FR-004 Family page** (`/settings/family`): Members (avatar in member color, name, "Has the app" / "Added by {name}", role "Owner" / "Can edit" / "No account"); "+ Invite someone" and "+ Add without app" side by side, with the hint (spec 033 owns the sheets and rules). **Your account**: "Your name ›" (shows the name), "Sign out" (olive link row); below the card, danger link "Delete my account" → Dialog. Only the owner sees member role controls and "Delete family".
 - **FR-005 Recipes page** (`/settings/recipes`, built in spec 027): Cooking defaults — keep screen on, kitchen scale, thermometer, Units.
@@ -53,7 +53,7 @@
 ## Tracking (PostHog)
 | Event | Properties |
 | --- | --- |
-| `menu_app_opened` | app (calendar, recipes, groceries) |
+| `menu_app_opened` | app (calendar, recipes, groceries, timers) |
 | `settings_row_opened` | row (family, ai, calendar, recipes, groceries, deleted) |
 | `signed_out` | — |
 | `calendar_settings_changed` | setting, value |
@@ -71,3 +71,4 @@ None.
 - 2026-10-26 (later): Gabriel's direction: Settings becomes **Menu** with two sections, Apps (a directory of every part of the app) and Settings (Family, AI assistants, then one page per app). Cooking defaults move to their own Recipes page (built in 027), the grocery settings get a Groceries page (the Groceries tab's sheet stays), Account moves into the Family page. Routes `/menu` and `/settings/*`; new event `menu_app_opened`.
 - 2026-10-27 (from spec 033): My color moved from the Calendar page to the Family page (built in 033); FR-008 and the Calendar row's detail ("Your view, times of day") updated.
 - 2026-10-26 (later): Does 032-later L71 (FR-013): account deletion fails today for members who joined by invite.
+- 2026-11-02: Gabriel's direction: Timers joins Apps (2 × 2 grid), so Timers can be reached when nothing is running; does 032-later L20.

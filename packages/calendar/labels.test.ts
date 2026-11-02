@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SLOT_TIMES } from './slots';
-import { dateLabel, dayTitle, formatTime, monthTitle, rangeLabel, timeLabel, uses24h, weekTitle, whenWord } from './labels';
+import { dateLabel, dayTitles, fitTitle, formatTime, monthTitles, rangeLabel, timeLabel, titleWidth, uses24h, weekTitles, whenWord } from './labels';
 
 const custom = (start_time: string, end_time: string) => ({ time_type: 'custom' as const, slots: [], start_time, end_time });
 
@@ -54,44 +54,64 @@ describe('time label rule (FR-003)', () => {
   });
 });
 
-describe('titles (FR-007, design/ui/CalHeader.md)', () => {
+describe('titles (FR-007, design/ui/CalHeader.md › Titles)', () => {
   const today = '2026-10-27';
+  const at = (formats: string[]) => [320, 375, 390, 430].map((width) => fitTitle(formats, width));
 
   it.each([
-    [2026, 10, 375, 'October'],
-    [2026, 10, 720, 'October'],
-    [2027, 1, 375, 'Jan. 2027'],
-    [2027, 1, 429, 'Jan. 2027'],
-    [2027, 1, 430, 'January 2027'],
-    [2027, 5, 375, 'May 2027'],
-    [2027, 9, 375, 'Sep. 2027'],
-    [2025, 12, 375, 'Dec. 2025'],
-  ])('month %d-%d at %d px → %s', (year, month, width, title) => {
-    expect(monthTitle(year, month, today, width)).toBe(title);
+    ['September', 144],
+    ['September 2027', 217],
+    ['Mar. 2027', 131],
+    ['September 13 – 19', 245],
+    ['Mar. 15 – 21', 159],
+    ['November 29 – December 5', 360],
+    ['Nov. 29 – Dec. 5', 207],
+    ['September 13 – 19, 2027', 325],
+    ['Feb. 28 – Mar. 6, 2027', 284],
+    ['Wednesday, September 16', 350],
+    ['Wed, September 16', 260],
+    ['Wed, Sep. 16', 172],
+    ['Wed, September 16, 2027', 340],
+    ['Wed, Sep. 16, 2027', 252],
+  ])('"%s" measures %i px', (title, width) => {
+    expect(Math.abs(titleWidth(title) - width)).toBeLessThan(1);
+  });
+
+  // The worst cases of CalHeader.md, at 320, 375, 390 and 430 px.
+  it.each([
+    ['month, this year', monthTitles(2026, 9, today), ['September', 'September', 'September', 'September']],
+    ['month, other year', monthTitles(2027, 9, today), ['Sep. 2027', 'September 2027', 'September 2027', 'September 2027']],
+    ['week, one month', weekTitles('2026-09-13', '2026-09-19', today), ['Sep. 13 – 19', 'September 13 – 19', 'September 13 – 19', 'September 13 – 19']],
+    ['week, two months', weekTitles('2026-11-29', '2026-12-05', today), ['Nov. 29 – Dec. 5', 'Nov. 29 – Dec. 5', 'Nov. 29 – Dec. 5', 'Nov. 29 – Dec. 5']],
+    ['week, other year', weekTitles('2027-09-12', '2027-09-18', today), ['Sep. 12 – 18', 'Sep. 12 – 18, 2027', 'Sep. 12 – 18, 2027', 'Sep. 12 – 18, 2027']],
+    ['week across New Year', weekTitles('2026-12-27', '2027-01-02', today), ['Dec. 27 – Jan. 2', 'Dec. 27 – Jan. 2', 'Dec. 27 – Jan. 2', 'Dec. 27 – Jan. 2, 2027']],
+    ['week, other year, two months', weekTitles('2027-02-28', '2027-03-06', today), ['Feb. 28 – Mar. 6', 'Feb. 28 – Mar. 6', 'Feb. 28 – Mar. 6', 'Feb. 28 – Mar. 6, 2027']],
+    ['day', dayTitles('2026-09-16', today), ['Wed, Sep. 16', 'Wed, Sep. 16', 'Wed, September 16', 'Wed, September 16']],
+    ['day, short weekday', dayTitles('2026-10-25', today), ['Sun, Oct. 25', 'Sun, October 25', 'Sunday, October 25', 'Sunday, October 25']],
+    ['day, other year', dayTitles('2027-09-15', today), ['Wed, Sep. 15', 'Wed, Sep. 15', 'Wed, Sep. 15, 2027', 'Wed, Sep. 15, 2027']],
+    ['day, other year, short month', dayTitles('2027-01-08', today), ['Fri, Jan. 8', 'Fri, Jan. 8, 2027', 'Fri, January 8, 2027', 'Friday, January 8, 2027']],
+  ])('%s', (_, formats, titles) => {
+    expect(at(formats)).toEqual(titles);
+  });
+
+  it('lists formats longest first, with the year only outside the current year', () => {
+    expect(monthTitles(2027, 1, today)).toEqual(['January 2027', 'Jan. 2027']);
+    expect(weekTitles('2026-10-25', '2026-10-31', today)).toEqual(['October 25 – 31', 'Oct. 25 – 31']);
+    expect(dayTitles('2027-01-08', today)).toEqual(['Friday, January 8, 2027', 'Fri, January 8, 2027', 'Fri, Jan. 8, 2027', 'Fri, Jan. 8']);
   });
 
   it('decides "this year" from today in the home time zone', () => {
-    expect(monthTitle(2027, 1, '2026-12-31', 375)).toBe('Jan. 2027');
-    expect(monthTitle(2027, 1, '2027-01-01', 375)).toBe('January');
+    expect(monthTitles(2027, 1, '2026-12-31')).toEqual(['January 2027', 'Jan. 2027']);
+    expect(monthTitles(2027, 1, '2027-01-01')).toEqual(['January']);
   });
 
-  it.each([
-    ['2026-10-25', '2026-10-31', 375, 'Oct. 25 – 31'],
-    ['2026-11-29', '2026-12-05', 375, 'Nov. 29 – Dec. 5'],
-    ['2026-10-25', '2026-10-31', 430, 'October 25 – 31'],
-    ['2026-11-29', '2026-12-05', 430, 'November 29 – December 5'],
-    ['2026-12-27', '2027-01-02', 375, 'Dec. 27 – Jan. 2'],
-    ['2027-05-02', '2027-05-08', 375, 'May 2 – 8'],
-  ])('week %s–%s at %d px → %s', (start, end, width, title) => {
-    expect(weekTitle(start, end, width)).toBe(title);
+  it('May has no period', () => {
+    expect(monthTitles(2027, 5, today)).toEqual(['May 2027', 'May 2027']);
+    expect(weekTitles('2027-05-02', '2027-05-08', '2027-01-01').at(-1)).toBe('May 2 – 8');
   });
 
-  it.each([
-    ['2026-10-25', 375, 'Sun, Oct. 25'],
-    ['2026-10-25', 430, 'Sunday, October 25'],
-    ['2027-05-06', 375, 'Thu, May 6'],
-  ])('day %s at %d px → %s', (date, width, title) => {
-    expect(dayTitle(date, width)).toBe(title);
+  it('uses the last format when none fits, and never adds "…"', () => {
+    expect(fitTitle(['A very long title', 'Short'], 100)).toBe('Short');
   });
 });
 

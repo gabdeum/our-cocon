@@ -38,7 +38,7 @@
 
 1. **Find and cook.** Home or Recipes → tap a recipe → Recipe (adjust Servings, Version) → Steps tab or "Start cooking" → Cook → Next … "Finish" → back to Recipe.
 2. **Shop for a recipe.** Recipe → "Add to groceries…" → AddGroceries (untick what you have) → "Add N items" → success → "See the list" → Groceries.
-3. **Timers.** Any timed step → "Start timer" → pill appears on every screen → tap the pill → Timers.
+3. **Timers.** Any timed step → "Start timer" → pill appears on every screen → tap the pill → Timers. With nothing running: Menu › Timers tile.
 4. **Scale or convert.** Recipe → "…" next to Servings → panel → "Scale by an ingredient" (ScaleIng → "Apply to recipe" → Recipe) or "Unit converter" (Units → close → Recipe).
 5. **Create.** Recipes → "New" → EditBasics → "Next: Ingredients" → EditIngredients → "Next: Steps" → EditSteps → "Next: Variants" → EditVariants → "Save recipe" → Recipe.
 6. **Edit and delete.** Recipe → (edit entry: "Edit" in recipe settings) → Edit modal at Details → … → EditVariants → "Delete this recipe" → Delete dialog → "Delete recipe" → Recipes, with a StatusBanner "Recipe deleted · Undo".
@@ -62,6 +62,7 @@
 | OC-CalWeek | `/calendar?view=week&date=` | tab (same screen) | 038 |
 | OC-CalDay | `/calendar?view=day&date=` | tab (same screen) | 039 |
 | OC-CalAgenda | `/calendar?view=agenda` | tab (same screen) | 040 |
+| Day sheet (OC-CalMonthSheet) | over `/calendar` (Month), no route of its own | sheet | 037 |
 | OC-CalAdd / OC-CalAddMore | `/calendar/new` (`?date=&slot=`, or `&time=HH:MM` from a long press in the week grid: Starts at that hour, one hour long) · `/calendar/[id]/edit` (`?date=` for one occurrence) | sheet | 041, 043 |
 | OC-CalEvent | `/calendar/[id]` (`?date=` for one occurrence) | stack | 042 |
 | OC-CalEventDelete | dialog over OC-CalEvent | dialog | 042 |
@@ -82,12 +83,12 @@
 | OC-SettingsGroceries | `/settings/groceries` | stack | 029 |
 | Recently deleted | `/settings/deleted` | stack | 018 |
 
-The tab bar's last tab is "Menu" (spec 036). Menu has two sections: **Apps** (tiles that open Calendar, Recipes, Groceries, and later parts with no tab) and **Settings** (Family, AI assistants, Calendar, Recipes, Groceries, Recently deleted). Every settings page goes back to Menu.
+The tab bar's last tab is "Menu" (spec 036). Menu has two sections: **Apps** (tiles that open Calendar, Recipes, Groceries and Timers, and later parts with no tab) and **Settings** (Family, AI assistants, Calendar, Recipes, Groceries, Recently deleted). Every settings page goes back to Menu.
 
 ## Flows
 
 1. **Check today.** Home → calendar card (Today, or This week, or empty) → tap a row → OC-CalEvent; "+" → OC-CalAdd; "Open calendar" → Calendar tab.
-2. **Scan and drill in.** Calendar tab → Month (scroll through months) → tap a day → Day → "+ Add in the evening" → OC-CalAdd with that day and slot.
+2. **Scan and drill in.** Calendar tab → Month (scroll through months) → tap a day → day sheet → tap an event → OC-CalEvent, or "+" → OC-CalAdd for that day.
 3. **Quick add.** "+" anywhere → type title → Today → Evening → Save → toast with Undo.
 4. **Add with details.** OC-CalAdd → More options → Who, Repeat, Where, "Who takes James?" → Save.
 5. **Edit, move, delete.** OC-CalEvent → Edit (repeating: "This event only" / "All future events") → Save; Delete → dialog → toast "Event deleted · Undo".

@@ -5,7 +5,7 @@ import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { gabriel, james, mia } from '../test/fakes';
 import { memberLook, monthOccurrences } from './calendar-month';
-import { layoutDayView, type DayViewContext } from './calendar-day';
+import { layoutDaySheet, layoutDayView, type DayViewContext } from './calendar-day';
 
 const eva = { ...mia, id: 'm-eva', display_name: 'Eva', color: 'rose' as const };
 const members = [gabriel, eva, james];
@@ -163,5 +163,38 @@ describe('layoutDayView', () => {
     expect(busy).toEqual([]);
     expect(allDay).toEqual([]);
     expect(bands.map((b) => b.addText)).toEqual(['+ Add in the early morning', '+ Add in the morning', '+ Add in the lunch slot', '+ Add in the afternoon', '+ Add in the evening']);
+  });
+});
+
+// Spec 037 FR-009: the month's day sheet.
+describe('layoutDaySheet', () => {
+  const sheet = (events: StoredEvent[], date = TODAY, viewer = gabriel.id) =>
+    layoutDaySheet(date, monthOccurrences(events, '2026-10-01', '2026-11-30', viewer, new Set()), ctx);
+
+  it('titles the day and counts its events', () => {
+    expect(sheet([]).title).toBe('Sunday, October 25');
+    expect(sheet([]).addLabel).toBe('Add event on Sunday, October 25');
+    expect([sheet([]).count, sheet([ev({})]).count, sheet([ev({}), ev({})]).count]).toEqual(['Nothing planned', '1 event', '2 events']);
+  });
+
+  it('lists all-day and multi-day events first, then the rest by time, as the day view words them', () => {
+    const { rows } = sheet([
+      ev({ title: 'Coffee', time_type: 'custom', slots: [], start_time: '14:30', end_time: '15:30' }),
+      ev({ title: 'Brunch', slots: ['lunch'] }),
+      ev({ title: 'Grandma visits', time_type: 'all_day', slots: [], starts_on: '2026-10-24', ends_on: '2026-10-27', members: ['everyone'] }),
+      ev({ title: 'Pumpkins', time_type: 'all_day', slots: [] }),
+      ev({ title: 'Elsewhere', starts_on: '2026-10-26', ends_on: '2026-10-26' }),
+    ]);
+    expect(rows.map((r) => [r.title, r.time, r.initials])).toEqual([
+      ['Grandma visits', 'All day · day 2 of 4', 'All'],
+      ['Pumpkins', 'All day', 'G'],
+      ['Brunch', 'Lunch', 'G'],
+      ['Coffee', '14:30', 'G'],
+    ]);
+  });
+
+  it('Eva’s private event reads Busy for Gabriel', () => {
+    const { rows } = sheet([ev({ title: 'Therapist', time_type: 'custom', slots: [], start_time: '10:00', end_time: '11:00', location: 'Dr. Kay', members: [eva.id], visibility: 'private', creator_member_id: eva.id })]);
+    expect(rows.map((r) => [r.title, r.time])).toEqual([['Busy', '10:00']]);
   });
 });

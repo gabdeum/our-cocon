@@ -15,7 +15,7 @@ a{color:#5A6820}a:hover{color:#424D17}
 </style>
 </helmet>
 <div style="width: 390px; height: 1200px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
-  <dc-import name="CalHeader" view="week" label="{{labelFull}}" short="{{labelShort}}" on-prev="{{goPrev}}" on-next="{{goNext}}" on-today="{{goToday}}" hint-size="390px,162px"></dc-import>
+  <dc-import name="CalHeader" view="week" options="{{titleOptions}}" on-prev="{{goPrev}}" on-next="{{goNext}}" on-today="{{goToday}}" hint-size="390px,162px"></dc-import>
 
   <div style="padding: 4px 8px 180px; overflow: hidden">
     <div onPointerDown="{{swDown}}" onPointerMove="{{swMove}}" onPointerUp="{{swUp}}" onPointerLeave="{{swUp}}" onPointerCancel="{{swUp}}" style="{{swipeStyle}}">
@@ -104,8 +104,10 @@ class Component extends DCLogic {
 
     var first = at(off * 7), last = at(off * 7 + 6);
     var sameMonth = first.getUTCMonth() === last.getUTCMonth();
-    var labelFull = MON[first.getUTCMonth()] + ' ' + first.getUTCDate() + ' – ' + (sameMonth ? '' : MON[last.getUTCMonth()] + ' ') + last.getUTCDate();
-    var labelShort = MSHORT[first.getUTCMonth()] + ' ' + first.getUTCDate() + ' – ' + (sameMonth ? '' : MSHORT[last.getUTCMonth()] + ' ') + last.getUTCDate();
+    // Title formats, longest first (spec 034 FR-007): "October 25 – 31", "Nov. 29 – Dec. 5"; ", 2027" when the week ends in another year.
+    var range = function (M) { return M[first.getUTCMonth()] + ' ' + first.getUTCDate() + ' – ' + (sameMonth ? '' : M[last.getUTCMonth()] + ' ') + last.getUTCDate(); };
+    var yr = first.getUTCFullYear() === 2026 && last.getUTCFullYear() === 2026 ? '' : ', ' + last.getUTCFullYear();
+    var titleOptions = [range(MON) + yr, range(MSHORT) + yr, range(MSHORT)];
     var days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(function (l, i) {
       var dt = at(off * 7 + i), today = off === 0 && i === 0;
       return {
@@ -202,7 +204,7 @@ class Component extends DCLogic {
     var nowTop = (toH('13:20') - START) * PX;
     return {
       swDown: swipe.down, swMove: swipe.move, swUp: swipe.up, swipeStyle: swipeStyle, goPrev: function () { go(-1); }, goNext: function () { go(1); }, goToday: function () { self.setState({ offset: 0, dx: 0 }); },
-      labelFull: labelFull, labelShort: labelShort,
+      titleOptions: titleOptions,
       days: days, allDay: allDay, cols: cols, hours: hours, nowStyle: 'position: absolute; left: -2px; right: -2px; top: ' + nowTop + 'px; height: 2px; background: #5A6820; z-index: 2'
     };
   }

@@ -167,9 +167,11 @@ export const events = {
   calendar_viewed: z.strictObject({ view: CalendarView, entry: z.enum(['nav', 'homepage']) }),
   calendar_view_changed: z.strictObject({ from: CalendarView, to: CalendarView }),
   calendar_member_filter_changed: z.strictObject({ members_visible: z.int().min(0) }),
-  // Spec 037: a day opened from a view (Month, Week since 038; Agenda later), and the month's
+  // Spec 037: a day opened from a view (Week since 038; Month until its day sheet, 2026-11-02),
+  // a month day's sheet opened (how many events it lists, never which), and the month's
   // first-visit hint dismissed.
   calendar_day_opened: z.strictObject({ from_view: CalendarView }),
+  calendar_day_sheet_opened: z.strictObject({ events: z.int().min(0) }),
   calendar_first_hint_dismissed: z.strictObject({}),
   // Spec 038: a week swiped left (next) or right (previous); the header's arrows don't count.
   calendar_week_swiped: z.strictObject({ direction: z.enum(['next', 'previous']) }),

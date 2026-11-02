@@ -2,10 +2,17 @@ import type { TimeFormatSetting } from '@cocon/schemas/calendar';
 import { addDays, parts, weekday } from './dates';
 import { DEFAULT_SLOT_TIMES, slotStartingAt, timeRange, toMinutes } from './slots';
 import type { CalendarEvent, SlotTimes } from './types';
+import { ADVANCE, KERN } from './title-font';
 import { en } from './words.en';
 
-/** FR-007: titles use the full month name from this screen width up. */
-export const WIDE_TITLE_MIN_WIDTH = 430;
+/** FR-007: the title font, Nunito 900 at 28 px with −0.5 px tracking (CalHeader.md › Titles). */
+const TITLE_SIZE = 28;
+const TITLE_TRACKING = -0.5;
+/** A character the table doesn't have counts as one em, so a title with it errs on the short side. */
+const UNKNOWN_ADVANCE = 1000;
+
+/** Row 1 around the title: padding 20 + 20, the "Today" pill (80: 15/800 text, 18 px padding) and the 8 px gap. */
+export const TITLE_SIDE = 128;
 
 /** Spec 029 "Time format": Automatic follows the device. */
 export function uses24h(setting: TimeFormatSetting, device24h: boolean): boolean {
@@ -48,29 +55,56 @@ function monthName(month: number, wide: boolean): string {
   return (wide ? en.months : en.monthsShort)[month - 1] as string;
 }
 
-/**
- * FR-007: "October" in the current year (the year of `today`, in the home time zone);
- * another year adds it: "January 2027" from 430 px, "Jan. 2027" below.
- */
-export function monthTitle(year: number, month: number, today: string, width: number): string {
-  if (year === parts(today).year) return monthName(month, true);
-  return `${monthName(month, width >= WIDE_TITLE_MIN_WIDTH)} ${year}`;
+/** FR-007: a title's width in px, from the font's advances and kerning (`title-font.ts`). */
+export function titleWidth(text: string): number {
+  let units = 0;
+  for (let i = 0; i < text.length; i++) {
+    units += ADVANCE[text[i] as string] ?? UNKNOWN_ADVANCE;
+    units += KERN[text.slice(i, i + 2)] ?? 0;
+  }
+  return (units * TITLE_SIZE) / 1000 + TITLE_TRACKING * text.length;
 }
 
-/** FR-007: "Oct. 25 – 31", "Nov. 29 – Dec. 5"; "October 25 – 31" from 430 px. */
-export function weekTitle(start: string, end: string, width: number): string {
-  const wide = width >= WIDE_TITLE_MIN_WIDTH;
+/** FR-007: the first format (longest first) that fits beside "Today" on this screen; the last one if none does. */
+export function fitTitle(formats: readonly string[], screenWidth: number): string {
+  const space = screenWidth - TITLE_SIDE;
+  return formats.find((f) => titleWidth(f) <= space) ?? (formats[formats.length - 1] as string);
+}
+
+/** ", 2027" when any of these days is outside the year of `today` (home time zone). */
+function yearSuffix(today: string, ...dates: string[]): string {
+  const current = parts(today).year;
+  const last = parts(dates[dates.length - 1] as string).year;
+  return dates.some((d) => parts(d).year !== current) ? `, ${last}` : '';
+}
+
+/** Longest first, then the same without the year as a last resort. */
+function withYear(formats: string[], year: string): string[] {
+  return year ? [...formats.map((f) => f + year), formats[formats.length - 1] as string] : formats;
+}
+
+/** FR-007: "October" in the current year; another year "January 2027", then "Jan. 2027". */
+export function monthTitles(year: number, month: number, today: string): string[] {
+  if (year === parts(today).year) return [monthName(month, true)];
+  return [`${monthName(month, true)} ${year}`, `${monthName(month, false)} ${year}`];
+}
+
+/** FR-007: "October 25 – 31" / "November 29 – December 5", then "Nov. 29 – Dec. 5"; ", 2027" outside this year. */
+export function weekTitles(start: string, end: string, today: string): string[] {
   const a = parts(start);
   const b = parts(end);
-  const to = a.month === b.month ? `${b.day}` : `${monthName(b.month, wide)} ${b.day}`;
-  return `${monthName(a.month, wide)} ${a.day} – ${to}`;
+  const range = (wide: boolean) => `${monthName(a.month, wide)} ${a.day} – ${a.month === b.month ? '' : `${monthName(b.month, wide)} `}${b.day}`;
+  return withYear([range(true), range(false)], yearSuffix(today, start, end));
 }
 
-/** FR-007: "Sun, Oct. 25"; "Sunday, October 25" from 430 px. */
-export function dayTitle(date: string, width: number): string {
-  const wide = width >= WIDE_TITLE_MIN_WIDTH;
+/** FR-007: "Sunday, October 25", "Sun, October 25", then "Sun, Oct. 25"; ", 2027" outside this year. */
+export function dayTitles(date: string, today: string): string[] {
   const { month, day } = parts(date);
-  return `${(wide ? en.weekdays : en.weekdaysShort)[weekday(date)]}, ${monthName(month, wide)} ${day}`;
+  const wd = weekday(date);
+  const long = `${en.weekdays[wd]}, ${monthName(month, true)} ${day}`;
+  const mid = `${en.weekdaysShort[wd]}, ${monthName(month, true)} ${day}`;
+  const short = `${en.weekdaysShort[wd]}, ${monthName(month, false)} ${day}`;
+  return withYear([long, mid, short], yearSuffix(today, date));
 }
 
 /**

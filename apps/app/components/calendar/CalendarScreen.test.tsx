@@ -109,7 +109,7 @@ describe('Calendar header (spec 036)', () => {
 
   it('pages with ‹ › and Today, named by the view', async () => {
     const { onNavigate } = await setup({ view: 'week', anchor: '2026-11-03' });
-    expect(screen.getByRole('heading').textContent).toBe('Nov. 1 – 7');
+    expect(screen.getByRole('heading').textContent).toBe('November 1 – 7');
     fireEvent.click(screen.getByRole('button', { name: 'Previous week' }));
     expect(onNavigate).toHaveBeenLastCalledWith({ date: '2026-10-27' });
     fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
@@ -167,13 +167,13 @@ describe('Month view (spec 037)', () => {
     const onEventWindow = vi.fn();
     await setup({ events: [swim], onEventWindow });
     expect(screen.getByText('E Baby swim')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'October 28: Baby swim' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'October 28: Baby swim' })).toBeTruthy();
     expect(onEventWindow).toHaveBeenCalledWith({ from: '2026-04-01', to: '2027-06-30' });
   });
 
   it('US2: scrolling into November changes the title once November fills the grid', async () => {
     await setup();
-    const cell = screen.getByRole('link', { name: 'October 28: nothing planned' });
+    const cell = screen.getByRole('button', { name: 'October 28: nothing planned' });
     let scroller: HTMLElement | null = cell.parentElement;
     while (scroller && getComputedStyle(scroller).overflowY !== 'auto' && getComputedStyle(scroller).overflowY !== 'scroll') scroller = scroller.parentElement;
     if (!scroller) throw new Error('no scrolling grid');
@@ -201,25 +201,90 @@ describe('Month view (spec 037)', () => {
     expect(screen.getByRole('heading').textContent).toBe('November');
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
-    expect(screen.getByRole('heading').textContent).toBe('Jan. 2027');
+    expect(screen.getByRole('heading').textContent).toBe('January 2027');
     fireEvent.click(screen.getByRole('button', { name: 'Today' }));
     expect(screen.getByRole('heading').textContent).toBe('October');
   });
 
-  it('US3: tapping a day opens Day view on it; long-press and + open Add event', async () => {
+  const monthEvent = (id: number, fields: Record<string, unknown>) => ({
+    id: `00000000-0000-4000-8000-00000000010${id}`,
+    title: 'Event',
+    category: null,
+    location: null,
+    notes: null,
+    reminder: null,
+    starts_on: '2026-10-28',
+    ends_on: '2026-10-28',
+    time_type: 'custom' as const,
+    slots: [],
+    start_time: '14:30',
+    end_time: '15:30',
+    recurrence: null,
+    members: [gabriel.id],
+    responsible_member_id: null,
+    visibility: 'family' as const,
+    creator_member_id: gabriel.id,
+    surprise: null,
+    removed_members: [],
+    exceptions: [],
+    checklist: [],
+    created_by: null,
+    updated_by: null,
+    source: 'app',
+    created_at: '2026-10-01T00:00:00Z',
+    updated_at: '2026-10-01T00:00:00Z',
+    deleted_at: null,
+    ...fields,
+  });
+  const monthEvents = [
+    monthEvent(1, { title: 'Baby swim' }),
+    monthEvent(2, { title: 'Grandma visits', time_type: 'all_day', start_time: null, end_time: null, starts_on: '2026-10-27', ends_on: '2026-10-30', members: ['everyone'] }),
+  ];
+
+  it('US3: tapping a day opens its sheet: the day’s events, all day first, and an add button for that day', async () => {
+    const onAddEvent = vi.fn();
+    const onOpenEvent = vi.fn();
+    const { onNavigate, tracker } = await setup({ events: monthEvents, onAddEvent, onOpenEvent });
+    fireEvent.click(screen.getByRole('button', { name: /^October 28: / }));
+    const sheet = screen.getByRole('dialog');
+    expect(within(sheet).getByRole('heading').textContent).toBe('Wednesday, October 28');
+    expect(sheet.textContent).toContain('2 events');
+    expect(within(sheet).getAllByRole('link').map((r) => r.getAttribute('aria-label'))).toEqual(['Grandma visits, All day · day 2 of 4', 'Baby swim, 14:30']);
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 2 });
+    expect(onNavigate).not.toHaveBeenCalled();
+
+    fireEvent.click(within(sheet).getByRole('link', { name: 'Baby swim, 14:30' }));
+    expect(onOpenEvent).toHaveBeenCalledWith(monthEvents[0]?.id, '2026-10-28');
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /^October 28: / }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add event on Wednesday, October 28' }));
+    expect(onAddEvent).toHaveBeenCalledWith('2026-10-28');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('FR-009: an empty day says so, and the sheet closes', async () => {
+    const { tracker } = await setup({ events: [] });
+    fireEvent.click(screen.getByRole('button', { name: 'October 31: nothing planned' }));
+    const sheet = screen.getByRole('dialog');
+    expect(sheet.textContent).toContain('Nothing planned');
+    expect(sheet.textContent).toContain('Nothing planned yet.');
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 0 });
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('FR-008: long-press on a day and + open Add event', async () => {
     vi.useFakeTimers();
     try {
       const onAddEvent = vi.fn();
-      const { onNavigate, tracker } = await setup({ onAddEvent });
-      fireEvent.click(screen.getByRole('link', { name: 'October 30: nothing planned' }));
-      expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-30' });
-      expect(tracker.track).toHaveBeenCalledWith('calendar_day_opened', { from_view: 'month' });
-
-      const day = screen.getByRole('link', { name: 'October 29: nothing planned' });
+      await setup({ onAddEvent });
+      const day = screen.getByRole('button', { name: 'October 29: nothing planned' });
       fireEvent.mouseDown(day, { button: 0, buttons: 1 });
       act(() => void vi.advanceTimersByTime(800));
       fireEvent.mouseUp(day, { button: 0 });
       expect(onAddEvent).toHaveBeenCalledWith('2026-10-29');
+      expect(screen.queryByRole('dialog')).toBeNull();
 
       fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
       expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-27');
@@ -291,10 +356,10 @@ describe('Week view (spec 038)', () => {
     expect(onEventWindow).toHaveBeenCalledWith({ from: '2026-04-01', to: '2027-06-30' });
   });
 
-  it('US2: swiping left moves to Nov. 1 – 7; right goes back; a short drag stays', async () => {
+  it('US2: swiping left moves to November 1 – 7; right goes back; a short drag stays', async () => {
     const release = captureSwipes();
     const { onNavigate, tracker } = await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-25' });
-    expect(screen.getByRole('heading').textContent).toBe('Oct. 25 – 31');
+    expect(screen.getByRole('heading').textContent).toBe('October 25 – 31');
     release(-80);
     expect(onNavigate).toHaveBeenLastCalledWith({ date: '2026-11-01' });
     expect(tracker.track).toHaveBeenCalledWith('calendar_week_swiped', { direction: 'next' });
@@ -307,7 +372,7 @@ describe('Week view (spec 038)', () => {
     cleanup();
 
     await setup({ view: 'week', anchor: '2026-11-01', today: '2026-10-25' });
-    expect(screen.getByRole('heading').textContent).toBe('Nov. 1 – 7');
+    expect(screen.getByRole('heading').textContent).toBe('November 1 – 7');
     expect(screen.getAllByRole('link', { name: 'Sunday November 1' })).toHaveLength(2);
   });
 
@@ -369,11 +434,11 @@ describe('Day view (spec 039)', () => {
 
   it('US1: who’s busy, then the bands with their events or an add row', async () => {
     await setup({ view: 'day', anchor: '2026-10-25', today: '2026-10-25', events });
-    expect(headerTitle()).toBe('Sun, Oct. 25');
+    expect(headerTitle()).toBe('Sunday, October 25');
     expect(within(screen.getByRole('group', { name: 'Who’s busy this day' })).getByText('Gabriel 1')).toBeTruthy();
     expect(screen.getByText('Everyone 1')).toBeTruthy();
     expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual([
-      'Sun, Oct. 25',
+      'Sunday, October 25',
       'Early morning06:00–09:00',
       'Morning09:00–12:00',
       'Lunch12:00–14:00',
@@ -385,7 +450,7 @@ describe('Day view (spec 039)', () => {
     expect(screen.getByText('+ Add in the early morning')).toBeTruthy();
   });
 
-  it('US2: swiping left shows Mon, Oct. 26; right goes back; the arrows don’t count as swipes', async () => {
+  it('US2: swiping left shows Mon, October 26; right goes back; the arrows don’t count as swipes', async () => {
     const release = captureSwipes();
     const { onNavigate, tracker } = await setup({ view: 'day', anchor: '2026-10-25', today: '2026-10-25' });
     release(-80);
@@ -404,7 +469,7 @@ describe('Day view (spec 039)', () => {
     cleanup();
 
     await setup({ view: 'day', anchor: '2026-10-26', today: '2026-10-25' });
-    expect(headerTitle()).toBe('Mon, Oct. 26');
+    expect(headerTitle()).toBe('Mon, October 26');
   });
 
   it('FR-004: an empty band adds in its slot; a row opens its event; + adds on the day shown', async () => {

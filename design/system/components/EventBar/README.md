@@ -16,3 +16,4 @@ Reference: `design/screens/OC-CalMonth.dc.html` (inline styles are the exact val
 
 - Cells under a bar keep that row empty so chips sit below it.
 - Overlapping bars stack 23 px apart (`layoutSpans` in @cocon/calendar); a month cell shows two rows, so a third bar counts in "+N".
+- Month: not a tap target; the tap goes to the day cell under it (day sheet).

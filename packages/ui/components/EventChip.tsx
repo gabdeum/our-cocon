@@ -56,7 +56,8 @@ export interface EventChipProps {
 
 /**
  * A one-line event in a month cell (EventChip README): 20 tall, radius 6, padding 0 4. With
- * `onPress` it opens the event (a tap beside it opens the day), reaching into the gaps between chips.
+ * `onPress` it's a link of its own, reaching into the gaps between chips; the month grid passes none, so
+ * a tap goes to the day (spec 037 FR-008).
  */
 export function EventChip({ text, colors, onPress }: EventChipProps & { onPress?: () => void }) {
   const look = 'h-[20px] overflow-hidden rounded-xs px-4';
@@ -111,28 +112,40 @@ export const WEEK_BAR_STEP = 30;
 /**
  * A multi-day event drawn over a month week row (EventBar README › Month), from its first to its
  * last day in the row so the title runs the full width. Inset 4 px each side, above the cells.
+ * Without `onPress` it's only drawn: taps reach the cell under it (the month's day sheet).
  */
 export function EventBar({ text, colors, label, column, days, lane, startsHere, endsHere, onPress, size = 'month' }: EventBarProps) {
   const week = size === 'week';
   const rounded = week ? cn(startsHere && 'rounded-l-[8px]', endsHere && 'rounded-r-[8px]') : cn(startsHere && 'rounded-l-xs', endsHere && 'rounded-r-xs');
   // The outer box spans the days; its padding is the inset (no calc() in React Native): 4 px in a
   // month row, 1 px either side in the week row (the grid's 2 px gap).
+  const bar = cn('overflow-hidden', week ? 'h-[28px] px-6' : 'h-[20px] px-4', rounded);
+  const content = (
+    <>
+      <Fill colors={colors} rounded={rounded} />
+      {week ? (
+        <Text size={11} weight="800" numberOfLines={1} ellipsizeMode="clip" style={[{ lineHeight: WEEK_BAR_HEIGHT }, clipOnWeb]}>
+          {text}
+        </Text>
+      ) : (
+        <ChipText text={text} />
+      )}
+    </>
+  );
   return (
     <View
-      pointerEvents="box-none"
+      pointerEvents={onPress ? 'box-none' : 'none'}
+      aria-hidden={!onPress}
       className={cn('absolute z-10', week ? 'px-[1px]' : 'px-4')}
       style={{ top: week ? lane * WEEK_BAR_STEP : BAR_TOP + lane * BAR_STEP, left: `${(column * 100) / 7}%`, width: `${(days * 100) / 7}%` }}
     >
-      <Pressable role="link" aria-label={label} onPress={onPress} className={cn('overflow-hidden', week ? 'h-[28px] px-6' : 'h-[20px] px-4', rounded, focusRing)}>
-        <Fill colors={colors} rounded={rounded} />
-        {week ? (
-          <Text size={11} weight="800" numberOfLines={1} ellipsizeMode="clip" style={[{ lineHeight: WEEK_BAR_HEIGHT }, clipOnWeb]}>
-            {text}
-          </Text>
-        ) : (
-          <ChipText text={text} />
-        )}
-      </Pressable>
+      {onPress ? (
+        <Pressable role="link" aria-label={label} onPress={onPress} className={cn(bar, focusRing)}>
+          {content}
+        </Pressable>
+      ) : (
+        <View className={bar}>{content}</View>
+      )}
     </View>
   );
 }

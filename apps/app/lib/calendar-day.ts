@@ -53,19 +53,7 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
     return { key: occurrenceKey(o), title: o.title, tag, colors: eventLook(o.members, ctx.look).colors, label: d.allDayLabel(o.title, tag) };
   });
 
-  const timed = onDay
-    .filter((o) => !inAllDay(o))
-    .flatMap((o) => {
-      try {
-        const range = timeRange(o, ctx.slotTimes);
-        if (!range) return [];
-        const slot = o.time_type === 'slot' ? (sortSlots(o.slots)[0] ?? slotAt(range.start, ctx.slotTimes)) : slotAt(range.start, ctx.slotTimes);
-        return [{ o, range, slot, item: eventRow(o, range, date, ctx) }];
-      } catch {
-        return [];
-      }
-    })
-    .sort((a, b) => toMinutes(a.range.start) - toMinutes(b.range.start) || a.o.title.localeCompare(b.o.title));
+  const timed = timedRows(onDay, date, ctx);
 
   const bands = SLOT_KEYS.map((slot) => {
     const { start, end } = ctx.slotTimes[slot];
@@ -81,6 +69,54 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
   });
 
   return { busy: busyChips([...onDay.filter(inAllDay), ...timed.map((t) => t.o)], ctx), allDay, bands };
+}
+
+/** The day's timed events by start (then title), each with its slot and row. An event the engine can't read is left out. */
+function timedRows(onDay: readonly MonthOccurrence[], date: string, ctx: DayViewContext) {
+  return onDay
+    .filter((o) => !inAllDay(o))
+    .flatMap((o) => {
+      try {
+        const range = timeRange(o, ctx.slotTimes);
+        if (!range) return [];
+        const slot = o.time_type === 'slot' ? (sortSlots(o.slots)[0] ?? slotAt(range.start, ctx.slotTimes)) : slotAt(range.start, ctx.slotTimes);
+        return [{ o, range, slot, item: eventRow(o, range, date, ctx) }];
+      } catch {
+        return [];
+      }
+    })
+    .sort((a, b) => toMinutes(a.range.start) - toMinutes(b.range.start) || a.o.title.localeCompare(b.o.title));
+}
+
+export interface DaySheet {
+  /** "Sunday, October 25". */
+  title: string;
+  /** "3 events", "1 event", "Nothing planned". */
+  count: string;
+  rows: DayEventItem[];
+  /** "Add event on Sunday, October 25". */
+  addLabel: string;
+}
+
+/**
+ * Spec 037 FR-009: the month's day sheet. The day view's event rows, all-day and multi-day events
+ * first ("All day", "All day · day 2 of 4"), then the rest by time.
+ */
+export function layoutDaySheet(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext): DaySheet {
+  const s = strings.calendar.month.sheet;
+  const onDay = occurrences.filter((o) => o.starts_on <= date && o.ends_on >= date);
+  const allDay = onDay
+    .filter(inAllDay)
+    .sort((a, b) => a.starts_on.localeCompare(b.starts_on) || a.title.localeCompare(b.title))
+    .map((o): DayEventItem => {
+      const { initials, colors } = eventLook(o.members, ctx.look);
+      const span = dayOf(o, date);
+      const time = span ? d.at(words.allDay, span.toLowerCase()) : words.allDay;
+      return { key: occurrenceKey(o), title: o.title, time, driver: null, nowText: null, initials, colors, label: d.rowLabel([o.title, time], false) };
+    });
+  const rows = [...allDay, ...timedRows(onDay, date, ctx).map((t) => t.item)];
+  const title = s.title(words.weekdays[weekday(date)] ?? '', longDate(date));
+  return { title, count: s.count(rows.length), rows, addLabel: s.addLabel(title) };
 }
 
 function eventRow(o: MonthOccurrence, range: { start: string; end: string }, date: string, ctx: DayViewContext): DayEventItem {

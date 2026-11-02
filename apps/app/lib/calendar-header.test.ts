@@ -22,12 +22,15 @@ describe('calendar header (spec 036)', () => {
 
   it.each([
     ['month', '2026-10-27', 390, 'October'],
-    ['month', '2027-01-05', 390, 'Jan. 2027'],
-    ['month', '2027-01-05', 430, 'January 2027'],
-    ['week', '2026-10-27', 390, 'Oct. 25 – 31'],
-    ['week', '2026-10-27', 430, 'October 25 – 31'],
-    ['day', '2026-10-25', 390, 'Sun, Oct. 25'],
-    ['day', '2026-10-25', 430, 'Sunday, October 25'],
+    ['month', '2027-01-05', 390, 'January 2027'],
+    ['month', '2027-09-05', 320, 'Sep. 2027'],
+    ['week', '2026-10-27', 390, 'October 25 – 31'],
+    ['week', '2026-10-27', 320, 'Oct. 25 – 31'],
+    ['week', '2026-12-01', 390, 'Nov. 29 – Dec. 5'],
+    ['week', '2027-01-05', 390, 'January 3 – 9, 2027'],
+    ['day', '2026-10-25', 390, 'Sunday, October 25'],
+    ['day', '2026-10-28', 390, 'Wed, October 28'],
+    ['day', '2026-10-25', 320, 'Sun, Oct. 25'],
     ['agenda', '2026-10-25', 390, 'Coming up'],
   ] as const)('FR-003: %s on %s at %i px reads "%s"', (view, anchor, width, title) => {
     expect(headerTitle(view, anchor, '2026-10-27', width, 0)).toBe(title);

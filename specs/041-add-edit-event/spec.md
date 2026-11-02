@@ -27,7 +27,7 @@
 - **FR-004 More options** (collapsed, sub-label "Place, repeat, reminder…"): Type (Sport, School, Work, Health, Social, Travel, Home, Birthday, Other); Where (text, opens Maps from detail); **"Who takes {names}?"** shown only when Who includes a member without the app (spec 033), choices "Not decided yet" and each account member, hint "{names} was added by the family, so someone with the app handles this."; Repeat (Never, Daily, Weekly + weekday picker, Every 2 weeks, Monthly, Yearly; Ends Never / On a date / After a number of times); Reminder (None, Morning of, 1 hour before, 1 day before) with hint "Shows on Home for now. Phone alerts come later."; Who can see it (spec 043); Notes + checklist ("+ Add to checklist").
 - **FR-005**: Save is enabled as soon as there's a title; without one it's styled disabled and shows the error on tap.
 - **FR-006 Conflicts**: from `findConflict` (spec 034); never blocks; wording "{Name} already has {title} this {slot}." ("You already have …" for the creator).
-- **FR-007 Pre-fill**: opened from a day, slot row or week cell, the sheet starts on that day and slot.
+- **FR-007 Pre-fill**: opened from a day (month long-press or the day sheet's add button), slot row or week cell, the sheet starts on that day and slot.
 - **FR-008 Edit**: same sheet with values filled; repeating events ask for scope first (spec 042 dialog).
 - **FR-009 Toast**: "{title} added for {tonight | tomorrow | Sat, Oct 31}, {time range}." with Undo (5 s), above the tab bar. Undo deletes it without a trace in Recently deleted.
 
@@ -83,3 +83,4 @@ All copy (labels, hints, error, conflict, toast) is in `design/ui/OC-CalAdd.md`.
     - A hidden person reaching the edit sheet by its link is left to 043 (032-later L101).
 - 2026-10-28 (after review with Gabriel): no Custom chip. Starts / Ends always show under the slots (empty for All day, the slots' hours otherwise), and typing there makes a custom time. Who can be emptied; Save then says "Pick at least one person." Who already starts on the signed-in member. Copy added to OC-CalAdd.md.
 - 2026-10-29: Who starts on Everyone (was the signed-in member) and lists Everyone first.
+- 2026-11-02 (037 day sheet): the month view opens Add event for a day from the day sheet's add button as well as by long-press (FR-007).

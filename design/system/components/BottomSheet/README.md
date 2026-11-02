@@ -12,6 +12,7 @@ A sheet that slides up over a dimmed screen for focused tasks: filters, scaling,
 | Header | title 24/900; optional lead 15/600 muted; optional close IconButton `--soft` or a "Clear all" link on the right; optional leading Avatar 48 before the title, centred on it (OC-CalBusy, spec 043) |
 | Body | scrolls if it overflows; sections start with 15–16/900 headings ("1. Which ingredient?") |
 | Footer | fixed: one full-width ink button, or soft Cancel (≈110) + ink primary |
+| Floating | optional round button (IconButton `fab`) over the bottom-right, 20 from the side and 34 from the bottom; the body keeps 72 px clear under it (the month's day sheet, spec 037) |
 
 ## Rules
 

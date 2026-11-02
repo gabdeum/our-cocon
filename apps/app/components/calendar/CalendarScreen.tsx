@@ -194,10 +194,8 @@ export function CalendarScreen({
           weekStartsOn={weekStartsOn}
           jump={jump}
           onMonthShown={setShown}
-          onOpenDay={(date) => {
-            onNavigate({ view: 'day', date });
-            tracker.track('calendar_day_opened', { from_view: 'month' });
-          }}
+          timeZone={timeZone}
+          onDaySheetOpened={(count) => tracker.track('calendar_day_sheet_opened', { events: count })}
           onAddEvent={onAddEvent}
           onOpenEvent={onOpenEvent}
           showHint={hint.show}

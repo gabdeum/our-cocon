@@ -19,6 +19,8 @@ export interface BottomSheetProps {
   children: ReactNode;
   /** Fixed footer: one ink Button, or SheetFooter (Cancel + primary). */
   footer?: ReactNode;
+  /** A round button over the bottom-right of the sheet, 20 from the side and 34 from the bottom (the month's day sheet). */
+  floating?: ReactNode;
   /** Unsaved changes: tapping the scrim or swiping down doesn't close the sheet. */
   dirty?: boolean;
   /** Screen-reader name of the scrim: "Close". */
@@ -35,7 +37,7 @@ const DURATION = 250;
  * 92% of the screen; the body scrolls, the footer doesn't. Swipe down closes; focus moves to the
  * title on open; Reduce Motion skips the slide.
  */
-export function BottomSheet({ visible, onClose, title, lead, leading, headerAction, children, footer, dirty, closeLabel, fieldFocus = false }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, title, lead, leading, headerAction, children, footer, floating, dirty, closeLabel, fieldFocus = false }: BottomSheetProps) {
   const titleId = useId();
   const titleRef = useRef<HostInstance>(null);
   const reduce = useReduceMotion();
@@ -90,10 +92,12 @@ export function BottomSheet({ visible, onClose, title, lead, leading, headerActi
                 {headerAction}
               </View>
             </View>
-            <ScrollView className="shrink" contentContainerClassName="gap-16">
+            {/* The body scrolls clear of the floating button (60 + 12). */}
+            <ScrollView className="shrink" contentContainerClassName={cn('gap-16', floating != null && 'pb-[72px]')}>
               {children}
             </ScrollView>
             {footer}
+            {floating ? <View className="absolute bottom-[34px] right-20">{floating}</View> : null}
           </View>
         </Animated.View>
         {visible ? <ToastHost /> : null}
