@@ -64,3 +64,30 @@ export function SegmentedControl<K extends string>({ segments, value, onChange, 
     </View>
   );
 }
+
+/**
+ * A setting with a few choices inside a settings card (OC-CalSettings › For you, spec 029): label
+ * 16/800, optional hint, then the SegmentedControl; 1.5 px `line` divider like SettingRow's.
+ */
+export function SegmentedSettingRow<K extends string>({
+  label,
+  hint,
+  last,
+  ...control
+}: Omit<SegmentedControlProps<K>, 'label' | 'variant'> & { label: string; hint?: string; last?: boolean }) {
+  return (
+    <View className={cn('gap-10 py-14', !last && 'border-b-[1.5px] border-line')}>
+      <View>
+        <Text size={16} weight="800">
+          {label}
+        </Text>
+        {hint ? (
+          <Text variant="caption" color="ink-muted">
+            {hint}
+          </Text>
+        ) : null}
+      </View>
+      <SegmentedControl<K> label={label} {...control} />
+    </View>
+  );
+}

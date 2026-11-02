@@ -17,3 +17,10 @@ Reference: `design/screens/OC-Menu.dc.html` (inline styles are the exact values;
 
 - The accessible name is the name plus the detail ("Calendar, 3 today").
 - The list of apps is data; adding an app is one entry.
+
+## States
+
+- Pressed: darkens like the other white rows (`surface-soft` in the bundle). Focused: 3 px olive outline, offset 2.
+- The detail is live; while it loads, the tile shows its name and no detail.
+
+The Timers tile uses the design system's `timer` icon (OC-Menu draws a stopwatch variant of it).

@@ -10,11 +10,12 @@ export { AppFrame, TabScreen, PushedScreen, PhotoScreen, PublicScreen, FormScree
 
 export { Button, DisclosureButton, Link, type ButtonProps, type ButtonVariant, type ButtonSize, type DisclosureButtonProps, type LinkProps } from './components/Button';
 export { IconButton, type IconButtonProps, type IconButtonVariant } from './components/IconButton';
+export { AppGrid, AppTile, type AppTileProps } from './components/AppTile';
 export { IconTile, type IconTileProps, type IconTileTone } from './components/IconTile';
 export { Pill, FilterButton, Choice, PersonPill, PillRow } from './components/Pill';
 export { Tag, Meta, type TagTone, type MetaTone } from './components/Tag';
 export { Switch, SettingRow, type SwitchProps, type SettingRowProps } from './components/Switch';
-export { SegmentedControl, type SegmentedControlProps, type Segment } from './components/SegmentedControl';
+export { SegmentedControl, SegmentedSettingRow, type SegmentedControlProps, type Segment } from './components/SegmentedControl';
 export { Stepper, type StepperProps } from './components/Stepper';
 export { FieldWarning, TextField, SearchField, PickerField, type TextFieldProps, type PickerFieldProps } from './components/TextField';
 export { MonthPicker, type MonthPickerProps } from './components/MonthPicker';

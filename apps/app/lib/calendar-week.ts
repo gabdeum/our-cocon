@@ -2,6 +2,7 @@ import { addDays, calendarWordsEn, daysBetween, fromMinutes, layoutDay, layoutSp
 import { GRID_FIRST_HOUR, GRID_HOURS, HOUR_HEIGHT, type HourGridProps, type WeekAllDayBar, type WeekBlock, type WeekColumn, type WeekDayHead } from '@cocon/ui';
 import { chipLook, eventLook, longDate, occurrenceKey, weekdayLetters, type MemberLook, type MonthOccurrence } from './calendar-month';
 import { strings } from '../strings/en';
+import { clock, hourOnly } from './clock';
 
 const w = strings.calendar.week;
 const m = strings.calendar.month;
@@ -12,8 +13,9 @@ const GRID_END = 24 * 60;
 /** HourGrid README: a block is never shorter than this, so its top line still reads. */
 const MIN_BLOCK = 22;
 
-/** FR-001: "06:00" … "23:00", as drawn (the Time format setting comes with spec 029). */
+/** FR-001: "06:00" … "23:00", as drawn; "6 AM" … "11 PM" in 12-hour time (spec 029, L95). */
 export const hourLabels = Array.from({ length: GRID_HOURS }, (_, i) => fromMinutes(GRID_START + i * 60));
+const hourLabels12 = hourLabels.map((t) => hourOnly(t, false));
 
 /** Distance from the grid's top for a time in minutes (36 px per hour from 06:00). */
 const yOf = (minutes: number) => ((minutes - GRID_START) / 60) * HOUR_HEIGHT;
@@ -25,6 +27,8 @@ export interface WeekGridContext {
   slotTimes: SlotTimes;
   /** "HH:MM" now in the home time zone, for the now line. */
   now: string;
+  /** The member's Time format (spec 029); 24-hour when not given. */
+  use24h?: boolean;
 }
 
 export type WeekGrid = Pick<HourGridProps, 'days' | 'bars' | 'columns' | 'hourLabels' | 'nowY'>;
@@ -82,7 +86,7 @@ export function layoutWeekGrid(anchor: string, occurrences: readonly MonthOccurr
 
   const now = toMinutes(ctx.now);
   const nowY = dates.includes(ctx.today) && now >= GRID_START && now < GRID_END ? yOf(now) : null;
-  return { days, bars, columns, hourLabels, nowY };
+  return { days, bars, columns, hourLabels: ctx.use24h === false ? hourLabels12 : hourLabels, nowY };
 }
 
 function dayBlocks(events: readonly MonthOccurrence[], date: string, ctx: WeekGridContext): WeekBlock[] {
@@ -104,13 +108,14 @@ function dayBlocks(events: readonly MonthOccurrence[], date: string, ctx: WeekGr
     const { initials, colors } = eventLook(o.members, ctx.look);
     const slot = o.time_type === 'slot';
     const slotNames = sortSlots(o.slots).map((s) => words.slots[s]);
-    const when = slot ? (slotNames[0] ?? '') : range.start;
+    const use24h = ctx.use24h ?? true;
+    const when = slot ? (slotNames[0] ?? '') : clock(range.start, use24h);
     const lane = lanes.get(key) ?? { lane: 0, lanes: 1 };
     return {
       key,
       top: lane.lanes > 1 ? initials : [initials, when].filter(Boolean).join(' '),
       title: o.title,
-      label: w.blockLabel(o.title, dayName(date), slot ? slotNames.join(', ') : w.timeRange(range.start, range.end)),
+      label: w.blockLabel(o.title, dayName(date), slot ? slotNames.join(', ') : w.timeRange(clock(range.start, use24h), clock(range.end, use24h))),
       colors,
       kind: slot ? 'slot' : 'custom',
       y: yOf(from) + 1,

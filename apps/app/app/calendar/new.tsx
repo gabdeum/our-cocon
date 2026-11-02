@@ -44,7 +44,7 @@ export default function NewEventRoute() {
         });
         sheet.refreshEvents();
         toast.show({
-          text: toastText(input, today, slotTimes),
+          text: toastText(input, today, slotTimes, sheet.use24h),
           onUndo: () =>
             undoCreateEvent(client, id)
               .then(() => tracker.track('event_create_undone', {}))

@@ -497,6 +497,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"member_calendar_settings": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"fade_past": boolean,"family_id": string,"id": string,"month_hint_seen": boolean,"opens_on": string,"show_birthdays": boolean,"source": string,"time_format": string,"updated_at": string,"updated_by": string | null,"user_id": string,"week_start": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"fade_past"?: boolean,"family_id": string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"fade_past"?: boolean,"family_id"?: string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "member_calendar_settings_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"members": {
                   Row: {
                     "color": Database["public"]['Enums']["member_color"],"created_at": string,"created_by": string | null,"display_name": string,"family_id": string,"id": string,"joined_at": string,"managed_by": string | null,"role": Database["public"]['Enums']["member_role"],"source": string,"updated_at": string,"updated_by": string | null,"user_id": string | null
@@ -709,6 +729,9 @@ isOneToOne: false
 "_created_event":
 { Args: { "eid": string }; Returns: boolean
                            },
+"_default_slot_times":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "_event_changed_outside":
 { Args: { "at": string,"eid": string,"p_key": string }; Returns: Json
                            },
@@ -727,6 +750,9 @@ isOneToOne: false
 { Args: { "fam": string }; Returns: {
               "aisle": Database["public"]['Enums']["aisle"],"catalog_key": string,"default_size": Database["public"]['Enums']["size_word"],"density_g_per_ml": number,"diet": (string)[],"family_ingredient_id": string,"name": string,"noun_plural": string,"noun_singular": string,"plural": string,"size_large_g": number,"size_medium_g": number,"size_small_g": number,"whole_only": boolean
             }[]
+                           },
+"_leaving":
+{ Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "_load_catalog":
 { Args: { "data": Json }; Returns: undefined
@@ -825,6 +851,12 @@ isOneToOne: false
                            },
 "_sees_logged_event":
 { Args: { "actor": string,"eid": string,"secret": boolean }; Returns: boolean
+                           },
+"_slot_times_ok":
+{ Args: { "t": Json }; Returns: boolean
+                           },
+"_slots_range":
+{ Args: { "edge": string,"slots": (string)[],"t": Json }; Returns: string
                            },
 "_token_hash":
 { Args: { "token": string }; Returns: string
@@ -958,8 +990,14 @@ isOneToOne: false
 "set_display_name":
 { Args: { "display_name": string }; Returns: undefined
                            },
+"set_home_time_zone":
+{ Args: { "tz": string }; Returns: undefined
+                           },
 "set_member_color":
 { Args: { "member_id": string,"pick": Database["public"]['Enums']["member_color"] }; Returns: undefined
+                           },
+"set_slot_times":
+{ Args: { "p_times": Json }; Returns: number
                            },
 "share_event":
 { Args: { "p_date": string,"p_event_id": string }; Returns: {

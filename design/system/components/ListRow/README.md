@@ -9,7 +9,7 @@ A row inside a white list group: grocery items, picker items, settings links and
 | List group | surface-card, radius 22, overflow hidden; preceded by an `oc-overline` group label (13/900 uppercase ink-muted, 6 gap), optionally with a 12/700 ink-muted note on its right ("All ticked to start", OC-AddGroceries) |
 | Row | min 60 tall, padding 10 14, gap 12, 1.5 px `line` divider (none on the last row) |
 | Flush (`--flush`) | inside a card's padding: no side padding, min 52 tall (the recipe page's "…" panel) |
-| Leading | checkbox or radio 26 × 26 (olive), an avatar 40, an IconTile with letters (an assistant, OC-Connect), or nothing |
+| Leading | checkbox or radio 26 × 26 (olive), an avatar 40, an IconTile with letters (an assistant, OC-Connect), a 36 px `surface-soft` IconTile with a 20 px ink icon (the Menu's settings rows, OC-Menu: those rows are 64 tall), or nothing |
 | Title | 16/800 ink; done: line-through + `ink-faint`; dim (an unticked row in Add to groceries): `ink-muted`, no line-through, so it stays readable |
 | Disabled | unchanged look, not pressable, `aria-disabled` (offline grocery rows keep their tick) |
 | Sub-line | 13/600 ink-muted (source: "For Leek & bacon quiche", "Alex via ChatGPT"); warn 700 for merge notes ("Already on the list (100 ml) → will be 400 ml"); olive-deep 700 for a good status ("Connected · used 2 h ago", OC-Connect) |

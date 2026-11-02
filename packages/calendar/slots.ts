@@ -72,3 +72,42 @@ export function timeRange(event: Timed, slotTimes: SlotTimes = DEFAULT_SLOT_TIME
   if (!event.start_time || !event.end_time) throw new CalendarError('EndBeforeStart', 'A custom time needs a start and an end');
   return { start: event.start_time, end: event.end_time };
 }
+
+/** A broken rule in a family's slot times (spec 029 FR-009): `slot` starts where `previous` doesn't end, or ends before it starts. */
+export interface SlotTimesProblem {
+  slot: SlotKey;
+  previous: SlotKey | null;
+}
+
+/**
+ * FR-009 (032-later L81): each slot ends where the next one starts, and starts before it ends.
+ * Only Evening may end at 24:00. The database checks the same (`_slot_times_ok`).
+ */
+export function checkSlotTimes(slotTimes: SlotTimes): SlotTimesProblem | null {
+  for (const [i, slot] of SLOT_KEYS.entries()) {
+    const previous = i > 0 ? (SLOT_KEYS[i - 1] as SlotKey) : null;
+    const { start, end } = slotTimes[slot];
+    if (end === '24:00' && slot !== 'evening') return { slot, previous };
+    if (toMinutes(start) >= toMinutes(end)) return { slot, previous };
+    if (previous && slotTimes[previous].end !== start) return { slot, previous };
+  }
+  return null;
+}
+
+/**
+ * Moves one edge of a slot, and the neighbour sharing it (Gabriel, 2026-11-02): Evening starting at
+ * 18:30 makes Afternoon end at 18:30. Early morning's start and Evening's end have no neighbour.
+ */
+export function moveSlotEdge(slotTimes: SlotTimes, slot: SlotKey, edge: 'start' | 'end', time: string): SlotTimes {
+  const i = SLOT_KEYS.indexOf(slot);
+  const next = { ...slotTimes, [slot]: { ...slotTimes[slot], [edge]: time } };
+  const neighbour = SLOT_KEYS[edge === 'start' ? i - 1 : i + 1];
+  if (neighbour) next[neighbour] = { ...slotTimes[neighbour], [edge === 'start' ? 'end' : 'start']: time };
+  return next;
+}
+
+/** The neighbour whose edge moves with this one, if any. */
+export function slotNeighbour(slot: SlotKey, edge: 'start' | 'end'): SlotKey | null {
+  const i = SLOT_KEYS.indexOf(slot);
+  return SLOT_KEYS[edge === 'start' ? i - 1 : i + 1] ?? null;
+}

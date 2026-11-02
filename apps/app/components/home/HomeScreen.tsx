@@ -8,6 +8,7 @@ import { ActivitySection } from '../activity/ActivitySection';
 import { BusySheet } from '../calendar/BusySheet';
 import { OfflineBanner } from '../sync/OfflineBanner';
 import { combineRows, toBuyCount } from '../../lib/groceries';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { eventOccurrence } from '../../lib/event-detail';
 import { memberLook, parseOccurrenceKey } from '../../lib/calendar-month';
 import { firstName, greeting, homeDate, layoutCalendarCard, recipeToBuy } from '../../lib/home';
@@ -60,7 +61,11 @@ export interface HomeScreenProps {
 /** Spec 028 (OC-Home): brand row, greeting, calendar card, latest recipe, the two tiles, AI activity. */
 export function HomeScreen({ me, members, today, now, slotTimes = DEFAULT_SLOT_TIMES, events, hero, heroPhotoUri, groceries, recipeCount, activity, onUndo, readOnly, tracker, footer, navigate }: HomeScreenProps) {
   const look = useMemo(() => memberLook(members), [members]);
-  const layout = useMemo(() => layoutCalendarCard(events ?? [], { today, now, look, slotTimes, members, me }), [events, today, now, look, slotTimes, members, me]);
+  const { use24h, show_birthdays: showBirthdays } = useCalendarDisplay().prefs;
+  const layout = useMemo(
+    () => layoutCalendarCard(events ?? [], { today, now, look, slotTimes, members, me, use24h, showBirthdays }),
+    [events, today, now, look, slotTimes, members, me, use24h, showBirthdays],
+  );
   // OC-CalBusy (spec 043, 032 L107): someone else's private event opens a sheet, not the event page.
   const [busy, setBusy] = useState<StoredEvent | null>(null);
   const initials = memberInitials(members);

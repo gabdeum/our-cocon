@@ -9,6 +9,7 @@ import type { DeleteScope } from '../../lib/event-delete';
 import { addedLine, deleteBody, mapsUrl, memberBadges, reminderLines, repeatLine, responsibleLine, whenLines } from '../../lib/event-detail';
 import { dateGridMonth, shiftMonth } from '../../lib/event-form';
 import type { Member } from '../../lib/session';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -62,7 +63,7 @@ export function EventDetail(p: EventDetailProps) {
   const ticks = pending.of === event.checklist ? pending.done : {};
   const setTick = (id: string, done: boolean) => setPending((t) => ({ of: event.checklist, done: { ...(t.of === event.checklist ? t.done : {}), [id]: done } }));
 
-  const when = whenLines(o, p.slotTimes);
+  const when = whenLines(o, p.slotTimes, useCalendarDisplay().prefs.use24h);
   const repeat = repeatLine(event);
   const responsible = responsibleLine(o.responsible_member_id, o.members, members);
   const reminder = reminderLines(o, members);

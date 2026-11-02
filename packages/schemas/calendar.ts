@@ -193,3 +193,25 @@ export const WeekStartSetting = z.enum(['automatic', 'sunday', 'monday']);
 export type WeekStartSetting = z.infer<typeof WeekStartSetting>;
 export const TimeFormatSetting = z.enum(['automatic', '24h', '12h']);
 export type TimeFormatSetting = z.infer<typeof TimeFormatSetting>;
+
+/** Spec 029 FR-007: a member's own calendar settings (member_calendar_settings); no row = these defaults. */
+export const MemberCalendarSettings = z.strictObject({
+  opens_on: CalendarView,
+  week_start: WeekStartSetting,
+  time_format: TimeFormatSetting,
+  show_birthdays: z.boolean(),
+  fade_past: z.boolean(),
+  /** OC-CalMonth's hint was dismissed (032-later L94). */
+  month_hint_seen: z.boolean(),
+});
+export type MemberCalendarSettings = z.infer<typeof MemberCalendarSettings>;
+export const MemberCalendarSettingsUpdate = MemberCalendarSettings.partial();
+export type MemberCalendarSettingsUpdate = z.infer<typeof MemberCalendarSettingsUpdate>;
+export const DEFAULT_MEMBER_CALENDAR_SETTINGS: MemberCalendarSettings = {
+  opens_on: 'month',
+  week_start: 'automatic',
+  time_format: 'automatic',
+  show_birthdays: true,
+  fade_past: true,
+  month_hint_seen: false,
+};

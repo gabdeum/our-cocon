@@ -1,12 +1,13 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Button, ColorSwatch, Dialog, Link, ListGroup, ListRow, SheetFooter, Text, TextField, type SwatchOption } from '@cocon/ui';
+import { BackHeader, BottomSheet, Button, ColorSwatch, Dialog, Link, ListGroup, ListRow, PushedScreen, SheetFooter, Text, TextField, type SwatchOption } from '@cocon/ui';
 import { DisplayName, MEMBER_COLORS, memberInitials, memberKind, nextMemberColor, type MemberColor, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useToast } from '../../lib/toast';
 import type { FamilyApi } from '../../lib/family';
 import type { AccountMember, Family, Member } from '../../lib/session';
 import { shareInvite, type ShareDeps } from '../../lib/invite';
+import { OfflineBanner } from '../sync/OfflineBanner';
 
 const f = strings.settings.family;
 const a = strings.settings.account;
@@ -23,8 +24,6 @@ export interface FamilySettingsProps {
   shareDeps?: ShareDeps;
   /** Offline (spec 004): everything stays readable, changes are disabled. Sign out still works. */
   readOnly?: boolean;
-  /** OC-Settings › More, between Family and Account: its rows (spec 018 Recently deleted, 025 AI assistants). */
-  more?: ReactNode;
 }
 
 type Confirm =
@@ -64,8 +63,19 @@ function swatches(members: readonly Member[], initials: Map<string, string>, tar
   return freeFirst ? [...options.filter((o) => o.state !== 'taken'), ...options.filter((o) => o.state === 'taken')] : options;
 }
 
-/** Settings › Family and Account (specs 003 and 033; design/ui/OC-SettingsFamily.md). */
-export function FamilySettings({ me, family, members, api, tracker, onChanged, onSignOut, shareDeps, readOnly = false, more }: FamilySettingsProps) {
+/** Menu › Family (`/settings/family`, spec 029): the page around Members, My color and Your account. */
+export function FamilyPage({ onBack, ...props }: FamilySettingsProps & { onBack: () => void }) {
+  return (
+    <PushedScreen className="gap-18">
+      <BackHeader backLabel={f.back} onBack={onBack} title={f.title} lead={f.lead} />
+      <OfflineBanner screen="settings" tracker={props.tracker} />
+      <FamilySettings {...props} />
+    </PushedScreen>
+  );
+}
+
+/** Members, My color and Your account (specs 003, 033 and 029; design/ui/OC-SettingsFamily.md). */
+export function FamilySettings({ me, family, members, api, tracker, onChanged, onSignOut, shareDeps, readOnly = false }: FamilySettingsProps) {
   const isOwner = me.role === 'owner';
   const initials = memberInitials(members);
   const toast = useToast();
@@ -213,7 +223,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
       case 'deleteFamily':
         return { icon: 'trash' as const, title: a.deleteFamilyTitle(family.name), body: a.deleteFamilyBody(members.length), confirmLabel: a.deleteFamilyConfirm, cancelLabel: a.keep };
       case 'deleteAccount':
-        return { icon: 'trash' as const, title: a.deleteAccountTitle, body: a.deleteAccountBody(family.name), confirmLabel: a.deleteAccountConfirm, cancelLabel: a.keep };
+        return { icon: 'trash' as const, title: a.deleteAccountTitle, body: a.deleteAccountBody, confirmLabel: a.deleteAccountConfirm, cancelLabel: a.keep };
       default:
         return null;
     }
@@ -270,19 +280,12 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
         <ColorSwatch label={f.myColor} options={swatches(members, initials, me, me.color, true)} disabled={readOnly} onSelect={(c) => void setColor(me, c)} />
       </View>
 
-      {more ? (
-        <View className="gap-8">
-          <Heading>{strings.settings.more.heading}</Heading>
-          <ListGroup>{more}</ListGroup>
-        </View>
-      ) : null}
-
       <View className="gap-8">
         <Heading>{a.heading}</Heading>
         <ListGroup>
           <ListRow
             title={a.yourName}
-            trailing={{ kind: 'value', text: me.display_name }}
+            trailing={readOnly ? { kind: 'value', text: me.display_name } : { kind: 'chevron', text: me.display_name }}
             onPress={
               readOnly
                 ? undefined
@@ -291,10 +294,17 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
                     setEditingName(me.display_name);
                   }
             }
-            last
           />
+          <View className="justify-center px-14 py-6">
+            <Link
+              label={a.signOut}
+              onPress={() => {
+                tracker.track('signed_out', {});
+                void onSignOut();
+              }}
+            />
+          </View>
         </ListGroup>
-        <Link label={a.signOut} onPress={() => void onSignOut()} />
         <Link
           label={isOwner ? a.deleteFamily : a.deleteAccount}
           tone="danger"

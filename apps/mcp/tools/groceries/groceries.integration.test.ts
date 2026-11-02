@@ -187,7 +187,7 @@ describe.skipIf(!local)('grocery tools and permissions against local Supabase', 
     await allow('groceries', false);
     const before = (await loadGroceryList(gabriel)).length;
     expect((await call('add_groceries', { items: ['bread'] })).error).toBe(
-      'This member hasn’t allowed AI to change the grocery list. They can change it in Settings › AI assistants.',
+      'This member hasn’t allowed AI to change the grocery list. They can change it in Menu › AI assistants.',
     );
     expect((await call('add_recipe_to_groceries', { recipe_id: quiche })).error).toMatch(/hasn’t allowed AI to change the grocery list/);
     expect(await loadGroceryList(gabriel)).toHaveLength(before);
@@ -195,7 +195,7 @@ describe.skipIf(!local)('grocery tools and permissions against local Supabase', 
     await allow('groceries', true);
 
     await allow('recipes_delete', false);
-    expect((await call('delete_recipe', { id: quiche })).error).toBe('This member hasn’t allowed AI to delete recipes. They can change it in Settings › AI assistants.');
+    expect((await call('delete_recipe', { id: quiche })).error).toBe('This member hasn’t allowed AI to delete recipes. They can change it in Menu › AI assistants.');
     expect((await gabriel.from('recipes').select('deleted_at').eq('id', quiche).single()).data?.deleted_at).toBeNull();
     await allow('recipes_delete', true);
 

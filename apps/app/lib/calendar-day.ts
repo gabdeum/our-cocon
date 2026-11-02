@@ -4,6 +4,7 @@ import type { DayAllDayItem, DayBand, DayEventItem, MemberChipColor } from '@coc
 import { eventLook, longDate, occurrenceKey, type MemberLook, type MonthOccurrence } from './calendar-month';
 import type { Member } from './session';
 import { strings } from '../strings/en';
+import { clock } from './clock';
 
 const d = strings.calendar.day;
 const words = calendarWordsEn;
@@ -16,6 +17,8 @@ export interface DayViewContext {
   slotTimes: SlotTimes;
   /** In member order: the busy chips follow it. */
   members: readonly Member[];
+  /** The member's Time format (spec 029); 24-hour when not given. */
+  use24h?: boolean;
 }
 
 /** FR-001: "Gabriel 2", in member order, then "Everyone 2". */
@@ -61,7 +64,7 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
       key: slot,
       slot,
       title: words.slots[slot],
-      hours: d.hours(start, end),
+      hours: d.hours(clock(start, ctx.use24h ?? true), clock(end, ctx.use24h ?? true)),
       events: timed.filter((t) => t.slot === slot).map((t) => t.item),
       addText: d.addIn(d.bands[slot]),
       addLabel: d.addInLabel(d.bands[slot], dayName(date)),
@@ -121,7 +124,7 @@ export function layoutDaySheet(date: string, occurrences: readonly MonthOccurren
 
 function eventRow(o: MonthOccurrence, range: { start: string; end: string }, date: string, ctx: DayViewContext): DayEventItem {
   const { initials, colors } = eventLook(o.members, ctx.look);
-  const when = timeLabel(o, { use24h: true, slotTimes: ctx.slotTimes });
+  const when = timeLabel(o, { use24h: ctx.use24h ?? true, slotTimes: ctx.slotTimes });
   const placed = o.location ? d.at(when, o.location) : when;
   const hidden = hiddenFromLine(o, ctx.members);
   const time = hidden ? d.at(placed, hidden) : placed;

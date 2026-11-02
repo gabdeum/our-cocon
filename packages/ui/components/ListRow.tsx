@@ -61,7 +61,9 @@ export type ListRowLeading =
   | { kind: 'checkbox' | 'radio'; checked: boolean }
   | { kind: 'avatar'; initial: string; color: AvatarColor }
   /** An assistant's letters in a 40 px square (Settings › AI assistants, spec 025). */
-  | { kind: 'tile'; letters: string; tone: IconTileTone };
+  | { kind: 'tile'; letters: string; tone: IconTileTone }
+  /** A 36 px `surface-soft` tile with a 20 px ink icon (the Menu's settings rows, spec 029). */
+  | { kind: 'icon'; icon: IconName };
 
 export type ListRowTrailing =
   /** `olive`: a setting that's on, in olive-deep ("Allowed", OC-Connect). */
@@ -155,6 +157,7 @@ export function ListRow({
     <>
       {leading?.kind === 'avatar' ? <Avatar initial={leading.initial} color={leading.color} size="lg" /> : null}
       {leading?.kind === 'tile' ? <IconTile letters={leading.letters} tone={leading.tone} /> : null}
+      {leading?.kind === 'icon' ? <IconTile icon={leading.icon} tone="soft" size="sm" /> : null}
       {isCheck ? <Mark kind={leading.kind} checked={leading.checked} /> : null}
       <View className="min-w-0 flex-1">
         <Text size={16} weight="800" color={done ? 'ink-faint' : dim ? 'ink-muted' : 'ink'} strike={done}>
@@ -177,7 +180,7 @@ export function ListRow({
   );
   const divider = !last && 'border-b-[1.5px] border-line';
   // With an action, the divider goes on the wrapper so it runs under the button too.
-  const box = cn('flex-row items-center gap-12 py-10', flush ? 'min-h-[52px]' : 'min-h-[60px] px-14', action ? 'flex-1' : divider);
+  const box = cn('flex-row items-center gap-12 py-10', flush ? 'min-h-[52px]' : leading?.kind === 'icon' ? 'min-h-[64px] px-14' : 'min-h-[60px] px-14', action ? 'flex-1' : divider);
   if (!onPress) {
     return (
       <View role="listitem" className={box}>

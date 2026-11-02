@@ -6,6 +6,7 @@ import { FloatingAdd, HourGrid, Swipeable } from '@cocon/ui';
 import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { layoutWeekGrid } from '../../lib/calendar-week';
 import { useNow } from '../../lib/use-now';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
 import type { AddPrefill } from './CalendarScreen';
 import { strings } from '../../strings/en';
@@ -39,11 +40,12 @@ export interface WeekViewProps {
 /** Spec 038 (OC-CalWeek): the week's hour grid, swiped left and right, and the add button. */
 export function WeekView({ members, myMemberId, events, slotTimes, hidden, anchor, today, timeZone, weekStartsOn, onSwipe, onOpenDay, onAddEvent, onOpenEvent }: WeekViewProps) {
   const now = useNow(timeZone);
+  const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
   const { start } = weekRange(anchor, weekStartsOn);
   const { from, to } = eventWindow(firstOfMonth(anchor));
   const occurrences = useMemo(() => monthOccurrences(events ?? [], from, to, myMemberId, hidden), [events, from, to, myMemberId, hidden]);
-  const grid = useMemo(() => layoutWeekGrid(anchor, occurrences, { weekStartsOn, today, look, slotTimes, now }), [anchor, occurrences, weekStartsOn, today, look, slotTimes, now]);
+  const grid = useMemo(() => layoutWeekGrid(anchor, occurrences, { weekStartsOn, today, look, slotTimes, now, use24h }), [anchor, occurrences, weekStartsOn, today, look, slotTimes, now, use24h]);
   // The add button: today when it's in this week, else the week's first day.
   const addDay = today >= start && today <= addDays(start, 6) ? today : start;
   const openEvent = (key: string) => {
