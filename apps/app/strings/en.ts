@@ -158,6 +158,54 @@ export const strings = {
     cancel: 'Cancel',
     disconnectFailed: "Couldn't disconnect. Check your connection and try again.",
   },
+  // design/ui/OC-Home.md (spec 028): brand row, greeting, latest-recipe hero and the two tiles.
+  home: {
+    brand: 'Our Cocon',
+    /** FR-007: 5:00–11:59, 12:00–17:59, 18:00–4:59. */
+    greeting: { morning: (name: string) => `Good morning ${name}`, day: (name: string) => `Hi ${name}`, evening: (name: string) => `Good evening ${name}` },
+    family: (names: string[]) => `Family: ${names.join(', ')}`,
+    moreMembers: (n: number) => `+${n}`,
+    latestRecipe: 'Latest recipe',
+    serves: (n: number) => `Serves ${n}`,
+    toBuyChip: (n: number) => `${n} to buy`,
+    toBuy: 'to buy',
+    familyRecipes: 'family recipes',
+    noRecipes: {
+      title: "What's for dinner?",
+      body: 'Save your first family recipe and it will show up here.',
+      action: 'Add your first recipe',
+      hint: 'Or ask your AI assistant to add one for you.',
+    },
+    invite: {
+      title: 'Invite your family',
+      body: 'Share Our Cocon so everyone sees the same recipes, list and calendar.',
+      action: 'Invite',
+    },
+  },
+  // design/ui/CalCard.md (spec 028): Home's calendar card.
+  calCard: {
+    label: 'Family calendar',
+    show: 'Show',
+    today: 'Today',
+    thisWeek: 'This week',
+    calendar: 'Calendar',
+    addEvent: 'Add event',
+    /** "Eva’s birthday is on Tuesday", "… is tomorrow", "… is today". */
+    birthday: (title: string, when: 'today' | 'tomorrow' | string) => (when === 'today' ? `${title} is today` : when === 'tomorrow' ? `${title} is tomorrow` : `${title} is on ${when}`),
+    /** A reminder due today for tomorrow's event: "Tomorrow · 10:00". */
+    tomorrow: (sub: string) => `Tomorrow · ${sub}`,
+    reminder: 'Reminder',
+    seeAll: (n: number) => `See all (${n} more)`,
+    empty: 'No events in the next 7 days. Add one?',
+    emptyAdd: '+ Add event',
+    openCalendar: 'Open calendar',
+    /** The week row after the title: "Eva · Evening". */
+    detail: (who: string, when: string) => (who ? `${who} · ${when}` : when),
+    rowLabel: (parts: string[]) => parts.filter(Boolean).join(', '),
+    /** A strip day for screen readers: "Today, October 25, 2 people busy". */
+    dayLabel: (today: boolean, date: string, people: number) =>
+      `${today ? 'Today, ' : ''}${date}, ${people === 0 ? 'nothing planned' : people === 1 ? '1 person busy' : `${people} people busy`}`,
+  },
   // design/ui/OC-Home.md › Activity card and design/ui/OC-Activity.md (spec 026): what AI assistants
   // changed, who asked, and Undo.
   activity: {

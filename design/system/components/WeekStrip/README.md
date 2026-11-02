@@ -15,3 +15,4 @@ Reference: `design/screens/CalCard.dc.html` (inline styles are the exact values;
 ## Rules
 
 - Tap a tile → day view.
+- In code: `WeekStrip` in `packages/ui/components/CalCard.tsx`, with the card (CalCard README).

@@ -14,8 +14,8 @@ import type { Client } from './supabase';
 export const activityKey = (familyId: string, filter: ActivityFilter = {}) => ['activity', familyId, filter.actor ?? null, filter.source ?? null] as const;
 export const activityFiltersKey = (familyId: string) => ['activity', familyId, 'filters'] as const;
 
-/** Home shows the latest 2 (FR-002); the list loads 50 at a time. */
-export const HOME_ENTRIES = 2;
+/** Home shows the latest one (spec 028 FR-006); the list loads 50 at a time. */
+export const HOME_ENTRIES = 1;
 export const PAGE_SIZE = 50;
 
 export interface ActivityFilter {

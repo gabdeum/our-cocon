@@ -12,7 +12,7 @@ A family member's initial in their member color, alone or stacked.
 | `--sm` | 32, no ring (inside person pills) |
 | Colors | the member's color (`member-honey` … `member-clay`, spec 033); `member-everyone`, `member-others` (with a 1 px `line-handle` outline) and `member-removed` for events |
 | Initials | one letter; two when an earlier member has the same one ("Ev", "El") |
-| Stack (`oc-avatars`) | overlap −10, most recent first, up to 4 then "+N" |
+| Stack (`oc-avatars`) | overlap −10, most recent first, up to 4 then "+N"; with `onPress` the whole stack is one link (Home → Settings › Family) |
 
 ## Rules
 

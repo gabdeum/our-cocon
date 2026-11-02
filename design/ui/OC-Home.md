@@ -14,12 +14,14 @@ Source `screens/OC-Home.dc.html` · Route `/` · Spec 028
 ## States not drawn
 | State | Copy and behaviour |
 | --- | --- |
-| No recipes yet | Hero becomes a soft card: title "What's for dinner?", body "Save your first family recipe and it will show up here.", olive button "Add your first recipe" → `/recipes/new`. |
+| No recipes yet | Hero becomes a soft card: title "What's for dinner?", body "Save your first family recipe and it will show up here.", olive button "Add your first recipe" → `/recipes/new`, then the hint "Or ask your AI assistant to add one for you." |
+| New family (only you) | A soft card after the activity: title "Invite your family", body "Share Our Cocon so everyone sees the same recipes, list and calendar.", olive button "Invite" → `/settings/family`. |
 | No groceries | Tile reads "0" / "to buy". |
 | No recipes | Tile reads "0" / "family recipes"; tapping opens Recipes empty state. |
 | No AI activity | Activity card hidden. |
 | AI deleted something | Sub-line "Deleted by {name} via {assistant} · {timeAgo}"; link "Restore" instead of "Undo" (restores from Recently deleted, spec 026). |
 | Undo done | Card sub-line becomes "Undone by {name}"; Undo link hidden. |
+| Activity | The latest one entry, then the link "See all" → `/activity` (design/flows.md). |
 
 ## Interactions
 | Element | Result |
@@ -28,4 +30,4 @@ Source `screens/OC-Home.dc.html` · Route `/` · Spec 028
 | Groceries tile | → `/groceries` |
 | Recipes tile | → `/recipes` |
 | Undo | reverts that activity (spec 026), StatusBanner "Undone" |
-| Avatar stack | → `/settings/family` |
+| Avatar stack | → `/settings/family` (screen readers: "Family: Gabriel, Eva, James") |

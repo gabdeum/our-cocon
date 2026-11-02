@@ -55,9 +55,17 @@ export function responsibleLine(responsible: string | null | undefined, eventMem
 export function reminderLines(event: StoredEvent, members: readonly Member[]): { title: string; sub?: string } | null {
   if (!event.reminder || event.reminder === 'none') return null;
   const title = strings.calendar.add.reminders[event.reminder];
-  const on = (m: Member) => event.members.includes('everyone') || event.members.includes(m.id) || m.id === event.responsible_member_id;
-  const names = members.filter((m) => memberKind(m) === 'account' && on(m)).map((m) => m.display_name);
+  const names = members.filter((m) => remindsMember(event, m)).map((m) => m.display_name);
   return names.length ? { title, sub: e.showsOnHome(names) } : { title };
+}
+
+/**
+ * Whom an event's reminder shows on Home for (spec 042 FR-001, 028 FR-003): members with the app
+ * on the event (Everyone is all of them), and whoever takes the ones without it.
+ */
+export function remindsMember(event: Pick<StoredEvent, 'members' | 'responsible_member_id'>, member: Member): boolean {
+  if (memberKind(member) !== 'account') return false;
+  return event.members.includes('everyone') || event.members.includes(member.id) || member.id === event.responsible_member_id;
 }
 
 /** "Added by Eva · 2 days ago", or "Added via Claude · 1 h ago" for an assistant's event (FR-006). */

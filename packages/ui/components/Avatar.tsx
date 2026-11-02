@@ -1,5 +1,5 @@
-import { Image, View } from 'react-native';
-import { cn } from '../cn';
+import { Image, Pressable, View } from 'react-native';
+import { cn, focusRing } from '../cn';
 import { Text } from './Text';
 
 /** The member palette (tokens `member-*`, spec 033), plus Everyone, Others and a member who left. */
@@ -63,14 +63,16 @@ export interface AvatarStackProps {
   moreLabel: (n: number) => string;
   /** Screen-reader summary, e.g. "Gabriel, Alex and Mia". */
   label: string;
+  /** Makes the stack a link (Home's → Settings › Family). */
+  onPress?: () => void;
 }
 
 /** Stacked avatars, overlapping by 10, up to 4 then "+N". */
-export function AvatarStack({ members, moreLabel, label }: AvatarStackProps) {
+export function AvatarStack({ members, moreLabel, label, onPress }: AvatarStackProps) {
   const shown = members.slice(0, 4);
   const more = members.length - shown.length;
-  return (
-    <View role="img" aria-label={label} className="flex-row">
+  const avatars = (
+    <View role={onPress ? undefined : 'img'} aria-label={onPress ? undefined : label} className="flex-row">
       {shown.map((m, i) => (
         <Avatar key={i} initial={m.initial} color={m.color} className={i > 0 ? '-ml-10' : undefined} />
       ))}
@@ -82,5 +84,11 @@ export function AvatarStack({ members, moreLabel, label }: AvatarStackProps) {
         </View>
       ) : null}
     </View>
+  );
+  if (!onPress) return avatars;
+  return (
+    <Pressable role="link" aria-label={label} onPress={onPress} className={cn('min-h-touch-min justify-center', focusRing)}>
+      {avatars}
+    </Pressable>
   );
 }
