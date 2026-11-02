@@ -88,6 +88,10 @@ import {
   Tag,
   EventListGroup,
   EventListRow,
+  WeekEventRow,
+  CalCard,
+  CalCardBanner,
+  WeekStrip,
   Text,
   TextField,
   TimerCard,
@@ -670,6 +674,35 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <EventListRow event={{ key: 'b', title: 'Baby swim class', sub: '14:30 · Gabriel takes James', tag: null, initials: 'J', colors: ['sky'], label: 'Baby swim class, 14:30 · Gabriel takes James' }} onPress={noop} />
           <EventListRow event={{ key: 'c', title: 'Lyon trip', sub: 'All day', tag: { label: 'Day 1 of 3', tone: 'soft' }, initials: 'E', colors: ['rose'], label: 'Lyon trip, All day, Day 1 of 3' }} onPress={noop} last />
         </EventListGroup>
+      </Section>
+
+      <Section group="Lists and cards" title="CalCard">
+        <CalCard label="Family calendar" header={<Text size={20} weight="900">This week</Text>} addLabel="Add event" onAdd={noop} footer={{ label: 'Open calendar', onPress: noop }}>
+          <CalCardBanner icon="cake" text="Eva’s birthday is on Tuesday" onPress={noop} />
+          <View role="list">
+            <EventListRow
+              size="sm"
+              event={{ key: 'a', title: 'Brunch at Grandma’s', sub: 'Lunch · Grandma’s house', tag: { label: 'Now', tone: 'honey' }, initials: 'All', colors: ['everyone'], label: 'Brunch at Grandma’s, Lunch · Grandma’s house, Now' }}
+              onPress={noop}
+            />
+            <EventListRow size="sm" event={{ key: 'r', title: 'Pediatrician', sub: 'Tomorrow · 10:00', tag: null, initials: 'J', colors: ['sky'], label: 'Reminder: Pediatrician, Tomorrow · 10:00', bell: true }} onPress={noop} last />
+          </View>
+          <WeekStrip
+            days={['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((letter, i) => ({
+              date: `2026-10-${25 + i}`,
+              letter,
+              num: String(25 + i),
+              dots: i === 1 ? [] : i === 3 ? ['rose', 'sky'] : ['honey'],
+              today: i === 0,
+              label: `October ${25 + i}`,
+            }))}
+            onDay={noop}
+          />
+          <View role="list">
+            <WeekEventRow event={{ key: 'w1', day: 'Tue', title: 'Yoga', detail: 'Eva · Evening', colors: ['rose'], label: 'Tue, Yoga, Eva, Evening' }} onPress={noop} />
+            <WeekEventRow event={{ key: 'w2', day: 'Wed', title: 'Lyon trip', detail: 'Eva · Wed–Fri', colors: ['rose'], label: 'Wed, Lyon trip, Eva, Wed–Fri' }} onPress={noop} last />
+          </View>
+        </CalCard>
       </Section>
 
       <Section group="Lists and cards" title="Card">

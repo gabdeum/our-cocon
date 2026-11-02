@@ -58,7 +58,7 @@ export function layoutAgenda(from: string, to: string, occurrences: readonly Mon
       .filter((o) => o.starts_on <= date && o.ends_on >= date)
       .flatMap((o) => {
         try {
-          return [row(o, date, ctx)];
+          return [agendaRow(o, date, ctx)];
         } catch {
           return [];
         }
@@ -69,7 +69,8 @@ export function layoutAgenda(from: string, to: string, occurrences: readonly Mon
   return groups;
 }
 
-function row(o: MonthOccurrence, date: string, ctx: AgendaContext): { order: number; item: EventListItem } {
+/** One row: its sort order (start in minutes, -1 all day) and what it shows. Home's card reuses it (spec 028). */
+export function agendaRow(o: MonthOccurrence, date: string, ctx: AgendaContext): { order: number; item: EventListItem } {
   const { initials, colors } = eventLook(o.members, ctx.look);
   const allDay = inAllDay(o);
   const range = allDay ? null : timeRange(o, ctx.slotTimes);

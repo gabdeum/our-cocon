@@ -46,3 +46,31 @@ export function searchRecipes<T extends Pick<RecipeListItem, 'name' | 'descripti
 export function visibleRecipes<T extends RecipeListItem>(recipes: readonly T[], query: string, filters: RecipeFilters): T[] {
   return filterRecipes(searchRecipes(recipes, query), filters);
 }
+
+/** The recipe Home's hero shows (spec 028 FR-005), with what its ingredients are, for "N to buy". */
+export interface HomeHero {
+  id: string;
+  name: string;
+  serves: number;
+  total_minutes: number | null;
+  photo_path: string | null;
+  ingredients: { name: string; catalog_key: string | null }[];
+}
+
+/**
+ * FR-005: what Home's hero shows. For now the most recently added recipe that isn't deleted (032
+ * L42); a meal plan will put tonight's dish here later, so Home reads it only through this.
+ */
+export async function loadHomeHero(client: Pick<Db, 'from'>): Promise<HomeHero | null> {
+  const { data, error } = await client
+    .from('recipes')
+    .select('id, name, serves, total_minutes, photo_path, recipe_ingredients(name, catalog_key)')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const { recipe_ingredients, ...recipe } = data;
+  return { ...recipe, ingredients: recipe_ingredients };
+}

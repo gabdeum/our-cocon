@@ -20,6 +20,10 @@ const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 
  * The highest step count events take: a recipe's 100 steps (MAX_STEPS) plus any its variants add.
  * Senders cap what they send at this, so a longer recipe never makes `track` throw.
  */
+/** Spec 028: the state Home's calendar card is in. */
+export const HomeCardState = z.enum(['today', 'week', 'empty']);
+export type HomeCardState = z.infer<typeof HomeCardState>;
+
 export const MAX_TRACKED_STEPS = 200;
 
 /**
@@ -196,6 +200,14 @@ export const events = {
   event_checklist_ticked: z.strictObject({}),
   // Spec 043: who can see an event, sent when a save changes it (a new event: Private or Surprise).
   event_visibility_set: z.strictObject({ visibility: Visibility }),
+  // Spec 028: Home. The latest-recipe hero opened, a stat tile tapped, "Add your first recipe";
+  // the calendar card's rows (which part, and which state the card was in), toggle and "+".
+  home_hero_opened: z.strictObject({}),
+  home_tile_tapped: z.strictObject({ tile: z.enum(['groceries', 'recipes']) }),
+  first_recipe_cta_tapped: z.strictObject({}),
+  homepage_calendar_event_tapped: z.strictObject({ section: z.enum(['today', 'week']), card_state: HomeCardState }),
+  homepage_calendar_toggled: z.strictObject({ to: z.enum(['today', 'week']) }),
+  homepage_calendar_add_tapped: z.strictObject({ card_state: HomeCardState }),
 } as const;
 
 export type EventName = keyof typeof events;

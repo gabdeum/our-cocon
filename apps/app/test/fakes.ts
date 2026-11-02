@@ -4,6 +4,7 @@ import type { Tracker } from '@cocon/schemas';
 import type { FamilyApi } from '../lib/family';
 import type { AccountMember, Family, Member } from '../lib/session';
 import type { GroceryItem, PackData } from '../lib/groceries';
+import type { StoredEvent } from '@cocon/data';
 
 export const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
 
@@ -103,4 +104,40 @@ export function groceryItem(over: Partial<GroceryItem>): GroceryItem {
 export async function packData(keys: string[], corrected: Record<string, string> = {}): Promise<Record<string, PackData>> {
   const { facts, packsOf } = await import('@cocon/quantity/catalog.fixture');
   return Object.fromEntries(keys.map((k) => [k, { packs: { us: packsOf(k, 'us'), eu: packsOf(k, 'eu') }, facts: facts(k), corrected: corrected[k] ?? null }]));
+}
+
+let eventCount = 0;
+/** A family event (spec 035) as `loadEvents` gives it: Gabriel's, on Oct 25 2026 in the morning. */
+export function storedEvent(fields: Partial<StoredEvent>): StoredEvent {
+  eventCount += 1;
+  return {
+    id: `00000000-0000-4000-8000-${String(eventCount).padStart(12, '0')}`,
+    title: 'Event',
+    category: null,
+    location: null,
+    notes: null,
+    reminder: null,
+    starts_on: '2026-10-25',
+    ends_on: '2026-10-25',
+    time_type: 'slot',
+    slots: ['morning'],
+    start_time: null,
+    end_time: null,
+    recurrence: null,
+    members: [gabriel.id],
+    responsible_member_id: null,
+    visibility: 'family',
+    creator_member_id: gabriel.id,
+    surprise: null,
+    removed_members: [],
+    exceptions: [],
+    checklist: [],
+    created_by: null,
+    updated_by: null,
+    source: 'app',
+    created_at: '2026-10-01T00:00:00Z',
+    updated_at: '2026-10-01T00:00:00Z',
+    deleted_at: null,
+    ...fields,
+  };
 }

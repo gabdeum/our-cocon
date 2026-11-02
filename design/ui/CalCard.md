@@ -11,3 +11,13 @@ Sources `screens/CalCard.dc.html` (today, interactive toggle), `screens/OC-CalCa
 
 ## Interactions
 Toggle switches Today / This week (not remembered). Rows → OC-CalEvent. Strip day → OC-CalDay. "+" → OC-CalAdd (today, or the next free day in This week). "Open calendar" → Calendar tab.
+
+## States not drawn
+| State | Copy and behaviour |
+| --- | --- |
+| Birthday today or tomorrow | "{title} is today", "{title} is tomorrow"; later days "{title} is on Tuesday". In Today, one banner per birthday from today to 3 days ahead (This week lists it as a row); a birthday shows in the banner, not as a row. |
+| Reminder due today | At the top of Today, with a 16 px olive bell before the title: the morning-of and 1-hour-before reminders of today's events, and the 1-day-before reminders of tomorrow's ("Tomorrow · 10:00"). Only for the people the event page names under "Shows on Home for". Screen readers: "Reminder, Pediatrician, Tomorrow · 10:00". |
+| Someone else's private event | "Busy" in their color; tapping opens OC-CalBusy. A surprise shows its cover to the person it's hidden from. |
+| Strip day | Screen readers: "Today, October 25, 2 people busy", "October 26, nothing planned". |
+| Offline | "+" and "+ Add event" are off. |
+| Banner | Opens the Agenda. |

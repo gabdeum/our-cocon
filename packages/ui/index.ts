@@ -53,7 +53,8 @@ export {
   type WeekDayHead,
 } from './components/HourGrid';
 export { Swipeable, SWIPE_COMMIT, type SwipeableProps } from './components/Swipeable';
-export { EventListGroup, EventListRow, type EventListItem } from './components/EventListRow';
+export { EventListGroup, EventListRow, WeekEventRow, type EventListItem, type WeekEventItem } from './components/EventListRow';
+export { CalCard, CalCardBanner, WeekStrip, type CalCardProps, type WeekStripDay } from './components/CalCard';
 export { AllDayRow, DayEventRow, SlotBand, type DayAllDayItem, type DayBand, type DayEventItem, type SlotBandProps } from './components/SlotBand';
 export { FloatingAdd, Toast, ToastHost, ToastProvider, useToast, TOAST_MS, TOAST_ACTION_MS, type FloatingAddProps, type ToastProps, type ToastRequest } from './components/Toast';
 export { CalendarHeader, type CalendarHeaderChip, type CalendarHeaderProps } from './components/CalendarHeader';
