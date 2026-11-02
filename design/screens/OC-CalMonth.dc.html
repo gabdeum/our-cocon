@@ -15,7 +15,7 @@ a{color:#5A6820}a:hover{color:#424D17}
 </style>
 </helmet>
 <div style="width: 390px; height: 1000px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
-  <dc-import name="CalHeader" view="month" label="{{monthFull}}" short="{{monthShort}}" hint-size="390px,162px"></dc-import>
+  <dc-import name="CalHeader" view="month" options="{{titleOptions}}" hint-size="390px,162px"></dc-import>
 
   <div ref="{{scrollRef}}" onScroll="{{onScroll}}" style="position: absolute; left: 0; right: 0; top: 162px; bottom: 0; overflow-y: auto; padding: 4px 8px 180px; box-sizing: border-box">
     <div style="background: #FFFFFF; border-radius: 20px">
@@ -28,7 +28,7 @@ a{color:#5A6820}a:hover{color:#424D17}
       <div style="position: relative">
       <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr))">
         <sc-for list="{{wk.cells}}" as="c" hint-placeholder-count="7">
-          <a href="OC-CalDay.dc.html" aria-label="{{c.aria}}" style="{{c.style}}">
+          <button aria-label="{{c.aria}}" aria-haspopup="dialog" onClick="{{c.open}}" style="{{c.style}}">
             <span style="{{c.numStyle}}">{{c.num}}</span>
             <sc-for list="{{c.chips}}" as="e" hint-placeholder-count="2">
               <span style="{{e.style}}"><span style="display: block; overflow: hidden; white-space: nowrap">{{e.text}}</span></span>
@@ -36,11 +36,11 @@ a{color:#5A6820}a:hover{color:#424D17}
             <sc-if value="{{c.more}}" hint-placeholder-val="{{false}}">
               <span style="font-size: 11px; font-weight: 900; color: #5A503A; padding-left: 3px">{{c.moreText}}</span>
             </sc-if>
-          </a>
+          </button>
         </sc-for>
       </div>
       <sc-for list="{{wk.bars}}" as="bar" hint-placeholder-count="1">
-        <a href="OC-CalEvent.dc.html" aria-label="{{bar.aria}}" style="{{bar.style}}"><span style="display: block; overflow: hidden; white-space: nowrap">{{bar.text}}</span></a>
+        <span aria-hidden="true" style="{{bar.style}}"><span style="display: block; overflow: hidden; white-space: nowrap">{{bar.text}}</span></span>
       </sc-for>
       </div>
       </sc-for>
@@ -60,11 +60,40 @@ a{color:#5A6820}a:hover{color:#424D17}
   <div style="position: absolute; left: 0; bottom: 0; width: 390px; height: 160px">
     <dc-import name="TabBar" active="calendar" timers="{{false}}" hint-size="390px,160px"></dc-import>
   </div>
+
+  <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+    <div onClick="{{closeSheet}}" aria-hidden="true" style="position: absolute; inset: 0; z-index: 10; background: rgba(42,36,20,0.38)"></div>
+    <div role="dialog" aria-modal="true" aria-label="{{sheet.title}}" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 11; max-height: 640px; box-sizing: border-box; background: #FFF8E3; border-radius: 28px 28px 0 0; padding: 10px 20px 34px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 -8px 28px rgba(42,36,20,0.2)">
+      <span aria-hidden="true" style="align-self: center; width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4"></span>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <div style="flex: 1; min-width: 0">
+          <h2 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.3px">{{sheet.title}}</h2>
+          <div style="font-size: 14px; font-weight: 700; color: #5A503A">{{sheet.count}}</div>
+        </div>
+        <button onClick="{{closeSheet}}" aria-label="Close" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: #FFF0C9; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-bottom: 72px">
+        <sc-for list="{{sheet.rows}}" as="r" hint-placeholder-count="3">
+          <a href="OC-CalEvent.dc.html" style="background: #FFFFFF; border-radius: 20px; padding: 12px 14px 12px 12px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: #2A2414">
+            <span aria-hidden="true" style="{{r.stripe}}"></span>
+            <span style="{{r.avatar}}">{{r.initial}}</span>
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 800">{{r.title}}</span><span style="font-size: 14px; font-weight: 700; color: #5A503A">{{r.sub}}</span></span>
+          </a>
+        </sc-for>
+        <sc-if value="{{sheet.empty}}" hint-placeholder-val="{{false}}">
+          <p style="margin: 8px 0; font-size: 16px; font-weight: 700; color: #5A503A">Nothing planned yet.</p>
+        </sc-if>
+      </div>
+      <a href="OC-CalAdd.dc.html" aria-label="{{sheet.addLabel}}" style="position: absolute; right: 20px; bottom: 34px; width: 60px; height: 60px; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(42,36,20,0.25)">
+        <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </a>
+    </div>
+  </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1000}}'>
+<script type="text/x-dc" data-dc-script data-props='{"sheetDay":{"editor":"number","default":-1},"$preview":{"width":390,"height":1000}}'>
 class Component extends DCLogic {
-  constructor(props) { super(props); this.state = { hint: true, top: 4 }; }
+  constructor(props) { super(props); var sd = props.sheetDay; this.state = { hint: !(sd >= 0), top: 4, sel: sd >= 0 ? sd : null }; }
   renderVals() {
     var self = this;
     var ROW = 96, WEEKS = 22;                       // fixed row height; Aug 30, 2026 → Jan 30, 2027
@@ -138,7 +167,8 @@ class Component extends DCLogic {
           num: first ? MSHORT[m].replace('.', '') + ' 1' : dayNum,
           chips: shown, more: more > 0, moreText: '+' + more,
           aria: MON[m] + ' ' + dayNum + (list.length ? ': ' + list.map(function (x) { return x.e.t; }).join(', ') : ': nothing planned'),
-          style: 'height: ' + ROW + 'px; overflow: hidden; box-sizing: border-box; padding: 4px 4px 6px; display: flex; flex-direction: column; gap: 3px; text-decoration: none; color: #2A2414; border-right: 1px solid #F2E6C4; border-bottom: 1px solid #F2E6C4; ' +
+          open: (function (k) { return function () { self.setState({ sel: k }); }; })(i),
+          style: 'width: 100%; border: none; font-family: inherit; text-align: left; cursor: pointer; height: ' + ROW + 'px; overflow: hidden; box-sizing: border-box; padding: 4px 4px 6px; display: flex; flex-direction: column; gap: 3px; text-decoration: none; color: #2A2414; border-right: 1px solid #F2E6C4; border-bottom: 1px solid #F2E6C4; ' +
             (isToday ? 'box-shadow: inset 0 0 0 2.5px #5A6820; background: #FFFFFF' : past ? 'background: #FFF8E3' : 'background: #FFFFFF'),
           numStyle: isToday
             ? 'align-self: flex-start; min-width: 22px; height: 22px; border-radius: 11px; background: #5A6820; color: #FFFFFF; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center'
@@ -163,19 +193,45 @@ class Component extends DCLogic {
         a = end + 1;
       }
     });
+    // Day sheet: tapping a day opens a drawer with everything planned that day, plus the add button.
+    var WDN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var NAME = { G: 'G', E: 'E', J: 'J', All: 'All', Oth: '' };
+    var sheet = { rows: [], empty: true, title: '', count: '', addLabel: 'Add event' };
+    if (this.state.sel !== null) {
+      var si = this.state.sel, sdt = new Date(START + si * DAY);
+      var items = (byDay[si] || []).slice().sort(function (a, b) {
+        return (a.e.span ? -1 : ORDER[a.e.slot]) - (b.e.span ? -1 : ORDER[b.e.slot]);
+      });
+      var dname = WDN[sdt.getUTCDay()] + ', ' + MON[sdt.getUTCMonth()] + ' ' + sdt.getUTCDate();
+      sheet = {
+        title: dname, empty: items.length === 0,
+        count: items.length === 0 ? 'Nothing planned' : items.length + (items.length === 1 ? ' event' : ' events'),
+        addLabel: 'Add event on ' + dname,
+        rows: items.map(function (x) {
+          var e = x.e, k = e.who[0], col = bg(e.who);
+          var sub2 = e.span ? 'All day · day ' + (Math.round((START + si * DAY - e.span[0]) / DAY) + 1) + ' of ' + (Math.round((e.span[1] - e.span[0]) / DAY) + 1) : e.slot;
+          return {
+            title: e.t, sub: sub2, initial: label(e.who) || '',
+            stripe: 'width: 6px; align-self: stretch; border-radius: 3px; flex: none; background: ' + col,
+            avatar: 'width: 36px; height: 36px; flex: none; border-radius: 50%; background: ' + col + '; display: flex; align-items: center; justify-content: center; font-size: ' + ((label(e.who) || '').length > 1 ? '11px' : '15px') + '; font-weight: 900' + (k === 'Oth' ? '; box-shadow: inset 0 0 0 1px #D8CBA4' : '')
+          };
+        })
+      };
+    }
     // The title follows the month that fills the grid: the Wednesday of the second visible row.
     var probe = new Date(START + (Math.min(WEEKS - 1, this.state.top + 1) * 7 + 3) * DAY);
     return {
       weekdays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
       weeks: weeks,
-      // This year: full month name, no year ("October"). Another year: "January 2027", or "Jan. 2027" under 430 px.
-      monthFull: MON[probe.getUTCMonth()] + (probe.getUTCFullYear() === THIS_YEAR ? '' : ' ' + probe.getUTCFullYear()),
-      monthShort: probe.getUTCFullYear() === THIS_YEAR ? MON[probe.getUTCMonth()] : MSHORT[probe.getUTCMonth()] + ' ' + probe.getUTCFullYear(),
+      // Title formats, longest first (spec 034 FR-007): "October" this year; "January 2027" another year; "Jan. 2027" only if that can't fit.
+      titleOptions: probe.getUTCFullYear() === THIS_YEAR ? [MON[probe.getUTCMonth()]] : [MON[probe.getUTCMonth()] + ' ' + probe.getUTCFullYear(), MSHORT[probe.getUTCMonth()] + ' ' + probe.getUTCFullYear()],
       scrollRef: function (el) { if (el && !self._placed) { self._placed = true; el.scrollTop = 4 * ROW; } },
       onScroll: function (ev) {
         var top = Math.floor((ev.currentTarget.scrollTop + 24) / ROW);
         if (top !== self.state.top) self.setState({ top: top });
       },
+      sheetOpen: this.state.sel !== null, sheet: sheet,
+      closeSheet: function () { self.setState({ sel: null }); },
       showHint: this.state.hint,
       dismiss: function () { self.setState({ hint: false }); }
     };

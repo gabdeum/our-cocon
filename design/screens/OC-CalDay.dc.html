@@ -15,7 +15,7 @@ a{color:#5A6820}a:hover{color:#424D17}
 </style>
 </helmet>
 <div style="width: 390px; height: 1280px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
-  <dc-import name="CalHeader" view="day" label="{{labelFull}}" short="{{labelShort}}" on-prev="{{goPrev}}" on-next="{{goNext}}" on-today="{{goToday}}" hint-size="390px,162px"></dc-import>
+  <dc-import name="CalHeader" view="day" options="{{titleOptions}}" on-prev="{{goPrev}}" on-next="{{goNext}}" on-today="{{goToday}}" hint-size="390px,162px"></dc-import>
 
   <div style="overflow: hidden">
   <div onPointerDown="{{swDown}}" onPointerMove="{{swMove}}" onPointerUp="{{swUp}}" onPointerLeave="{{swUp}}" onPointerCancel="{{swUp}}" style="{{swipeStyle}}">
@@ -111,8 +111,14 @@ class Component extends DCLogic {
     var swipeStyle = 'touch-action: pan-y; user-select: none; transform: translateX(' + self.state.dx + 'px); opacity: ' + Math.max(0.35, 1 - Math.abs(self.state.dx) / 400) + (self.state.settle ? '; transition: transform 220ms ease-out, opacity 220ms ease-out' : '');
 
     var dt = at(off), wd = dt.getUTCDay();
-    var labelFull = WD[wd] + ', ' + MON[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
-    var labelShort = WD[wd].slice(0, 3) + ', ' + MSHORT[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
+    // Title formats, longest first (spec 034 FR-007): "Sunday, October 25" → "Sun, October 25" → "Sun, Oct. 25"; ", 2027" in another year.
+    var dyr = dt.getUTCFullYear() === 2026 ? '' : ', ' + dt.getUTCFullYear();
+    var titleOptions = [
+      WD[wd] + ', ' + MON[dt.getUTCMonth()] + ' ' + dt.getUTCDate() + dyr,
+      WD[wd].slice(0, 3) + ', ' + MON[dt.getUTCMonth()] + ' ' + dt.getUTCDate() + dyr,
+      WD[wd].slice(0, 3) + ', ' + MSHORT[dt.getUTCMonth()] + ' ' + dt.getUTCDate() + dyr,
+      WD[wd].slice(0, 3) + ', ' + MSHORT[dt.getUTCMonth()] + ' ' + dt.getUTCDate()
+    ];
     // The time line shows the band name when the event starts at the band's start (Lunch = 12:00),
     // otherwise the event's own start time ("14:30").
     var BAND_START = { 'Early morning': '06:00', 'Morning': '09:00', 'Lunch': '12:00', 'Afternoon': '14:00', 'Evening': '18:00' };
@@ -167,7 +173,7 @@ class Component extends DCLogic {
     var toast = off === 0 && this.props.toast !== false && !this.state.undone;
     return {
       swDown: swipe.down, swMove: swipe.move, swUp: swipe.up, swipeStyle: swipeStyle, goPrev: function () { go(-1); }, goNext: function () { go(1); }, goToday: function () { self.setState({ offset: 0, dx: 0 }); },
-      labelFull: labelFull, labelShort: labelShort, busy: busy,
+      titleOptions: titleOptions, busy: busy,
       hasAllDay: allDay.length > 0,
       allDay: allDay.map(function (e) {
         return { title: e.title, tag: e.tag, style: 'min-height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: 18px; background: ' + C[e.who] + '; color: #2A2414; text-decoration: none; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 800' };

@@ -16,4 +16,4 @@ Reference: `design/screens/CalHeader.dc.html` (inline styles are the exact value
 
 ## Rules
 
-- Month titles: "October" in the current year (any width); other years "Jan. 2027" under 430 px, "January 2027" above.
+- Title: the first of the view's formats (longest first) that fits row 1 beside "Today" (262 px at 390), measured; see `design/ui/CalHeader.md` › Titles.

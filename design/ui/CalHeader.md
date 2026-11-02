@@ -10,14 +10,22 @@ Height 162 (54 top inset, two 44 rows, gap 10, 10 bottom).
 4. **People filter** (popover, full width minus 20 px sides, white, radius 20, padding 10 14 12): header "SHOW EVENTS FOR" (13/900 caps, ink-muted) + "Show all" (olive-deep link); rows 52: dot 34, name 16/800, checkbox 26 (on: olive with white check; off: 2 px `line-dashed` border). Members in order, then Everyone ("All" dot) and Others (person icon dot).
 
 ## Titles (spec 034 FR-007)
-| View | Under 430 px | 430 px and wider |
-| --- | --- | --- |
-| Month, this year | "October" | "October" |
-| Month, another year | "Jan. 2027" | "January 2027" |
-| Week | "Oct. 25 – 31" · "Nov. 29 – Dec. 5" | "October 25 – 31" |
-| Day | "Sun, Oct. 25" | "Sunday, October 25" |
-| Agenda | "Coming up" | "Coming up" |
-May has no period ("May 2027").
+Title space = screen width − 128 px (20 + 20 padding, "Today" 80, gap 8): 192 at 320, 247 at 375, **262 at 390**, 265 at 393, 302 at 430. Use the first format that fits, measured in Nunito 900 28 px (−0.5 px tracking) with the font's own widths and kerning (`titleWidth` in `@cocon/calendar`). Widths below are measured that way (2026-11-02; the first draft's estimates were 8–15% narrow).
+
+| View | Formats, longest first | Worst case (width) | Fits from screen width |
+| --- | --- | --- | --- |
+| Month, this year | MMMM | "September" (144) | always |
+| Month, other year | MMMM YYYY → MMM YYYY | "September 2027" (217) → "Mar. 2027" (131) | 345 → always |
+| Week, one month | MMMM d – d → MMM d – d | "September 13 – 19" (245) → "Mar. 15 – 21" (159) | 374 → always |
+| Week, two months | MMMM d – MMMM d → MMM d – MMM d | "November 29 – December 5" (360) → "Nov. 29 – Dec. 5" (207) | 488 → 335 |
+| Week, other year | … + ", YYYY" (full, then short) → short without year | "September 13 – 19, 2027" (325) → "Feb. 28 – Mar. 6, 2027" (284) | 454 → 412 → as the week rows above |
+| Day | EEEE, MMMM d → EEE, MMMM d → EEE, MMM d | "Wednesday, September 16" (350) → "Wed, September 16" (260) → "Wed, Sep. 16" (172) | 479 → 388 → always |
+| Day, other year | … + ", YYYY" (each) → EEE, MMM d | "Wednesday, September 16, 2027" (430) → "Wed, September 16, 2027" (340) → "Wed, Sep. 16, 2027" (252) | 559 → 468 → 381 → always |
+| Agenda | "Coming up" | — | always |
+
+What a 390 px phone shows (title space 262): "October" · "January 2027" · "October 25 – 31" · "Nov. 29 – Dec. 5" · "January 3 – 9, 2027" · "Dec. 27 – Jan. 2" · "Sunday, October 25" · "Wed, October 28" · "Wed, September 16" · "Fri, January 8, 2027".
+Under 335 px (iPhone SE 1st generation, 320) a two-month week's shortest title ("Nov. 29 – Dec. 5", 207) is wider than the space.
+Short months: Jan. Feb. Mar. Apr. May Jun. Jul. Aug. Sep. Oct. Nov. Dec. Never "…".
 
 ## Interactions
 "‹"/"›": previous/next month, week or day (accessible names "Previous week" etc.). "Today": back to today. The view and people buttons open their popovers (`aria-haspopup`, `aria-expanded`); outside tap or Escape closes. Picking a view closes the menu; the people filter stays open while ticking. The filter is remembered per user per device.

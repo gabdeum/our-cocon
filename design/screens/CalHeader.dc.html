@@ -61,12 +61,14 @@ a{color:#5A6820}a:hover{color:#424D17}
   </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"view":{"editor":"enum","options":["month","week","day","agenda"],"default":"month"},"label":{"editor":"text","default":"October"},"short":{"editor":"text","default":"October"},"compact":{"editor":"boolean","default":true},"menu":{"editor":"enum","options":["none","view","people"],"default":"none"},"hideSample":{"editor":"boolean","default":false},"onPrev":{"editor":null},"onNext":{"editor":null},"onToday":{"editor":null},"$preview":{"width":390,"height":162}}'>
+<script type="text/x-dc" data-dc-script data-props='{"view":{"editor":"enum","options":["month","week","day","agenda"],"default":"month"},"label":{"editor":"text","default":"October"},"short":{"editor":"text","default":"October"},"compact":{"editor":"boolean","default":true},"options":{"editor":null},"menu":{"editor":"enum","options":["none","view","people"],"default":"none"},"hideSample":{"editor":"boolean","default":false},"onPrev":{"editor":null},"onNext":{"editor":null},"onToday":{"editor":null},"$preview":{"width":390,"height":162}}'>
 class Component extends DCLogic {
   constructor(props) {
     super(props);
     var m = props.menu && props.menu !== 'none' ? props.menu : null;
-    this.state = { open: m, hidden: props.hideSample ? { E: true, Oth: true } : {} };
+    this.state = { open: m, hidden: props.hideSample ? { E: true, Oth: true } : {}, font: 0 };
+    var self = this;
+    try { document.fonts.load('900 28px Nunito').then(function () { self.setState({ font: 1 }); }); } catch (e) {}
   }
   renderVals() {
     var self = this, view = this.props.view || 'month', open = this.state.open, hidden = this.state.hidden;
@@ -111,10 +113,22 @@ class Component extends DCLogic {
     });
     var compact = this.props.compact !== false;
     var full = this.props.label || 'October';
+    // Title: the first of the given formats (longest first) that fits the space left of "Today":
+    // screen 390 − 2 × 20 padding − 68 "Today" − 8 gap = 274 px, measured in Nunito 900 28 px, −0.5 px tracking.
+    var opts = this.props.options, fitted = null;
+    if (opts && opts.length) {
+      var ctx = Component._ctx || (Component._ctx = document.createElement('canvas').getContext('2d'));
+      ctx.font = '900 28px Nunito';
+      var avail = 390 - 40 - 68 - 8;
+      fitted = opts[opts.length - 1];
+      for (var oi = 0; oi < opts.length; oi++) {
+        if (ctx.measureText(opts[oi]).width - 0.5 * opts[oi].length <= avail) { fitted = opts[oi]; break; }
+      }
+    }
     var noop = function () {};
     var unit = { month: 'month', week: 'week', day: 'day', agenda: 'week' }[view];
     return {
-      label: compact ? (this.props.short || full) : full,
+      label: fitted || (compact ? (this.props.short || full) : full),
       viewLabel: viewLabel, viewAria: 'View: ' + viewLabel, views: views,
       viewOpen: open === 'view', peopleOpen: open === 'people',
       toggleView: function () { self.setState({ open: self.state.open === 'view' ? null : 'view' }); },

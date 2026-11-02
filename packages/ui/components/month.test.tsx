@@ -23,11 +23,9 @@ const week = (i: number): MonthWeek => ({
 });
 
 describe('MonthGrid (spec 037)', () => {
-  it('draws days with chips and "+N", and opens a day on tap or Add event on long-press', () => {
+  it('draws days with chips and "+N"; a tap anywhere on a day opens it, chips and bars included', () => {
     const onDayPress = vi.fn();
     const onDayLongPress = vi.fn();
-    const onBarPress = vi.fn();
-    const onChipPress = vi.fn();
     render(
       <MonthGrid
         weekdays={['S', 'M', 'T', 'W', 'T', 'F', 'S']}
@@ -37,23 +35,21 @@ describe('MonthGrid (spec 037)', () => {
         onTopRowChange={vi.fn()}
         onDayPress={onDayPress}
         onDayLongPress={onDayLongPress}
-        onChipPress={onChipPress}
-        onBarPress={onBarPress}
         addLabel="Add event"
       />,
     );
     expect(screen.getByText('Oct 1')).toBeTruthy();
     expect(screen.getByText('J Baby swim')).toBeTruthy();
     expect(screen.getByText('+2')).toBeTruthy();
-    fireEvent.click(screen.getByRole('link', { name: 'October 4: nothing planned' }));
+    const day = screen.getByRole('button', { name: 'October 4: nothing planned' });
+    expect(day.getAttribute('aria-haspopup')).toBe('dialog');
+    fireEvent.click(day);
     expect(onDayPress).toHaveBeenCalledWith('2026-10-04');
-    fireEvent.click(screen.getByRole('link', { name: 'Grandma visits, October 5 to October 7' }));
-    expect(onBarPress).toHaveBeenCalledWith('e1:2026-10-05');
-    // A chip opens its event, not the day (decided 2026-10-28).
+    // FR-008: chips and bars aren't targets of their own (spec 037, 2026-11-02).
+    expect(screen.queryByRole('link')).toBeNull();
     onDayPress.mockClear();
-    fireEvent.click(screen.getByRole('link', { name: 'J Baby swim' }));
-    expect(onChipPress).toHaveBeenCalledWith('c');
-    expect(onDayPress).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText('J Baby swim'));
+    expect(onDayPress).toHaveBeenCalledTimes(1);
   });
 });
 

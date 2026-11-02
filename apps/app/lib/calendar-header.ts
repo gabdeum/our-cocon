@@ -1,5 +1,5 @@
 import { CALENDAR_VIEWS, CalendarView, CalendarDate } from '@cocon/schemas/calendar';
-import { VIEW_STEP, dayTitle, monthTitle, parts, weekRange, weekTitle, type WeekStartsOn } from '@cocon/calendar';
+import { VIEW_STEP, dayTitles, fitTitle, monthTitles, parts, weekRange, weekTitles, type WeekStartsOn } from '@cocon/calendar';
 import { strings } from '../strings/en';
 
 const h = strings.calendar.header;
@@ -23,16 +23,16 @@ export function entryFrom(param: unknown): 'nav' | 'homepage' {
   return param === 'home' ? 'homepage' : 'nav';
 }
 
-/** FR-003 (spec 034 FR-007): the header title for a view showing `anchor`, at this screen width. */
+/** FR-003 (spec 034 FR-007): the longest of the view's title formats that fits beside "Today" on this screen. */
 export function headerTitle(view: CalendarView, anchor: string, today: string, width: number, weekStartsOn: WeekStartsOn): string {
   if (view === 'agenda') return h.agendaTitle;
-  if (view === 'day') return dayTitle(anchor, width);
+  if (view === 'day') return fitTitle(dayTitles(anchor, today), width);
   if (view === 'week') {
     const { start, end } = weekRange(anchor, weekStartsOn);
-    return weekTitle(start, end, width);
+    return fitTitle(weekTitles(start, end, today), width);
   }
   const { year, month } = parts(anchor);
-  return monthTitle(year, month, today, width);
+  return fitTitle(monthTitles(year, month, today), width);
 }
 
 /** FR-002: "Previous month" / "Next week", by how far the arrows move the view. */

@@ -144,7 +144,7 @@ Also settled: no pantry (every ingredient starts ticked in "Add to groceries"; u
 | C6 | Who | "Everyone" and "Others" are always offered in the filter and the Who picker. Others needs no names. |
 | C7 | Slots | Early morning, Morning, Lunch, Afternoon, Evening (18:00–22:00). No Night slot; later times use Custom. Family-wide; the owner edits. |
 | C8 | Week start | Follows the device region; overridable per member. |
-| C9 | Time labels | Slot name only when the event starts at the slot's start, otherwise its start time. Month titles: "October" in the current year; other years "Jan. 2027" under 430 px, "January 2027" above. |
+| C9 | Time labels | Slot name only when the event starts at the slot's start, otherwise its start time. Titles use the longest date format that fits (spec 034 FR-007): "October", "October 25 – 31", "Sunday, October 25" on a 390 px phone; years only outside the current year. |
 | C10 | Month view | One continuous vertical scroll; sticky weekdays; multi-day events as pills over the grid; no ellipsis on chips. |
 | C11 | Week / Day | Week = hour grid with side-by-side overlaps; Day = time-of-day bands; both swipe left/right. |
 | C12 | Navigation | Tabs: Home · Calendar · Recipes · Groceries · Menu (Menu = Apps directory + Settings pages, spec 029); the selected tab is a fixed 132 px. |
