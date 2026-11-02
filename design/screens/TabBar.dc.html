@@ -15,12 +15,16 @@ body{margin:0}
 </helmet>
 <div style="width: 390px; height: 160px; box-sizing: border-box; padding: 0 16px 26px; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; font-family: 'Nunito', sans-serif">
   <sc-if value="{{showTimers}}" hint-placeholder-val="{{true}}">
-    <a href="OC-Timers.dc.html" aria-label="2 timers running. Open timers" style="align-self: center; height: 50px; padding: 0 8px 0 14px; border-radius: 999px; background: #FFFFFF; color: #2A2414; text-decoration: none; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(42,36,20,0.22); border: 2px solid #FFCF5C">
-      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6820" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2M9 2h6"></path></svg>
-      <span style="font-size: 15px; font-weight: 800">Blind bake</span>
-      <span style="font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums">11:42</span>
-      <span style="font-size: 13px; font-weight: 900; background: #FFCF5C; padding: 6px 10px; border-radius: 999px">+1</span>
-    </a>
+    <div style="align-self: center; height: 50px; box-sizing: border-box; padding: 0 3px 0 0; border-radius: 999px; background: #FFFFFF; display: flex; align-items: center; box-shadow: 0 6px 20px rgba(42,36,20,0.22); border: 2px solid #FFCF5C">
+      <a href="OC-Timers.dc.html" aria-label="2 timers running. Open timers" style="height: 100%; padding: 0 6px 0 14px; color: #2A2414; text-decoration: none; display: flex; align-items: center; gap: 10px">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6820" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2M9 2h6"></path></svg>
+        <span style="font-size: 15px; font-weight: 800">Blind bake</span>
+        <span style="font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums">11:42</span>
+        <span style="font-size: 13px; font-weight: 900; background: #FFCF5C; padding: 6px 10px; border-radius: 999px">+1</span>
+      </a>
+      <span aria-hidden="true" style="width: 1.5px; height: 24px; background: #F2E6C4"></span>
+      <button onClick="{{hidePill}}" aria-label="Hide the timer pill. Timers keep running" style="width: 40px; height: 44px; flex: none; border: none; background: none; color: #5A503A; border-radius: 999px; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
   </sc-if>
   <nav aria-label="Main" style="width: 100%; height: 68px; flex: none; border-radius: 34px; background: #2A2414; display: flex; gap: 4px; padding: 8px; box-sizing: border-box; box-shadow: 0 8px 24px rgba(42,36,20,0.25)">
     <a href="OC-Home.dc.html" aria-label="Home" style="{{s.home}}">
@@ -48,14 +52,15 @@ body{margin:0}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["home","calendar","recipes","groceries","settings"],"default":"home"},"timers":{"editor":"boolean","default":true},"$preview":{"width":390,"height":160}}'>
 class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { hidden: false }; }
   renderVals() {
-    var a = this.props.active || 'home';
+    var self = this, a = this.props.active || 'home';
     // One fixed width for the selected tab, sized to the longest label ("Groceries") plus 16 px padding each side.
     var onS = 'flex: 0 0 132px; width: 132px; padding: 0 16px; box-sizing: border-box; border-radius: 26px; background: #FFCF5C; color: #2A2414; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-size: 15px; font-weight: 800; white-space: nowrap';
     var offS = 'flex: 1 1 0; min-width: 44px; border-radius: 26px; color: #E6DFC9; display: flex; align-items: center; justify-content: center; text-decoration: none';
     var keys = ['home', 'calendar', 'recipes', 'groceries', 'settings'], s = {}, on = {};
     keys.forEach(function (k) { s[k] = k === a ? onS : offS; on[k] = k === a; });
-    return { s: s, on: on, showTimers: this.props.timers !== false };
+    return { s: s, on: on, showTimers: this.props.timers !== false && !this.state.hidden, hidePill: function () { self.setState({ hidden: true }); } };
   }
 }
 </script>

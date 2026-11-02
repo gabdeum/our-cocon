@@ -190,6 +190,12 @@ export const strings = {
     thisWeek: 'This week',
     calendar: 'Calendar',
     addEvent: 'Add event',
+    /** A strip day picked (FR-008): "+" adds on it. */
+    addEventOn: (weekday: string) => `Add event on ${weekday}`,
+    /** "Wednesday, Oct. 28", "Today, Sunday, Oct. 25". */
+    dayTitle: (today: boolean, date: string) => (today ? `Today, ${date}` : date),
+    dayEmpty: (weekday: string) => `Nothing planned on ${weekday}.`,
+    wholeWeek: 'Whole week',
     /** "Eva’s birthday is on Tuesday", "… is tomorrow", "… is today". */
     birthday: (title: string, when: 'today' | 'tomorrow' | string) => (when === 'today' ? `${title} is today` : when === 'tomorrow' ? `${title} is tomorrow` : `${title} is on ${when}`),
     /** A reminder due today for tomorrow's event: "Tomorrow · 10:00". */
@@ -199,56 +205,56 @@ export const strings = {
     empty: 'No events in the next 7 days. Add one?',
     emptyAdd: '+ Add event',
     openCalendar: 'Open calendar',
-    /** The week row after the title: "Eva · Evening". */
-    detail: (who: string, when: string) => (who ? `${who} · ${when}` : when),
+    /** The week row after the title: "06:30 · Gabriel". */
+    detail: (who: string, when: string) => (who ? `${when} · ${who}` : when),
     rowLabel: (parts: string[]) => parts.filter(Boolean).join(', '),
     /** A strip day for screen readers: "Today, October 25, 2 people busy". */
     dayLabel: (today: boolean, date: string, people: number) =>
       `${today ? 'Today, ' : ''}${date}, ${people === 0 ? 'nothing planned' : people === 1 ? '1 person busy' : `${people} people busy`}`,
   },
-  // design/ui/OC-Home.md › Activity card and design/ui/OC-Activity.md (spec 026): what AI assistants
-  // changed, who asked, and Undo.
+  // design/ui/OC-Home.md › Latest activity and design/ui/OC-Activity.md (specs 026, 028): what the
+  // family and their AI assistants changed, and Undo for an AI change.
   activity: {
     badge: 'AI',
+    /** "Eva added Pumpkin soup", "Gabriel ticked 4 items". */
     title: {
-      recipe_created: (recipe: string) => `New: ${recipe}`,
-      recipe_edited: (recipe: string) => `Edited: ${recipe}`,
-      recipe_deleted: (recipe: string) => `Deleted: ${recipe}`,
-      groceries_added: (n: number, name: string) => (n === 1 ? `${name} added to Groceries` : `${n} items added to Groceries`),
-      groceries_ticked: (n: number, name: string) => (n === 1 ? `${name} ticked` : `${n} items ticked`),
-      groceries_unticked: (n: number, name: string) => (n === 1 ? `${name} put back on the list` : `${n} items put back on the list`),
-      groceries_removed: (n: number, name: string) => (n === 1 ? `${name} removed from Groceries` : `${n} items removed from Groceries`),
-      groceries_cleared: (n: number) => (n === 1 ? '1 done item cleared' : `${n} done items cleared`),
-      event_created: (event: string) => `New event: ${event}`,
-      event_edited: (event: string) => `Edited event: ${event}`,
-      event_deleted: (event: string) => `Deleted event: ${event}`,
-      event_date_deleted: (event: string) => `Deleted one date: ${event}`,
-      other: (n: number) => (n === 1 ? '1 change' : `${n} changes`),
+      recipe_created: (who: string, recipe: string) => `${who} added ${recipe}`,
+      recipe_edited: (who: string, recipe: string) => `${who} edited ${recipe}`,
+      recipe_deleted: (who: string, recipe: string) => `${who} deleted ${recipe}`,
+      recipe_restored: (who: string, recipe: string) => `${who} restored ${recipe}`,
+      groceries_added: (who: string, n: number, name: string) => (n === 1 ? `${who} added ${name}` : `${who} added ${n} items`),
+      groceries_ticked: (who: string, n: number, name: string) => (n === 1 ? `${who} ticked ${name}` : `${who} ticked ${n} items`),
+      groceries_unticked: (who: string, n: number, name: string) => (n === 1 ? `${who} put back ${name}` : `${who} put back ${n} items`),
+      groceries_removed: (who: string, n: number, name: string) => (n === 1 ? `${who} removed ${name}` : `${who} removed ${n} items`),
+      groceries_cleared: (who: string, n: number) => (n === 1 ? `${who} cleared 1 done item` : `${who} cleared ${n} done items`),
+      event_created: (who: string, event: string) => `${who} added ${event}`,
+      event_edited: (who: string, event: string) => `${who} edited ${event}`,
+      event_deleted: (who: string, event: string) => `${who} deleted ${event}`,
+      event_date_deleted: (who: string, event: string) => `${who} deleted one date of ${event}`,
+      other: (who: string, n: number) => (n === 1 ? `${who} made 1 change` : `${who} made ${n} changes`),
     },
-    /** The sub-line's verb, by kind: "Added by Alex via ChatGPT · 4 h ago". */
-    by: {
-      recipe_created: 'Added',
-      recipe_edited: 'Changed',
-      recipe_deleted: 'Deleted',
-      groceries_added: 'Added',
-      groceries_ticked: 'Ticked',
-      groceries_unticked: 'Changed',
-      groceries_removed: 'Removed',
-      groceries_cleared: 'Cleared',
-      event_created: 'Added',
-      event_edited: 'Changed',
-      event_deleted: 'Deleted',
-      event_date_deleted: 'Deleted',
-      other: 'Changed',
-    },
-    sub: (verb: string, name: string, assistant: string, timeAgo: string) => `${verb} by ${name} via ${assistant} · ${timeAgo}`,
+    /** In a title when the reader may not see the event, or it's gone for good. */
+    privateEvent: 'a private event',
+    anEvent: 'an event',
+    aRecipe: 'a recipe',
+    module: { recipes: 'Recipes', groceries: 'Groceries', calendar: 'Calendar' },
+    /** "from Leek & bacon quiche", in the sub-line of grocery items added from a recipe. */
+    fromRecipe: (recipe: string) => `from ${recipe}`,
+    via: (assistant: string) => `via ${assistant}`,
+    /** "Recipes · via ChatGPT · 1 h ago", "Calendar · Wed, 10:00 · via Claude · 3 h ago". */
+    sub: (parts: string[]) => parts.filter(Boolean).join(' · '),
     undoneBy: (name: string) => `Undone by ${name}`,
     restoredBy: (name: string) => `Restored by ${name}`,
     undo: 'Undo',
     restore: 'Restore',
     undoA11y: (title: string) => `Undo: ${title}`,
     restoreA11y: (title: string) => `Restore: ${title}`,
-    seeAll: 'See all',
+    seeAll: 'See all activity',
+    latest: 'Latest activity',
+    show: 'Show',
+    all: 'All',
+    aiOnly: 'AI only',
+    noAi: 'No AI changes yet.',
     undone: 'Undone',
     restored: 'Restored',
     // Something changed after the AI's change (spec 026 edge case): a Dialog before undoing the rest.
@@ -266,16 +272,18 @@ export const strings = {
     expired: "This can't be undone any more.",
     undoFailed: "Couldn't undo. Check your connection and try again.",
     restoreFailed: "Couldn't restore it. Check your connection and try again.",
-    // design/ui/OC-Activity.md: the full list, from Home's "See all".
-    screenTitle: 'AI activity',
+    // design/ui/OC-Activity.md: the full list, from Home's "See all activity".
+    screenTitle: 'Activity',
     back: 'Home',
     people: 'People',
     assistants: 'Assistants',
     otherAssistant: 'Other',
     showMore: 'Show more',
-    loading: 'Loading AI activity',
-    loadFailed: "Couldn't load AI activity. Check your connection and try again.",
+    loading: 'Loading activity',
+    loadFailed: "Couldn't load activity. Check your connection and try again.",
     tryAgain: 'Try again',
+    allEmptyTitle: 'No activity yet',
+    allEmptyBody: 'When anyone in the family adds or changes something, it shows up here.',
     emptyTitle: 'No AI changes yet',
     emptyBody: 'When an AI assistant changes something for your family, it shows up here. You can undo it for 7 days.',
     noMatches: 'Nothing matches these filters.',
@@ -1200,6 +1208,7 @@ export const strings = {
   timerPill: {
     label: (count: number) => `${count} ${count === 1 ? 'timer' : 'timers'} running. Open timers`,
     more: (others: number) => `+${others}`,
+    hide: 'Hide the timer pill. Timers keep running',
   },
   // design/ui/OC-Timers.md (spec 011)
   timersScreen: {

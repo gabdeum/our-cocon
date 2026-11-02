@@ -14,7 +14,8 @@ import {
   BottomSheet,
   BrandHeader,
   Button,
-  ActivityCard,
+  ActivityRow,
+  LatestActivityCard,
   Callout,
   Card,
   Choice,
@@ -89,7 +90,7 @@ import {
   Tag,
   EventListGroup,
   EventListRow,
-  WeekEventRow,
+  WeekEventGroup,
   CalCard,
   CalCardBanner,
   WeekStrip,
@@ -387,9 +388,26 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         </PillRow>
       </Section>
 
-      <Section group="Display" title="ActivityCard">
-        <ActivityCard badge="AI" title="New: Pumpkin soup" sub="Added by Alex via ChatGPT · 1 h ago" action={{ label: 'Undo', accessibilityLabel: 'Undo: New: Pumpkin soup', onPress: noop }} />
-        <ActivityCard badge="AI" title="6 items added to Groceries" sub="Undone by Gabriel" />
+      <Section group="Display" title="ActivityRow">
+        <LatestActivityCard
+          title="Latest activity"
+          toggle={<SegmentedControl variant="pill" label="Show" segments={[{ key: 'all', label: 'All' }, { key: 'ai', label: 'AI only' }]} value="all" onChange={noop} />}
+          footer={<Link label="See all activity" onPress={noop} />}
+        >
+          <View role="list">
+            <ActivityRow badge={{ kind: 'person', initial: 'E', color: 'rose' }} title="Eva edited Leek & bacon quiche" sub="Recipes · 1 day ago" last />
+          </View>
+        </LatestActivityCard>
+        <View role="list">
+          <ActivityRow
+            badge={{ kind: 'ai', label: 'AI', color: 'rose' }}
+            title="Eva added Pumpkin soup"
+            sub="Recipes · via ChatGPT · 1 h ago"
+            action={{ label: 'Undo', accessibilityLabel: 'Undo: Eva added Pumpkin soup', onPress: noop }}
+          />
+          <ActivityRow badge={{ kind: 'person', initial: 'G', color: 'honey' }} title="Gabriel ticked 4 items" sub="Groceries · 2 h ago" />
+          <ActivityRow badge={{ kind: 'ai', label: 'AI', color: 'honey' }} title="Gabriel added 6 items" sub="Undone by Eva" last />
+        </View>
       </Section>
 
       <Section group="Display" title="StatTile">
@@ -702,6 +720,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             <EventListRow size="sm" event={{ key: 'r', title: 'Pediatrician', sub: 'Tomorrow · 10:00', tag: null, initials: 'J', colors: ['sky'], label: 'Reminder: Pediatrician, Tomorrow · 10:00', bell: true }} onPress={noop} last />
           </View>
           <WeekStrip
+            picked={null}
             days={['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((letter, i) => ({
               date: `2026-10-${25 + i}`,
               letter,
@@ -713,8 +732,22 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             onDay={noop}
           />
           <View role="list">
-            <WeekEventRow event={{ key: 'w1', day: 'Tue', title: 'Yoga', detail: 'Eva · Evening', colors: ['rose'], label: 'Tue, Yoga, Eva, Evening' }} onPress={noop} />
-            <WeekEventRow event={{ key: 'w2', day: 'Wed', title: 'Lyon trip', detail: 'Eva · Wed–Fri', colors: ['rose'], label: 'Wed, Lyon trip, Eva, Wed–Fri' }} onPress={noop} last />
+            <WeekEventGroup
+              first
+              group={{ date: '2026-10-27', day: 'Tue', events: [{ key: 'w1', title: 'Yoga', detail: 'Evening · Eva', colors: ['rose'], label: 'Tue, Yoga, Evening · Eva' }] }}
+              onPress={noop}
+            />
+            <WeekEventGroup
+              group={{
+                date: '2026-10-28',
+                day: 'Wed',
+                events: [
+                  { key: 'w2', title: 'Lyon trip', detail: 'Wed–Fri · Eva', colors: ['rose'], label: 'Wed, Lyon trip, Wed–Fri · Eva' },
+                  { key: 'w3', title: 'Pediatrician', detail: '10:00 · James', colors: ['sky'], label: 'Wed, Pediatrician, 10:00 · James' },
+                ],
+              }}
+              onPress={noop}
+            />
           </View>
         </CalCard>
       </Section>

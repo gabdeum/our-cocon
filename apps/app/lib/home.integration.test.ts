@@ -91,7 +91,7 @@ describe.skipIf(!local)('Home against local Supabase', () => {
     const card = layoutCalendarCard(await loadEvents(gabriel, from, to), { today, now: '08:00', look: memberLook(members), slotTimes: DEFAULT_SLOT_TIMES, members, me: member('Gabriel') });
     expect(card.state).toBe('today');
     expect(card.today.map((r) => [r.title, r.sub, r.colors[0]])).toEqual([['Busy', 'Morning', e.color]]);
-    expect(card.week.map((r) => r.title)).toEqual(['Busy', 'Yoga']);
+    expect(card.week.flatMap((g) => g.events.map((r) => r.title))).toEqual(['Busy', 'Yoga']);
     expect(JSON.stringify(card)).not.toContain('Dr. Kay');
   });
 });

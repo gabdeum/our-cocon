@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { BackHeader, Button, Callout, Overline, PersonPill, Pill, PillRow, PushedScreen, RecipeItemSkeleton, Text } from '@cocon/ui';
+import { BackHeader, Button, Callout, Overline, PersonPill, Pill, PillRow, PushedScreen, RecipeItemSkeleton, SegmentedControl, Text } from '@cocon/ui';
 import { memberInitials, type ActivityEntry } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { ActivityFilter } from '../../lib/activity';
@@ -28,13 +28,15 @@ export interface ActivityScreenProps extends Omit<ActivityEntriesProps, 'entries
 }
 
 /**
- * AI activity (OC-Activity, spec 026 FR-002): every AI change, newest first, filterable by the
- * person who asked and the assistant, each with Undo for 7 days.
+ * Activity (OC-Activity, spec 026 FR-002): every change by the family and their AI assistants,
+ * newest first, or AI changes only ("All · AI only", opened with Home's choice, spec 028 FR-006);
+ * filterable by person, and under AI only by assistant. AI changes have Undo for 7 days.
  */
 export function ActivityScreen({ entries, members, actors, sources, filter, onFilter, failed, onRetry, hasMore, loadingMore, onShowMore, onBack, ...rest }: ActivityScreenProps) {
   const initials = memberInitials(members);
   const people = members.filter((m): m is typeof m & { user_id: string } => m.user_id !== null && actors.includes(m.user_id));
   const filtered = Boolean(filter.actor || filter.source);
+  const ai = Boolean(filter.ai);
 
   let body;
   if (entries === undefined && failed) {
@@ -56,9 +58,9 @@ export function ActivityScreen({ entries, members, actors, sources, filter, onFi
     ) : (
       <View className="gap-6">
         <Text size={17} weight="900">
-          {a.emptyTitle}
+          {ai ? a.emptyTitle : a.allEmptyTitle}
         </Text>
-        <Text color="ink-muted">{a.emptyBody}</Text>
+        <Text color="ink-muted">{ai ? a.emptyBody : a.allEmptyBody}</Text>
       </View>
     );
   } else {
@@ -74,6 +76,17 @@ export function ActivityScreen({ entries, members, actors, sources, filter, onFi
     <PushedScreen className="gap-18">
       <BackHeader backLabel={a.back} onBack={onBack} title={a.screenTitle} />
       <OfflineBanner screen="home" tracker={rest.tracker} />
+      <SegmentedControl
+        variant="pill"
+        label={a.show}
+        segments={[
+          { key: 'all', label: a.all },
+          { key: 'ai', label: a.aiOnly },
+        ]}
+        value={ai ? 'ai' : 'all'}
+        // An assistant pill only applies to AI only.
+        onChange={(to: 'all' | 'ai') => onFilter(to === 'ai' ? { ...filter, ai: true } : { actor: filter.actor ?? null })}
+      />
       {people.length > 1 ? (
         <View className="gap-6">
           <Overline>{a.people}</Overline>
@@ -91,7 +104,7 @@ export function ActivityScreen({ entries, members, actors, sources, filter, onFi
           </PillRow>
         </View>
       ) : null}
-      {sources.length > 1 ? (
+      {ai && sources.length > 1 ? (
         <View className="gap-6">
           <Overline>{a.assistants}</Overline>
           <PillRow>

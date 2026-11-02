@@ -757,6 +757,9 @@ isOneToOne: false
 "_load_catalog":
 { Args: { "data": Json }; Returns: undefined
                            },
+"_log_app_write":
+{ Args: { "op": string,"r": Json,"tbl": string,"was": Json }; Returns: undefined
+                           },
 "_managed":
 { Args: { "fam": string,"member_id": string }; Returns: {
               "color": Database["public"]['Enums']["member_color"],
@@ -849,6 +852,9 @@ isOneToOne: false
                            } |
 { Args: { "creator": string,"eid": string,"vis": string }; Returns: boolean
                            },
+"_sees_logged_app_event":
+{ Args: { "actor": string,"eid": string,"secret": boolean,"surprise": boolean }; Returns: boolean
+                           },
 "_sees_logged_event":
 { Args: { "actor": string,"eid": string,"secret": boolean }; Returns: boolean
                            },
@@ -860,6 +866,9 @@ isOneToOne: false
                            },
 "_token_hash":
 { Args: { "token": string }; Returns: string
+                           },
+"_undo_ai_change":
+{ Args: { "p_key": string,"p_skip_changed"?: boolean }; Returns: Json
                            },
 "_upcoming_events_of":
 { Args: { "fam": string,"member": string }; Returns: string[]
@@ -878,7 +887,7 @@ isOneToOne: false
                            },
 "activity_entries":
 { Args: { "p_actor"?: string,"p_before"?: string,"p_limit"?: number,"p_source"?: string }; Returns: {
-              "actor_id": string,"can_restore": boolean,"can_undo": boolean,"count": number,"created_at": string,"event_id": string,"event_name": string,"key": string,"kind": string,"names": (string)[],"recipe_id": string,"recipe_name": string,"source": string,"undo_action": string,"undone_at": string,"undone_by": string
+              "actor_id": string,"can_restore": boolean,"can_undo": boolean,"count": number,"created_at": string,"event_id": string,"event_name": string,"event_secret": boolean,"event_when": Json,"from_recipe_name": string,"key": string,"kind": string,"names": (string)[],"recipe_id": string,"recipe_name": string,"source": string,"undo_action": string,"undone_at": string,"undone_by": string
             }[]
                            },
 "activity_filters":

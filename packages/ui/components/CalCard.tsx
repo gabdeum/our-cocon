@@ -82,28 +82,33 @@ export interface WeekStripDay {
   label: string;
 }
 
-/** WeekStrip README: seven tiles (min 62, radius 14), each a link to its day. */
-export function WeekStrip({ days, onDay }: { days: readonly WeekStripDay[]; onDay: (date: string) => void }) {
+/**
+ * WeekStrip README: seven tiles (min 62, radius 14), toggle buttons: tapping one picks that day,
+ * tapping it again goes back to the whole week (`picked` null).
+ */
+export function WeekStrip({ days, picked, onDay }: { days: readonly WeekStripDay[]; picked: string | null; onDay: (date: string) => void }) {
   return (
     <View className="flex-row gap-4">
       {days.map((d) => {
         const empty = d.dots.length === 0;
+        const on = d.date === picked;
         return (
           <Pressable
             key={d.date}
-            role="link"
+            role="button"
             aria-label={d.label}
+            aria-pressed={on}
             onPress={() => onDay(d.date)}
             className={cn(
               'min-h-[62px] min-w-0 flex-1 items-center justify-center gap-[2px] rounded-[14px]',
-              d.today ? 'border-2 border-olive bg-surface-soft' : empty ? 'bg-transparent' : 'bg-surface-page',
+              on ? 'bg-olive' : d.today ? 'border-2 border-olive bg-surface-soft' : empty ? 'bg-transparent' : 'bg-surface-page',
               focusRing,
             )}
           >
-            <Text size={12} weight="900" color="ink-muted">
+            <Text size={12} weight="900" color={on ? 'on-olive' : 'ink-muted'}>
               {d.letter}
             </Text>
-            <Text size={16} weight="900" color={empty && !d.today ? 'ink-muted' : 'ink'} tabular>
+            <Text size={16} weight="900" color={on ? 'on-olive' : empty && !d.today ? 'ink-muted' : 'ink'} tabular>
               {d.num}
             </Text>
             <View aria-hidden className="h-[7px] flex-row gap-[2px]">

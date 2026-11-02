@@ -99,4 +99,37 @@ describe('TimerPill (spec 011 US1)', () => {
     expect(onOpen).toHaveBeenCalledOnce();
     expect(tracker.track).toHaveBeenCalledExactlyOnceWith('timer_pill_tapped', { timer_count: 1 });
   });
+
+  describe('✕ (FR-008)', () => {
+    const hide = () => screen.getByRole('button', { name: 'Hide the timer pill. Timers keep running' });
+
+    it('hides the pill without touching timers, and sends timer_pill_hidden', () => {
+      const { tracker } = setup();
+      act(() => void store.start('Blind bake', 12 * 60, 'step'));
+      act(() => void store.quick());
+      fireEvent.click(hide());
+      expect(screen.queryByRole('link')).toBeNull();
+      expect(store.getSnapshot().timers.map((t) => t.state)).toEqual(['running', 'running']);
+      expect(tracker.track).toHaveBeenCalledExactlyOnceWith('timer_pill_hidden', { timer_count: 2 });
+      act(() => vi.advanceTimersByTime(60 * 1000));
+      expect(screen.queryByRole('link')).toBeNull();
+    });
+
+    it('comes back when a timer starts', () => {
+      setup();
+      act(() => void store.start('Blind bake', 12 * 60, 'step'));
+      fireEvent.click(hide());
+      act(() => void store.quick());
+      expect(pill().textContent).toBe('Kitchen timer05:00+1');
+    });
+
+    it('comes back when a timer finishes, while another still runs', () => {
+      setup();
+      act(() => void store.start('Simmer', 60, 'step'));
+      act(() => void store.start('Blind bake', 12 * 60, 'step'));
+      fireEvent.click(hide());
+      act(() => vi.advanceTimersByTime(60 * 1000));
+      expect(pill().textContent).toBe('Blind bake11:00');
+    });
+  });
 });

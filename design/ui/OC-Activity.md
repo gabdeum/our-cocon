@@ -1,39 +1,37 @@
-# OC-Activity — AI activity
+# OC-Activity — Activity
 
-No drawn screen: this spec is the source of truth (built from ActivityCard, PersonPill, Pill, BackHeader). Route `/activity` (stack, from Home's "See all") · Spec 026
+No drawn screen: this spec is the source of truth (built from ActivityRow, SegmentedControl, PersonPill, Pill, BackHeader). Route `/activity` (stack, from Home's "See all activity", `?show=ai` when Home was on AI only) · Specs 026, 028
 
 ## Layout (top → bottom)
-1. BackHeader: back link "Home", title "AI activity".
+1. BackHeader: back link "Home", title "Activity".
 2. Offline banner when offline (Undo and Restore are then off).
-3. "People" overline, then a row of PersonPills: each member who has asked an AI for a change. Shown only with 2 or more. One at a time; tapping the selected one clears it.
-4. "Assistants" overline, then a row of filter Pills: "Claude", "ChatGPT", "Gemini", "Other" (an assistant we can't name), only those that made changes. Shown only with 2 or more. One at a time; tapping the selected one clears it.
-5. ActivityCards, newest first, gap 12: every AI change, 50 at a time, then a soft button "Show more".
+3. SegmentedControl (pill) "All" · "AI only", opened with Home's choice. Switching to All drops the assistant pill.
+4. "People" overline, then a row of PersonPills: each member who has entries (in the filter's sense). Shown only with 2 or more. One at a time; tapping the selected one clears it.
+5. Under AI only: "Assistants" overline, then a row of filter Pills: "Claude", "ChatGPT", "Gemini", "Other" (an assistant we can't name), only those that made changes. Shown only with 2 or more. One at a time; tapping the selected one clears it.
+6. ActivityRows, newest first, in a list: every change by the family and their assistants (or AI ones only), 50 at a time, then a soft button "Show more".
 
 ## Entries
-One per AI tool call (spec 026 FR-001). A private event's entries are seen only by its creator, and a surprise's never by the people it's kept from (spec 044). Titles:
+One per AI tool call (spec 026 FR-001), or one action in the app (spec 028 FR-009: a recipe and its rows within 10 minutes, a burst of grocery adds or clears, ticks within 10 minutes). A private event's entries read "a private event" for the others, and a surprise's are never seen by the people it's kept from (spec 044). Titles, "{person} {verb} {thing}":
 
-| Change | Title | Sub-line verb |
-| --- | --- | --- |
-| Recipe added | "New: {recipe}" | Added |
-| Recipe changed | "Edited: {recipe}" | Changed |
-| Recipe deleted | "Deleted: {recipe}" (link "Restore" while it's in Recently deleted) | Deleted |
-| Grocery items added | "{n} items added to Groceries" · "{item} added to Groceries" | Added |
-| Ticked | "{n} items ticked" · "{item} ticked" | Ticked |
-| Unticked | "{n} items put back on the list" · "{item} put back on the list" | Changed |
-| Removed | "{n} items removed from Groceries" · "{item} removed from Groceries" | Removed |
-| Done items cleared | "{n} done items cleared" · "1 done item cleared" | Cleared |
-| Event added (spec 044) | "New event: {title}" | Added |
-| Event changed | "Edited event: {title}" | Changed |
-| Event deleted (the whole event, or its dates from one on) | "Deleted event: {title}" (link "Restore" while it's in Recently deleted, 30 days) | Deleted |
-| One date of a repeating event deleted | "Deleted one date: {title}" | Deleted |
-| Anything else | "{n} changes" · "1 change" | Changed |
+| Change | Title |
+| --- | --- |
+| Recipe added · changed · deleted · restored | "Eva added Pumpkin soup" · "Eva edited …" · "Eva deleted …" (AI: link "Restore" while it's in Recently deleted) · "Eva restored …" (app only) |
+| Grocery items added | "Gabriel added 6 items" · "Gabriel added Onion"; sub-line detail "from {recipe}" when they came from one |
+| Ticked | "Gabriel ticked 4 items" · "Gabriel ticked Onion" |
+| Unticked (AI only) | "… put back 2 items" · "… put back Onion" |
+| Removed (AI only) | "… removed 2 items" · "… removed Onion" |
+| Done items cleared | "… cleared 4 done items" · "… cleared 1 done item" |
+| Event added · changed · deleted | "Gabriel added Pediatrician" · "… edited …" · "… deleted …" (AI: "Restore" while in Recently deleted, 30 days); "a private event" when the reader can't see it, "an event" once it's gone for good |
+| One date of a repeating event deleted (AI) | "… deleted one date of Swim" |
+| Anything else | "… made 3 changes" · "… made 1 change" |
 
-Sub-line: "{verb} by {name} via {assistant} · {timeAgo}" ("just now", "12 min ago", "4 h ago", "2 days ago"); "Former member" for someone who left, "an AI assistant" for an assistant we can't name. Undo and its states as on OC-Home (States).
+Badge: the person's avatar in their color; an AI change has "AI" in a rounded square in their color with an olive ring. Sub-line: "{module} · {detail} · via {assistant} · {timeAgo}" — module Recipes, Groceries or Calendar; detail the event's day and time ("Wed, 10:00") or "from {recipe}"; "via" only for AI changes ("an AI assistant" for one we can't name); time "just now", "12 min ago", "4 h ago", "2 days ago". "Former member" for someone who left. Undo and its states as on OC-Home (States); the family's own changes have no Undo.
 
 ## States
 | State | Copy and behaviour |
 | --- | --- |
-| Loading | Skeleton row, screen reader "Loading AI activity". |
-| Load failed | Callout (warn) "Couldn't load AI activity. Check your connection and try again." and soft button "Try again". |
-| No AI activity | Title "No AI changes yet", body "When an AI assistant changes something for your family, it shows up here. You can undo it for 7 days." |
+| Loading | Skeleton row, screen reader "Loading activity". |
+| Load failed | Callout (warn) "Couldn't load activity. Check your connection and try again." and soft button "Try again". |
+| No activity | Title "No activity yet", body "When anyone in the family adds or changes something, it shows up here." |
+| AI only, none | Title "No AI changes yet", body "When an AI assistant changes something for your family, it shows up here. You can undo it for 7 days." |
 | Filters match nothing | "Nothing matches these filters." |

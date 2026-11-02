@@ -29,7 +29,7 @@ export { Card, HeroCard, Photo, PhotoPlaceholder, Thumb, type CardProps } from '
 export { RecipeItem, RecipeItemSkeleton, RecipeSummary, type RecipeItemProps, type RecipeSummaryProps } from './components/RecipeItem';
 export { LinkField, type LinkFieldProps } from './components/LinkField';
 export { StatTile, type StatTileProps } from './components/StatTile';
-export { ActivityCard, type ActivityCardProps } from './components/ActivityCard';
+export { ActivityRow, LatestActivityCard, type ActivityRowProps, type LatestActivityCardProps } from './components/ActivityRow';
 export { Callout, type CalloutProps, type CalloutVariant } from './components/Callout';
 export { Avatar, AvatarStack, type AvatarColor, type MemberColor } from './components/Avatar';
 export { MemberBadge, MemberChip, MemberCount, MemberPickerChip, MemberStack, type MemberBadgeProps, type MemberChipColor, type MemberChipProps, type MemberCountProps, type MemberPickerChipProps } from './components/MemberChip';
@@ -54,7 +54,7 @@ export {
   type WeekDayHead,
 } from './components/HourGrid';
 export { Swipeable, SWIPE_COMMIT, type SwipeableProps } from './components/Swipeable';
-export { EventListGroup, EventListRow, WeekEventRow, type EventListItem, type WeekEventItem } from './components/EventListRow';
+export { EventListGroup, EventListRow, WeekEventGroup, type EventListItem, type WeekEventDay, type WeekEventItem } from './components/EventListRow';
 export { CalCard, CalCardBanner, WeekStrip, type CalCardProps, type WeekStripDay } from './components/CalCard';
 export { AllDayRow, DayEventRow, SlotBand, type DayAllDayItem, type DayBand, type DayEventItem, type SlotBandProps } from './components/SlotBand';
 export { FloatingAdd, Toast, ToastHost, ToastProvider, useToast, TOAST_MS, TOAST_ACTION_MS, type FloatingAddProps, type ToastProps, type ToastRequest } from './components/Toast';

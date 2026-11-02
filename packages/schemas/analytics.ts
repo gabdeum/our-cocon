@@ -93,8 +93,9 @@ export const events = {
   timer_finished: z.strictObject({}),
   // Spec 009/010: a step's "Start timer"; the step's position, from 0.
   step_timer_started: z.strictObject({ step_index: z.int().min(0).max(MAX_TRACKED_STEPS - 1) }),
-  // Spec 011: the TimerPill was tapped, and the Timers screen opened; how many timers exist.
+  // Spec 011: the TimerPill was tapped, or hidden with its ✕ (FR-008), and the Timers screen opened; how many timers exist.
   timer_pill_tapped: z.strictObject({ timer_count: z.int().min(1).max(100) }),
+  timer_pill_hidden: z.strictObject({ timer_count: z.int().min(1).max(100) }),
   timers_screen_opened: z.strictObject({ timer_count: z.int().min(0).max(100) }),
   // Spec 012: cooking mode opened, finished ("Finish" on the last step) or left with Exit.
   // `at_step` counts from 1; `minutes` from opening to Finish.
@@ -220,6 +221,10 @@ export const events = {
   homepage_calendar_event_tapped: z.strictObject({ section: z.enum(['today', 'week']), card_state: HomeCardState }),
   homepage_calendar_toggled: z.strictObject({ to: z.enum(['today', 'week']) }),
   homepage_calendar_add_tapped: z.strictObject({ card_state: HomeCardState }),
+  // Spec 028 FR-008: a strip day picked in This week (0 today … 6).
+  homepage_calendar_day_picked: z.strictObject({ day_offset: z.int().min(0).max(6) }),
+  // Spec 028 FR-006: Latest activity's "All · AI only".
+  homepage_activity_filter_changed: z.strictObject({ to: z.enum(['all', 'ai']) }),
 } as const;
 
 export type EventName = keyof typeof events;

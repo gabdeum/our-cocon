@@ -1,6 +1,6 @@
 -- Spec 026: the activity list and Undo. Members of the family list and undo its AI entries, through
 -- RLS; assistants can't undo; an undo is done once and never undone itself (FR-003); Undo lasts 7
--- days (edge case); app writes are never logged (decision 33). Undoing each tool exactly (SC-001)
+-- days (edge case). App writes are logged too, as the app's, and never undone (spec 028 FR-009). Undoing each tool exactly (SC-001)
 -- is in apps/mcp/tools/undo.integration.test.ts.
 begin;
 select plan(21);
@@ -48,13 +48,13 @@ select pg_temp.login('00000000-0000-0000-0000-00000000000b', 'cocon_assistant', 
 select pg_temp.call('11111111-1111-4111-8111-111111111111', 'add_groceries');
 insert into public.grocery_items (name) values ('Milk'), ('Bread');
 
--- Gabriel's own writes aren't logged.
+-- Gabriel's own write is logged as the app's, apart from the call.
 select pg_temp.login('00000000-0000-0000-0000-00000000000a', 'authenticated');
 select set_config('request.headers', '', true);
 insert into public.grocery_items (name) values ('Rice');
-select is((select count(*)::int from public.activity where action = 'insert'), 2, 'only the assistant''s writes are logged');
+select is((select count(*)::int from public.activity where action = 'insert' and source <> 'app'), 2, 'the assistant''s two writes are logged as its own');
 
-select results_eq($$ select key, kind, count, source, can_undo from public.activity_entries() $$,
+select results_eq($$ select key, kind, count, source, can_undo from public.activity_entries(p_source => 'ai') $$,
   $$ values ('11111111-1111-4111-8111-111111111111'::uuid, 'groceries_added', 2, 'chatgpt', true) $$,
   'one entry for the whole call, from ChatGPT');
 select throws_ok($$ insert into public.activity (action, target_kind) values ('insert', 'grocery_items') $$, '42501', null,
@@ -68,7 +68,7 @@ select throws_ok($$ select public.undo_ai_change('11111111-1111-4111-8111-111111
 select pg_temp.login('00000000-0000-0000-0000-00000000000a', 'authenticated');
 select is(public.undo_ai_change('11111111-1111-4111-8111-111111111111') ->> 'done', '2', 'Undo clears both items');
 select is((select count(*)::int from public.grocery_items where deleted_at is null), 1, 'Rice stays');
-select results_eq($$ select undone_by, undo_action, can_undo from public.activity_entries() $$,
+select results_eq($$ select undone_by, undo_action, can_undo from public.activity_entries(p_source => 'ai') $$,
   $$ values ('00000000-0000-0000-0000-00000000000a'::uuid, 'undo', false) $$, 'the entry reads undone by Gabriel');
 select throws_ok($$ select public.undo_ai_change('11111111-1111-4111-8111-111111111111') $$, '22023', 'already_undone', 'done once');
 select throws_ok($$ select public.undo_ai_change((select id from public.activity where action = 'undo')) $$, 'P0002', 'not_found',
@@ -85,7 +85,7 @@ select pg_temp.login('00000000-0000-0000-0000-00000000000b', 'cocon_assistant', 
 select pg_temp.call('11111111-1111-4111-8111-111111111111', 'add_groceries');
 insert into public.grocery_items (name) values ('Eggs');
 select pg_temp.login('00000000-0000-0000-0000-00000000000a', 'authenticated');
-select results_eq($$ select count, can_undo from public.activity_entries() where key <> '11111111-1111-4111-8111-111111111111' $$,
+select results_eq($$ select count, can_undo from public.activity_entries(p_source => 'ai') where key <> '11111111-1111-4111-8111-111111111111' $$,
   $$ values (1, true) $$, 'a reused call id doesn''t join an undone entry');
 
 -- An edit labelled as a delete is still an edit, with Undo.

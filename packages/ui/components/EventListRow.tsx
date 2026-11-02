@@ -82,42 +82,58 @@ export function EventListRow({ event, onPress, last, size = 'md' }: { event: Eve
   );
 }
 
-/** One line of the week (ListRow README › Week row, CalCard): "Tue", stripe, "Yoga · Eva · Evening". */
+/** One line of the week (ListRow README › Week rows, CalCard): stripe, "Morning run · 06:30 · Gabriel". */
 export interface WeekEventItem {
   key: string;
-  /** "Tue". */
-  day: string;
   title: string;
-  /** "Eva · Evening": who and when, after the title. */
+  /** "06:30 · Gabriel": when and who, after the title. */
   detail: string;
   colors: readonly EventColor[];
-  /** For screen readers: the whole row in one sentence. */
+  /** For screen readers: the whole row in one sentence, its day first. */
   label: string;
 }
 
-/** ListRow README › Week row: day 40 wide, 5 × 26 stripe, one line with an ellipsis; min 44. */
-export function WeekEventRow({ event, onPress, last }: { event: WeekEventItem; onPress: () => void; last?: boolean }) {
+/** One day of the week list: its label shows once, at the top of the group. */
+export interface WeekEventDay {
+  date: string;
+  /** "Tue". */
+  day: string;
+  events: readonly WeekEventItem[];
+}
+
+/**
+ * ListRow README › Week rows: one day's events, the day label (40 wide) once at the top, rows of a
+ * 5 × 26 stripe and one line with an ellipsis (min 44), no lines inside the day; a divider above
+ * every day but the first.
+ */
+export function WeekEventGroup({ group, onPress, first }: { group: WeekEventDay; onPress: (key: string) => void; first?: boolean }) {
   return (
-    <View role="listitem" className={cn(!last && 'border-b-[1.5px] border-line')}>
-      <Pressable
-        role="link"
-        aria-label={event.label}
-        onPress={onPress}
-        className={cn('min-h-touch-min flex-row items-center gap-10 active:bg-surface-card-pressed', focusRing)}
-      >
-        <Text size={13} weight="900" color="ink-muted" className="w-[40px] flex-none">
-          {event.day}
-        </Text>
-        <View aria-hidden className="h-[26px] w-[5px] flex-none">
-          <Fill colors={event.colors} rounded="rounded-[3px]" />
-        </View>
-        <Text size={15} weight="800" numberOfLines={1} className="min-w-0 flex-1">
-          {event.title}
-          <Text size={15} weight="700" color="ink-muted">
-            {` · ${event.detail}`}
-          </Text>
-        </Text>
-      </Pressable>
+    <View className={cn('flex-row items-start gap-10', !first && 'border-t-[1.5px] border-line')}>
+      <Text aria-hidden size={13} weight="900" color="ink-muted" className="w-[40px] flex-none pt-12">
+        {group.day}
+      </Text>
+      <View role="list" className="min-w-0 flex-1">
+        {group.events.map((event) => (
+          <View key={event.key} role="listitem">
+            <Pressable
+              role="link"
+              aria-label={event.label}
+              onPress={() => onPress(event.key)}
+              className={cn('min-h-touch-min flex-row items-center gap-10 active:bg-surface-card-pressed', focusRing)}
+            >
+              <View aria-hidden className="h-[26px] w-[5px] flex-none">
+                <Fill colors={event.colors} rounded="rounded-[3px]" />
+              </View>
+              <Text size={15} weight="800" numberOfLines={1} className="min-w-0 flex-1">
+                {event.title}
+                <Text size={15} weight="700" color="ink-muted">
+                  {` · ${event.detail}`}
+                </Text>
+              </Text>
+            </Pressable>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }

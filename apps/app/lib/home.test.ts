@@ -91,19 +91,34 @@ describe('layoutCalendarCard', () => {
     ];
     const card = layoutCalendarCard(events, ctx);
     expect(card.state).toBe('week');
-    expect(card.week.map((e) => `${e.day} · ${e.title} · ${e.detail}`)).toEqual([
-      'Mon · Morning run · Gabriel · 06:30',
-      'Tue · Eva’s birthday · Eva · All day',
-      'Tue · Yoga · Eva · Evening',
-      'Wed · Lyon trip · Eva · Wed–Fri',
-      'Wed · Pediatrician · James · 10:00',
+    // Grouped by day, the day once; "title · when · person"; Lyon trip once, on its first day.
+    expect(card.week.map((g) => [g.day, g.events.map((e) => `${e.title} · ${e.detail}`)])).toEqual([
+      ['Mon', ['Morning run · 06:30 · Gabriel']],
+      ['Tue', ['Eva’s birthday · All day · Eva', 'Yoga · Evening · Eva']],
+      ['Wed', ['Lyon trip · Wed–Fri · Eva', 'Pediatrician · 10:00 · James']],
     ]);
+    expect(card.week[1]?.events[1]?.label).toBe('Tue, Yoga, Evening · Eva');
     expect(card.more).toBe(2);
     expect(card.strip.map((d) => d.letter).join('')).toBe('SMTWTFS');
     expect(card.strip[0]).toMatchObject({ today: true, dots: [], label: 'Today, October 25, nothing planned' });
     expect(card.strip[3]).toMatchObject({ dots: ['rose', 'mint'], label: 'October 28, 2 people busy' });
     // FR-002: "+" opens the next free day: today has nothing.
     expect(card.addDate.week).toBe(TODAY);
+  });
+
+  it('FR-008: each strip day in the Today layout, with its header, empty text and "+" label', () => {
+    const events = [
+      ev({ title: 'Lyon trip', starts_on: '2026-10-28', ends_on: '2026-10-30', time_type: 'all_day', slots: [], members: [eva.id] }),
+      ev({ title: 'Pediatrician', starts_on: '2026-10-28', ends_on: '2026-10-28', time_type: 'custom', slots: [], start_time: '10:00', end_time: '11:00', members: [james.id] }),
+    ];
+    const card = layoutCalendarCard(events, ctx);
+    expect(card.days.map((d) => d.date)).toEqual(card.strip.map((d) => d.date));
+    expect(card.days[0]).toMatchObject({ title: 'Today, Sunday, Oct. 25', items: [], empty: 'Nothing planned on Sunday.' });
+    const wed = card.days[3];
+    expect(wed).toMatchObject({ title: 'Wednesday, Oct. 28', addLabel: 'Add event on Wednesday' });
+    expect(wed?.items.map((e) => e.title)).toEqual(['Lyon trip', 'Pediatrician']);
+    // A multi-day event is on each of its days.
+    expect(card.days[4]?.items.map((e) => [e.title, e.tag?.label])).toEqual([['Lyon trip', 'Day 2 of 3']]);
   });
 
   it('FR-002: the next free day when today is taken', () => {
@@ -139,7 +154,7 @@ describe('layoutCalendarCard › surprises', () => {
     const card = layoutCalendarCard([surprise], ctx);
     expect(card.birthdays).toEqual([]);
     expect(card.today.map((e) => [e.title, e.bell ?? false, e.tag])).toEqual([['Dinner with Eva', false, null]]);
-    expect(card.week.map((e) => e.title)).toEqual(['Dinner with Eva']);
+    expect(card.week.flatMap((g) => g.events.map((e) => e.title))).toEqual(['Dinner with Eva']);
     expect(JSON.stringify(card)).not.toContain('surprise party');
   });
 });
