@@ -168,7 +168,7 @@ Every night (between 02:00 and 03:30 UTC), for each copy:
 
 Anything older than 30 days is deleted. Backups are encrypted to two keys: yours (for a disaster) and the server's own (for the monthly test).
 
-**Monthly restore test.** On the 3rd of each month, GitHub restores the latest prod backup into staging and checks every table's row count and the photos. It replaces staging's data with a copy of prod's, so staging then holds real family data. To run it now: GitHub → Actions → Restore test → Run workflow. If it fails, GitHub emails you.
+**Monthly restore test.** On the 3rd of each month, GitHub restores the latest prod backup into staging and checks every table's row count and the photos. It replaces staging's data with a copy of prod's, so staging then holds real family data. If the test fails, staging's previous data is put back and staging starts on it again. To run it now: GitHub → Actions → Restore test → Run workflow. If it fails, GitHub emails you.
 
 **Run a backup now:** `sudo systemctl start cocon-backup@prod` (watch it: `journalctl -fu cocon-backup@prod`).
 
