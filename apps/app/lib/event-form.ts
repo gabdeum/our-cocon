@@ -36,6 +36,7 @@ import type { DateGridDay, MemberChipColor } from '@cocon/ui';
 import { monthOccurrences } from './calendar-month';
 import type { Member } from './session';
 import { strings } from '../strings/en';
+import { hourOnly } from './clock';
 
 const a = strings.calendar.add;
 
@@ -282,11 +283,11 @@ export function dayTiles(today: string, date: string): { today: string; tomorrow
   return { today: tile(today), tomorrow: tile(addDays(today, 1)), other: picked === 'other' ? dateLabel(date) : a.pickDate, picked };
 }
 
-/** The slot chips, in order, with the family's hours ("18–22"). */
-export function slotChips(slotTimes: SlotTimes): { key: SlotKey | 'all_day'; label: string; hours: string }[] {
+/** The slot chips, in order, with the family's hours ("18–22", or "6 PM–10 PM" in 12-hour time). */
+export function slotChips(slotTimes: SlotTimes, use24h = true): { key: SlotKey | 'all_day'; label: string; hours: string }[] {
   return [
     { key: 'all_day', label: a.allDay, hours: a.wholeDay },
-    ...SLOT_KEYS.map((s) => ({ key: s, label: calendarWordsEn.slots[s], hours: a.slotHours(slotTimes[s].start, slotTimes[s].end) })),
+    ...SLOT_KEYS.map((s) => ({ key: s, label: calendarWordsEn.slots[s], hours: a.slotHours(hourOnly(slotTimes[s].start, use24h), hourOnly(slotTimes[s].end, use24h)) })),
   ];
 }
 
@@ -378,9 +379,11 @@ export function conflictLine(draft: EventDraft, events: readonly StoredEvent[], 
 }
 
 /** FR-009: "Poker night added for tonight, 18:00–22:00."; all day: "… added for Sat, Oct 31." */
-export function toastText(input: EventInput, today: string, slotTimes: SlotTimes): string {
-  const range = rangeLabel({ time_type: input.time_type, slots: input.slots ?? [], start_time: input.start_time, end_time: input.end_time }, { use24h: true, slotTimes });
-  const start = range ? (range.split('–')[0] ?? null) : null;
+export function toastText(input: EventInput, today: string, slotTimes: SlotTimes, use24h = true): string {
+  const timed = { time_type: input.time_type, slots: input.slots ?? [], start_time: input.start_time, end_time: input.end_time };
+  const range = rangeLabel(timed, { use24h, slotTimes });
+  // "Tonight" goes by the 24-hour start, whatever the member's clock.
+  const start = rangeLabel(timed, { use24h: true, slotTimes })?.split('–')[0] ?? null;
   const word = whenWord(input.starts_on, today, start);
   const when = word === 'tonight' ? a.tonight : word === 'today' ? a.todayWord : word === 'tomorrow' ? a.tomorrowWord : dateLabel(input.starts_on);
   return a.added(input.title, when, range);

@@ -47,7 +47,7 @@ describe('Recently deleted', () => {
   it('lists each recipe with who deleted it, when, and the days left, newest first', () => {
     setup();
     expect(screen.getByRole('heading', { name: 'Recently deleted' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Settings' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Menu' })).toBeTruthy();
     const first = screen.getByText('Deleted by Gabriel · 3 days ago · 27 days left');
     const second = screen.getByText('Deleted by Former member · 10 days ago · 20 days left');
     expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

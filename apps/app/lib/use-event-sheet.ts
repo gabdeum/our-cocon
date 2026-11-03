@@ -1,8 +1,9 @@
 import { router, type Href } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { DEFAULT_SLOT_TIMES, todayIn, weekStartFor } from '@cocon/calendar';
+import { DEFAULT_SLOT_TIMES, todayIn } from '@cocon/calendar';
 import { loadCalendarSettings } from '@cocon/data';
-import { calendarSettingsKey, deviceRegion } from './calendar-header';
+import { calendarSettingsKey } from './calendar-header';
+import { useCalendarDisplay } from './calendar-prefs';
 import { useSession } from './session';
 
 /**
@@ -16,6 +17,7 @@ export function useEventSheet() {
   const familyId = state.status === 'ready' ? state.family.id : null;
   const settings = useQuery({ queryKey: calendarSettingsKey(familyId ?? ''), queryFn: () => loadCalendarSettings(client), enabled: familyId !== null });
   const timeZone = settings.data?.homeTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const { prefs } = useCalendarDisplay();
   const myMemberId = state.status === 'ready' ? (state.members.find((m) => m.user_id === state.userId)?.id ?? state.me.id) : null;
   return {
     ...session,
@@ -23,8 +25,8 @@ export function useEventSheet() {
     myMemberId,
     today: todayIn(timeZone),
     slotTimes: settings.data?.slotTimes ?? DEFAULT_SLOT_TIMES,
-    // "Automatic" until spec 029 adds the member's own setting (as the Calendar tab).
-    weekStartsOn: weekStartFor('automatic', deviceRegion()),
+    weekStartsOn: prefs.weekStartsOn,
+    use24h: prefs.use24h,
     /** The calendar's queries start with `events` (lib/sync.tsx refetches them live too). */
     refreshEvents: () => void queryClient.invalidateQueries({ queryKey: ['events'] }),
     // Opened straight from a link there's nothing to go back to: the calendar.

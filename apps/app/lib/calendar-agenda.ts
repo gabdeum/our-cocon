@@ -27,6 +27,8 @@ export interface AgendaContext {
   look: MemberLook;
   slotTimes: SlotTimes;
   members: readonly Member[];
+  /** The member's Time format (spec 029); 24-hour when not given. */
+  use24h?: boolean;
 }
 
 export interface AgendaGroup {
@@ -74,7 +76,7 @@ export function agendaRow(o: MonthOccurrence, date: string, ctx: AgendaContext):
   const { initials, colors } = eventLook(o.members, ctx.look);
   const allDay = inAllDay(o);
   const range = allDay ? null : timeRange(o, ctx.slotTimes);
-  const when = allDay || !range ? d.allDay : timeLabel(o, { use24h: true, slotTimes: ctx.slotTimes });
+  const when = allDay || !range ? d.allDay : timeLabel(o, { use24h: ctx.use24h ?? true, slotTimes: ctx.slotTimes });
   const driver = o.view === 'full' ? driverLine(o.responsible_member_id, o.members, ctx.members) : null;
   const place = o.location ?? driver;
   const placed = place ? d.at(when, place) : when;

@@ -395,6 +395,12 @@ describe('the toast (FR-009)', () => {
   ] as const)('%s', (_, over, text) => {
     expect(toastText(input(over), TODAY, DEFAULT_SLOT_TIMES)).toBe(text);
   });
+
+  it('in 12-hour time (spec 029 Time format, L95): still "tonight", and the chips read "6 PM–10 PM"', () => {
+    expect(toastText(input({ time: slots('evening') }), TODAY, DEFAULT_SLOT_TIMES, false)).toBe('Poker night added for tonight, 6:00 PM–10:00 PM.');
+    expect(slotChips(DEFAULT_SLOT_TIMES, false).find((c) => c.key === 'evening')?.hours).toBe('6 PM–10 PM');
+    expect(slotChips(DEFAULT_SLOT_TIMES, false).find((c) => c.key === 'early_morning')?.hours).toBe('6 AM–9 AM');
+  });
 });
 
 describe('who can see it (spec 043)', () => {

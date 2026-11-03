@@ -112,8 +112,8 @@ select lives_ok($$ update public.recipes set deleted_at = now() $$, 'a delete al
 
 -- FR-003: every assistant grocery write is logged, with the row as it was.
 reset role;
-select is((select count(*)::int from public.activity where target_kind = 'grocery_items'), 4, 'each add, the tick and the clear are an entry');
-select is((select payload ->> 'name' from public.activity where target_kind = 'grocery_items' and action = 'insert' order by payload ->> 'name' limit 1), 'Milk', 'with the item''s name');
+select is((select count(*)::int from public.activity where target_kind = 'grocery_items' and source <> 'app'), 4, 'each add, the tick and the clear are an entry');
+select is((select payload ->> 'name' from public.activity where target_kind = 'grocery_items' and action = 'insert' and source <> 'app' order by payload ->> 'name' limit 1), 'Milk', 'with the item''s name');
 select ok((select payload #>> '{before,deleted_at}' is null from public.activity
   where target_kind = 'grocery_items' and action = 'update' and payload #>> '{before,checked}' = 'true'), 'the clear keeps the item as it was, for Undo');
 

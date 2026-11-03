@@ -1,8 +1,10 @@
-import { router, type Href } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
+import { router, useFocusEffect, type Href } from 'expo-router';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { todayIn } from '@cocon/calendar';
 import { loadCalendarSettings, loadEvents, loadHomeHero } from '@cocon/data';
 import { DebugFooter } from '../../components/DebugFooter';
+import type { ActivityShow } from '../../components/activity/ActivitySection';
 import { HomeScreen } from '../../components/home/HomeScreen';
 import { activityKey, HOME_ENTRIES, loadActivity, undoActivity } from '../../lib/activity';
 import { calendarSettingsKey, eventsKey } from '../../lib/calendar-header';
@@ -34,7 +36,17 @@ export default function HomeTab() {
   const recipes = useQuery({ queryKey: recipeListKey(familyId ?? ''), queryFn: () => loadRecipeList(client), enabled });
   const hero = useQuery({ queryKey: homeHeroKey(familyId ?? ''), queryFn: () => loadHomeHero(client), enabled });
   const groceries = useQuery({ queryKey: groceryListKey(familyId ?? ''), queryFn: () => loadGroceryList(client), enabled });
-  const activity = useQuery({ queryKey: [...activityKey(familyId ?? ''), 'home'], queryFn: () => loadActivity(client, HOME_ENTRIES), enabled });
+  // "All · AI only" isn't remembered: All each time Home comes back into view (FR-006).
+  const [show, setShow] = useState<ActivityShow>('all');
+  useFocusEffect(useCallback(() => setShow('all'), []));
+  const filter = { ai: show === 'ai' };
+  // The other filter's rows stay until these load, so AI only doesn't flash "No AI changes yet."
+  const activity = useQuery({
+    queryKey: [...activityKey(familyId ?? '', filter), 'home'],
+    queryFn: () => loadActivity(client, HOME_ENTRIES, filter),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
   const photos = useRecipePhotoUrls(client, familyId, [hero.data?.photo_path]);
 
   if (state.status !== 'ready') return null;
@@ -53,6 +65,8 @@ export default function HomeTab() {
       groceries={groceries.data}
       recipeCount={recipes.data?.length}
       activity={activity.data ?? []}
+      activityShow={show}
+      onActivityShow={setShow}
       readOnly={!online}
       tracker={tracker}
       onUndo={async (entry, skipChanged) => {
@@ -68,9 +82,8 @@ export default function HomeTab() {
         groceries: () => router.navigate('/groceries'),
         recipes: () => router.navigate('/recipes'),
         family: () => go('/settings/family'),
-        activity: () => go('/activity'),
+        activity: (to) => go(`/activity?show=${to}`),
         event: (id, date) => go(`/calendar/${id}?date=${date}`),
-        day: (date) => router.navigate(`/calendar?view=day&date=${date}&from=home` as Href),
         agenda: () => router.navigate('/calendar?view=agenda&from=home' as Href),
         calendar: () => router.navigate('/calendar?from=home' as Href),
         addEvent: (date) => go(`/calendar/new?date=${date}`),

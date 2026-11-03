@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { ActivityCard, Dialog } from '@cocon/ui';
+import { ActivityRow, Dialog } from '@cocon/ui';
 import { RestoreKind, UndoKind, type ActivityEntry, type Tracker, type UndoConflict } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useToast } from '../../lib/toast';
@@ -11,20 +11,22 @@ const a = strings.activity;
 
 export interface ActivityEntriesProps {
   entries: readonly ActivityEntry[];
-  members: readonly Pick<Member, 'user_id' | 'display_name'>[];
+  members: readonly Pick<Member, 'id' | 'user_id' | 'display_name' | 'color' | 'joined_at'>[];
   tracker: Tracker;
   /** Undo or Restore, as the member (lib/activity.ts › undoActivity). */
   onUndo: (entry: ActivityEntry, skipChanged: boolean) => Promise<UndoOutcome>;
   /** Offline: Undo and Restore are off. */
   readOnly?: boolean;
   now?: Date;
+  /** The member's Time format (spec 029), for an event's "Wed, 10:00". */
+  use24h?: boolean;
 }
 
 /**
- * AI entries as ActivityCards, with Undo (spec 026 US2): "Undone" when done; when someone changed
+ * Entries as ActivityRows, AI ones with Undo (spec 026 US2): "Undone" when done; when someone changed
  * part of it since, a Dialog says who and what, then undoes only the rest.
  */
-export function ActivityEntries({ entries, members, tracker, onUndo, readOnly, now = new Date() }: ActivityEntriesProps) {
+export function ActivityEntries({ entries, members, tracker, onUndo, readOnly, now = new Date(), use24h }: ActivityEntriesProps) {
   const [busy, setBusy] = useState<string | null>(null);
   const toast = useToast();
   const [asking, setAsking] = useState<{ entry: ActivityEntry; conflicts: UndoConflict[] } | null>(null);
@@ -58,28 +60,31 @@ export function ActivityEntries({ entries, members, tracker, onUndo, readOnly, n
   };
 
   return (
-    <View className="gap-12">
-      {entries.map((entry) => {
-        const view = describeEntry(entry, members, now);
-        return (
-          <ActivityCard
-            key={entry.key}
-            badge={a.badge}
-            title={view.title}
-            sub={view.sub}
-            action={
-              view.action
-                ? {
-                    label: view.action === 'restore' ? a.restore : a.undo,
-                    accessibilityLabel: view.action === 'restore' ? a.restoreA11y(view.title) : a.undoA11y(view.title),
-                    onPress: () => void run(entry, false),
-                    disabled: readOnly || busy !== null,
-                  }
-                : undefined
-            }
-          />
-        );
-      })}
+    <>
+      <View role="list">
+        {entries.map((entry, i) => {
+          const view = describeEntry(entry, members, now, use24h);
+          return (
+            <ActivityRow
+              key={entry.key}
+              last={i === entries.length - 1}
+              badge={view.badge}
+              title={view.title}
+              sub={view.sub}
+              action={
+                view.action
+                  ? {
+                      label: view.action === 'restore' ? a.restore : a.undo,
+                      accessibilityLabel: view.action === 'restore' ? a.restoreA11y(view.title) : a.undoA11y(view.title),
+                      onPress: () => void run(entry, false),
+                      disabled: readOnly || busy !== null,
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
+      </View>
       <Dialog
         visible={asking !== null}
         icon="warning"
@@ -92,6 +97,6 @@ export function ActivityEntries({ entries, members, tracker, onUndo, readOnly, n
         cancelLabel={a.cancel}
         onCancel={() => setAsking(null)}
       />
-    </View>
+    </>
   );
 }

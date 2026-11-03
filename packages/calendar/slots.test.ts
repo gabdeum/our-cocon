@@ -1,7 +1,7 @@
 import type { SlotKey } from '@cocon/schemas/calendar';
 import { describe, expect, it } from 'vitest';
 import { timeLabel } from './labels';
-import { DEFAULT_SLOT_TIMES, fromMinutes, slotAt, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes } from './slots';
+import { DEFAULT_SLOT_TIMES, checkSlotTimes, fromMinutes, moveSlotEdge, slotAt, slotNeighbour, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes } from './slots';
 
 describe('slotsToRange (US2, FR-002)', () => {
   it.each([
@@ -73,5 +73,33 @@ describe('slot helpers', () => {
     expect(timeRange({ time_type: 'slot', slots: ['lunch'] })).toEqual({ start: '12:00', end: '14:00' });
     expect(timeRange({ time_type: 'custom', slots: [], start_time: '14:30', end_time: '16:00' })).toEqual({ start: '14:30', end: '16:00' });
     expect(() => timeRange({ time_type: 'custom', slots: [], start_time: '14:30' })).toThrow(expect.objectContaining({ code: 'EndBeforeStart' }));
+  });
+});
+
+describe('checkSlotTimes and moveSlotEdge (spec 029 FR-009, US6)', () => {
+  it('accepts the defaults', () => {
+    expect(checkSlotTimes(DEFAULT_SLOT_TIMES)).toBeNull();
+  });
+
+  it('moving Evening to 18:30 moves Afternoon’s end with it', () => {
+    const moved = moveSlotEdge(DEFAULT_SLOT_TIMES, 'evening', 'start', '18:30');
+    expect(moved.evening).toEqual({ start: '18:30', end: '22:00' });
+    expect(moved.afternoon).toEqual({ start: '14:00', end: '18:30' });
+    expect(checkSlotTimes(moved)).toBeNull();
+  });
+
+  it('moving an end moves the next start; the day’s outer edges move alone', () => {
+    expect(moveSlotEdge(DEFAULT_SLOT_TIMES, 'lunch', 'end', '13:30').afternoon.start).toBe('13:30');
+    expect(moveSlotEdge(DEFAULT_SLOT_TIMES, 'early_morning', 'start', '05:30').early_morning).toEqual({ start: '05:30', end: '09:00' });
+    expect(moveSlotEdge(DEFAULT_SLOT_TIMES, 'evening', 'end', '23:00').evening).toEqual({ start: '18:00', end: '23:00' });
+    expect(slotNeighbour('evening', 'start')).toBe('afternoon');
+    expect(slotNeighbour('evening', 'end')).toBeNull();
+  });
+
+  it('refuses a gap, a slot that ends before it starts, or a squeezed-out neighbour', () => {
+    expect(checkSlotTimes({ ...DEFAULT_SLOT_TIMES, evening: { start: '18:30', end: '22:00' } })).toEqual({ slot: 'evening', previous: 'afternoon' });
+    expect(checkSlotTimes(moveSlotEdge(DEFAULT_SLOT_TIMES, 'evening', 'start', '13:00'))).toEqual({ slot: 'afternoon', previous: 'lunch' });
+    expect(checkSlotTimes({ ...DEFAULT_SLOT_TIMES, lunch: { start: '12:00', end: '24:00' } })).toEqual({ slot: 'lunch', previous: 'morning' });
+    expect(checkSlotTimes({ ...DEFAULT_SLOT_TIMES, evening: { start: '18:00', end: '24:00' } })).toBeNull();
   });
 });

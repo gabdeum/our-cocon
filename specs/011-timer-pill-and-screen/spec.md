@@ -17,6 +17,9 @@
 - A paused or done timer nobody touches for 3 hours is cleared from the list.
 - The pill's label truncates at 14 characters with an ellipsis; the clock never truncates.
 
+### User Story 3 — Put the pill away (P2)
+**Given** a running timer, **When** I tap the pill's ✕, **Then** the pill disappears but the timer keeps running; it's still in Menu › Timers and still chimes when done. The pill comes back by itself when a new timer starts or one finishes.
+
 ## Requirements
 
 - **FR-001**: The pill renders the store's "most urgent" timer (spec 010) and updates every second.
@@ -25,6 +28,7 @@
 - **FR-004**: "Quick kitchen timer" with 5 · 10 · 15 · 30 min: each adds and starts a "Kitchen timer" of that length.
 - **FR-005**: A footnote reads: "Timers keep running when you leave the recipe. You'll hear a chime when one ends."
 - **FR-006**: A paused or done timer nobody touches for 3 hours is cleared from the list, while the app is open or the next time it opens. Any change to a paused timer starts its 3 hours over.
+- **FR-008 Hide**: the pill has a ✕ on its right (40 × 44 hit area, behind a 1.5 px divider, label "Hide the timer pill. Timers keep running"). It hides the pill on every screen (tab bar, recipe page, cooking-mode header) for this device without touching any timer. The pill shows again when a timer is started or finishes (the done banner shows as before), or after the app is reopened. Tapping the rest of the pill still opens Timers.
 - **FR-007**: The pill shows only while a timer is running. Its "+N" and screen-reader label count running timers only ("2 timers running. Open timers").
 
 ## Success Criteria
@@ -35,6 +39,7 @@
 | --- | --- |
 | `timer_pill_tapped` | timer_count |
 | `timers_screen_opened` | timer_count |
+| `timer_pill_hidden` | timer_count |
 
 ## Warnings and errors
 All copy is in the States tables of the UI specs for: TabBar, OC-Timers. New messages go there and in `strings/en.ts` first.
@@ -47,3 +52,5 @@ All copy is in the States tables of the UI specs for: TabBar, OC-Timers. New mes
 - 2026-10-19: Built. TimerPill above the tab bar and fixed 108 from the top of the recipe page (an overlay: React Native has no CSS sticky); Timers screen at `/timers`; "Open timers" on the done banner. Events `timer_pill_tapped`, `timers_screen_opened`. Deviations: timers now keep their recipe's name on the device (`recipeName`) for the card's sub-line; once only done timers are left, the pill shows one at 00:00, so it stays while any timer exists (SC-001); TimerCard aligned to `OC-Timers.dc.html` (Edit 13/900, "Set to" label, presets 15/900, Stop/Dismiss white 70%); the quick-timer button is the design-system dashed Button (54 tall, 15 px) instead of the screen's 56/16. The pill in the cooking-mode header comes with 012 (`AppTimerPill compact`).
 - 2026-10-20: Changes from Gabriel's review. The pill's "+N" and screen-reader count include running timers only; its right padding is 14 without the "+N" chip. Paused and done timers untouched for 3 hours are cleared (`stoppedAt` on stored timers). Cards lose Edit and its "Set to" presets; the quick kitchen timer becomes "Quick kitchen timer" with 5 · 10 · 15 · 30 min (new component TimePresets). UI specs, screen source and READMEs updated to match.
 - 2026-10-20: The pill now shows only while a timer is running (Gabriel's review); paused or done timers alone no longer show it. This replaces the done-timer fallback from the first build, and SC-001 now reads "while a timer is running". Another way to reach Timers is left to Gabriel (032-later L20).
+- 2026-11-02: Gabriel's direction: the pill can be hidden with a ✕ without stopping timers (FR-008); Menu › Timers (spec 029) is the way back.
+- 2026-11-02: Built FR-008. The timer store keeps a `pillHidden` flag in memory (not saved, so reopening the app shows the pill again); starting a timer or one finishing clears it, and every pill (tab bar, recipe page, cooking-mode header) reads it through `useMostUrgent`, so the tab bar stops reserving its height too. TimerPill gets `onHide` / `hideLabel`: the link part, a 1.5 × 24 `line` divider and a 40 × 44 ✕ (README updated). Event `timer_pill_hidden { timer_count }`.

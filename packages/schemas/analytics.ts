@@ -55,8 +55,18 @@ export const events = {
   member_added_without_app: z.strictObject({}),
   member_color_changed: z.strictObject({ color: MemberColor }),
   managed_member_linked: z.strictObject({ days_since_added: z.int().min(0) }),
+  // Spec 029: the Menu tab. A tile in Apps, a row in Settings, and signing out from Family.
+  menu_app_opened: z.strictObject({ app: z.enum(['calendar', 'recipes', 'groceries', 'timers']) }),
+  settings_row_opened: z.strictObject({ row: z.enum(['family', 'ai', 'calendar', 'recipes', 'groceries', 'deleted']) }),
+  signed_out: z.strictObject({}),
+  // Spec 029: a calendar setting changed. Its new value (on/off for switches), the slot changed for
+  // times of day, "phone" for the home time zone: never the zone's name or the hours.
+  calendar_settings_changed: z.strictObject({
+    setting: z.enum(['opens_on', 'week_start', 'time_format', 'show_birthdays', 'fade_past', 'times_of_day', 'home_time_zone']),
+    value: z.enum([...CalendarView.options, 'automatic', 'sunday', 'monday', '24h', '12h', ...SlotKey.options, 'on', 'off', 'phone']),
+  }),
   // Spec 004: the offline banner appeared on a screen (once per offline spell). Later screens join the enum.
-  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'calendar', 'recipes', 'recipe', 'recipe_form', 'groceries', 'settings']) }),
+  offline_banner_shown: z.strictObject({ screen: z.enum(['home', 'calendar', 'recipes', 'recipe', 'recipe_form', 'groceries', 'settings', 'menu']) }),
   // Spec 031: an ingredient that matched nothing in the catalog was saved. One event each, never
   // its text: the count tells us where the catalog needs to grow.
   ingredient_unmatched: z.strictObject({}),
@@ -83,8 +93,9 @@ export const events = {
   timer_finished: z.strictObject({}),
   // Spec 009/010: a step's "Start timer"; the step's position, from 0.
   step_timer_started: z.strictObject({ step_index: z.int().min(0).max(MAX_TRACKED_STEPS - 1) }),
-  // Spec 011: the TimerPill was tapped, and the Timers screen opened; how many timers exist.
+  // Spec 011: the TimerPill was tapped, or hidden with its ✕ (FR-008), and the Timers screen opened; how many timers exist.
   timer_pill_tapped: z.strictObject({ timer_count: z.int().min(1).max(100) }),
+  timer_pill_hidden: z.strictObject({ timer_count: z.int().min(1).max(100) }),
   timers_screen_opened: z.strictObject({ timer_count: z.int().min(0).max(100) }),
   // Spec 012: cooking mode opened, finished ("Finish" on the last step) or left with Exit.
   // `at_step` counts from 1; `minutes` from opening to Finish.
@@ -210,6 +221,10 @@ export const events = {
   homepage_calendar_event_tapped: z.strictObject({ section: z.enum(['today', 'week']), card_state: HomeCardState }),
   homepage_calendar_toggled: z.strictObject({ to: z.enum(['today', 'week']) }),
   homepage_calendar_add_tapped: z.strictObject({ card_state: HomeCardState }),
+  // Spec 028 FR-008: a strip day picked in This week (0 today … 6).
+  homepage_calendar_day_picked: z.strictObject({ day_offset: z.int().min(0).max(6) }),
+  // Spec 028 FR-006: Latest activity's "All · AI only".
+  homepage_activity_filter_changed: z.strictObject({ to: z.enum(['all', 'ai']) }),
 } as const;
 
 export type EventName = keyof typeof events;

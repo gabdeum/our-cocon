@@ -18,6 +18,7 @@ import {
 } from '../../lib/calendar-month';
 import type { Member } from '../../lib/session';
 import { useNow } from '../../lib/use-now';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { strings } from '../../strings/en';
 import { DaySheet } from './DaySheet';
 
@@ -61,10 +62,11 @@ export function MonthView({ members, myMemberId, events, slotTimes, hidden, mont
   const keepVisibleIndex = month === `${today.slice(0, 8)}01` ? weekIndexOf(range, today) : undefined;
   // FR-008/FR-009: a tap on a day opens its sheet; the sheet closes before an event or Add opens.
   const now = useNow(timeZone);
+  const { use24h, fade_past: fadePast } = useCalendarDisplay().prefs;
   const [sheetDate, setSheetDate] = useState<string | null>(null);
   const sheet = useMemo(
-    () => (sheetDate ? layoutDaySheet(sheetDate, occurrences, { today, now, look, slotTimes, members }) : null),
-    [sheetDate, occurrences, today, now, look, slotTimes, members],
+    () => (sheetDate ? layoutDaySheet(sheetDate, occurrences, { today, now, look, slotTimes, members, use24h }) : null),
+    [sheetDate, occurrences, today, now, look, slotTimes, members, use24h],
   );
   const openDay = useCallback(
     (date: string) => {
@@ -83,6 +85,7 @@ export function MonthView({ members, myMemberId, events, slotTimes, hidden, mont
   return (
     <View className="flex-1">
       <MonthGrid
+        mutePast={fadePast}
         weekdays={weekdayLetters(weekStartsOn)}
         weekCount={range.weekCount}
         weekAt={weekAt}

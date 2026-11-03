@@ -1,8 +1,8 @@
-// Spec 003 User Stories 2 and 3, FR-006, and spec 033: the Family and Account sections of Settings.
+// Spec 003 User Stories 2 and 3, FR-006, spec 033, and spec 029 US3: Menu › Family (members, my color, your account).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ToastProvider } from '../../lib/toast';
-import { FamilySettings, type FamilySettingsProps } from './FamilySettings';
+import { FamilyPage, FamilySettings, type FamilySettingsProps } from './FamilySettings';
 import { alex, fakeApi, fakeTracker, family, flush, gabriel, james, mia, last } from '../../test/fakes';
 
 vi.mock('expo-linking', () => ({ createURL: (p: string) => p }));
@@ -21,9 +21,28 @@ function setup(props: Partial<FamilySettingsProps> = {}, api = fakeApi()) {
   return { api, tracker, onChanged, onSignOut, shareDeps };
 }
 
+it('spec 029 US3: the Family page, back to the Menu', () => {
+  const onBack = vi.fn();
+  render(
+    <ToastProvider>
+      <FamilyPage me={gabriel} family={family} members={[gabriel, alex, james]} api={fakeApi()} tracker={fakeTracker()} onChanged={vi.fn()} onSignOut={vi.fn()} onBack={onBack} />
+    </ToastProvider>,
+  );
+  expect(screen.getByRole('heading', { name: 'Family' })).toBeTruthy();
+  expect(screen.getByText("Who's in the family, and your own account.")).toBeTruthy();
+  const headings = screen.getAllByRole('heading').map((h) => h.textContent);
+  expect(headings).toEqual(['Family', 'Members', 'My color', 'Your account']);
+  expect(screen.getByRole('button', { name: 'Invite someone' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Add without app' })).toBeTruthy();
+  expect(screen.getByRole('link', { name: /Your name/ }).textContent).toContain('Gabriel');
+  expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('link', { name: 'Menu' }));
+  expect(onBack).toHaveBeenCalledOnce();
+});
+
 it('lists members in join order with their role', () => {
   setup();
-  expect(screen.getByRole('heading', { name: 'Family' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Members' })).toBeTruthy();
   expect(screen.getByText('Owner')).toBeTruthy();
   expect(screen.getAllByText('Can edit')).toHaveLength(2);
   // Gabriel also shows in Account › Your name, after the list.
@@ -126,15 +145,16 @@ describe('Account (FR-006)', () => {
     expect(api.deleteFamily).not.toHaveBeenCalled();
   });
 
-  it('signs out', () => {
-    const { onSignOut } = setup();
+  it('signs out, and says so (signed_out)', () => {
+    const { onSignOut, tracker } = setup();
     fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(onSignOut).toHaveBeenCalled();
+    expect(tracker.track).toHaveBeenCalledWith('signed_out', {});
   });
 
   it('changes my name', async () => {
     const { api, onChanged } = setup();
-    fireEvent.click(screen.getByRole('button', { name: /Your name/ }));
+    fireEvent.click(screen.getByRole('link', { name: /Your name/ }));
     fireEvent.change(last(screen.getAllByLabelText('Your name')), { target: { value: 'Gabe' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await flush();
@@ -169,7 +189,7 @@ describe('when something fails', () => {
 
   it('asks for a name before saving it', async () => {
     const { api } = setup();
-    fireEvent.click(screen.getByRole('button', { name: /Your name/ }));
+    fireEvent.click(screen.getByRole('link', { name: /Your name/ }));
     fireEvent.change(last(screen.getAllByLabelText('Your name')), { target: { value: '  ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await flush();
@@ -188,7 +208,7 @@ describe('Offline (spec 004)', () => {
     expect(api.createInvite).not.toHaveBeenCalled();
     // Member rows and "Your name" can't be opened.
     expect(screen.queryByRole('button', { name: 'Alex, Has the app, Can edit' })).toBeNull();
-    expect(screen.queryByRole('button', { name: /Your name/ })).toBeNull();
+    expect(screen.queryByRole('link', { name: /Your name/ })).toBeNull();
     expect(screen.getByRole('button', { name: 'Delete family' }).getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(onSignOut).toHaveBeenCalled();

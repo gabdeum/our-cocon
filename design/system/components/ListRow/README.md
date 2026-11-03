@@ -9,7 +9,7 @@ A row inside a white list group: grocery items, picker items, settings links and
 | List group | surface-card, radius 22, overflow hidden; preceded by an `oc-overline` group label (13/900 uppercase ink-muted, 6 gap), optionally with a 12/700 ink-muted note on its right ("All ticked to start", OC-AddGroceries) |
 | Row | min 60 tall, padding 10 14, gap 12, 1.5 px `line` divider (none on the last row) |
 | Flush (`--flush`) | inside a card's padding: no side padding, min 52 tall (the recipe page's "…" panel) |
-| Leading | checkbox or radio 26 × 26 (olive), an avatar 40, an IconTile with letters (an assistant, OC-Connect), or nothing |
+| Leading | checkbox or radio 26 × 26 (olive), an avatar 40, an IconTile with letters (an assistant, OC-Connect), a 36 px `surface-soft` IconTile with a 20 px ink icon (the Menu's settings rows, OC-Menu: those rows are 64 tall), or nothing |
 | Title | 16/800 ink; done: line-through + `ink-faint`; dim (an unticked row in Add to groceries): `ink-muted`, no line-through, so it stays readable |
 | Disabled | unchanged look, not pressable, `aria-disabled` (offline grocery rows keep their tick) |
 | Sub-line | 13/600 ink-muted (source: "For Leek & bacon quiche", "Alex via ChatGPT"); warn 700 for merge notes ("Already on the list (100 ml) → will be 400 ml"); olive-deep 700 for a good status ("Connected · used 2 h ago", OC-Connect) |
@@ -20,7 +20,7 @@ A row inside a white list group: grocery items, picker items, settings links and
 | Compact ingredient row (`oc-ingredient--compact`) | the shared recipe page (OC-SharedView): padding 10 0, divider `line`; name 16/400 on the left (optional Tag after it), "{amount} · {weight}" 16/900 on the right |
 | Event row (`EventListRow`, OC-CalAgenda) | a day's white card (`EventListGroup`: radius 22, padding 4 14 4 10) under an 18/900 heading ("Today · Sun, Oct 25"); rows min 64, padding 8 0, gap 12, 1.5 px `line` divider: 6 px stripe and 36 avatar in the member colors (as SlotBand's event row), title 17/800, sub-line 14/700 ink-muted ("14:30 · Gabriel takes James"), optional Tag `md` at the end: "Now" honey, "Surprise" sage, "Birthday" / "Day 1 of 3" soft. The row is a link to the event |
 | Event row `sm` (`EventListRow size="sm"`, Home's CalCard) | min 58, padding 6 0, gap 10: 5 px stripe, 32 avatar (initials 14/900, 11 for two), title 16/800, sub-line 13/700 ink-muted, "Now" Tag `md`. A reminder due today (`bell`) puts a 16 px olive bell before the title |
-| Week row (`WeekEventRow`, Home's CalCard "This week") | min 44, gap 10, 1.5 px `line` divider: day 13/900 ink-muted, 40 wide ("Tue"); 5 × 26 stripe in the member colors; one line with an ellipsis, title 15/800 then " · {who} · {when}" 15/700 ink-muted ("Yoga · Eva · Evening"). The row is a link to the event |
+| Week rows (`WeekEventGroup`, Home's CalCard "This week") | One group per day: day 13/900 ink-muted, 40 wide ("Tue"), once at the top of the group; rows min 44, gap 10, no lines inside a day, a 1.5 px `line` divider between days; 5 × 26 stripe in the member colors; one line with an ellipsis, title 15/800 then " · {when} · {who}" 15/700 ink-muted ("Morning run · 06:30 · Gabriel"). Each row is a link to the event |
 | Icon row (`IconRow`, OC-CalEvent, spec 042) | facts about an event in a `ListGroup inset` card (padding 4 16): olive icon 22, gap 12, title 16/800, optional sub-line 14/700 ink-muted, optional olive link at the end ("Open in Maps"); min 56 tall, 60 with a sub-line or a link; 1.5 px `line` divider. Not pressable; only its link is |
 
 ## Rules

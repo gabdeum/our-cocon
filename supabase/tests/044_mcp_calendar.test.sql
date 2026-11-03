@@ -111,17 +111,17 @@ update public.events set title = 'Music class', visibility = 'private' where id 
 
 -- FR-004 and L83: Gabriel sees both entries; Eva sees none of a private event's rows.
 select pg_temp.login('00000000-0000-0000-0000-00000000044a');
-select results_eq($$ select kind, event_name, can_undo from public.activity_entries() order by created_at, kind $$,
+select results_eq($$ select kind, event_name, can_undo from public.activity_entries(p_source => 'ai') order by created_at, kind $$,
   $$ values ('event_created', 'Music class', true), ('event_edited', 'Music class', true) $$, 'Gabriel sees what Claude did, by the event''s title');
 select pg_temp.login('00000000-0000-0000-0000-00000000044b');
 select is((select count(*)::int from public.activity where payload ->> 'event_id' = pg_temp.id('music')::text), 0, 'Eva can''t read the private event''s log');
-select is((select count(*)::int from public.activity_entries()), 0, 'or see its entries');
+select is((select count(*)::int from public.activity_entries(p_source => 'ai')), 0, 'or see its entries');
 
 select pg_temp.login('00000000-0000-0000-0000-00000000044a');
 select is((public.undo_ai_change('44444444-4444-4444-8444-000000000002') ->> 'applied')::boolean, true, 'Gabriel undoes the edit');
 select is((select row(title, visibility)::text from public.events where id = pg_temp.id('music')), row('Baby music class', 'family')::text, 'and it''s back as it was');
 select pg_temp.login('00000000-0000-0000-0000-00000000044b');
-select is((select count(*)::int from public.activity_entries() where kind = 'event_created'), 1, 'Eva now sees the family event''s entry');
+select is((select count(*)::int from public.activity_entries(p_source => 'ai') where kind = 'event_created'), 1, 'Eva now sees the family event''s entry');
 select is((select count(*)::int from public.activity where public._activity_key(payload, id) = '44444444-4444-4444-8444-000000000002'), 0,
   'but never the rows logged while it was private');
 

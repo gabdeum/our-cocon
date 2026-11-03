@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CalendarDate, ClockTime, SlotKey, TimeType } from './calendar';
 
 const Name = z.string().regex(/^[a-z][a-z_]{0,39}$/);
 
@@ -14,11 +15,12 @@ export const ActivityInput = z.strictObject({
 });
 export type ActivityInput = z.infer<typeof ActivityInput>;
 
-/** What an AI entry did (`_activity_kind` in the database), for its title and the undo event. */
+/** What an entry did (`_activity_kind` in the database), for its title and the undo event. `recipe_restored` is the app's only (spec 028 FR-009). */
 export const ActivityKind = z.enum([
   'recipe_created',
   'recipe_edited',
   'recipe_deleted',
+  'recipe_restored',
   'groceries_added',
   'groceries_ticked',
   'groceries_unticked',
@@ -38,10 +40,13 @@ export type ActivityKind = z.infer<typeof ActivityKind>;
 export const RestoreKind = ActivityKind.extract(['recipe_deleted', 'event_deleted']);
 export type RestoreKind = z.infer<typeof RestoreKind>;
 /** The kinds Undo applies to, for 7 days. */
-export const UndoKind = ActivityKind.exclude(RestoreKind.options);
+export const UndoKind = ActivityKind.exclude([...RestoreKind.options, 'recipe_restored']);
 export type UndoKind = z.infer<typeof UndoKind>;
 
-/** One AI tool call as Home and the activity list show it (`activity_entries`, spec 026 FR-001). */
+/**
+ * One entry as Home and the activity list show it (`activity_entries`): an AI tool call (spec 026
+ * FR-001), or one action of the family's own in the app (`source` 'app', spec 028 FR-009).
+ */
 export const ActivityEntry = z.object({
   key: z.uuid(),
   actor_id: z.uuid().nullable(),
@@ -52,9 +57,17 @@ export const ActivityEntry = z.object({
   names: z.array(z.string()),
   recipe_id: z.uuid().nullable(),
   recipe_name: z.string().nullable(),
+  /** The recipe grocery items were added from: "from Leek quiche". */
+  from_recipe_name: z.string().nullable(),
   /** The event an entry changed (spec 044), and its title as the caller may see it. */
   event_id: z.uuid().nullable(),
   event_name: z.string().nullable(),
+  /** When the event is, as the caller may see it: "Wed, 10:00". */
+  event_when: z
+    .object({ starts_on: CalendarDate, time_type: TimeType, slots: z.array(SlotKey), start_time: ClockTime.nullable(), end_time: ClockTime.nullable() })
+    .nullable(),
+  /** Private or a surprise when logged: with no title, it reads "a private event". */
+  event_secret: z.boolean(),
   undone_by: z.uuid().nullable(),
   undone_at: z.string().nullable(),
   undo_action: z.enum(['undo', 'restore']).nullable(),

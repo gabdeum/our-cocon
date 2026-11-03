@@ -4,7 +4,7 @@ import { useFamilySettings } from '../../lib/family-settings';
 import { useOnline } from '../../lib/online';
 import { useSession } from '../../lib/session';
 
-/** /settings/recipes (spec 027, OC-SettingsRecipes): the family's cooking defaults, pushed from Settings › More. */
+/** /settings/recipes (spec 027, OC-SettingsRecipes): the family's cooking defaults, pushed from the Menu. */
 export default function RecipesSettingsRoute() {
   const { tracker } = useSession();
   const online = useOnline();
@@ -14,7 +14,7 @@ export default function RecipesSettingsRoute() {
       settings={settings}
       onChange={change}
       tracker={tracker}
-      onBack={() => (router.canGoBack() ? router.back() : router.replace('/settings'))}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace('/menu'))}
       readOnly={!online}
     />
   );

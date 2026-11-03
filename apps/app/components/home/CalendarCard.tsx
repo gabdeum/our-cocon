@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import type { HomeCardState } from '@cocon/schemas';
-import { Button, CalCard, CalCardBanner, EventListRow, Link, SegmentedControl, Text, WeekEventRow, WeekStrip } from '@cocon/ui';
+import { Button, CalCard, CalCardBanner, EventListRow, Link, SegmentedControl, Text, WeekEventGroup, WeekStrip } from '@cocon/ui';
 import type { CardLayout } from '../../lib/home';
 import { strings } from '../../strings/en';
 
@@ -15,7 +15,8 @@ export interface CalendarCardProps {
   readOnly?: boolean;
   /** A row's occurrence key ("id|date") and the day it was tapped on. */
   onOpenEvent: (key: string, section: CardView, cardState: HomeCardState) => void;
-  onOpenDay: (date: string) => void;
+  /** FR-008: a strip day was picked (0 today … 6), for `homepage_calendar_day_picked`. */
+  onPickDay: (offset: number) => void;
   onAdd: (date: string, cardState: HomeCardState) => void;
   onToggle: (to: CardView) => void;
   /** The Agenda: "See all" and the birthday banner. */
@@ -25,10 +26,12 @@ export interface CalendarCardProps {
 
 /**
  * Spec 028 FR-002 (CalCard): Today, This week or empty. The toggle shows only when there's
- * something today, and isn't remembered.
+ * something today, and isn't remembered. In This week, a strip day shows only that day (FR-008),
+ * not remembered either.
  */
-export function CalendarCard({ layout, readOnly, onOpenEvent, onOpenDay, onAdd, onToggle, onSeeAll, onOpenCalendar }: CalendarCardProps) {
+export function CalendarCard({ layout, readOnly, onOpenEvent, onPickDay, onAdd, onToggle, onSeeAll, onOpenCalendar }: CalendarCardProps) {
   const [picked, setPicked] = useState<CardView>('today');
+  const [dayPicked, setDayPicked] = useState<string | null>(null);
   const { state } = layout;
   const view: CardView | 'empty' = state === 'today' ? picked : state;
   const shownState: HomeCardState = view === 'empty' ? 'empty' : view;
@@ -44,6 +47,7 @@ export function CalendarCard({ layout, readOnly, onOpenEvent, onOpenDay, onAdd, 
         onChange={(to: CardView) => {
           if (to === picked) return;
           setPicked(to);
+          setDayPicked(null);
           onToggle(to);
         }}
       />
@@ -52,14 +56,20 @@ export function CalendarCard({ layout, readOnly, onOpenEvent, onOpenDay, onAdd, 
         {state === 'week' ? c.thisWeek : c.calendar}
       </Text>
     );
-  const addDate = view === 'week' ? layout.addDate.week : layout.addDate.today;
+  const day = view === 'week' ? (layout.days.find((d) => d.date === dayPicked) ?? null) : null;
+  const addDate = day ? day.date : view === 'week' ? layout.addDate.week : layout.addDate.today;
   const add = () => onAdd(addDate, shownState);
+  const pickDay = (date: string) => {
+    if (date === dayPicked) return setDayPicked(null);
+    setDayPicked(date);
+    onPickDay(layout.days.findIndex((d) => d.date === date));
+  };
 
   return (
     <CalCard
       label={c.label}
       header={header}
-      addLabel={c.addEvent}
+      addLabel={day ? day.addLabel : c.addEvent}
       onAdd={add}
       addDisabled={readOnly}
       footer={view === 'empty' ? undefined : { label: c.openCalendar, onPress: onOpenCalendar }}
@@ -80,13 +90,37 @@ export function CalendarCard({ layout, readOnly, onOpenEvent, onOpenDay, onAdd, 
       ) : null}
       {view === 'week' ? (
         <View className="gap-10">
-          <WeekStrip days={layout.strip} onDay={onOpenDay} />
-          <View role="list">
-            {layout.week.map((e, i) => (
-              <WeekEventRow key={e.key} event={e} onPress={() => onOpenEvent(e.key, 'week', shownState)} last={i === layout.week.length - 1} />
-            ))}
-          </View>
-          {layout.more > 0 ? <Link label={c.seeAll(layout.more)} onPress={onSeeAll} /> : null}
+          <WeekStrip days={layout.strip} picked={day?.date ?? null} onDay={pickDay} />
+          {day ? (
+            <View>
+              <View className="flex-row items-center justify-between gap-10">
+                <Text role="heading" aria-level={3} size={15} weight="900" className="min-w-0 flex-1">
+                  {day.title}
+                </Text>
+                <Link label={c.wholeWeek} onPress={() => setDayPicked(null)} />
+              </View>
+              {day.items.length ? (
+                <View role="list">
+                  {day.items.map((e, i) => (
+                    <EventListRow key={e.key} size="sm" event={e} onPress={() => onOpenEvent(e.key, 'week', shownState)} last={i === day.items.length - 1} />
+                  ))}
+                </View>
+              ) : (
+                <Text size={15} weight="700" color="ink-muted" className="mb-4 mt-6">
+                  {day.empty}
+                </Text>
+              )}
+            </View>
+          ) : (
+            <>
+              <View>
+                {layout.week.map((g, i) => (
+                  <WeekEventGroup key={g.date} group={g} first={i === 0} onPress={(key) => onOpenEvent(key, 'week', shownState)} />
+                ))}
+              </View>
+              {layout.more > 0 ? <Link label={c.seeAll(layout.more)} onPress={onSeeAll} /> : null}
+            </>
+          )}
         </View>
       ) : null}
       {view === 'empty' ? (

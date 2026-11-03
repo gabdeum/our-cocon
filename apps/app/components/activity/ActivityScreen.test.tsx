@@ -1,4 +1,4 @@
-// Spec 026 FR-002: the full AI activity list, filterable by person and assistant.
+// Spec 026 FR-002: the full activity list, "All · AI only" (spec 028 FR-006), filterable by person and, under AI only, by assistant.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ActivityEntry } from '@cocon/schemas';
@@ -17,8 +17,11 @@ const entry: ActivityEntry = {
   names: ['Bread', 'Milk'],
   recipe_id: null,
   recipe_name: null,
+  from_recipe_name: null,
   event_id: null,
   event_name: null,
+  event_when: null,
+  event_secret: false,
   undone_by: null,
   undone_at: null,
   undo_action: null,
@@ -48,26 +51,32 @@ function setup(over: Partial<Parameters<typeof ActivityScreen>[0]> = {}) {
   return { onFilter };
 }
 
-describe('AI activity', () => {
-  it('lists entries, with pills for the people and assistants that have some', () => {
+describe('Activity', () => {
+  it('lists entries, with pills for the people who have some; assistants only under AI only', () => {
     const { onFilter } = setup();
-    expect(screen.getByRole('heading', { name: 'AI activity' })).toBeTruthy();
-    expect(screen.getByText('2 items ticked')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Activity' })).toBeTruthy();
+    expect(screen.getByText('Alex ticked 2 items')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Gabriel/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Claude' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Mia/ }));
     expect(onFilter).toHaveBeenCalledWith({ actor: mia.user_id });
-    fireEvent.click(screen.getByRole('button', { name: 'Other' }));
-    expect(onFilter).toHaveBeenLastCalledWith({ source: 'other' });
+    fireEvent.click(screen.getByRole('button', { name: 'AI only' }));
+    expect(onFilter).toHaveBeenLastCalledWith({ ai: true });
   });
 
-  it('tapping a selected pill clears it', () => {
-    const { onFilter } = setup({ filter: { source: 'claude' } });
+  it('AI only: the assistant pills; tapping a selected one clears it; All drops it', () => {
+    const { onFilter } = setup({ filter: { ai: true, source: 'claude' } });
     fireEvent.click(screen.getByRole('button', { name: 'Claude' }));
-    expect(onFilter).toHaveBeenCalledWith({ source: null });
+    expect(onFilter).toHaveBeenCalledWith({ ai: true, source: null });
+    fireEvent.click(screen.getByRole('button', { name: 'All' }));
+    expect(onFilter).toHaveBeenLastCalledWith({ actor: null });
   });
 
   it('empty, and nothing matching the filters', () => {
     setup({ entries: [] });
+    expect(screen.getByText('No activity yet')).toBeTruthy();
+    cleanup();
+    setup({ entries: [], filter: { ai: true } });
     expect(screen.getByText('No AI changes yet')).toBeTruthy();
     cleanup();
     setup({ entries: [], filter: { actor: mia.user_id } });

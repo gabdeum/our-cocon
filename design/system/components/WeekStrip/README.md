@@ -11,8 +11,9 @@ Reference: `design/screens/CalCard.dc.html` (inline styles are the exact values;
 | Tile | min 62, radius 14, letter 12/900 ink-muted, date 16/900, up to 3 dots (7 px, member colors, 1 px ink 25% inset) |
 | Today | `surface-soft` + 2 px olive inset ring |
 | Empty day | transparent, ink-muted text |
+| Picked | olive fill, white letter and date |
 
 ## Rules
 
-- Tap a tile → day view.
+- Tiles are toggle buttons: tap → the card shows only that day (picked: olive fill, white text); tap again → whole week.
 - In code: `WeekStrip` in `packages/ui/components/CalCard.tsx`, with the card (CalCard README).

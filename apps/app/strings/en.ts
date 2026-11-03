@@ -76,7 +76,7 @@ export const strings = {
     /** The name an app gave itself, when its return address doesn't prove who it is. */
     titleUnverified: (name: string) => `Let “${name}” use Our Cocon?`,
     notReally: (name: string, host: string) => `This app calls itself ${name}, but it would send you back to ${host}. Only allow it if you trust ${host}.`,
-    lead: "It will see and change your family's things in Our Cocon, like recipes and the grocery list, as you. You can disconnect it any time in Settings › AI assistants.",
+    lead: "It will see and change your family's things in Our Cocon, like recipes and the grocery list, as you. You can disconnect it any time in Menu › AI assistants.",
     sendsBackTo: (host: string) => `After this you'll go back to ${host}.`,
     allow: 'Allow',
     allowing: 'Connecting…',
@@ -92,7 +92,7 @@ export const strings = {
   // design/ui/OC-Connect.md (spec 025): Settings › AI assistants, with its Connect and Manage sheets.
   // Connection steps checked against each assistant's help pages on 2026-10-26 (spec 025 FR-005).
   aiConnections: {
-    back: 'Settings',
+    back: 'Menu',
     title: 'AI assistants',
     lead: 'Let your AI save recipes, fill the grocery list and add events for you. Each person connects their own.',
     connected: (timeAgo: string) => `Connected · used ${timeAgo}`,
@@ -190,6 +190,12 @@ export const strings = {
     thisWeek: 'This week',
     calendar: 'Calendar',
     addEvent: 'Add event',
+    /** A strip day picked (FR-008): "+" adds on it. */
+    addEventOn: (weekday: string) => `Add event on ${weekday}`,
+    /** "Wednesday, Oct. 28", "Today, Sunday, Oct. 25". */
+    dayTitle: (today: boolean, date: string) => (today ? `Today, ${date}` : date),
+    dayEmpty: (weekday: string) => `Nothing planned on ${weekday}.`,
+    wholeWeek: 'Whole week',
     /** "Eva’s birthday is on Tuesday", "… is tomorrow", "… is today". */
     birthday: (title: string, when: 'today' | 'tomorrow' | string) => (when === 'today' ? `${title} is today` : when === 'tomorrow' ? `${title} is tomorrow` : `${title} is on ${when}`),
     /** A reminder due today for tomorrow's event: "Tomorrow · 10:00". */
@@ -199,56 +205,56 @@ export const strings = {
     empty: 'No events in the next 7 days. Add one?',
     emptyAdd: '+ Add event',
     openCalendar: 'Open calendar',
-    /** The week row after the title: "Eva · Evening". */
-    detail: (who: string, when: string) => (who ? `${who} · ${when}` : when),
+    /** The week row after the title: "06:30 · Gabriel". */
+    detail: (who: string, when: string) => (who ? `${when} · ${who}` : when),
     rowLabel: (parts: string[]) => parts.filter(Boolean).join(', '),
     /** A strip day for screen readers: "Today, October 25, 2 people busy". */
     dayLabel: (today: boolean, date: string, people: number) =>
       `${today ? 'Today, ' : ''}${date}, ${people === 0 ? 'nothing planned' : people === 1 ? '1 person busy' : `${people} people busy`}`,
   },
-  // design/ui/OC-Home.md › Activity card and design/ui/OC-Activity.md (spec 026): what AI assistants
-  // changed, who asked, and Undo.
+  // design/ui/OC-Home.md › Latest activity and design/ui/OC-Activity.md (specs 026, 028): what the
+  // family and their AI assistants changed, and Undo for an AI change.
   activity: {
     badge: 'AI',
+    /** "Eva added Pumpkin soup", "Gabriel ticked 4 items". */
     title: {
-      recipe_created: (recipe: string) => `New: ${recipe}`,
-      recipe_edited: (recipe: string) => `Edited: ${recipe}`,
-      recipe_deleted: (recipe: string) => `Deleted: ${recipe}`,
-      groceries_added: (n: number, name: string) => (n === 1 ? `${name} added to Groceries` : `${n} items added to Groceries`),
-      groceries_ticked: (n: number, name: string) => (n === 1 ? `${name} ticked` : `${n} items ticked`),
-      groceries_unticked: (n: number, name: string) => (n === 1 ? `${name} put back on the list` : `${n} items put back on the list`),
-      groceries_removed: (n: number, name: string) => (n === 1 ? `${name} removed from Groceries` : `${n} items removed from Groceries`),
-      groceries_cleared: (n: number) => (n === 1 ? '1 done item cleared' : `${n} done items cleared`),
-      event_created: (event: string) => `New event: ${event}`,
-      event_edited: (event: string) => `Edited event: ${event}`,
-      event_deleted: (event: string) => `Deleted event: ${event}`,
-      event_date_deleted: (event: string) => `Deleted one date: ${event}`,
-      other: (n: number) => (n === 1 ? '1 change' : `${n} changes`),
+      recipe_created: (who: string, recipe: string) => `${who} added ${recipe}`,
+      recipe_edited: (who: string, recipe: string) => `${who} edited ${recipe}`,
+      recipe_deleted: (who: string, recipe: string) => `${who} deleted ${recipe}`,
+      recipe_restored: (who: string, recipe: string) => `${who} restored ${recipe}`,
+      groceries_added: (who: string, n: number, name: string) => (n === 1 ? `${who} added ${name}` : `${who} added ${n} items`),
+      groceries_ticked: (who: string, n: number, name: string) => (n === 1 ? `${who} ticked ${name}` : `${who} ticked ${n} items`),
+      groceries_unticked: (who: string, n: number, name: string) => (n === 1 ? `${who} put back ${name}` : `${who} put back ${n} items`),
+      groceries_removed: (who: string, n: number, name: string) => (n === 1 ? `${who} removed ${name}` : `${who} removed ${n} items`),
+      groceries_cleared: (who: string, n: number) => (n === 1 ? `${who} cleared 1 done item` : `${who} cleared ${n} done items`),
+      event_created: (who: string, event: string) => `${who} added ${event}`,
+      event_edited: (who: string, event: string) => `${who} edited ${event}`,
+      event_deleted: (who: string, event: string) => `${who} deleted ${event}`,
+      event_date_deleted: (who: string, event: string) => `${who} deleted one date of ${event}`,
+      other: (who: string, n: number) => (n === 1 ? `${who} made 1 change` : `${who} made ${n} changes`),
     },
-    /** The sub-line's verb, by kind: "Added by Alex via ChatGPT · 4 h ago". */
-    by: {
-      recipe_created: 'Added',
-      recipe_edited: 'Changed',
-      recipe_deleted: 'Deleted',
-      groceries_added: 'Added',
-      groceries_ticked: 'Ticked',
-      groceries_unticked: 'Changed',
-      groceries_removed: 'Removed',
-      groceries_cleared: 'Cleared',
-      event_created: 'Added',
-      event_edited: 'Changed',
-      event_deleted: 'Deleted',
-      event_date_deleted: 'Deleted',
-      other: 'Changed',
-    },
-    sub: (verb: string, name: string, assistant: string, timeAgo: string) => `${verb} by ${name} via ${assistant} · ${timeAgo}`,
+    /** In a title when the reader may not see the event, or it's gone for good. */
+    privateEvent: 'a private event',
+    anEvent: 'an event',
+    aRecipe: 'a recipe',
+    module: { recipes: 'Recipes', groceries: 'Groceries', calendar: 'Calendar' },
+    /** "from Leek & bacon quiche", in the sub-line of grocery items added from a recipe. */
+    fromRecipe: (recipe: string) => `from ${recipe}`,
+    via: (assistant: string) => `via ${assistant}`,
+    /** "Recipes · via ChatGPT · 1 h ago", "Calendar · Wed, 10:00 · via Claude · 3 h ago". */
+    sub: (parts: string[]) => parts.filter(Boolean).join(' · '),
     undoneBy: (name: string) => `Undone by ${name}`,
     restoredBy: (name: string) => `Restored by ${name}`,
     undo: 'Undo',
     restore: 'Restore',
     undoA11y: (title: string) => `Undo: ${title}`,
     restoreA11y: (title: string) => `Restore: ${title}`,
-    seeAll: 'See all',
+    seeAll: 'See all activity',
+    latest: 'Latest activity',
+    show: 'Show',
+    all: 'All',
+    aiOnly: 'AI only',
+    noAi: 'No AI changes yet.',
     undone: 'Undone',
     restored: 'Restored',
     // Something changed after the AI's change (spec 026 edge case): a Dialog before undoing the rest.
@@ -266,25 +272,55 @@ export const strings = {
     expired: "This can't be undone any more.",
     undoFailed: "Couldn't undo. Check your connection and try again.",
     restoreFailed: "Couldn't restore it. Check your connection and try again.",
-    // design/ui/OC-Activity.md: the full list, from Home's "See all".
-    screenTitle: 'AI activity',
+    // design/ui/OC-Activity.md: the full list, from Home's "See all activity".
+    screenTitle: 'Activity',
     back: 'Home',
     people: 'People',
     assistants: 'Assistants',
     otherAssistant: 'Other',
     showMore: 'Show more',
-    loading: 'Loading AI activity',
-    loadFailed: "Couldn't load AI activity. Check your connection and try again.",
+    loading: 'Loading activity',
+    loadFailed: "Couldn't load activity. Check your connection and try again.",
     tryAgain: 'Try again',
+    allEmptyTitle: 'No activity yet',
+    allEmptyBody: 'When anyone in the family adds or changes something, it shows up here.',
     emptyTitle: 'No AI changes yet',
     emptyBody: 'When an AI assistant changes something for your family, it shows up here. You can undo it for 7 days.',
     noMatches: 'Nothing matches these filters.',
   },
   // design/ui/OC-Settings.md (spec 003 sections; the rest come with 021, 025, 027, 018 and 029)
+  // design/ui/OC-Menu.md (spec 029): the last tab. Apps, then the settings pages.
+  menu: {
+    title: 'Menu',
+    apps: 'Apps',
+    settings: 'Settings',
+    calendar: 'Calendar',
+    recipes: 'Recipes',
+    groceries: 'Groceries',
+    timers: 'Timers',
+    today: (n: number) => (n === 0 ? 'Nothing today' : `${n} today`),
+    recipeCount: (n: number) => (n === 0 ? 'No recipes yet' : `${n} ${n === 1 ? 'recipe' : 'recipes'}`),
+    toBuy: (n: number) => (n === 0 ? 'All done' : `${n} to buy`),
+    timersDetail: (running: number, paused: number) => (running > 0 ? `${running} running` : paused > 0 ? `${paused} paused` : 'None running'),
+    family: 'Family',
+    familyDetail: (names: readonly string[]) => `${names.join(', ')} · your account`,
+    aiAssistants: 'AI assistants',
+    connected: (n: number) => `${n} connected`,
+    notConnected: 'Not connected',
+    calendarDetail: 'Your view, times of day',
+    recipesDetail: 'Cooking defaults, units',
+    groceriesDetail: 'Where you shop, store sizes',
+    recentlyDeleted: 'Recently deleted',
+    /** Recipes and events (spec 042). */
+    items: (n: number) => (n === 0 ? 'Empty' : `${n} ${n === 1 ? 'item' : 'items'}`),
+  },
   settings: {
-    title: 'Settings',
-    // Spec 021: where the family shops (the Groceries tab's "Grocery settings" sheet).
+    // Spec 021: where the family shops (the Groceries tab's "Grocery settings" sheet, and the
+    // Groceries page, OC-SettingsGroceries, spec 029).
     groceries: {
+      back: 'Menu',
+      title: 'Groceries',
+      lead: 'For the whole family. You can also change these from the Groceries tab.',
       shopLabel: 'Where do you shop?',
       shopHint: 'So the list shows packs you can actually buy',
       usStores: 'US stores',
@@ -297,10 +333,9 @@ export const strings = {
       roundHint: 'Off: the list shows only what recipes need',
       saveFailed: "Couldn't save. Try again.",
     },
-    // Spec 027: the family's cooking defaults (design/ui/OC-SettingsRecipes.md). The back link says
-    // "Menu" once spec 029 builds it.
+    // Spec 027: the family's cooking defaults (design/ui/OC-SettingsRecipes.md).
     recipes: {
-      back: 'Settings',
+      back: 'Menu',
       title: 'Recipes',
       lead: 'Used for every recipe, for the whole family. Each recipe can change them in its own settings.',
       cookingDefaults: 'Cooking defaults',
@@ -315,8 +350,56 @@ export const strings = {
       imperial: 'Imperial · oz, °F',
       saveFailed: "Couldn't save. Try again.",
     },
+    // design/ui/OC-CalSettings.md (spec 029). The slot and time zone sheets aren't drawn.
+    calendar: {
+      back: 'Menu',
+      title: 'Calendar',
+      lead: "How the family calendar looks for you, and the family's times of day.",
+      forYou: 'For you',
+      opensOn: 'Opens on',
+      views: { month: 'Month', week: 'Week', day: 'Day', agenda: 'Agenda' },
+      weekStart: 'Week starts on',
+      weekStartHint: "Automatic follows this phone's region",
+      weekStarts: { automatic: 'Automatic', sunday: 'Sunday', monday: 'Monday' },
+      timeFormat: 'Time format',
+      timeFormatHint: "Automatic follows this phone's settings",
+      timeFormats: { automatic: 'Automatic', '24h': '24-hour', '12h': '12-hour' },
+      birthdays: 'Show birthdays',
+      birthdaysHint: 'Also on Home, 3 days ahead',
+      fadePast: 'Fade past days',
+      fadePastHint: "So today and what's next stand out",
+      timesOfDay: 'Times of day',
+      timesOfDayLead: (owner: string) => `Used by the whole family when you pick a time of day. Only ${owner}, the family owner, can change them.`,
+      hours: (start: string, end: string) => `${start}–${end}`,
+      slotLabel: (slot: string, hours: string) => `${slot}, ${hours}`,
+      family: 'Family',
+      homeTimeZone: 'Home time zone',
+      aiAssistants: 'AI assistants',
+      aiAssistantsSub: 'Let Claude, ChatGPT or Gemini add events',
+      // The slot sheet (not drawn): Starts and Ends like Add event's custom times.
+      starts: 'Starts',
+      ends: 'Ends',
+      badTime: 'Use a time like 18:30.',
+      endBeforeStart: 'Pick an end time after the start.',
+      /** The neighbour that moves with an edge: "Afternoon will end at 18:30." */
+      movesWith: (slot: string, edge: 'start' | 'end', time: string) => `${slot} will ${edge === 'start' ? 'start' : 'end'} at ${time}.`,
+      overlap: (slot: string, previous: string) => `Times can't overlap. ${slot} has to start when ${previous} ends.`,
+      cancel: 'Cancel',
+      save: 'Save',
+      saving: 'Saving…',
+      // The time zone sheet (not drawn).
+      timeZoneLead: 'All dates in the family calendar use this time zone.',
+      usePhoneZone: (zone: string) => `Use this phone's time zone (${zone})`,
+      sameZone: "That's the family's time zone already.",
+      notSet: 'Not set yet',
+      close: 'Close',
+      saveFailed: "Couldn't save. Try again.",
+    },
     family: {
-      heading: 'Family',
+      back: 'Menu',
+      title: 'Family',
+      lead: "Who's in the family, and your own account.",
+      heading: 'Members',
       owner: 'Owner',
       editor: 'Can edit',
       invite: 'Invite someone',
@@ -385,7 +468,7 @@ export const strings = {
       actionFailed: "Couldn't save. Try again.",
     },
     account: {
-      heading: 'Account',
+      heading: 'Your account',
       yourName: 'Your name',
       nameSave: 'Save',
       nameSaving: 'Saving…',
@@ -398,22 +481,10 @@ export const strings = {
       deleteFamilyConfirm: 'Delete family',
       deleteAccount: 'Delete my account',
       deleteAccountTitle: 'Delete your account?',
-      deleteAccountBody: (family: string) => `You'll leave “${family}”. The family's recipes and groceries stay.`,
+      deleteAccountBody: "Your recipes and events stay with the family. You'll be signed out on every device.",
       deleteAccountConfirm: 'Delete my account',
       keep: 'Keep it',
       failed: "Couldn't save. Try again.",
-    },
-    // OC-Settings › More (spec 018 adds Recently deleted, 025 AI assistants).
-    more: {
-      heading: 'More',
-      aiAssistants: 'AI assistants',
-      connected: (n: number) => `${n} connected`,
-      recentlyDeleted: 'Recently deleted',
-      // Spec 027, as OC-Menu draws it (until 029 builds the Menu).
-      recipesSettings: 'Recipes',
-      recipesSettingsSub: 'Cooking defaults, units',
-      /** Recently deleted's count: recipes and events (spec 042; OC-Menu.md). */
-      items: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
     },
   },
   // design/ui/OC-Recipes.md (spec 006; the filter logic comes with 007)
@@ -898,7 +969,7 @@ export const strings = {
   },
   // design/flows.md › Recently deleted (spec 018; not drawn, copy in design/ui/OC-Settings.md).
   recentlyDeleted: {
-    back: 'Settings',
+    back: 'Menu',
     title: 'Recently deleted',
     /** "Deleted by Gabriel · 3 days ago · 27 days left" ("Former member" once that person left). */
     sub: (by: string, daysAgo: number, daysLeft: number) => {
@@ -926,7 +997,7 @@ export const strings = {
   // design/ui/OC-RecipeSettings.md (specs 017 and 027; the switches come with 027)
   recipeSettings: {
     title: 'Recipe settings',
-    lead: 'These only change this recipe. Your family defaults are in Settings.',
+    lead: 'These only change this recipe. Your family defaults are in Menu › Recipes.',
     editRecipe: 'Edit recipe',
     // Spec 027: this recipe's own settings; each follows the family's default until changed.
     keepAwake: 'Keep screen on',
@@ -1137,6 +1208,7 @@ export const strings = {
   timerPill: {
     label: (count: number) => `${count} ${count === 1 ? 'timer' : 'timers'} running. Open timers`,
     more: (others: number) => `+${others}`,
+    hide: 'Hide the timer pill. Timers keep running',
   },
   // design/ui/OC-Timers.md (spec 011)
   timersScreen: {
@@ -1353,8 +1425,8 @@ export const strings = {
       timeHint: 'Pick a time of day — no need for exact hours.',
       allDay: 'All day',
       wholeDay: 'Whole day',
-      /** A slot chip's hours: "18–22". */
-      slotHours: (start: string, end: string) => `${start.slice(0, 2)}–${end.slice(0, 2)}`,
+      /** A slot chip's hours, each already the hour alone: "18–22", "6 PM–10 PM". */
+      slotHours: (start: string, end: string) => `${start}–${end}`,
       starts: 'Starts',
       ends: 'Ends',
       badTime: 'Use a time like 18:30.',

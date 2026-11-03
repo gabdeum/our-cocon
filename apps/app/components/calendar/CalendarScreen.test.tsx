@@ -293,17 +293,16 @@ describe('Month view (spec 037)', () => {
     }
   });
 
-  it('FR-006: the hint shows on the first visit only', async () => {
-    const storage = memoryStorage();
-    const first = await setup({ storage });
+  it('FR-006: the hint shows until "Got it", kept in the member settings (spec 029, L94)', async () => {
+    const onDismiss = vi.fn();
+    const first = await setup({ monthHint: { show: true, onDismiss } });
     expect(screen.getByRole('status').textContent).toContain('Tap a day to see details. Each color is a family member.');
     fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(onDismiss).toHaveBeenCalledOnce();
     expect(first.tracker.track).toHaveBeenCalledWith('calendar_first_hint_dismissed', {});
-    await act(async () => undefined);
     first.unmount();
 
-    await setup({ storage });
+    await setup({ monthHint: { show: false, onDismiss } });
     expect(screen.queryByText('Got it')).toBeNull();
   });
 

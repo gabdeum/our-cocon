@@ -3,7 +3,7 @@
 // Used by the app and the MCP server, so both give the same answer. No React.
 export { CalendarError, type CalendarErrorCode } from './errors';
 export { addDays, daysBetween, daysInMonth, makeDate, parts, timeIn, todayIn, weekRange, weekStartFor, weekday, type WeekStartsOn } from './dates';
-export { DEFAULT_SLOT_TIMES, fromMinutes, slotAt, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes } from './slots';
+export { DEFAULT_SLOT_TIMES, checkSlotTimes, fromMinutes, moveSlotEdge, slotAt, slotNeighbour, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes, type SlotTimesProblem } from './slots';
 export { TITLE_SIDE, dateLabel, dayTitles, fitTitle, formatTime, monthTitles, rangeLabel, timeLabel, titleWidth, uses24h, weekTitles, whenWord, type LabelOptions } from './labels';
 export { assertValidEvent, expand, occurrenceOn, splitSeries } from './recurrence';
 export { layoutDay, layoutSpans, type LaneSlot, type LayoutItem, type SpanItem } from './layout';

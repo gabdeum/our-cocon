@@ -7,7 +7,7 @@ import { useDeletedItems } from '../../lib/recently-deleted';
 import { useOnline } from '../../lib/online';
 import { useSession } from '../../lib/session';
 
-/** /settings/deleted (spec 018; events since 042): Recently deleted, pushed from Settings › More. */
+/** /settings/deleted (spec 018; events since 042): Recently deleted, pushed from the Menu. */
 export default function RecentlyDeletedRoute() {
   const { state, client, tracker } = useSession();
   const online = useOnline();
@@ -25,7 +25,7 @@ export default function RecentlyDeletedRoute() {
       tracker={tracker}
       failed={list.failed}
       onRetry={() => void list.refetch()}
-      onBack={() => (router.canGoBack() ? router.back() : router.replace('/settings'))}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace('/menu'))}
       onRestore={async (item) => {
         await (item.kind === 'recipe' ? restoreRecipe(client, item.id) : restoreEvent(client, item.id));
         await refresh(item.kind);

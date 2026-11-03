@@ -12,7 +12,7 @@ import { fakeTracker } from '../test/fakes';
 
 afterEach(cleanup);
 
-const routes = ['index', 'calendar', 'recipes', 'groceries', 'settings'].map((name) => ({ key: `${name}-key`, name }));
+const routes = ['index', 'calendar', 'recipes', 'groceries', 'menu'].map((name) => ({ key: `${name}-key`, name }));
 
 const noStorage: ChoiceStorage = { getItem: async () => null, setItem: async () => undefined };
 
@@ -57,7 +57,7 @@ describe('AppTabBar', () => {
     expect(within(nav).getByRole('link', { name: 'Calendar' }).getAttribute('aria-current')).toBe('page');
     expect(t.capture).toHaveBeenLastCalledWith('tab_selected', { tab: 'calendar' });
 
-    // Menu opens the settings screen until spec 029 adds /menu.
+    // Menu is /menu (spec 029).
     fireEvent.click(within(nav).getByRole('link', { name: 'Menu' }));
     expect(within(nav).getByRole('link', { name: 'Menu' }).getAttribute('aria-current')).toBe('page');
     expect(screen.getByText('Menu')).toBeTruthy();

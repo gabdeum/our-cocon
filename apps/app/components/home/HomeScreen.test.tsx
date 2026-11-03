@@ -35,7 +35,6 @@ function setup(over: Partial<HomeScreenProps> = {}) {
     family: vi.fn(),
     activity: vi.fn(),
     event: vi.fn(),
-    day: vi.fn(),
     agenda: vi.fn(),
     calendar: vi.fn(),
     addEvent: vi.fn(),
@@ -50,6 +49,8 @@ function setup(over: Partial<HomeScreenProps> = {}) {
     groceries: [groceryItem({ name: 'Leek', catalog_key: 'leek' })],
     recipeCount: 32,
     activity: [],
+    activityShow: 'all' as const,
+    onActivityShow: vi.fn(),
     onUndo: vi.fn(),
     tracker: fakeTracker(),
     navigate,
@@ -97,7 +98,7 @@ describe('Home', () => {
     // The toggle shows the week, and isn't remembered.
     fireEvent.click(card().getByRole('button', { name: 'This week' }));
     expect(tracker.track).toHaveBeenCalledWith('homepage_calendar_toggled', { to: 'week' });
-    expect(card().getByRole('link', { name: 'Today, October 25, 2 people busy' })).toBeTruthy();
+    expect(card().getByRole('button', { name: 'Today, October 25, 2 people busy' })).toBeTruthy();
   });
 
   it('US2.1: nothing today: "This week", the strip, five rows and See all', () => {
@@ -114,17 +115,42 @@ describe('Home', () => {
     });
     expect(card().getByRole('heading', { name: 'This week' })).toBeTruthy();
     expect(card().queryByRole('button', { name: 'Today' })).toBeNull();
-    expect(card().getByRole('link', { name: 'Tue, Yoga, Eva · Evening' })).toBeTruthy();
+    expect(card().getByRole('link', { name: 'Tue, Yoga, Evening · Eva' })).toBeTruthy();
     expect(card().queryByRole('link', { name: /Football/ })).toBeNull();
     fireEvent.click(card().getByRole('button', { name: 'See all (2 more)' }));
     expect(navigate.agenda).toHaveBeenCalled();
-    fireEvent.click(card().getByRole('link', { name: 'October 27, 1 person busy' }));
-    expect(navigate.day).toHaveBeenCalledWith('2026-10-27');
-    fireEvent.click(card().getByRole('link', { name: 'Tue, Yoga, Eva · Evening' }));
+    fireEvent.click(card().getByRole('link', { name: 'Tue, Yoga, Evening · Eva' }));
     expect(tracker.track).toHaveBeenCalledWith('homepage_calendar_event_tapped', { section: 'week', card_state: 'week' });
     fireEvent.click(card().getByRole('button', { name: 'Add event' }));
     // The next free day: today.
     expect(navigate.addEvent).toHaveBeenCalledWith(TODAY);
+  });
+
+  it('US2.3: a strip day shows only that day; tapping it again or "Whole week" goes back', () => {
+    const { navigate, tracker } = setup({
+      events: [
+        on('2026-10-26', 'Morning run', { time_type: 'custom', slots: [], start_time: '06:30', end_time: '07:00' }),
+        on('2026-10-28', 'Pediatrician', { time_type: 'custom', slots: [], start_time: '10:00', end_time: '11:00', members: [james.id] }),
+      ],
+    });
+    const wed = () => card().getByRole('button', { name: 'October 28, 1 person busy' });
+    fireEvent.click(wed());
+    expect(wed().getAttribute('aria-pressed')).toBe('true');
+    expect(tracker.track).toHaveBeenCalledWith('homepage_calendar_day_picked', { day_offset: 3 });
+    expect(card().getByRole('heading', { name: 'Wednesday, Oct. 28' })).toBeTruthy();
+    expect(card().getByRole('link', { name: /^Pediatrician, 10:00/ })).toBeTruthy();
+    expect(card().queryByRole('link', { name: /Morning run/ })).toBeNull();
+    // "+" adds on the picked day.
+    fireEvent.click(card().getByRole('button', { name: 'Add event on Wednesday' }));
+    expect(navigate.addEvent).toHaveBeenCalledWith('2026-10-28');
+    // Tapping it again: the whole week.
+    fireEvent.click(wed());
+    expect(card().getByRole('link', { name: 'Mon, Morning run, 06:30 · Gabriel' })).toBeTruthy();
+    // An empty day, then "Whole week".
+    fireEvent.click(card().getByRole('button', { name: 'October 29, nothing planned' }));
+    expect(card().getByText('Nothing planned on Thursday.')).toBeTruthy();
+    fireEvent.click(card().getByRole('button', { name: 'Whole week' }));
+    expect(card().getByRole('link', { name: 'Mon, Morning run, 06:30 · Gabriel' })).toBeTruthy();
   });
 
   it('US2.2: nothing in the next 7 days asks to add one, with no footer', () => {

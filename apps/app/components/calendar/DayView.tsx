@@ -7,6 +7,7 @@ import { AllDayRow, FloatingAdd, MemberCount, SlotBand, Swipeable, Text } from '
 import { layoutDayView } from '../../lib/calendar-day';
 import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { useNow } from '../../lib/use-now';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
 
@@ -39,10 +40,11 @@ export interface DayViewProps {
 /** Spec 039 (OC-CalDay): who's busy, All day, and the five bands of one day, swiped left and right. */
 export function DayView({ members, myMemberId, events, slotTimes, hidden, date, today, timeZone, onSwipe, onAddEvent, onAddInSlot, onOpenEvent }: DayViewProps) {
   const now = useNow(timeZone);
+  const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
   const { from, to } = eventWindow(firstOfMonth(date));
   const occurrences = useMemo(() => monthOccurrences(events ?? [], from, to, myMemberId, hidden), [events, from, to, myMemberId, hidden]);
-  const day = useMemo(() => layoutDayView(date, occurrences, { today, now, look, slotTimes, members }), [date, occurrences, today, now, look, slotTimes, members]);
+  const day = useMemo(() => layoutDayView(date, occurrences, { today, now, look, slotTimes, members, use24h }), [date, occurrences, today, now, look, slotTimes, members, use24h]);
   const openEvent = (key: string) => {
     const { id, date: series } = parseOccurrenceKey(key);
     onOpenEvent(id, series);

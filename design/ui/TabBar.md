@@ -9,7 +9,7 @@ Five destinations in this order: Home · Calendar · Recipes · Groceries · Men
 - Bar 68 tall, radius 34, ink, padding 8, gap 4.
 - **Selected tab: fixed 132 px wide**, 16 px side padding, radius 26, honey fill, icon 24 + label 15/800, gap 6, no wrapping. It never grows or shrinks.
 - Unselected tabs share the remaining width (min 44 px), icon only in `on-ink`.
-- TimerPill above the bar when timers exist (unchanged).
+- TimerPill above the bar while a timer runs: the link part (icon, name, clock, "+N") opens Timers; a 1.5 px `line` divider, then a ✕ (40 × 44, ink-muted) hides the pill until a timer starts or finishes (spec 011 FR-008).
 
 ## Behaviour
 "Menu" opens `/menu` (spec 029: Apps and Settings). Calendar opens the member's default view (spec 029).

@@ -12,6 +12,8 @@ import type { Timer, TimerOrigin } from './timers';
 export interface TimersSnapshot {
   timers: readonly Timer[];
   now: number;
+  /** The pill's ✕ was tapped (spec 011 FR-008): until a timer starts or finishes, or the app reopens. */
+  pillHidden: boolean;
 }
 
 export interface TimerStore {
@@ -28,6 +30,8 @@ export interface TimerStore {
   set(id: string, seconds: number): void;
   stop(id: string): void;
   dismiss(id: string): void;
+  /** Hides the TimerPill on every screen without touching any timer (spec 011 FR-008). */
+  hidePill(): void;
   /** Called for each timer that reaches zero while the app is open (not for one that ended while closed). */
   onFinished(listener: (timer: Timer) => void): () => void;
   /** Reads the saved timers; ones that ended while the app was closed come back done, silently. */
@@ -59,7 +63,9 @@ export async function clearTimers(storage: { removeItem: (key: string) => Promis
 
 export function createTimerStore({ storage, userId, tracker, now = Date.now }: TimerStoreOptions): TimerStore {
   let timers: Timer[] = [];
-  let snapshot: TimersSnapshot = { timers, now: now() };
+  // Not saved: reopening the app shows the pill again.
+  let pillHidden = false;
+  let snapshot: TimersSnapshot = { timers, now: now(), pillHidden };
   let shown = '';
   let interval: ReturnType<typeof setInterval> | null = null;
   // Wakes the store when a paused or done timer is due to be cleared (3 h, spec 011).
@@ -77,7 +83,7 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
     const key = shownKey(at);
     if (!force && key === shown) return;
     shown = key;
-    snapshot = { timers, now: at };
+    snapshot = { timers, now: at, pillHidden };
     listeners.forEach((l) => l());
   }
 
@@ -95,6 +101,7 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
     const cleared = next.length !== settled.length;
     if (finished.length || cleared) {
       timers = next;
+      if (finished.length) pillHidden = false;
       save();
       finished.forEach((t) => {
         tracker.track('timer_finished', {});
@@ -140,6 +147,7 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
     getSnapshot: () => snapshot,
     start(label, seconds, from, origin) {
       const id = `${now().toString(36)}-${(nextId++).toString(36)}`;
+      pillHidden = false;
       change((ts, at) => T.start(ts, id, label, seconds, at, origin));
       tracker.track('timer_started', { from });
       return id;
@@ -160,6 +168,11 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
     },
     stop: (id) => change((ts) => T.stop(ts, id)),
     dismiss: (id) => change((ts) => T.dismiss(ts, id)),
+    hidePill() {
+      if (pillHidden) return;
+      pillHidden = true;
+      publish(now(), true);
+    },
     onFinished(listener) {
       finishedListeners.add(listener);
       return () => finishedListeners.delete(listener);
@@ -239,11 +252,11 @@ export function useStepTimer(recipeId: string, stepId: string): { timer: Timer |
 
 /**
  * FR-004, for the TimerPill (spec 011): only running timers count. `timer` is null, and the pill
- * hidden, when nothing is running; `running` gives its "+N" and label.
+ * hidden, when nothing is running or its ✕ was tapped (FR-008); `running` gives its "+N" and label.
  */
 export function useMostUrgent(): { timer: Timer | null; left: number; count: number; running: number } {
-  const { timers, now } = useTimers();
-  const timer = T.pillTimer(timers, now);
+  const { timers, now, pillHidden } = useTimers();
+  const timer = pillHidden ? null : T.pillTimer(timers, now);
   const running = timers.filter((t) => t.state === 'running').length;
   return { timer, left: timer ? T.remaining(timer, now) : 0, count: timers.length, running };
 }

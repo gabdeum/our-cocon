@@ -25,7 +25,7 @@ a{color:#5A6820}a:hover{color:#424D17}
     <sc-if value="{{hasTitle}}" hint-placeholder-val="{{false}}">
       <h2 style="margin: 0; flex: 1; font-size: 20px; font-weight: 900">{{title}}</h2>
     </sc-if>
-    <a href="OC-CalAdd.dc.html" aria-label="Add event" style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+    <a href="OC-CalAdd.dc.html" aria-label="{{addLabel}}" style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
       <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
     </a>
   </div>
@@ -54,27 +54,58 @@ a{color:#5A6820}a:hover{color:#424D17}
 
   <sc-if value="{{isWeek}}" hint-placeholder-val="{{false}}">
     <div style="display: flex; flex-direction: column; gap: 10px">
-      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+      <div role="group" aria-label="Pick a day" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
         <sc-for list="{{strip}}" as="d" hint-placeholder-count="7">
-          <a href="OC-CalDay.dc.html" aria-label="{{d.aria}}" style="{{d.style}}">
-            <span style="font-size: 12px; font-weight: 900; color: #5A503A">{{d.letter}}</span>
+          <button aria-label="{{d.aria}}" aria-pressed="{{d.pressed}}" onClick="{{d.pick}}" style="{{d.style}}">
+            <span style="{{d.letterStyle}}">{{d.letter}}</span>
             <span style="font-size: 16px; font-weight: 900">{{d.num}}</span>
             <span aria-hidden="true" style="display: flex; gap: 2px; height: 7px">
               <sc-for list="{{d.dots}}" as="dot" hint-placeholder-count="2"><span style="{{dot}}"></span></sc-for>
             </span>
-          </a>
+          </button>
         </sc-for>
       </div>
-      <div style="display: flex; flex-direction: column">
-        <sc-for list="{{week}}" as="e" hint-placeholder-count="5">
-          <a href="OC-CalEvent.dc.html" style="{{e.row}}">
-            <span style="width: 40px; flex: none; font-size: 13px; font-weight: 900; color: #5A503A">{{e.day}}</span>
-            <span aria-hidden="true" style="{{e.stripe}}"></span>
-            <span style="flex: 1; min-width: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{e.title}}<span style="font-weight: 700; color: #5A503A"> · {{e.who}} · {{e.when}}</span></span>
-          </a>
-        </sc-for>
-      </div>
-      <a href="OC-CalAgenda.dc.html" style="align-self: flex-start; font-size: 15px; font-weight: 800; padding: 6px 0">See all (6 more)</a>
+
+      <sc-if value="{{allWeek}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; flex-direction: column">
+          <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+            <div style="{{g.style}}">
+              <span style="width: 40px; flex: none; padding-top: 12px; font-size: 13px; font-weight: 900; color: #5A503A">{{g.day}}</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+                <sc-for list="{{g.rows}}" as="e" hint-placeholder-count="2">
+                  <a href="OC-CalEvent.dc.html" style="display: flex; align-items: center; gap: 10px; min-height: 44px; text-decoration: none; color: #2A2414">
+                    <span aria-hidden="true" style="{{e.stripe}}"></span>
+                    <span style="flex: 1; min-width: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{e.title}}<span style="font-weight: 700; color: #5A503A"> · {{e.when}} · {{e.who}}</span></span>
+                  </a>
+                </sc-for>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <a href="OC-CalAgenda.dc.html" style="align-self: flex-start; font-size: 15px; font-weight: 800; padding: 6px 0">See all (6 more)</a>
+      </sc-if>
+
+      <sc-if value="{{oneDay}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; flex-direction: column">
+          <div style="display: flex; align-items: center; justify-content: space-between; min-height: 36px">
+            <span style="font-size: 15px; font-weight: 900">{{dayTitle}}</span>
+            <button onClick="{{clearDay}}" style="height: 36px; padding: 0 2px; border: none; background: none; color: #424D17; font-family: inherit; font-size: 15px; font-weight: 800; cursor: pointer">Whole week</button>
+          </div>
+          <sc-for list="{{dayRows}}" as="e" hint-placeholder-count="2">
+            <a href="OC-CalEvent.dc.html" style="{{e.row}}">
+              <span aria-hidden="true" style="{{e.stripe}}"></span>
+              <span style="{{e.avatar}}">{{e.initial}}</span>
+              <span style="flex: 1; min-width: 0">
+                <span style="display: block; font-size: 16px; font-weight: 800">{{e.title}}</span>
+                <span style="display: block; font-size: 13px; font-weight: 700; color: #5A503A">{{e.sub}}</span>
+              </span>
+            </a>
+          </sc-for>
+          <sc-if value="{{dayEmpty}}" hint-placeholder-val="{{false}}">
+            <p style="margin: 6px 0 4px; font-size: 15px; font-weight: 700; color: #5A503A">{{dayEmptyText}}</p>
+          </sc-if>
+        </div>
+      </sc-if>
     </div>
   </sc-if>
 
@@ -90,9 +121,9 @@ a{color:#5A6820}a:hover{color:#424D17}
   </sc-if>
 </section>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["today","week","empty"],"default":"today"},"$preview":{"width":350,"height":440}}'>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["today","week","empty"],"default":"today"},"day":{"editor":"number","default":-1},"$preview":{"width":350,"height":440}}'>
 class Component extends DCLogic {
-  constructor(props) { super(props); this.state = { view: null }; }
+  constructor(props) { super(props); this.state = { view: null, sel: props.day >= 0 ? props.day : null }; }
   renderVals() {
     var self = this;
     var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478' };
@@ -117,28 +148,53 @@ class Component extends DCLogic {
         avatar: avatar(x[0])
       };
     });
-    var DOTS = [['All', 'J'], ['G'], ['E'], ['E', 'J'], ['E', 'G'], ['E', 'G'], ['J', 'All', 'G']];
-    var strip = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(function (l, i) {
-      var dots = mode === 'week' && i === 0 ? [] : DOTS[i];
-      var isToday = i === 0;
+    var NAME = { G: 'Gabriel', E: 'Eva', J: 'James', All: 'Everyone' };
+    var LETTER = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    var DAYNAME = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    // [who, title, when, place or driver, multi-day continuation]
+    var DAYS = [
+      mode === 'week' ? [] : [['All', 'Brunch at Grandma’s', 'Lunch', 'Grandma’s house'], ['J', 'Baby swim class', '14:30', 'Gabriel takes James'], ['All', 'Movie night', 'Evening', '']],
+      [['G', 'Morning run', '06:30', 'Riverside Park']],
+      [['E', 'Eva’s birthday', 'All day', ''], ['E', 'Yoga', 'Evening', 'Studio Ama']],
+      [['E', 'Lyon trip', 'Wed–Fri', ''], ['J', 'Pediatrician', '10:00', 'Gabriel takes James']],
+      [['E', 'Lyon trip', 'Day 2 of 3', '', true], ['G', 'Dentist', '10:30', 'Smile Dental']],
+      [['E', 'Lyon trip', 'Day 3 of 3', '', true], ['G', 'Poker night', 'Evening', 'at Sam’s']],
+      [['J', 'Baby music class', 'Morning', 'Little Notes studio'], ['All', 'Halloween walk', 'Afternoon', 'Our street'], ['G', 'Eva’s surprise dinner', 'Evening', 'Café Lalo']]
+    ];
+    var sel = this.state.sel;
+    var strip = LETTER.map(function (l, i) {
+      var who = []; DAYS[i].forEach(function (x) { if (who.indexOf(x[0]) < 0) who.push(x[0]); });
+      var dots = who.slice(0, 3), isToday = i === 0, picked = sel === i;
       return {
-        letter: l, num: 25 + i, aria: (isToday ? 'Today, ' : '') + 'October ' + (25 + i) + ', ' + (dots.length ? dots.length + ' people busy' : 'nothing planned'),
+        letter: l, num: 25 + i, pressed: picked ? 'true' : 'false',
+        pick: function () { self.setState({ sel: self.state.sel === i ? null : i }); },
+        aria: (isToday ? 'Today, ' : '') + DAYNAME[i] + ', October ' + (25 + i) + ', ' + (DAYS[i].length ? DAYS[i].length + (DAYS[i].length === 1 ? ' event' : ' events') : 'nothing planned'),
+        letterStyle: 'font-size: 12px; font-weight: 900; color: ' + (picked ? '#FFFFFF' : '#5A503A'),
         dots: dots.map(function (w) { return 'width: 7px; height: 7px; border-radius: 50%; background: ' + C[w] + '; box-shadow: inset 0 0 0 1px rgba(42,36,20,0.25)'; }),
-        style: 'min-height: 62px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #2A2414; ' +
-          (isToday ? 'background: #FFF0C9; box-shadow: inset 0 0 0 2px #5A6820' : dots.length ? 'background: #FFF8E3' : 'background: transparent; color: #5A503A')
+        style: 'min-height: 62px; border: none; padding: 0; font-family: inherit; cursor: pointer; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; ' +
+          (picked ? 'background: #5A6820; color: #FFFFFF' : isToday ? 'background: #FFF0C9; color: #2A2414; box-shadow: inset 0 0 0 2px #5A6820' : dots.length ? 'background: #FFF8E3; color: #2A2414' : 'background: transparent; color: #5A503A')
       };
     });
-    var week = [
-      ['Mon', 'Morning run', 'Gabriel', '06:30', 'G'],
-      ['Tue', 'Eva’s birthday', 'Eva', 'All day', 'E'],
-      ['Tue', 'Yoga', 'Eva', 'Evening', 'E'],
-      ['Wed', 'Lyon trip', 'Eva', 'Wed–Fri', 'E'],
-      ['Wed', 'Pediatrician', 'James', '10:00', 'J']
-    ].map(function (x, i) {
+    // Whole week: one day label per day, no lines inside a day; "Title · when · person". Multi-day events once.
+    var groups = [], count = 0;
+    for (var di = 1; di < 7 && count < 5; di++) {
+      var rows = DAYS[di].filter(function (x) { return !x[4]; }).slice(0, 5 - count);
+      if (!rows.length) continue;
+      count += rows.length;
+      groups.push({
+        day: SHORT[di],
+        style: 'display: flex; align-items: flex-start; gap: 10px' + (groups.length ? '; border-top: 1.5px solid #F2E6C4' : ''),
+        rows: rows.map(function (x) { return { title: x[1], when: x[2], who: NAME[x[0]], stripe: 'width: 5px; height: 26px; border-radius: 3px; flex: none; background: ' + C[x[0]] }; })
+      });
+    }
+    // One day picked: the Today layout for that day.
+    var dayRows = sel === null ? [] : DAYS[sel].map(function (x, i, arr) {
       return {
-        day: x[0], title: x[1], who: x[2], when: x[3],
-        row: 'display: flex; align-items: center; gap: 10px; min-height: 44px; text-decoration: none; color: #2A2414' + (i < 4 ? '; border-bottom: 1.5px solid #F2E6C4' : ''),
-        stripe: 'width: 5px; height: 26px; border-radius: 3px; flex: none; background: ' + C[x[4]]
+        initial: x[0], title: x[1], sub: x[2] + (x[3] ? ' · ' + x[3] : ''),
+        row: 'display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 6px 0; text-decoration: none; color: #2A2414' + (i < arr.length - 1 ? '; border-bottom: 1.5px solid #F2E6C4' : ''),
+        stripe: 'width: 5px; align-self: stretch; border-radius: 3px; flex: none; background: ' + C[x[0]],
+        avatar: avatar(x[0])
       };
     });
     return {
@@ -150,7 +206,13 @@ class Component extends DCLogic {
       showWeek: function () { self.setState({ view: 'week' }); },
       isToday: view === 'today', isWeek: view === 'week', isEmpty: mode === 'empty',
       hasFooter: mode !== 'empty',
-      today: today, strip: strip, week: week
+      today: today, strip: strip, groups: groups,
+      allWeek: sel === null, oneDay: sel !== null, dayRows: dayRows,
+      dayTitle: sel === null ? '' : (sel === 0 ? 'Today, ' : '') + DAYNAME[sel] + ', Oct. ' + (25 + sel),
+      dayEmpty: sel !== null && DAYS[sel].length === 0,
+      dayEmptyText: sel === null ? '' : 'Nothing planned on ' + DAYNAME[sel] + '.',
+      clearDay: function () { self.setState({ sel: null }); },
+      addLabel: sel === null ? 'Add event' : 'Add event on ' + DAYNAME[sel]
     };
   }
 }

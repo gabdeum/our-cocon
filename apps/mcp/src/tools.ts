@@ -39,9 +39,9 @@ const permissionWords: Record<AiPermission, string> = {
   recipes_delete: 'delete recipes',
 };
 
-/** "This member hasn’t allowed AI to change the grocery list. They can change it in Settings › AI assistants." */
+/** "This member hasn’t allowed AI to change the grocery list. They can change it in Menu › AI assistants." */
 export const notAllowedSentence = (permission: AiPermission) =>
-  `This member hasn’t allowed AI to ${permissionWords[permission]}. They can change it in Settings › AI assistants.`;
+  `This member hasn’t allowed AI to ${permissionWords[permission]}. They can change it in Menu › AI assistants.`;
 
 /** The database's refusal (migration ai_permissions_groceries): the permission's key, hinted `ai_not_allowed`. */
 function refusedPermission(error: unknown): AiPermission | null {

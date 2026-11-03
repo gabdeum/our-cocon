@@ -4,10 +4,11 @@ import { memberInitials, type ActivityEntry, type HomeCardState, type Tracker } 
 import { DEFAULT_SLOT_TIMES, viewFor, type SlotTimes } from '@cocon/calendar';
 import type { GroceryItem, HomeHero, StoredEvent } from '@cocon/data';
 import { AvatarStack, BrandHeader, Button, Card, HeroCard, StatTile, TabScreen, Text, type AvatarColor } from '@cocon/ui';
-import { ActivitySection } from '../activity/ActivitySection';
+import { ActivitySection, type ActivityShow } from '../activity/ActivitySection';
 import { BusySheet } from '../calendar/BusySheet';
 import { OfflineBanner } from '../sync/OfflineBanner';
 import { combineRows, toBuyCount } from '../../lib/groceries';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { eventOccurrence } from '../../lib/event-detail';
 import { memberLook, parseOccurrenceKey } from '../../lib/calendar-month';
 import { firstName, greeting, homeDate, layoutCalendarCard, recipeToBuy } from '../../lib/home';
@@ -36,7 +37,10 @@ export interface HomeScreenProps {
   groceries?: GroceryItem[];
   /** How many recipes the Recipes tab lists. */
   recipeCount?: number;
+  /** The 4 newest entries for `activityShow`. */
   activity: readonly ActivityEntry[];
+  activityShow: ActivityShow;
+  onActivityShow: (to: ActivityShow) => void;
   onUndo: (entry: ActivityEntry, skipChanged: boolean) => Promise<UndoOutcome>;
   readOnly?: boolean;
   tracker: Tracker;
@@ -48,19 +52,42 @@ export interface HomeScreenProps {
     groceries: () => void;
     recipes: () => void;
     family: () => void;
-    activity: () => void;
+    /** The activity list, with Home's filter. */
+    activity: (show: ActivityShow) => void;
     event: (id: string, date: string) => void;
-    day: (date: string) => void;
     agenda: () => void;
     calendar: () => void;
     addEvent: (date: string) => void;
   };
 }
 
-/** Spec 028 (OC-Home): brand row, greeting, calendar card, latest recipe, the two tiles, AI activity. */
-export function HomeScreen({ me, members, today, now, slotTimes = DEFAULT_SLOT_TIMES, events, hero, heroPhotoUri, groceries, recipeCount, activity, onUndo, readOnly, tracker, footer, navigate }: HomeScreenProps) {
+/** Spec 028 (OC-Home): brand row, greeting, calendar card, latest recipe, the two tiles, Latest activity. */
+export function HomeScreen({
+  me,
+  members,
+  today,
+  now,
+  slotTimes = DEFAULT_SLOT_TIMES,
+  events,
+  hero,
+  heroPhotoUri,
+  groceries,
+  recipeCount,
+  activity,
+  activityShow,
+  onActivityShow,
+  onUndo,
+  readOnly,
+  tracker,
+  footer,
+  navigate,
+}: HomeScreenProps) {
   const look = useMemo(() => memberLook(members), [members]);
-  const layout = useMemo(() => layoutCalendarCard(events ?? [], { today, now, look, slotTimes, members, me }), [events, today, now, look, slotTimes, members, me]);
+  const { use24h, show_birthdays: showBirthdays } = useCalendarDisplay().prefs;
+  const layout = useMemo(
+    () => layoutCalendarCard(events ?? [], { today, now, look, slotTimes, members, me, use24h, showBirthdays }),
+    [events, today, now, look, slotTimes, members, me, use24h, showBirthdays],
+  );
   // OC-CalBusy (spec 043, 032 L107): someone else's private event opens a sheet, not the event page.
   const [busy, setBusy] = useState<StoredEvent | null>(null);
   const initials = memberInitials(members);
@@ -96,7 +123,7 @@ export function HomeScreen({ me, members, today, now, slotTimes = DEFAULT_SLOT_T
         layout={layout}
         readOnly={readOnly}
         onOpenEvent={openEvent}
-        onOpenDay={navigate.day}
+        onPickDay={(offset) => tracker.track('homepage_calendar_day_picked', { day_offset: offset })}
         onAdd={(date, cardState) => {
           tracker.track('homepage_calendar_add_tapped', { card_state: cardState });
           navigate.addEvent(date);
@@ -163,7 +190,20 @@ export function HomeScreen({ me, members, today, now, slotTimes = DEFAULT_SLOT_T
           }}
         />
       </View>
-      <ActivitySection entries={activity} members={members} tracker={tracker} readOnly={readOnly} onUndo={onUndo} onSeeAll={navigate.activity} />
+      <ActivitySection
+        entries={activity}
+        members={members}
+        tracker={tracker}
+        readOnly={readOnly}
+        onUndo={onUndo}
+        use24h={use24h}
+        show={activityShow}
+        onShow={(to) => {
+          tracker.track('homepage_activity_filter_changed', { to });
+          onActivityShow(to);
+        }}
+        onSeeAll={() => navigate.activity(activityShow)}
+      />
       {members.length === 1 ? (
         <Card tone="soft">
           <Text size={18} weight="900">

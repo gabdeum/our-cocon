@@ -19,11 +19,11 @@ export const seesInFull = (event: StoredEvent, myMemberId: string) => !event.del
  * (a custom time) or "All day"; a multi-day event's dates: "Sat, Oct 31 – Mon, Nov 2". The shared
  * page (`/e/[token]`) says it the same way.
  */
-export function whenLines(o: Pick<CalendarEvent, 'starts_on' | 'ends_on' | 'time_type' | 'slots' | 'start_time' | 'end_time'>, slotTimes: SlotTimes): { title: string; sub: string } {
+export function whenLines(o: Pick<CalendarEvent, 'starts_on' | 'ends_on' | 'time_type' | 'slots' | 'start_time' | 'end_time'>, slotTimes: SlotTimes, use24h = true): { title: string; sub: string } {
   const title = o.starts_on === o.ends_on ? dateLabel(o.starts_on, 'long') : e.span(dateLabel(o.starts_on), dateLabel(o.ends_on));
-  const range = rangeLabel(o, { use24h: true, slotTimes });
+  const range = rangeLabel(o, { use24h, slotTimes });
   if (!range) return { title, sub: e.allDay };
-  return { title, sub: o.time_type === 'slot' ? e.slotTime(timeLabel(o, { use24h: true, slotTimes }), range) : range };
+  return { title, sub: o.time_type === 'slot' ? e.slotTime(timeLabel(o, { use24h, slotTimes }), range) : range };
 }
 
 /** The Repeat row: "Every Saturday", "Every Tuesday and Thursday", "Every day"; null for a one-off event. */
@@ -106,9 +106,9 @@ export function deleteBody(event: StoredEvent, myMemberId: string, members: read
  * "Thursday, Oct 22 · Afternoon" (the slot, the start time or "All day"), and the creator's avatar.
  * `creator` is null when they've left the family ("Someone is busy").
  */
-export function busyLines(o: StoredEvent, members: readonly Member[], slotTimes: SlotTimes): { creator: { name: string; initial: string; color: MemberChipColor } | null; when: string } {
+export function busyLines(o: StoredEvent, members: readonly Member[], slotTimes: SlotTimes, use24h = true): { creator: { name: string; initial: string; color: MemberChipColor } | null; when: string } {
   const m = members.find((x) => x.id === o.creator_member_id);
-  const when = strings.calendar.busy.when(dateLabel(o.starts_on, 'long'), timeLabel(o, { use24h: true, slotTimes }));
+  const when = strings.calendar.busy.when(dateLabel(o.starts_on, 'long'), timeLabel(o, { use24h, slotTimes }));
   return { creator: m ? { name: m.display_name, initial: memberInitials(members).get(m.id) ?? '', color: m.color as MemberChipColor } : null, when };
 }
 

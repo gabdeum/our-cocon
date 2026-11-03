@@ -2,7 +2,7 @@ import { addDays, calendarWordsEn, dateLabel, parts, timeLabel, weekday, type Sl
 import type { GroceryItem, HomeHero, StoredEvent } from '@cocon/data';
 import { groceryIdentity } from '@cocon/quantity';
 import type { HomeCardState } from '@cocon/schemas';
-import type { EventColor, EventListItem, WeekEventItem, WeekStripDay } from '@cocon/ui';
+import type { EventColor, EventListItem, WeekEventDay, WeekStripDay } from '@cocon/ui';
 import { agendaRow } from './calendar-agenda';
 import { inAllDay, isBirthday } from './calendar-day';
 import { longDate, monthOccurrences, occurrenceKey, type MemberLook, type MonthOccurrence } from './calendar-month';
@@ -59,6 +59,10 @@ export interface CardContext {
   members: readonly Member[];
   /** The signed-in member: what they may see, and whose reminders show. */
   me: Member;
+  /** The member's Time format (spec 029); 24-hour when not given. */
+  use24h?: boolean;
+  /** "Show birthdays" (spec 029, L111): off hides the birthday banner. */
+  showBirthdays?: boolean;
 }
 
 export interface CardBirthday {
@@ -74,12 +78,25 @@ export interface CardLayout {
   /** Today: reminders due today first (FR-003), then today's events by time. */
   today: EventListItem[];
   strip: WeekStripDay[];
-  /** This week: the first five events. */
-  week: WeekEventItem[];
+  /** This week: the first five events, grouped by day (the day label once). */
+  week: WeekEventDay[];
+  /** FR-008: each strip day as the card shows it once picked, in the Today layout. */
+  days: CardDay[];
   /** How many more events the week has than it lists: "See all (6 more)". */
   more: number;
   /** FR-002: the day "+" opens Add event on, for each view. */
   addDate: { today: string; week: string };
+}
+
+export interface CardDay {
+  date: string;
+  /** "Wednesday, Oct. 28", "Today, Sunday, Oct. 25". */
+  title: string;
+  items: EventListItem[];
+  /** "Nothing planned on Thursday." */
+  empty: string;
+  /** "Add event on Wednesday". */
+  addLabel: string;
 }
 
 const covers = (o: MonthOccurrence, date: string) => o.starts_on <= date && o.ends_on >= date;
@@ -99,10 +116,10 @@ function whoLine(o: MonthOccurrence, members: readonly Member[]): string {
 }
 
 /** "All day", "Evening", "10:00", or "Wed–Fri" for an event over several days. */
-function whenLine(o: MonthOccurrence, slotTimes: SlotTimes): string {
+function whenLine(o: MonthOccurrence, slotTimes: SlotTimes, use24h = true): string {
   if (o.ends_on > o.starts_on) return `${words.weekdaysShort[weekday(o.starts_on)]}–${words.weekdaysShort[weekday(o.ends_on)]}`;
   if (inAllDay(o)) return words.allDay;
-  return timeLabel(o, { use24h: true, slotTimes });
+  return timeLabel(o, { use24h, slotTimes });
 }
 
 function safeRow(o: MonthOccurrence, date: string, ctx: CardContext) {
@@ -130,7 +147,7 @@ export function layoutCalendarCard(events: readonly StoredEvent[], ctx: CardCont
 
   // FR-004: birthdays from today to 3 days ahead, in the banner rather than the rows.
   const birthdays = occurrences
-    .filter((o) => isBirthday(o) && o.starts_on >= today && o.starts_on <= addDays(today, BIRTHDAY_DAYS_AHEAD))
+    .filter((o) => ctx.showBirthdays !== false && isBirthday(o) && o.starts_on >= today && o.starts_on <= addDays(today, BIRTHDAY_DAYS_AHEAD))
     .sort((a, b) => a.starts_on.localeCompare(b.starts_on))
     .map((o) => ({
       key: occurrenceKey(o),
@@ -162,21 +179,50 @@ export function layoutCalendarCard(events: readonly StoredEvent[], ctx: CardCont
   const byTime = (x: { order: number; item: EventListItem }, y: { order: number; item: EventListItem }) => x.order - y.order || x.item.title.localeCompare(y.item.title);
   const todayItems = [...reminders.sort(byTime), ...todayRows.sort(byTime)].map((r) => r.item);
 
-  // This week: each event once, on its first day in the window.
+  // This week: each event once, on its first day in the window, grouped by day.
   const days = Array.from({ length: CARD_DAYS }, (_, i) => addDays(today, i));
-  const weekAll = days.flatMap((date) =>
-    occurrences
+  const weekByDay = days.map((date) => {
+    const day = words.weekdaysShort[weekday(date)] ?? '';
+    const events = occurrences
       .filter((o) => (date === today ? covers(o, today) : o.starts_on === date))
       .flatMap((o) => {
         const row = safeRow(o, date, ctx);
         if (!row) return [];
-        const day = words.weekdaysShort[weekday(date)] ?? '';
-        const detail = c.detail(whoLine(o, ctx.members), whenLine(o, ctx.slotTimes));
-        return [{ order: row.order, item: { key: occurrenceKey(o), day, title: o.title, detail, colors: eventColors(o, ctx.look).slice(0, 2), label: c.rowLabel([day, o.title, detail]) } }];
+        const detail = c.detail(whoLine(o, ctx.members), whenLine(o, ctx.slotTimes, ctx.use24h));
+        return [{ order: row.order, item: { key: occurrenceKey(o), title: o.title, detail, colors: eventColors(o, ctx.look).slice(0, 2), label: c.rowLabel([day, o.title, detail]) } }];
       })
       .sort((x, y) => x.order - y.order || x.item.title.localeCompare(y.item.title))
-      .map((r) => r.item),
-  );
+      .map((r) => r.item);
+    return { date, day, events };
+  });
+  const weekCount = weekByDay.reduce((n, g) => n + g.events.length, 0);
+  let room = WEEK_ROWS;
+  const week = weekByDay.flatMap((g) => {
+    const events = g.events.slice(0, room);
+    room -= events.length;
+    return events.length ? [{ ...g, events }] : [];
+  });
+
+  // FR-008: a picked day, laid out like Today (birthdays are rows here, there's no banner).
+  const dayList = days.map((date): CardDay => {
+    const name = words.weekdays[weekday(date)] ?? '';
+    const items = occurrences
+      .filter((o) => covers(o, date))
+      .flatMap((o) => {
+        const row = safeRow(o, date, ctx);
+        return row ? [row] : [];
+      })
+      .sort(byTime)
+      .map((r) => r.item);
+    const { month, day } = parts(date);
+    return {
+      date,
+      title: c.dayTitle(date === today, `${name}, ${words.monthsShort[month - 1] ?? ''} ${day}`),
+      items,
+      empty: c.dayEmpty(name),
+      addLabel: c.addEventOn(name),
+    };
+  });
 
   const strip = days.map((date): WeekStripDay => {
     const dots = [...new Set(occurrences.filter((o) => covers(o, date)).flatMap((o) => eventColors(o, ctx.look)))].slice(0, 3);
@@ -192,15 +238,16 @@ export function layoutCalendarCard(events: readonly StoredEvent[], ctx: CardCont
 
   // A birthday today is something today, though it shows only in the banner.
   const hasToday = todayItems.length > 0 || occurrences.some((o) => isBirthday(o) && o.starts_on === today);
-  const state: HomeCardState = hasToday ? 'today' : weekAll.length ? 'week' : 'empty';
+  const state: HomeCardState = hasToday ? 'today' : weekCount ? 'week' : 'empty';
   const freeDay = days.find((date) => !occurrences.some((o) => covers(o, date))) ?? today;
   return {
     state,
     birthdays,
     today: todayItems,
     strip,
-    week: weekAll.slice(0, WEEK_ROWS),
-    more: Math.max(0, weekAll.length - WEEK_ROWS),
+    week,
+    days: dayList,
+    more: Math.max(0, weekCount - WEEK_ROWS),
     addDate: { today, week: freeDay },
   };
 }
