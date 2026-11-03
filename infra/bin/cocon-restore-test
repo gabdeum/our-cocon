@@ -88,7 +88,8 @@ cocon-stack "$env" up -d --wait
 log "checking the restore against the backup's manifest"
 docker exec -i "$db" psql -U supabase_admin -d postgres -qtAF $'\t' -v ON_ERROR_STOP=1 <<<"$COUNT_SQL" \
   >"$plain/restored.tsv"
-grep -v '^photos	' "$plain/manifest.tsv" >"$plain/expected.tsv"
+grep -v '^photos	' "$plain/manifest.tsv" >"$plain/expected.tsv" ||
+  die "backup $latest has no row counts to check against"
 if ! diff -u "$plain/expected.tsv" "$plain/restored.tsv" >"$plain/diff.txt"; then
   cat "$plain/diff.txt" >&2
   die "restored row counts differ from the backup (lines with - are the backup, + the restore)"

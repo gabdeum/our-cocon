@@ -39,9 +39,9 @@ ${log('rclone')}
 case "$*" in *lsf*) echo 2026-11-03T03-00/ ;; esac
 exit 0
 `,
-  // Writes the manifest for any -o file; streams nothing for the dump.
+  // Writes the manifest (STUB_MANIFEST, or one table) for any -o file; streams nothing for the dump.
   age: `#!/usr/bin/env bash
-while [ $# -gt 0 ]; do [ "$1" = -o ] && printf 'public.recipes\\t3\\n' > "$2"; shift; done
+while [ $# -gt 0 ]; do [ "$1" = -o ] && printf '%b' "\${STUB_MANIFEST:-public.recipes\\t3\\n}" > "$2"; shift; done
 exit 0
 `,
   'cocon-secrets': '#!/usr/bin/env bash\nexit 0\n',
@@ -109,6 +109,95 @@ describe('cocon-restore-test', () => {
     const lines = calls();
     expect(lines.at(-2)).toBe('cocon-stack staging up -d --wait --quiet-pull');
     expect(lines).not.toContain(`cocon-deploy staging ${SHA}`);
+  });
+
+  it('says so, and puts staging back, when the backup has no row counts', () => {
+    const { status, stderr } = restoreTest({ STUB_MANIFEST: 'photos\\t5\\n' });
+    expect(status).not.toBe(0);
+    expect(stderr).toMatch(/backup \S+ has no row counts to check against/);
+    expect(readdirSync(join(volumes(), 'db/data'))).toEqual(['staging-db']);
+  });
+});
+
+// cocon-backup reads the row counts from a coprocess (bash 4+): CI's Ubuntu runs this, macOS's
+// bash 3.2 can't. The docker stand-in answers like psql: a snapshot id, then the counts and `end`.
+const backupStubs = {
+  docker: `#!/usr/bin/env bash
+case "$1" in
+  ps) echo db-container ;;
+  exec)
+    case "$*" in
+      *pg_dump*) echo dump ;;
+      *psql*)
+        while read -r line; do
+          case "$line" in
+            *pg_export_snapshot*) echo snapshot-1 ;;
+            *'$$end$$'*) [ -z "\${STUB_NO_COUNTS:-}" ] && printf 'public.recipes\\t3\\n'; echo end ;;
+          esac
+        done ;;
+    esac ;;
+esac
+exit 0
+`,
+  // Keeps a copy of what is uploaded (the script deletes its folder afterwards).
+  rclone: `#!/usr/bin/env bash
+prev=
+for arg in "$@"; do
+  [ "$prev" = copy ] && cp -R "$arg" "$STUB_DIR/uploaded"
+  prev=$arg
+done
+exit 0
+`,
+  age: '#!/usr/bin/env bash\ncat\n',
+  getfattr: '#!/usr/bin/env bash\nexit 0\n',
+  'cocon-secrets': '#!/usr/bin/env bash\nexit 0\n',
+  flock: '#!/usr/bin/env bash\nexit 0\n',
+};
+const oldBash = !/version [4-9]/.test(spawnSync('bash', ['--version'], { encoding: 'utf8' }).stdout);
+
+describe.skipIf(oldBash)('cocon-backup', () => {
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'cocon-backup-'));
+    mkdirSync(join(dir, 'stubs'));
+    for (const [name, body] of Object.entries(backupStubs)) {
+      writeFileSync(join(dir, 'stubs', name), body);
+      chmodSync(join(dir, 'stubs', name), 0o755);
+    }
+    mkdirSync(join(dir, 'run'));
+    mkdirSync(join(dir, 'srv/prod/supabase/volumes/storage'), { recursive: true });
+    writeFileSync(join(dir, 'srv/prod/supabase/volumes/storage/photo-1'), '');
+    writeFileSync(join(dir, 'srv/prod/supabase/volumes/storage/photo-2'), '');
+  });
+
+  function backup(env: Record<string, string> = {}) {
+    const result = spawnSync('bash', [join(infra, 'bin/cocon-backup'), 'prod'], {
+      encoding: 'utf8',
+      env: {
+        PATH: `${join(dir, 'stubs')}:${join(infra, 'bin')}:${process.env.PATH}`,
+        HOME: dir,
+        COCON_HOME: infra,
+        COCON_SRV: join(dir, 'srv'),
+        COCON_CREDS: join(dir, 'creds'),
+        COCON_RUN: join(dir, 'run'),
+        COCON_STATE: join(dir, 'state'),
+        STUB_DIR: dir,
+        ...env,
+      },
+    });
+    return { status: result.status, stderr: result.stderr };
+  }
+
+  it("writes every table's row count and the photo count to the manifest", () => {
+    const { status, stderr } = backup();
+    expect(status, stderr).toBe(0);
+    expect(readFileSync(join(dir, 'uploaded/manifest.tsv.age'), 'utf8')).toBe('public.recipes\t3\nphotos\t2\n');
+  });
+
+  it('fails, uploading nothing, when it gets no row counts', () => {
+    const { status, stderr } = backup({ STUB_NO_COUNTS: '1' });
+    expect(status).not.toBe(0);
+    expect(stderr).toContain("could not count the rows of prod's tables");
+    expect(existsSync(join(dir, 'uploaded'))).toBe(false);
   });
 });
 
