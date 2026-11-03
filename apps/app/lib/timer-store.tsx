@@ -34,6 +34,8 @@ export interface TimerStore {
   hidePill(): void;
   /** Called for each timer that reaches zero while the app is open (not for one that ended while closed). */
   onFinished(listener: (timer: Timer) => void): () => void;
+  /** Called after every start: the first may ask for notifications (spec 046 FR-002). */
+  onStarted(listener: () => void): () => void;
   /** Reads the saved timers; ones that ended while the app was closed come back done, silently. */
   load(): Promise<void>;
   destroy(): void;
@@ -75,6 +77,7 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
   let destroyed = false;
   const listeners = new Set<() => void>();
   const finishedListeners = new Set<(t: Timer) => void>();
+  const startedListeners = new Set<() => void>();
 
   /** What the screens show: only a change here re-renders them, so 10 timers stay cheap (SC-002). */
   const shownKey = (at: number) => timers.map((t) => `${t.id}:${t.state}:${T.remaining(t, at)}`).join('|');
@@ -150,6 +153,7 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
       pillHidden = false;
       change((ts, at) => T.start(ts, id, label, seconds, at, origin));
       tracker.track('timer_started', { from });
+      startedListeners.forEach((l) => l());
       return id;
     },
     quick: (seconds = T.QUICK_SECONDS) => store.start(strings.timers.kitchenTimer, seconds, 'quick'),
@@ -176,6 +180,10 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
     onFinished(listener) {
       finishedListeners.add(listener);
       return () => finishedListeners.delete(listener);
+    },
+    onStarted(listener) {
+      startedListeners.add(listener);
+      return () => startedListeners.delete(listener);
     },
     async load() {
       if (!userId) return;
@@ -206,6 +214,7 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
       expiry = null;
       listeners.clear();
       finishedListeners.clear();
+      startedListeners.clear();
     },
   };
   return store;
@@ -219,12 +228,16 @@ export interface TimersProviderProps {
   storage: ChoiceStorage;
   tracker: Tracker;
   now?: () => number;
+  /** After every start (spec 046: the first may ask for notifications). */
+  onStart?: () => void;
   children: ReactNode;
 }
 
 /** App-wide, so timers keep running on every screen (US1). A new person on the device gets their own. */
-export function TimersProvider({ userId, storage, tracker, now, children }: TimersProviderProps) {
+export function TimersProvider({ userId, storage, tracker, now, onStart, children }: TimersProviderProps) {
   const store = useMemo(() => createTimerStore({ storage, userId, tracker, now }), [storage, userId, tracker, now]);
+  // A listener, not a store option: a new callback must not make a new store (that would drop the running timers).
+  useEffect(() => (onStart ? store.onStarted(onStart) : undefined), [store, onStart]);
   useEffect(() => {
     void store.load();
     return () => store.destroy();

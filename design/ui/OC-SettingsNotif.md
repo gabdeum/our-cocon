@@ -14,6 +14,10 @@ Source `screens/OC-SettingsNotif.dc.html` (off state: `OC-SettingsNotifOff.dc.ht
 | --- | --- |
 | Web | "Notifications work in the iPhone app." (page shows only this line) |
 | Reminders off | the two rows below the switch are hidden |
+| Not yet asked (not drawn, spec 046) | Card: "Hear the chime and see your timer on the Lock Screen, and get reminders before family events, even when Our Cocon is closed." (15/600 muted) + ink button "Turn on notifications" |
+| Default sheet (not drawn, spec 046) | BottomSheet "Default for new events", a ListRow with a radio per choice; a tap saves and closes. Failed: StatusBanner "Couldn't save. Try again." |
+| Members without the app | The hint names them all ("Events for James and Mia remind…") and says "them": no pronouns are stored (spec 046) |
+| Offline | Readable; switches and the default row are off (Patterns.md › Offline) |
 
 ## Menu row
 In Menu › Settings, first card, after AI assistants: bell icon, "Notifications" / "Timers, event reminders" ›. When off in iPhone Settings, the detail reads "Off" in the warn color.

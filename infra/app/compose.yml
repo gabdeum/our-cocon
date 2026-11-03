@@ -1,4 +1,4 @@
-# The web app and MCP server for one environment, started by cocon-deploy as project
+# The web app, MCP server and notifier for one environment, started by cocon-deploy as project
 # cocon-<env>-app. Images come from CI; settings from the sealed <env>-app.env.
 
 services:
@@ -29,6 +29,22 @@ services:
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     mem_limit: 256m
+
+  # Spec 046: sends push notifications. The only app container with the service role key and the
+  # Expo access token (its own notifier.env, written by cocon-deploy); it reaches Supabase inside
+  # Docker and serves nothing.
+  notifier:
+    image: ${COCON_IMAGE_PREFIX}-notifier:${COCON_SHA:?}
+    container_name: ${COCON_ENV:?}-notifier
+    restart: unless-stopped
+    env_file: ${COCON_RUN}/${COCON_ENV}/notifier.env
+    environment:
+      COCON_ENV: ${COCON_ENV}
+    networks: [edge]
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 128m
 
 networks:
   edge:

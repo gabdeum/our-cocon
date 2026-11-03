@@ -6,9 +6,10 @@ import { Text } from './Text';
 
 /**
  * sage: calm results (OC-ScaleIng's preview, OC-Units' "For this recipe"). ink: a promo block,
- * text in on-olive / on-ink (OC-SharedView's "Keep your family's recipes together").
+ * text in on-olive / on-ink (OC-SharedView's "Keep your family's recipes together"). warn: something
+ * that stops a feature, text in warn (OC-SettingsNotif's "Notifications are off for Our Cocon").
  */
-export type CardTone = 'default' | 'soft' | 'sage' | 'ink';
+export type CardTone = 'default' | 'soft' | 'sage' | 'ink' | 'warn';
 
 export interface CardProps {
   children: ReactNode;
@@ -28,6 +29,8 @@ export function Card({ children, tone = 'default', selected, attention, onPress,
   const box = cn(
     tone === 'sage'
       ? 'gap-6 rounded-[20px] bg-sage px-16 py-14'
+      : tone === 'warn'
+        ? 'gap-10 rounded-[20px] bg-warn-soft px-16 py-14'
       : tone === 'ink'
         ? 'gap-10 rounded-[24px] bg-ink p-18'
         : cn('gap-12 rounded-xl p-16', tone === 'soft' ? 'bg-surface-soft' : 'bg-surface-card'),

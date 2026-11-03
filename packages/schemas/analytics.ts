@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { UndoKind } from './activity';
-import { CalendarView, SlotKey, TimeType, Visibility } from './calendar';
+import { CalendarView, DefaultReminder, SlotKey, TimeType, Visibility } from './calendar';
 import { AiPermission, CookingSetting, MemberColor, SignInMethod } from './family';
+import { NotificationKind } from './notifications';
 import { FilterKey } from './recipe-filters';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
 
@@ -20,6 +21,10 @@ const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 
  * The highest step count events take: a recipe's 100 steps (MAX_STEPS) plus any its variants add.
  * Senders cap what they send at this, so a longer recipe never makes `track` throw.
  */
+/** Spec 046: what led to the notifications ask (the first timer, the first reminder, or the page). */
+export const NotificationAskTrigger = z.enum(['timer', 'reminder', 'settings']);
+export type NotificationAskTrigger = z.infer<typeof NotificationAskTrigger>;
+
 /** Spec 028: the state Home's calendar card is in. */
 export const HomeCardState = z.enum(['today', 'week', 'empty']);
 export type HomeCardState = z.infer<typeof HomeCardState>;
@@ -57,7 +62,7 @@ export const events = {
   managed_member_linked: z.strictObject({ days_since_added: z.int().min(0) }),
   // Spec 029: the Menu tab. A tile in Apps, a row in Settings, and signing out from Family.
   menu_app_opened: z.strictObject({ app: z.enum(['calendar', 'recipes', 'groceries', 'timers']) }),
-  settings_row_opened: z.strictObject({ row: z.enum(['family', 'ai', 'calendar', 'recipes', 'groceries', 'deleted']) }),
+  settings_row_opened: z.strictObject({ row: z.enum(['family', 'ai', 'notifications', 'calendar', 'recipes', 'groceries', 'deleted']) }),
   signed_out: z.strictObject({}),
   // Spec 029: a calendar setting changed. Its new value (on/off for switches), the slot changed for
   // times of day, "phone" for the home time zone: never the zone's name or the hours.
@@ -225,6 +230,14 @@ export const events = {
   homepage_calendar_day_picked: z.strictObject({ day_offset: z.int().min(0).max(6) }),
   // Spec 028 FR-006: Latest activity's "All · AI only".
   homepage_activity_filter_changed: z.strictObject({ to: z.enum(['all', 'ai']) }),
+  // Spec 046: asking for notifications (never at launch), tapping one, and Menu › Notifications.
+  notifications_ask_shown: z.strictObject({ trigger: NotificationAskTrigger }),
+  notifications_permission_result: z.strictObject({ granted: z.boolean(), trigger: NotificationAskTrigger }),
+  notification_opened: z.strictObject({ kind: NotificationKind, cold_start: z.boolean() }),
+  notification_settings_changed: z.strictObject({
+    setting: z.enum(['timers_live', 'timers_alert', 'reminders_on', 'reminders_scope', 'default_reminder']),
+    value: z.enum(['on', 'off', 'mine', 'all', ...DefaultReminder.options]),
+  }),
 } as const;
 
 export type EventName = keyof typeof events;

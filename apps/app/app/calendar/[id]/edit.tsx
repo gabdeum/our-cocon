@@ -9,6 +9,7 @@ import { BottomSheet, Button, Link } from '@cocon/ui';
 import { EventSheet } from '../../../components/calendar/EventSheet';
 import { eventOccurrence, seesInFull } from '../../../lib/event-detail';
 import { changedFields, draftFromEvent, scopeBody, toInput } from '../../../lib/event-form';
+import { useNotifications } from '../../../lib/notifications-context';
 import { useEventSheet } from '../../../lib/use-event-sheet';
 import { strings } from '../../../strings/en';
 
@@ -26,6 +27,7 @@ export default function EditEventRoute() {
   const params = useLocalSearchParams<{ id: string; date?: string }>();
   const id = z.uuid().safeParse(params.id).success ? params.id : null;
   const sheet = useEventSheet();
+  const { maybeAsk } = useNotifications();
   const { state, client, tracker, familyId, myMemberId } = sheet;
   const event = useQuery({ queryKey: ['events', familyId ?? '', 'one', id ?? ''], queryFn: () => (id ? loadEvent(client, id) : null), enabled: familyId !== null && id !== null, staleTime: 0 });
   const [scope, setScope] = useState<Scope | null>(null);
@@ -83,6 +85,7 @@ export default function EditEventRoute() {
         if (fields.length) tracker.track('event_updated', { fields_changed: fields, scope: done });
         sheet.refreshEvents();
         sheet.close();
+        if (input.reminder && input.reminder !== 'none') maybeAsk('reminder');
       }}
     />
   );

@@ -5,7 +5,7 @@ import type { Db } from './client';
 export async function loadMemberCalendarSettings(client: Pick<Db, 'from'>): Promise<MemberCalendarSettings> {
   const { data, error } = await client
     .from('member_calendar_settings')
-    .select('opens_on, week_start, time_format, show_birthdays, fade_past, month_hint_seen')
+    .select('opens_on, week_start, time_format, show_birthdays, fade_past, month_hint_seen, default_reminder')
     .maybeSingle();
   if (error) throw error;
   return data ? MemberCalendarSettings.parse(data) : DEFAULT_MEMBER_CALENDAR_SETTINGS;

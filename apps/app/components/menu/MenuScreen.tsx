@@ -15,6 +15,8 @@ export interface MenuScreenProps {
   memberNames: readonly string[];
   connected?: number;
   deleted?: number;
+  /** Notifications are off for the app in iPhone Settings: the row's detail reads "Off" (spec 046). */
+  notificationsOff?: boolean;
   tracker: Tracker;
   /** A tile switches tabs (or opens Timers); a row pushes its settings page. */
   onNavigate: (href: string) => void;
@@ -30,7 +32,7 @@ function Heading({ children }: { children: string }) {
 }
 
 /** The Menu tab (spec 029, design/ui/OC-Menu.md): Apps, then Settings. */
-export function MenuScreen({ details, memberNames, connected, deleted, tracker, onNavigate, footer }: MenuScreenProps) {
+export function MenuScreen({ details, memberNames, connected, deleted, notificationsOff, tracker, onNavigate, footer }: MenuScreenProps) {
   const openApp = (app: (typeof APPS)[number]) => {
     tracker.track('menu_app_opened', { app: app.key });
     onNavigate(app.href);
@@ -39,7 +41,7 @@ export function MenuScreen({ details, memberNames, connected, deleted, tracker, 
     tracker.track('settings_row_opened', { row });
     onNavigate(SETTINGS_PAGES[row]);
   };
-  const row = (key: SettingsPage, icon: 'people' | 'sparkle' | 'calendar' | 'recipes' | 'groceries', title: string, sub: string | undefined, last = false, subTone?: 'olive') => (
+  const row = (key: SettingsPage, icon: 'people' | 'sparkle' | 'bell' | 'calendar' | 'recipes' | 'groceries', title: string, sub: string | undefined, last = false, subTone?: 'olive' | 'warn') => (
     <ListRow key={key} title={title} sub={sub} subTone={subTone} leading={{ kind: 'icon', icon }} trailing={{ kind: 'chevron' }} onPress={() => open(key)} last={last} />
   );
   return (
@@ -55,10 +57,13 @@ export function MenuScreen({ details, memberNames, connected, deleted, tracker, 
         <ListGroup>
           {row('family', 'people', m.family, m.familyDetail(memberNames))}
           {connected === undefined
-            ? row('ai', 'sparkle', m.aiAssistants, undefined, true)
+            ? row('ai', 'sparkle', m.aiAssistants, undefined)
             : connected > 0
-              ? row('ai', 'sparkle', m.aiAssistants, m.connected(connected), true, 'olive')
-              : row('ai', 'sparkle', m.aiAssistants, m.notConnected, true)}
+              ? row('ai', 'sparkle', m.aiAssistants, m.connected(connected), false, 'olive')
+              : row('ai', 'sparkle', m.aiAssistants, m.notConnected)}
+          {notificationsOff
+            ? row('notifications', 'bell', m.notifications, m.notificationsOff, true, 'warn')
+            : row('notifications', 'bell', m.notifications, m.notificationsDetail, true)}
         </ListGroup>
         <ListGroup>
           {row('calendar', 'calendar', m.calendar, m.calendarDetail)}

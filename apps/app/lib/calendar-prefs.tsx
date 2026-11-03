@@ -31,7 +31,8 @@ export function calendarPrefs(settings: MemberCalendarSettings, region: string |
   return { ...settings, weekStartsOn: weekStartFor(settings.week_start, region), use24h: uses24h(settings.time_format, device) };
 }
 
-type Tracked = Exclude<keyof MemberCalendarSettings, 'month_hint_seen'>;
+// The default reminder is Menu › Notifications' (spec 046): it sends `notification_settings_changed`.
+type Tracked = Exclude<keyof MemberCalendarSettings, 'month_hint_seen' | 'default_reminder'>;
 
 /** Shown at once and saved; reverts on failure. Each "For you" change is tracked with its new value. */
 export async function changeCalendarPrefs(
@@ -48,7 +49,11 @@ export async function changeCalendarPrefs(
   if (result === 'saved')
     for (const [setting, value] of Object.entries(change) as [keyof MemberCalendarSettings, MemberCalendarSettings[keyof MemberCalendarSettings]][]) {
       if (setting === 'month_hint_seen') continue;
-      tracker.track('calendar_settings_changed', { setting: setting satisfies Tracked, value: typeof value === 'boolean' ? (value ? 'on' : 'off') : value });
+      if (setting === 'default_reminder') {
+        tracker.track('notification_settings_changed', { setting, value: value as MemberCalendarSettings['default_reminder'] });
+        continue;
+      }
+      tracker.track('calendar_settings_changed', { setting: setting satisfies Tracked, value: typeof value === 'boolean' ? (value ? 'on' : 'off') : (value as MemberCalendarSettings['opens_on' | 'week_start' | 'time_format']) });
     }
   return result;
 }

@@ -25,4 +25,4 @@ Follow-up after 2 min: "Still waiting: {label}" · "Done {n} minutes ago."
 | 1 hour before | "Baby swim class in 1 hour" | "14:30 · Aquatic Center · Gabriel takes James" |
 | Morning of | "Pediatrician at 10:00" · "Baby music this morning" · "Today: Grandma visits" | "James · Dr. Lee · Gabriel takes James" |
 | 1 day before | "Tomorrow: Eva’s birthday" | "All day · Tuesday" |
-In-app (app open): StatusBanner with the same title and body, tap → event.
+In-app (app open): StatusBanner with the same title and body, tap → event. Built as the app's Toast: "{title} · {body}" with the button "Open" (spec 046).

@@ -3,12 +3,12 @@
 #
 #   cocon-deploy <staging|prod> <40-character commit>
 #
-# 1. Pull the web, mcp and migrate images for the commit.  Fails → nothing changed.
+# 1. Pull the web, mcp, notifier and migrate images for the commit.  Fails → nothing changed.
 #    The commit needs newer server scripts (infra/VERSION) → nothing changed.
 # 2. Apply pending database migrations (all or none).     Fails → nothing changed.
 # 3. Install the commit's Edge Functions and reload them.
-# 4. Start the new web and MCP containers.
-# 5. Wait until both report the new commit. If they don't within COCON_HEALTH_TIMEOUT seconds,
+# 4. Start the new web, MCP and notifier containers.
+# 5. Wait until all three report the new commit. If they don't within COCON_HEALTH_TIMEOUT seconds,
 #    start the previous commit again and fail.
 [ -z "${SUDO_USER:-}" ] || unset COCON_HOME
 . "${COCON_HOME:-/opt/cocon/infra}/lib/common.sh"
@@ -30,7 +30,7 @@ previous=$(cat "$state/current" 2>/dev/null || true)
 
 log "deploying ${sha:0:7} to $env"
 
-for image in web mcp migrate; do
+for image in web mcp notifier migrate; do
   docker pull -q "$prefix-$image:$sha" >/dev/null || die "could not pull $image:$sha; $env is unchanged"
 done
 
@@ -76,16 +76,32 @@ done
 rm -rf "$staged"
 docker restart "$(stack_container "$env" functions)" >/dev/null || die "could not restart Supabase functions on $env"
 
+# The notifier's own settings (spec 046): the service role key, Supabase's API inside Docker rather
+# than back out through Cloudflare, and the Expo access token (sealed on its own as
+# <env>-expo-access-token, so no other container gets it; optional until it's set).
+key=$(env_value "$COCON_RUN/$env/supabase.env" SERVICE_ROLE_KEY)
+[ -n "$key" ] || die "SERVICE_ROLE_KEY is missing from $env's Supabase settings"
+expo=''
+if cocon-secrets has "$env-expo-access-token"; then
+  cocon-secrets open "$env-expo-access-token" "$COCON_RUN/$env/expo-access-token" || die "could not open $env's Expo access token"
+  expo=$(cat "$COCON_RUN/$env/expo-access-token")
+  rm -f "$COCON_RUN/$env/expo-access-token"
+fi
+(umask 077 && printf 'SUPABASE_URL=http://%s-api:8000\nSERVICE_ROLE_KEY=%s\nEXPO_ACCESS_TOKEN=%s\n' "$env" "$key" "$expo" >"$COCON_RUN/$env/notifier.env")
+
 app() {
   COCON_ENV=$env COCON_SHA=$1 COCON_RUN=$COCON_RUN COCON_IMAGE_PREFIX=$prefix \
     docker compose -p "cocon-$env-app" -f "$COCON_HOME/app/compose.yml" up -d --quiet-pull --remove-orphans
 }
 
-# serves <commit>: both containers report it.
+# serves <commit>: every container reports it.
+health() {
+  docker exec "$env-$1" node -e "fetch('http://127.0.0.1:$2/health').then(r=>r.text()).then(t=>console.log(t))" 2>/dev/null
+}
 serves() {
   docker exec "$env-web" wget -qO- http://127.0.0.1:8080/version.json 2>/dev/null | grep -q "\"$1\"" &&
-    docker exec "$env-mcp" node -e "fetch('http://127.0.0.1:8787/health').then(r=>r.text()).then(t=>console.log(t))" \
-      2>/dev/null | grep -q "\"$1\""
+    health mcp 8787 | grep -q "\"$1\"" &&
+    health notifier 8789 | grep -q "\"$1\""
 }
 
 app "$sha" || true

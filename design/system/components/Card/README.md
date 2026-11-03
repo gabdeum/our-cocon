@@ -9,6 +9,7 @@ Flat rounded containers: the default white card, a soft card, and the photo hero
 | `oc-card` | surface-card, radius 22, padding 16, gap 12 between blocks, no shadow |
 | `--soft` | surface-soft (recipe link cards, AI activity, info cards) |
 | `--sage` | sage, radius 20, padding 14 16, gap 6: calm results ("Recipe × 1.25 → about 7½ servings", the converter's "For this recipe") |
+| `--warn` | warn-soft, radius 20, padding 14 16, gap 10, text in `warn`: something that stops a feature, with what to do (OC-SettingsNotif's "Notifications are off for Our Cocon" and "Open iPhone Settings", spec 046) |
 | `--ink` | ink, radius 24, padding 18, gap 10; title 18/900 on-olive (white), body 15/600 on-ink, a honey button: a promo block (OC-SharedView's "Keep your family's recipes together") |
 | `--selected` | 2 px olive border (the step or variant being edited) |
 | `--attention` | 2 px warn-border (a row with a problem) |
