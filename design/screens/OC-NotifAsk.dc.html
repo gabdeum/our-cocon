@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ask for notifications</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div aria-hidden="true" style="padding: 54px 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="font-size: 26px; font-weight: 900">Leek &amp; bacon quiche</div>
+    <div style="height: 90px; border-radius: 22px; background: #FFFFFF"></div>
+    <div style="height: 90px; border-radius: 22px; background: #FFFFFF"></div>
+    <div style="height: 90px; border-radius: 22px; background: #D9E3A8"></div>
+  </div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(42,36,20,0.38)"></div>
+  <div role="dialog" aria-modal="true" aria-labelledby="perm-title" style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFF8E3; border-radius: 28px 28px 0 0; padding: 10px 24px 34px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
+    <span aria-hidden="true" style="width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4"></span>
+    <span aria-hidden="true" style="width: 72px; height: 72px; margin-top: 8px; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+    <h2 id="perm-title" style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.4px">Know when it’s done</h2>
+    <p style="margin: 0; font-size: 16px; font-weight: 600; line-height: 1.45; color: #5A503A">Turn on notifications to hear the chime and see your timer on the Lock Screen, even with your phone locked. You’ll also get reminders before family events.</p>
+    <button style="width: 100%; height: 56px; margin-top: 6px; border-radius: 999px; border: none; background: #2A2414; color: #FFFFFF; font-size: 17px; font-weight: 900">Turn on notifications</button>
+    <button style="height: 44px; padding: 0 12px; border: none; background: none; color: #424D17; font-size: 16px; font-weight: 800">Not now</button>
+    <p style="margin: 0; font-size: 13px; font-weight: 600; color: #5A503A">You can change this anytime in Menu › Notifications.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

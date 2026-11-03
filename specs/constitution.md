@@ -6,13 +6,14 @@ These rules apply to every spec in `specs/`. Specs reference them instead of rep
 
 - Our Cocon is a household app a family shares, managed from the app or from any AI assistant. V1 builds recipes, groceries and the shared calendar; reminders and phone notifications (V2), lists and to-dos (V3), documents and expenses (later) follow. Users are non-technical family members of every age.
 - Each area is a module: its own routes, tables, MCP tools (`apps/mcp/tools/<module>/`) and specs. Shared pieces (family, members, activity, Home, Settings, design system) stay module-agnostic, so a new module plugs in without reworking existing ones.
-- V1 runs on the web (Expo web); the iPhone app follows from the same codebase (Expo Go in development, then EAS free tier or local Xcode builds for TestFlight).
+- V1 runs on the web (Expo web); the iPhone app follows from the same codebase, built with EAS (free tier) for TestFlight and the App Store. Push notifications and Live Activities (specs 046–049) need a development build on the phone: Expo Go isn't enough for the iPhone app.
 - Any AI assistant (Claude, ChatGPT, Gemini) can do what the app does through the Our Cocon MCP server.
 
 ## II. Stack
 
 - pnpm monorepo, TypeScript strict everywhere. Expo (React Native + web) with Expo Router; styling with NativeWind on the design-system tokens. Supabase for Postgres, Auth, Storage and Realtime; clients talk to Supabase directly and RLS is the security boundary (no separate API server). MCP server in TypeScript (streamable HTTP), authenticated through Supabase's OAuth 2.1 server with dynamic client registration, so assistants act as the signed-in member.
 - Calendar rules (slots, recurrence, overlaps, conflicts, labels, visibility) live once in `packages/calendar` (`@cocon/calendar`), used by the app and the MCP server.
+- Notifications: `packages/notify` (`@cocon/notify`) sends pushes through the Expo Push API, run by `apps/notifier`, a small worker on Hetzner beside the MCP server (one per environment). Timer alerts and the Lock Screen timer stay on the phone (spec 046).
 - Services: PostHog for product analytics, Resend as Supabase Auth's email (SMTP) provider.
 - Supabase is self-hosted on Hetzner (Docker Compose) to start, built to move to Supabase Cloud without code changes: only standard Supabase features, everything in `supabase/migrations`, and every URL and key from environment config. Nothing may depend on a Cloud-only feature.
 - Environments: local (Supabase CLI + Expo) for development; staging (pre-prod) and prod each run their own Supabase stack, app and MCP server on Hetzner, with DNS and TLS through Cloudflare. Domain: ourcocon.com.
@@ -66,3 +67,6 @@ These rules apply to every spec in `specs/`. Specs reference them instead of rep
 - **Theme:** light only in V1.
 - **Accessibility:** WCAG 2.2 AA.
 - **Calendar:** see "Calendar decisions" C1–C16 in `specs/README.md`.
+
+## Changelog
+- 2026-11-02: Notifications (specs 046–049): the iPhone app needs a development build (Expo Go can't do push or Live Activities); `apps/notifier` and `packages/notify` join the stack.
