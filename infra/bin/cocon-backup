@@ -48,7 +48,7 @@ while read -r line <&"${PSQL[0]}"; do
   if [ "$line" = end ]; then complete=1 && break; fi
   manifest+="$line"$'\n'
 done
-[ -n "$complete" ] && [ -n "$manifest" ] || die "could not count the rows of $env's tables"
+if [ -z "$complete" ] || [ -z "$manifest" ]; then die "could not count the rows of $env's tables"; fi
 printf '%sphotos\t%s\n' "$manifest" "$(count_files "$storage")" | age_encrypt >"$work/manifest.tsv.age"
 echo "commit;" >&"${PSQL[1]}"
 psql_in=${PSQL[1]}
