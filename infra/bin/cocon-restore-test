@@ -20,7 +20,7 @@
 env=staging
 work=$(mktemp -d /var/tmp/cocon-restore.XXXXXX) # encrypted downloads only
 plain=$(mktemp -d "$COCON_RUN/restore.XXXXXX")   # small decrypted files, in memory
-db_moved= storage_moved= # set once each has been moved aside
+db_moved='' storage_moved='' # set once each has been moved aside
 # Undoes only what was moved; a failed step stops it (set -e doesn't apply on the left of ||).
 put_back() {
   log "putting staging's previous data back"
