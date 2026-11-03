@@ -19,6 +19,7 @@ export type AppKey = (typeof APPS)[number]['key'];
 export const SETTINGS_PAGES = {
   family: '/settings/family',
   ai: '/settings/ai',
+  notifications: '/settings/notifications',
   calendar: '/settings/calendar',
   recipes: '/settings/recipes',
   groceries: '/settings/groceries',

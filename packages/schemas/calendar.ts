@@ -40,6 +40,9 @@ export type EventCategory = z.infer<typeof EventCategory>;
 /** Spec 041's Reminder choices (shown on Home for now). */
 export const Reminder = z.enum(['none', 'morning_of', 'hour_before', 'day_before']);
 export type Reminder = z.infer<typeof Reminder>;
+/** Spec 046 FR-003: the reminder Add event starts with (spec 049 adds `minutes_15` to events too). */
+export const DefaultReminder = z.enum(['none', 'minutes_15', 'hour_before', 'morning_of', 'day_before']);
+export type DefaultReminder = z.infer<typeof DefaultReminder>;
 
 /** 0 = Sunday … 6 = Saturday. */
 export const Weekday = z.int().min(0).max(6);
@@ -203,6 +206,8 @@ export const MemberCalendarSettings = z.strictObject({
   fade_past: z.boolean(),
   /** OC-CalMonth's hint was dismissed (032-later L94). */
   month_hint_seen: z.boolean(),
+  /** Menu › Notifications › Default for new events (spec 046 FR-003). */
+  default_reminder: DefaultReminder,
 });
 export type MemberCalendarSettings = z.infer<typeof MemberCalendarSettings>;
 export const MemberCalendarSettingsUpdate = MemberCalendarSettings.partial();
@@ -214,4 +219,5 @@ export const DEFAULT_MEMBER_CALENDAR_SETTINGS: MemberCalendarSettings = {
   show_birthdays: true,
   fade_past: true,
   month_hint_seen: false,
+  default_reminder: 'none',
 };

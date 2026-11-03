@@ -7,8 +7,17 @@ export type IconTileTone = 'sage' | 'honey' | 'peach' | 'soft';
 
 const fills: Record<IconTileTone, string> = { sage: 'bg-sage', honey: 'bg-honey', peach: 'bg-peach', soft: 'bg-surface-soft' };
 
-/** sm 36 (Menu's settings rows), md 40, lg 44 with a 24 px icon (AppTile), spec 029. */
-const boxes = { sm: 'h-[36px] w-[36px] rounded-[12px]', md: 'h-[40px] w-[40px] rounded-[12px]', lg: 'h-[44px] w-[44px] rounded-[14px]' } as const;
+/**
+ * sm 36 (Menu's settings rows), md 40, lg 44 with a 24 px icon (AppTile), spec 029; xl a 72 circle
+ * with a 34 px icon (the notifications ask sheet's bell, spec 046).
+ */
+const boxes = {
+  sm: 'h-[36px] w-[36px] rounded-[12px]',
+  md: 'h-[40px] w-[40px] rounded-[12px]',
+  lg: 'h-[44px] w-[44px] rounded-[14px]',
+  xl: 'h-[72px] w-[72px] rounded-full',
+} as const;
+const iconSizes = { sm: 'sm', md: 'sm', lg: 'md', xl: 34 } as const;
 
 export type IconTileProps = {
   tone?: IconTileTone;
@@ -25,7 +34,7 @@ export function IconTile({ icon, letters, tone = 'sage', size = 'md', className 
   return (
     <View aria-hidden className={cn('shrink-0 items-center justify-center', boxes[size], fills[tone], className)}>
       {icon ? (
-        <Icon name={icon} size={size === 'lg' ? 'md' : 'sm'} color="ink" />
+        <Icon name={icon} size={iconSizes[size]} color="ink" />
       ) : (
         <Text size={16} weight="900">
           {letters}

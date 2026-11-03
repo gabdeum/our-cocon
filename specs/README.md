@@ -1,6 +1,6 @@
 # Our Cocon — V1 specs
 
-Our Cocon is a household app; V1 builds three modules — recipes, groceries and the shared calendar — plus the shared foundation (accounts, family, sync, MCP, Home, Menu). There are 44 specs, plus `032-later`, the living list of deferred tasks. Shared rules (stack, design system, accessibility, quantities, security, project-wide decisions) live once in `specs/constitution.md`; the specs reference it instead of repeating it. Every spec is Ready: there are no open questions.
+Our Cocon is a household app; V1 builds three modules — recipes, groceries and the shared calendar — plus the shared foundation (accounts, family, sync, MCP, Home, Menu). There are 48 specs, plus `032-later`, the living list of deferred tasks. Shared rules (stack, design system, accessibility, quantities, security, project-wide decisions) live once in `specs/constitution.md`; the specs reference it instead of repeating it. Every spec is Ready: there are no open questions.
 
 ## What Claude Code reads for each spec
 
@@ -83,15 +83,19 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 42 | 029 Menu (apps and settings) and the settings pages | 018, 021, 025, 027, 033, 034, 036 | OC-Menu, OC-SettingsFamily, OC-SettingsGroceries, OC-CalSettings |
 | 43 | 030 Accessibility and hints pass | all | all |
 | 44 | 045 iPhone sign-in (email link that opens the app, Google, Apple) | 003, iOS release setup | OC-Welcome |
+| 45 | 046 Notifications foundation, permission and settings | 003, 029 | OC-NotifAsk, OC-SettingsNotif, OC-SettingsNotifOff, OC-Menu |
+| 46 | 047 Timer-done alerts when the app is closed | 010, 011, 046 | OC-NotifLockDone |
+| 47 | 048 Timers on the Lock Screen and in the Dynamic Island | 010, 011, 046, 047 | OC-NotifLockTimer, OC-NotifIsland, OC-NotifLockDone |
+| 48 | 049 Event reminders on the phone | 033, 035, 041, 043, 046 | OC-NotifLockReminders, OC-SettingsNotif |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
-Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module.
+Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order.
 
 032 is a living list, not built in one go: each task names the spec that does it (its plan picks it up), and every build adds, edits or removes its rows.
 
 ## Decisions
 
-All 34 open questions are answered. The specs, UI specs and screens already reflect these; this list is the summary.
+All 36 open questions are answered. The specs, UI specs and screens already reflect these; this list is the summary.
 
 | # | Area | Decision |
 | --- | --- | --- |
@@ -113,7 +117,7 @@ All 34 open questions are answered. The specs, UI specs and screens already refl
 | 16 | Variants | Change only ingredients and steps |
 | 17 | Delete | Any family member; 30 days to restore |
 | 18 | Timers | Personal, on your device |
-| 19 | Background alerts | V2 |
+| 19 | Background alerts | V2: timers 047 and 048, event reminders 049 |
 | 20 | Timer sound | Soft kitchen-bell chime |
 | 21 | Finish cooking | Just closes |
 | 22 | Home hero | Latest recipe; a calendar will replace it later |
@@ -129,6 +133,8 @@ All 34 open questions are answered. The specs, UI specs and screens already refl
 | 32 | AI deletes | No approval step; restorable for 30 days |
 | 33 | Activity log | AI actions only |
 | 34 | Assistant setup steps | Claude Code checks each assistant's current connection steps while building 025 |
+| 35 | Reminder times | "Morning of" at 07:30 (or 1 hour before the start when it begins before 08:30); "1 day before" at 18:00 the evening before; family home time zone (spec 049 FR-002) |
+| 36 | Reminder recipients | Account members on the event ("Everyone" = all of them); a member without the app → whoever takes them, or every account member while "Not decided yet"; "Others" → the creator; plus anyone who chose "All family events"; private events remind only their owner, surprises never the hidden person (spec 049 FR-003) |
 
 Also settled: no pantry (every ingredient starts ticked in "Add to groceries"; untick what you have), and aisles, densities, piece sizes and pack sizes come from the ingredient catalog with family corrections (031).
 
@@ -155,3 +161,6 @@ Also settled: no pantry (every ingredient starts ticked in "Add to groceries"; u
 
 ### Screens described in words only
 These have no drawn screen; their UI spec is the source of truth: sign-in, set up a family and join (OC-Welcome.md), Recently deleted (flows.md), Connect and Manage sheets (OC-Connect.md), the "Add without app" sheet (OC-SettingsFamily.md), the event share sheet and page (OC-CalEvent.md). Your account is drawn on OC-SettingsFamily.
+
+## Changelog
+- 2026-11-02: Notifications: build order rows 45–48 (specs 046–049, after 045), decisions 35 (reminder times) and 36 (reminder recipients); decision 19 points to them.

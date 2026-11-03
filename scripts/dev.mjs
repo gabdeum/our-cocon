@@ -1,7 +1,8 @@
 // `pnpm dev`: local Supabase (Supabase CLI, in Docker), then the web app and MCP server.
 // On first run it writes .env.local from env.example, filled with the local Supabase URL and key.
 // Values are never printed.
-// `pnpm dev:phone` (--phone) serves the app to Expo Go on an iPhone on the same Wi-Fi instead:
+// `pnpm dev:phone` (--phone) serves the app to the Our Cocon development build on an iPhone on the
+// same Wi-Fi instead (Expo Go can't do notifications, spec 046; README › On an iPhone):
 // the phone reaches local Supabase through this Mac's network name, not 127.0.0.1.
 // Local Supabase (database, Studio, Mailpit) is then open to the whole Wi-Fi: use a trusted one.
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
@@ -55,11 +56,11 @@ if (phone) {
     process.exit(1);
   }
   // The Mac's Bonjour name (Name.local), not its IP: Supabase Auth refuses sign-in redirects to a
-  // literal IP other than 127.0.0.1, and Expo Go's address (exp://…) is built from this host.
+  // literal IP other than 127.0.0.1, and the development build finds Metro through this host.
   const host = `${execFileSync('scutil', ['--get', 'LocalHostName'], { encoding: 'utf8' }).trim()}.local`;
   // dotenv keeps variables that are already set, so these win over .env.local.
   env = { ...process.env, REACT_NATIVE_PACKAGER_HOSTNAME: host, EXPO_PUBLIC_SUPABASE_URL: `http://${host}:54321` };
-  console.log(`In Expo Go, open exp://${host}:8081 (or scan the QR code below).`);
+  console.log(`In the Our Cocon development build, open http://${host}:8081 (or scan the QR code below).`);
   console.log(`Sign-in emails: http://${host}:54324. In the link, replace 127.0.0.1 with ${host}.`);
 }
 
@@ -68,7 +69,7 @@ const child = spawn(
   [
     'exec', 'dotenv', '-e', '.env.local', '--',
     'concurrently', '-n', 'app,mcp', '-c', 'yellow,cyan',
-    (phone ? 'pnpm --filter @cocon/app start' : 'pnpm --filter @cocon/app web') + clear, 'pnpm --filter @cocon/mcp dev',
+    (phone ? 'pnpm --filter @cocon/app start --dev-client' : 'pnpm --filter @cocon/app web') + clear, 'pnpm --filter @cocon/mcp dev',
   ],
   { stdio: 'inherit', env },
 );

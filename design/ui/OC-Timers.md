@@ -23,4 +23,4 @@ Source `screens/OC-Timers.dc.html` · Route `/timers` · Specs 010, 011
 
 Screen reader: "Go to step: {timer name}" on a step timer's link.
 
-Timers are personal and live on this device only. The chime is a soft kitchen bell; there are no background/phone alerts in V1.
+Timers are personal and live on this device only. The chime is a soft kitchen bell; when the app is closed the phone alerts instead (spec 047), and running timers show on the Lock Screen (spec 048).

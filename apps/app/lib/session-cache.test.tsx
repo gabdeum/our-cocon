@@ -89,6 +89,9 @@ describe('SessionProvider cache', () => {
     const queryClient = new QueryClient();
     const persister = { removeClient: vi.fn(() => Promise.resolve()) };
     const clearDevice = vi.fn(() => Promise.resolve());
+    // Spec 046: the phone's push registration goes while still signed in (RLS needs the member).
+    let signedOutFirst: boolean | null = null;
+    const beforeSignOut = vi.fn(async () => void (signedOutFirst = client.auth.signOut.mock.calls.length > 0));
     function SignOut() {
       const { signOut } = useSession();
       return (
@@ -99,7 +102,7 @@ describe('SessionProvider cache', () => {
     }
     render(
       <QueryClientProvider client={queryClient}>
-        <SessionProvider client={client as never} tracker={fakeTracker()} persister={persister} clearDevice={clearDevice}>
+        <SessionProvider client={client as never} tracker={fakeTracker()} persister={persister} clearDevice={clearDevice} beforeSignOut={beforeSignOut}>
           <SignOut />
         </SessionProvider>
       </QueryClientProvider>,
@@ -112,6 +115,9 @@ describe('SessionProvider cache', () => {
     expect(persister.removeClient).toHaveBeenCalled();
     // Their timers (with step names) go too (spec 010).
     expect(clearDevice).toHaveBeenCalledWith(gabriel.user_id);
+    expect(beforeSignOut).toHaveBeenCalledOnce();
+    expect(signedOutFirst).toBe(false);
+    expect(client.auth.signOut).toHaveBeenCalled();
   });
 
   it("wipes a restored cache that belongs to someone else before it is read", async () => {

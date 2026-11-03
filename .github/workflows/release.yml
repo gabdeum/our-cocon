@@ -41,7 +41,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Use the images CI built for this commit
         run: |
-          for image in web mcp migrate; do
+          for image in web mcp notifier migrate; do
             docker buildx imagetools inspect "$IMAGE_PREFIX-$image:$GITHUB_SHA" >/dev/null ||
               { echo "::error::No $image image for ${GITHUB_SHA::7}. Wait for CI on main to finish, or tag a commit that passed it."; exit 1; }
             docker buildx imagetools create --tag "$IMAGE_PREFIX-$image:$GITHUB_REF_NAME" "$IMAGE_PREFIX-$image:$GITHUB_SHA"

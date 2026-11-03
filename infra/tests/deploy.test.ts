@@ -26,7 +26,9 @@ case "$1" in
       *infra-version) [ -n "\${STUB_IMAGE_INFRA:-}" ] || exit 1; printf 'version=%s\\n' "$STUB_IMAGE_INFRA" > "$3" ;;
       *) mkdir -p "$3/shared-recipe" "$3/main" && echo new > "$3/shared-recipe/index.ts" && echo theirs > "$3/main/index.ts" ;;
     esac ;;
-  compose) echo "$COCON_SHA" > "$STUB_DIR/running" ;;
+  compose)
+    [ -z "\${STUB_KEEP_NOTIFIER_ENV:-}" ] || cp "$COCON_RUN/$COCON_ENV/notifier.env" "$STUB_KEEP_NOTIFIER_ENV"
+    echo "$COCON_SHA" > "$STUB_DIR/running" ;;
   exec)
     running=$(cat "$STUB_DIR/running" 2>/dev/null)
     [ "$running" = "\${STUB_BROKEN_SHA:-}" ] && exit 1
@@ -70,7 +72,7 @@ beforeEach(() => {
     chmodSync(join(dir, 'stubs', name), 0o755);
   }
   mkdirSync(join(dir, 'creds'));
-  writeFileSync(join(dir, 'creds/staging-supabase.env.cred'), 'POSTGRES_PASSWORD=pw\nSMTP_SENDER_NAME=Our Cocon\n');
+  writeFileSync(join(dir, 'creds/staging-supabase.env.cred'), 'POSTGRES_PASSWORD=pw\nSERVICE_ROLE_KEY=service-key\nSMTP_SENDER_NAME=Our Cocon\n');
   writeFileSync(join(dir, 'creds/staging-app.env.cred'), 'SUPABASE_URL=https://api-staging.example.com\n');
   // OLD is live.
   mkdirSync(join(dir, 'srv/staging'), { recursive: true });
@@ -101,6 +103,27 @@ describe('cocon-deploy', () => {
     expect(calls()).not.toContain('pw');
     expect(existsSync(join(dir, 'run/staging/supabase.env'))).toBe(false);
     expect(existsSync(join(dir, 'run/staging/migrate.env'))).toBe(false);
+  });
+
+  it('starts the notifier with the service role key in its own settings file, never on a command line (spec 046)', () => {
+    let settings = '';
+    const { status } = deploy(['staging', NEW], { STUB_KEEP_NOTIFIER_ENV: join(dir, 'notifier.env.copy') });
+    if (existsSync(join(dir, 'notifier.env.copy'))) settings = readFileSync(join(dir, 'notifier.env.copy'), 'utf8');
+    expect(status).toBe(0);
+    expect(calls()).toContain(`pull -q ghcr.io/gabdeum/our-cocon-notifier:${NEW}`);
+    expect(calls()).not.toContain('service-key');
+    expect(settings).toBe('SUPABASE_URL=http://staging-api:8000\nSERVICE_ROLE_KEY=service-key\nEXPO_ACCESS_TOKEN=\n');
+    expect(calls()).toMatch(/exec staging-notifier node -e .*8789\/health/);
+    expect(existsSync(join(dir, 'run/staging/notifier.env'))).toBe(false);
+  });
+
+  it('gives the notifier the Expo access token once it is sealed, and only the notifier (spec 046)', () => {
+    writeFileSync(join(dir, 'creds/staging-expo-access-token.cred'), 'expo-token');
+    const { status } = deploy(['staging', NEW], { STUB_KEEP_NOTIFIER_ENV: join(dir, 'notifier.env.copy') });
+    expect(status).toBe(0);
+    expect(readFileSync(join(dir, 'notifier.env.copy'), 'utf8')).toContain('EXPO_ACCESS_TOKEN=expo-token\n');
+    expect(calls()).not.toContain('expo-token');
+    expect(existsSync(join(dir, 'run/staging/expo-access-token'))).toBe(false);
   });
 
   it('stops before migrating when an image cannot be pulled', () => {

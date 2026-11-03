@@ -14,7 +14,7 @@
 
 ## Requirements
 
-- **FR-001**: Rows with olive icons: when, repeat summary, where (+ "Open in Maps"), responsible ("{name} drives" or "{name} takes {managed member}"), reminder ("Shows on Home for {account members on the event}"). Rows without a value are hidden.
+- **FR-001**: Rows with olive icons: when, repeat summary, where (+ "Open in Maps"), responsible ("{name} drives" or "{name} takes {managed member}"), reminder ("Reminds {names} · {when}", e.g. "Reminds Gabriel · 13:30"; who and when from spec 049 FR-002, FR-003). Rows without a value are hidden.
 - **FR-002 Checklist** "Bring": tickable by any family member, realtime; hint "Anyone in the family can tick these."
 - **FR-003 Actions**: olive "Edit", soft "Duplicate" (date picker, then a toast "Copied to {day}" with Undo), soft "Share a view-only link", danger link "Delete event".
 - **FR-004 Delete**: non-repeating → "Delete “{title}”? This removes it for the whole family." / "Delete" / "Keep it". Repeating → scope dialog above. Someone else's event adds "{Name} added this." Deleted events go to Recently deleted for 30 days (spec 018); toast "Event deleted" with Undo.
@@ -42,4 +42,4 @@ None.
   - "This and all future ones" splits the series at that date (as "All future events" does) and deletes the new part, so those dates are one Recently deleted entry under the event's title; on the series' first date the whole event is deleted.
   - The reminder's "Shows on Home for …" also names whoever takes the members without the app (OC-CalEvent's Baby music class is for James only, yet reads "Gabriel").
   - Share isn't offered once that date is over. The Busy and surprise pages are 043's: until then a "Busy" event says "We couldn't open this event."
-
+- 2026-11-02: The reminder row reads "Reminds {names} · {when}" (spec 049 FR-006).

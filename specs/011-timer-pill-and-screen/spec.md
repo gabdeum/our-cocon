@@ -16,6 +16,7 @@
 - No timer running (none yet, or all paused or done): the pill is hidden. No timers at all: the Timers screen shows "No timers running. Start one from any recipe step." plus the quick kitchen timers.
 - A paused or done timer nobody touches for 3 hours is cleared from the list.
 - The pill's label truncates at 14 characters with an ellipsis; the clock never truncates.
+- App in the background or phone locked: running timers show on the Lock Screen and in the Dynamic Island (spec 048), even when the pill is hidden (FR-008); a timer that ends alerts the phone (spec 047).
 
 ### User Story 3 — Put the pill away (P2)
 **Given** a running timer, **When** I tap the pill's ✕, **Then** the pill disappears but the timer keeps running; it's still in Menu › Timers and still chimes when done. The pill comes back by itself when a new timer starts or one finishes.
@@ -54,3 +55,4 @@ All copy is in the States tables of the UI specs for: TabBar, OC-Timers. New mes
 - 2026-10-20: The pill now shows only while a timer is running (Gabriel's review); paused or done timers alone no longer show it. This replaces the done-timer fallback from the first build, and SC-001 now reads "while a timer is running". Another way to reach Timers is left to Gabriel (032-later L20).
 - 2026-11-02: Gabriel's direction: the pill can be hidden with a ✕ without stopping timers (FR-008); Menu › Timers (spec 029) is the way back.
 - 2026-11-02: Built FR-008. The timer store keeps a `pillHidden` flag in memory (not saved, so reopening the app shows the pill again); starting a timer or one finishing clears it, and every pill (tab bar, recipe page, cooking-mode header) reads it through `useMostUrgent`, so the tab bar stops reserving its height too. TimerPill gets `onHide` / `hideLabel`: the link part, a 1.5 × 24 `line` divider and a 40 × 44 ✕ (README updated). Event `timer_pill_hidden { timer_count }`.
+- 2026-11-02: Timers outside the app: Lock Screen and Dynamic Island (spec 048) and alerts when the app is closed (spec 047); OC-Timers.md no longer says there are no phone alerts.

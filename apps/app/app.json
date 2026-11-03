@@ -24,7 +24,10 @@
       "usesAppleSignIn": true,
       "associatedDomains": [
         "applinks:app.ourcocon.com"
-      ]
+      ],
+      "entitlements": {
+        "com.apple.developer.usernotifications.time-sensitive": true
+      }
     },
     "web": {
       "bundler": "metro",
@@ -47,6 +50,7 @@
       "expo-status-bar",
       "expo-asset",
       "expo-apple-authentication",
+      "expo-notifications",
       [
         "@react-native-google-signin/google-signin",
         {

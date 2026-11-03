@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dynamic Island · timer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 560px; box-sizing: border-box; background: #EDE6D3; color: #2A2414; font-family: 'Nunito', sans-serif; padding: 28px 20px; display: flex; flex-direction: column; gap: 22px">
+  <div style="display: flex; flex-direction: column; gap: 10px; align-items: center">
+    <div style="align-self: flex-start; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.6px; color: #5A503A">Compact · one timer</div>
+    <div style="width: 230px; height: 37px; border-radius: 19px; background: #000000; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; box-sizing: border-box"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFCF5C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2M9 2h6"></path></svg><span style="font-size: 15px; font-weight: 900; color: #FFCF5C; font-variant-numeric: tabular-nums">4:12</span></div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 10px; align-items: center">
+    <div style="align-self: flex-start; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.6px; color: #5A503A">Minimal · shared with another app</div>
+    <div style="display: flex; gap: 10px; align-items: center"><div style="width: 160px; height: 37px; border-radius: 19px; background: #000000"></div><div style="width: 37px; height: 37px; border-radius: 50%; background: #000000; display: flex; align-items: center; justify-content: center"><span style="width: 23px; height: 23px; border-radius: 50%; box-sizing: border-box; border: 3px solid #FFCF5C; border-right-color: #5A503A"></span></div></div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.6px; color: #5A503A">Expanded · long-press</div>
+    <div style="background: #000000; border-radius: 44px; padding: 18px 22px; color: #FFFFFF; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px"><span aria-hidden="true" style="width: 36px; height: 36px; flex: none; border-radius: 10px; background: #FFCF5C; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M12 17.5s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6Z"/></svg></span><div style="flex: 1; min-width: 0"><div style="font-size: 17px; font-weight: 900">Blind bake</div><div style="font-size: 13px; font-weight: 700; color: #CFC6B0">Leek &amp; bacon quiche · +1 more</div></div><span style="font-size: 36px; font-weight: 900; color: #FFCF5C; font-variant-numeric: tabular-nums">4:12</span></div>
+      <div aria-hidden="true" style="height: 6px; border-radius: 3px; background: #3A3A3A"><div style="width: 62%; height: 6px; border-radius: 3px; background: #FFCF5C"></div></div>
+      <div style="display: flex; gap: 8px"><button style="flex: 1; height: 42px; border-radius: 999px; border: none; background: #2E2E2E; color: #FFFFFF; font-size: 15px; font-weight: 900">+1 min</button><button style="flex: 1; height: 42px; border-radius: 999px; border: none; background: #2E2E2E; color: #FFFFFF; font-size: 15px; font-weight: 900">Pause</button></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

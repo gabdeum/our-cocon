@@ -499,14 +499,14 @@ isOneToOne: false
                   ]
                 },"member_calendar_settings": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"fade_past": boolean,"family_id": string,"id": string,"month_hint_seen": boolean,"opens_on": string,"show_birthdays": boolean,"source": string,"time_format": string,"updated_at": string,"updated_by": string | null,"user_id": string,"week_start": string
+                    "created_at": string,"created_by": string | null,"default_reminder": string,"fade_past": boolean,"family_id": string,"id": string,"month_hint_seen": boolean,"opens_on": string,"show_birthdays": boolean,"source": string,"time_format": string,"updated_at": string,"updated_by": string | null,"user_id": string,"week_start": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"fade_past"?: boolean,"family_id": string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
+                    "created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id": string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"fade_past"?: boolean,"family_id"?: string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
+                    "created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id"?: string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
                   }
                   Relationships: [
                     {
@@ -543,6 +543,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"notification_log": {
+                  Row: {
+                    "device_id": string | null,"error": string | null,"family_id": string | null,"id": string,"kind": string,"member_id": string | null,"receipt_checked_at": string | null,"ref": string | null,"sent_at": string,"status": string,"ticket_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "device_id"?: string | null,"error"?: string | null,"family_id"?: string | null,"id"?: string,"kind": string,"member_id"?: string | null,"receipt_checked_at"?: string | null,"ref"?: string | null,"sent_at"?: string,"status": string,"ticket_id"?: string | null
+                  }
+                  Update: {
+                    "device_id"?: string | null,"error"?: string | null,"family_id"?: string | null,"id"?: string,"kind"?: string,"member_id"?: string | null,"receipt_checked_at"?: string | null,"ref"?: string | null,"sent_at"?: string,"status"?: string,"ticket_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_log_device_id_fkey"
+      columns: ["device_id"]
+isOneToOne: false
+      referencedRelation: "push_devices"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notification_log_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notification_log_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"oauth_client_sources": {
                   Row: {
                     "client_id": string,"created_at": string,"source": string
@@ -556,6 +588,32 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"push_devices": {
+                  Row: {
+                    "app_version": string | null,"created_at": string,"device_id": string,"disabled_at": string | null,"expo_push_token": string | null,"family_id": string,"id": string,"last_seen_at": string,"live_activity_start_token": string | null,"member_id": string,"platform": string,"prefs": NonNullable<Json>,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "app_version"?: string | null,"created_at"?: string,"device_id": string,"disabled_at"?: string | null,"expo_push_token"?: string | null,"family_id": string,"id"?: string,"last_seen_at"?: string,"live_activity_start_token"?: string | null,"member_id": string,"platform": string,"prefs"?: NonNullable<Json>,"updated_at"?: string
+                  }
+                  Update: {
+                    "app_version"?: string | null,"created_at"?: string,"device_id"?: string,"disabled_at"?: string | null,"expo_push_token"?: string | null,"family_id"?: string,"id"?: string,"last_seen_at"?: string,"live_activity_start_token"?: string | null,"member_id"?: string,"platform"?: string,"prefs"?: NonNullable<Json>,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_devices_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "push_devices_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"recipe_ingredients": {
                   Row: {
@@ -832,6 +890,9 @@ isOneToOne: false
 "_override_keys_ok":
 { Args: { "o": Json }; Returns: boolean
                            },
+"_push_prefs_ok":
+{ Args: { "p": Json }; Returns: boolean
+                           },
 "_recipe_folder_deleted":
 { Args: { "path": string }; Returns: boolean
                            },
@@ -972,6 +1033,9 @@ isOneToOne: false
               "family_id": string,"id": string
             }[]
                            },
+"register_push_device":
+{ Args: { "p_app_version": string,"p_device_id": string,"p_platform": string,"p_prefs": Json,"p_token": string }; Returns: undefined
+                           },
 "remove_managed_member":
 { Args: { "member_id": string }; Returns: undefined
                            },
@@ -1004,6 +1068,9 @@ isOneToOne: false
                            },
 "set_member_color":
 { Args: { "member_id": string,"pick": Database["public"]['Enums']["member_color"] }; Returns: undefined
+                           },
+"set_push_prefs":
+{ Args: { "p_device_id": string,"p_prefs": Json }; Returns: undefined
                            },
 "set_slot_times":
 { Args: { "p_times": Json }; Returns: number
@@ -1055,6 +1122,9 @@ isOneToOne: false
                            },
 "undo_ai_change":
 { Args: { "p_key": string,"p_skip_changed"?: boolean }; Returns: Json
+                           },
+"unregister_push_device":
+{ Args: { "p_device_id": string }; Returns: undefined
                            }
           }
           Enums: {

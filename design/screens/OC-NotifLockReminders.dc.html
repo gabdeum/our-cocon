@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lock Screen · event reminders</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #3A3226; color: #FFFFFF; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden; padding: 0 16px">
+  <div aria-hidden="true" style="position: absolute; left: -80px; top: 420px; width: 520px; height: 520px; border-radius: 50%; background: #4A4030"></div>
+  <div style="position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 70px">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+    <div style="margin-top: 10px; font-size: 20px; font-weight: 700">Sunday, October 25</div>
+    <div style="font-size: 92px; font-weight: 800; line-height: 1; letter-spacing: -2px; font-variant-numeric: tabular-nums">13:30</div>
+  </div>
+  <div style="position: relative; margin-top: 30px; display: flex; flex-direction: column; gap: 10px">
+    <div style="background: rgba(255,248,227,0.94); color: #2A2414; border-radius: 22px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start">
+      <span aria-hidden="true" style="width: 38px; height: 38px; flex: none; border-radius: 10px; background: #FFCF5C; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M12 17.5s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6Z"/></svg></span>
+      <div style="flex: 1; min-width: 0">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: #5A503A"><span>Our Cocon</span><span style="font-weight: 600">now</span></div>
+        <div style="font-size: 16px; font-weight: 800; margin-top: 2px">Baby swim class in 1 hour</div>
+        <div style="font-size: 15px; font-weight: 600; line-height: 1.35">14:30 · Aquatic Center · Gabriel takes James</div>
+      </div>
+    </div>
+    <div style="background: rgba(255,248,227,0.94); color: #2A2414; border-radius: 22px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start">
+      <span aria-hidden="true" style="width: 38px; height: 38px; flex: none; border-radius: 10px; background: #FFCF5C; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M12 17.5s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6Z"/></svg></span>
+      <div style="flex: 1; min-width: 0">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: #5A503A"><span>Our Cocon</span><span style="font-weight: 600">7:30</span></div>
+        <div style="font-size: 16px; font-weight: 800; margin-top: 2px">Pediatrician at 10:00</div>
+        <div style="font-size: 15px; font-weight: 600; line-height: 1.35">James · Dr. Lee · Gabriel takes James</div>
+      </div>
+    </div>
+    <div style="background: rgba(255,248,227,0.94); color: #2A2414; border-radius: 22px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start">
+      <span aria-hidden="true" style="width: 38px; height: 38px; flex: none; border-radius: 10px; background: #FFCF5C; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M12 17.5s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6Z"/></svg></span>
+      <div style="flex: 1; min-width: 0">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: #5A503A"><span>Our Cocon</span><span style="font-weight: 600">Yesterday</span></div>
+        <div style="font-size: 16px; font-weight: 800; margin-top: 2px">Tomorrow: Eva’s birthday</div>
+        <div style="font-size: 15px; font-weight: 600; line-height: 1.35">All day · Tuesday</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

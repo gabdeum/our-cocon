@@ -19,6 +19,7 @@
     "theme": "node scripts/theme.mjs",
     "catalog": "tsx scripts/catalog.ts",
     "purge": "tsx scripts/purge-deleted.ts",
+    "notify:test": "dotenv -e .env.local -- pnpm --silent --filter @cocon/notifier test-push",
     "release:ios": "pnpm --dir apps/app exec eas build --platform ios --profile production --auto-submit",
     "update:prod": "node scripts/eas-update.mjs"
   },

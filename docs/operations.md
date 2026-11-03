@@ -2,7 +2,7 @@
 
 How the server is set up, how changes reach it, and what to do when something needs attention. Each section is a short checklist; the commands are copied as is.
 
-**Where things run.** One rented Hetzner server, `cocon-1`, runs two complete copies of Our Cocon: **staging** (a test copy, every change lands there first) and **prod** (the real app). Each copy has its own Supabase (database, sign-in, photo storage) and its own web app and MCP server, each in a **container** (a sealed box with everything one program needs, run by Docker). **Caddy**, the front door, receives every request from Cloudflare and passes it to the right container.
+**Where things run.** One rented Hetzner server, `cocon-1`, runs two complete copies of Our Cocon: **staging** (a test copy, every change lands there first) and **prod** (the real app). Each copy has its own Supabase (database, sign-in, photo storage) and its own web app, MCP server and notifier (it sends phone notifications, spec 046), each in a **container** (a sealed box with everything one program needs, run by Docker). **Caddy**, the front door, receives every request from Cloudflare and passes it to the right container.
 
 **Who does what.** GitHub (**CI**, its robots) tests, builds and deploys. You run the one-time setup and approve releases. Claude Code writes the scripts but never has access to the server.
 
@@ -84,7 +84,7 @@ The script is safe to run again at any time (`infra/bootstrap-from-laptop.sh <se
 
 ### After the first deploy
 
-1. **GitHub images.** The first CI run on `main` creates three packages under github.com/gabdeum → Packages (`our-cocon-web`, `-mcp`, `-migrate`). Open each → Package settings → Change visibility → Public (the code is public; the server downloads them without a password).
+1. **GitHub images.** The first CI run on `main` creates four packages under github.com/gabdeum → Packages (`our-cocon-web`, `-mcp`, `-notifier`, `-migrate`; `-notifier` arrived later, with spec 046). Open each → Package settings → Change visibility → Public (the code is public; the server downloads them without a password).
 2. **Uptime monitoring.** In UptimeRobot (free), add HTTPS monitors every 5 minutes, alerting your email:
    `https://app.ourcocon.com/version.json`, `https://mcp.ourcocon.com/health`, `https://api.ourcocon.com/auth/v1/health` (expect 401), and the same three with `-staging`.
 3. **HSTS** (tells browsers to always use HTTPS): Cloudflare → SSL/TLS → Edge Certificates → HSTS → on, 12 months, include subdomains.
@@ -122,6 +122,12 @@ There is one app, and it talks to prod. Check changes beforehand on staging (the
 4. Commit the `app.json` changes.
 5. In App Store Connect, when the first build arrives: App Information → fill in the category and privacy policy link; App Privacy → fill in what data the app collects.
 
+**Notifications** (once, spec 046). Apple delivers every push notification through its own service, **APNs** (Apple Push Notification service); Expo's push service sends to APNs for us, with a key from your Apple account.
+
+1. `pnpm exec eas credentials --platform ios`, choose `production`, then Push Notifications → Set up a push key, and let EAS create it. One key serves the development build and the App Store app.
+2. The next build (development or `pnpm release:ios`) adds the Push Notifications and Time Sensitive Notifications capabilities to the app ID by itself (they're in `app.json`). If EAS asks, say yes.
+3. **Expo access token**, so only our server can send to our app: expo.dev → your account → Access tokens → Create token, named `notifier`. Seal it on the server for each copy: `sudo cocon-secrets ask staging-expo-access-token "Expo access token"`, the same with `prod-`, then redeploy each. Only the notifier container gets it. Then on expo.dev → the project → Settings, turn on **Enhanced Security for Push Notifications**. From then on Expo refuses pushes without the token. For `pnpm notify:test` on your Mac, add the same line to `.env.local`.
+
 **Releasing a build**
 
 1. Release the backend first (`## 2.` above, Prod), so prod's database already has what the new app needs.
@@ -151,6 +157,7 @@ All secrets are sealed in `/etc/cocon/creds` on the server. To change one, log i
 | --- | --- | --- |
 | A Supabase setting (SMTP, URLs, …) | `sudo cocon-secrets edit staging-supabase.env` | `sudo cocon-stack staging up -d` |
 | App settings (PostHog key, …) | `sudo cocon-secrets edit prod-app.env` | Redeploy (re-run the last workflow) |
+| Expo access token (notifications, spec 046) | `sudo cocon-secrets ask prod-expo-access-token "Expo access token"` | Redeploy (re-run the last workflow) |
 | Google sign-in (`GOOGLE_SIGN_IN`, `GOOGLE_CLIENT_ID` as `<web>,<ios>`, `GOOGLE_SECRET`) | `sudo cocon-secrets edit prod-supabase.env` | `sudo cocon-stack prod up -d` |
 | Sign in with Apple (`APPLE_SIGN_IN`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`: the `.p8` file as base64 on one line, `base64 -i AuthKey_….p8`) | `sudo cocon-secrets edit prod-supabase.env` | `sudo cocon-stack prod up -d` |
 | Resend key | `sudo rm /etc/cocon/creds/resend-api-key.cred` and re-run the setup | Also update `SMTP_PASS` in both Supabase settings |
@@ -192,6 +199,7 @@ Emails come to `hello@ourcocon.com`, at most every 6 hours per problem.
 | Unhealthy: \<containers> | `sudo cocon-stack prod ps` and `sudo cocon-stack prod logs --tail 100 <service>`. Often `sudo cocon-stack prod restart <service>` fixes it. |
 | cocon-backup@… failed | The email holds the last log lines. Re-run it: `sudo systemctl start cocon-backup@prod`. |
 | cocon-purge@… failed | Nothing is lost: recipes it couldn't remove stay in the database and are tried again the next night. The email holds the last log lines. Re-run it: `sudo systemctl start cocon-purge@prod`. |
+| Unhealthy: prod-notifier | Phone notifications stop; the app works. `sudo docker logs --tail 100 prod-notifier` shows why: "Invalid API key" means the service role key changed (redeploy), an Expo error means checking expo.dev's status page or the access token (section 3). |
 | UptimeRobot: down | Check GitHub Actions (a deploy in progress?), then the containers as above. |
 
 ## 6. Updating Supabase

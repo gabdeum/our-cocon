@@ -3,6 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { saveEvent, undoCreateEvent } from '@cocon/data';
 import { EventSheet } from '../../components/calendar/EventSheet';
 import { newDraft, prefillFrom, toastText } from '../../lib/event-form';
+import { useNotifications } from '../../lib/notifications-context';
 import { useToast } from '../../lib/toast';
 import { useEventSheet } from '../../lib/use-event-sheet';
 
@@ -14,6 +15,7 @@ export default function NewEventRoute() {
   const params = useLocalSearchParams<{ date?: string; slot?: string; time?: string }>();
   const sheet = useEventSheet();
   const toast = useToast();
+  const { maybeAsk } = useNotifications();
   const { state, client, tracker, familyId, myMemberId, today, slotTimes } = sheet;
   // The draft starts once, on the day the sheet opened; later renders keep what's been typed.
   const [initial] = useState(() => (myMemberId ? newDraft(prefillFrom(params), today) : null));
@@ -51,6 +53,8 @@ export default function NewEventRoute() {
               .finally(sheet.refreshEvents),
         });
         sheet.close();
+        // Spec 046 FR-002: the first event with a reminder may ask for notifications.
+        if (input.reminder && input.reminder !== 'none') maybeAsk('reminder');
       }}
     />
   );

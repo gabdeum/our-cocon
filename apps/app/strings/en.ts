@@ -307,6 +307,10 @@ export const strings = {
     aiAssistants: 'AI assistants',
     connected: (n: number) => `${n} connected`,
     notConnected: 'Not connected',
+    // Spec 046 (OC-SettingsNotif.md › Menu row).
+    notifications: 'Notifications',
+    notificationsDetail: 'Timers, event reminders',
+    notificationsOff: 'Off',
     calendarDetail: 'Your view, times of day',
     recipesDetail: 'Cooking defaults, units',
     groceriesDetail: 'Where you shop, store sizes',
@@ -315,6 +319,37 @@ export const strings = {
     items: (n: number) => (n === 0 ? 'Empty' : `${n} ${n === 1 ? 'item' : 'items'}`),
   },
   settings: {
+    // Spec 046: Menu › Notifications (design/ui/OC-SettingsNotif.md).
+    notifications: {
+      back: 'Menu',
+      title: 'Notifications',
+      lead: 'Just for you, on this iPhone.',
+      web: 'Notifications work in the iPhone app.',
+      offTitle: 'Notifications are off for Our Cocon',
+      offBody: 'Timers can’t chime and reminders won’t arrive while the app is closed.',
+      openSettings: 'Open iPhone Settings',
+      // Not asked yet (not drawn; written for spec 046).
+      askBody: 'Hear the chime and see your timer on the Lock Screen, and get reminders before family events, even when Our Cocon is closed.',
+      turnOn: 'Turn on notifications',
+      timers: 'Timers',
+      timersLive: 'Timer on Lock Screen',
+      timersLiveHint: 'Countdown on the Lock Screen and in the Dynamic Island',
+      timersAlert: 'Alert when a timer ends',
+      timersAlertHint: 'Chime and notification, even when the app is closed',
+      reminders: 'Event reminders',
+      remindersOn: 'Event reminders',
+      remindersOnHint: 'Before events that have a reminder',
+      remindMe: 'Remind me about',
+      scopes: { mine: 'Events I’m on', all: 'All family events' },
+      defaultReminder: 'Default for new events',
+      defaultReminderHint: 'When you add an event',
+      reminderChoices: { none: 'None', minutes_15: '15 minutes before', hour_before: '1 hour before', morning_of: 'Morning of', day_before: '1 day before' },
+      // The family's members without the app (spec 033). No pronouns are stored, so "them".
+      managedHint: (names: readonly string[]) =>
+        `Events for ${names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : (names[0] ?? '')} remind the person who takes them, or everyone with the app if nobody’s chosen yet.`,
+      close: 'Close',
+      saveFailed: "Couldn't save. Try again.",
+    },
     // Spec 021: where the family shops (the Groceries tab's "Grocery settings" sheet, and the
     // Groceries page, OC-SettingsGroceries, spec 029).
     groceries: {
@@ -1316,6 +1351,21 @@ export const strings = {
     reload: 'Reload',
   },
   // design/system/components/Toast: the one toast, on every screen.
+  // Spec 046: the ask sheet (design/ui/OC-Notifications.md › Ask sheet) and reminders shown in the app.
+  notifications: {
+    askTitle: { timer: 'Know when it’s done', reminder: 'Get a heads-up before events' },
+    askBody: {
+      timer: 'Turn on notifications to hear the chime and see your timer on the Lock Screen, even with your phone locked. You’ll also get reminders before family events.',
+      reminder: 'Turn on notifications so reminders reach your phone, even when Our Cocon is closed.',
+    },
+    turnOn: 'Turn on notifications',
+    notNow: 'Not now',
+    note: 'You can change this anytime in Menu › Notifications.',
+    close: 'Close',
+    // The StatusBanner for a reminder that arrives while the app is open (not drawn).
+    inApp: (title: string, body: string) => (body ? `${title} · ${body}` : title),
+    open: 'Open',
+  },
   toast: {
     undo: 'Undo',
     // When an Undo fails (032-later L99), unless the screen says it its own way.

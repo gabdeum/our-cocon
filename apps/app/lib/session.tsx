@@ -58,6 +58,7 @@ export function SessionProvider({
   persister,
   restored = Promise.resolve(),
   clearDevice,
+  beforeSignOut,
   children,
 }: {
   client: SessionContextValue['client'];
@@ -68,6 +69,8 @@ export function SessionProvider({
   restored?: Promise<void>;
   /** Anything else this person keeps on the device (their timers, spec 010), removed on sign-out. */
   clearDevice?: (userId: string) => Promise<void>;
+  /** While still signed in: removes this phone's push registration, so reminders stop (spec 046). */
+  beforeSignOut?: () => Promise<void>;
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();
@@ -126,13 +129,14 @@ export function SessionProvider({
   }, [api, familyId]);
 
   const signOut = useCallback(async () => {
+    await beforeSignOut?.().catch(() => undefined);
     await client.auth.signOut();
     queryClient.clear();
     // The saved copy too, now: the cache is only written to the device every second or so.
     await persister?.removeClient();
     if (userId) await clearDevice?.(userId);
     tracker.reset();
-  }, [client, queryClient, persister, clearDevice, userId, tracker]);
+  }, [client, queryClient, persister, clearDevice, beforeSignOut, userId, tracker]);
 
   const value = useMemo(() => ({ state, client, api, tracker, refresh, signOut }), [state, client, api, tracker, refresh, signOut]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

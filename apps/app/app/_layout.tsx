@@ -1,8 +1,8 @@
 import '../global.css';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Stack, router, useSegments } from 'expo-router';
+import { Stack, router, useSegments, type Href } from 'expo-router';
 import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -28,7 +28,11 @@ import { clearTimers, TimersProvider } from '../lib/timer-store';
 import { CalendarPrefsProvider } from '../lib/calendar-prefs';
 import { deviceStorage } from '../lib/recipe-choices';
 import { clearPendingSave } from '../lib/pending-save';
-import { ToastProvider } from '../lib/toast';
+import { ToastProvider, useToast } from '../lib/toast';
+import { NotificationsProvider, useNotifications } from '../lib/notifications-context';
+import { nativeNotifications } from '../lib/notifications-native';
+import { clearPrefs, unregisterDevice } from '../lib/notifications';
+import { strings } from '../strings/en';
 import { playChime, vibrateDone } from '../lib/chime';
 import { TimerAlerts } from '../components/timers/TimerAlerts';
 
@@ -53,21 +57,52 @@ function FamilySync({ children }: { children: ReactNode }) {
   );
 }
 
+/** Spec 046: asking for notifications, this phone's registration, and opening a tapped notification. */
+function Notifications({ children }: { children: ReactNode }) {
+  const { state } = useSession();
+  const toast = useToast();
+  const navigate = useCallback((route: string) => router.push(route as Href), []);
+  const showBanner = useCallback((text: string, onOpen: () => void) => toast.show({ text, action: { label: strings.notifications.open, onPress: onOpen } }), [toast]);
+  return (
+    <NotificationsProvider
+      native={nativeNotifications}
+      storage={AsyncStorage}
+      client={supabase}
+      tracker={tracker}
+      userId={state.status === 'ready' ? state.userId : ''}
+      navigate={navigate}
+      showBanner={showBanner}
+    >
+      {children}
+    </NotificationsProvider>
+  );
+}
+
 /** Each signed-in person's timers, on every screen (spec 010), with the done chime and banner ("Open timers", 011). */
 function Timers({ children }: { children: ReactNode }) {
   const { state } = useSession();
+  const { maybeAsk } = useNotifications();
+  const onStart = useCallback(() => maybeAsk('timer'), [maybeAsk]);
   return (
-    <TimersProvider userId={state.status === 'ready' ? state.userId : ''} storage={deviceStorage} tracker={tracker}>
+    <TimersProvider userId={state.status === 'ready' ? state.userId : ''} storage={deviceStorage} tracker={tracker} onStart={onStart}>
       {children}
       <TimerAlerts chime={playChime} vibrate={vibrateDone} onOpenTimers={() => router.push('/timers')} />
     </TimersProvider>
   );
 }
 
-// On sign-out: this person's timers, and a shared recipe still waiting to be saved (spec 019).
+// On sign-out: this person's timers, notification switches (spec 046), and a shared recipe still
+// waiting to be saved (spec 019).
 const clearDevice = async (userId: string) => {
   await clearTimers(AsyncStorage, userId);
+  await clearPrefs(AsyncStorage, userId);
   await clearPendingSave();
+};
+// Spec 046: while still signed in, so reminders stop reaching this phone. The phone's own token goes
+// too, so Expo refuses it even if the server never heard (offline); the next sign-in gets a new one.
+const beforeSignOut = async () => {
+  await unregisterDevice(supabase, AsyncStorage);
+  await nativeNotifications?.unregister().catch(() => undefined);
 };
 
 const queryClient = createQueryClient();
@@ -112,10 +147,11 @@ export default function RootLayout() {
         onSuccess={() => cacheRestored()}
         onError={() => cacheRestored()}
       >
-        <SessionProvider client={supabase} tracker={tracker} persister={queryPersister} restored={restored} clearDevice={clearDevice}>
+        <SessionProvider client={supabase} tracker={tracker} persister={queryPersister} restored={restored} clearDevice={clearDevice} beforeSignOut={beforeSignOut}>
           <FamilySync>
             <AppFrame>
               <ToastProvider>
+              <Notifications>
               <Timers>
               <CalendarPrefsProvider>
                 <SessionGate />
@@ -151,6 +187,7 @@ export default function RootLayout() {
                   <Stack.Screen name="settings/groceries" options={presentation.stack} />
                   <Stack.Screen name="settings/deleted" options={presentation.stack} />
                   <Stack.Screen name="settings/ai" options={presentation.stack} />
+                  <Stack.Screen name="settings/notifications" options={presentation.stack} />
                   <Stack.Screen name="settings/recipes" options={presentation.stack} />
                   <Stack.Screen name="dev/gallery" options={presentation.stack} />
                   <Stack.Screen name="dev/sheet" options={presentation.sheet} />
@@ -158,6 +195,7 @@ export default function RootLayout() {
                 </Stack>
               </CalendarPrefsProvider>
               </Timers>
+              </Notifications>
               </ToastProvider>
             </AppFrame>
           </FamilySync>
