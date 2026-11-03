@@ -71,9 +71,9 @@ select throws_ok($$ update public.recipes set photo_path = null $$, '42501', nul
 select lives_ok($$ delete from public.recipe_steps $$, 'it removes a step directly');
 select throws_ok($$ insert into public.activity (action, target_kind) values ('recipe_created', 'recipe') $$, '42501', null, 'it cannot write log entries itself');
 reset role;
-select is((select payload #>> '{before,body}' from public.activity where action = 'delete' and target_kind = 'recipe_steps'), 'Bake.', 'the removed step is logged as it was');
-select is((select source::text from public.activity where action = 'delete' and target_kind = 'recipe_steps'), 'mcp', 'as the assistant''s');
-select is((select count(*)::int from public.activity where action = 'update' and target_kind = 'recipes'), 2, 'each change to a recipe is one entry (serves, then deleted_at)');
+select is((select payload #>> '{before,body}' from public.activity where action = 'delete' and target_kind = 'recipe_steps' and source <> 'app'), 'Bake.', 'the removed step is logged as it was');
+select is((select source::text from public.activity where action = 'delete' and target_kind = 'recipe_steps' and source <> 'app'), 'mcp', 'as the assistant''s');
+select is((select count(*)::int from public.activity where action = 'update' and target_kind = 'recipes' and source <> 'app'), 2, 'each change to a recipe is one entry (serves, then deleted_at)');
 select ok(exists (select 1 from public.activity where source = 'app') and not exists (select 1 from public.activity where source = 'app' and payload ? 'before'),
   'the app''s own writes are logged as the app''s, without what Undo needs (spec 028 FR-009)');
 -- A row too big for the log can't be changed by an assistant: nothing would undo it.

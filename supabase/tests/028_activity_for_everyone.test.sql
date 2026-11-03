@@ -86,7 +86,8 @@ select is((select count(*)::int from public.activity_entries(p_source => 'app'))
 
 -- An assistant can't join an app entry by naming its key.
 reset role;
-insert into ids select 'ticks', public._activity_key(payload, id) from public.activity where payload ->> 'kind' = 'groceries_ticked' limit 1;
+insert into ids select 'ticks', public._activity_key(payload, id) from public.activity
+  where payload ->> 'kind' = 'groceries_ticked' and actor_id = '00000000-0000-0000-0000-00000000028a' limit 1;
 select pg_temp.login('00000000-0000-0000-0000-00000000028a', 'cocon_assistant', 'c28');
 select pg_temp.call(pg_temp.id('ticks'), 'add_groceries');
 insert into public.grocery_items (name) values ('Milk');
