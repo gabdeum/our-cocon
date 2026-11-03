@@ -6,6 +6,21 @@
 # shellcheck disable=SC2034
 DUMP_EXCLUDE=(-N realtime -N _realtime)
 
+# Roles, role memberships and role settings belong to the Postgres server, not the database, so
+# pg_dump leaves them out. Every one a migration makes is repeated here, and the restore runs this
+# before loading the dump (whose policies name these roles). infra/tests/backup.test.ts checks it
+# against the migrations.
+# shellcheck disable=SC2016
+ROLES_SQL='
+do $do$ begin
+  if not exists (select from pg_roles where rolname = $$cocon_assistant$$) then
+    create role cocon_assistant nologin noinherit;
+  end if;
+end $do$;
+alter role cocon_assistant nologin noinherit;
+grant cocon_assistant to authenticator;
+alter role authenticator set pgrst.db_pre_request = $$public.check_request$$;'
+
 # Exact row count of every table that holds family data, for the restore check.
 # shellcheck disable=SC2016
 COUNT_SQL='

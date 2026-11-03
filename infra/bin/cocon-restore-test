@@ -3,11 +3,13 @@
 # Run monthly by CI (.github/workflows/restore-test.yml) as `deploy` through sudo. No arguments.
 #
 # Staging's own data is replaced. The previous copy stays in volumes/db/data.before-restore and
-# volumes/storage.before-restore until the next test.
+# volumes/storage.before-restore until the next test. If any step fails, it is put back and
+# staging is started on it again.
 #
 # 1. Download and decrypt the latest prod backup (server key).
 # 2. Start staging on an empty database once, so every Supabase service sets itself up.
-# 3. Stop the services, restore the dump in one transaction, then the photos and their metadata.
+# 3. Stop the services, create the app's roles (pg_dump leaves them out), restore the dump in one
+#    transaction, then the photos and their metadata.
 # 4. Start staging, compare every table's row count with the backup's manifest, check photos.
 # 5. Deploy staging's current commit again, so migrations newer than prod are applied on top.
 [ -z "${SUDO_USER:-}" ] || unset COCON_HOME
@@ -18,7 +20,29 @@
 env=staging
 work=$(mktemp -d /var/tmp/cocon-restore.XXXXXX) # encrypted downloads only
 plain=$(mktemp -d "$COCON_RUN/restore.XXXXXX")   # small decrypted files, in memory
-trap 'rm -rf "$work" "$plain"; rm -f "$COCON_RUN/rclone.conf" "$COCON_RUN/backup-identity"; release_env' EXIT
+db_moved='' storage_moved='' # set once each has been moved aside
+# Undoes only what was moved; a failed step stops it (set -e doesn't apply on the left of ||).
+put_back() {
+  log "putting staging's previous data back"
+  cocon-stack "$env" down || return 1
+  rm -rf "$dir/volumes/db/data" || return 1
+  mv "$dir/volumes/db/data.before-restore" "$dir/volumes/db/data" || return 1
+  if [ -n "$storage_moved" ]; then
+    rm -rf "$dir/volumes/storage" || return 1
+    mv "$dir/volumes/storage.before-restore" "$dir/volumes/storage" || return 1
+  fi
+  cocon-stack "$env" up -d --wait --quiet-pull
+}
+cleanup() {
+  local status=$?
+  rm -rf "$work" "$plain"
+  rm -f "$COCON_RUN/rclone.conf" "$COCON_RUN/backup-identity"
+  if [ "$status" -ne 0 ] && [ -n "$db_moved" ] && ! (put_back); then
+    log "error: staging could not be put back; look in $dir/volumes for data.before-restore"
+  fi
+  release_env
+}
+trap cleanup EXIT
 use_env "$env"
 backup_rclone_unlock
 cocon-secrets open backup-identity "$COCON_RUN/backup-identity"
@@ -38,7 +62,11 @@ log "starting staging on an empty database"
 cocon-stack "$env" down
 rm -rf "$dir/volumes/db/data.before-restore" "$dir/volumes/storage.before-restore"
 mv "$dir/volumes/db/data" "$dir/volumes/db/data.before-restore"
-[ -d "$dir/volumes/storage" ] && mv "$dir/volumes/storage" "$dir/volumes/storage.before-restore"
+db_moved=1
+if [ -d "$dir/volumes/storage" ]; then
+  mv "$dir/volumes/storage" "$dir/volumes/storage.before-restore"
+  storage_moved=1
+fi
 mkdir -p "$dir/volumes/storage"
 cocon-stack "$env" up -d --wait --quiet-pull
 # shellcheck disable=SC2086
@@ -46,6 +74,7 @@ cocon-stack "$env" stop $services
 
 log "restoring the database"
 db=$(stack_container "$env" db)
+docker exec -i "$db" psql -U supabase_admin -d postgres -q -v ON_ERROR_STOP=1 <<<"$ROLES_SQL"
 # Decrypted as it streams in; the plain dump never touches the disk.
 age -d -i "$COCON_RUN/backup-identity" "$work/db.dump.age" |
   docker exec -i "$db" pg_restore -U supabase_admin -d postgres --clean --if-exists --single-transaction --exit-on-error
