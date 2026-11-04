@@ -7,7 +7,7 @@
     "dev": "tsx watch src/main.ts",
     "dev:local": "tsx src/dev-local.ts",
     "start": "node dist/main.js",
-    "build": "esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --sourcemap --outfile=dist/main.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\"",
+    "build": "esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --sourcemap --external:@opentelemetry/api --outfile=dist/main.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\"",
     "test-push": "tsx src/test-push.ts",
     "typecheck": "tsc --noEmit --pretty false"
   },
