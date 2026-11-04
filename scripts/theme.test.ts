@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error plain .mjs script without types
-import { colorThemes, darken, svgToJsx, tailwindTheme, themeObject } from './theme-lib.mjs';
+import { colorThemes, darken, svgToJsx, swiftColor, tailwindTheme, themeObject, themeSwift, widgetAssets } from './theme-lib.mjs';
 // @ts-expect-error plain .mjs script without types
 import { generate } from './theme.mjs';
 
@@ -68,6 +68,16 @@ describe('pnpm theme (spec 002, acceptance 1.1)', () => {
     const out = svgToJsx(svg);
     expect(out.rootProps).toBe('viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2"');
     expect(out.children).toBe('<Circle cx="5" cy="12" r="2" />');
+  });
+
+  it('gives the Live Activity every colour token in Swift, and the icons as vector images (spec 048)', () => {
+    expect(swiftColor('#FFCF5C')).toBe('Color(red: 1, green: 0.8118, blue: 0.3608, opacity: 1)');
+    expect(swiftColor('rgba(42, 36, 20, 0.55)')).toBe('Color(red: 0.1647, green: 0.1412, blue: 0.0784, opacity: 0.55)');
+    const swift = themeSwift(tokens);
+    for (const t of tokens.color.tokens) expect(swift).toContain(`static let ${camel(t.name)} = `);
+    const assets = widgetAssets({ timer: '<svg/>', bell: '<svg/>' }, '<svg mark/>', 'x');
+    expect(JSON.parse(assets['x/timer.imageset/Contents.json']).properties).toEqual({ 'preserves-vector-representation': true, 'template-rendering-intent': 'template' });
+    expect(assets['x/mark.imageset/mark.svg']).toBe('<svg mark/>');
   });
 
   it('has committed files equal to a fresh generation (CI runs `pnpm theme --check`)', () => {

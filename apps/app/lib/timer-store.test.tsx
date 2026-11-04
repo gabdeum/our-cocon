@@ -8,6 +8,8 @@ import { clearTimers, createTimerStore, TimersProvider, timersOnScreen, useTimer
 import { clock, remaining, type Timer } from './timers';
 import type { ChoiceStorage } from './recipe-choices';
 import { fakeTracker } from '../test/fakes';
+import type { LiveActionRecord } from './live-activity';
+import { handleTimerAction } from './timer-alert-actions';
 
 const T0 = 1_760_000_000_000;
 
@@ -483,5 +485,95 @@ describe('useTimerOwner', () => {
     await flush();
     expect(removeAlerts).toHaveBeenCalledOnce();
     expect(storage.data.get('cocon.timers.owner')).toBe('b2');
+  });
+});
+
+// Spec 048 FR-001 and FR-004: the Lock Screen card follows every store change, and its taps come back
+// to the timers (and their alerts) as at the moment they were tapped.
+describe('Lock Screen card (spec 048)', () => {
+  const USER = '0b6c3c3e-8d1a-4c55-9f0e-6a1d2b3c4d5e';
+  function fakeLive() {
+    const taps: LiveActionRecord[] = [];
+    return {
+      taps,
+      sync: vi.fn((_ts: readonly Timer[]) => undefined),
+      takeActions: vi.fn(async () => taps.splice(0)),
+      onAction: vi.fn(() => () => undefined),
+      dispose: vi.fn(),
+    };
+  }
+  const synced = (live: ReturnType<typeof fakeLive>) => live.sync.mock.calls.map(([ts]) => ts.map((t) => `${t.label} ${t.state}`).join(', '));
+
+  it('shows the saved timers once read, never an empty list before, then every change', async () => {
+    const storage = memoryStorage();
+    storage.data.set(`cocon.timers.${USER}`, JSON.stringify([{ id: 'a-1', label: 'Blind bake', totalSeconds: 600, state: 'running', endsAt: T0 + 600_000 }]));
+    const live = fakeLive();
+    const store = createTimerStore({ storage, userId: USER, tracker: fakeTracker(), live });
+    store.syncLive();
+    expect(live.sync).not.toHaveBeenCalled();
+    await store.load();
+    expect(synced(live)).toEqual(['Blind bake running']);
+    store.start('Pasta water', 700, 'quick');
+    expect(synced(live).at(-1)).toBe('Blind bake running, Pasta water running');
+    const id = 'a-1';
+    store.pause(id);
+    store.stop(id);
+    expect(synced(live).slice(2)).toEqual(['Blind bake paused, Pasta water running', 'Pasta water running']);
+    // Reaching zero changes the card too (done, US3).
+    await act(async () => void vi.advanceTimersByTime(700_000));
+    expect(synced(live).at(-1)).toBe('Pasta water done');
+    store.destroy();
+  });
+
+  it('applies "+1 min", "Pause" and "Resume" from the card at their own time, with their alerts and events', async () => {
+    const live = fakeLive();
+    const tracker = fakeTracker();
+    const schedule = vi.fn(async (_t: Timer) => undefined);
+    const alerts = { schedule, cancel: vi.fn(async () => undefined), reconcile: vi.fn(async () => undefined), cancelAll: vi.fn(async () => undefined) };
+    const store = createTimerStore({ storage: memoryStorage(), userId: USER, tracker, live, alerts });
+    await store.load();
+    const id = store.start('Blind bake', 300, 'step');
+    // Tapped while the app slept; it runs again 30 s later.
+    live.taps.push({ owner: USER, timerId: id, action: 'add_minute', at: T0 + 10_000 });
+    vi.setSystemTime(T0 + 40_000);
+    await store.applyLiveActions();
+    expect(store.getSnapshot().timers[0]).toMatchObject({ state: 'running', endsAt: T0 + 360_000 });
+    expect(schedule).toHaveBeenLastCalledWith(expect.objectContaining({ endsAt: T0 + 360_000 }));
+    expect(tracker.track).toHaveBeenCalledWith('timer_live_activity_action', { action: 'add_minute' });
+
+    live.taps.push({ owner: USER, timerId: id, action: 'pause', at: T0 + 60_000 }, { owner: USER, timerId: id, action: 'resume', at: T0 + 100_000 });
+    vi.setSystemTime(T0 + 120_000);
+    await store.applyLiveActions();
+    // Paused with 5:00 left at 1:00, resumed at 1:40: ends at 6:40.
+    expect(store.getSnapshot().timers[0]).toMatchObject({ state: 'running', endsAt: T0 + 400_000 });
+    expect(synced(live).at(-1)).toBe('Blind bake running');
+    store.destroy();
+  });
+
+  it('reads taps left while the app was closed as soon as it has read the timers', async () => {
+    const storage = memoryStorage();
+    storage.data.set(`cocon.timers.${USER}`, JSON.stringify([{ id: 'a-1', label: 'Blind bake', totalSeconds: 600, state: 'running', endsAt: T0 + 600_000 }]));
+    const live = fakeLive();
+    live.taps.push({ owner: USER, timerId: 'a-1', action: 'pause', at: T0 });
+    const store = createTimerStore({ storage, userId: USER, tracker: fakeTracker(), live });
+    await store.load();
+    expect(store.getSnapshot().timers[0]).toMatchObject({ state: 'paused', remainingSeconds: 600 });
+    store.destroy();
+  });
+
+  it('L119: a "+1 min" from the alert with no store yet shows on the card once the store reads it', async () => {
+    const storage = memoryStorage();
+    storage.data.set(`cocon.timers.${USER}`, JSON.stringify([{ id: 'a-1', label: 'Blind bake', totalSeconds: 600, state: 'done', stoppedAt: T0 }]));
+    storage.data.set('cocon.timers.owner', USER);
+    const alerts = { schedule: vi.fn(async () => undefined), cancel: vi.fn(async () => undefined), reconcile: vi.fn(async () => undefined), cancelAll: vi.fn(async () => undefined) };
+    await handleTimerAction(
+      { actionIdentifier: 'add_minute', categoryIdentifier: 'timer_done', fromPush: false, data: { kind: 'timer_done', route: '/timers', timerId: 'a-1', userId: USER } },
+      { storage, tracker: fakeTracker(), alertsFor: async () => alerts },
+    );
+    const live = fakeLive();
+    const store = createTimerStore({ storage, userId: USER, tracker: fakeTracker(), live });
+    await store.load();
+    expect(live.sync.mock.calls[0]?.[0][0]).toMatchObject({ label: 'Blind bake', state: 'running', endsAt: T0 + 60_000 });
+    store.destroy();
   });
 });

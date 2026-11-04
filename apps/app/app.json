@@ -19,7 +19,8 @@
       "bundleIdentifier": "com.ourcocon.app",
       "supportsTablet": false,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true
       },
       "usesAppleSignIn": true,
       "associatedDomains": [
@@ -27,7 +28,8 @@
       ],
       "entitlements": {
         "com.apple.developer.usernotifications.time-sensitive": true
-      }
+      },
+      "appleTeamId": "59TR87TBX2"
     },
     "web": {
       "bundler": "metro",
@@ -66,7 +68,8 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.1056584882565-1kosa2us2rv00lqvn9mbif6uf6se267d"
         }
-      ]
+      ],
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true

@@ -5,6 +5,7 @@ import { TimersScreen } from '../components/timers/TimersScreen';
 import { loadRecipe, recipeKey, type RecipeDetail } from '../lib/recipe';
 import { useSession } from '../lib/session';
 import { useTimers } from '../lib/timer-store';
+import { cookStepPath } from '../lib/links';
 import { tracker } from '../lib/tracker';
 
 /** /timers (spec 011): reachable from anywhere through the TimerPill or the done banner. */
@@ -28,7 +29,7 @@ export default function TimersRoute() {
       focused={focused}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       recipes={recipes}
-      onGoToStep={(recipeId, stepId) => router.push(`/recipes/${recipeId}/cook?step=${encodeURIComponent(stepId)}` as Href)}
+      onGoToStep={(recipeId, stepId) => router.push(cookStepPath(recipeId, stepId) as Href)}
     />
   );
 }

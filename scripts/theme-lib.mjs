@@ -242,3 +242,49 @@ ${brandEntries.join('\n')}
 export type BrandName = keyof typeof brandShapes;
 `;
 }
+
+/** `#RRGGBB` or `rgba(r, g, b, a)` → SwiftUI's 0–1 channels. */
+export function swiftColor(value) {
+  const hex = /^#([0-9a-f]{6})$/i.exec(value);
+  const rgba = /^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/i.exec(value);
+  const parts = hex ? [16, 8, 0].map((s) => (Number.parseInt(hex[1], 16) >> s) & 255).concat(1) : rgba ? [1, 2, 3].map((i) => Number(rgba[i])).concat(Number(rgba[4])) : null;
+  if (!parts) throw new Error(`Can't make a Swift colour from ${value}`);
+  const [r, g, b, a] = parts;
+  const ch = (n) => String(Number((n / 255).toFixed(4)));
+  return `Color(red: ${ch(r)}, green: ${ch(g)}, blue: ${ch(b)}, opacity: ${a})`;
+}
+
+/** The Live Activity's colours (spec 048): every colour token, for the SwiftUI widget that can't use NativeWind. */
+export function themeSwift(tokens) {
+  const first = colorThemes(tokens)[tokens.color.themes[0].id];
+  const lines = tokens.color.tokens.map((t) => `  static let ${camel(t.name)} = ${swiftColor(first[t.name])}`);
+  return `// ${HEADER}
+import SwiftUI
+
+enum Theme {
+${lines.join('\n')}
+}
+`;
+}
+
+/**
+ * The widget's asset catalog (spec 048): the mark as drawn, and icons as template images so SwiftUI
+ * tints them (honey in the Dynamic Island, ink on the Lock Screen). Vector, so they stay sharp at any size.
+ */
+export function widgetAssets(icons, logo, dir) {
+  const json = (o) => `${JSON.stringify(o, null, 2)}\n`;
+  const set = (name, svg, template) => ({
+    [`${dir}/${name}.imageset/${name}.svg`]: svg,
+    [`${dir}/${name}.imageset/Contents.json`]: json({
+      images: [{ filename: `${name}.svg`, idiom: 'universal' }],
+      info: { author: 'pnpm theme', version: 1 },
+      properties: { 'preserves-vector-representation': true, ...(template ? { 'template-rendering-intent': 'template' } : {}) },
+    }),
+  });
+  return {
+    [`${dir}/Contents.json`]: json({ info: { author: 'pnpm theme', version: 1 } }),
+    ...set('mark', logo, false),
+    ...set('timer', icons.timer, true),
+    ...set('bell', icons.bell, true),
+  };
+}
