@@ -33,6 +33,8 @@ storage="$(supabase_dir "$env")/volumes/storage"
 log "backing up $env ($stamp)"
 # One open transaction exports its snapshot, so the dump and the row counts see the same data.
 coproc PSQL { docker exec -i "$db" psql -U supabase_admin -d postgres -qtAF $'\t' -v ON_ERROR_STOP=1; }
+# Kept now: bash unsets PSQL_PID as soon as the session ends, which can be before the wait below.
+psql_pid=$PSQL_PID
 echo "begin isolation level repeatable read; select pg_export_snapshot();" >&"${PSQL[1]}"
 read -r snapshot <&"${PSQL[0]}"
 [ -n "$snapshot" ] || die "could not open a database snapshot"
@@ -53,7 +55,7 @@ printf '%sphotos\t%s\n' "$manifest" "$(count_files "$storage")" | age_encrypt >"
 echo "commit;" >&"${PSQL[1]}"
 psql_in=${PSQL[1]}
 exec {psql_in}>&-
-wait "$PSQL_PID" || die "the database snapshot session failed"
+wait "$psql_pid" || die "the database snapshot session failed"
 (cd "$storage" && getfattr -R -d -m '^user\.supabase\.' .) | age_encrypt >"$work/xattrs.txt.age"
 
 rclone_ copy "$work" "r2:$R2_BUCKET/$env/db/$stamp"
