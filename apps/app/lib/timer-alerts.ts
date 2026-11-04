@@ -125,9 +125,13 @@ const OWNER_KEY = 'cocon.timers.owner';
  * Who is signed in, for "+1 min" when the app wakes with no screen (security review): an alert left
  * from someone no longer signed in never touches their timers. '' when nobody is.
  */
+let ownerNow = '';
 export async function setTimerOwner(storage: ChoiceStorage, userId: string): Promise<void> {
+  ownerNow = userId;
   await storage.setItem(OWNER_KEY, userId).catch(() => undefined);
 }
+/** The same, in memory, for checks that can't wait (the foreground handler). */
+export const timerOwnerNow = () => ownerNow;
 export async function timerOwner(storage: ChoiceStorage): Promise<string> {
   try {
     return (await storage.getItem(OWNER_KEY)) ?? '';
@@ -182,12 +186,16 @@ export function createTimerAlerts({ local, userId, storage, tracker, enabled, no
   const without = (r: Record<string, number>, ids: readonly string[]) => Object.fromEntries(Object.entries(r).filter(([id]) => !ids.includes(id)));
 
   function schedule(t: Timer): Promise<void> {
-    if (!enabled || t.state !== 'running' || t.endsAt === undefined || t.endsAt <= now()) return Promise.resolve();
+    if (!enabled || t.state !== 'running' || t.endsAt === undefined) return Promise.resolve();
+    // iOS takes whole seconds and drops the fraction: rounded up, the alert never comes before the
+    // clock shows 0:00. Under a second away, iOS refuses it, and the app's own alert is moments off.
+    const fireAt = Math.ceil(t.endsAt / 1000) * 1000;
+    if (fireAt - now() < 1000) return Promise.resolve();
     touch(t.id);
     const data: TimerAlertData = { kind: 'timer_done', route: '/timers', timerId: t.id, userId };
-    const again = t.endsAt + FOLLOW_UP_MS;
+    const again = fireAt + FOLLOW_UP_MS;
     // Both asked for now, before any await.
-    const asked = [local.scheduleAt(alertId(t.id), t.endsAt, alertContent(t), data), local.scheduleAt(followUpId(t.id), again, followUpContent(t), data)];
+    const asked = [local.scheduleAt(alertId(t.id), fireAt, alertContent(t), data), local.scheduleAt(followUpId(t.id), again, followUpContent(t), data)];
     return Promise.all(asked).then(() => record((r) => ({ ...r, [t.id]: again })), failed);
   }
 

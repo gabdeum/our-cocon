@@ -1,4 +1,4 @@
-import { router, type Href } from 'expo-router';
+import { router, useIsFocused, type Href } from 'expo-router';
 import { useQueries } from '@tanstack/react-query';
 import { z } from 'zod';
 import { TimersScreen } from '../components/timers/TimersScreen';
@@ -10,6 +10,7 @@ import { tracker } from '../lib/tracker';
 /** /timers (spec 011): reachable from anywhere through the TimerPill or the done banner. */
 export default function TimersRoute() {
   const { state, client } = useSession();
+  const focused = useIsFocused();
   const familyId = state.status === 'ready' ? state.family.id : null;
   // The step timers' recipes (usually cached already), so "Go to step" shows only while the step is there.
   const ids = [...new Set(useTimers().timers.flatMap((t) => (z.uuid().safeParse(t.recipeId).success && t.recipeId ? [t.recipeId] : [])))];
@@ -24,6 +25,7 @@ export default function TimersRoute() {
   return (
     <TimersScreen
       tracker={tracker}
+      focused={focused}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       recipes={recipes}
       onGoToStep={(recipeId, stepId) => router.push(`/recipes/${recipeId}/cook?step=${encodeURIComponent(stepId)}` as Href)}

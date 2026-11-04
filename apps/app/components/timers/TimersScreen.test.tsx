@@ -206,3 +206,15 @@ describe('Timers screen and Lock Screen alerts (spec 047 FR-001)', () => {
     expect(alerts.cancel).toHaveBeenCalledExactlyOnceWith([simmer]);
   });
 });
+
+describe('Timers screen under another screen (spec 047)', () => {
+  it('with cooking mode on top ("Go to step"), done timers keep their alerts', () => {
+    const alerts = { schedule: vi.fn(async () => undefined), cancel: vi.fn(async () => undefined), reconcile: vi.fn(async () => undefined), cancelAll: vi.fn(async () => undefined) };
+    store.destroy();
+    store = createTimerStore({ storage: noStorage, userId: '', tracker: fakeTracker(), alerts });
+    designTimers();
+    alerts.cancel.mockClear();
+    setup({ focused: false });
+    expect(alerts.cancel).not.toHaveBeenCalled();
+  });
+});

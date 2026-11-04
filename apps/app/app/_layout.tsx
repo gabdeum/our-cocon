@@ -24,7 +24,7 @@ import { gateRedirect, SessionProvider, useSession } from '../lib/session';
 import { createQueryClient, persistMaxAge, queryPersister, shouldPersistQuery } from '../lib/query';
 import { watchConnection } from '../lib/online';
 import { SyncProvider } from '../lib/sync';
-import { clearTimers, TimersProvider } from '../lib/timer-store';
+import { clearTimers, TimersProvider, useTimerOwner } from '../lib/timer-store';
 import { CalendarPrefsProvider } from '../lib/calendar-prefs';
 import { deviceStorage } from '../lib/recipe-choices';
 import { clearPendingSave } from '../lib/pending-save';
@@ -33,7 +33,7 @@ import { NotificationsProvider, useNotifications } from '../lib/notifications-co
 import { nativeNotifications } from '../lib/notifications-native';
 import { clearPrefs, unregisterDevice } from '../lib/notifications';
 import { timerNotifications } from '../lib/timer-notifications';
-import { clearFollowUps, createTimerAlerts, setTimerOwner } from '../lib/timer-alerts';
+import { clearFollowUps, createTimerAlerts } from '../lib/timer-alerts';
 import { strings } from '../strings/en';
 import { playChime, vibrateDone } from '../lib/chime';
 import { TimerAlerts } from '../components/timers/TimerAlerts';
@@ -94,13 +94,7 @@ function Timers({ children }: { children: ReactNode }) {
     () => (timerNotifications && userId && known ? createTimerAlerts({ local: timerNotifications, userId, storage: deviceStorage, tracker, enabled }) : undefined),
     [userId, known, enabled],
   );
-  // However the session ends (Sign out, expired, signed out elsewhere), the last person's Lock Screen
-  // alerts go, and "+1 min" from one left behind does nothing (security review).
-  useEffect(() => {
-    void setTimerOwner(deviceStorage, userId);
-    if (userId || !timerNotifications) return;
-    void createTimerAlerts({ local: timerNotifications, userId: '', storage: deviceStorage, tracker, enabled: false }).cancelAll();
-  }, [userId]);
+  useTimerOwner(deviceStorage, state.status, userId, removeAllTimerAlerts);
   return (
     <TimersProvider userId={userId} storage={deviceStorage} tracker={tracker} onStart={onStart} alerts={alerts}>
       {children}
@@ -108,6 +102,10 @@ function Timers({ children }: { children: ReactNode }) {
     </TimersProvider>
   );
 }
+
+// Every timer notification on this phone, whoever's (spec 047: signed out).
+const phoneAlerts = timerNotifications;
+const removeAllTimerAlerts = phoneAlerts ? () => createTimerAlerts({ local: phoneAlerts, userId: '', storage: deviceStorage, tracker, enabled: false }).cancelAll() : undefined;
 
 // On sign-out: this person's timers and their Lock Screen alerts (spec 047), notification switches
 // (spec 046), and a shared recipe still waiting to be saved (spec 019).

@@ -257,3 +257,18 @@ describe('no waiting (Gabriel: lock the phone right after the tap, the alert sti
     expect([...phone.at.keys()].sort()).toEqual(['timer:a', 'timer:a:again']);
   });
 });
+
+describe('whole seconds (iOS drops the fraction)', () => {
+  it('rounds up so the alert never comes before 0:00, and skips one under a second away', async () => {
+    const phone = fakePhone();
+    const { alerts } = alertsFor(phone);
+    await alerts.schedule({ ...blindBake(), endsAt: T0 + 60_400 });
+    expect(phone.at.get('timer:a')?.at).toBe(T0 + 61_000);
+    expect(phone.at.get('timer:a:again')?.at).toBe(T0 + 61_000 + FOLLOW_UP_MS);
+    // At 0.7 s past a second, ending 0.2 s later: iOS would get under a second.
+    const late = alertsFor(phone, { now: () => T0 + 700 }).alerts;
+    phone.at.clear();
+    await late.schedule({ ...blindBake(), endsAt: T0 + 900 });
+    expect(phone.at.size).toBe(0);
+  });
+});

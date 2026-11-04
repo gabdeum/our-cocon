@@ -38,7 +38,12 @@
       "expo-router",
       "expo-font",
       "expo-splash-screen",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": false
+        }
+      ],
       [
         "expo-image-picker",
         {

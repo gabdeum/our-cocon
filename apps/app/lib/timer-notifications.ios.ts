@@ -56,10 +56,12 @@ async function alertsFor(userId: string) {
   return createTimerAlerts({ local, userId, storage: AsyncStorage, tracker, enabled: allowed && prefs.timers_alert });
 }
 
-// FR-003: the long-press actions. Neither opens the app.
+// FR-003: the long-press actions. They open the app: expo-notifications tells iOS the tap is handled
+// before the app's code has run, so in the background iOS may pause the app first, and a "+1 min" would
+// only happen whenever it's next opened. Opened, it happens at once (spec 047 Changelog).
 void Notifications.setNotificationCategoryAsync(TIMER_CATEGORY, [
-  { identifier: 'add_minute', buttonTitle: strings.notifications.timerDone.addMinute, options: { opensAppToForeground: false } },
-  { identifier: 'stop', buttonTitle: strings.notifications.timerDone.stop, options: { isDestructive: true, opensAppToForeground: false } },
+  { identifier: 'add_minute', buttonTitle: strings.notifications.timerDone.addMinute, options: { opensAppToForeground: true } },
+  { identifier: 'stop', buttonTitle: strings.notifications.timerDone.stop, options: { isDestructive: true, opensAppToForeground: true } },
 ]).catch(ignore);
 
 // Listened for as soon as the app's code loads: iOS wakes the app in the background for the action and

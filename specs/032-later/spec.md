@@ -74,6 +74,7 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L117 | P3 | **Browser notifications.** On the web, Menu › Notifications says only "Notifications work in the iPhone app." Web Push (a service worker and VAPID keys beside Expo's push service) would bring reminders to the web app. | 046 | none |
 | L118 | P2 | **Trim the send log.** `notification_log` keeps every push the notifier sends. Once reminders go out (049) it grows daily: have the nightly purge (`cocon-purge`) remove rows older than 90 days. | 046 | 049 |
 | L119 | P2 | **"+1 min" from the notification moves the Live Activity too.** Spec 047's "+1 min" and "Stop" on a timer-done alert go through the timer store when the app is running, and straight to the saved timers when iOS woke it with no store yet (`apps/app/lib/timer-alert-actions.ts`). The Live Activity has to follow both paths (047 FR-003). | 047 | 048 |
+| L120 | P3 | **"+1 min" and "Stop" without opening the app.** Spec 047's notification actions open the app, because expo-notifications tells iOS a tap is handled before the app's code runs, so in the background iOS can pause the app first. A small native change (hold a background task until the app's code has handled the tap) would let them run with the phone locked, as 047 FR-003 first said. | 047 | 048 |
 
 ## Changelog
 - 2026-10-19: Created. Seeded with the open items from the Needs your attention sections of 003, 004 and 006.
@@ -127,3 +128,4 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 - 2026-11-02 (notifications specs): L18 goes to 047 (timer-done alerts) and L112 to 049 (event reminders). Added L72 (Android notifications).
 - 2026-11-03 (046): no tasks named 046. L34 now says the development build (Expo Go can't run the app any more). Added L117 (browser notifications) and L118 (trim the send log, 049).
 - 2026-11-03 (047): did L18 (timer-done alerts when the app is closed). Added L119 (the notification's "+1 min" updates the Live Activity, 048).
+- 2026-11-03 (047, fix): added L120 (notification actions without opening the app).

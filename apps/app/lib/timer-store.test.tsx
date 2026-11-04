@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { Text } from 'react-native';
-import { clearTimers, createTimerStore, TimersProvider, useTimers, useTimerStore, type TimerStore } from './timer-store';
+import { clearTimers, createTimerStore, TimersProvider, timersOnScreen, useTimerOwner, useTimers, useTimerStore, type TimerStore } from './timer-store';
 import { clock, remaining, type Timer } from './timers';
 import type { ChoiceStorage } from './recipe-choices';
 import { fakeTracker } from '../test/fakes';
@@ -367,5 +367,121 @@ describe('timer alerts (spec 047)', () => {
     act(() => store.pause(store.getSnapshot().timers[0]?.id ?? ''));
     expect(second.cancel).toHaveBeenCalledOnce();
     expect(first.cancel).not.toHaveBeenCalled();
+  });
+});
+
+// Spec 047, from Gabriel's iPhone: the app can keep running in the background (audio), unseen. A timer
+// that ends then must not count as seen in the app, or its Lock Screen alert would be taken away.
+describe('ended unseen (spec 047)', () => {
+  function fakeAlerts() {
+    return {
+      schedule: vi.fn(async (_t: Timer) => undefined),
+      cancel: vi.fn(async (_ids: readonly string[]) => undefined),
+      reconcile: vi.fn(async (_ts: readonly Timer[]) => undefined),
+      cancelAll: vi.fn(async () => undefined),
+    };
+  }
+  function setup() {
+    const alerts = fakeAlerts();
+    const tracker = fakeTracker();
+    const front = { on: true };
+    const store = createTimerStore({ storage: memoryStorage(), userId: 'u1', tracker, alerts, isForeground: () => front.on });
+    const finished = vi.fn();
+    store.onFinished(finished);
+    return { alerts, tracker, front, store, finished };
+  }
+
+  it('locked while the app keeps running in the background: no in-app alert, the phone’s alert and follow-up stay', () => {
+    const { alerts, tracker, front, store, finished } = setup();
+    const id = store.start('Blind bake', 60, 'step');
+    front.on = false;
+    act(() => vi.advanceTimersByTime(61_000));
+    expect(store.getSnapshot().timers[0]).toMatchObject({ id, state: 'done' });
+    expect(finished).not.toHaveBeenCalled();
+    expect(alerts.cancel).not.toHaveBeenCalled();
+    expect(tracker.track).not.toHaveBeenCalledWith('timer_finished', {});
+  });
+
+  it('asleep through zero, then back on screen: still unseen (the gap gives it away)', () => {
+    const { alerts, front, store, finished } = setup();
+    store.start('Blind bake', 60, 'step');
+    // Asleep: no ticks at all, then it wakes on screen.
+    front.on = false;
+    act(() => vi.advanceTimersByTime(10_000));
+    front.on = true;
+    vi.setSystemTime(Date.now() + 60_000);
+    act(() => vi.advanceTimersByTime(250));
+    expect(store.getSnapshot().timers[0]?.state).toBe('done');
+    expect(finished).not.toHaveBeenCalled();
+    expect(alerts.cancel).not.toHaveBeenCalled();
+  });
+
+  it('on screen right through zero: the in-app alert, and the follow-up goes', () => {
+    const { alerts, store, finished } = setup();
+    const id = store.start('Blind bake', 60, 'step');
+    act(() => vi.advanceTimersByTime(61_000));
+    expect(finished).toHaveBeenCalledOnce();
+    expect(alerts.cancel).toHaveBeenCalledWith([id]);
+  });
+
+  it('the phone’s own alert shows while the app is open only when the app won’t play its own', () => {
+    const { front, store } = setup();
+    store.start('Blind bake', 60, 'step');
+    act(() => vi.advanceTimersByTime(1000));
+    expect(timersOnScreen()).toBe(true);
+    front.on = false;
+    act(() => vi.advanceTimersByTime(1000));
+    expect(timersOnScreen()).toBe(false);
+    // Woken on screen after a sleep: not until it has been ticking there.
+    front.on = true;
+    expect(timersOnScreen(Date.now() + 10_000)).toBe(false);
+  });
+
+  it('the Timers screen behind the Lock Screen clears nothing; on screen it does', () => {
+    const { alerts, front, store } = setup();
+    const id = store.start('Blind bake', 60, 'step');
+    front.on = false;
+    act(() => vi.advanceTimersByTime(61_000));
+    store.seenDone();
+    expect(alerts.cancel).not.toHaveBeenCalled();
+    front.on = true;
+    store.seenDone();
+    expect(alerts.cancel).toHaveBeenCalledWith([id]);
+  });
+});
+
+// Spec 047, from Gabriel's iPhone: every launch starts with the session loading. That must never
+// remove the alerts waiting; only a real sign-out does.
+describe('useTimerOwner', () => {
+  it('launching (loading → ready) keeps every alert; signing out removes them and the owner', async () => {
+    const { renderHook } = await import('@testing-library/react');
+    const storage = memoryStorage();
+    const removeAlerts = vi.fn(async () => undefined);
+    type Status = 'loading' | 'signedOut' | 'noFamily' | 'ready';
+    const { rerender } = renderHook(({ status, userId }: { status: Status; userId: string }) => useTimerOwner(storage, status, userId, removeAlerts), {
+      initialProps: { status: 'loading' as Status, userId: '' },
+    });
+    rerender({ status: 'noFamily', userId: '' });
+    rerender({ status: 'ready', userId: 'u1' });
+    await flush();
+    expect(removeAlerts).not.toHaveBeenCalled();
+    expect(storage.data.get('cocon.timers.owner')).toBe('u1');
+    rerender({ status: 'signedOut', userId: '' });
+    await flush();
+    expect(removeAlerts).toHaveBeenCalledOnce();
+    expect(storage.data.get('cocon.timers.owner')).toBe('');
+  });
+
+  it('straight from one person to another: the last one’s alerts go', async () => {
+    const { renderHook } = await import('@testing-library/react');
+    const storage = memoryStorage();
+    const removeAlerts = vi.fn(async () => undefined);
+    const { rerender } = renderHook(({ userId }: { userId: string }) => useTimerOwner(storage, 'ready', userId, removeAlerts), { initialProps: { userId: 'a1' } });
+    await flush();
+    expect(removeAlerts).not.toHaveBeenCalled();
+    rerender({ userId: 'b2' });
+    await flush();
+    expect(removeAlerts).toHaveBeenCalledOnce();
+    expect(storage.data.get('cocon.timers.owner')).toBe('b2');
   });
 });
