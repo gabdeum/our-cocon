@@ -50,7 +50,12 @@
       "expo-status-bar",
       "expo-asset",
       "expo-apple-authentication",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "sounds": ["./assets/sounds/kitchen-bell.caf"]
+        }
+      ],
       [
         "@react-native-google-signin/google-signin",
         {

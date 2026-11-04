@@ -26,7 +26,8 @@ Notifications.setNotificationHandler({
   },
 });
 
-// Each tap is reported once, even when the launch response is also delivered to the listener.
+// Each tap is reported once, even when the launch response is also delivered to the listener. A timer's
+// alert keeps its id after "+1 min" (spec 047), so its delivery time tells two taps apart.
 const handled = new Set<string>();
 
 export const nativeNotifications: NativeNotifications | null = {
@@ -51,7 +52,7 @@ export const nativeNotifications: NativeNotifications | null = {
   onOpen(listener) {
     const report = (response: Notifications.NotificationResponse, coldStart: boolean) => {
       if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
-      const id = response.notification.request.identifier;
+      const id = `${response.notification.request.identifier}|${response.notification.date}`;
       if (handled.has(id)) return;
       handled.add(id);
       listener(response.notification.request.content.data, coldStart);

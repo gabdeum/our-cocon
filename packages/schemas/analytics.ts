@@ -238,6 +238,9 @@ export const events = {
     setting: z.enum(['timers_live', 'timers_alert', 'reminders_on', 'reminders_scope', 'default_reminder']),
     value: z.enum(['on', 'off', 'mine', 'all', ...DefaultReminder.options]),
   }),
+  // Spec 047: a timer-done alert on the phone: its "+1 min" or "Stop", or tapped open; and the one follow-up that arrived.
+  timer_alert_action: z.strictObject({ action: z.enum(['add_minute', 'stop', 'open']) }),
+  timer_alert_followup_sent: z.strictObject({}),
 } as const;
 
 export type EventName = keyof typeof events;

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { Text } from 'react-native';
 import { clearTimers, createTimerStore, TimersProvider, useTimers, useTimerStore, type TimerStore } from './timer-store';
-import { clock, remaining } from './timers';
+import { clock, remaining, type Timer } from './timers';
 import type { ChoiceStorage } from './recipe-choices';
 import { fakeTracker } from '../test/fakes';
 
@@ -243,5 +243,129 @@ describe('timer store (spec 010)', () => {
     const removeItem = vi.fn(async () => undefined);
     await clearTimers({ removeItem }, 'u1');
     expect(removeItem).toHaveBeenCalledWith('cocon.timers.u1');
+  });
+});
+
+// Spec 047 SC-002: every store action schedules or cancels its Lock Screen alert.
+describe('timer alerts (spec 047)', () => {
+  function fakeAlerts() {
+    return {
+      schedule: vi.fn(async (_t: Timer) => undefined),
+      cancel: vi.fn(async (_ids: readonly string[]) => undefined),
+      reconcile: vi.fn(async (_ts: readonly Timer[]) => undefined),
+      cancelAll: vi.fn(async () => undefined),
+    };
+  }
+  const setup = () => {
+    const alerts = fakeAlerts();
+    const store = createTimerStore({ storage: memoryStorage(), userId: 'u1', tracker: fakeTracker(), alerts });
+    return { alerts, store };
+  };
+  const scheduled = (alerts: ReturnType<typeof fakeAlerts>) => alerts.schedule.mock.calls.map(([t]) => `${t.id} ${((t.endsAt ?? 0) - T0) / 1000}`);
+
+  it('start, resume, ±1 min and set schedule at endsAt; pause, stop and dismiss cancel at once', () => {
+    const { alerts, store } = setup();
+    const id = store.start('Blind bake', 600, 'step', { recipeId: 'r1', stepId: 's3', recipeName: 'Leek & bacon quiche', stepNumber: 3 });
+    expect(scheduled(alerts)).toEqual([`${id} 600`]);
+    expect(alerts.schedule.mock.calls[0]?.[0]).toMatchObject({ label: 'Blind bake', stepNumber: 3 });
+    store.add(id, 60);
+    store.add(id, -60);
+    store.set(id, 300);
+    expect(scheduled(alerts)).toEqual([`${id} 600`, `${id} 660`, `${id} 600`, `${id} 300`]);
+    store.pause(id);
+    expect(alerts.cancel).toHaveBeenLastCalledWith([id]);
+    alerts.schedule.mockClear();
+    store.resume(id);
+    expect(scheduled(alerts)).toEqual([`${id} 300`]);
+    store.stop(id);
+    expect(alerts.cancel).toHaveBeenLastCalledWith([id]);
+
+    const quick = store.quick();
+    store.pause(quick);
+    alerts.cancel.mockClear();
+    store.stop(quick);
+    // Paused: its alert went with the pause; nothing waits.
+    expect(alerts.cancel).not.toHaveBeenCalled();
+  });
+
+  it('never leaves an alert for a paused or stopped timer, whatever the order (SC-002)', () => {
+    const { alerts, store } = setup();
+    const waiting = new Set<string>();
+    alerts.schedule.mockImplementation(async (t) => void waiting.add(t.id));
+    alerts.cancel.mockImplementation(async (ids) => void ids.forEach((i) => waiting.delete(i)));
+    const a = store.start('Blind bake', 600, 'step');
+    const b = store.quick();
+    store.pause(a);
+    store.add(a, 60);
+    store.set(a, 120);
+    store.stop(b);
+    expect([...waiting]).toEqual([]);
+    store.resume(a);
+    expect([...waiting]).toEqual([a]);
+  });
+
+  it('a timer that ends with the app open: the in-app alert plays, so its follow-up goes', () => {
+    const { alerts, store } = setup();
+    const id = store.start('Blind bake', 60, 'step');
+    act(() => vi.advanceTimersByTime(61_000));
+    expect(alerts.cancel).toHaveBeenLastCalledWith([id]);
+    alerts.cancel.mockClear();
+    store.dismiss(id);
+    expect(alerts.cancel).toHaveBeenLastCalledWith([id]);
+  });
+
+  it('a done timer cleared after 3 hours loses its alerts', () => {
+    const { alerts, store } = setup();
+    const id = store.start('Blind bake', 60, 'step');
+    act(() => vi.advanceTimersByTime(61_000));
+    alerts.cancel.mockClear();
+    act(() => vi.advanceTimersByTime(3 * 3600 * 1000));
+    expect(alerts.cancel).toHaveBeenCalledWith([id]);
+  });
+
+  it('loading matches the phone’s alerts to the saved timers; one that ended while closed stays silent', async () => {
+    const storage = memoryStorage();
+    storage.data.set('cocon.timers.u1', JSON.stringify([{ id: 'a', label: 'Blind bake', totalSeconds: 60, state: 'running', endsAt: T0 - 1000 }]));
+    const alerts = fakeAlerts();
+    const store = createTimerStore({ storage, userId: 'u1', tracker: fakeTracker(), alerts });
+    store.reconcileAlerts();
+    expect(alerts.reconcile).not.toHaveBeenCalled();
+    await store.load();
+    expect(alerts.reconcile).toHaveBeenCalledWith([expect.objectContaining({ id: 'a', state: 'done' })]);
+    expect(alerts.cancel).not.toHaveBeenCalled();
+    store.seenDone();
+    expect(alerts.cancel).toHaveBeenCalledWith(['a']);
+    store.destroy();
+  });
+
+  it('a new alerts value (a switch, the permission) keeps the timers and reconciles', async () => {
+    const storage = memoryStorage();
+    const first = fakeAlerts();
+    const second = fakeAlerts();
+    const got: { store?: TimerStore } = {};
+    function Grab() {
+      const s = useTimerStore();
+      useEffect(() => void (got.store = s), [s]);
+      return null;
+    }
+    const tracker = fakeTracker();
+    const tree = (alerts: ReturnType<typeof fakeAlerts>) => (
+      <TimersProvider userId="u1" storage={storage} tracker={tracker} alerts={alerts}>
+        <Grab />
+      </TimersProvider>
+    );
+    const { rerender } = render(tree(first));
+    await flush();
+    const store = got.store;
+    if (!store) throw new Error('no store');
+    act(() => void store.start('Blind bake', 600, 'step'));
+    expect(first.schedule).toHaveBeenCalledOnce();
+    rerender(tree(second));
+    await flush();
+    expect(got.store).toBe(store);
+    expect(second.reconcile).toHaveBeenCalledWith([expect.objectContaining({ label: 'Blind bake' })]);
+    act(() => store.pause(store.getSnapshot().timers[0]?.id ?? ''));
+    expect(second.cancel).toHaveBeenCalledOnce();
+    expect(first.cancel).not.toHaveBeenCalled();
   });
 });

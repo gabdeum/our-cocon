@@ -42,7 +42,7 @@ export function useStepTimerControl({ recipeId, recipeName, stepId, index, timer
 
   const onPress = () => {
     if (!timer) {
-      store.start(planned.label, startWith, 'step', { recipeId, stepId, recipeName });
+      store.start(planned.label, startWith, 'step', { recipeId, stepId, recipeName, stepNumber: index + 1 });
       tracker.track('step_timer_started', { step_index: Math.min(index, MAX_TRACKED_STEPS - 1) });
       setStartWith(planned.seconds);
     } else if (timer.state === 'running') store.pause(timer.id);

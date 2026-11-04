@@ -186,6 +186,8 @@ describe('taps (US4, FR-006)', () => {
     act(() => phone.tap({ kind: 'timer_done', route: '/timers' }, true));
     expect(navigate).toHaveBeenLastCalledWith('/timers');
     expect(tracker.track).toHaveBeenCalledWith('notification_opened', { kind: 'timer_done', cold_start: true });
+    // Spec 047: a tapped timer alert.
+    expect(tracker.track).toHaveBeenCalledWith('timer_alert_action', { action: 'open' });
     const event = '/calendar/0f8fad5b-d9cb-469f-a165-70867728950e?date=2026-11-03';
     act(() => phone.tap({ kind: 'reminder', route: event }));
     expect(navigate).toHaveBeenLastCalledWith(event);

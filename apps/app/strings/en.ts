@@ -1365,6 +1365,16 @@ export const strings = {
     // The StatusBanner for a reminder that arrives while the app is open (not drawn).
     inApp: (title: string, body: string) => (body ? `${title} · ${body}` : title),
     open: 'Open',
+    // Spec 047: a timer that ends while the app is closed (OC-NotifLockDone). Plain text, no emoji.
+    timerDone: {
+      title: (label: string) => `${label} is done`,
+      stepBody: (recipe: string, step: number) => `${recipe} · step ${step}`,
+      quickBody: (minutes: number) => `${minutes}-minute kitchen timer`,
+      followUpTitle: (label: string) => `Still waiting: ${label}`,
+      followUpBody: (minutes: number) => `Done ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago.`,
+      addMinute: '+1 min',
+      stop: 'Stop',
+    },
   },
   toast: {
     undo: 'Undo',

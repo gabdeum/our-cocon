@@ -41,6 +41,15 @@ export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep }: Time
     opened.current = true;
     tracker.track('timers_screen_opened', { timer_count: timers.length });
   }, [tracker, timers.length]);
+  // Spec 047 FR-001: seen here, so done timers' Lock Screen alerts and follow-ups go (also once a
+  // cold start from a tapped alert has read the saved timers).
+  const done = timers
+    .filter((t) => t.state === 'done')
+    .map((t) => t.id)
+    .join(',');
+  useEffect(() => {
+    if (done) store.seenDone();
+  }, [store, done]);
 
   const running = timers.filter((t) => t.state === 'running').length;
   const newestFirst = [...timers].reverse();

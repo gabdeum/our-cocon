@@ -194,3 +194,15 @@ describe('Go to step (L19)', () => {
     expect(screen.queryByRole('button', { name: /^Go to step/ })).toBeNull();
   });
 });
+
+describe('Timers screen and Lock Screen alerts (spec 047 FR-001)', () => {
+  it('opening it clears the done timers’ alerts and follow-ups, not the running ones', () => {
+    const alerts = { schedule: vi.fn(async () => undefined), cancel: vi.fn(async () => undefined), reconcile: vi.fn(async () => undefined), cancelAll: vi.fn(async () => undefined) };
+    store.destroy();
+    store = createTimerStore({ storage: noStorage, userId: '', tracker: fakeTracker(), alerts });
+    const { simmer } = designTimers();
+    alerts.cancel.mockClear();
+    setup();
+    expect(alerts.cancel).toHaveBeenCalledExactlyOnceWith([simmer]);
+  });
+});
