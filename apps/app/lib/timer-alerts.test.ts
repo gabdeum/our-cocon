@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { alertChanges, alertContent, createTimerAlerts, FOLLOW_UP_MS, followUpContent, type LocalNotifications } from './timer-alerts';
 import * as T from './timers';
 import type { Timer } from './timers';
+import { createTimerStore } from './timer-store';
 import { fakeTracker } from '../test/fakes';
 
 const T0: number = 1_760_000_000_000;
@@ -196,5 +197,63 @@ describe('reconcile before and after the switches are known', () => {
     now = endOf(t) + FOLLOW_UP_MS + 1;
     await make(true).reconcile(T.settle([t], now).timers);
     expect(tracker.track).not.toHaveBeenCalled();
+  });
+});
+
+describe('no waiting (Gabriel: lock the phone right after the tap, the alert still comes on time)', () => {
+  /** Like the iPhone: each request applies in the order it was made, and answers later. */
+  function slowPhone() {
+    const at = new Map<string, number>();
+    const calls: string[] = [];
+    const answers: (() => void)[] = [];
+    const later = () => new Promise<void>((r) => answers.push(r));
+    const local: LocalNotifications = {
+      scheduleAt: (id, when) => (calls.push(`${id} ${(when - T0) / 1000}`), at.set(id, when), later()),
+      remove: (ids) => (calls.push(`remove ${ids.join(' ')}`), ids.forEach((id) => at.delete(id)), later()),
+      ids: () => later().then(() => [...at.keys()]),
+    };
+    return { local, at, calls, answerAll: () => answers.splice(0).forEach((a) => a()) };
+  }
+
+  it('both requests reach the iPhone in the same moment as the tap, through the store', () => {
+    const phone = slowPhone();
+    const alerts = createTimerAlerts({ local: phone.local, userId: 'u1', storage: memoryStorage(), tracker: fakeTracker(), enabled: true, now: () => T0 });
+    const store = createTimerStore({ storage: memoryStorage(), userId: 'u1', tracker: fakeTracker(), alerts, now: () => T0 });
+    const id = store.start('Blind bake', 60, 'step');
+    // Nothing awaited yet: already asked.
+    expect(phone.calls).toEqual([`timer:${id} 60`, `timer:${id}:again 180`]);
+    store.destroy();
+  });
+
+  it('quick −1 taps and a pause apply in order, while the iPhone is still answering', () => {
+    const phone = slowPhone();
+    const { alerts } = alertsFor(phone.local);
+    let t = blindBake();
+    void alerts.schedule(t);
+    for (const left of [660, 600, 540, 60]) {
+      t = { ...t, endsAt: T0 + left * 1000 };
+      void alerts.schedule(t);
+    }
+    expect(phone.at.get('timer:a')).toBe(T0 + 60_000);
+    expect(phone.at.get('timer:a:again')).toBe(T0 + 60_000 + FOLLOW_UP_MS);
+    void alerts.cancel(['a']);
+    expect(phone.at.size).toBe(0);
+  });
+
+  it('a re-check under way leaves a timer started meanwhile alone', async () => {
+    const phone = slowPhone();
+    const { alerts } = alertsFor(phone.local);
+    phone.at.set('timer:old', T0);
+    const checking = alerts.reconcile([]);
+    await Promise.resolve();
+    const t = blindBake();
+    void alerts.schedule(t);
+    await vi.waitFor(() => {
+      phone.answerAll();
+      expect(phone.calls).toContain('remove timer:old');
+    });
+    phone.answerAll();
+    await checking;
+    expect([...phone.at.keys()].sort()).toEqual(['timer:a', 'timer:a:again']);
   });
 });

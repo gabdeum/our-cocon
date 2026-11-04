@@ -3,7 +3,7 @@ import * as Notifications from 'expo-notifications';
 import { strings } from '../strings/en';
 import { readPrefs } from './notifications';
 import { handleTimerAction } from './timer-alert-actions';
-import { createTimerAlerts, TIMER_CATEGORY, TIMER_SOUND, TIMER_THREAD, type LocalNotifications } from './timer-alerts';
+import { createTimerAlerts, devLog, TIMER_CATEGORY, TIMER_SOUND, TIMER_THREAD, type LocalNotifications } from './timer-alerts';
 import { tracker } from './tracker';
 
 /**
@@ -11,6 +11,8 @@ import { tracker } from './tracker';
  * code is only in builds; the sound is bundled by its config plugin in app.json).
  */
 const ignore = () => undefined;
+
+const logged = (e: unknown) => devLog(e instanceof Error ? e.message : String(e));
 
 const local: LocalNotifications = {
   async scheduleAt(id, at, { title, body }, data) {
@@ -29,10 +31,18 @@ const local: LocalNotifications = {
     });
   },
   async remove(ids) {
-    await Promise.all(ids.flatMap((id) => [Notifications.cancelScheduledNotificationAsync(id).catch(ignore), Notifications.dismissNotificationAsync(id).catch(ignore)]));
+    await Promise.all(
+      ids.flatMap((id) => [
+        Notifications.cancelScheduledNotificationAsync(id).catch(logged),
+        Notifications.dismissNotificationAsync(id).catch(logged),
+      ]),
+    );
   },
   async ids() {
-    const [waiting, shown] = await Promise.all([Notifications.getAllScheduledNotificationsAsync(), Notifications.getPresentedNotificationsAsync()]);
+    const [waiting, shown] = await Promise.all([
+      Notifications.getAllScheduledNotificationsAsync(),
+      Notifications.getPresentedNotificationsAsync(),
+    ]);
     return [...new Set([...waiting.map((r) => r.identifier), ...shown.map((n) => n.request.identifier)])];
   },
 };
