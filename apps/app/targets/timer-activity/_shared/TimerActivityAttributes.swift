@@ -6,31 +6,47 @@ import ActivityKit
 import Foundation
 
 public struct TimerActivityAttributes: ActivityAttributes {
-  public struct Row: Codable, Hashable {
+  /// One timer as the card shows it, every word from strings/en.ts.
+  public struct Face: Codable, Hashable {
+    public var id: String
+    /// "running", "paused" or "done".
+    public var state: String
     public var label: String
+    public var subRunning: String
+    public var subPaused: String
+    public var subDone: String
+    public var islandSub: String
+    public var doneTitle: String
+    /// Milliseconds since 1970, as in the app.
     public var endsAt: Double?
     public var remainingSeconds: Int?
-  }
-
-  /// Every word on the card, from strings/en.ts.
-  public struct Copy: Codable, Hashable {
-    public var title: String
+    public var totalSeconds: Int
+    /// A tap on the card: the step in cooking mode, or Timers.
+    public var openUrl: String
+    /// The "2 running" pill now; after Pause, Resume or "Add 1 more minute"; once this one ends.
     public var count: String
     public var countToggled: String
     public var countDone: String
-    public var sub: String
-    public var pausedSub: String
-    public var islandSub: String
-    public var more: String
-    public var doneTitle: String
-    public var left: String
-    public var removeMinute: String
-    public var addMinute: String
-    public var pause: String
-    public var resume: String
+    public var alert: Alert?
   }
 
-  /// The primary timer's two alerts (spec 047), for the buttons to move while the app sleeps.
+  /// The buttons' words.
+  public struct Copy: Codable, Hashable {
+    public var minus: String
+    public var plus: String
+    public var minusA11y: String
+    public var plusA11y: String
+    public var pause: String
+    public var resume: String
+    public var addMore: String
+    public var stop: String
+    public var dismiss: String
+    public var removeMinute: String
+    public var addMinute: String
+    public var pausedSub: String
+  }
+
+  /// A timer's two alerts (spec 047), for the buttons to move while the app sleeps.
   public struct Alert: Codable, Hashable {
     public var alertId: String
     public var againId: String
@@ -46,23 +62,14 @@ public struct TimerActivityAttributes: ActivityAttributes {
   }
 
   public struct ContentState: Codable, Hashable {
-    public var id: String
-    /// "running", "paused" or "done".
-    public var state: String
-    public var label: String
-    /// Milliseconds since 1970, as in the app.
-    public var endsAt: Double?
-    public var remainingSeconds: Int?
-    public var totalSeconds: Int
-    public var others: [Row]
-    public var othersCount: Int
+    public var face: Face
+    /// Shown once `face` is stopped or dismissed on the Lock Screen; none: the card ends.
+    public var next: Face?
     public var copy: Copy
-    /// "−1 min" never takes the time left below this.
+    /// "−1" never takes the time left below this.
     public var minLeftSeconds: Int
-    /// A tap on the card (the step in cooking mode, or Timers), and on "2 running" (Timers).
-    public var openUrl: String
+    /// A tap on the "2 running" pill: Timers.
     public var timersUrl: String
-    public var alert: Alert?
   }
 
   /// Who signed in when it started: a tap on someone else's card is dropped by the app.

@@ -1,6 +1,7 @@
-// Spec 048 FR-003: the Live Activity as drawn in design/screens OC-NotifLockTimer (Lock Screen),
-// OC-NotifIsland (Dynamic Island) and OC-NotifLockDone (done). Colours are design tokens (Theme.swift,
-// from `pnpm theme`); every word comes from the app. The phone counts down by itself from `endsAt`.
+// Spec 048 FR-003: the Live Activity. On the Lock Screen it is the Timers screen's card (TimerCard
+// README › Timers screen, OC-Timers), with a "2 running" pill in place of "Go to step"; the Dynamic
+// Island is OC-NotifIsland. Colours are design tokens (Theme.swift, from `pnpm theme`); every word comes
+// from the app. The phone counts down by itself from `endsAt`.
 import ActivityKit
 import AppIntents
 import SwiftUI
@@ -18,7 +19,7 @@ struct TimerActivityWidget: Widget {
     ActivityConfiguration(for: TimerActivityAttributes.self) { context in
       let card = Card(state: context.state, ended: context.isStale)
       LockScreenCard(card: card)
-        .activityBackgroundTint(card.isDone ? Theme.honey : Theme.surfacePage)
+        .activityBackgroundTint(card.fill)
         .activitySystemActionForegroundColor(Theme.ink)
         .widgetURL(card.openURL)
     } dynamicIsland: { context in
@@ -52,34 +53,37 @@ struct TimerActivityWidget: Widget {
 
 // MARK: - What to show
 
-/// The card's state, with "done" also when the primary timer reached zero while the app slept: iOS
-/// marks the activity stale at `endsAt` (the app sets that date) and draws it again.
+/// The card's state, with "done" also when the timer reached zero while the app slept: iOS marks the
+/// activity stale at `endsAt` (the app sets that date) and draws it again.
 struct Card {
   let state: TimerActivityAttributes.ContentState
   let ended: Bool
 
-  var isDone: Bool { state.state == "done" || (ended && state.state == "running") }
-  var isPaused: Bool { state.state == "paused" }
+  var face: TimerActivityAttributes.Face { state.face }
   var copy: TimerActivityAttributes.Copy { state.copy }
-  var count: String { isDone && state.state == "running" ? copy.countDone : copy.count }
-  var next: TimerActivityAttributes.Row? { state.others.first }
+  var isDone: Bool { face.state == "done" || (ended && face.state == "running") }
+  var isPaused: Bool { face.state == "paused" }
+  var count: String { isDone && face.state == "running" ? face.countDone : face.count }
+  var sub: String { isDone ? face.subDone : isPaused ? face.subPaused : face.subRunning }
+  /// As on the Timers screen: sage while running, surface-soft while paused, honey once done.
+  var fill: Color { isDone ? Theme.honey : isPaused ? Theme.surfaceSoft : Theme.sage }
   /// A tap on the card: the step in cooking mode, or Timers.
-  var openURL: URL? { URL(string: state.openUrl) }
+  var openURL: URL? { URL(string: face.openUrl) }
   var timersURL: URL? { URL(string: state.timersUrl) }
 
-  private var end: Date? { state.endsAt.map { Date(timeIntervalSince1970: $0 / 1000) } }
-  private var start: Date? { end.map { $0.addingTimeInterval(-Double(state.totalSeconds)) } }
+  private var end: Date? { face.endsAt.map { Date(timeIntervalSince1970: $0 / 1000) } }
+  private var start: Date? { end.map { $0.addingTimeInterval(-Double(face.totalSeconds)) } }
 
-  /// The countdown: ticking while running, the time it stopped at while paused, 0:00 once done.
+  /// The clock: ticking while running, the time it stopped at while paused, 0:00 once done.
   var countdown: Text {
     if !isDone, let start, let end, start <= end {
       return Text(timerInterval: start...end, countsDown: true)
     }
-    return Text(Clock.text(isDone ? 0 : state.remainingSeconds ?? 0))
+    return Text(Clock.text(isDone ? 0 : face.remainingSeconds ?? 0))
   }
 
   /// Time gone, as on the Timers screen: fills as time passes.
-  func bar(height: CGFloat, track: Color) -> some View {
+  func bar(height: CGFloat, fill: Color, track: Color) -> some View {
     Group {
       if !isDone, let start, let end, start <= end {
         ProgressView(timerInterval: start...end, countsDown: false) { EmptyView() } currentValueLabel: { EmptyView() }
@@ -88,7 +92,7 @@ struct Card {
       }
     }
     .progressViewStyle(.linear)
-    .tint(Theme.honey)
+    .tint(fill)
     // The system bar is about 4 pt tall: stretched to the drawn height, on the drawn track.
     .scaleEffect(x: 1, y: height / 4, anchor: .center)
     .frame(height: height)
@@ -112,16 +116,8 @@ struct Card {
   }
 
   private var pausedProgress: Double {
-    guard state.totalSeconds > 0 else { return 0 }
-    return min(1, max(0, 1 - Double(state.remainingSeconds ?? 0) / Double(state.totalSeconds)))
-  }
-
-  /// The next timer's time.
-  func time(of row: TimerActivityAttributes.Row) -> Text {
-    if let endsAt = row.endsAt {
-      return Text(timerInterval: Date.distantPast...Date(timeIntervalSince1970: endsAt / 1000), countsDown: true)
-    }
-    return Text(Clock.text(row.remainingSeconds ?? 0))
+    guard face.totalSeconds > 0 else { return 0 }
+    return min(1, max(0, 1 - Double(face.remainingSeconds ?? 0) / Double(face.totalSeconds)))
   }
 }
 
@@ -134,126 +130,118 @@ enum Clock {
   }
 }
 
-// MARK: - Lock Screen (OC-NotifLockTimer, OC-NotifLockDone)
+// MARK: - Lock Screen: the Timers screen's card
 
-/// iOS cuts a Lock Screen Live Activity at 160 pt, so the drawn card's gaps are tightened (padding 12,
-/// gaps 6, header 26, buttons 36); the order, sizes of the words and colours are as drawn.
+/// iOS cuts a Lock Screen Live Activity at 160 pt and the Timers screen's card is about 210, so it is
+/// tightened (padding 10 16, gaps 6, circles 40, clock 40, buttons 36); parts, order, colours and words
+/// are the Timers screen's.
 struct LockScreenCard: View {
   let card: Card
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
+    VStack(spacing: 6) {
       HStack(spacing: 8) {
-        Image("mark")
-          .resizable()
-          .frame(width: 24, height: 24)
-          .clipShape(RoundedRectangle(cornerRadius: 7))
-          .accessibilityHidden(true)
-        Text(card.copy.title).font(.nunito(14, .black)).foregroundStyle(Theme.ink)
-        Spacer(minLength: 0)
-        CountPill(text: card.count, url: card.timersURL, fill: card.isDone ? Theme.surfaceCard.opacity(0.55) : Theme.surfaceSoft)
-      }
-      .frame(height: 26)
-      if card.isDone {
-        done
-      } else {
-        counting
-      }
-    }
-    .padding(.vertical, 12)
-    .padding(.horizontal, 16)
-  }
-
-  private var counting: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      HStack(alignment: .center, spacing: 10) {
         VStack(alignment: .leading, spacing: 0) {
-          Text(card.state.label).font(.nunito(20, .black)).foregroundStyle(Theme.ink).lineLimit(1)
-          Text(card.isPaused ? card.copy.pausedSub : card.copy.sub).font(.nunito(13, .bold)).foregroundStyle(Theme.inkMuted).lineLimit(1)
+          Text(card.face.label).font(.nunito(17, .black)).lineLimit(1)
+          Text(card.sub).font(.nunito(13, .bold)).opacity(0.8).lineLimit(1)
         }
-        .layoutPriority(1)
-        card.countdown
-          .font(.nunito(42, .black))
-          .monospacedDigit()
-          .foregroundStyle(Theme.oliveDeep)
-          .multilineTextAlignment(.trailing)
-          .lineLimit(1)
-          .frame(maxWidth: .infinity, maxHeight: 44, alignment: .trailing)
-      }
-      .frame(height: 44)
-      card.bar(height: 8, track: Theme.line)
-      HStack(spacing: 6) {
-        Group {
-          if let next = card.next {
-            (Text(next.label + " ").foregroundStyle(Theme.inkMuted) + card.time(of: next).foregroundStyle(Theme.ink) + Text(card.copy.more).foregroundStyle(Theme.inkMuted))
-          } else {
-            Text("")
-          }
-        }
-        .font(.nunito(14, .heavy))
-        .monospacedDigit()
-        .lineLimit(1)
         .frame(maxWidth: .infinity, alignment: .leading)
-        Button(intent: RemoveMinuteIntent(timerId: card.state.id)) {
-          Pill(text: card.copy.removeMinute, fill: Theme.surfaceSoft, ink: Theme.ink, height: 36)
+        CountPill(text: card.count, url: card.timersURL)
+      }
+      .frame(height: 36)
+      HStack(spacing: 8) {
+        Button(intent: RemoveMinuteIntent(timerId: card.face.id)) {
+          AdjustCircle(text: card.copy.minus)
         }
         .buttonStyle(.plain)
-        Button(intent: AddMinuteIntent(timerId: card.state.id)) {
-          Pill(text: card.copy.addMinute, fill: Theme.surfaceSoft, ink: Theme.ink, height: 36)
+        .accessibilityLabel(card.copy.minusA11y)
+        card.countdown
+          .font(.nunito(40, .black))
+          .kerning(-1)
+          .monospacedDigit()
+          .multilineTextAlignment(.center)
+          .lineLimit(1)
+          .frame(maxWidth: .infinity, maxHeight: 40)
+        Button(intent: AddMinuteIntent(timerId: card.face.id)) {
+          AdjustCircle(text: card.copy.plus)
         }
         .buttonStyle(.plain)
-        Button(intent: TogglePauseIntent(timerId: card.state.id)) {
-          Pill(text: card.isPaused ? card.copy.resume : card.copy.pause, fill: Theme.ink, ink: Theme.onOlive, height: 36)
+        .accessibilityLabel(card.copy.plusA11y)
+      }
+      .frame(height: 40)
+      card.bar(height: 6, fill: Theme.ink, track: Theme.ink.opacity(0.12))
+      HStack(spacing: 8) {
+        if card.isDone {
+          Button(intent: AddMinuteIntent(timerId: card.face.id)) {
+            MainPill(text: card.copy.addMore)
+          }
+          .buttonStyle(.plain)
+        } else {
+          Button(intent: TogglePauseIntent(timerId: card.face.id)) {
+            MainPill(text: card.isPaused ? card.copy.resume : card.copy.pause)
+          }
+          .buttonStyle(.plain)
+        }
+        Button(intent: StopTimerIntent(timerId: card.face.id)) {
+          Text(card.isDone ? card.copy.dismiss : card.copy.stop)
+            .font(.nunito(15, .heavy))
+            .padding(.horizontal, 16)
+            .frame(height: 36)
+            .background(Capsule().fill(Theme.surfaceCard.opacity(0.7)))
         }
         .buttonStyle(.plain)
       }
     }
-  }
-
-  private var done: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      HStack(spacing: 10) {
-        Image("bell")
-          .renderingMode(.template)
-          .resizable()
-          .frame(width: 34, height: 34)
-          .foregroundStyle(Theme.ink)
-          .accessibilityHidden(true)
-        VStack(alignment: .leading, spacing: 0) {
-          Text(card.copy.doneTitle).font(.nunito(22, .black)).lineLimit(1)
-          Text(card.copy.sub).font(.nunito(14, .bold)).lineLimit(1)
-        }
-        .foregroundStyle(Theme.ink)
-      }
-      if let next = card.next {
-        HStack {
-          Text(next.label).lineLimit(1)
-          Spacer(minLength: 8)
-          (card.time(of: next) + Text(" " + card.copy.left)).monospacedDigit()
-        }
-        .font(.nunito(15, .heavy))
-        .foregroundStyle(Theme.ink)
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.surfaceCard.opacity(0.55)))
+    .foregroundStyle(Theme.ink)
+    .padding(.vertical, 10)
+    .padding(.horizontal, 16)
+    // Done: the Timers screen's 2 px ink border, along the card's own corners.
+    .overlay {
+      if card.isDone {
+        ContainerRelativeShape().strokeBorder(Theme.ink, lineWidth: 2)
       }
     }
   }
 }
 
-/// "2 running": a soft pill that opens Timers, wherever the card itself opens.
+/// "−1" and "+1": white at 70%.
+struct AdjustCircle: View {
+  let text: String
+
+  var body: some View {
+    Text(text)
+      .font(.nunito(15, .black))
+      .frame(width: 40, height: 40)
+      .background(Circle().fill(Theme.surfaceCard.opacity(0.7)))
+  }
+}
+
+/// "Pause", "Resume" or "Add 1 more minute": the ink pill, as wide as it can be.
+struct MainPill: View {
+  let text: String
+
+  var body: some View {
+    Text(text)
+      .font(.nunito(16, .black))
+      .foregroundStyle(Theme.onOlive)
+      .lineLimit(1)
+      .frame(maxWidth: .infinity, minHeight: 36, maxHeight: 36)
+      .background(Capsule().fill(Theme.ink))
+  }
+}
+
+/// "2 running", where the Timers screen has "Go to step": it opens Timers, wherever the card opens.
 struct CountPill: View {
   let text: String
   let url: URL?
-  let fill: Color
 
   var body: some View {
     let pill = Text(text)
       .font(.nunito(13, .heavy))
-      .foregroundStyle(Theme.ink)
+      .lineLimit(1)
       .padding(.horizontal, 10)
       .frame(height: 26)
-      .background(Capsule().fill(fill))
+      .background(Capsule().fill(Theme.surfaceCard.opacity(0.7)))
     if let url {
       Link(destination: url) { pill }
     } else {
@@ -285,8 +273,8 @@ struct IslandExpanded: View {
             .accessibilityHidden(true)
         }
         VStack(alignment: .leading, spacing: 0) {
-          Text(card.isDone ? card.copy.doneTitle : card.state.label).font(.nunito(17, .black)).foregroundStyle(Theme.onOlive).lineLimit(1)
-          Text(card.isPaused ? card.copy.pausedSub : card.copy.islandSub).font(.nunito(13, .bold)).foregroundStyle(Theme.islandSub).lineLimit(1)
+          Text(card.isDone ? card.face.doneTitle : card.face.label).font(.nunito(17, .black)).foregroundStyle(Theme.onOlive).lineLimit(1)
+          Text(card.isPaused ? card.copy.pausedSub : card.face.islandSub).font(.nunito(13, .bold)).foregroundStyle(Theme.islandSub).lineLimit(1)
         }
         .layoutPriority(1)
         card.countdown
@@ -297,19 +285,19 @@ struct IslandExpanded: View {
           .lineLimit(1)
           .frame(maxWidth: .infinity, alignment: .trailing)
       }
-      card.bar(height: 6, track: Theme.islandTrack)
+      card.bar(height: 6, fill: Theme.honey, track: Theme.islandTrack)
       if !card.isDone {
         HStack(spacing: 8) {
-          Button(intent: RemoveMinuteIntent(timerId: card.state.id)) {
-            Pill(text: card.copy.removeMinute, fill: Theme.islandButton, ink: Theme.onOlive, height: 42, stretch: true)
+          Button(intent: RemoveMinuteIntent(timerId: card.face.id)) {
+            IslandButton(text: card.copy.removeMinute)
           }
           .buttonStyle(.plain)
-          Button(intent: AddMinuteIntent(timerId: card.state.id)) {
-            Pill(text: card.copy.addMinute, fill: Theme.islandButton, ink: Theme.onOlive, height: 42, stretch: true)
+          Button(intent: AddMinuteIntent(timerId: card.face.id)) {
+            IslandButton(text: card.copy.addMinute)
           }
           .buttonStyle(.plain)
-          Button(intent: TogglePauseIntent(timerId: card.state.id)) {
-            Pill(text: card.isPaused ? card.copy.resume : card.copy.pause, fill: Theme.islandButton, ink: Theme.onOlive, height: 42, stretch: true)
+          Button(intent: TogglePauseIntent(timerId: card.face.id)) {
+            IslandButton(text: card.isPaused ? card.copy.resume : card.copy.pause)
           }
           .buttonStyle(.plain)
         }
@@ -319,25 +307,16 @@ struct IslandExpanded: View {
   }
 }
 
-// MARK: - Pieces
-
-/// A button's look: as wide as its words on the Lock Screen, sharing the width in the island.
-struct Pill: View {
+struct IslandButton: View {
   let text: String
-  let fill: Color
-  let ink: Color
-  let height: CGFloat
-  var stretch = false
 
   var body: some View {
     Text(text)
       .font(.nunito(15, .black))
-      .foregroundStyle(ink)
+      .foregroundStyle(Theme.onOlive)
       .lineLimit(1)
-      .padding(.horizontal, 12)
-      .frame(minWidth: 44, maxWidth: stretch ? .infinity : nil, minHeight: height, maxHeight: height)
-      .fixedSize(horizontal: !stretch, vertical: false)
-      .background(Capsule().fill(fill))
+      .frame(maxWidth: .infinity, minHeight: 42, maxHeight: 42)
+      .background(Capsule().fill(Theme.islandButton))
   }
 }
 

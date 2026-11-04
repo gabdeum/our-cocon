@@ -28,67 +28,57 @@ const blindBake = running('a-1', 'Blind bake', 252, quiche);
 const pasta = running('a-2', 'Pasta water', 700);
 
 describe('what the card shows', () => {
-  it('US1: the most urgent timer, its step, the next one, and both buttons', () => {
+  it('US1: the Timers screen card for the most urgent timer, its words, and its time from endsAt', () => {
     const view = liveActivityState([pasta, blindBake], T0);
-    expect(view?.state).toMatchObject({
+    expect(view?.state.face).toMatchObject({
       id: 'a-1',
       state: 'running',
       label: 'Blind bake',
+      subRunning: 'Leek & bacon quiche · Running',
+      subPaused: 'Leek & bacon quiche · Paused',
+      subDone: 'Leek & bacon quiche · Done!',
       endsAt: T0 + 252_000,
       totalSeconds: 900,
-      others: [{ label: 'Pasta water', endsAt: T0 + 700_000 }],
-      othersCount: 1,
-    });
-    expect(view?.state.copy).toMatchObject({
-      title: 'Timers',
       count: '2 running',
-      sub: 'Leek & bacon quiche · step 3',
-      more: '',
-      addMinute: '+1 min',
-      pause: 'Pause',
-      resume: 'Resume',
     });
+    expect(view?.state.copy).toMatchObject({ minus: '−1', plus: '+1', pause: 'Pause', resume: 'Resume', addMore: 'Add 1 more minute', stop: 'Stop', dismiss: 'Dismiss' });
     // The phone draws the countdown itself; the card turns done at zero with no update.
     expect(view?.staleAt).toBe(T0 + 252_000);
     expect(view?.changeAt).toBeNull();
+    expect(view?.timerCount).toBe(2);
+  });
+
+  it('carries the next card, for "Stop" or "Dismiss" on the Lock Screen', () => {
+    const view = liveActivityState([pasta, blindBake], T0);
+    expect(view?.state.next).toMatchObject({ id: 'a-2', label: 'Pasta water', subRunning: 'No recipe · Running', count: '1 running' });
+    expect(liveActivityState([blindBake], T0)?.state.next).toBeUndefined();
   });
 
   it('US2: the island says which recipe and how many more', () => {
-    expect(liveActivityState([pasta, blindBake], T0)?.state.copy.islandSub).toBe('Leek & bacon quiche · +1 more');
-    expect(liveActivityState([blindBake], T0)?.state.copy.islandSub).toBe('Leek & bacon quiche · step 3');
-    expect(liveActivityState([running('q-1', 'Kitchen timer', 300, { totalSeconds: 300 })], T0)?.state.copy.sub).toBe('5-minute kitchen timer');
+    expect(liveActivityState([pasta, blindBake], T0)?.state.face.islandSub).toBe('Leek & bacon quiche · +1 more');
+    expect(liveActivityState([blindBake], T0)?.state.face.islandSub).toBe('Leek & bacon quiche · step 3');
+    expect(liveActivityState([running('q-1', 'Kitchen timer', 300, { totalSeconds: 300 })], T0)?.state.face.islandSub).toBe('5-minute kitchen timer');
   });
 
-  it('more than 2 timers: the next one and "+1 more"', () => {
-    const view = liveActivityState([pasta, blindBake, running('a-3', 'Rice', 1200)], T0);
-    expect(view?.state.others).toEqual([{ label: 'Pasta water', endsAt: T0 + 700_000 }]);
-    expect(view?.state.copy.more).toBe(' · +1 more');
-    expect(view?.state.copy.count).toBe('3 running');
-  });
-
-  it('all paused: "Paused", the frozen time, "Resume", and no done date', () => {
+  it('all paused: the paused card, its frozen time, and no done date', () => {
     const view = liveActivityState([paused('a-1', 'Blind bake', 252), paused('a-2', 'Pasta water', 700)], T0);
-    expect(view?.state).toMatchObject({ id: 'a-1', state: 'paused', remainingSeconds: 252, others: [{ label: 'Pasta water', remainingSeconds: 700 }] });
-    expect(view?.state.endsAt).toBeUndefined();
-    expect(view?.state.copy).toMatchObject({ count: '2 paused', pausedSub: 'Paused', countToggled: '1 running' });
+    expect(view?.state.face).toMatchObject({ id: 'a-1', state: 'paused', remainingSeconds: 252, count: '2 paused', countToggled: '1 running' });
+    expect(view?.state.face.endsAt).toBeUndefined();
     expect(view?.staleAt).toBeNull();
   });
 
-  it('the counts after "Pause" and once the first one ends are ready for the phone', () => {
-    const copy = liveActivityState([pasta, blindBake], T0)?.state.copy;
-    expect(copy).toMatchObject({ countToggled: '1 running', countDone: '1 running', doneTitle: 'Blind bake is done' });
+  it('the pill after "Pause" and once the shown timer ends is ready for the phone', () => {
+    expect(liveActivityState([pasta, blindBake], T0)?.state.face).toMatchObject({ countToggled: '1 running', countDone: '1 running', doneTitle: 'Blind bake is done' });
   });
 
-  it('US3: a done timer stays first for 10 minutes, with the next one below, then the next shows', () => {
+  it('US3: a done timer stays first for 10 minutes, then the next shows', () => {
     const ended = done('a-1', 'Blind bake', 60_000, quiche);
     const view = liveActivityState([ended, pasta], T0);
-    expect(view?.state).toMatchObject({ id: 'a-1', state: 'done', others: [{ label: 'Pasta water', endsAt: T0 + 700_000 }] });
-    expect(view?.state.copy).toMatchObject({ doneTitle: 'Blind bake is done', sub: 'Leek & bacon quiche · step 3', count: '1 running', left: 'left' });
+    expect(view?.state.face).toMatchObject({ id: 'a-1', state: 'done', count: '1 running', countToggled: '2 running' });
+    expect(view?.state.next).toMatchObject({ id: 'a-2' });
     expect(view?.changeAt).toBe(T0 - 60_000 + DONE_SHOWN_MS);
     expect(view?.staleAt).toBeNull();
-
-    const later = liveActivityState([ended, pasta], T0 - 60_000 + DONE_SHOWN_MS);
-    expect(later?.state).toMatchObject({ id: 'a-2', state: 'running' });
+    expect(liveActivityState([ended, pasta], T0 - 60_000 + DONE_SHOWN_MS)?.state.face).toMatchObject({ id: 'a-2', state: 'running' });
   });
 
   it('ends with nothing running or recently done (FR-001)', () => {
@@ -96,9 +86,9 @@ describe('what the card shows', () => {
     expect(liveActivityState([done('a-1', 'Blind bake', DONE_SHOWN_MS)], T0)).toBeNull();
   });
 
-  it("carries the primary timer's alerts only while they're on, for the card's buttons", () => {
-    const withAlerts = liveActivityState([blindBake], T0, { alertsFor: (t) => liveAlert(t, USER) })?.state.alert;
-    expect(withAlerts).toEqual({
+  it("carries each timer's alerts while they're on, for the card's buttons", () => {
+    const view = liveActivityState([blindBake, pasta], T0, { alertsFor: (t) => liveAlert(t, USER) });
+    expect(view?.state.face.alert).toEqual({
       alertId: 'timer:a-1',
       againId: 'timer:a-1:again',
       title: 'Blind bake is done',
@@ -111,15 +101,14 @@ describe('what the card shows', () => {
       category: 'timer_done',
       data: { kind: 'timer_done', route: '/timers', timerId: 'a-1', userId: USER },
     });
-    expect(liveActivityState([blindBake], T0)?.state.alert).toBeUndefined();
-    expect(liveActivityState([done('a-1', 'Blind bake', 1000)], T0, { alertsFor: (t) => liveAlert(t, USER) })?.state.alert).toBeUndefined();
+    expect(view?.state.next?.alert?.alertId).toBe('timer:a-2');
+    expect(liveActivityState([blindBake], T0)?.state.face.alert).toBeUndefined();
   });
 
-  it('a tap opens the step in cooking mode, or Timers for a quick timer; "2 running" opens Timers', () => {
+  it('a tap opens the step in cooking mode, or Timers for a quick timer; the pill opens Timers', () => {
     const url = (p: string) => `ourcocon://${p.slice(1)}`;
-    expect(liveActivityState([blindBake], T0, { url })?.state).toMatchObject({ openUrl: 'ourcocon://recipes/r1/cook?step=s3', timersUrl: 'ourcocon://timers' });
-    expect(liveActivityState([pasta], T0, { url })?.state).toMatchObject({ openUrl: 'ourcocon://timers', timersUrl: 'ourcocon://timers' });
-    expect(liveActivityState([pasta], T0)?.state.copy.removeMinute).toBe('−1 min');
+    expect(liveActivityState([blindBake], T0, { url })?.state.face.openUrl).toBe('ourcocon://recipes/r1/cook?step=s3');
+    expect(liveActivityState([pasta], T0, { url })?.state).toMatchObject({ face: { openUrl: 'ourcocon://timers' }, timersUrl: 'ourcocon://timers' });
     expect(liveActivityState([pasta], T0)?.state.minLeftSeconds).toBe(30);
   });
 
@@ -156,6 +145,16 @@ describe("the card's buttons, applied as when they were tapped (FR-004)", () => 
     const [t] = applyLiveAction([ended], { timerId: 'a-1', action: 'add_minute', at: T0 - 2000 });
     expect(t).toMatchObject({ state: 'running', endsAt: T0 + 60_000, recipeName: 'Leek & bacon quiche' });
     expect(t?.stoppedAt).toBeUndefined();
+  });
+
+  it('"Add 1 more minute" on a timer that had ended by the tap runs it again for a minute', () => {
+    const [t] = applyLiveAction([running('a-1', 'Blind bake', 0)], { timerId: 'a-1', action: 'add_minute', at: T0 + 5000 });
+    expect(t).toMatchObject({ state: 'running', endsAt: T0 + 65_000, totalSeconds: 60 });
+  });
+
+  it('Stop and Dismiss take the timer away', () => {
+    expect(applyLiveAction([blindBake, pasta], { timerId: 'a-1', action: 'stop', at: T0 })).toEqual([pasta]);
+    expect(applyLiveAction([done('a-1', 'Blind bake', 1000), pasta], { timerId: 'a-1', action: 'dismiss', at: T0 })).toEqual([pasta]);
   });
 
   it('leaves other timers alone, and a gone timer is nothing', () => {
@@ -207,12 +206,12 @@ describe('the Live Activity on the phone (FR-001)', () => {
     const { native, tracker, live } = setup();
     live.sync([blindBake]);
     await flushAll();
-    expect(native.start).toHaveBeenCalledWith(USER, expect.objectContaining({ id: 'a-1', label: 'Blind bake' }), T0 + 252_000);
+    expect(native.start).toHaveBeenCalledWith(USER, expect.objectContaining({ face: expect.objectContaining({ id: 'a-1', label: 'Blind bake' }) }), T0 + 252_000);
     expect(tracker.track).toHaveBeenCalledWith('timer_live_activity_started', { timer_count: 1 });
 
     live.sync([blindBake, pasta]);
     await flushAll();
-    expect(native.update).toHaveBeenCalledWith(USER, expect.objectContaining({ othersCount: 1 }), T0 + 252_000);
+    expect(native.update).toHaveBeenCalledWith(USER, expect.objectContaining({ next: expect.objectContaining({ id: 'a-2' }) }), T0 + 252_000);
     expect(native.start).toHaveBeenCalledTimes(1);
 
     // The same card again: nothing sent.
@@ -300,10 +299,10 @@ describe('the Live Activity on the phone (FR-001)', () => {
     const { native, live } = setup();
     live.sync([done('a-1', 'Blind bake', 0), pasta]);
     await flushAll();
-    expect(native.start).toHaveBeenCalledWith(USER, expect.objectContaining({ id: 'a-1', state: 'done' }), null);
+    expect(native.start).toHaveBeenCalledWith(USER, expect.objectContaining({ face: expect.objectContaining({ id: 'a-1', state: 'done' }) }), null);
     await vi.advanceTimersByTimeAsync(DONE_SHOWN_MS);
     await flushAll();
-    expect(native.update).toHaveBeenLastCalledWith(USER, expect.objectContaining({ id: 'a-2', state: 'running' }), T0 + 700_000);
+    expect(native.update).toHaveBeenLastCalledWith(USER, expect.objectContaining({ face: expect.objectContaining({ id: 'a-2', state: 'running' }) }), T0 + 700_000);
   });
 
   it("reads only this person's taps, and nothing that isn't one", async () => {

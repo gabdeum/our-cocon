@@ -8,156 +8,165 @@ import type { Timer } from './timers';
 
 /**
  * Spec 048: one Live Activity for all of this phone's timers, on the Lock Screen and in the Dynamic
- * Island. The app decides everything here, words included; the phone draws the countdown and the
- * progress bar from `endsAt` by itself, so nothing is sent every second (FR-002). The phone's own
- * calls are behind `LiveTimerNative` (live-timer-native.ios.ts, none on the web).
+ * Island. On the Lock Screen it is the Timers screen's card (TimerCard README › Timers screen). The
+ * app decides everything here, words included; the phone draws the countdown and the progress bar
+ * from `endsAt` by itself, so nothing is sent every second (FR-002). The phone's own calls are behind
+ * `LiveTimerNative` (live-timer-native.ios.ts, none on the web).
  */
 
 /** A done timer stays on the card this long, then the next one shows (US3). */
 export const DONE_SHOWN_MS = 10 * 60 * 1000;
 
-export interface LiveRow {
+/** One timer as the card shows it, every word ready. Swift only places them (targets/timer-activity). */
+export interface LiveFace {
+  id: string;
+  state: Timer['state'];
   label: string;
+  /** "Leek & bacon quiche · Running", and the same once paused or done (the phone switches by itself). */
+  subRunning: string;
+  subPaused: string;
+  subDone: string;
+  /** The Dynamic Island: "Leek & bacon quiche · +1 more", or the step. */
+  islandSub: string;
+  doneTitle: string;
   /** Running: the phone counts down to it. */
   endsAt?: number;
   /** Paused: the time it stays at. */
   remainingSeconds?: number;
-}
-
-/** Every word on the card, ready to show. Swift only places them (targets/timer-activity). */
-export interface LiveCopy {
-  title: string;
-  /** "2 running" now; after "Pause" or "Resume" on the card; once the primary timer ends. */
+  totalSeconds: number;
+  /** A tap on the card: the step in cooking mode for a step timer, otherwise Timers. */
+  openUrl: string;
+  /** The "2 running" pill now; after "Pause", "Resume" or "Add 1 more minute" on the card; once this one ends. */
   count: string;
   countToggled: string;
   countDone: string;
-  /** "Leek & bacon quiche · step 3", shown under the name ("Paused" while paused). */
-  sub: string;
-  pausedSub: string;
-  /** "Leek & bacon quiche · +1 more" in the expanded island. */
-  islandSub: string;
-  /** " · +1 more" after the next timer's time, with more than 2 timers. */
-  more: string;
-  doneTitle: string;
-  left: string;
-  removeMinute: string;
-  addMinute: string;
-  pause: string;
-  resume: string;
+  /** Only while its alerts are on (047): the card's buttons move them. */
+  alert?: LiveAlert;
 }
 
-/** FR-002, plus the primary timer's id (for the buttons), its words, and its alerts (047). Same shape in Swift. */
+/** The buttons' words, from the Timers screen (and the island's). */
+export interface LiveCopy {
+  minus: string;
+  plus: string;
+  minusA11y: string;
+  plusA11y: string;
+  pause: string;
+  resume: string;
+  addMore: string;
+  stop: string;
+  dismiss: string;
+  removeMinute: string;
+  addMinute: string;
+  pausedSub: string;
+}
+
+/** What the phone gets. Same shape in Swift (TimerActivityAttributes.swift). */
 export interface LiveActivityState {
-  id: string;
-  state: Timer['state'];
-  label: string;
-  endsAt?: number;
-  remainingSeconds?: number;
-  totalSeconds: number;
-  /** The next timer only: the card shows one more line. */
-  others: LiveRow[];
-  othersCount: number;
+  face: LiveFace;
+  /** What the card shows once this one is stopped or dismissed on the Lock Screen; none: the card ends. */
+  next?: LiveFace;
   copy: LiveCopy;
-  /** "−1 min" never takes the time left below this (lib/timers.ts). */
+  /** "−1" never takes the time left below this (lib/timers.ts). */
   minLeftSeconds: number;
-  /** A tap on the card: the step in cooking mode for a step timer, otherwise Timers. */
-  openUrl: string;
-  /** A tap on "2 running": Timers. */
+  /** A tap on the "2 running" pill: Timers. */
   timersUrl: string;
-  /** Only while the primary timer's alerts are on (047): the card's "+1 min" or "Resume" moves them. */
-  alert?: LiveAlert;
 }
 
 export interface LiveView {
   state: LiveActivityState;
-  /** When the primary ends: the phone then shows the done card by itself (no update needed). */
+  /** When the timer shown ends: the phone then shows the done card by itself (no update needed). */
   staleAt: number | null;
   /** When the card next changes with no timer touched (a done timer's 10 minutes). */
   changeAt: number | null;
   timerCount: number;
 }
 
-const copy = strings.liveTimer;
+const live = strings.liveTimer;
+const screen = strings.timersScreen;
 
-const header = (running: number, paused: number) => (running ? copy.running(running) : paused ? copy.paused(paused) : '');
+const header = (running: number, paused: number) => (running ? live.running(running) : paused ? live.paused(paused) : '');
 
 export interface LiveStateOptions {
-  /** The primary timer's alerts, while 047's are on. */
+  /** A timer's alerts, while 047's are on. */
   alertsFor?: (t: Timer) => LiveAlert | undefined;
   /** A path in the app as a link the phone opens (the app's own scheme). */
   url?: (path: string) => string;
 }
 
-/**
- * What the card shows, or null for no card (FR-001: nothing running or done). A timer that ended in
- * the last 10 minutes comes first (US3), the latest one; otherwise the most urgent (spec 010 FR-004).
- */
-export function liveActivityState(timers: readonly Timer[], now: number, { alertsFor, url = (p) => p }: LiveStateOptions = {}): LiveView | null {
-  const shownDone = (t: Timer) => t.state === 'done' && now - (t.stoppedAt ?? now) < DONE_SHOWN_MS;
-  const recent = timers.filter(shownDone).sort((a, b) => (b.stoppedAt ?? 0) - (a.stoppedAt ?? 0));
-  const primary = recent[0] ?? T.mostUrgent(timers, now);
+/** A timer that ended in the last 10 minutes comes first (US3), the latest one; otherwise the most urgent (spec 010 FR-004). */
+function shownTimer(timers: readonly Timer[], now: number): Timer | null {
+  const recent = timers.filter((t) => t.state === 'done' && now - (t.stoppedAt ?? now) < DONE_SHOWN_MS);
+  return recent.sort((a, b) => (b.stoppedAt ?? 0) - (a.stoppedAt ?? 0))[0] ?? T.mostUrgent(timers, now);
+}
+
+function faceOf(timers: readonly Timer[], t: Timer, { alertsFor, url = (p) => p }: LiveStateOptions): LiveFace {
+  const others = timers.filter((o) => o.state !== 'done' && o.id !== t.id);
+  const running = others.filter((o) => o.state === 'running').length;
+  const paused = others.length - running;
+  const count = t.state === 'running' ? header(running + 1, paused) : t.state === 'paused' ? header(running, paused + 1) : header(running, paused);
+  // Pause, Resume, or "Add 1 more minute" on a done one (it runs again).
+  const countToggled = t.state === 'running' ? header(running, paused + 1) : header(running + 1, paused);
+  const recipe = t.recipeName ?? screen.noRecipe;
+  const step = alertContent(t).body;
+  const face: LiveFace = {
+    id: t.id,
+    state: t.state,
+    label: t.label,
+    subRunning: screen.sub(recipe, screen.running),
+    subPaused: screen.sub(recipe, screen.paused),
+    subDone: screen.sub(recipe, screen.done),
+    islandSub: others.length ? live.more(t.recipeName ?? step, others.length) : step,
+    doneTitle: strings.notifications.timerDone.title(t.label),
+    ...(t.state === 'running' ? { endsAt: t.endsAt } : {}),
+    ...(t.state === 'paused' ? { remainingSeconds: t.remainingSeconds } : {}),
+    totalSeconds: t.totalSeconds,
+    openUrl: url(t.recipeId && t.stepId ? cookStepPath(t.recipeId, t.stepId) : '/timers'),
+    count,
+    countToggled,
+    countDone: header(running, paused),
+  };
+  const alert = alertsFor?.(t);
+  if (alert) face.alert = alert;
+  return face;
+}
+
+/** What the card shows, or null for no card (FR-001: nothing running or recently done). */
+export function liveActivityState(timers: readonly Timer[], now: number, options: LiveStateOptions = {}): LiveView | null {
+  const primary = shownTimer(timers, now);
   if (!primary) return null;
-
-  const counting = timers.filter((t) => t.state !== 'done' && t.id !== primary.id);
-  const order = (t: Timer) => (t.state === 'running' ? 0 : 1) * 1e9 + T.remaining(t, now);
-  const others = [...counting].sort((a, b) => order(a) - order(b));
-  const running = counting.filter((t) => t.state === 'running').length;
-  const paused = counting.length - running;
-
-  const count =
-    primary.state === 'running' ? header(running + 1, paused) : primary.state === 'paused' ? header(running, paused + 1) : header(running, paused);
-  const countToggled =
-    primary.state === 'running' ? header(running, paused + 1) : primary.state === 'paused' ? header(running + 1, paused) : count;
-  const sub = alertContent(primary).body;
-  const recipe = primary.recipeName ?? sub;
-
+  const rest = timers.filter((t) => t.id !== primary.id);
+  const after = shownTimer(rest, now);
   const state: LiveActivityState = {
-    id: primary.id,
-    state: primary.state,
-    label: primary.label,
-    ...(primary.state === 'running' ? { endsAt: primary.endsAt } : {}),
-    ...(primary.state === 'paused' ? { remainingSeconds: primary.remainingSeconds } : {}),
-    totalSeconds: primary.totalSeconds,
-    others: others.slice(0, 1).map(row),
-    othersCount: others.length,
+    face: faceOf(timers, primary, options),
+    ...(after ? { next: faceOf(rest, after, options) } : {}),
     copy: {
-      title: copy.title,
-      count,
-      countToggled,
-      countDone: header(running, paused),
-      sub,
-      pausedSub: copy.pausedSub,
-      islandSub: others.length ? copy.more(recipe, others.length) : sub,
-      more: others.length > 1 ? copy.more('', others.length - 1) : '',
-      doneTitle: strings.notifications.timerDone.title(primary.label),
-      left: copy.left,
-      removeMinute: copy.removeMinute,
-      addMinute: copy.addMinute,
-      pause: copy.pause,
-      resume: copy.resume,
+      minus: screen.minus,
+      plus: screen.plus,
+      minusA11y: screen.minusA11y,
+      plusA11y: screen.plusA11y,
+      pause: screen.pause,
+      resume: screen.resume,
+      addMore: screen.addMinute,
+      stop: screen.stop,
+      dismiss: screen.dismiss,
+      removeMinute: live.removeMinute,
+      addMinute: live.addMinute,
+      pausedSub: live.pausedSub,
     },
     minLeftSeconds: T.MIN_REDUCED_SECONDS,
-    openUrl: url(primary.recipeId && primary.stepId ? cookStepPath(primary.recipeId, primary.stepId) : '/timers'),
-    timersUrl: url('/timers'),
+    timersUrl: (options.url ?? ((p) => p))('/timers'),
   };
-  const alert = primary.state !== 'done' ? alertsFor?.(primary) : undefined;
-  if (alert) state.alert = alert;
-
-  const ends = recent.map((t) => (t.stoppedAt ?? now) + DONE_SHOWN_MS);
+  const ends = timers.filter((t) => t.state === 'done' && now - (t.stoppedAt ?? now) < DONE_SHOWN_MS).map((t) => (t.stoppedAt ?? now) + DONE_SHOWN_MS);
   return {
     state,
     staleAt: primary.state === 'running' ? (primary.endsAt ?? null) : null,
     changeAt: ends.length ? Math.min(...ends) : null,
-    timerCount: others.length + 1,
+    timerCount: timers.filter((t) => t.state !== 'done').length + (primary.state === 'done' ? 1 : 0),
   };
 }
 
-function row(t: Timer): LiveRow {
-  return t.state === 'running' ? { label: t.label, endsAt: t.endsAt } : { label: t.label, remainingSeconds: t.remainingSeconds ?? 0 };
-}
-
 /** The card's buttons (FR-004), as the phone recorded them. */
-export const LiveTimerAction = z.enum(['add_minute', 'remove_minute', 'pause', 'resume']);
+export const LiveTimerAction = z.enum(['add_minute', 'remove_minute', 'pause', 'resume', 'stop', 'dismiss']);
 export type LiveTimerAction = z.infer<typeof LiveTimerAction>;
 
 export const LiveActionRecord = z.object({
@@ -172,7 +181,8 @@ export type LiveActionRecord = z.infer<typeof LiveActionRecord>;
 
 /**
  * A button tapped on the card, applied as at the moment it was tapped: the app may only run minutes
- * later. A timer that has since been marked done but was still counting then counts again first.
+ * later. A timer marked done since, but still counting then, counts again first; one that had reached
+ * zero by then is done ("Add 1 more minute" runs it again for a minute).
  */
 export function applyLiveAction(timers: readonly Timer[], { timerId, action, at }: Pick<LiveActionRecord, 'timerId' | 'action' | 'at'>): Timer[] {
   const rewound = timers.map((t): Timer => {
@@ -180,10 +190,12 @@ export function applyLiveAction(timers: readonly Timer[], { timerId, action, at 
     const { stoppedAt, ...rest } = t;
     return { ...rest, state: 'running', endsAt: stoppedAt };
   });
-  if (action === 'add_minute') return T.add(rewound, timerId, T.MINUTE, at);
-  if (action === 'remove_minute') return T.add(rewound, timerId, -T.MINUTE, at);
-  if (action === 'pause') return T.pause(rewound, timerId, at);
-  return T.resume(rewound, timerId, at);
+  const then = T.settle(rewound, at).timers;
+  if (action === 'add_minute') return T.add(then, timerId, T.MINUTE, at);
+  if (action === 'remove_minute') return T.add(then, timerId, -T.MINUTE, at);
+  if (action === 'pause') return T.pause(then, timerId, at);
+  if (action === 'resume') return T.resume(then, timerId, at);
+  return T.stop(then, timerId);
 }
 
 /** The phone's Live Activity, so tests can fake it. Every call is best effort and never throws past here. */

@@ -1376,22 +1376,18 @@ export const strings = {
       stop: 'Stop',
     },
   },
-  // Spec 048: the Live Activity on the Lock Screen and in the Dynamic Island (OC-NotifLockTimer,
-  // OC-NotifIsland, OC-NotifLockDone). The phone draws the time itself; every word comes from here.
+  // Spec 048: the Live Activity. On the Lock Screen it's the Timers screen's card (OC-Timers, its
+  // words from timersScreen); these are its "2 running" pill and the Dynamic Island (OC-NotifIsland).
+  // The phone draws the time itself; every word comes from here.
   liveTimer: {
-    title: 'Timers',
     running: (count: number) => `${count} running`,
-    // Not drawn: the header when every timer is paused.
+    // Not drawn: the pill when every timer is paused.
     paused: (count: number) => `${count} paused`,
     pausedSub: 'Paused',
-    // "Pasta water 11:40 · +1 more" on the Lock Screen, "Leek & bacon quiche · +1 more" in the island.
+    // "Leek & bacon quiche · +1 more" in the island.
     more: (text: string, others: number) => `${text} · +${others} more`,
     removeMinute: '−1 min',
     addMinute: '+1 min',
-    pause: 'Pause',
-    resume: 'Resume',
-    // After the time in "Pasta water   7:28 left".
-    left: 'left',
   },
   toast: {
     undo: 'Undo',
