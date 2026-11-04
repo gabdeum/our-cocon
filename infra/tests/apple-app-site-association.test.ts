@@ -25,3 +25,10 @@ it("links the sign-in email to the app's /auth/confirm with its one-time token (
   expect(email).toContain('href="{{ if eq .RedirectTo .SiteURL }}{{ .SiteURL }}/auth/confirm?next=%2F&token_hash={{ .TokenHash }}&type=email');
   expect(email).not.toContain('{{ .ConfirmationURL }}');
 });
+
+it("also shows the link as text in local development, where an ourcocon:// href is blanked (spec 046)", () => {
+  const email = readFileSync(join(root, 'apps/app/public/email/sign-in.html'), 'utf8');
+  expect(email).toMatch(
+    /\{\{ if and \(eq \.SiteURL "http:\/\/localhost:8081"\) \(ne \.RedirectTo \.SiteURL\) \}\}<p[^>]*>[^{]*\{\{ \.RedirectTo \}\}&token_hash=\{\{ \.TokenHash \}\}&type=email<\/p>\{\{ end \}\}/,
+  );
+});

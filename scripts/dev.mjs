@@ -61,7 +61,7 @@ if (phone) {
   // dotenv keeps variables that are already set, so these win over .env.local.
   env = { ...process.env, REACT_NATIVE_PACKAGER_HOSTNAME: host, EXPO_PUBLIC_SUPABASE_URL: `http://${host}:54321` };
   console.log(`In the Our Cocon development build, open http://${host}:8081 (or scan the QR code below).`);
-  console.log(`Sign-in emails: http://${host}:54324. In the link, replace 127.0.0.1 with ${host}.`);
+  console.log(`Sign-in emails: http://${host}:54324. Paste the link shown as text under the button into Safari on the iPhone.`);
 }
 
 const child = spawn(
