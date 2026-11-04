@@ -61,7 +61,7 @@ describe('Event detail', () => {
       'Open in Maps',
       'Gabriel takes James',
       '1 hour before',
-      'Shows on Home for Gabriel',
+      'Reminds Gabriel · 08:00',
       'Bring',
       'Diaper bag',
       'Bottle',

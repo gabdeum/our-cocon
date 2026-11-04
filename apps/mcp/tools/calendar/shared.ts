@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { CalendarError, calendarWordsEn, dateLabel, expand, rangeLabel, timeLabel, todayIn, viewFor, type SlotTimes } from '@cocon/calendar';
-import { loadCalendarSettings, loadEvents, type StoredEvent } from '@cocon/data';
+import { loadCalendarSettings, loadEvents, loadMemberCalendarSettings, type StoredEvent } from '@cocon/data';
 import { normaliseName, type EventMember, type MemberColor } from '@cocon/schemas';
-import { CalendarDate } from '@cocon/schemas/calendar';
+import { CalendarDate, type Reminder } from '@cocon/schemas/calendar';
 import { ToolError, type ToolContext } from '../../src/tools.js';
 import { addedBy } from '../recipes/shared.js';
 
@@ -24,15 +24,28 @@ export interface Calendar {
   slotTimes: SlotTimes;
   timeZone: string;
   today: string;
+  /** The caller's default reminder (spec 046 FR-003): new events start on it, as in the app (spec 049). */
+  defaultReminder: Reminder;
 }
 
 export async function loadCalendar(ctx: Pick<ToolContext, 'db' | 'userId'>): Promise<Calendar> {
-  const [members, settings] = await Promise.all([ctx.db.from('members').select('id, user_id, display_name, color').order('joined_at'), loadCalendarSettings(ctx.db)]);
+  const [members, settings, mine] = await Promise.all([
+    ctx.db.from('members').select('id, user_id, display_name, color').order('joined_at'),
+    loadCalendarSettings(ctx.db),
+    loadMemberCalendarSettings(ctx.db),
+  ]);
   if (members.error) throw members.error;
   const list = members.data.map((m) => ({ id: m.id, user_id: m.user_id, name: m.display_name, color: m.color }));
   // Until the first device sets the home time zone (claim_home_time_zone), UTC.
   const timeZone = settings.homeTimeZone ?? 'UTC';
-  return { members: list, me: list.find((m) => m.user_id === ctx.userId)?.id ?? '', slotTimes: settings.slotTimes, timeZone, today: todayIn(timeZone) };
+  return {
+    members: list,
+    me: list.find((m) => m.user_id === ctx.userId)?.id ?? '',
+    slotTimes: settings.slotTimes,
+    timeZone,
+    today: todayIn(timeZone),
+    defaultReminder: mine.default_reminder,
+  };
 }
 
 /** An event's page in the app, on one of its dates. */
@@ -110,6 +123,7 @@ export function shownOccurrence(o: StoredEvent & { occurrence_date?: string }, c
     ...(o.notes ? { notes: o.notes } : {}),
     ...(o.category ? { type: o.category } : {}),
     ...(o.recurrence ? { repeats: repeatWords(o.recurrence) } : {}),
+    ...(o.reminder && o.reminder !== 'none' ? { reminder: o.reminder } : {}),
     ...(checklist.length ? { checklist } : {}),
     ...(o.visibility === 'private' ? { private: true } : {}),
     ...(hiddenFrom.length ? { kept_secret_from: hiddenFrom } : {}),

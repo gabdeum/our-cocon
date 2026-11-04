@@ -37,7 +37,11 @@ services:
     image: ${COCON_IMAGE_PREFIX}-notifier:${COCON_SHA:?}
     container_name: ${COCON_ENV:?}-notifier
     restart: unless-stopped
-    env_file: ${COCON_RUN}/${COCON_ENV}/notifier.env
+    # app.env for the PostHog key (spec 049: event_reminder_sent); notifier.env comes last, so its
+    # SUPABASE_URL (the stack's internal address) is the one used.
+    env_file:
+      - ${COCON_RUN}/${COCON_ENV}/app.env
+      - ${COCON_RUN}/${COCON_ENV}/notifier.env
     environment:
       COCON_ENV: ${COCON_ENV}
     networks: [edge]

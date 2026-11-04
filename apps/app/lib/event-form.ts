@@ -6,6 +6,7 @@ import {
   findConflict,
   parts,
   rangeLabel,
+  reminderRecipients,
   slotsToRange,
   sortSlots,
   toMinutes,
@@ -97,8 +98,11 @@ const plusHour = (time: string) => {
   return `${String(Math.floor(end / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`;
 };
 
-/** A new event: today (or the prefilled day), All day unless a slot or hour was given, for everyone. */
-export function newDraft(prefill: Prefill, today: string): EventDraft {
+/**
+ * A new event: today (or the prefilled day), All day unless a slot or hour was given, for everyone,
+ * with the member's default reminder (spec 046 FR-003, 049 FR-001).
+ */
+export function newDraft(prefill: Prefill, today: string, reminder: Reminder = 'none'): EventDraft {
   const time: DraftTime = prefill.slot ? { kind: 'slot', slots: [prefill.slot] } : prefill.time ? { kind: 'custom', start: prefill.time, end: plusHour(prefill.time) } : { kind: 'all_day' };
   return {
     title: '',
@@ -112,7 +116,7 @@ export function newDraft(prefill: Prefill, today: string): EventDraft {
     repeat: 'never',
     weekdays: [],
     ends: { type: 'never' },
-    reminder: 'none',
+    reminder,
     notes: '',
     checklist: [],
     visibility: 'family',
@@ -395,6 +399,19 @@ export function scopeBody(event: StoredEvent, date: string): string {
   const day = calendarWordsEn.weekdays[weekday(date)] ?? '';
   const every = !r ? '' : r.freq === 'weekly' ? a.every.weekly(day) : r.freq === 'biweekly' ? a.every.biweekly(day) : a.every[r.freq]();
   return a.scopeBody(dateLabel(date, 'long'), every);
+}
+
+/**
+ * Spec 049 FR-001: the Reminder hint, "Reminds Gabriel and Eva on their phones.", or "Reminds you
+ * on your phone." when it's only you (a private event). Null without a reminder or anyone to remind.
+ */
+export function reminderHint(draft: EventDraft, members: readonly Member[], creatorId: string, myMemberId: string): string | null {
+  if (draft.reminder === 'none') return null;
+  const event = { members: draft.who, responsible_member_id: draft.responsible, visibility: draft.visibility, creator_member_id: creatorId, surprise: { hidden_from: draft.hiddenFrom, cover_title: '' } };
+  const ids = reminderRecipients(event, members).flatMap((r) => (r.via === 'event' ? [r.memberId] : []));
+  if (ids.length === 0) return null;
+  if (ids.length === 1 && ids[0] === myMemberId) return a.reminderHintYou;
+  return a.reminderHint(members.filter((m) => ids.includes(m.id)).map((m) => m.display_name));
 }
 
 /** An edit opens More options when anything in it is set (FR-008: the same sheet, filled in). */

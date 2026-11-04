@@ -17,7 +17,7 @@ Toggle switches Today / This week (not remembered). Rows → OC-CalEvent. Strip 
 | State | Copy and behaviour |
 | --- | --- |
 | Birthday today or tomorrow | "{title} is today", "{title} is tomorrow"; later days "{title} is on Tuesday". In Today, one banner per birthday from today to 3 days ahead (This week lists it as a row); a birthday shows in the banner, not as a row. |
-| Reminder due today | At the top of Today, with a 16 px olive bell before the title: the morning-of and 1-hour-before reminders of today's events, and the 1-day-before reminders of tomorrow's ("Tomorrow · 10:00"). Only for the people the event page names under "Shows on Home for". Screen readers: "Reminder, Pediatrician, Tomorrow · 10:00". |
+| Reminder due today | At the top of Today, with a 16 px olive bell before the title: the morning-of, 1-hour-before and 15-minutes-before reminders of today's events, and the 1-day-before reminders of tomorrow's ("Tomorrow · 10:00"). Only for the people the event page names under "Reminds". Screen readers: "Reminder, Pediatrician, Tomorrow · 10:00". |
 | Someone else's private event | "Busy" in their color; tapping opens OC-CalBusy. A surprise shows its cover to the person it's hidden from. |
 | Strip day | Screen readers: "Today, October 25, 2 people busy", "October 26, nothing planned"; the picked tile is announced as selected (`aria-pressed`). |
 | Offline | "+" and "+ Add event" are off. |

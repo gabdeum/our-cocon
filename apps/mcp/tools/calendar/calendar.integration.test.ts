@@ -8,7 +8,7 @@ import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { loadDeletedEvents, loadEvent, saveEvent, setAiPermission, type Db } from '@cocon/data';
+import { loadDeletedEvents, loadEvent, saveEvent, saveMemberCalendarSettings, setAiPermission, type Db } from '@cocon/data';
 import { ActivityEntry, createTracker } from '@cocon/schemas';
 import { loadConfig } from '../../src/config.js';
 import { createHttpServer } from '../../src/server.js';
@@ -194,7 +194,7 @@ describe.skipIf(!local)('calendar tools and permission against local Supabase', 
   it('changes one date, or every date from then on', async () => {
     expect((await call('update_event', { id: music, patch: { slots: ['afternoon'] } })).error).toMatch(/^This event repeats\. Ask the member whether to change only that date/);
     expect((await call('update_event', { id: music, date: '2026-11-14', scope: 'this', patch: { repeat: null } })).error).toBe(
-      'How it repeats and who sees it can’t change for one date. Use scope "future".',
+      'How it repeats, its reminder and who sees it can’t change for one date. Use scope "future".',
     );
 
     const one = await call('update_event', { id: music, date: '2026-11-14', scope: 'this', patch: { slots: ['afternoon'] } });
@@ -270,6 +270,22 @@ describe.skipIf(!local)('calendar tools and permission against local Supabase', 
     expect(error).toBeNull();
     expect(await loadEvent(gabriel, data?.id as string)).toBeNull();
     expect((await entries(gabriel)).find((e) => e.key === entry?.key)).toMatchObject({ event_name: 'Pediatrician', undo_action: 'undo' });
+  });
+
+  it('spec 049: an assistant\'s event reminds like any other, from the member\'s default', async () => {
+    const set = await saveMemberCalendarSettings(gabriel, familyId, { default_reminder: 'hour_before' });
+    expect(set.error).toBeNull();
+    const plain = await call('create_event', { title: 'Pediatrician', date: '2026-11-12', start_time: '10:00', end_time: '10:30', members: ['Gabriel'] });
+    expect((await loadEvent(gabriel, plain.data?.id as string))?.reminder).toBe('hour_before');
+    const chosen = await call('create_event', { title: 'Eva’s birthday', date: '2026-11-10', all_day: true, members: ['everyone'], reminder: 'day_before' });
+    expect((await loadEvent(gabriel, chosen.data?.id as string))?.reminder).toBe('day_before');
+    const day = await call('get_day', { date: '2026-11-10' });
+    expect(JSON.stringify(day.data)).toContain('"reminder":"day_before"');
+    const changed = await call('update_event', { id: plain.data?.id, patch: { reminder: 'minutes_15' } });
+    expect(changed.error).toBeNull();
+    expect((await loadEvent(gabriel, plain.data?.id as string))?.reminder).toBe('minutes_15');
+    const oneDate = await call('update_event', { id: music, date: '2026-11-21', scope: 'this', patch: { reminder: 'none' } });
+    expect(oneDate.error).toContain('its reminder');
   });
 
   it('says what to fix', async () => {

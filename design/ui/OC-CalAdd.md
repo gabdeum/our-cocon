@@ -15,7 +15,7 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
    - "Where": input, placeholder "Add a place".
    - "Who takes James?" (only when a member without the app is in Who) + hint "James was added by the family, so someone with the app handles this." — "Not decided yet" · "Gabriel" · "Eva".
    - "Repeat": Never · Daily · Weekly · Every 2 weeks · Monthly · Yearly. Weekly shows "On" weekday letters (S M T W T F S) and "Ends": Never · On a date · After a number of times.
-   - "Reminder": None · Morning of · 1 hour before · 1 day before + hint "Shows on Home for now. Phone alerts come later."
+   - "Reminder": None · 15 minutes before · 1 hour before · Morning of · 1 day before (pre-filled with the member's default, Menu › Notifications) + hint "Reminds {names} on their phones." ("Reminds you on your phone." when it's only you, as for a private event; hidden for None). The names follow spec 049 FR-003: whoever the phones will remind.
    - "Who can see it?": Family · Private · Surprise (+ hints, see OC-CalSurprise.md).
    - "Notes": textarea, placeholder "Anything to remember"; checklist rows + "+ Add to checklist".
 9. Ink "Save" 58 (disabled style until there's a title).

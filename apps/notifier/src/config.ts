@@ -12,6 +12,9 @@ export const NotifierConfig = z.object({
   /** Expo's access token, once "Enhanced push security" is on (docs/operations.md › Secrets). */
   expoAccessToken: z.string().optional(),
   intervalMs: z.coerce.number().int().positive(),
+  /** Spec 049: `event_reminder_sent` goes to this environment's PostHog project; nothing without a key. */
+  posthogKey: z.string().optional(),
+  posthogHost: z.url().optional(),
 });
 export type NotifierConfig = z.infer<typeof NotifierConfig>;
 
@@ -24,5 +27,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): NotifierConfig
     serviceRoleKey: env.SERVICE_ROLE_KEY,
     expoAccessToken: env.EXPO_ACCESS_TOKEN || undefined,
     intervalMs: env.NOTIFIER_INTERVAL_MS ?? 60_000,
+    posthogKey: env.POSTHOG_KEY || undefined,
+    posthogHost: env.POSTHOG_HOST || undefined,
   });
 }

@@ -94,7 +94,7 @@ export const updateEvent = defineTool({
   needs: 'events',
   description: [
     'Change an event: send only what changes in patch (null clears location, notes, type, repeat or responsible).',
-    'For a repeating event, send the date being changed and scope: "this" for that date only, "future" for that date and every one after. Ask the member which if they didn’t say. How it repeats and who sees it only change with "future".',
+    'For a repeating event, send the date being changed and scope: "this" for that date only, "future" for that date and every one after. Ask the member which if they didn’t say. How it repeats, its reminder and who sees it only change with "future".',
     'Only the person who added a private or surprise event can change it.',
   ].join('\n'),
   input: z.strictObject({
@@ -111,8 +111,8 @@ export const updateEvent = defineTool({
     const repeats = event.recurrence != null;
     if (repeats && (!args.scope || !args.date)) throw new ToolError(scopeWords);
     const scope = repeats ? (args.scope as 'this' | 'future') : 'all';
-    if (scope === 'this' && (p.repeat !== undefined || p.visibility !== undefined || p.surprise !== undefined)) {
-      throw new ToolError('How it repeats and who sees it can’t change for one date. Use scope "future".');
+    if (scope === 'this' && (p.repeat !== undefined || p.visibility !== undefined || p.surprise !== undefined || p.reminder !== undefined)) {
+      throw new ToolError('How it repeats, its reminder and who sees it can’t change for one date. Use scope "future".');
     }
     if ((p.visibility !== undefined || p.surprise !== undefined) && event.creator_member_id !== cal.me) {
       throw new ToolError('Only the person who added this event can change who sees it.');

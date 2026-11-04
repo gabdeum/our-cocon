@@ -5,11 +5,11 @@ Sources `screens/OC-CalEvent.dc.html` (interactive: checklist, Edit, Delete) and
 ## Layout
 1. Back link "Calendar".
 2. Type tag (soft) "Social"; title 30/900 "Baby music class"; member chips (40) "J James".
-3. White card of icon rows (olive icons, 56–60 tall): "Saturday, Oct 31" / "Morning · about 09:00–12:00"; "Every Saturday"; "Little Notes studio, 4 Elm St" + link "Open in Maps"; "Gabriel takes James"; "1 hour before" / "Shows on Home for Gabriel". Rows without a value are hidden.
+3. White card of icon rows (olive icons, 56–60 tall): "Saturday, Oct 31" / "Morning · about 09:00–12:00"; "Every Saturday"; "Little Notes studio, 4 Elm St" + link "Open in Maps"; "Gabriel takes James"; "1 hour before" / "Reminds Gabriel · 08:00". Rows without a value are hidden.
    - When: "Morning · about 09:00–12:00" for a time of day; a custom time shows its hours ("14:30–15:30"); "All day"; several days: "Sat, Oct 31 – Mon, Nov 2".
    - Repeat: "Every Saturday", "Every Tuesday and Thursday", "Every other Saturday", "Every day", "Every month", "Every year".
    - Responsible: "{name} takes {members without the app}", or "{name} drives" when everyone on it has the app.
-   - Reminder sub-line: the members with the app on the event (Everyone: all of them) and whoever takes the ones without it.
+   - Reminder sub-line (spec 049 FR-006): "Reminds {names} · {time}", the people the phones remind (spec 049 FR-003) and when, in the home time zone and the member's clock; "1 day before" reads "Reminds Gabriel · 18:00 the day before". No names (a private event of someone without the app): the title alone.
    - "Open in Maps" opens Apple Maps on iPhone, Google Maps on the web, searching for the place as typed.
 4. "Bring" checklist: rows (52) with 26 checkbox; ticked = olive box + strike-through; hint "Anyone in the family can tick these."
 5. "Added by Eva · 2 days ago" ("Added via Claude · 1 h ago" for AI).

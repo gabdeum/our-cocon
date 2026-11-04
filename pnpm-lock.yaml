@@ -380,6 +380,9 @@ importers:
 
   apps/notifier:
     dependencies:
+      '@cocon/calendar':
+        specifier: workspace:*
+        version: link:../../packages/calendar
       '@cocon/notify':
         specifier: workspace:*
         version: link:../../packages/notify
@@ -389,6 +392,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.118.0
         version: 2.118.0
+      posthog-node:
+        specifier: ^5.56.1
+        version: 5.56.1(rxjs@7.8.2)
       zod:
         specifier: ^4.6.7
         version: 4.6.7

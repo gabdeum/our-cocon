@@ -2,6 +2,7 @@
  * Spec 018 FR-002: removes for good the recipes deleted more than 30 days ago, with their photos.
  * Spec 020: also the grocery items cleared or removed more than a day ago (kept until then for Undo).
  * Spec 035: and the events deleted more than 30 days ago, with everything about them.
+ * Spec 049 (032-later L118): and the notification sends and reminder deliveries over 90 days old.
  * Spec 045 FR-009: and tries again to revoke the Sign in with Apple of deleted accounts, through the
  * apple-sign-in Edge Function (which holds the Apple key). Apple being down never fails the purge.
  * Runs nightly on the server (systemd timer cocon-purge@<env>, infra/bin/cocon-purge); `pnpm purge`
@@ -27,6 +28,8 @@ export interface PurgeResult {
   photos: number;
   groceries: number;
   events: number;
+  /** Rows of `notification_log` and `reminder_deliveries` over 90 days old. */
+  notifications: number;
   /** Recipes kept for the next night because their photos couldn't be removed. */
   failed: string[];
   /** Apple sign-ins revoked, and left for the next night; null when the function couldn't be reached. */
@@ -64,11 +67,12 @@ export async function purgeDeleted({ url, serviceKey, fetch: http = fetch }: Pur
   const recipes = cleared.length > 0 ? await call<number>('POST', '/rest/v1/rpc/purge_deleted_recipes', { ids: cleared }) : 0;
   const groceries = await call<number>('POST', '/rest/v1/rpc/purge_cleared_groceries', {});
   const events = await call<number>('POST', '/rest/v1/rpc/purge_deleted_events', {});
+  const notifications = await call<number>('POST', '/rest/v1/rpc/purge_notification_history', {});
   const apple = await call<{ revoked: number; left: number }>('POST', '/functions/v1/apple-sign-in', { retry: true }).catch((error: unknown) => {
     console.error(`Couldn't retry the Apple revokes: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   });
-  return { recipes, photos, groceries, events, failed, apple };
+  return { recipes, photos, groceries, events, notifications, failed, apple };
 }
 
 /** Local development: the URL and service key from the Supabase CLI (never printed). */
@@ -92,10 +96,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
   purgeDeleted(config).then(
-    ({ recipes, photos, groceries, events, failed, apple }) => {
+    ({ recipes, photos, groceries, events, notifications, failed, apple }) => {
       if (recipes > 0 || photos > 0) console.log(`Removed ${recipes} recipe(s) deleted over 30 days ago, and ${photos} photo(s).`);
       if (groceries > 0) console.log(`Removed ${groceries} grocery item(s) cleared over a day ago.`);
       if (events > 0) console.log(`Removed ${events} event(s) deleted over 30 days ago.`);
+      if (notifications > 0) console.log(`Removed ${notifications} notification record(s) over 90 days old.`);
       if (apple && apple.revoked > 0) console.log(`Revoked ${apple.revoked} Sign in with Apple of deleted accounts.`);
       if (apple && apple.left > 0) console.log(`${apple.left} Sign in with Apple revoke(s) left for the next night (Apple didn't answer).`);
       if (failed.length > 0) process.exit(1);

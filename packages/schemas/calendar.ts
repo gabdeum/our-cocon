@@ -37,12 +37,14 @@ export const EVENT_CATEGORIES = ['sport', 'school', 'work', 'health', 'social', 
 export const EventCategory = z.enum(EVENT_CATEGORIES);
 export type EventCategory = z.infer<typeof EventCategory>;
 
-/** Spec 041's Reminder choices (shown on Home for now). */
-export const Reminder = z.enum(['none', 'morning_of', 'hour_before', 'day_before']);
+/** Spec 049 FR-001: an event's Reminder choices, in the order they're offered. */
+export const Reminder = z.enum(['none', 'minutes_15', 'hour_before', 'morning_of', 'day_before']);
 export type Reminder = z.infer<typeof Reminder>;
-/** Spec 046 FR-003: the reminder Add event starts with (spec 049 adds `minutes_15` to events too). */
-export const DefaultReminder = z.enum(['none', 'minutes_15', 'hour_before', 'morning_of', 'day_before']);
-export type DefaultReminder = z.infer<typeof DefaultReminder>;
+/** A reminder that goes out (anything but None). */
+export type ReminderKind = Exclude<Reminder, 'none'>;
+/** Spec 046 FR-003: the reminder Add event starts with. */
+export const DefaultReminder = Reminder;
+export type DefaultReminder = Reminder;
 
 /** 0 = Sunday … 6 = Saturday. */
 export const Weekday = z.int().min(0).max(6);

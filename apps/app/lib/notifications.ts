@@ -1,5 +1,6 @@
 import * as Crypto from 'expo-crypto';
-import { DEFAULT_NOTIFICATION_PREFS, NotificationPrefs, PushPayload, type NotificationKind } from '@cocon/schemas';
+import { DEFAULT_NOTIFICATION_PREFS, NotificationPrefs, PushPayload, type NotificationKind, type PushDevicePrefs } from '@cocon/schemas';
+import { device24h } from './calendar-prefs';
 import type { ChoiceStorage } from './recipe-choices';
 import type { Client } from './supabase';
 
@@ -141,11 +142,12 @@ export async function registerDevice(
   storage: ChoiceStorage,
   prefs: NotificationPrefs,
   make: () => string = Crypto.randomUUID,
+  clock24h: boolean = device24h(),
 ): Promise<boolean> {
   const token = await native.pushToken();
   if (!token) return false;
   const register = async (id: string) =>
-    (await client.rpc('register_push_device', { p_device_id: id, p_platform: 'ios', p_token: token, p_prefs: prefs, p_app_version: native.appVersion })).error;
+    (await client.rpc('register_push_device', { p_device_id: id, p_platform: 'ios', p_token: token, p_prefs: devicePrefs(prefs, clock24h), p_app_version: native.appVersion })).error;
   const error = await register(await deviceId(storage, make));
   if (error?.code !== '42501') return !error;
   const fresh = make();
@@ -157,8 +159,13 @@ export async function registerDevice(
   return !(await register(fresh));
 }
 
-export async function savePushPrefs(client: Pick<Client, 'rpc'>, id: string, prefs: NotificationPrefs): Promise<void> {
-  await client.rpc('set_push_prefs', { p_device_id: id, p_prefs: prefs });
+export async function savePushPrefs(client: Pick<Client, 'rpc'>, id: string, prefs: NotificationPrefs, clock24h: boolean = device24h()): Promise<void> {
+  await client.rpc('set_push_prefs', { p_device_id: id, p_prefs: devicePrefs(prefs, clock24h) });
+}
+
+/** Spec 049 FR-004: the server writes a reminder's time the way this phone's clock does. */
+function devicePrefs(prefs: NotificationPrefs, clock24h: boolean): PushDevicePrefs {
+  return { ...prefs, clock_24h: clock24h };
 }
 
 /** Signing out stops reminders on this phone. Best effort, and never more than 3 s. */

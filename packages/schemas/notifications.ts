@@ -8,6 +8,12 @@ export const NotificationPrefs = z.strictObject({
   reminders_scope: z.enum(['mine', 'all']),
 });
 export type NotificationPrefs = z.infer<typeof NotificationPrefs>;
+/**
+ * What `push_devices.prefs` holds: the switches, plus whether the phone's clock is 24-hour (spec
+ * 049 FR-004: a reminder's time follows an "Automatic" time format). Any key may be missing.
+ */
+export const PushDevicePrefs = NotificationPrefs.extend({ clock_24h: z.boolean() }).partial();
+export type PushDevicePrefs = z.infer<typeof PushDevicePrefs>;
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   timers_live: true,
   timers_alert: true,

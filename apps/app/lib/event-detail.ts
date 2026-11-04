@@ -1,6 +1,6 @@
-import { calendarWordsEn, dateLabel, rangeLabel, timeLabel, viewFor, weekday, type CalendarEvent, type SlotTimes } from '@cocon/calendar';
+import { calendarWordsEn, dateLabel, formatTime, rangeLabel, reminderAt, reminderRecipients, timeLabel, viewFor, weekday, type CalendarEvent, type SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { memberInitials, memberKind, type EventMember } from '@cocon/schemas';
+import { memberInitials } from '@cocon/schemas';
 import type { MemberChipColor } from '@cocon/ui';
 import { strings } from '../strings/en';
 import { minutesSince } from './assistants';
@@ -10,6 +10,7 @@ import type { Member } from './session';
 const e = strings.calendar.event;
 
 export { eventOccurrence } from '@cocon/data';
+export { responsibleLine } from '@cocon/calendar';
 
 /** Whether this member sees the event itself, not "Busy" (the Busy and surprise pages are spec 043). */
 export const seesInFull = (event: StoredEvent, myMemberId: string) => !event.deleted_at && viewFor(event, myMemberId).view === 'full';
@@ -37,35 +38,29 @@ export function repeatLine(event: StoredEvent): string | null {
 }
 
 /**
- * The Responsible row: "Gabriel takes James" when members without the app are on the event,
- * "Gabriel drives" otherwise; null when nobody is responsible.
+ * The Reminder row (spec 049 FR-006): "1 hour before" over "Reminds Gabriel · 13:30", who it
+ * reaches (the same rule as the phones: `reminderRecipients`) and when, in the home time zone.
+ * Null without a reminder.
  */
-export function responsibleLine(responsible: string | null | undefined, eventMembers: readonly EventMember[], members: readonly Member[]): string | null {
-  const driver = members.find((m) => m.id === responsible);
-  if (!driver) return null;
-  const taken = members.filter((m) => memberKind(m) === 'managed' && eventMembers.includes(m.id)).map((m) => m.display_name);
-  return taken.length ? strings.calendar.day.takes(driver.display_name, taken) : e.drives(driver.display_name);
+export function reminderLines(o: StoredEvent, members: readonly Member[], slotTimes: SlotTimes, use24h = true): { title: string; sub?: string } | null {
+  if (!o.reminder || o.reminder === 'none') return null;
+  const title = strings.calendar.add.reminders[o.reminder];
+  const names = remindedNames(o, members);
+  if (!names.length) return { title };
+  const at = reminderAt(o, o.reminder, slotTimes);
+  const time = formatTime(at.time, use24h);
+  return { title, sub: e.reminds(names, at.date < o.starts_on ? e.dayBefore(time) : time) };
 }
 
-/**
- * The Reminder row: "1 hour before" over "Shows on Home for Gabriel": the members with the app on
- * the event (Everyone is all of them), and whoever takes the ones without it ("Gabriel takes
- * James"). Null without a reminder.
- */
-export function reminderLines(event: StoredEvent, members: readonly Member[]): { title: string; sub?: string } | null {
-  if (!event.reminder || event.reminder === 'none') return null;
-  const title = strings.calendar.add.reminders[event.reminder];
-  const names = members.filter((m) => remindsMember(event, m)).map((m) => m.display_name);
-  return names.length ? { title, sub: e.showsOnHome(names) } : { title };
+/** Who an event reminds because they're on it (FR-003), by name; "All family events" aside. */
+export function remindedNames(o: Pick<StoredEvent, 'members' | 'responsible_member_id' | 'visibility' | 'creator_member_id' | 'surprise'>, members: readonly Member[]): string[] {
+  const ids = reminderRecipients(o, members).flatMap((r) => (r.via === 'event' ? [r.memberId] : []));
+  return members.filter((m) => ids.includes(m.id)).map((m) => m.display_name);
 }
 
-/**
- * Whom an event's reminder shows on Home for (spec 042 FR-001, 028 FR-003): members with the app
- * on the event (Everyone is all of them), and whoever takes the ones without it.
- */
-export function remindsMember(event: Pick<StoredEvent, 'members' | 'responsible_member_id'>, member: Member): boolean {
-  if (memberKind(member) !== 'account') return false;
-  return event.members.includes('everyone') || event.members.includes(member.id) || member.id === event.responsible_member_id;
+/** Whether an event's reminder shows on Home for this member (spec 028 FR-003): the phones' rule. */
+export function remindsMember(o: Pick<StoredEvent, 'members' | 'responsible_member_id' | 'visibility' | 'creator_member_id' | 'surprise'>, member: Member, members: readonly Member[]): boolean {
+  return reminderRecipients(o, members).some((r) => r.via === 'event' && r.memberId === member.id);
 }
 
 /** "Added by Eva · 2 days ago", or "Added via Claude · 1 h ago" for an assistant's event (FR-006). */

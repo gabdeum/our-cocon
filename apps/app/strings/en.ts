@@ -1540,8 +1540,10 @@ export const strings = {
       timesHint: 'Counts this one too.',
       timesProblem: 'Use a number from 1 to 1000.',
       reminder: 'Reminder',
-      reminders: { none: 'None', morning_of: 'Morning of', hour_before: '1 hour before', day_before: '1 day before' },
-      reminderHint: 'Shows on Home for now. Phone alerts come later.',
+      reminders: { none: 'None', minutes_15: '15 minutes before', hour_before: '1 hour before', morning_of: 'Morning of', day_before: '1 day before' },
+      /** Spec 049 FR-001: who the reminder reaches. */
+      reminderHint: (names: string[]) => `Reminds ${andList(names)} on their phones.`,
+      reminderHintYou: 'Reminds you on your phone.',
       notes: 'Notes',
       notesPlaceholder: 'Anything to remember',
       addToChecklist: '+ Add to checklist',
@@ -1623,8 +1625,9 @@ export const strings = {
       openInMaps: 'Open in Maps',
       openInMapsA11y: (place: string) => `Open ${place} in Maps`,
       drives: (name: string) => `${name} drives`,
-      /** The reminder's sub-line: the members with the app on the event. */
-      showsOnHome: (names: string[]) => `Shows on Home for ${andList(names)}`,
+      /** Spec 049 FR-006: the reminder's sub-line, "Reminds Gabriel · 13:30". */
+      reminds: (names: string[], when: string) => `Reminds ${andList(names)} · ${when}`,
+      dayBefore: (time: string) => `${time} the day before`,
       bring: 'Bring',
       bringHint: 'Anyone in the family can tick these.',
       tickFailed: "Couldn't change that. Try again.",
