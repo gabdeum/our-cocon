@@ -3,7 +3,7 @@
 Source `screens/OC-SettingsFamily.dc.html` · Route `/settings/family` · Specs 003, 033, 029 · Sign-in pages: OC-Welcome.md
 
 ## Layout
-1. Back link "Menu"; title "Family" (28/900); lead "Who's in the family, and your own account."
+1. TopBar (spec 050): back "Back to Menu", title "Family" (`titleMode="always"`); then the lead "Who's in the family, and your own account."
 2. **Members**: rows — avatar in member color, name, sub-line "Has the app" or "Added by {name}", trailing "Owner" / "Can edit" / "No account". Then two dashed buttons side by side "+ Invite someone" · "+ Add without app", and hint "Add kids or anyone who won't use the app. They get a color in the calendar, and you choose who takes them to things."
 3. **My color** / "Your events show in this color for everyone. Taken colors show who has them.": 4 × 2 ColorSwatch grid (60 tall, radius 18): Honey, Rose, Sky, Mint, Lilac, Peach, Pistachio, Clay. Mine has a double ring; taken ones show the initial and can't be picked. Tapping a free one saves at once. (Moved here from OC-CalSettings, spec 033; the canvas still shows it there.)
 4. **Your account**: "Your name" row with the name and a chevron; "Sign out" (olive link row); below the card, danger link "Delete my account" → Dialog "Delete your account?" · "Your recipes and events stay with the family. You'll be signed out on every device." · danger "Delete my account" · soft "Keep it".

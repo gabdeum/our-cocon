@@ -42,6 +42,9 @@ export const iconShapes = {
   "close": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="M18 6 6 18M6 6l12 12" /></Svg>
   ),
+  "edit": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M4 20h4L19 9l-4-4L4 16Z" /><Path d="m13.5 6.5 4 4" /></Svg>
+  ),
   "filter": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="M4 6h16M7 12h10M10 18h4" /></Svg>
   ),

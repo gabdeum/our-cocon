@@ -1,6 +1,6 @@
 # Feature Specification: One top bar for every pushed screen
 
-**Feature Branch**: `050-top-bar` · **Status**: Ready · **Depends on**: 002 (and every built screen listed below)
+**Feature Branch**: `050-top-bar` · **Status**: Built · **Depends on**: 002 (and every built screen listed below)
 **Input**: Back and action buttons look different from screen to screen (text links "‹ Menu", "‹ Back", an "✕ Exit" pill, round buttons on the recipe page), and titles sit under the back button, wasting a row. One compact bar everywhere: round buttons with a soft shadow, the title centered between them, pinned to the top while scrolling.
 **Design**: `design/system/components/TopBar/README.md`; screens `OC-Recipe`, `OC-RecipeSettings`, `OC-Timers`, `OC-Cook`, `OC-CalEvent`, `OC-CalSurprise`, `OC-CalSettings`, `OC-Connect`, `OC-SettingsFamily`, `OC-SettingsRecipes`, `OC-SettingsGroceries`, `OC-SettingsNotif`.
 
@@ -42,4 +42,14 @@ None.
 ## Changelog
 - 2026-11-02: Ready. From Gabriel's review: one round, sticky, shadowed top bar across screens.
 - 2026-11-03: Gabriel's review: title centered in the bar (no row under the back button); detail screens show their name in the bar on scroll; the event detail is redesigned compactly (spec 042 changes listed in FR-006).
+- 2026-11-04: Built. `TopBar` and `TopBarHeading` (`@cocon/ui`), drawn by `PushedScreen` and `PhotoScreen` (`topBar` prop) outside the scroll so the bar stays pinned; IconButton `round`; new `ActionMenu` (the event page's ⋯); tokens `shadow-button` and `shadow-bar`; icon `edit`; `Lead` replaces `BackHeader`/`BackLink`, which are gone. Every settings page, Recipe settings, AI assistants, Timers, Recently deleted and Activity use `titleMode="always"`; the recipe page (over its photo), the event page and the surprise view use `onScroll`; cooking mode's Exit pill is a round ✕ "Exit cooking mode". Back labels read "Back to {parent}". FR-006 built: see spec 042 and OC-CalEvent.md › Changelog; IconRow and ChecklistRow gain `compact`. No new analytics events. Deviations:
+  - The round button's shadow is `shadow-button`, and the scrolled bar's `shadow-bar`: `shadow-float` already names the timer pill's stronger shadow.
+  - The who row reads "James · Gabriel takes James": the app doesn't know anyone's pronouns. The reminder row keeps 049's time ("· reminds Gabriel · 08:00").
+  - Timers' back reads "Back" (the drawing: "Back to recipe"): Timers opens from anywhere.
+  - The bar's top padding is the safe-area inset, at least 52 (the web has none). The title's maximum width follows the widest side (one button or two), so settings titles get 246 at 390 rather than 214.
+  - OC-CalSurprise's drawing only changed its bar, so the surprise view keeps its content (FR-006 says it shares the event's layout; the screen wins on layout).
+  - Cooking mode keeps its own header (progress and the options button, as drawn), with the round ✕.
+  - The compact card uses `ListGroup inset` (padding 4 16; the drawing 2 14).
+  - SC-001 is a grep test (`apps/app/components/top-bar.test.ts`) plus each screen's own test of its "Back to …" button; SC-002 is checked structurally in jsdom (the bar sits outside the scroll and stays after scrolling to the end) and by hand. L125 adds it to Playwright.
+  - The screens `OC-Cook`, `OC-Recipe` and `OC-Timers` from the review were drawn on their first versions; they were merged three-way so later changes (Cooking options, Add groceries, quick timers) stay.
 

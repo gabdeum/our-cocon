@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { BackHeader, BottomSheet, Button, ColorSwatch, Dialog, Link, ListGroup, ListRow, PushedScreen, SheetFooter, Text, TextField, type SwatchOption } from '@cocon/ui';
+import { BottomSheet, Button, ColorSwatch, Dialog, Lead, Link, ListGroup, ListRow, PushedScreen, SheetFooter, Text, TextField, type SwatchOption } from '@cocon/ui';
 import { DisplayName, MEMBER_COLORS, memberInitials, memberKind, nextMemberColor, type MemberColor, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useToast } from '../../lib/toast';
@@ -66,8 +66,8 @@ function swatches(members: readonly Member[], initials: Map<string, string>, tar
 /** Menu › Family (`/settings/family`, spec 029): the page around Members, My color and Your account. */
 export function FamilyPage({ onBack, ...props }: FamilySettingsProps & { onBack: () => void }) {
   return (
-    <PushedScreen className="gap-18">
-      <BackHeader backLabel={f.back} onBack={onBack} title={f.title} lead={f.lead} />
+    <PushedScreen className="gap-18" topBar={{ back: { label: f.back, onPress: onBack }, title: f.title }}>
+      <Lead>{f.lead}</Lead>
       <OfflineBanner screen="settings" tracker={props.tracker} />
       <FamilySettings {...props} />
     </PushedScreen>

@@ -116,7 +116,7 @@ describe('Recipe settings: cooking settings (spec 027)', () => {
 describe('Recipe settings (OC-RecipeSettings › Layout)', () => {
   it('reads like the screen: back to the recipe, title, lead, Edit recipe, Variants', () => {
     const { onBack } = setup();
-    fireEvent.click(screen.getByRole('link', { name: 'Leek & bacon quiche' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to Leek & bacon quiche' }));
     expect(onBack).toHaveBeenCalled();
     expect(screen.getByRole('heading', { name: 'Recipe settings' })).toBeTruthy();
     expect(screen.getByText('These only change this recipe. Your family defaults are in Menu › Recipes.')).toBeTruthy();

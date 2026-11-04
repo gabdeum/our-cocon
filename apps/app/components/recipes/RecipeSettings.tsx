@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { MAX_VARIANTS, resolveCooking, type FamilySettings, type RecipeOverrides, type RecipeOverridesUpdate } from '@cocon/schemas';
-import { BackHeader, Button, Card, IconTile, Link, ListGroup, ListRow, PushedScreen, SegmentedControl, SettingRow, Text } from '@cocon/ui';
+import { Button, Card, IconTile, Lead, Link, ListGroup, ListRow, PushedScreen, SegmentedControl, SettingRow, Text } from '@cocon/ui';
 import { strings } from '../../strings/en';
 import { useToast } from '../../lib/toast';
 import type { RecipeDetail } from '../../lib/recipe';
@@ -44,8 +44,7 @@ function summaryBase(recipe: RecipeDetail): SummaryBase {
 export function RecipeSettings({ recipe, failed, onRetry, onBack, onEditRecipe, onEditVariants, onDelete, defaults, onChangeSettings, readOnly }: RecipeSettingsProps) {
   if (recipe === undefined && !failed) {
     return (
-      <PushedScreen className="gap-18">
-        <BackHeader backLabel={r.back} onBack={onBack} title={r.title} />
+      <PushedScreen className="gap-18" topBar={{ back: { label: r.back, onPress: onBack }, title: r.title }}>
         <View role="progressbar" aria-label={r.loading} className="gap-12">
           {[0, 1, 2].map((n) => (
             <View key={n} className="h-control-md rounded-md bg-surface-soft" />
@@ -56,16 +55,21 @@ export function RecipeSettings({ recipe, failed, onRetry, onBack, onEditRecipe, 
   }
   if (!recipe) {
     return (
-      <PushedScreen className="gap-18">
-        <BackHeader backLabel={r.back} onBack={onBack} title={r.loadFailedTitle} lead={r.loadFailedBody} />
+      <PushedScreen className="gap-18" topBar={{ back: { label: r.back, onPress: onBack }, title: r.title }}>
+        <View className="gap-4">
+          <Text variant="titleLg" role="heading" aria-level={2}>
+            {r.loadFailedTitle}
+          </Text>
+          <Lead>{r.loadFailedBody}</Lead>
+        </View>
         {onRetry ? <Button label={r.retry} variant="soft" onPress={onRetry} /> : null}
       </PushedScreen>
     );
   }
   const base = summaryBase(recipe);
   return (
-    <PushedScreen className="gap-18">
-      <BackHeader backLabel={recipe.name} onBack={onBack} title={r.title} lead={r.lead} />
+    <PushedScreen className="gap-18" topBar={{ back: { label: r.backTo(recipe.name), onPress: onBack }, title: r.title }}>
+      <Lead>{r.lead}</Lead>
       <ListGroup>
         <ListRow title={r.editRecipe} trailing={{ kind: 'chevron' }} onPress={onEditRecipe} last />
       </ListGroup>

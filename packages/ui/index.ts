@@ -70,7 +70,9 @@ export { BottomSheet, SheetFooter, type BottomSheetProps } from './components/Bo
 export { Dialog, type DialogProps } from './components/Dialog';
 export { FormProgress, CookProgress } from './components/Progress';
 export { CookLayout, CookSection, type CookLayoutProps, type CookSectionProps } from './components/CookLayout';
-export { TabHeader, BrandHeader, BackHeader, BackLink, FormBar } from './components/ScreenHeader';
+export { TabHeader, BrandHeader, Lead, FormBar } from './components/ScreenHeader';
+export { TopBar, TopBarHeading, type TopBarConfig, type TopBarProps } from './components/TopBar';
+export { ActionMenu, type ActionMenuItem, type ActionMenuProps } from './components/ActionMenu';
 export { IngredientEditCard, type IngredientEditCardProps, type IngredientEditField } from './components/IngredientEditCard';
 export { ReorderList, dropIndex, type ReorderListProps } from './components/ReorderList';
 export { FieldPair, StepEditCard, StepNote, StepPreview, type StepEditCardProps } from './components/StepEditCard';

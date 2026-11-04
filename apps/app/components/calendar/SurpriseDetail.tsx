@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import type { SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { BackLink, Card, IconRow, ListGroup, MemberBadge, PushedScreen, Text } from '@cocon/ui';
+import { Card, IconRow, ListGroup, MemberBadge, PushedScreen, Text, TopBarHeading } from '@cocon/ui';
 import { addedLine, mapsUrl, memberBadges, whenLines } from '../../lib/event-detail';
 import type { Member } from '../../lib/session';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
@@ -37,12 +37,13 @@ export function SurpriseDetail({ occurrence: o, members, slotTimes, os, now, onB
   ].filter((r) => r !== null);
 
   return (
-    <PushedScreen className="gap-16">
-      <BackLink label={e.back} onPress={onBack} />
+    <PushedScreen className="gap-16" topBar={{ back: { label: e.back, onPress: onBack }, title: o.title, titleMode: 'onScroll' }}>
       <View className="gap-10">
-        <Text size={30} weight="900" role="heading" aria-level={1}>
-          {o.title}
-        </Text>
+        <TopBarHeading>
+          <Text size={30} weight="900" role="heading" aria-level={1}>
+            {o.title}
+          </Text>
+        </TopBarHeading>
         {badges.length ? (
           <View role="list" aria-label={a.who} className="flex-row flex-wrap gap-8">
             {badges.map((b) => (

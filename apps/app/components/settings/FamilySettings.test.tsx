@@ -36,7 +36,7 @@ it('spec 029 US3: the Family page, back to the Menu', () => {
   expect(screen.getByRole('button', { name: 'Add without app' })).toBeTruthy();
   expect(screen.getByRole('link', { name: /Your name/ }).textContent).toContain('Gabriel');
   expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy();
-  fireEvent.click(screen.getByRole('link', { name: 'Menu' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Back to Menu' }));
   expect(onBack).toHaveBeenCalledOnce();
 });
 

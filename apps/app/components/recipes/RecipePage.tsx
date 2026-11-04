@@ -11,6 +11,7 @@ import {
   PhotoPlaceholder,
   Photo,
   PhotoScreen,
+  TopBarHeading,
   PillRow,
   SegmentedControl,
   SettingRow,
@@ -72,11 +73,11 @@ export interface RecipePageProps {
 /** The recipe page (spec 008, design/ui/OC-Recipe.md) and its Steps tab (spec 009, OC-RecipeSteps.md). */
 export function RecipePage(props: RecipePageProps) {
   const { recipe, failed, onRetry, tracker, onBack } = props;
-  const back = <IconButton icon="back" label={p.back} onPress={onBack} />;
+  const back = { label: p.back, onPress: onBack };
 
   if (recipe === undefined && !failed) {
     return (
-      <PhotoScreen photo={<PhotoPlaceholder className="h-full" />} left={back}>
+      <PhotoScreen photo={<PhotoPlaceholder className="h-full" />} topBar={{ back }}>
         <View role="progressbar" aria-label={p.loading} className="gap-12">
           <View className="h-28 w-2/3 rounded-xs bg-surface-soft" />
           {[0, 1, 2].map((n) => (
@@ -88,7 +89,7 @@ export function RecipePage(props: RecipePageProps) {
   }
   if (!recipe) {
     return (
-      <PhotoScreen photo={<PhotoPlaceholder className="h-full" />} left={back}>
+      <PhotoScreen photo={<PhotoPlaceholder className="h-full" />} topBar={{ back }}>
         <OfflineBanner screen="recipe" tracker={tracker} />
         <Text variant="titleLg" role="heading" aria-level={1}>
           {p.loadFailedTitle}
@@ -195,15 +196,17 @@ function LoadedRecipe({
           <PhotoPlaceholder initial={recipe.name.charAt(0).toUpperCase()} className="h-full" />
         )
       }
-      left={<IconButton icon="back" label={p.back} onPress={onBack} />}
+      topBar={{
+        back: { label: p.back, onPress: onBack },
+        title: recipe.name,
+        titleMode: 'onScroll',
+        actions: [
+          <IconButton key="share" variant="round" icon="share" label={p.share} onPress={onShare} />,
+          <IconButton key="settings" variant="round" icon="settings" label={p.settings} onPress={onSettings} />,
+        ],
+      }}
       floating={<AppTimerPill onOpen={onOpenTimers} tracker={tracker} />}
       footer={<RecipeActions onAddToGroceries={onAddToGroceries} onStartCooking={onStartCooking} />}
-      right={
-        <>
-          <IconButton icon="share" label={p.share} onPress={onShare} />
-          <IconButton icon="settings" label={p.settings} onPress={onSettings} />
-        </>
-      }
       banner={
         <>
           <OfflineBanner screen="recipe" tracker={tracker} />
@@ -212,9 +215,11 @@ function LoadedRecipe({
       }
     >
       <View>
-        <Text variant="displayLg" role="heading" aria-level={1}>
-          {recipe.name}
-        </Text>
+        <TopBarHeading>
+          <Text variant="displayLg" role="heading" aria-level={1}>
+            {recipe.name}
+          </Text>
+        </TopBarHeading>
         {recipe.description ? (
           <Text variant="body" color="ink-muted" className="mt-6">
             {recipe.description}

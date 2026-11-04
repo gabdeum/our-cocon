@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { DefaultReminder, type NotificationPrefs, type Tracker } from '@cocon/schemas';
-import { BackHeader, BottomSheet, Button, Card, cn, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, StatusBanner, Text } from '@cocon/ui';
+import { BottomSheet, Button, Card, cn, Lead, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, StatusBanner, Text } from '@cocon/ui';
 import type { PermissionStatus } from '../../lib/notifications';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -57,8 +57,8 @@ export function NotificationSettings(p: NotificationSettingsProps) {
   };
 
   return (
-    <PushedScreen className="gap-18">
-      <BackHeader backLabel={s.back} onBack={p.onBack} title={s.title} lead={p.supported ? s.lead : undefined} />
+    <PushedScreen className="gap-18" topBar={{ back: { label: s.back, onPress: p.onBack }, title: s.title }}>
+      {p.supported ? <Lead>{s.lead}</Lead> : null}
       {!p.supported ? (
         <Text size={15} weight="600" color="ink-muted">
           {s.web}

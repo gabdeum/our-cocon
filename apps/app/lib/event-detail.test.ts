@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import { gabriel, james } from '../test/fakes';
 import { NOW, babyMusic, eva, members } from '../test/baby-music';
-import { addedLine, deleteBody, eventOccurrence, mapsUrl, memberBadges, reminderLines, repeatLine, responsibleLine, whenLines } from './event-detail';
+import { addedLine, deleteBody, eventOccurrence, mapsUrl, memberBadges, reminderLines, repeatLine, responsibleLine, whenLine, whenLines } from './event-detail';
 
 const music = babyMusic();
 const oct31 = eventOccurrence(music, '2026-10-31');
@@ -16,7 +16,7 @@ describe('the event page rows (FR-001)', () => {
     expect(whenLines(oct31, DEFAULT_SLOT_TIMES)).toEqual({ title: 'Saturday, Oct 31', sub: 'Morning · about 09:00–12:00' });
     expect(repeatLine(music)).toBe('Every Saturday');
     expect(responsibleLine(oct31.responsible_member_id, oct31.members, members)).toBe('Gabriel takes James');
-    expect(reminderLines(oct31, members, DEFAULT_SLOT_TIMES)).toEqual({ title: '1 hour before', sub: 'Reminds Gabriel · 08:00' });
+    expect(reminderLines(oct31, members, DEFAULT_SLOT_TIMES)).toEqual({ title: '1 hour before', sub: 'reminds Gabriel · 08:00' });
     expect(memberBadges(oct31, members)).toEqual([{ key: james.id, name: 'James', initial: 'J', color: 'mint' }]);
   });
 
@@ -24,6 +24,14 @@ describe('the event page rows (FR-001)', () => {
     expect(whenLines({ ...music, time_type: 'custom', slots: [], start_time: '14:30', end_time: '15:30' }, DEFAULT_SLOT_TIMES).sub).toBe('14:30–15:30');
     expect(whenLines({ ...music, time_type: 'all_day', slots: [] }, DEFAULT_SLOT_TIMES).sub).toBe('All day');
     expect(whenLines({ ...music, starts_on: '2026-10-31', ends_on: '2026-11-02', time_type: 'all_day', slots: [] }, DEFAULT_SLOT_TIMES).title).toBe('Sat, Oct 31 – Mon, Nov 2');
+  });
+
+  // Spec 050 FR-006: one line under the title.
+  it('puts the date and time on one line for the compact page', () => {
+    if (!oct31) throw new Error('no Oct 31');
+    expect(whenLine(oct31, DEFAULT_SLOT_TIMES)).toEqual({ date: 'Sat, Oct 31', time: 'Morning, about 09:00–12:00' });
+    expect(whenLine({ ...music, time_type: 'custom', slots: [], start_time: '14:30', end_time: '15:30' }, DEFAULT_SLOT_TIMES).time).toBe('14:30–15:30');
+    expect(whenLine({ ...music, starts_on: '2026-10-31', ends_on: '2026-11-02', time_type: 'all_day', slots: [] }, DEFAULT_SLOT_TIMES)).toEqual({ date: 'Sat, Oct 31 – Mon, Nov 2', time: 'All day' });
   });
 
   it('names every repeat, and none for a one-off event', () => {
@@ -43,10 +51,10 @@ describe('the event page rows (FR-001)', () => {
 
   it('says whom the reminder reaches and when (spec 049 FR-006): Everyone is all of them, Others the creator', () => {
     const lines = (fields: Parameters<typeof babyMusic>[0], use24h = true) => reminderLines(babyMusic(fields), members, DEFAULT_SLOT_TIMES, use24h);
-    expect(lines({ members: ['everyone'], responsible_member_id: null })?.sub).toBe('Reminds Gabriel and Eva · 08:00');
-    expect(lines({ members: ['others'], responsible_member_id: null })?.sub).toBe('Reminds Eva · 08:00');
-    expect(lines({ reminder: 'day_before' }, false)?.sub).toBe('Reminds Gabriel · 6:00 PM the day before');
-    expect(lines({ reminder: 'minutes_15', time_type: 'custom', slots: [], start_time: '14:30', end_time: '15:30' })).toEqual({ title: '15 minutes before', sub: 'Reminds Gabriel · 14:15' });
+    expect(lines({ members: ['everyone'], responsible_member_id: null })?.sub).toBe('reminds Gabriel and Eva · 08:00');
+    expect(lines({ members: ['others'], responsible_member_id: null })?.sub).toBe('reminds Eva · 08:00');
+    expect(lines({ reminder: 'day_before' }, false)?.sub).toBe('reminds Gabriel · 6:00 PM the day before');
+    expect(lines({ reminder: 'minutes_15', time_type: 'custom', slots: [], start_time: '14:30', end_time: '15:30' })).toEqual({ title: '15 minutes before', sub: 'reminds Gabriel · 14:15' });
     expect(lines({ visibility: 'private', creator_member_id: james.id })).toEqual({ title: '1 hour before' });
     expect(lines({ reminder: 'none' })).toBeNull();
   });

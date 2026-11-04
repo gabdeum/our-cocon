@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { loadEvent, setChecklistDone } from '@cocon/data';
 import { CalendarDate } from '@cocon/schemas/calendar';
-import { BackLink, PushedScreen, Text } from '@cocon/ui';
+import { PushedScreen, Text } from '@cocon/ui';
 import { EventDetail } from '../../../components/calendar/EventDetail';
 import { SurpriseDetail } from '../../../components/calendar/SurpriseDetail';
 import { deleteOccurrences, duplicateEvent, duplicateInput } from '../../../lib/event-delete';
@@ -41,8 +41,7 @@ export default function EventRoute() {
   const occurrence = ev && date && seesInFull(ev, myMemberId) ? eventOccurrence(ev, date) : null;
   if (!ev || !date || !occurrence) {
     return (
-      <PushedScreen className="gap-16">
-        <BackLink label={e.back} onPress={page.close} />
+      <PushedScreen className="gap-16" topBar={{ back: { label: e.back, onPress: page.close } }}>
         <View className="gap-6">
           <Text size={22} weight="900" role="heading" aria-level={1}>
             {a.loadFailedTitle}

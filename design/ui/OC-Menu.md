@@ -23,10 +23,10 @@ Source `screens/OC-Menu.dc.html` · Route `/menu` (`/settings` redirects here) �
 | Recently deleted, empty | "Empty" |
 
 ## Behaviour
-Tiles switch tabs (the tab bar selection follows). Rows push the settings pages; each has the back link "Menu".
+Tiles switch tabs (the tab bar selection follows). Rows push the settings pages; each has the TopBar's "Back to Menu" (spec 050).
 
 ## Recently deleted (spec 018, not drawn)
-Route `/settings/deleted`, pushed from the "Recently deleted" row ("{n} item(s) ›", recipes and (spec 042) events deleted in the last 30 days). Built from ScreenHeader (back link "Menu", title "Recently deleted") and one ListGroup, newest first.
+Route `/settings/deleted`, pushed from the "Recently deleted" row ("{n} item(s) ›", recipes and (spec 042) events deleted in the last 30 days). Built from the TopBar ("Back to Menu", title "Recently deleted") and one ListGroup, newest first.
 
 | Element | Copy and behaviour |
 | --- | --- |

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { BackHeader, BottomSheet, Button, Callout, Card, Dialog, Link, LinkField, ListGroup, ListRow, Overline, PushedScreen, SettingRow, StepText, Text } from '@cocon/ui';
+import { BottomSheet, Button, Callout, Card, Dialog, Lead, Link, LinkField, ListGroup, ListRow, Overline, PushedScreen, SettingRow, StepText, Text } from '@cocon/ui';
 import type { AssistantConnection, AssistantConnections } from '@cocon/data';
 import { AiPermission, type AiPermissions, type ConnectionAssistant, type KnownAssistant, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
@@ -187,8 +187,8 @@ export function AiConnections({
   });
 
   return (
-    <PushedScreen className="gap-16">
-      <BackHeader backLabel={c.back} onBack={onBack} title={c.title} lead={c.lead} />
+    <PushedScreen className="gap-16" topBar={{ back: { label: c.back, onPress: onBack }, title: c.title }}>
+      <Lead>{c.lead}</Lead>
       <OfflineBanner screen="settings" tracker={tracker} />
       {rows}
       <View className="gap-8">

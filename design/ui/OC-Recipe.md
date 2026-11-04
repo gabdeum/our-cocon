@@ -3,7 +3,7 @@
 Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipes/[id]` · Specs 008, 013
 
 ## Layout
-1. Photo header 240: IconButtons "Back to recipes" (left); "Share recipe", "Recipe settings" (right).
+1. Photo header 240 under the TopBar (spec 050, `titleMode="onScroll"`): round "Back to recipes" (left); "Share recipe", "Recipe settings" (right). The bar is see-through over the photo, turns `surface-page` with its hairline once the photo has scrolled away, and the recipe name fades into it once the title is under it.
 2. TimerPill, sticky at the top centre, only when a timer exists.
 3. Content sheet: title, description, chips "{time}" (`total_minutes`, hidden when empty), "{cuisine}" (hidden when Other), "Best {Mon} – {Mon}" (hidden if all year), sage "{author} · via {assistant}".
 4. "Version": choice pills ("Classic" + each version variant); then a switch row per option variant: title (e.g. "Make my own dough"), hint describing its changes (e.g. "Adds 3 ingredients and 1 step").

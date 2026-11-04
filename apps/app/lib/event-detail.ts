@@ -27,6 +27,14 @@ export function whenLines(o: Pick<CalendarEvent, 'starts_on' | 'ends_on' | 'time
   return { title, sub: o.time_type === 'slot' ? e.slotTime(timeLabel(o, { use24h, slotTimes }), range) : range };
 }
 
+/** Spec 050 FR-006: the date and time on one line, "Sat, Oct 31" · "Morning, about 09:00–12:00". */
+export function whenLine(o: Pick<CalendarEvent, 'starts_on' | 'ends_on' | 'time_type' | 'slots' | 'start_time' | 'end_time'>, slotTimes: SlotTimes, use24h = true): { date: string; time: string } {
+  const date = o.starts_on === o.ends_on ? dateLabel(o.starts_on) : e.span(dateLabel(o.starts_on), dateLabel(o.ends_on));
+  const range = rangeLabel(o, { use24h, slotTimes });
+  if (!range) return { date, time: e.allDay };
+  return { date, time: o.time_type === 'slot' ? e.slotTimeInline(timeLabel(o, { use24h, slotTimes }), range) : range };
+}
+
 /** The Repeat row: "Every Saturday", "Every Tuesday and Thursday", "Every day"; null for a one-off event. */
 export function repeatLine(event: StoredEvent): string | null {
   const r = event.recurrence;

@@ -1,9 +1,9 @@
 # OC-Activity — Activity
 
-No drawn screen: this spec is the source of truth (built from ActivityRow, SegmentedControl, PersonPill, Pill, BackHeader). Route `/activity` (stack, from Home's "See all activity", `?show=ai` when Home was on AI only) · Specs 026, 028
+No drawn screen: this spec is the source of truth (built from ActivityRow, SegmentedControl, PersonPill, Pill, TopBar). Route `/activity` (stack, from Home's "See all activity", `?show=ai` when Home was on AI only) · Specs 026, 028
 
 ## Layout (top → bottom)
-1. BackHeader: back link "Home", title "Activity".
+1. TopBar (spec 050): back "Back to Home", title "Activity" (`titleMode="always"`).
 2. Offline banner when offline (Undo and Restore are then off).
 3. SegmentedControl (pill) "All" · "AI only", opened with Home's choice. Switching to All drops the assistant pill.
 4. "People" overline, then a row of PersonPills: each member who has entries (in the filter's sense). Shown only with 2 or more. One at a time; tapping the selected one clears it.

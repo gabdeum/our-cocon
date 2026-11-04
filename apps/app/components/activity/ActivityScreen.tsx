@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { BackHeader, Button, Callout, Overline, PersonPill, Pill, PillRow, PushedScreen, RecipeItemSkeleton, SegmentedControl, Text } from '@cocon/ui';
+import { Button, Callout, Overline, PersonPill, Pill, PillRow, PushedScreen, RecipeItemSkeleton, SegmentedControl, Text } from '@cocon/ui';
 import { memberInitials, type ActivityEntry } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { ActivityFilter } from '../../lib/activity';
@@ -73,8 +73,7 @@ export function ActivityScreen({ entries, members, actors, sources, filter, onFi
   }
 
   return (
-    <PushedScreen className="gap-18">
-      <BackHeader backLabel={a.back} onBack={onBack} title={a.screenTitle} />
+    <PushedScreen className="gap-18" topBar={{ back: { label: a.back, onPress: onBack }, title: a.screenTitle }}>
       <OfflineBanner screen="home" tracker={rest.tracker} />
       <SegmentedControl
         variant="pill"

@@ -1,8 +1,7 @@
 import type { ReactNode, Ref } from 'react';
-import { Platform, Pressable, ScrollView, View, type LayoutChangeEvent, type ScrollViewInstance, type NativeScrollEvent, type NativeSyntheticEvent, type ViewStyle } from 'react-native';
-import { cn, focusRing } from '../cn';
+import { Platform, ScrollView, View, type LayoutChangeEvent, type ScrollViewInstance, type NativeScrollEvent, type NativeSyntheticEvent, type ViewStyle } from 'react-native';
+import { cn } from '../cn';
 import { Button } from './Button';
-import { Icon } from './Icon';
 import { IconButton } from './IconButton';
 import { Text } from './Text';
 import { ToastHost } from './Toast';
@@ -16,7 +15,7 @@ const snapStart = (web ? { scrollSnapAlign: 'start', scrollSnapStop: 'always' } 
 const snapEndMark = (web ? { scrollSnapAlign: 'end', scrollSnapStop: 'always' } : undefined) as ViewStyle | undefined;
 
 export interface CookLayoutProps {
-  /** "Exit": closes cooking mode. */
+  /** "Exit cooking mode": the round ✕ that closes cooking mode (spec 050). */
   exitLabel: string;
   onExit: () => void;
   /** Right of Exit, before the options button: the TimerPill while timers run. */
@@ -58,18 +57,9 @@ export function CookLayout(props: CookLayoutProps) {
   const { exitLabel, onExit, status, optionsLabel, onOptions, progress, children, endLabel, backLabel, onBack, backExits, nextLabel, onNext, nextFinishes, scrollRef, onScroll, onViewportLayout, snapOffsets } = props;
   return (
     <View className="flex-1 bg-surface-page">
-      <View className="gap-12 border-b-[1.5px] border-line bg-surface-page px-20 pb-12 pt-[50px]">
+      <View className="gap-12 border-b-[1.5px] border-line bg-surface-page px-20 pb-12 pt-[52px]">
         <View className="flex-row items-center justify-between gap-8">
-          <Pressable
-            role="button"
-            onPress={onExit}
-            className={cn('h-control-md flex-row items-center gap-4 rounded-pill bg-surface-soft pl-8 pr-14 active:bg-surface-soft-pressed', focusRing)}
-          >
-            <Icon name="close" />
-            <Text size={15} weight="800">
-              {exitLabel}
-            </Text>
-          </Pressable>
+          <IconButton variant="round" icon="close" label={exitLabel} onPress={onExit} />
           <View className="min-w-0 flex-shrink flex-row items-center justify-end gap-8">
             {status}
             <IconButton icon="settings" label={optionsLabel} variant="soft" onPress={onOptions} />

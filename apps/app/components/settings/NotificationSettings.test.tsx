@@ -39,7 +39,7 @@ describe('Notifications (OC-SettingsNotif)', () => {
     expect(screen.getByRole('button', { name: 'Events I’m on' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('link', { name: /Default for new events/ }).textContent).toContain('1 hour before');
     expect(screen.getByText('Events for James remind the person who takes them, or everyone with the app if nobody’s chosen yet.')).toBeTruthy();
-    fireEvent.click(screen.getByRole('link', { name: 'Menu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to Menu' }));
     expect(onBack).toHaveBeenCalledOnce();
   });
 

@@ -150,7 +150,7 @@ describe('Timers screen (spec 011 US2)', () => {
 
   it('Back goes back', () => {
     const { onBack } = setup();
-    fireEvent.click(screen.getByRole('link', { name: 'Back' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(onBack).toHaveBeenCalledOnce();
   });
 });

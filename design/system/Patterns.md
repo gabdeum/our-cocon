@@ -25,7 +25,7 @@ These are the layouts every Our Cocon screen is built from. Compose new screens 
 
 ## Pushed screen without photo (settings sub-pages, timers)
 
-- A back link (olive, 16/800, chevron) 44 tall at the top-left, then a `display-lg` title and a `body-sm` muted lead.
+- The TopBar (spec 050), pinned: round back button, the title centred (17/900), up to two round actions. The lead (15/600 muted) is the first line of content; there is no other title. Detail pages (recipe, event) keep a `display-lg` heading in the content and the bar shows the name once it scrolls under it.
 
 ## Bottom sheet (filters, scale by ingredient, converter, share, add to groceries)
 

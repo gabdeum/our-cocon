@@ -3,7 +3,7 @@
 Source `screens/OC-RecipeSettings.dc.html` · Route `/recipes/[id]/settings` · Specs 027, 017
 
 ## Layout
-1. Back link: "{recipe name}".
+1. TopBar (spec 050): back "Back to {recipe name}" ("Back to recipe" while it loads), title "Recipe settings" (`titleMode="always"`); the lead is the first line of content.
 2. Title "Recipe settings"; lead "These only change this recipe. Your family defaults are in Settings."
 3. **(Add, not drawn)** a ListRow "Edit recipe ›" opening the edit modal at Details.
 4. Settings card, each row a Switch row:
