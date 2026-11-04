@@ -9,10 +9,12 @@ BottomSheet over the screen that triggered it. Honey circle 72 with bell icon; t
 From a reminder (first event with a reminder): title "Get a heads-up before events", body "Turn on notifications so reminders reach your phone, even when Our Cocon is closed."
 
 ## Live timer (048)
-Lock Screen card (radius 24, padding 14 16, `surface-page`): row app mark 28 + "Timers" 14/900 + "{n} running" 13/800 muted · label 20/900 + sub 13/700 muted ("Leek & bacon quiche · step 3") · countdown 42/900 olive-deep, tabular, right-aligned · progress 8 px (`line` track, honey fill) · row "{next label} {time}" (or "· +{n} more") + soft pill "+1 min" + ink pill "Pause" (40 tall).
+Lock Screen card (radius 24, padding 14 16, `surface-page`): row app mark 28 + "Timers" 14/900 + soft pill "{n} running" 13/800 (opens Timers) · label 20/900 + sub 13/700 muted ("Leek & bacon quiche · step 3") · countdown 42/900 olive-deep, tabular, right-aligned · progress 8 px (`line` track, honey fill) · row "{next label} {time}" (or "· +{n} more") + soft pills "−1 min" and "+1 min" + ink pill "Pause" (40 tall). "−1 min" never takes the time below 0:30 (as in the app).
+Taps: the card opens the timer's step in cooking mode (Timers for a quick timer); the "{n} running" pill opens Timers.
+On the phone, iOS cuts the card at 160 pt: padding 12 16, gaps 6, mark 24, header 26, buttons 36 (spec 048 Changelog).
 Paused: countdown frozen, sub "Paused", ink pill "Resume".
-Done: card fill honey; bell 34 + "{label} is done" 22/900 + sub; next timer in a white 55% row "{label} · {time} left".
-Dynamic Island: compact = timer icon (honey) · time 15/900 honey; minimal = honey progress ring; expanded = app mark 36, label 17/900 white, "{recipe} · +{n} more" 13/700 `island-sub`, time 36/900 honey, progress 6 px on `island-track`, two buttons 42 on `island-button`.
+Done: card fill honey, the "{n} running" pill white 55%; bell 34 + "{label} is done" 22/900 + sub; next timer in a white 55% row "{label} · {time} left".
+Dynamic Island: compact = timer icon (honey) · time 15/900 honey; minimal = honey progress ring; expanded = app mark 36, label 17/900 white, "{recipe} · +{n} more" 13/700 `island-sub`, time 36/900 honey, progress 6 px on `island-track`, three buttons 42 on `island-button` ("−1 min", "+1 min", "Pause").
 Not drawn (spec 048): every timer paused, the header says "{n} paused"; done in the island, the compact icon is the bell and the expanded one shows "{label} is done" with no buttons; one timer only, the island's sub is the step ("Leek & bacon quiche · step 3"). All words are in `strings/en.ts` › `liveTimer` (the phone only draws the time).
 
 ## Timer done (047)

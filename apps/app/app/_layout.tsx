@@ -36,6 +36,7 @@ import { timerNotifications } from '../lib/timer-notifications';
 import { clearFollowUps, createTimerAlerts, liveAlert } from '../lib/timer-alerts';
 import { createLiveActivity, endLiveActivity } from '../lib/live-activity';
 import { liveTimerNative } from '../lib/live-timer-native';
+import { linkOn } from '../lib/links';
 import { strings } from '../strings/en';
 import { playChime, vibrateDone } from '../lib/chime';
 import { TimerAlerts } from '../components/timers/TimerAlerts';
@@ -107,6 +108,8 @@ function Timers({ children }: { children: ReactNode }) {
             tracker,
             enabled: prefs.timers_live,
             alertsFor: enabled ? (t) => liveAlert(t, userId) : undefined,
+            // The app's own scheme: the card hands the link straight to the app.
+            url: (path) => linkOn(undefined, path.slice(1)),
             isForeground: () => AppState.currentState === 'active',
           })
         : undefined,

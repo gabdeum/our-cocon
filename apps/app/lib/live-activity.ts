@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../strings/en';
+import { cookStepPath } from './links';
 import { alertContent, devLog, TimerAlertData, type LiveAlert } from './timer-alerts';
 import * as T from './timers';
 import type { Timer } from './timers';
@@ -39,6 +40,7 @@ export interface LiveCopy {
   more: string;
   doneTitle: string;
   left: string;
+  removeMinute: string;
   addMinute: string;
   pause: string;
   resume: string;
@@ -56,6 +58,12 @@ export interface LiveActivityState {
   others: LiveRow[];
   othersCount: number;
   copy: LiveCopy;
+  /** "−1 min" never takes the time left below this (lib/timers.ts). */
+  minLeftSeconds: number;
+  /** A tap on the card: the step in cooking mode for a step timer, otherwise Timers. */
+  openUrl: string;
+  /** A tap on "2 running": Timers. */
+  timersUrl: string;
   /** Only while the primary timer's alerts are on (047): the card's "+1 min" or "Resume" moves them. */
   alert?: LiveAlert;
 }
@@ -73,11 +81,18 @@ const copy = strings.liveTimer;
 
 const header = (running: number, paused: number) => (running ? copy.running(running) : paused ? copy.paused(paused) : '');
 
+export interface LiveStateOptions {
+  /** The primary timer's alerts, while 047's are on. */
+  alertsFor?: (t: Timer) => LiveAlert | undefined;
+  /** A path in the app as a link the phone opens (the app's own scheme). */
+  url?: (path: string) => string;
+}
+
 /**
  * What the card shows, or null for no card (FR-001: nothing running or done). A timer that ended in
  * the last 10 minutes comes first (US3), the latest one; otherwise the most urgent (spec 010 FR-004).
  */
-export function liveActivityState(timers: readonly Timer[], now: number, alertsFor?: (t: Timer) => LiveAlert | undefined): LiveView | null {
+export function liveActivityState(timers: readonly Timer[], now: number, { alertsFor, url = (p) => p }: LiveStateOptions = {}): LiveView | null {
   const shownDone = (t: Timer) => t.state === 'done' && now - (t.stoppedAt ?? now) < DONE_SHOWN_MS;
   const recent = timers.filter(shownDone).sort((a, b) => (b.stoppedAt ?? 0) - (a.stoppedAt ?? 0));
   const primary = recent[0] ?? T.mostUrgent(timers, now);
@@ -116,10 +131,14 @@ export function liveActivityState(timers: readonly Timer[], now: number, alertsF
       more: others.length > 1 ? copy.more('', others.length - 1) : '',
       doneTitle: strings.notifications.timerDone.title(primary.label),
       left: copy.left,
+      removeMinute: copy.removeMinute,
       addMinute: copy.addMinute,
       pause: copy.pause,
       resume: copy.resume,
     },
+    minLeftSeconds: T.MIN_REDUCED_SECONDS,
+    openUrl: url(primary.recipeId && primary.stepId ? cookStepPath(primary.recipeId, primary.stepId) : '/timers'),
+    timersUrl: url('/timers'),
   };
   const alert = primary.state !== 'done' ? alertsFor?.(primary) : undefined;
   if (alert) state.alert = alert;
@@ -138,7 +157,7 @@ function row(t: Timer): LiveRow {
 }
 
 /** The card's buttons (FR-004), as the phone recorded them. */
-export const LiveTimerAction = z.enum(['add_minute', 'pause', 'resume']);
+export const LiveTimerAction = z.enum(['add_minute', 'remove_minute', 'pause', 'resume']);
 export type LiveTimerAction = z.infer<typeof LiveTimerAction>;
 
 export const LiveActionRecord = z.object({
@@ -162,6 +181,7 @@ export function applyLiveAction(timers: readonly Timer[], { timerId, action, at 
     return { ...rest, state: 'running', endsAt: stoppedAt };
   });
   if (action === 'add_minute') return T.add(rewound, timerId, T.MINUTE, at);
+  if (action === 'remove_minute') return T.add(rewound, timerId, -T.MINUTE, at);
   if (action === 'pause') return T.pause(rewound, timerId, at);
   return T.resume(rewound, timerId, at);
 }
@@ -211,12 +231,13 @@ export interface LiveActivityOptions {
   enabled: boolean;
   /** The primary timer's alerts, while 047's are on. */
   alertsFor?: (t: Timer) => LiveAlert | undefined;
+  url?: (path: string) => string;
   /** ActivityKit only starts one while the app is on screen. */
   isForeground: () => boolean;
   now?: () => number;
 }
 
-export function createLiveActivity({ native, userId, tracker, enabled, alertsFor, isForeground, now = Date.now }: LiveActivityOptions): LiveTimerActivity {
+export function createLiveActivity({ native, userId, tracker, enabled, alertsFor, url, isForeground, now = Date.now }: LiveActivityOptions): LiveTimerActivity {
   const failed = (e: unknown) => devLog('live activity:', e instanceof Error ? e.message : String(e));
   // Whether this phone's card is ours; null until asked (a relaunch, another person signed in before).
   let attached: boolean | null = null;
@@ -234,7 +255,7 @@ export function createLiveActivity({ native, userId, tracker, enabled, alertsFor
     if (wake) clearTimeout(wake);
     wake = null;
     const at = now();
-    const view = liveActivityState(latest, at, alertsFor);
+    const view = liveActivityState(latest, at, { alertsFor, url });
     if (attached === null) {
       const current = await native.current();
       if (gone()) return;

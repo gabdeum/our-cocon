@@ -349,9 +349,10 @@ export function createTimerStore({ storage, userId, tracker, alerts, live, isFor
     schedule();
     hasRead = true;
     store.reconcileAlerts();
-    syncLive();
-    // Taps on the card while the app was closed (spec 048).
+    // Taps on the card while the app was closed first (spec 048): showing the saved timers before
+    // would put the old time back on the card for a moment.
     await store.applyLiveActions();
+    syncLive();
   }
   return store;
 }
@@ -458,9 +459,11 @@ export function TimersProvider({ userId, storage, tracker, now, onStart, alerts,
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => {
       if (s !== 'active') return;
-      store.reconcileAlerts();
-      store.syncLive();
-      void store.applyLiveActions();
+      // The card's taps first, so the app and the card show the new time at once (never the old one).
+      void store.applyLiveActions().then(() => {
+        store.reconcileAlerts();
+        store.syncLive();
+      });
     });
     return () => sub.remove();
   }, [store]);

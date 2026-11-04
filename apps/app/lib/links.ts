@@ -16,6 +16,11 @@ export function linkOn(base: string | undefined, path: string): string {
   return base ? new URL(path, base).toString() : Linking.createURL(path);
 }
 
+/** Cooking mode at a step (spec 012), as "Go to step" on Timers and the Lock Screen card (spec 048) open it. */
+export function cookStepPath(recipeId: string, stepId: string): string {
+  return `/recipes/${recipeId}/cook?step=${encodeURIComponent(stepId)}`;
+}
+
 /** Where to go after signing in: only this app's own paths, never another site. */
 export function safeNext(next: unknown): string {
   if (typeof next !== 'string' || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return '/';

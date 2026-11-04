@@ -1386,6 +1386,7 @@ export const strings = {
     pausedSub: 'Paused',
     // "Pasta water 11:40 · +1 more" on the Lock Screen, "Leek & bacon quiche · +1 more" in the island.
     more: (text: string, others: number) => `${text} · +${others} more`,
+    removeMinute: '−1 min',
     addMinute: '+1 min',
     pause: 'Pause',
     resume: 'Resume',

@@ -24,6 +24,7 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public var more: String
     public var doneTitle: String
     public var left: String
+    public var removeMinute: String
     public var addMinute: String
     public var pause: String
     public var resume: String
@@ -56,6 +57,11 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public var others: [Row]
     public var othersCount: Int
     public var copy: Copy
+    /// "−1 min" never takes the time left below this.
+    public var minLeftSeconds: Int
+    /// A tap on the card (the step in cooking mode, or Timers), and on "2 running" (Timers).
+    public var openUrl: String
+    public var timersUrl: String
     public var alert: Alert?
   }
 

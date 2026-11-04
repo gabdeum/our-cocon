@@ -243,7 +243,7 @@ export const events = {
   timer_alert_followup_sent: z.strictObject({}),
   // Spec 048: the Live Activity started (timers on the Lock Screen), and its "+1 min" / "Pause" / "Resume".
   timer_live_activity_started: z.strictObject({ timer_count: z.int().min(1).max(100) }),
-  timer_live_activity_action: z.strictObject({ action: z.enum(['add_minute', 'pause', 'resume']) }),
+  timer_live_activity_action: z.strictObject({ action: z.enum(['add_minute', 'remove_minute', 'pause', 'resume']) }),
 } as const;
 
 export type EventName = keyof typeof events;

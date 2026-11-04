@@ -13,9 +13,6 @@ struct TimerActivityBundle: WidgetBundle {
   }
 }
 
-/// Tapping anywhere but a button opens Timers (FR-004).
-private let timersURL = URL(string: "ourcocon://timers")
-
 struct TimerActivityWidget: Widget {
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: TimerActivityAttributes.self) { context in
@@ -23,7 +20,7 @@ struct TimerActivityWidget: Widget {
       LockScreenCard(card: card)
         .activityBackgroundTint(card.isDone ? Theme.honey : Theme.surfacePage)
         .activitySystemActionForegroundColor(Theme.ink)
-        .widgetURL(timersURL)
+        .widgetURL(card.openURL)
     } dynamicIsland: { context in
       let card = Card(state: context.state, ended: context.isStale)
       return DynamicIsland {
@@ -48,7 +45,7 @@ struct TimerActivityWidget: Widget {
         card.ring
       }
       .keylineTint(Theme.honey)
-      .widgetURL(timersURL)
+      .widgetURL(card.openURL)
     }
   }
 }
@@ -66,20 +63,23 @@ struct Card {
   var copy: TimerActivityAttributes.Copy { state.copy }
   var count: String { isDone && state.state == "running" ? copy.countDone : copy.count }
   var next: TimerActivityAttributes.Row? { state.others.first }
+  /// A tap on the card: the step in cooking mode, or Timers.
+  var openURL: URL? { URL(string: state.openUrl) }
+  var timersURL: URL? { URL(string: state.timersUrl) }
 
   private var end: Date? { state.endsAt.map { Date(timeIntervalSince1970: $0 / 1000) } }
   private var start: Date? { end.map { $0.addingTimeInterval(-Double(state.totalSeconds)) } }
 
-  /// The countdown: ticking while running, frozen while paused, 0:00 once done.
+  /// The countdown: ticking while running, the time it stopped at while paused, 0:00 once done.
   var countdown: Text {
     if !isDone, let start, let end, start <= end {
       return Text(timerInterval: start...end, countsDown: true)
     }
-    return Clock.frozen(isDone ? 0 : state.remainingSeconds ?? 0)
+    return Text(Clock.text(isDone ? 0 : state.remainingSeconds ?? 0))
   }
 
   /// Time gone, as on the Timers screen: fills as time passes.
-  @ViewBuilder func bar(height: CGFloat, track: Color) -> some View {
+  func bar(height: CGFloat, track: Color) -> some View {
     Group {
       if !isDone, let start, let end, start <= end {
         ProgressView(timerInterval: start...end, countsDown: false) { EmptyView() } currentValueLabel: { EmptyView() }
@@ -98,7 +98,7 @@ struct Card {
   }
 
   /// The minimal island: a honey ring of the time gone.
-  @ViewBuilder var ring: some View {
+  var ring: some View {
     Group {
       if !isDone, let start, let end, start <= end {
         ProgressView(timerInterval: start...end, countsDown: false) { EmptyView() } currentValueLabel: { EmptyView() }
@@ -121,49 +121,52 @@ struct Card {
     if let endsAt = row.endsAt {
       return Text(timerInterval: Date.distantPast...Date(timeIntervalSince1970: endsAt / 1000), countsDown: true)
     }
-    return Clock.frozen(row.remainingSeconds ?? 0)
+    return Text(Clock.text(row.remainingSeconds ?? 0))
   }
 }
 
 enum Clock {
-  private static let base = Date(timeIntervalSinceReferenceDate: 0)
-
-  /// The system's own timer text, stopped: the same format as a running one.
-  static func frozen(_ seconds: Int) -> Text {
-    Text(timerInterval: base...base.addingTimeInterval(Double(max(0, seconds))), pauseTime: base, countsDown: true)
+  /// A stopped time in the system timer's own format: "4:12", "1:04:12".
+  static func text(_ seconds: Int) -> String {
+    let s = max(0, seconds)
+    let (h, m, sec) = (s / 3600, (s % 3600) / 60, s % 60)
+    return h > 0 ? String(format: "%d:%02d:%02d", h, m, sec) : String(format: "%d:%02d", m, sec)
   }
 }
 
 // MARK: - Lock Screen (OC-NotifLockTimer, OC-NotifLockDone)
 
+/// iOS cuts a Lock Screen Live Activity at 160 pt, so the drawn card's gaps are tightened (padding 12,
+/// gaps 6, header 26, buttons 36); the order, sizes of the words and colours are as drawn.
 struct LockScreenCard: View {
   let card: Card
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
+    VStack(alignment: .leading, spacing: 6) {
       HStack(spacing: 8) {
         Image("mark")
           .resizable()
-          .frame(width: 28, height: 28)
-          .clipShape(RoundedRectangle(cornerRadius: 8))
+          .frame(width: 24, height: 24)
+          .clipShape(RoundedRectangle(cornerRadius: 7))
           .accessibilityHidden(true)
         Text(card.copy.title).font(.nunito(14, .black)).foregroundStyle(Theme.ink)
         Spacer(minLength: 0)
-        Text(card.count).font(.nunito(13, .heavy)).foregroundStyle(card.isDone ? Theme.ink : Theme.inkMuted)
+        CountPill(text: card.count, url: card.timersURL, fill: card.isDone ? Theme.surfaceCard.opacity(0.55) : Theme.surfaceSoft)
       }
+      .frame(height: 26)
       if card.isDone {
         done
       } else {
         counting
       }
     }
-    .padding(.vertical, 14)
+    .padding(.vertical, 12)
     .padding(.horizontal, 16)
   }
 
   private var counting: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      HStack(alignment: .bottom, spacing: 10) {
+    VStack(alignment: .leading, spacing: 6) {
+      HStack(alignment: .center, spacing: 10) {
         VStack(alignment: .leading, spacing: 0) {
           Text(card.state.label).font(.nunito(20, .black)).foregroundStyle(Theme.ink).lineLimit(1)
           Text(card.isPaused ? card.copy.pausedSub : card.copy.sub).font(.nunito(13, .bold)).foregroundStyle(Theme.inkMuted).lineLimit(1)
@@ -174,10 +177,12 @@ struct LockScreenCard: View {
           .monospacedDigit()
           .foregroundStyle(Theme.oliveDeep)
           .multilineTextAlignment(.trailing)
-          .frame(maxWidth: .infinity, alignment: .trailing)
+          .lineLimit(1)
+          .frame(maxWidth: .infinity, maxHeight: 44, alignment: .trailing)
       }
+      .frame(height: 44)
       card.bar(height: 8, track: Theme.line)
-      HStack(spacing: 8) {
+      HStack(spacing: 6) {
         Group {
           if let next = card.next {
             (Text(next.label + " ").foregroundStyle(Theme.inkMuted) + card.time(of: next).foregroundStyle(Theme.ink) + Text(card.copy.more).foregroundStyle(Theme.inkMuted))
@@ -189,12 +194,16 @@ struct LockScreenCard: View {
         .monospacedDigit()
         .lineLimit(1)
         .frame(maxWidth: .infinity, alignment: .leading)
+        Button(intent: RemoveMinuteIntent(timerId: card.state.id)) {
+          Pill(text: card.copy.removeMinute, fill: Theme.surfaceSoft, ink: Theme.ink, height: 36)
+        }
+        .buttonStyle(.plain)
         Button(intent: AddMinuteIntent(timerId: card.state.id)) {
-          Pill(text: card.copy.addMinute, fill: Theme.surfaceSoft, ink: Theme.ink, height: 40)
+          Pill(text: card.copy.addMinute, fill: Theme.surfaceSoft, ink: Theme.ink, height: 36)
         }
         .buttonStyle(.plain)
         Button(intent: TogglePauseIntent(timerId: card.state.id)) {
-          Pill(text: card.isPaused ? card.copy.resume : card.copy.pause, fill: Theme.ink, ink: Theme.onOlive, height: 40)
+          Pill(text: card.isPaused ? card.copy.resume : card.copy.pause, fill: Theme.ink, ink: Theme.onOlive, height: 36)
         }
         .buttonStyle(.plain)
       }
@@ -202,7 +211,7 @@ struct LockScreenCard: View {
   }
 
   private var done: some View {
-    VStack(alignment: .leading, spacing: 10) {
+    VStack(alignment: .leading, spacing: 8) {
       HStack(spacing: 10) {
         Image("bell")
           .renderingMode(.template)
@@ -228,6 +237,27 @@ struct LockScreenCard: View {
         .padding(.horizontal, 12)
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.surfaceCard.opacity(0.55)))
       }
+    }
+  }
+}
+
+/// "2 running": a soft pill that opens Timers, wherever the card itself opens.
+struct CountPill: View {
+  let text: String
+  let url: URL?
+  let fill: Color
+
+  var body: some View {
+    let pill = Text(text)
+      .font(.nunito(13, .heavy))
+      .foregroundStyle(Theme.ink)
+      .padding(.horizontal, 10)
+      .frame(height: 26)
+      .background(Capsule().fill(fill))
+    if let url {
+      Link(destination: url) { pill }
+    } else {
+      pill
     }
   }
 }
@@ -264,11 +294,16 @@ struct IslandExpanded: View {
           .monospacedDigit()
           .foregroundStyle(Theme.honey)
           .multilineTextAlignment(.trailing)
+          .lineLimit(1)
           .frame(maxWidth: .infinity, alignment: .trailing)
       }
       card.bar(height: 6, track: Theme.islandTrack)
       if !card.isDone {
         HStack(spacing: 8) {
+          Button(intent: RemoveMinuteIntent(timerId: card.state.id)) {
+            Pill(text: card.copy.removeMinute, fill: Theme.islandButton, ink: Theme.onOlive, height: 42, stretch: true)
+          }
+          .buttonStyle(.plain)
           Button(intent: AddMinuteIntent(timerId: card.state.id)) {
             Pill(text: card.copy.addMinute, fill: Theme.islandButton, ink: Theme.onOlive, height: 42, stretch: true)
           }
@@ -299,7 +334,7 @@ struct Pill: View {
       .font(.nunito(15, .black))
       .foregroundStyle(ink)
       .lineLimit(1)
-      .padding(.horizontal, 14)
+      .padding(.horizontal, 12)
       .frame(minWidth: 44, maxWidth: stretch ? .infinity : nil, minHeight: height, maxHeight: height)
       .fixedSize(horizontal: !stretch, vertical: false)
       .background(Capsule().fill(fill))

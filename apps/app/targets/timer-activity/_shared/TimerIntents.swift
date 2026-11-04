@@ -1,4 +1,4 @@
-// Spec 048 FR-004: the card's "+1 min" and "Pause" / "Resume". Live Activity intents run in the app's
+// Spec 048 FR-004: the card's "−1 min", "+1 min" and "Pause" / "Resume". Live Activity intents run in the app's
 // process, even with the phone locked and the app closed (iOS wakes it), so this file is in both the
 // app and the widget (_shared). A tap changes the card and the timer's alerts (spec 047) right away,
 // then leaves a note the app's timer store applies as soon as its code runs (lib/live-activity.ts).
@@ -49,14 +49,36 @@ struct TogglePauseIntent: LiveActivityIntent {
 }
 
 @available(iOS 17.0, *)
+struct RemoveMinuteIntent: LiveActivityIntent {
+  static let title: LocalizedStringResource = "Take a minute off a timer"
+  static let isDiscoverable = false
+
+  @Parameter(title: "Timer")
+  var timerId: String
+
+  init() {}
+
+  init(timerId: String) {
+    self.timerId = timerId
+  }
+
+  func perform() async throws -> some IntentResult {
+    await LiveTimerButtons.tap(.removeMinute, timerId: timerId)
+    return .result()
+  }
+}
+
+@available(iOS 17.0, *)
 enum LiveTimerButtons {
   enum Kind {
     case addMinute
+    case removeMinute
     case toggle
   }
 
-  /// The same rules as the app's timers (lib/timers.ts): +1 min adds 60 s to the time left and to the
-  /// total; a pause keeps the seconds left, rounded up.
+  /// The same rules as the app's timers (lib/timers.ts): ±1 min changes the time left and the total by
+  /// as much, and −1 min never goes below `minLeftSeconds` (nor adds time); a pause keeps the seconds
+  /// left, rounded up. The card changes first, so the tap shows at once; the alerts follow.
   static func tap(_ kind: Kind, timerId: String) async {
     guard let activity = Activity<TimerActivityAttributes>.activities.first else { return }
     var state = activity.content.state
@@ -64,30 +86,43 @@ enum LiveTimerButtons {
     guard state.id == timerId else { return }
     let now = Date().timeIntervalSince1970 * 1000
     let action: String
+    var moveAlerts = false
+    var dropAlerts = false
     switch kind {
-    case .addMinute:
-      if state.state == "running", let endsAt = state.endsAt, endsAt > now {
-        state.endsAt = endsAt + 60_000
-        await scheduleAlerts(state)
-      } else if state.state == "paused", let left = state.remainingSeconds {
-        state.remainingSeconds = left + 60
+    case .addMinute, .removeMinute:
+      let running = state.state == "running"
+      guard running || state.state == "paused" else { return }
+      guard !running || (state.endsAt ?? now) > now else { return }
+      // Seconds left, rounded up as the app counts them.
+      let left = running ? Int((((state.endsAt ?? now) - now) / 1000).rounded(.up)) : state.remainingSeconds ?? 0
+      let next: Int
+      if kind == .addMinute {
+        next = left + 60
       } else {
-        return
+        next = left <= state.minLeftSeconds ? left : max(state.minLeftSeconds, left - 60)
       }
-      state.totalSeconds += 60
-      action = "add_minute"
+      guard next != left else { return }
+      let delta = next - left
+      state.totalSeconds = max(next, state.totalSeconds + delta)
+      if running {
+        state.endsAt = now + Double(next) * 1000
+        moveAlerts = true
+      } else {
+        state.remainingSeconds = next
+      }
+      action = kind == .addMinute ? "add_minute" : "remove_minute"
     case .toggle:
       if state.state == "running", let endsAt = state.endsAt, endsAt > now {
         state.state = "paused"
         state.remainingSeconds = Int(((endsAt - now) / 1000).rounded(.up))
         state.endsAt = nil
-        removeAlerts(state)
+        dropAlerts = true
         action = "pause"
       } else if state.state == "paused", let left = state.remainingSeconds {
         state.state = "running"
         state.endsAt = now + Double(left) * 1000
         state.remainingSeconds = nil
-        await scheduleAlerts(state)
+        moveAlerts = true
         action = "resume"
       } else {
         return
@@ -100,6 +135,8 @@ enum LiveTimerButtons {
     await activity.update(ActivityContent(state: state, staleDate: staleDate))
     LiveTimerTaps.append(["owner": activity.attributes.owner, "timerId": timerId, "action": action, "at": now])
     NotificationCenter.default.post(name: LiveTimerTaps.tapped, object: nil)
+    if dropAlerts { removeAlerts(state) }
+    if moveAlerts { await scheduleAlerts(state) }
   }
 
   /// The timer's alert and follow-up at its new end, as lib/timer-alerts.ts schedules them: whole

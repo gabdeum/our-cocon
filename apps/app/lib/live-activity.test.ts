@@ -97,7 +97,7 @@ describe('what the card shows', () => {
   });
 
   it("carries the primary timer's alerts only while they're on, for the card's buttons", () => {
-    const withAlerts = liveActivityState([blindBake], T0, (t) => liveAlert(t, USER))?.state.alert;
+    const withAlerts = liveActivityState([blindBake], T0, { alertsFor: (t) => liveAlert(t, USER) })?.state.alert;
     expect(withAlerts).toEqual({
       alertId: 'timer:a-1',
       againId: 'timer:a-1:again',
@@ -112,7 +112,15 @@ describe('what the card shows', () => {
       data: { kind: 'timer_done', route: '/timers', timerId: 'a-1', userId: USER },
     });
     expect(liveActivityState([blindBake], T0)?.state.alert).toBeUndefined();
-    expect(liveActivityState([done('a-1', 'Blind bake', 1000)], T0, (t) => liveAlert(t, USER))?.state.alert).toBeUndefined();
+    expect(liveActivityState([done('a-1', 'Blind bake', 1000)], T0, { alertsFor: (t) => liveAlert(t, USER) })?.state.alert).toBeUndefined();
+  });
+
+  it('a tap opens the step in cooking mode, or Timers for a quick timer; "2 running" opens Timers', () => {
+    const url = (p: string) => `ourcocon://${p.slice(1)}`;
+    expect(liveActivityState([blindBake], T0, { url })?.state).toMatchObject({ openUrl: 'ourcocon://recipes/r1/cook?step=s3', timersUrl: 'ourcocon://timers' });
+    expect(liveActivityState([pasta], T0, { url })?.state).toMatchObject({ openUrl: 'ourcocon://timers', timersUrl: 'ourcocon://timers' });
+    expect(liveActivityState([pasta], T0)?.state.copy.removeMinute).toBe('−1 min');
+    expect(liveActivityState([pasta], T0)?.state.minLeftSeconds).toBe(30);
   });
 
   it('the hidden pill changes nothing: the card reads only the timers', () => {
@@ -126,6 +134,13 @@ describe("the card's buttons, applied as when they were tapped (FR-004)", () => 
   it('+1 min adds a minute to that timer and its total', () => {
     const [t] = applyLiveAction([blindBake], { timerId: 'a-1', action: 'add_minute', at: tapAt });
     expect(t).toMatchObject({ state: 'running', endsAt: T0 + 312_000, totalSeconds: 960 });
+  });
+
+  it('−1 min takes a minute off, never below 0:30 (as in the app)', () => {
+    const [t] = applyLiveAction([blindBake], { timerId: 'a-1', action: 'remove_minute', at: T0 });
+    expect(t).toMatchObject({ endsAt: T0 + 192_000, totalSeconds: 840 });
+    const [short] = applyLiveAction([running('a-1', 'Blind bake', 50)], { timerId: 'a-1', action: 'remove_minute', at: T0 });
+    expect(short?.endsAt).toBe(T0 + 30_000);
   });
 
   it('pause keeps the time left at the tap, resume counts it from the tap', () => {
