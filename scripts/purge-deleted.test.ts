@@ -77,6 +77,19 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
       [familyId],
     );
     await db.query("insert into public.event_exceptions (family_id, event_id, occurrence_date, cancelled) select family_id, id, starts_on, true from public.events where family_id = $1", [familyId]);
+    // Spec 049 (L118): sends and reminder deliveries 91 days and 1 day old.
+    const member = await db.query<{ id: string }>("insert into public.members (family_id, role, display_name, color) values ($1, 'editor', 'James', 'sky') returning id", [familyId]);
+    await db.query(
+      `insert into public.notification_log (family_id, kind, ref, status, sent_at) values
+         ($1, 'reminder', 'purge-old', 'delivered', now() - interval '91 days'), ($1, 'reminder', 'purge-recent', 'sent', now() - interval '1 day')`,
+      [familyId],
+    );
+    await db.query(
+      `insert into public.reminder_deliveries (family_id, event_id, occurrence_date, kind, member_id, sent_at)
+         select family_id, id, d, 'day_before', $2, now() - (case when d = starts_on then interval '91 days' else interval '1 day' end)
+         from public.events, lateral (values (starts_on), (starts_on + 7)) v(d) where family_id = $1 and title = 'Recent swim'`,
+      [familyId, member.rows[0]?.id],
+    );
     for (const path of [...photos.old, photos.recent]) await upload(path);
   }, 30_000);
 
@@ -114,6 +127,13 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
     expect(rows).toEqual([{ title: 'Recent swim' }]);
     const exceptions = await db.query('select 1 from public.event_exceptions where family_id = $1', [familyId]);
     expect(exceptions.rowCount).toBe(1);
+  });
+
+  it('removes notification records over 90 days old (spec 049, 032-later L118)', async () => {
+    const log = await db.query<{ ref: string }>('select ref from public.notification_log where family_id = $1', [familyId]);
+    expect(log.rows).toEqual([{ ref: 'purge-recent' }]);
+    const deliveries = await db.query('select 1 from public.reminder_deliveries where family_id = $1', [familyId]);
+    expect(deliveries.rowCount).toBe(1);
   });
 
   it('retries the Apple revokes; without Apple set up (locally) they stay queued (spec 045)', async () => {

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { UndoKind } from './activity';
-import { CalendarView, DefaultReminder, SlotKey, TimeType, Visibility } from './calendar';
+import { CalendarView, DefaultReminder, Reminder, SlotKey, TimeType, Visibility } from './calendar';
 import { AiPermission, CookingSetting, MemberColor, SignInMethod } from './family';
 import { NotificationKind } from './notifications';
 import { FilterKey } from './recipe-filters';
@@ -244,6 +244,8 @@ export const events = {
   // Spec 048: the Live Activity started (timers on the Lock Screen), and its "+1 min" / "Pause" / "Resume".
   timer_live_activity_started: z.strictObject({ timer_count: z.int().min(1).max(100) }),
   timer_live_activity_action: z.strictObject({ action: z.enum(['add_minute', 'remove_minute', 'pause', 'resume', 'stop', 'dismiss']) }),
+  // Spec 049 (server, the notifier): one event's reminder went out for one date, to this many members.
+  event_reminder_sent: z.strictObject({ kind: Reminder.exclude(['none']), recipients: z.int().min(1).max(1000) }),
 } as const;
 
 export type EventName = keyof typeof events;

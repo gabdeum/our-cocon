@@ -16,7 +16,7 @@ describe('the event page rows (FR-001)', () => {
     expect(whenLines(oct31, DEFAULT_SLOT_TIMES)).toEqual({ title: 'Saturday, Oct 31', sub: 'Morning · about 09:00–12:00' });
     expect(repeatLine(music)).toBe('Every Saturday');
     expect(responsibleLine(oct31.responsible_member_id, oct31.members, members)).toBe('Gabriel takes James');
-    expect(reminderLines(oct31, members)).toEqual({ title: '1 hour before', sub: 'Shows on Home for Gabriel' });
+    expect(reminderLines(oct31, members, DEFAULT_SLOT_TIMES)).toEqual({ title: '1 hour before', sub: 'Reminds Gabriel · 08:00' });
     expect(memberBadges(oct31, members)).toEqual([{ key: james.id, name: 'James', initial: 'J', color: 'mint' }]);
   });
 
@@ -41,10 +41,14 @@ describe('the event page rows (FR-001)', () => {
     expect(responsibleLine(null, [james.id], members)).toBeNull();
   });
 
-  it('shows the reminder on Home for those with the app on the event, Everyone being all of them', () => {
-    expect(reminderLines(babyMusic({ members: ['everyone'], responsible_member_id: null }), members)?.sub).toBe('Shows on Home for Gabriel and Eva');
-    expect(reminderLines(babyMusic({ members: ['others'], responsible_member_id: null }), members)).toEqual({ title: '1 hour before' });
-    expect(reminderLines(babyMusic({ reminder: 'none' }), members)).toBeNull();
+  it('says whom the reminder reaches and when (spec 049 FR-006): Everyone is all of them, Others the creator', () => {
+    const lines = (fields: Parameters<typeof babyMusic>[0], use24h = true) => reminderLines(babyMusic(fields), members, DEFAULT_SLOT_TIMES, use24h);
+    expect(lines({ members: ['everyone'], responsible_member_id: null })?.sub).toBe('Reminds Gabriel and Eva · 08:00');
+    expect(lines({ members: ['others'], responsible_member_id: null })?.sub).toBe('Reminds Eva · 08:00');
+    expect(lines({ reminder: 'day_before' }, false)?.sub).toBe('Reminds Gabriel · 6:00 PM the day before');
+    expect(lines({ reminder: 'minutes_15', time_type: 'custom', slots: [], start_time: '14:30', end_time: '15:30' })).toEqual({ title: '15 minutes before', sub: 'Reminds Gabriel · 14:15' });
+    expect(lines({ visibility: 'private', creator_member_id: james.id })).toEqual({ title: '1 hour before' });
+    expect(lines({ reminder: 'none' })).toBeNull();
   });
 
   it('opens the place in the phone’s maps app', () => {

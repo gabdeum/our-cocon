@@ -18,7 +18,7 @@ export default function NewEventRoute() {
   const { maybeAsk } = useNotifications();
   const { state, client, tracker, familyId, myMemberId, today, slotTimes } = sheet;
   // The draft starts once, on the day the sheet opened; later renders keep what's been typed.
-  const [initial] = useState(() => (myMemberId ? newDraft(prefillFrom(params), today) : null));
+  const [initial] = useState(() => (myMemberId ? newDraft(prefillFrom(params), today, sheet.defaultReminder) : null));
   if (state.status !== 'ready' || !familyId || !myMemberId || !initial) return null;
   return (
     <EventSheet

@@ -63,10 +63,11 @@ export function EventDetail(p: EventDetailProps) {
   const ticks = pending.of === event.checklist ? pending.done : {};
   const setTick = (id: string, done: boolean) => setPending((t) => ({ of: event.checklist, done: { ...(t.of === event.checklist ? t.done : {}), [id]: done } }));
 
-  const when = whenLines(o, p.slotTimes, useCalendarDisplay().prefs.use24h);
+  const { use24h } = useCalendarDisplay().prefs;
+  const when = whenLines(o, p.slotTimes, use24h);
   const repeat = repeatLine(event);
   const responsible = responsibleLine(o.responsible_member_id, o.members, members);
-  const reminder = reminderLines(o, members);
+  const reminder = reminderLines(o, members, p.slotTimes, use24h);
   const badges = memberBadges(o, members);
   const checklist = event.checklist ?? [];
   const ownEvent = event.creator_member_id === p.myMemberId;

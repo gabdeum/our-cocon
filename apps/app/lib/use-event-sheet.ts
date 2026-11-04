@@ -27,6 +27,8 @@ export function useEventSheet() {
     slotTimes: settings.data?.slotTimes ?? DEFAULT_SLOT_TIMES,
     weekStartsOn: prefs.weekStartsOn,
     use24h: prefs.use24h,
+    /** Spec 046 FR-003: what Add event's Reminder starts on. */
+    defaultReminder: prefs.default_reminder,
     /** The calendar's queries start with `events` (lib/sync.tsx refetches them live too). */
     refreshEvents: () => void queryClient.invalidateQueries({ queryKey: ['events'] }),
     // Opened straight from a link there's nothing to go back to: the calendar.

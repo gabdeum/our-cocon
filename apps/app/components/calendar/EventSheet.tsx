@@ -3,7 +3,7 @@ import { ScrollView, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { addDays, dateLabel, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import { loadEvents, type Db, type StoredEvent } from '@cocon/data';
-import { EVENT_CATEGORIES, type EventInput, type Reminder, type Visibility } from '@cocon/schemas/calendar';
+import { EVENT_CATEGORIES, Reminder as ReminderSchema, type EventInput, type Reminder, type Visibility } from '@cocon/schemas/calendar';
 import type { Tracker } from '@cocon/schemas';
 import {
   BottomSheet,
@@ -34,6 +34,7 @@ import {
   dayTiles,
   endsProblem,
   hasMoreOptions,
+  reminderHint,
   hiddenNames,
   isChipOn,
   managedOn,
@@ -60,7 +61,7 @@ import { strings } from '../../strings/en';
 
 const a = strings.calendar.add;
 const REPEATS: RepeatChoice[] = ['never', 'daily', 'weekly', 'biweekly', 'monthly', 'yearly'];
-const REMINDERS: Reminder[] = ['none', 'morning_of', 'hour_before', 'day_before'];
+const REMINDERS: readonly Reminder[] = ReminderSchema.options;
 const VISIBILITIES: Visibility[] = ['family', 'private', 'surprise'];
 const MAX_CHECKLIST = 50;
 
@@ -147,6 +148,7 @@ export function EventSheet(p: EventSheetProps) {
   const revealed = hiddenNames(surprise.revealed.filter((id) => id !== myMemberId), members);
   const secret = surpriseProblems(out, members);
   const hidden = hiddenNames(out.hiddenFrom, members);
+  const remindHint = reminderHint(out, members, creatorId, myMemberId);
   const showVisibility = (p.canChangeVisibility ?? true) && !p.occurrenceOnly;
 
   const close = () => {
@@ -316,7 +318,7 @@ export function EventSheet(p: EventSheetProps) {
                   <Choice key={r} label={a.reminders[r]} selected={d.reminder === r} onPress={() => set({ reminder: r })} />
                 ))}
               </PillRow>
-              <Hint text={a.reminderHint} />
+              {remindHint ? <Hint text={remindHint} /> : null}
             </Section>
           )}
 

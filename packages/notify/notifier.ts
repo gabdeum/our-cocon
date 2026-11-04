@@ -1,29 +1,36 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { DEFAULT_NOTIFICATION_PREFS, NotificationPrefs, type Database, type PushPayload } from '@cocon/schemas';
-import { getReceipts, sendPushes, type ExpoOptions, type PushMessage } from './expo';
+import { DEFAULT_NOTIFICATION_PREFS, PushDevicePrefs, type Database, type NotificationPrefs, type PushPayload } from '@cocon/schemas';
+import { getReceipts, sendPushes, type ExpoOptions, type PushMessage, type PushTicket } from './expo';
 
 /** A Supabase client with the service role key: the notifier works for every family (FR-005). */
 export type ServiceDb = SupabaseClient<Database>;
 
 export type LogKind = 'timer_done' | 'reminder' | 'test';
 
+/** A phone a notification goes to, for wording it the way that phone shows times (spec 049). */
+export type Device = { member_id: string; prefs: NotificationPrefs & { clock_24h?: boolean } };
+
 export type Notification = {
   kind: LogKind;
   memberIds: string[];
-  title: string;
-  body: string;
+  /**
+   * Spec 049 FR-003: of `memberIds`, those reminded only because they chose "All family events":
+   * only their phones set that way get it.
+   */
+  allFamilyOnly?: string[];
   payload: PushPayload;
   /** What it's about, for the log (an event id and date for reminders). Never user text. */
   ref?: string;
   interruptionLevel?: PushMessage['interruptionLevel'];
-};
+} & ({ title: string; body: string } | { text: (device: Device) => { title: string; body: string } });
 
 /** Expo's answer for a token Apple no longer accepts (app deleted, notifications reset). */
 const GONE = 'DeviceNotRegistered';
 const RECEIPT_DELAY_MS = 15 * 60 * 1000;
 
-function prefsOf(raw: unknown): NotificationPrefs {
-  return { ...DEFAULT_NOTIFICATION_PREFS, ...NotificationPrefs.partial().catch({}).parse(raw) };
+/** A phone's saved prefs, with the defaults for anything missing or unreadable. */
+export function prefsOf(raw: unknown): Device['prefs'] {
+  return { ...DEFAULT_NOTIFICATION_PREFS, ...PushDevicePrefs.catch({}).parse(raw) };
 }
 
 export type SendResult = { sent: number; failed: number };
@@ -35,7 +42,10 @@ export function createNotifier(db: ServiceDb, expo: ExpoOptions, now: () => Date
     if (error) throw error;
   }
 
-  /** Sends to every enabled phone of these members; reminders skip phones that turned them off. */
+  /**
+   * Sends to every enabled phone of these members; reminders skip phones that turned them off.
+   * Failed sends are tried once more (spec 049), then logged.
+   */
   async function send(n: Notification): Promise<SendResult> {
     if (n.memberIds.length === 0) return { sent: 0, failed: 0 };
     const { data, error } = await db
@@ -45,20 +55,25 @@ export function createNotifier(db: ServiceDb, expo: ExpoOptions, now: () => Date
       .is('disabled_at', null)
       .not('expo_push_token', 'is', null);
     if (error) throw error;
-    const devices = (data ?? []).filter((d) => n.kind !== 'reminder' || prefsOf(d.prefs).reminders_on);
+    const allOnly = new Set(n.allFamilyOnly ?? []);
+    const devices = (data ?? [])
+      .map((d) => ({ ...d, prefs: prefsOf(d.prefs) }))
+      .filter((d) => n.kind !== 'reminder' || (d.prefs.reminders_on && (!allOnly.has(d.member_id) || d.prefs.reminders_scope === 'all')));
     if (devices.length === 0) return { sent: 0, failed: 0 };
 
-    const tickets = await sendPushes(
-      devices.map((d) => ({
-        to: d.expo_push_token as string,
-        title: n.title,
-        body: n.body,
-        data: n.payload,
-        sound: 'default',
-        ...(n.interruptionLevel ? { interruptionLevel: n.interruptionLevel } : {}),
-      })),
-      expo,
-    );
+    const messages: PushMessage[] = devices.map((d) => ({
+      to: d.expo_push_token as string,
+      ...('text' in n ? n.text(d) : { title: n.title, body: n.body }),
+      data: n.payload,
+      sound: 'default',
+      ...(n.interruptionLevel ? { interruptionLevel: n.interruptionLevel } : {}),
+    }));
+    const tickets = await sendPushes(messages, expo);
+    const retry = tickets.flatMap((t, i) => (t.ok || t.error === GONE ? [] : [i]));
+    if (retry.length) {
+      const again = await sendPushes(retry.map((i) => messages[i] as PushMessage), expo);
+      retry.forEach((i, k) => (tickets[i] = again[k] ?? (tickets[i] as PushTicket)));
+    }
     const sentAt = now().toISOString();
     const rows = devices.map((d, i) => {
       const t = tickets[i] ?? { ok: false as const, message: 'No ticket' };

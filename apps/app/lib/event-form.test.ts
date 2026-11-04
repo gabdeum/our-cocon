@@ -17,6 +17,7 @@ import {
   newDraft,
   overrideFor,
   prefillFrom,
+  reminderHint,
   scopeBody,
   shiftMonth,
   slotChips,
@@ -94,6 +95,26 @@ describe('the route’s prefill (FR-007, 032-later L91)', () => {
     expect(newDraft({ time: '14:00' }, TODAY).time).toEqual({ kind: 'custom', start: '14:00', end: '15:00' });
     expect(newDraft({ time: '23:30' }, TODAY).time).toEqual({ kind: 'custom', start: '23:30', end: '24:00' });
     expect(newDraft({}, TODAY)).toMatchObject({ date: TODAY, time: { kind: 'all_day' } });
+  });
+
+  it('starts on the member\'s default reminder (spec 049 FR-001)', () => {
+    expect(newDraft({}, TODAY).reminder).toBe('none');
+    expect(newDraft({}, TODAY, 'minutes_15').reminder).toBe('minutes_15');
+  });
+});
+
+describe('the Reminder hint (spec 049 FR-001)', () => {
+  const hint = (over: Partial<EventDraft>) => reminderHint(draft({ reminder: 'hour_before', ...over }), members, ME, ME);
+  it('names who it reminds on their phones: whoever takes a member without the app', () => {
+    expect(hint({ who: [james.id], responsible: alex.id })).toBe('Reminds Alex on their phones.');
+    expect(hint({ who: ['everyone'] })).toBe('Reminds Gabriel and Alex on their phones.');
+  });
+  it('"Reminds you" when it\'s only you, as for a private event', () => {
+    expect(hint({ who: ['everyone'], visibility: 'private' })).toBe('Reminds you on your phone.');
+  });
+  it('nothing without a reminder', () => {
+    expect(hint({ reminder: 'none' })).toBeNull();
+    expect(reminderHint(draft({ reminder: 'hour_before', who: [alex.id], visibility: 'private' }), members, alex.id, alex.id)).toBe('Reminds you on your phone.');
   });
 });
 

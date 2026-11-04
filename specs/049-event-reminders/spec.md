@@ -1,6 +1,6 @@
 # Feature Specification: Event reminders on the phone
 
-**Feature Branch**: `049-event-reminders` · **Status**: Ready · **Depends on**: 033, 035, 041, 043, 046
+**Feature Branch**: `049-event-reminders` · **Status**: Built · **Depends on**: 033, 035, 041, 043, 046
 **Input**: An event's reminder now reaches the right people's phones, even when the app is closed: "Baby swim class in 1 hour".
 **Design**: `design/ui/OC-Notifications.md` › Event reminders; screen `OC-NotifLockReminders`; `OC-SettingsNotif` (event reminders section).
 
@@ -50,3 +50,4 @@ Copy in `design/ui/OC-Notifications.md`. No user-facing errors; failed sends are
 
 ## Changelog
 - 2026-11-02: Ready. From Gabriel's notifications brief.
+- 2026-11-04: Built. Reminders go out from the notifier's new `reminders` job: `remindersDue` in `@cocon/calendar` (when, who, words; the event sheet's hint, the event page's row and Home use the same rules), claimed in `reminder_deliveries` before sending (a crash in between loses one reminder rather than sending two), sent with `packages/notify` (now worded per phone, and retried once). The event's Reminder has "15 minutes before", starts on the member's default, and assistants get it too (`reminder` on create_event and update_event, default from the member's settings; not for one date). `event_reminder_sent` goes to PostHog from the notifier (it now reads the PostHog key from app.env). The nightly purge keeps 90 days of sends (032-later L118). Deviations: the spec's examples drive the bodies: "15 minutes" and "1 hour" are "{time} · {place} · {who takes}", "Morning of" "{who it's for} · {place} · {who takes}" (its time is in the title), "1 day before" "{time, slot or All day} · {weekday} · …" (OC-Notifications.md has the rules); slot titles read "early this morning" and "at lunch" for those two slots; no `reminders` thread (Expo's push API has none, 032-later L122); a reminder may go out up to 30 s early instead of "in the next 2 minutes"; the hint says "Reminds you on your phone." whenever you're the only one reminded, not only for private events; an event moved later on the same day after its reminder went out isn't reminded again (the claim is per date, not per time); "Automatic" time format follows each phone's clock, which the app now sends with its settings (`clock_24h`).

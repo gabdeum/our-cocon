@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_NOTIFICATION_PREFS } from '@cocon/schemas';
 vi.mock('expo-crypto', () => ({ randomUUID: () => '00000000-0000-4000-8000-00000000ffff' }));
 
-import { ASK_AGAIN_MS, deviceId, registerDevice, NO_ASK, openedRoute, readAsk, readPrefs, recordAsk, shouldAsk, unregisterDevice, writeAsk, writePrefs } from './notifications';
+import { ASK_AGAIN_MS, deviceId, registerDevice, NO_ASK, openedRoute, readAsk, readPrefs, recordAsk, savePushPrefs, shouldAsk, unregisterDevice, writeAsk, writePrefs } from './notifications';
 
 function memoryStorage(initial: Record<string, string> = {}) {
   const items = new Map(Object.entries(initial));
@@ -86,6 +86,14 @@ describe('this install (FR-004)', () => {
     expect(await registerDevice({ rpc } as never, native as never, storage, DEFAULT_NOTIFICATION_PREFS, () => 'fresh-id')).toBe(true);
     expect(rpc.mock.calls.map(([, a]) => a.p_device_id)).toEqual(['taken-id', 'fresh-id']);
     expect(storage.items.get('cocon.device.id')).toBe('fresh-id');
+  });
+
+  it('tells the server whether this phone\'s clock is 24-hour (spec 049 FR-004)', async () => {
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const native = { pushToken: async () => 'ExponentPushToken[abcdefgh1234]', appVersion: '1.0.0' };
+    await registerDevice({ rpc } as never, native as never, memoryStorage({ 'cocon.device.id': 'device-1' }), DEFAULT_NOTIFICATION_PREFS, () => 'x', false);
+    await savePushPrefs({ rpc } as never, 'device-1', DEFAULT_NOTIFICATION_PREFS, true);
+    expect(rpc.mock.calls.map(([, a]) => a.p_prefs.clock_24h)).toEqual([false, true]);
   });
 
   it('nothing to remove on a phone that never registered', async () => {

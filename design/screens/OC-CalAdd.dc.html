@@ -131,11 +131,11 @@ input::placeholder,textarea::placeholder{color:#5A503A;opacity:1}
           <div style="display: flex; flex-direction: column; gap: 8px">
             <h3 style="margin: 0; font-size: 16px; font-weight: 900">Reminder</h3>
             <div style="display: flex; gap: 8px; flex-wrap: wrap">
-              <sc-for list="{{reminders}}" as="r" hint-placeholder-count="4">
+              <sc-for list="{{reminders}}" as="r" hint-placeholder-count="5">
                 <button aria-pressed="{{r.on}}" onClick="{{r.pick}}" style="{{r.style}}">{{r.label}}</button>
               </sc-for>
             </div>
-            <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A">Shows on Home for now. Phone alerts come later.</p>
+            <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A">Reminds you on your phone.</p>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 8px">
@@ -314,7 +314,7 @@ class Component extends DCLogic {
         }
       };
     });
-    var reminders = ['None', 'Morning of', '1 hour before', '1 day before'].map(function (r) {
+    var reminders = ['None', '15 minutes before', '1 hour before', 'Morning of', '1 day before'].map(function (r) {
       return { label: r, on: s.reminder === r ? 'true' : 'false', style: pill(s.reminder === r), pick: set({ reminder: r }) };
     });
     var VIS = { family: 'Family', 'private': 'Private', surprise: 'Surprise' };

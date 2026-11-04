@@ -55,6 +55,27 @@ export function timeIn(timeZone: string, now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now);
 }
 
+/** How far `timeZone` is ahead of UTC at the instant `ms`, in ms. */
+function offsetAt(timeZone: string, ms: number): number {
+  const f = new Intl.DateTimeFormat('en-US', { timeZone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+  const p = Object.fromEntries(f.formatToParts(new Date(ms)).map((x) => [x.type, Number(x.value)]));
+  const wall = Date.UTC(p.year ?? 0, (p.month ?? 1) - 1, p.day ?? 1, p.hour ?? 0, p.minute ?? 0);
+  return wall - Math.floor(ms / 60_000) * 60_000;
+}
+
+/**
+ * The instant a wall-clock time happens on a date in the home time zone (spec 049: when a
+ * reminder goes out). A repeated hour (clocks going back) is its first time; an hour skipped by
+ * clocks going forward comes out an hour early.
+ */
+export function zonedInstant(date: string, time: string, timeZone: string): Date {
+  const { year, month, day } = parts(date);
+  const [h, m] = time.split(':').map(Number) as [number, number];
+  const wall = Date.UTC(year, month - 1, day, h, m);
+  const guess = wall - offsetAt(timeZone, wall);
+  return new Date(wall - offsetAt(timeZone, guess));
+}
+
 /** Regions whose weeks start on Sunday (CLDR); everywhere else starts on Monday. */
 const SUNDAY_REGIONS = new Set([
   'AG', 'AS', 'BD', 'BR', 'BS', 'BT', 'BW', 'BZ', 'CA', 'CN', 'CO', 'DM', 'DO', 'ET', 'GT', 'GU', 'HK', 'HN', 'ID', 'IL', 'IN',

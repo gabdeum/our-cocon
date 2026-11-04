@@ -142,7 +142,7 @@ export function layoutCalendarCard(events: readonly StoredEvent[], ctx: CardCont
   const byId = new Map(events.map((e) => [e.id, e]));
   const reminderOf = (o: MonthOccurrence) => {
     const event = byId.get(o.id);
-    return o.view === 'full' && event && remindsMember(event, ctx.me) ? event.reminder : null;
+    return o.view === 'full' && event && remindsMember(o, ctx.me, ctx.members) ? event.reminder : null;
   };
 
   // FR-004: birthdays from today to 3 days ahead, in the banner rather than the rows.
@@ -154,10 +154,10 @@ export function layoutCalendarCard(events: readonly StoredEvent[], ctx: CardCont
       text: c.birthday(o.title, o.starts_on === today ? 'today' : o.starts_on === tomorrow ? 'tomorrow' : (words.weekdays[weekday(o.starts_on)] ?? '')),
     }));
 
-  // FR-003: a reminder due today: the morning of or an hour before today's event, or the day before tomorrow's.
+  // FR-003: a reminder due today: the morning of, an hour or 15 minutes before today's event, or the day before tomorrow's.
   const reminders = occurrences.flatMap((o) => {
     const reminder = reminderOf(o);
-    const due = (o.starts_on === today && (reminder === 'morning_of' || reminder === 'hour_before')) || (o.starts_on === tomorrow && reminder === 'day_before');
+    const due = (o.starts_on === today && (reminder === 'morning_of' || reminder === 'hour_before' || reminder === 'minutes_15')) || (o.starts_on === tomorrow && reminder === 'day_before');
     if (!due) return [];
     const row = safeRow(o, o.starts_on, ctx);
     if (!row) return [];

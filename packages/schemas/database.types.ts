@@ -719,6 +719,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"reminder_deliveries": {
+                  Row: {
+                    "event_id": string,"family_id": string,"id": string,"kind": string,"member_id": string,"occurrence_date": string,"sent_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "event_id": string,"family_id": string,"id"?: string,"kind": string,"member_id": string,"occurrence_date": string,"sent_at"?: string
+                  }
+                  Update: {
+                    "event_id"?: string,"family_id"?: string,"id"?: string,"kind"?: string,"member_id"?: string,"occurrence_date"?: string,"sent_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reminder_deliveries_event_id_family_id_fkey"
+      columns: ["event_id","family_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "reminder_deliveries_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reminder_deliveries_member_id_family_id_fkey"
+      columns: ["member_id","family_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
                 },"share_links": {
                   Row: {
                     "created_at": string,"created_by": string | null,"family_id": string,"id": string,"include_tips": boolean,"include_variants": boolean,"recipe_id": string,"source": string,"stopped_at": string | null,"stopped_by": string | null,"stopped_source": string | null,"token": string,"updated_at": string,"updated_by": string | null
@@ -1028,6 +1060,9 @@ isOneToOne: false
 "purge_deleted_recipes":
 { Args: { "ids": (string)[] }; Returns: number
                            },
+"purge_notification_history":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "recipes_due_for_purge":
 { Args: Record<PropertyKey, never>; Returns: {
               "family_id": string,"id": string
@@ -1035,6 +1070,11 @@ isOneToOne: false
                            },
 "register_push_device":
 { Args: { "p_app_version": string,"p_device_id": string,"p_platform": string,"p_prefs": Json,"p_token": string }; Returns: undefined
+                           },
+"reminder_candidates":
+{ Args: { "p_from": string,"p_to": string }; Returns: {
+              "created_at": string,"creator_member_id": string,"end_time": string,"ends_on": string,"exceptions": Json,"family_id": string,"hidden_from": (string)[],"id": string,"location": string,"members": Json,"recurrence": Json,"reminder": string,"responsible_member_id": string,"slots": (string)[],"start_time": string,"starts_on": string,"time_type": string,"title": string,"visibility": string
+            }[]
                            },
 "remove_managed_member":
 { Args: { "member_id": string }; Returns: undefined

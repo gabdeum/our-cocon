@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { addDays, daysBetween } from '@cocon/calendar';
-import { EventCategory, RecurrenceEnds, SlotKey, Visibility, Weekday, ClockTime, type EventInput } from '@cocon/schemas/calendar';
+import { EventCategory, RecurrenceEnds, Reminder, SlotKey, Visibility, Weekday, ClockTime, type EventInput } from '@cocon/schemas/calendar';
 import { ToolError } from '../../src/tools.js';
 import { Day, member, memberRef, type Calendar } from './shared.js';
 
@@ -40,6 +40,9 @@ export const fields = {
   location: z.string().trim().min(1).max(200).optional(),
   notes: z.string().trim().min(1).max(2000).optional(),
   type: EventCategory.optional().describe('What kind of event it is. A birthday is all day and repeats every year.'),
+  reminder: Reminder.optional().describe(
+    'When to remind on their phones: none, minutes_15, hour_before, morning_of (07:30, or an hour before an early start) or day_before (18:00 the evening before). Leave out to use the member’s default.',
+  ),
   visibility: Visibility.optional().describe('family (default: everyone sees it), private (others see "Busy"), or surprise (kept from some members, who see a cover instead).'),
   surprise: z
     .strictObject({
@@ -116,7 +119,7 @@ export function newEventInput(cal: Calendar, f: Fields & Pick<Required<Fields>, 
     ends_on: f.end_date ?? f.date,
     ...time,
     recurrence,
-    reminder: 'none',
+    reminder: f.reminder ?? cal.defaultReminder,
     members,
     responsible_member_id: responsibleOf(cal, members, f.responsible),
     visibility: f.visibility ?? 'family',
@@ -148,6 +151,7 @@ export function patchedInput(cal: Calendar, before: EventInput, p: Patch): Event
     ends_on: ends,
     ...(time ?? {}),
     recurrence: p.repeat !== undefined ? (p.repeat ? recurrenceOf(p.repeat) : null) : (before.recurrence ?? null),
+    reminder: p.reminder ?? before.reminder ?? 'none',
     members,
     responsible_member_id: responsibleOf(cal, members, p.responsible !== undefined ? p.responsible : keptTaker?.id),
     visibility,

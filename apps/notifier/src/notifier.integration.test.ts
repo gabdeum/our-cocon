@@ -25,11 +25,17 @@ describe.skipIf(!local)('notifier against local Supabase', () => {
   const sentTo: string[] = [];
   let now = new Date();
 
-  // Expo: accepts every token but "gone…", whose ticket says DeviceNotRegistered.
+  // Expo: accepts every token but "gone…", whose ticket says DeviceNotRegistered. While `flaky`
+  // is set, the first try of any batch fails as a whole.
+  let flaky = false;
   const fetch = (async (input: string, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body));
     if (String(input).endsWith('/send')) {
       sentTo.push(...body.map((m: { to: string }) => m.to));
+      if (flaky) {
+        flaky = false;
+        return new Response('busy', { status: 503 });
+      }
       return new Response(JSON.stringify({ data: body.map((m: { to: string }) => (m.to.includes('gone') ? { status: 'error', message: 'gone', details: { error: 'DeviceNotRegistered' } } : { status: 'ok', id: `ticket-${m.to}` })) }));
     }
     return new Response(JSON.stringify({ data: Object.fromEntries(body.ids.map((id: string) => [id, id.includes('ipad') ? { status: 'error', message: 'gone', details: { error: 'DeviceNotRegistered' } } : { status: 'ok' }])) }));
@@ -48,7 +54,7 @@ describe.skipIf(!local)('notifier against local Supabase', () => {
     const me = await admin.from('members').select('id').eq('user_id', userIds[0] as string).single();
     if (me.error) throw me.error;
     gabrielId = me.data.id;
-    await register('iphone');
+    await register('iphone', { reminders_scope: 'all' });
     await register('ipad');
     await register('gone');
     await register('quiet', { reminders_on: false });
@@ -87,6 +93,32 @@ describe.skipIf(!local)('notifier against local Supabase', () => {
     sentTo.length = 0;
     await notifier.send({ kind: 'test', memberIds: [gabrielId], title: 'Test', body: 'Body', payload: { kind: 'reminder', route: '/timers' }, ref });
     expect(sentTo.sort()).toEqual([token('iphone'), token('quiet')].sort());
+  });
+
+  it('spec 049: a failed send is tried once more', async () => {
+    sentTo.length = 0;
+    flaky = true;
+    const result = await notifier.send({ kind: 'test', memberIds: [gabrielId], title: 'Test', body: 'Body', payload: { kind: 'reminder', route: '/timers' }, ref });
+    expect(sentTo.sort()).toEqual([token('iphone'), token('iphone'), token('quiet'), token('quiet')].sort());
+    expect(result).toEqual({ sent: 2, failed: 0 });
+  });
+
+  it('spec 049: "All family events" members get it only on phones set that way, worded per phone', async () => {
+    sentTo.length = 0;
+    const words: string[] = [];
+    await notifier.send({
+      kind: 'reminder',
+      memberIds: [gabrielId],
+      allFamilyOnly: [gabrielId],
+      text: (d) => {
+        words.push(String(d.prefs.reminders_scope));
+        return { title: 'T', body: 'B' };
+      },
+      payload: { kind: 'reminder', route: '/timers' },
+      ref,
+    });
+    expect(sentTo).toEqual([token('iphone')]);
+    expect(words).toEqual(['all']);
   });
 
   it('registering again turns a phone back on', async () => {

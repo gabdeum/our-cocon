@@ -135,7 +135,12 @@ describe('EventSheet (spec 041)', () => {
     fireEvent.click(button('Wednesday'));
     fireEvent.click(button('Saturday'));
     fireEvent.change(screen.getByLabelText('Where'), { target: { value: 'Little Notes studio' } });
-    expect(screen.getByText('Shows on Home for now. Phone alerts come later.')).toBeTruthy();
+    // Spec 049 FR-001: five choices; the hint names who a reminder reaches, once there is one.
+    expect(['None', '15 minutes before', '1 hour before', 'Morning of', '1 day before'].every((r) => button(r))).toBe(true);
+    expect(screen.queryByText(/^Reminds /)).toBeNull();
+    fireEvent.click(button('1 hour before'));
+    expect(screen.getByText('Reminds you on your phone.')).toBeTruthy();
+    fireEvent.click(button('None'));
     fireEvent.click(button('Save'));
     await flush();
     expect(saved(props)).toMatchObject({
