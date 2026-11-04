@@ -1,6 +1,6 @@
 import '../global.css';
 import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, router, useSegments, type Href } from 'expo-router';
 import Constants from 'expo-constants';
@@ -33,7 +33,9 @@ import { NotificationsProvider, useNotifications } from '../lib/notifications-co
 import { nativeNotifications } from '../lib/notifications-native';
 import { clearPrefs, unregisterDevice } from '../lib/notifications';
 import { timerNotifications } from '../lib/timer-notifications';
-import { clearFollowUps, createTimerAlerts } from '../lib/timer-alerts';
+import { clearFollowUps, createTimerAlerts, liveAlert } from '../lib/timer-alerts';
+import { createLiveActivity, endLiveActivity } from '../lib/live-activity';
+import { liveTimerNative } from '../lib/live-timer-native';
 import { strings } from '../strings/en';
 import { playChime, vibrateDone } from '../lib/chime';
 import { TimerAlerts } from '../components/timers/TimerAlerts';
@@ -94,22 +96,46 @@ function Timers({ children }: { children: ReactNode }) {
     () => (timerNotifications && userId && known ? createTimerAlerts({ local: timerNotifications, userId, storage: deviceStorage, tracker, enabled }) : undefined),
     [userId, known, enabled],
   );
+  // Spec 048: the Lock Screen card while "Timer on Lock Screen" is on (it needs no notification
+  // permission). Its "+1 min" moves the alerts too, so it carries them while they're on.
+  const live = useMemo(
+    () =>
+      liveTimerNative && userId && known
+        ? createLiveActivity({
+            native: liveTimerNative,
+            userId,
+            tracker,
+            enabled: prefs.timers_live,
+            alertsFor: enabled ? (t) => liveAlert(t, userId) : undefined,
+            isForeground: () => AppState.currentState === 'active',
+          })
+        : undefined,
+    [userId, known, enabled, prefs.timers_live],
+  );
   useTimerOwner(deviceStorage, state.status, userId, removeAllTimerAlerts);
   return (
-    <TimersProvider userId={userId} storage={deviceStorage} tracker={tracker} onStart={onStart} alerts={alerts}>
+    <TimersProvider userId={userId} storage={deviceStorage} tracker={tracker} onStart={onStart} alerts={alerts} live={live}>
       {children}
       <TimerAlerts chime={playChime} vibrate={vibrateDone} onOpenTimers={() => router.push('/timers')} />
     </TimersProvider>
   );
 }
 
-// Every timer notification on this phone, whoever's (spec 047: signed out).
+// Every timer notification on this phone, whoever's, and the Lock Screen card (specs 047 and 048:
+// signed out, however the session ended, or another person signed in).
 const phoneAlerts = timerNotifications;
-const removeAllTimerAlerts = phoneAlerts ? () => createTimerAlerts({ local: phoneAlerts, userId: '', storage: deviceStorage, tracker, enabled: false }).cancelAll() : undefined;
+const removeAllTimerAlerts =
+  phoneAlerts || liveTimerNative
+    ? async () => {
+        if (liveTimerNative) await endLiveActivity(liveTimerNative).catch(() => undefined);
+        if (phoneAlerts) await createTimerAlerts({ local: phoneAlerts, userId: '', storage: deviceStorage, tracker, enabled: false }).cancelAll();
+      }
+    : undefined;
 
-// On sign-out: this person's timers and their Lock Screen alerts (spec 047), notification switches
-// (spec 046), and a shared recipe still waiting to be saved (spec 019).
+// On sign-out: this person's timers, their Lock Screen alerts (spec 047) and card (spec 048),
+// notification switches (spec 046), and a shared recipe still waiting to be saved (spec 019).
 const clearDevice = async (userId: string) => {
+  if (liveTimerNative) await endLiveActivity(liveTimerNative).catch(() => undefined);
   if (timerNotifications) await createTimerAlerts({ local: timerNotifications, userId, storage: AsyncStorage, tracker, enabled: false }).cancelAll();
   await clearFollowUps(AsyncStorage, userId);
   await clearTimers(AsyncStorage, userId);

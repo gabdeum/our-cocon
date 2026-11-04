@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyn
 import { AppState } from 'react-native';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../strings/en';
+import { applyLiveAction, type LiveActionRecord, type LiveTimerActivity } from './live-activity';
 import type { ChoiceStorage } from './recipe-choices';
 import { alertChanges, setTimerOwner, type TimerAlertScheduler } from './timer-alerts';
 import * as T from './timers';
@@ -42,6 +43,10 @@ export interface TimerStore {
   seenDone(): void;
   /** Matches the phone's timer notifications to the timers again (app back in front, a switch changed). */
   reconcileAlerts(): void;
+  /** Spec 048: shows the timers on the Lock Screen card again (app back in front, a switch changed). */
+  syncLive(): void;
+  /** Spec 048 FR-004: "+1 min", "Pause" or "Resume" tapped on the card, applied as at the moment of the tap. */
+  applyLiveActions(): Promise<void>;
   /** Reads the saved timers; ones that ended while the app was closed come back done, silently. */
   load(): Promise<void>;
   destroy(): void;
@@ -54,6 +59,8 @@ export interface TimerStoreOptions {
   tracker: Tracker;
   /** Spec 047: the phone's alerts for timers that end while the app is closed. None on the web. */
   alerts?: TimerAlertScheduler;
+  /** Spec 048: the Live Activity on the Lock Screen and in the Dynamic Island. None on the web. */
+  live?: LiveTimerActivity;
   /** Whether the app is on screen. It can also run in the background (audio), unseen. */
   isForeground?: () => boolean;
   now?: () => number;
@@ -116,7 +123,7 @@ export async function clearTimers(storage: { removeItem: (key: string) => Promis
   }
 }
 
-export function createTimerStore({ storage, userId, tracker, alerts, isForeground = () => AppState.currentState === 'active', now = Date.now }: TimerStoreOptions): TimerStore {
+export function createTimerStore({ storage, userId, tracker, alerts, live, isForeground = () => AppState.currentState === 'active', now = Date.now }: TimerStoreOptions): TimerStore {
   let timers: Timer[] = [];
   // Not saved: reopening the app shows the pill again.
   let pillHidden = false;
@@ -167,6 +174,12 @@ export function createTimerStore({ storage, userId, tracker, alerts, isForegroun
     due.forEach((t) => void alerts.schedule(t));
   }
 
+  // Spec 048 FR-001: the card follows every change. Not before the saved timers are read: an empty
+  // list would end the card still showing them.
+  function syncLive() {
+    if (live && hasRead && !destroyed) live.sync(timers);
+  }
+
   function tick() {
     const at = now();
     // Seen only if on screen now and a moment ago too: not asleep, not running unseen in the background.
@@ -183,6 +196,7 @@ export function createTimerStore({ storage, userId, tracker, alerts, isForegroun
       timers = next;
       if (seen.length) pillHidden = false;
       save();
+      syncLive();
       seen.forEach((t) => {
         tracker.track('timer_finished', {});
         finishedListeners.forEach((l) => l(t));
@@ -213,6 +227,7 @@ export function createTimerStore({ storage, userId, tracker, alerts, isForegroun
     timers = f(timers, at);
     syncAlerts(prev, timers);
     save();
+    syncLive();
     publish(at, true);
     schedule();
   }
@@ -274,6 +289,17 @@ export function createTimerStore({ storage, userId, tracker, alerts, isForegroun
     reconcileAlerts() {
       if (alerts && hasRead && !destroyed) void alerts.reconcile(timers);
     },
+    syncLive,
+    async applyLiveActions() {
+      if (!live || !hasRead || destroyed) return;
+      const taps = await live.takeActions();
+      if (destroyed) return;
+      taps.forEach((tap: LiveActionRecord) => {
+        tracker.track('timer_live_activity_action', { action: tap.action });
+        // Never later than now, whatever the phone's clock said.
+        change((ts, at) => applyLiveAction(ts, { ...tap, at: Math.min(tap.at, at) }));
+      });
+    },
     async load() {
       if (!userId) return;
       let ready: (ok: boolean) => void = () => undefined;
@@ -323,6 +349,9 @@ export function createTimerStore({ storage, userId, tracker, alerts, isForegroun
     schedule();
     hasRead = true;
     store.reconcileAlerts();
+    syncLive();
+    // Taps on the card while the app was closed (spec 048).
+    await store.applyLiveActions();
   }
   return store;
 }
@@ -336,6 +365,18 @@ function forwardingAlerts(): TimerAlertScheduler & { use: (alerts: TimerAlertSch
     cancel: async (ids) => current?.cancel(ids),
     reconcile: async (ts) => current?.reconcile(ts),
     cancelAll: async () => current?.cancelAll(),
+  };
+}
+
+/** The same for the Live Activity (spec 048): turning "Timer on Lock Screen" off never makes a new store. */
+function forwardingLive(): LiveTimerActivity & { use: (live: LiveTimerActivity | undefined) => void } {
+  let current: LiveTimerActivity | undefined;
+  return {
+    use: (live) => void (current = live),
+    sync: (timers) => current?.sync(timers),
+    takeActions: async () => (current ? current.takeActions() : []),
+    onAction: (listener) => (current ? current.onAction(listener) : () => undefined),
+    dispose: () => current?.dispose(),
   };
 }
 
@@ -385,20 +426,42 @@ export interface TimersProviderProps {
   onStart?: () => void;
   /** Spec 047: alerts when the app is closed. Changes (a switch, the permission) never make a new store. */
   alerts?: TimerAlertScheduler;
+  /** Spec 048: the Lock Screen card. The same: a new one never makes a new store. */
+  live?: LiveTimerActivity;
   children: ReactNode;
 }
 
 /** App-wide, so timers keep running on every screen (US1). A new person on the device gets their own. */
-export function TimersProvider({ userId, storage, tracker, now, onStart, alerts, children }: TimersProviderProps) {
+export function TimersProvider({ userId, storage, tracker, now, onStart, alerts, live, children }: TimersProviderProps) {
   const [forward] = useState(forwardingAlerts);
-  const store = useMemo(() => createTimerStore({ storage, userId, tracker, now, alerts: forward }), [storage, userId, tracker, now, forward]);
+  const [forwardLive] = useState(forwardingLive);
+  const store = useMemo(
+    () => createTimerStore({ storage, userId, tracker, now, alerts: forward, live: forwardLive }),
+    [storage, userId, tracker, now, forward, forwardLive],
+  );
   useEffect(() => {
     forward.use(alerts);
     store.reconcileAlerts();
   }, [alerts, forward, store]);
-  // Back in front: follow-ups that arrived are counted, and nothing stale waits (spec 047).
+  // Spec 048: a tap on the card while the app runs (even unseen, woken by the tap) is applied at once.
   useEffect(() => {
-    const sub = AppState.addEventListener('change', (s) => s === 'active' && store.reconcileAlerts());
+    forwardLive.use(live);
+    store.syncLive();
+    const off = live?.onAction(() => void store.applyLiveActions());
+    return () => {
+      off?.();
+      live?.dispose();
+    };
+  }, [live, forwardLive, store]);
+  // Back in front: follow-ups that arrived are counted, and nothing stale waits (spec 047); the card
+  // shows the timers as they are now, with any taps on it since (spec 048).
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s !== 'active') return;
+      store.reconcileAlerts();
+      store.syncLive();
+      void store.applyLiveActions();
+    });
     return () => sub.remove();
   }, [store]);
   // A listener, not a store option: a new callback must not make a new store (that would drop the running timers).

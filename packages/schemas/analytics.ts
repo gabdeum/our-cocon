@@ -241,6 +241,9 @@ export const events = {
   // Spec 047: a timer-done alert on the phone: its "+1 min" or "Stop", or tapped open; and the one follow-up that arrived.
   timer_alert_action: z.strictObject({ action: z.enum(['add_minute', 'stop', 'open']) }),
   timer_alert_followup_sent: z.strictObject({}),
+  // Spec 048: the Live Activity started (timers on the Lock Screen), and its "+1 min" / "Pause" / "Resume".
+  timer_live_activity_started: z.strictObject({ timer_count: z.int().min(1).max(100) }),
+  timer_live_activity_action: z.strictObject({ action: z.enum(['add_minute', 'pause', 'resume']) }),
 } as const;
 
 export type EventName = keyof typeof events;

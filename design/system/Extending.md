@@ -25,6 +25,7 @@ Check whether an existing component plus a variant covers it. Recurring tasks, a
 | `on-olive` (white) | olive, ink, danger | 6.1–15.6 |
 | `on-ink` | ink | 11.6 |
 | `peach-ink` | peach | 5.6 |
+| `island-sub`, `honey`, `on-olive` | the Dynamic Island's black; `on-olive` also on island-button (spec 048) | 12.4–21 |
 
 Anything not in this table needs a contrast check of at least 4.5:1 before use.
 

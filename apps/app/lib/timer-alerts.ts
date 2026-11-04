@@ -60,6 +60,42 @@ export function followUpContent(t: Timer): AlertContent {
   return { title: copy.followUpTitle(t.label), body: copy.followUpBody(FOLLOW_UP_MS / 1000 / MINUTE) };
 }
 
+/**
+ * Spec 048: what the Live Activity's "+1 min" and "Resume" need to move a timer's two alerts by
+ * themselves, with the phone locked and the app asleep: the same notifications this file schedules.
+ */
+export interface LiveAlert {
+  alertId: string;
+  againId: string;
+  title: string;
+  body: string;
+  againTitle: string;
+  againBody: string;
+  againAfterMs: number;
+  sound: string;
+  thread: string;
+  category: string;
+  data: TimerAlertData;
+}
+
+export function liveAlert(t: Timer, userId: string): LiveAlert {
+  const alert = alertContent(t);
+  const again = followUpContent(t);
+  return {
+    alertId: alertId(t.id),
+    againId: followUpId(t.id),
+    title: alert.title,
+    body: alert.body,
+    againTitle: again.title,
+    againBody: again.body,
+    againAfterMs: FOLLOW_UP_MS,
+    sound: TIMER_SOUND,
+    thread: TIMER_THREAD,
+    category: TIMER_CATEGORY,
+    data: { kind: 'timer_done', route: '/timers', timerId: t.id, userId },
+  };
+}
+
 function bodyOf(t: Timer): string {
   if (t.recipeName) return t.stepNumber ? copy.stepBody(t.recipeName, t.stepNumber) : t.recipeName;
   return copy.quickBody(Math.max(1, Math.round(t.totalSeconds / MINUTE)));
