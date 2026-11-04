@@ -1,5 +1,5 @@
 import '../global.css';
-import { useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, router, useSegments, type Href } from 'expo-router';
@@ -24,7 +24,7 @@ import { gateRedirect, SessionProvider, useSession } from '../lib/session';
 import { createQueryClient, persistMaxAge, queryPersister, shouldPersistQuery } from '../lib/query';
 import { watchConnection } from '../lib/online';
 import { SyncProvider } from '../lib/sync';
-import { clearTimers, TimersProvider } from '../lib/timer-store';
+import { clearTimers, TimersProvider, useTimerOwner } from '../lib/timer-store';
 import { CalendarPrefsProvider } from '../lib/calendar-prefs';
 import { deviceStorage } from '../lib/recipe-choices';
 import { clearPendingSave } from '../lib/pending-save';
@@ -32,6 +32,8 @@ import { ToastProvider, useToast } from '../lib/toast';
 import { NotificationsProvider, useNotifications } from '../lib/notifications-context';
 import { nativeNotifications } from '../lib/notifications-native';
 import { clearPrefs, unregisterDevice } from '../lib/notifications';
+import { timerNotifications } from '../lib/timer-notifications';
+import { clearFollowUps, createTimerAlerts } from '../lib/timer-alerts';
 import { strings } from '../strings/en';
 import { playChime, vibrateDone } from '../lib/chime';
 import { TimerAlerts } from '../components/timers/TimerAlerts';
@@ -81,19 +83,35 @@ function Notifications({ children }: { children: ReactNode }) {
 /** Each signed-in person's timers, on every screen (spec 010), with the done chime and banner ("Open timers", 011). */
 function Timers({ children }: { children: ReactNode }) {
   const { state } = useSession();
-  const { maybeAsk } = useNotifications();
+  const { maybeAsk, status, prefs } = useNotifications();
   const onStart = useCallback(() => maybeAsk('timer'), [maybeAsk]);
+  const userId = state.status === 'ready' ? state.userId : '';
+  // Spec 047: Lock Screen alerts, while notifications are allowed and "Alert when a timer ends" is on.
+  // None until the iPhone has said: "off" for that moment would cancel the alerts already waiting.
+  const enabled = status === 'granted' && prefs.timers_alert;
+  const known = status !== null;
+  const alerts = useMemo(
+    () => (timerNotifications && userId && known ? createTimerAlerts({ local: timerNotifications, userId, storage: deviceStorage, tracker, enabled }) : undefined),
+    [userId, known, enabled],
+  );
+  useTimerOwner(deviceStorage, state.status, userId, removeAllTimerAlerts);
   return (
-    <TimersProvider userId={state.status === 'ready' ? state.userId : ''} storage={deviceStorage} tracker={tracker} onStart={onStart}>
+    <TimersProvider userId={userId} storage={deviceStorage} tracker={tracker} onStart={onStart} alerts={alerts}>
       {children}
       <TimerAlerts chime={playChime} vibrate={vibrateDone} onOpenTimers={() => router.push('/timers')} />
     </TimersProvider>
   );
 }
 
-// On sign-out: this person's timers, notification switches (spec 046), and a shared recipe still
-// waiting to be saved (spec 019).
+// Every timer notification on this phone, whoever's (spec 047: signed out).
+const phoneAlerts = timerNotifications;
+const removeAllTimerAlerts = phoneAlerts ? () => createTimerAlerts({ local: phoneAlerts, userId: '', storage: deviceStorage, tracker, enabled: false }).cancelAll() : undefined;
+
+// On sign-out: this person's timers and their Lock Screen alerts (spec 047), notification switches
+// (spec 046), and a shared recipe still waiting to be saved (spec 019).
 const clearDevice = async (userId: string) => {
+  if (timerNotifications) await createTimerAlerts({ local: timerNotifications, userId, storage: AsyncStorage, tracker, enabled: false }).cancelAll();
+  await clearFollowUps(AsyncStorage, userId);
   await clearTimers(AsyncStorage, userId);
   await clearPrefs(AsyncStorage, userId);
   await clearPendingSave();

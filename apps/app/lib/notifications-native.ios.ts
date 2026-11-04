@@ -2,7 +2,9 @@ import { Linking } from 'react-native';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
-import type { NativeNotifications, PermissionStatus, ShownNotification } from './notifications';
+import { type NativeNotifications, type PermissionStatus, type ShownNotification } from './notifications';
+import { TimerAlertData, timerOwnerNow } from './timer-alerts';
+import { timersOnScreen } from './timer-store';
 
 /**
  * Spec 046 on the iPhone, through expo-notifications. Its native code is only in builds: Expo Go
@@ -15,18 +17,29 @@ function statusOf(p: Notifications.NotificationPermissionsStatus): PermissionSta
   return p.status === 'denied' ? 'denied' : 'undetermined';
 }
 
-// FR-006: while the app is open no system banner shows. Timers have their in-app alert (spec 010);
-// reminders reach the listener below, which shows a StatusBanner with the same text.
+// FR-006: while the app is open no system banner shows. Timers have their in-app alert (spec 010),
+// unless the app was asleep until a moment ago and won't play it, or it's the follow-up: then the
+// phone's shows (spec 047).
+// Reminders reach the listener below, which shows a StatusBanner with the same text.
 const foreground = new Set<(n: ShownNotification) => void>();
 Notifications.setNotificationHandler({
   handleNotification: async (n) => {
     const { title, body, data } = n.request.content;
+    // A follow-up means nobody acted on the alert (US3): it shows wherever the app is. Only alerts this
+    // phone scheduled, for whoever is signed in now (security review).
+    const followUp = n.request.identifier.endsWith(':again');
+    const local = (n.request.trigger as { type?: string } | null)?.type !== 'push';
+    const mine = TimerAlertData.safeParse(data);
+    if (local && mine.success && mine.data.userId === timerOwnerNow() && (followUp || !timersOnScreen())) {
+      return { shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false };
+    }
     for (const listener of foreground) listener({ title: title ?? '', body: body ?? '', data });
     return { shouldShowBanner: false, shouldShowList: false, shouldPlaySound: false, shouldSetBadge: false };
   },
 });
 
-// Each tap is reported once, even when the launch response is also delivered to the listener.
+// Each tap is reported once, even when the launch response is also delivered to the listener. A timer's
+// alert keeps its id after "+1 min" (spec 047), so its delivery time tells two taps apart.
 const handled = new Set<string>();
 
 export const nativeNotifications: NativeNotifications | null = {
@@ -51,7 +64,7 @@ export const nativeNotifications: NativeNotifications | null = {
   onOpen(listener) {
     const report = (response: Notifications.NotificationResponse, coldStart: boolean) => {
       if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
-      const id = response.notification.request.identifier;
+      const id = `${response.notification.request.identifier}|${response.notification.date}`;
       if (handled.has(id)) return;
       handled.add(id);
       listener(response.notification.request.content.data, coldStart);

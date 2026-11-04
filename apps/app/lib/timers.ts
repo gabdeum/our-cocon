@@ -14,6 +14,8 @@ export const TimerSchema = z.object({
   stepId: z.string().max(64).optional(),
   /** The recipe's name when it started, for the Timers screen (spec 011). Stays on the device too. */
   recipeName: z.string().max(200).optional(),
+  /** The step's place in the recipe, from 1, for "Leek & bacon quiche · step 3" on the Lock Screen (spec 047). */
+  stepNumber: z.int().min(1).max(999).optional(),
   totalSeconds: z.int().min(1).max(24 * 3600),
   state: z.enum(['running', 'paused', 'done']),
   /** Set while running. */
@@ -47,6 +49,7 @@ export interface TimerOrigin {
   recipeId?: string;
   stepId?: string;
   recipeName?: string;
+  stepNumber?: number;
 }
 
 export function start(timers: readonly Timer[], id: string, label: string, seconds: number, now: number, origin: TimerOrigin = {}): Timer[] {
@@ -169,6 +172,7 @@ function origin(t: Timer): TimerOrigin {
     ...(t.recipeId ? { recipeId: t.recipeId } : {}),
     ...(t.stepId ? { stepId: t.stepId } : {}),
     ...(t.recipeName ? { recipeName: t.recipeName } : {}),
+    ...(t.stepNumber ? { stepNumber: t.stepNumber } : {}),
   };
 }
 

@@ -1,7 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../strings/en';
 import type { ChoiceStorage } from './recipe-choices';
+import { alertChanges, setTimerOwner, type TimerAlertScheduler } from './timer-alerts';
 import * as T from './timers';
 import type { Timer, TimerOrigin } from './timers';
 
@@ -32,10 +34,14 @@ export interface TimerStore {
   dismiss(id: string): void;
   /** Hides the TimerPill on every screen without touching any timer (spec 011 FR-008). */
   hidePill(): void;
-  /** Called for each timer that reaches zero while the app is open (not for one that ended while closed). */
+  /** Called for each timer that reaches zero while the app is on screen (not one that ended while closed, asleep or in the background). */
   onFinished(listener: (timer: Timer) => void): () => void;
   /** Called after every start: the first may ask for notifications (spec 046 FR-002). */
   onStarted(listener: () => void): () => void;
+  /** The Timers screen is on screen (spec 047 FR-001): done timers' alerts and follow-ups go. Ignored while the app isn't. */
+  seenDone(): void;
+  /** Matches the phone's timer notifications to the timers again (app back in front, a switch changed). */
+  reconcileAlerts(): void;
   /** Reads the saved timers; ones that ended while the app was closed come back done, silently. */
   load(): Promise<void>;
   destroy(): void;
@@ -46,13 +52,60 @@ export interface TimerStoreOptions {
   /** Whose timers: each person on a shared device has their own. Empty when signed out: nothing is saved. */
   userId: string;
   tracker: Tracker;
+  /** Spec 047: the phone's alerts for timers that end while the app is closed. None on the web. */
+  alerts?: TimerAlertScheduler;
+  /** Whether the app is on screen. It can also run in the background (audio), unseen. */
+  isForeground?: () => boolean;
   now?: () => number;
 }
 
 /** Often enough that a clock never shows a second late by more than a quarter of one. */
 export const TICK_MS = 250;
+/**
+ * A timer reached zero "in the app" only if the app was on screen and ticking right up to it: no tick
+ * for longer than this means it was asleep or in the background, and the phone's alert did the job.
+ */
+export const SEEN_GAP_MS = 5000;
 
-const storageKey = (userId: string) => `cocon.timers.${userId}`;
+export const timerStorageKey = (userId: string) => `cocon.timers.${userId}`;
+const storageKey = timerStorageKey;
+
+// Spec 047: a "+1 min" or "Stop" tapped on the Lock Screen goes to that person's store once it has
+// loaded; before that it is written to storage, and a load waits for those writes first.
+const loaded = new Map<string, { store: TimerStore; ready: Promise<boolean> }>();
+let writes: Promise<unknown> = Promise.resolve();
+let pendingWrites = 0;
+
+// Spec 047: when a store was last on screen, ticking (see SEEN_GAP_MS).
+let lastSeenOnScreen = -Infinity;
+
+/**
+ * While the app is open, the phone's own timer alert is hidden only when the app plays its own: on
+ * screen and ticking right up to now. Just woken (unlocked in the very second it ends): the phone's shows.
+ */
+export function timersOnScreen(at = Date.now()): boolean {
+  return at - lastSeenOnScreen <= SEEN_GAP_MS;
+}
+
+/**
+ * That person's store on this device, once it has read its timers (null if that failed); null right
+ * away when none has started loading, so a caller can queue a write before any load reads.
+ */
+export function liveTimerStore(userId: string): Promise<TimerStore | null> | null {
+  const entry = loaded.get(userId);
+  return entry ? entry.ready.then((ok) => (ok ? entry.store : null)) : null;
+}
+
+/** Runs a change to saved timers after the ones before it; loads wait for all of them. */
+export function queueTimerWrite(f: () => Promise<void>): Promise<void> {
+  pendingWrites++;
+  const next = writes
+    .then(f)
+    .catch(() => undefined)
+    .finally(() => pendingWrites--);
+  writes = next;
+  return next;
+}
 
 /** On sign-out: labels are recipe text, so nothing stays behind on a shared device. */
 export async function clearTimers(storage: { removeItem: (key: string) => Promise<void> }, userId: string): Promise<void> {
@@ -63,7 +116,7 @@ export async function clearTimers(storage: { removeItem: (key: string) => Promis
   }
 }
 
-export function createTimerStore({ storage, userId, tracker, now = Date.now }: TimerStoreOptions): TimerStore {
+export function createTimerStore({ storage, userId, tracker, alerts, isForeground = () => AppState.currentState === 'active', now = Date.now }: TimerStoreOptions): TimerStore {
   let timers: Timer[] = [];
   // Not saved: reopening the app shows the pill again.
   let pillHidden = false;
@@ -75,6 +128,14 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
   let nextId = 0;
   // Set by destroy(): a load still reading storage must not start ticking a store nobody uses.
   let destroyed = false;
+  // Set once the saved timers are read: matching alerts to an empty list would cancel them all.
+  let hasRead = false;
+  // The last moment the app was seen on screen (a tick or a tap there).
+  let seenAt = -Infinity;
+  const markSeen = (at: number) => {
+    seenAt = isForeground() ? at : -Infinity;
+    lastSeenOnScreen = seenAt;
+  };
   const listeners = new Set<() => void>();
   const finishedListeners = new Set<(t: Timer) => void>();
   const startedListeners = new Set<() => void>();
@@ -97,16 +158,32 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
     storage.setItem(storageKey(userId), JSON.stringify(timers)).catch(() => undefined);
   }
 
+  // Spec 047 SC-002: every change to the list (re)schedules or cancels its alerts. Best effort.
+  function syncAlerts(prev: readonly Timer[], next: readonly Timer[], seen: readonly string[] = []) {
+    if (!alerts) return;
+    const { schedule: due, cancel } = alertChanges(prev, next);
+    const gone = [...new Set([...cancel, ...seen])];
+    if (gone.length) void alerts.cancel(gone);
+    due.forEach((t) => void alerts.schedule(t));
+  }
+
   function tick() {
     const at = now();
+    // Seen only if on screen now and a moment ago too: not asleep, not running unseen in the background.
+    const onScreen = isForeground() && at - seenAt <= SEEN_GAP_MS;
+    markSeen(at);
     const { timers: settled, finished } = T.settle(timers, at);
     const next = T.expire(settled, at);
     const cleared = next.length !== settled.length;
     if (finished.length || cleared) {
+      // Ended on screen: the in-app alert plays (spec 010) and the phone's is already hidden, so its
+      // follow-up goes (047 edge cases). Ended unseen: the phone's alert and follow-up stay, silently.
+      const seen = onScreen ? finished : [];
+      syncAlerts(timers, next, seen.map((t) => t.id));
       timers = next;
-      if (finished.length) pillHidden = false;
+      if (seen.length) pillHidden = false;
       save();
-      finished.forEach((t) => {
+      seen.forEach((t) => {
         tracker.track('timer_finished', {});
         finishedListeners.forEach((l) => l(t));
       });
@@ -131,7 +208,10 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
 
   function change(f: (ts: readonly Timer[], at: number) => Timer[]) {
     const at = now();
+    markSeen(at);
+    const prev = timers;
     timers = f(timers, at);
+    syncAlerts(prev, timers);
     save();
     publish(at, true);
     schedule();
@@ -185,29 +265,30 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
       startedListeners.add(listener);
       return () => startedListeners.delete(listener);
     },
+    seenDone() {
+      // The Timers screen can stay open behind the Lock Screen: only on screen does it count.
+      if (!isForeground()) return;
+      const done = timers.filter((t) => t.state === 'done').map((t) => t.id);
+      if (alerts && done.length) void alerts.cancel(done);
+    },
+    reconcileAlerts() {
+      if (alerts && hasRead && !destroyed) void alerts.reconcile(timers);
+    },
     async load() {
       if (!userId) return;
-      let raw: unknown;
+      let ready: (ok: boolean) => void = () => undefined;
+      const entry = { store, ready: new Promise<boolean>((r) => (ready = r)) };
+      loaded.set(userId, entry);
       try {
-        const text = await storage.getItem(storageKey(userId));
-        raw = text ? JSON.parse(text) : null;
+        await read();
+        ready(!destroyed);
       } catch {
-        raw = null;
+        ready(false);
       }
-      if (destroyed) return;
-      const at = now();
-      const stored = T.expire(T.settle(T.parseStored(raw), at).timers, at);
-      // Anything started while storage was being read stays.
-      const ids = new Set(timers.map((t) => t.id));
-      timers = [...stored.filter((t) => !ids.has(t.id)), ...timers];
-      // Write back what changed while closed (ended, cleared, given a stop time), so a reload doesn't
-      // restart a paused timer's 3 hours.
-      if (raw !== null) save();
-      publish(at, true);
-      schedule();
     },
     destroy() {
       destroyed = true;
+      if (loaded.get(userId)?.store === store) loaded.delete(userId);
       if (interval) clearInterval(interval);
       interval = null;
       if (expiry) clearTimeout(expiry);
@@ -217,7 +298,79 @@ export function createTimerStore({ storage, userId, tracker, now = Date.now }: T
       startedListeners.clear();
     },
   };
+
+  async function read() {
+    // A "+1 min" from the Lock Screen may still be writing (spec 047).
+    while (pendingWrites) await writes;
+    let raw: unknown;
+    try {
+      const text = await storage.getItem(storageKey(userId));
+      raw = text ? JSON.parse(text) : null;
+    } catch {
+      raw = null;
+    }
+    if (destroyed) return;
+    const at = now();
+    const stored = T.expire(T.settle(T.parseStored(raw), at).timers, at);
+    // Anything started while storage was being read stays.
+    const ids = new Set(timers.map((t) => t.id));
+    timers = [...stored.filter((t) => !ids.has(t.id)), ...timers];
+    // Write back what changed while closed (ended, cleared, given a stop time), so a reload doesn't
+    // restart a paused timer's 3 hours.
+    if (raw !== null) save();
+    publish(at, true);
+    markSeen(at);
+    schedule();
+    hasRead = true;
+    store.reconcileAlerts();
+  }
   return store;
+}
+
+/** The store keeps one scheduler, which passes each call to the latest alerts; with none it does nothing. */
+function forwardingAlerts(): TimerAlertScheduler & { use: (alerts: TimerAlertScheduler | undefined) => void } {
+  let current: TimerAlertScheduler | undefined;
+  return {
+    use: (alerts) => void (current = alerts),
+    schedule: async (t) => current?.schedule(t),
+    cancel: async (ids) => current?.cancel(ids),
+    reconcile: async (ts) => current?.reconcile(ts),
+    cancelAll: async () => current?.cancelAll(),
+  };
+}
+
+/**
+ * Spec 047, security review: who owns the timers on this phone, for "+1 min" with no screen yet; once
+ * signed out (expired, or signed out elsewhere too), the last person's Lock Screen alerts go. Never
+ * while the session is still loading: every launch starts there, and the alerts waiting must stay.
+ */
+export function useTimerOwner(storage: ChoiceStorage, status: 'loading' | 'signedOut' | 'noFamily' | 'ready', userId: string, removeAlerts?: () => Promise<void>): void {
+  const remove = useRef(removeAlerts);
+  useEffect(() => {
+    remove.current = removeAlerts;
+  });
+  // Through the same line as a Lock Screen "+1 min" (security review): an action already under way
+  // can't put an alert back after this, and the next person's store reads its timers only after.
+  const handOver = (owner: string, clear: boolean) =>
+    void queueTimerWrite(async () => {
+      if (clear) await remove.current?.();
+      await setTimerOwner(storage, owner);
+    });
+  const previous = useRef('');
+  useEffect(() => {
+    if (!userId) return;
+    // Straight from one person to another (a sign-in link opened on a signed-in phone): the last one's go too.
+    handOver(userId, previous.current !== '' && previous.current !== userId);
+    previous.current = userId;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storage, userId]);
+  const signedOut = status === 'signedOut';
+  useEffect(() => {
+    if (!signedOut) return;
+    handOver('', true);
+    previous.current = '';
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storage, signedOut]);
 }
 
 /** Exported for tests that hand a screen their own store. */
@@ -230,12 +383,24 @@ export interface TimersProviderProps {
   now?: () => number;
   /** After every start (spec 046: the first may ask for notifications). */
   onStart?: () => void;
+  /** Spec 047: alerts when the app is closed. Changes (a switch, the permission) never make a new store. */
+  alerts?: TimerAlertScheduler;
   children: ReactNode;
 }
 
 /** App-wide, so timers keep running on every screen (US1). A new person on the device gets their own. */
-export function TimersProvider({ userId, storage, tracker, now, onStart, children }: TimersProviderProps) {
-  const store = useMemo(() => createTimerStore({ storage, userId, tracker, now }), [storage, userId, tracker, now]);
+export function TimersProvider({ userId, storage, tracker, now, onStart, alerts, children }: TimersProviderProps) {
+  const [forward] = useState(forwardingAlerts);
+  const store = useMemo(() => createTimerStore({ storage, userId, tracker, now, alerts: forward }), [storage, userId, tracker, now, forward]);
+  useEffect(() => {
+    forward.use(alerts);
+    store.reconcileAlerts();
+  }, [alerts, forward, store]);
+  // Back in front: follow-ups that arrived are counted, and nothing stale waits (spec 047).
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => s === 'active' && store.reconcileAlerts());
+    return () => sub.remove();
+  }, [store]);
   // A listener, not a store option: a new callback must not make a new store (that would drop the running timers).
   useEffect(() => (onStart ? store.onStarted(onStart) : undefined), [store, onStart]);
   useEffect(() => {

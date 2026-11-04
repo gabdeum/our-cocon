@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View } from 'react-native';
+import { AppState, View } from 'react-native';
 import { BackHeader, PushedScreen, Text, TimePresets, TimerCard } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
@@ -22,6 +22,8 @@ export interface TimersScreenProps {
   recipes?: Readonly<Record<string, RecipeDetail | null | undefined>>;
   /** "Go to step": cooking mode at that step (032-later L19). */
   onGoToStep?: (recipeId: string, stepId: string) => void;
+  /** False while another screen is on top (cooking mode from "Go to step"): done timers aren't seen then. */
+  focused?: boolean;
 }
 
 /**
@@ -30,7 +32,7 @@ export interface TimersScreenProps {
  * timers of 5, 10, 15 or 30 min at the bottom. A step timer whose step is still there offers
  * "Go to step" (032-later L19).
  */
-export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep }: TimersScreenProps) {
+export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep, focused = true }: TimersScreenProps) {
   const store = useTimerStore();
   const { timers, now } = useTimers();
 
@@ -41,6 +43,19 @@ export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep }: Time
     opened.current = true;
     tracker.track('timers_screen_opened', { timer_count: timers.length });
   }, [tracker, timers.length]);
+  // Spec 047 FR-001: seen here, so done timers' Lock Screen alerts and follow-ups go (also once a
+  // cold start from a tapped alert has read the saved timers).
+  const done = timers
+    .filter((t) => t.state === 'done')
+    .map((t) => t.id)
+    .join(',');
+  useEffect(() => {
+    if (!done || !focused) return;
+    store.seenDone();
+    // Left open behind the Lock Screen: counts once the app is back on screen.
+    const sub = AppState.addEventListener('change', (s) => s === 'active' && store.seenDone());
+    return () => sub.remove();
+  }, [store, done, focused]);
 
   const running = timers.filter((t) => t.state === 'running').length;
   const newestFirst = [...timers].reverse();

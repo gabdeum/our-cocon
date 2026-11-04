@@ -115,6 +115,7 @@ export function NotificationsProvider({ native, storage, client, tracker, userId
       const opened = openedRoute(data);
       if (!opened) return;
       tracker.track('notification_opened', { kind: opened.kind, cold_start: coldStart });
+      if (opened.kind === 'timer_done') tracker.track('timer_alert_action', { action: 'open' });
       if (userRef.current) navigate(opened.route);
       else pending.current = opened.route;
     });
