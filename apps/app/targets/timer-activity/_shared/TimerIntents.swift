@@ -102,7 +102,8 @@ enum LiveTimerButtons {
   /// much, and −1 never goes below `minLeftSeconds` (nor adds time); +1 on a done timer runs it again
   /// for a minute; a pause keeps the seconds left, rounded up; Stop and Dismiss take it away.
   static func tap(_ kind: Kind, timerId: String) async {
-    guard let activity = Activity<TimerActivityAttributes>.activities.first else { return }
+    // A card stopped or swiped away stays in `activities` for a while: only one still on screen.
+    guard let activity = Activity<TimerActivityAttributes>.activities.first(where: { $0.activityState == .active || $0.activityState == .stale }) else { return }
     var state = activity.content.state
     // The card moved on since it was drawn (another timer shows now): nothing to do.
     guard state.face.id == timerId else { return }
