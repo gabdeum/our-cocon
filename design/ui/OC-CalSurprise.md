@@ -15,7 +15,7 @@ Surprise panel (white card): "What Eva sees" (input, e.g. "Dinner out"), "Note f
 Avatar 48 + "Eva is busy" (24/900) + "Thursday, Oct 22 · Afternoon"; white row with lock icon "Eva keeps the details of this one private."; ink "OK". Chips and rows elsewhere read "Busy".
 
 ## OC-CalSurprise (event detail as the hidden person sees it)
-TopBar "Back to Calendar" (spec 050, the title fades in on scroll); title "Dinner out"; member chip "E Eva"; rows: "Saturday, Oct 31" / "Evening · about 18:00–22:00", "Café Lalo" + "Open in Maps"; sage card overline "Note from Gabriel" + note 18/800; "Added by Gabriel · today". No Edit, Duplicate, Share or Delete.
+TopBar "Back to Calendar" (spec 050, the title fades in on scroll); title "Dinner out"; member chip "E Eva"; rows: "Saturday, Oct 31" / "Evening · about 18:00–22:00", "Café Lalo" + "Copy" and "Open in Maps" (as on OC-CalEvent: copies the place / opens Google Maps); sage card overline "Note from Gabriel" + note 18/800; "Added by Gabriel · today". No Edit, Duplicate, Share or Delete.
 Everyone else sees the real event with a sage "Surprise" tag and "hidden from Eva" in the sub-line.
 
 ## Copy not in the drawings (spec 043 build)
