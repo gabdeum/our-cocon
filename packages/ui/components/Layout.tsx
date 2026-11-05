@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react';
+import { useState, type ReactNode, type Ref } from 'react';
 import { ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { cn } from '../cn';
 import { theme } from '../theme';
@@ -6,7 +6,7 @@ import { Logo } from './Icon';
 import { Tag } from './Tag';
 import { Text } from './Text';
 import { ToastHost } from './Toast';
-import { TopBarHeadingProvider, useTopBar, type TopBarConfig } from './TopBar';
+import { TopBarHeadingProvider, useTopBar, useTopEdge, type TopBarConfig } from './TopBar';
 
 /**
  * The app's frame: cream ground, and on the web the mobile layout centred at max 720 wide
@@ -22,12 +22,61 @@ export function AppFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** Tab screen (Patterns.md): 54 top, 20 sides, 180 bottom (room for the tab bar and timer pill). */
-export function TabScreen({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <ScrollView className="flex-1 bg-surface-page" contentContainerClassName={cn('gap-18 px-20 pb-[180px] pt-[54px]', className)}>
+export interface TabScreenProps {
+  children: ReactNode;
+  className?: string;
+  /** Above `pinned`, scrolling away: Recipes' and Groceries' title. */
+  header?: ReactNode;
+  /** Sticks under the status bar once it reaches it, with the TopBar's hairline and shadow (spec 050 FR-007). */
+  pinned?: ReactNode;
+}
+
+/**
+ * Tab screen (Patterns.md): 54 top, 20 sides, 180 bottom (room for the tab bar and timer pill). With
+ * `pinned`, the status bar area is the page's own band and `pinned` sticks right under it.
+ */
+export function TabScreen({ children, className, header, pinned }: TabScreenProps) {
+  const top = useTopEdge(54);
+  const [at, setAt] = useState(0);
+  const [stuck, setStuck] = useState(false);
+  if (!pinned) {
+    return (
+      <ScrollView className="flex-1 bg-surface-page" contentContainerClassName={cn('gap-18 px-20 pb-[180px] pt-[54px]', className)}>
+        {children}
+      </ScrollView>
+    );
+  }
+  // No null children: the sticky index counts them on the web, not on the iPhone.
+  const parts = [
+    ...(header ? [<View key="header">{header}</View>] : []),
+    <View
+      key="pinned"
+      testID="tab-pinned"
+      onLayout={(e) => setAt(e.nativeEvent.layout.y)}
+      className={cn('-mx-20 gap-12 border-b-[1.5px] bg-surface-page px-20 pb-12', stuck ? 'border-line' : 'border-transparent')}
+      style={{ boxShadow: stuck ? theme.shadow.bar : undefined }}
+    >
+      {pinned}
+    </View>,
+    <View key="body" className={cn('gap-18', className)}>
       {children}
-    </ScrollView>
+    </View>,
+  ];
+  return (
+    <View className="flex-1 bg-surface-page">
+      <View className="bg-surface-page" style={{ height: top }} />
+      <ScrollView
+        className="flex-1 bg-surface-page"
+        contentContainerClassName="gap-18 px-20 pb-[180px]"
+        stickyHeaderIndices={[header ? 1 : 0]}
+        // A tap on the pinned part (a quick filter) lands while the keyboard is up.
+        keyboardShouldPersistTaps="handled"
+        onScroll={(e) => setStuck(e.nativeEvent.contentOffset.y > at)}
+        scrollEventThrottle={16}
+      >
+        {parts}
+      </ScrollView>
+    </View>
   );
 }
 

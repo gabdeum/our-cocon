@@ -10,7 +10,7 @@ Reference: `design/screens/OC-SettingsGroceries.dc.html` (title always), `OC-Cal
 | --- | --- |
 | Bar | sticky top 0, `surface-page` background, padding safe-area (52) / 16 / 8, grid `1fr auto 1fr`, gap 8 |
 | Scrolled | 1.5 px `line` bottom border + `shadow-bar` = 0 6px 14px -10px rgba(42,36,20,0.35) |
-| Round button | 48 × 48, radius 50%, white, ink icon 20–22, `shadow-button` = 0 4px 14px rgba(42,36,20,0.18) |
+| Round button | 40 × 40 (touch target 44), radius 50%, white, ink icon 22 (✕ 20), `shadow-button` = 0 4px 14px rgba(42,36,20,0.18) |
 | Title | 17/900, centered on the screen, one line, ellipsis, max 214 at 390 |
 | Back | chevron-left 22, label "Back to {parent}"; cooking mode: ✕ 20, "Exit cooking mode" |
 | Actions | right, gap 8, max 2 (Share + Settings on a recipe; Edit + More on an event) |

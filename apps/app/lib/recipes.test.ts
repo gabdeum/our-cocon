@@ -1,6 +1,6 @@
-// Spec 006 FR-004 and FR-007: search over the loaded list, and the In season / All recipes groups.
+// Spec 006 FR-004: search over the loaded list.
 import { describe, expect, it } from 'vitest';
-import { groupBySeason, searchRecipes } from './recipes';
+import { searchRecipes } from './recipes';
 
 const recipes = [
   { name: 'Pumpkin soup', description: null, ingredientNames: ['Pumpkin'], best_months: [10, 11] },
@@ -14,13 +14,5 @@ describe('searchRecipes', () => {
     expect(searchRecipes(recipes, 'GRUYERE').map((r) => r.name)).toEqual(['Quiche']);
     expect(searchRecipes(recipes, 'p').map((r) => r.name)).toEqual(['Pumpkin soup', 'Apple tart', 'Gazpacho']);
     expect(searchRecipes(recipes, '')).toHaveLength(4);
-  });
-});
-
-describe('groupBySeason', () => {
-  it('puts recipes in season this month first, and the rest (no best months too) after', () => {
-    const { inSeason, rest } = groupBySeason(recipes, 10);
-    expect(inSeason.map((r) => r.name)).toEqual(['Pumpkin soup', 'Quiche']);
-    expect(rest.map((r) => r.name)).toEqual(['Apple tart', 'Gazpacho']);
   });
 });

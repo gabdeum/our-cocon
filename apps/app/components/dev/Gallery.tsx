@@ -12,6 +12,7 @@ import {
   AwakeChip,
   BottomSheet,
   BrandHeader,
+  BrandRow,
   Button,
   ActivityRow,
   LatestActivityCard,
@@ -951,7 +952,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
       </Section>
 
       <Section group="Navigation" title="ScreenHeader">
-        <BrandHeader brand="Our Cocon" avatars={<AvatarStack members={[...family]} moreLabel={(n) => `+${n}`} label="Gabriel, Alex and Mia" />} date="Thursday 16 October" greeting="Good evening, Gabriel" />
+        <BrandRow brand="Our Cocon" avatars={<AvatarStack members={[...family]} moreLabel={(n) => `+${n}`} label="Gabriel, Alex and Mia" />} />
+        <BrandHeader date="Thursday 16 October" greeting="Good evening, Gabriel" />
         <TabHeader title="Groceries" sub="7 items to buy · shared with family" action={<Presence label="Mia is shopping" />} />
         <FormBar cancelLabel="Cancel" onCancel={noop} title="New recipe" saveLabel="Save" onSave={noop} />
       </Section>

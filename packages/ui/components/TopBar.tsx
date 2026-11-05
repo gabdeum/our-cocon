@@ -28,18 +28,24 @@ export interface TopBarProps extends TopBarConfig {
   transparent?: boolean;
 }
 
-const BUTTON = 48;
+const BUTTON = 40;
 const GAP = 8;
 // The drawings' 52: the status bar on a 390 × 844 iPhone. A taller notch pushes the bar down.
 const MIN_TOP = 52;
 const FADE = 200;
+
+/** Where a screen's first row starts: under the status bar, and never above `min` (the drawings' 52 or 54). */
+export function useTopEdge(min = MIN_TOP) {
+  const insets = useContext(SafeAreaInsetsContext);
+  return Math.max(insets?.top ?? 0, min);
+}
 
 /**
  * One bar at the top of every pushed screen (TopBar README): round back button, the title centred on
  * the screen whatever the sides hold, up to two round actions. The layout keeps it pinned.
  */
 export function TopBar({ back, title, titleMode = 'always', actions, scrolled = false, titleShown = false, transparent = false }: TopBarProps) {
-  const insets = useContext(SafeAreaInsetsContext);
+  const top = useTopEdge();
   const reduce = useReduceMotion();
   const always = titleMode === 'always';
   const visible = always || titleShown;
@@ -60,11 +66,11 @@ export function TopBar({ back, title, titleMode = 'always', actions, scrolled = 
       testID="top-bar"
       pointerEvents={through}
       className={cn('border-b-[1.5px] px-16 pb-8', scrolled ? 'border-line' : 'border-transparent', transparent ? 'bg-transparent' : 'bg-surface-page')}
-      style={{ paddingTop: Math.max(insets?.top ?? 0, MIN_TOP), boxShadow: scrolled ? theme.shadow.bar : undefined }}
+      style={{ paddingTop: top, boxShadow: scrolled ? theme.shadow.bar : undefined }}
     >
       <View pointerEvents={through} className="flex-row items-center gap-8">
         <View pointerEvents={through} className="flex-1 items-start" style={{ minWidth: side }}>
-          <IconButton variant="round" icon={back.icon ?? 'back'} iconSize={back.icon === 'close' ? 20 : 22} label={back.label} onPress={back.onPress} />
+          <IconButton variant="round" icon={back.icon ?? 'back'} iconSize={back.icon === 'close' ? 20 : undefined} label={back.label} onPress={back.onPress} />
         </View>
         {/* NativeWind doesn't style Animated.View: it only fades; the Text carries the look. */}
         <Animated.View pointerEvents="none" style={{ opacity, flexShrink: 1, alignItems: 'center' }}>

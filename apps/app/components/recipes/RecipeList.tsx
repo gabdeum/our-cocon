@@ -4,7 +4,7 @@ import { Button, Callout, FilterButton, Overline, Pill, PillRow, RecipeItem, Rec
 import { activeFilterKeys, emptyFilters, type RecipeFilters, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { PhotoUrls } from '../../lib/recipe-photo';
-import { groupBySeason, visibleRecipes, type RecipeListItem } from '../../lib/recipes';
+import { visibleRecipes, type RecipeListItem } from '../../lib/recipes';
 import { inSeasonOn, toggleInSeason, toggleUnder30, under30On } from '../../lib/recipe-filters';
 import { recipeAuthor, recipeMeta } from '../../lib/recipe-format';
 import { useOnline } from '../../lib/online';
@@ -31,7 +31,7 @@ export interface RecipeListProps {
   onFiltersChange?: (filters: RecipeFilters) => void;
   /** Opens the Filters sheet with the current search. */
   onOpenFilters?: (query: string) => void;
-  /** For the In season group; today by default. */
+  /** For the In season pill; today by default. */
   now?: Date;
   footer?: ReactNode;
   /** Signed links of the recipes' photos, by path (032-later L10). */
@@ -72,7 +72,6 @@ export function RecipeList({
   const results = useMemo(() => (recipes ? visibleRecipes(recipes, settled, filters) : []), [recipes, settled, filters]);
   const month = now.getMonth() + 1;
   const activeCount = activeFilterKeys(filters).length;
-  const groups = useMemo(() => groupBySeason(results, month), [results, month]);
   const tone = useMemo(() => new Map(recipes?.map((recipe, i) => [recipe.id, tones[i % tones.length]])), [recipes]);
 
   // Once per settled search, never its text. A live change to the list is not a new search, so the
@@ -150,26 +149,30 @@ export function RecipeList({
     ));
 
   return (
-    <TabScreen>
-      {header}
+    <TabScreen
+      header={header}
+      pinned={
+        <>
+          <SearchField
+            label={r.searchLabel}
+            placeholder={r.searchPlaceholder}
+            value={query}
+            onChangeText={setQuery}
+            autoCorrect={false}
+            autoCapitalize="none"
+            returnKeyType="search"
+          />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <PillRow wrap={false}>
+              <FilterButton label={r.filters(activeCount)} onPress={() => onOpenFilters?.(settled)} />
+              <Pill label={r.inSeason} selected={inSeasonOn(filters, month)} onPress={() => applyFilters(toggleInSeason(filters, month))} />
+              <Pill label={r.under30} selected={under30On(filters)} onPress={() => applyFilters(toggleUnder30(filters))} />
+            </PillRow>
+          </ScrollView>
+        </>
+      }
+    >
       <OfflineBanner screen="recipes" tracker={tracker} />
-      <SearchField
-        label={r.searchLabel}
-        placeholder={r.searchPlaceholder}
-        hint={query ? undefined : r.searchHint}
-        value={query}
-        onChangeText={setQuery}
-        autoCorrect={false}
-        autoCapitalize="none"
-        returnKeyType="search"
-      />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <PillRow wrap={false}>
-          <FilterButton label={r.filters(activeCount)} onPress={() => onOpenFilters?.(settled)} />
-          <Pill label={r.inSeason} selected={inSeasonOn(filters, month)} onPress={() => applyFilters(toggleInSeason(filters, month))} />
-          <Pill label={r.under30} selected={under30On(filters)} onPress={() => applyFilters(toggleUnder30(filters))} />
-        </PillRow>
-      </ScrollView>
       {results.length === 0 && !settled ? (
         <View className="gap-12">
           <Text size={18} weight="900" role="heading" aria-level={2}>
@@ -190,20 +193,10 @@ export function RecipeList({
           </View>
         </View>
       ) : (
-        <>
-          {groups.inSeason.length > 0 ? (
-            <View className="gap-14">
-              <Overline className="mt-4">{r.inSeasonGroup(strings.months[month - 1] ?? '', groups.inSeason.length)}</Overline>
-              {renderItems(groups.inSeason)}
-            </View>
-          ) : null}
-          {groups.rest.length > 0 ? (
-            <View className="gap-14">
-              <Overline className="mt-4">{r.allGroup(groups.rest.length)}</Overline>
-              {renderItems(groups.rest)}
-            </View>
-          ) : null}
-        </>
+        <View className="gap-14">
+          <Overline className="mt-4">{r.allGroup(results.length)}</Overline>
+          {renderItems(results)}
+        </View>
       )}
       {footer}
     </TabScreen>

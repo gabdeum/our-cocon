@@ -70,7 +70,7 @@ export { BottomSheet, SheetFooter, type BottomSheetProps } from './components/Bo
 export { Dialog, type DialogProps } from './components/Dialog';
 export { FormProgress, CookProgress } from './components/Progress';
 export { CookLayout, CookSection, type CookLayoutProps, type CookSectionProps } from './components/CookLayout';
-export { TabHeader, BrandHeader, Lead, FormBar } from './components/ScreenHeader';
+export { TabHeader, BrandRow, BrandHeader, Lead, FormBar } from './components/ScreenHeader';
 export { TopBar, TopBarHeading, type TopBarConfig, type TopBarProps } from './components/TopBar';
 export { ActionMenu, type ActionMenuItem, type ActionMenuProps } from './components/ActionMenu';
 export { IngredientEditCard, type IngredientEditCardProps, type IngredientEditField } from './components/IngredientEditCard';
