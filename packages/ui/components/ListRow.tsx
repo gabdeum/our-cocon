@@ -277,8 +277,8 @@ export interface IconRowProps {
   title: string;
   /** 14/700 muted: "Morning · about 09:00–12:00"; compact: on the title's line after " · ". */
   sub?: string;
-  /** A link at the end: "Open in Maps"; compact: a soft 36 pill ("Maps"). */
-  action?: { label: string; accessibilityLabel?: string; onPress: () => void };
+  /** Links at the end ("Copy", "Open in Maps"), 16 apart; compact: soft 36 pills ("Copy", "Maps"), 8 apart. */
+  actions?: { label: string; accessibilityLabel?: string; onPress: () => void }[];
   /** Olive, 22, at the end: the car on the who row (spec 050). */
   trailingIcon?: IconName;
   /** Spec 050 FR-006: 52 tall, one line. */
@@ -288,17 +288,17 @@ export interface IconRowProps {
 
 /**
  * ListRow README › Icon row (spec 042, OC-CalEvent): a fact with an olive icon, inside a white
- * `ListGroup inset` card. Min 56 tall, 60 with a sub-line or a link. Not pressable; its link is.
- * Compact (spec 050 FR-006): 52 tall, the sub-line on the title's line, the link a soft "Maps" pill.
+ * `ListGroup inset` card. Min 56 tall, 60 with a sub-line or links. Not pressable; its links are.
+ * Compact (spec 050 FR-006): 52 tall, the sub-line on the title's line, the links soft pills.
  */
-export function IconRow({ icon, leading, title, sub, action, trailingIcon, compact, last }: IconRowProps) {
+export function IconRow({ icon, leading, title, sub, actions = [], trailingIcon, compact, last }: IconRowProps) {
   const start = leading ?? (icon ? <Icon name={icon} size={22} color="olive" /> : null);
   const end = trailingIcon ? <Icon name={trailingIcon} size={22} color="olive" /> : null;
   if (compact) {
     return (
       <View className={cn('min-h-[52px] flex-row items-center gap-12 py-6', !last && 'border-b-[1.5px] border-line')}>
         {start}
-        <Text size={15} weight="800" numberOfLines={action ? 1 : undefined} className="min-w-0 flex-1">
+        <Text size={15} weight="800" numberOfLines={actions.length ? 1 : undefined} className="min-w-0 flex-1">
           {title}
           {sub ? (
             <Text size={15} weight="700" color="ink-muted">
@@ -306,24 +306,29 @@ export function IconRow({ icon, leading, title, sub, action, trailingIcon, compa
             </Text>
           ) : null}
         </Text>
-        {action ? (
-          <Pressable
-            role="link"
-            aria-label={action.accessibilityLabel ?? action.label}
-            onPress={action.onPress}
-            className={cn('h-[36px] flex-none items-center justify-center rounded-pill bg-surface-soft px-12 active:bg-surface-soft-pressed', focusRing)}
-          >
-            <Text size={14} weight="800">
-              {action.label}
-            </Text>
-          </Pressable>
+        {actions.length ? (
+          <View className="flex-none flex-row gap-8">
+            {actions.map((action) => (
+              <Pressable
+                key={action.label}
+                role="link"
+                aria-label={action.accessibilityLabel ?? action.label}
+                onPress={action.onPress}
+                className={cn('h-[36px] items-center justify-center rounded-pill bg-surface-soft px-12 active:bg-surface-soft-pressed', focusRing)}
+              >
+                <Text size={14} weight="800">
+                  {action.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         ) : null}
         {end}
       </View>
     );
   }
   return (
-    <View className={cn('flex-row items-center gap-12 py-8', sub || action ? 'min-h-[60px]' : 'min-h-[56px]', !last && 'border-b-[1.5px] border-line')}>
+    <View className={cn('flex-row items-center gap-12 py-8', sub || actions.length ? 'min-h-[60px]' : 'min-h-[56px]', !last && 'border-b-[1.5px] border-line')}>
       {start}
       <View className="min-w-0 flex-1">
         <Text size={16} weight="800">
@@ -335,7 +340,13 @@ export function IconRow({ icon, leading, title, sub, action, trailingIcon, compa
           </Text>
         ) : null}
       </View>
-      {action ? <Link label={action.label} accessibilityLabel={action.accessibilityLabel} onPress={action.onPress} /> : null}
+      {actions.length ? (
+        <View className="flex-row gap-16">
+          {actions.map((action) => (
+            <Link key={action.label} label={action.label} accessibilityLabel={action.accessibilityLabel} onPress={action.onPress} />
+          ))}
+        </View>
+      ) : null}
       {end}
     </View>
   );

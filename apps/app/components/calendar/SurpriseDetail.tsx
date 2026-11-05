@@ -2,9 +2,10 @@ import { View } from 'react-native';
 import type { SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { Card, IconRow, ListGroup, MemberBadge, PushedScreen, Text, TopBarHeading } from '@cocon/ui';
-import { addedLine, mapsUrl, memberBadges, whenLines } from '../../lib/event-detail';
+import { addedLine, memberBadges, placeActions, whenLines } from '../../lib/event-detail';
 import type { Member } from '../../lib/session';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
+import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 
 const e = strings.calendar.event;
@@ -15,11 +16,11 @@ export interface SurpriseDetailProps {
   occurrence: StoredEvent;
   members: readonly Member[];
   slotTimes: SlotTimes;
-  /** 'ios', 'web'…: which maps app "Open in Maps" opens. */
-  os: string;
   now?: Date;
   onBack: () => void;
   onOpenUrl: (url: string) => void;
+  /** Puts the place on the clipboard. */
+  onCopy: (text: string) => Promise<unknown>;
 }
 
 /**
@@ -27,13 +28,14 @@ export interface SurpriseDetailProps {
  * it's for, the time, the place and the creator's note; nothing to edit, copy, share or delete
  * (they don't know there's anything else, FR-005).
  */
-export function SurpriseDetail({ occurrence: o, members, slotTimes, os, now, onBack, onOpenUrl }: SurpriseDetailProps) {
+export function SurpriseDetail({ occurrence: o, members, slotTimes, now, onBack, onOpenUrl, onCopy }: SurpriseDetailProps) {
+  const toast = useToast();
   const when = whenLines(o, slotTimes, useCalendarDisplay().prefs.use24h);
   const badges = memberBadges(o, members);
   const creator = members.find((m) => m.id === o.creator_member_id)?.display_name ?? strings.recipe.formerMember;
   const rows = [
     { icon: 'clock' as const, title: when.title, sub: when.sub },
-    o.location ? { icon: 'pin' as const, title: o.location, action: { label: e.openInMaps, accessibilityLabel: e.openInMapsA11y(o.location), onPress: () => onOpenUrl(mapsUrl(o.location ?? '', os)) } } : null,
+    o.location ? { icon: 'pin' as const, title: o.location, actions: placeActions(o.location, false, { openUrl: onOpenUrl, copy: onCopy, toast: toast.show }) } : null,
   ].filter((r) => r !== null);
 
   return (

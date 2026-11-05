@@ -103,6 +103,7 @@ export function AgendaView({ userId, members, myMemberId, events, slotTimes, hid
   return (
     <View className="flex-1">
       <ScrollView
+        showsVerticalScrollIndicator={false}
         ref={list}
         onScroll={onScroll}
         scrollEventThrottle={16}

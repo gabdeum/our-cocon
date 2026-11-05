@@ -6,7 +6,7 @@ import type { Tracker } from '@cocon/schemas';
 import { ActionMenu, BottomSheet, ChecklistRow, DateGrid, Dialog, Icon, IconButton, IconRow, ListGroup, MemberStack, PushedScreen, Tag, Text, TopBarHeading } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import type { DeleteScope } from '../../lib/event-delete';
-import { addedLine, deleteBody, mapsUrl, memberBadges, reminderLines, repeatLine, responsibleLine, whenLine } from '../../lib/event-detail';
+import { addedLine, deleteBody, memberBadges, placeActions, reminderLines, repeatLine, responsibleLine, whenLine } from '../../lib/event-detail';
 import { dateGridMonth, shiftMonth } from '../../lib/event-form';
 import type { Member } from '../../lib/session';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
@@ -30,8 +30,6 @@ export interface EventDetailProps {
   today: string;
   weekStartsOn: WeekStartsOn;
   tracker: Tracker;
-  /** 'ios', 'web'…: which maps app "Open in Maps" opens. */
-  os: string;
   /** Offline: readable, nothing changes (decision 11). */
   readOnly?: boolean;
   now?: Date;
@@ -39,6 +37,8 @@ export interface EventDetailProps {
   onEdit: () => void;
   onShare: () => void;
   onOpenUrl: (url: string) => void;
+  /** Puts the place on the clipboard. */
+  onCopy: (text: string) => Promise<unknown>;
   onTick: (itemId: string, done: boolean) => Promise<void>;
   /** Deletes for the scope and returns the Undo; the page then closes. */
   onDelete: (scope: DeleteScope) => Promise<() => Promise<void>>;
@@ -89,7 +89,7 @@ export function EventDetail(p: EventDetailProps) {
         ? { key: 'who', icon: 'car' as const, title: responsible }
         : null,
     o.location
-      ? { key: 'place', icon: 'pin' as const, title: o.location, action: { label: e.maps, accessibilityLabel: e.openInMapsA11y(o.location), onPress: () => p.onOpenUrl(mapsUrl(o.location ?? '', p.os)) } }
+      ? { key: 'place', icon: 'pin' as const, title: o.location, actions: placeActions(o.location, true, { openUrl: p.onOpenUrl, copy: p.onCopy, toast: toast.show }) }
       : null,
     reminder ? { key: 'reminder', icon: 'bell' as const, ...reminder } : null,
   ].filter((r) => r !== null);

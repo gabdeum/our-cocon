@@ -9,18 +9,26 @@ import { MemberBadge } from './MemberChip';
 afterEach(cleanup);
 
 describe('IconRow', () => {
-  it('shows its title, sub-line and link; only the link is a control', () => {
+  it('shows its title, sub-line and links; only the links are controls', () => {
     const onPress = vi.fn();
     render(
       <ListGroup inset>
         <IconRow icon="clock" title="Saturday, Oct 31" sub="Morning · about 09:00–12:00" />
-        <IconRow icon="pin" title="Little Notes studio" action={{ label: 'Open in Maps', accessibilityLabel: 'Open Little Notes studio in Maps', onPress }} last />
+        <IconRow
+          icon="pin"
+          title="Little Notes studio"
+          actions={[
+            { label: 'Copy', accessibilityLabel: 'Copy Little Notes studio', onPress: vi.fn() },
+            { label: 'Open in Maps', accessibilityLabel: 'Open Little Notes studio in Google Maps', onPress },
+          ]}
+          last
+        />
       </ListGroup>,
     );
     expect(screen.getByText('Saturday, Oct 31')).toBeTruthy();
     expect(screen.getByText('Morning · about 09:00–12:00')).toBeTruthy();
-    expect(screen.getAllByRole('button')).toHaveLength(1);
-    fireEvent.click(screen.getByRole('button', { name: 'Open Little Notes studio in Maps' }));
+    expect(screen.getAllByRole('button')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Open Little Notes studio in Google Maps' }));
     expect(onPress).toHaveBeenCalledOnce();
   });
 });

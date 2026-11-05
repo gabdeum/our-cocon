@@ -6,8 +6,8 @@ Source `screens/OC-Home.dc.html` · Route `/` · Spec 028
 1. Brand row: logo mark + "Our Cocon"; right: avatar stack of all family members, account and without the app, in their member colors (max 4, then "+N"). Pinned under the status bar; the hairline and shadow show once content scrolls under it (spec 050 FR-007).
 2. Date line (olive 15/700), e.g. "Sunday, Oct 25", then greeting `display-xl` "Hi {firstName}" ("Good morning {firstName}" 5:00–11:59, "Good evening {firstName}" 18:00–4:59).
 3. **Calendar card** (CalCard.md).
-4. Hero card (latest recipe = most recently added): photo with white tag "Latest recipe"; title; chips "{time}", "Serves {n}", warn chip "{k} to buy" (hidden when 0). Opens the recipe.
-5. Two StatTiles: honey "{count}" / "to buy" → Groceries; sage "{count}" / "family recipes" → Recipes.
+4. Two StatTiles: honey "{count}" / "to buy" → Groceries; sage "{count}" / "family recipes" → Recipes.
+5. Hero card (latest recipe = most recently added): photo with white tag "Latest recipe"; title; chips "{time}", "Serves {n}", warn chip "{k} to buy" (hidden when 0). Opens the recipe.
 6. **Latest activity** (white card, radius 26): title 20/900 + small segmented "All" · "AI only" (36 tall, default All). 4 rows (56, dividers): badge 36 — person avatar in member color, or "AI" rounded square (radius 12) in the person's color with a 2 px olive ring; title 15/800 "Eva added Pumpkin soup" · "Gabriel ticked 4 items" · "Gabriel added Pediatrician" · "Eva edited Leek & bacon quiche"; sub 13/600 muted "Recipes · via ChatGPT · 1 h ago", "Groceries · 2 h ago", "Calendar · Wed, 10:00 · via Claude · 3 h ago"; AI rows end with "Undo" (or "Restore" for deletes). Link "See all activity".
 7. TabBar (Home active) with TimerPill when timers exist.
 
@@ -36,3 +36,4 @@ Source `screens/OC-Home.dc.html` · Route `/` · Spec 028
 
 ## Changelog
 - 2026-11-05 (050 FR-007): the brand row is pinned.
+- 2026-11-05: The two StatTiles move above the hero, right under the calendar card (Gabriel's ask).

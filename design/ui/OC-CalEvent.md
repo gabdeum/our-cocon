@@ -10,7 +10,7 @@ Compact since spec 050 FR-006: a typical event fits one 390 × 844 screen withou
    - Repeat: "Every Saturday", "Every Tuesday and Thursday", "Every other Saturday", "Every day", "Every month", "Every year".
 3. One white card of compact rows (52), each one line, its second part muted after " · ". Rows without a value are hidden.
    - Who: the member dots, "James · Gabriel takes James", car icon at the end. The names are joined ("James and Mia"); the responsible part is "{name} takes {members without the app}", or "{name} drives" when everyone on it has the app, and is left out (with the car) when nobody is responsible. Names, not pronouns: the app doesn't know anyone's.
-   - Place: pin, "Little Notes studio, 4 Elm St", soft pill "Maps" (read as "Open {place} in Maps"). It opens Apple Maps on iPhone, Google Maps on the web, searching for the place as typed.
+   - Place: pin, "Little Notes studio, 4 Elm St", soft pills "Copy" (read as "Copy {place}") and "Maps" (read as "Open {place} in Google Maps"), 8 apart. "Copy" puts the place as typed on the clipboard, then the toast "Address copied" ("Couldn't copy the address." in warn if it fails). "Maps" opens Google Maps (the app on iPhone when installed), searching for the place as typed.
    - Reminder: bell, "1 hour before · reminds Gabriel · 08:00" (spec 049 FR-006): the people the phones remind (spec 049 FR-003) and when, in the home time zone and the member's clock; "1 day before" reads "· reminds Gabriel · 18:00 the day before". No names (a private event of someone without the app): "1 hour before" alone.
 4. "Bring" card: heading 16/900 with "{ticked} of {total}" (13/700 muted) on the right; rows 44 with a 24 checkbox; ticked = olive box + strike-through.
 5. "Added by Eva · 2 days ago · anyone can tick the list" 13/700 muted ("Added via Claude · 1 h ago" for AI; the last part only when there is a list).
@@ -51,3 +51,4 @@ The page is `noindex` and sends no analytics. A link stops working once that dat
 
 ## Changelog
 - 2026-11-04 (spec 050 FR-006): compact layout. ✎ and ⋯ in the TopBar replace the Edit, Duplicate, Share and Delete buttons; the repeat moves beside the tag; date and time share one line; who, place and reminder are one-line 52 rows in one card; the Bring card shows its count and 44 rows; "anyone can tick the list" joins the Added line. Kept from spec 049: the reminder's time. The drawing's "takes him" reads "takes James".
+- 2026-11-05 (Gabriel's ask): the place gets a "Copy" pill beside "Maps", and "Maps" opens Google Maps on the iPhone too (it was Apple Maps).

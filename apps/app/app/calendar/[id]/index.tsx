@@ -1,4 +1,4 @@
-import { Linking, Platform, View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import { SurpriseDetail } from '../../../components/calendar/SurpriseDetail';
 import { deleteOccurrences, duplicateEvent, duplicateInput } from '../../../lib/event-delete';
 import { eventOccurrence, isCover, seesInFull } from '../../../lib/event-detail';
 import { useOnline } from '../../../lib/online';
+import { systemShare } from '../../../lib/system-share';
 import { useEventSheet } from '../../../lib/use-event-sheet';
 import { strings } from '../../../strings/en';
 
@@ -36,7 +37,7 @@ export default function EventRoute() {
   const date = CalendarDate.safeParse(params.date).success ? (params.date as string) : ev?.starts_on;
   const cover = ev && date && isCover(ev, myMemberId) ? eventOccurrence(ev, date) : null;
   if (cover) {
-    return <SurpriseDetail occurrence={cover} members={state.members} slotTimes={page.slotTimes} os={Platform.OS} onBack={page.close} onOpenUrl={(url) => void Linking.openURL(url)} />;
+    return <SurpriseDetail occurrence={cover} members={state.members} slotTimes={page.slotTimes} onBack={page.close} onOpenUrl={(url) => void Linking.openURL(url)} onCopy={systemShare.copy} />;
   }
   const occurrence = ev && date && seesInFull(ev, myMemberId) ? eventOccurrence(ev, date) : null;
   if (!ev || !date || !occurrence) {
@@ -63,12 +64,12 @@ export default function EventRoute() {
       today={page.today}
       weekStartsOn={page.weekStartsOn}
       tracker={tracker}
-      os={Platform.OS}
       readOnly={!online}
       onBack={page.close}
       onEdit={() => router.push(`/calendar/${ev.id}/edit?date=${date}` as Href)}
       onShare={() => router.push(`/calendar/${ev.id}/share?date=${date}` as Href)}
       onOpenUrl={(url) => void Linking.openURL(url)}
+      onCopy={systemShare.copy}
       onTick={async (itemId, done) => {
         await setChecklistDone(client, itemId, done);
         page.refreshEvents();

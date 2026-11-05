@@ -59,9 +59,8 @@ describe('the event page rows (FR-001)', () => {
     expect(lines({ reminder: 'none' })).toBeNull();
   });
 
-  it('opens the place in the phone’s maps app', () => {
-    expect(mapsUrl('4 Elm St', 'ios')).toBe('https://maps.apple.com/?q=4%20Elm%20St');
-    expect(mapsUrl('4 Elm St', 'web')).toBe('https://www.google.com/maps/search/?api=1&query=4%20Elm%20St');
+  it('opens the place in Google Maps, on the iPhone too', () => {
+    expect(mapsUrl('4 Elm St')).toBe('https://www.google.com/maps/search/?api=1&query=4%20Elm%20St');
   });
 
   it('badges Everyone and Others too', () => {

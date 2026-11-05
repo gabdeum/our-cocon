@@ -45,8 +45,7 @@ export function MenuScreen({ details, memberNames, connected, deleted, notificat
     <ListRow key={key} title={title} sub={sub} subTone={subTone} leading={{ kind: 'icon', icon }} trailing={{ kind: 'chevron' }} onPress={() => open(key)} last={last} />
   );
   return (
-    <TabScreen>
-      <TabHeader title={m.title} />
+    <TabScreen pinned={<TabHeader title={m.title} />}>
       <OfflineBanner screen="menu" tracker={tracker} />
       <View className="gap-10">
         <Heading>{m.apps}</Heading>

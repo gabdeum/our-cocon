@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import { NOW, babyMusic, eva, members } from '../../test/baby-music';
 import { gabriel } from '../../test/fakes';
+import { ToastProvider } from '../../lib/toast';
 import { SurpriseDetail, type SurpriseDetailProps } from './SurpriseDetail';
 
 afterEach(cleanup);
@@ -30,8 +31,12 @@ const cover = babyMusic({
 });
 
 function setup(over: Partial<SurpriseDetailProps> = {}) {
-  const props: SurpriseDetailProps = { occurrence: cover, members, slotTimes: DEFAULT_SLOT_TIMES, os: 'web', now: NOW, onBack: vi.fn(), onOpenUrl: vi.fn(), ...over };
-  render(<SurpriseDetail {...props} />);
+  const props: SurpriseDetailProps = { occurrence: cover, members, slotTimes: DEFAULT_SLOT_TIMES, now: NOW, onBack: vi.fn(), onOpenUrl: vi.fn(), onCopy: vi.fn(async () => undefined), ...over };
+  render(
+    <ToastProvider>
+      <SurpriseDetail {...props} />
+    </ToastProvider>,
+  );
   return props;
 }
 
@@ -42,7 +47,7 @@ describe('SurpriseDetail (OC-CalSurprise)', () => {
     // The top bar first (spec 050): back, and the title it shows once the heading scrolls under it.
     expect(screen.getByRole('button', { name: 'Back to Calendar' })).toBeTruthy();
     expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Dinner out']);
-    const order = ['Dinner out', 'Eva', 'Saturday, Oct 31', 'Evening · about 18:00–22:00', 'Café Lalo', 'Open in Maps', 'Note from Gabriel', 'Meet at Café Lalo at 19:30. Dress nice!', 'Added by Gabriel'];
+    const order = ['Dinner out', 'Eva', 'Saturday, Oct 31', 'Evening · about 18:00–22:00', 'Café Lalo', 'Copy', 'Open in Maps', 'Note from Gabriel', 'Meet at Café Lalo at 19:30. Dress nice!', 'Added by Gabriel'];
     expect(order.map((t) => text.indexOf(t))).toEqual([...order.map((t) => text.indexOf(t))].sort((x, y) => x - y));
     expect(order.every((t) => text.includes(t))).toBe(true);
   });
@@ -53,9 +58,12 @@ describe('SurpriseDetail (OC-CalSurprise)', () => {
     expect(screen.queryByText('Surprise')).toBeNull();
   });
 
-  it('opens the place in Maps, and hides the note card without a note', () => {
+  it('opens the place in Google Maps or copies it, and hides the note card without a note', async () => {
     const props = setup({ occurrence: { ...cover, notes: null } });
-    fireEvent.click(screen.getByRole('button', { name: 'Open Café Lalo in Maps' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy Café Lalo' }));
+    expect(props.onCopy).toHaveBeenCalledWith('Café Lalo');
+    expect(await screen.findByText('Address copied')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Open Café Lalo in Google Maps' }));
     expect(props.onOpenUrl).toHaveBeenCalledWith('https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lalo');
     expect(screen.queryByText('Note from Gabriel')).toBeNull();
   });

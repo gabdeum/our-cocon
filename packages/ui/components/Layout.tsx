@@ -41,7 +41,7 @@ export function TabScreen({ children, className, header, pinned }: TabScreenProp
   const [stuck, setStuck] = useState(false);
   if (!pinned) {
     return (
-      <ScrollView className="flex-1 bg-surface-page" contentContainerClassName={cn('gap-18 px-20 pb-[180px] pt-[54px]', className)}>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-surface-page" contentContainerClassName={cn('gap-18 px-20 pb-[180px] pt-[54px]', className)}>
         {children}
       </ScrollView>
     );
@@ -66,6 +66,7 @@ export function TabScreen({ children, className, header, pinned }: TabScreenProp
     <View className="flex-1 bg-surface-page">
       <View className="bg-surface-page" style={{ height: top }} />
       <ScrollView
+        showsVerticalScrollIndicator={false}
         className="flex-1 bg-surface-page"
         contentContainerClassName="gap-18 px-20 pb-[180px]"
         stickyHeaderIndices={[header ? 1 : 0]}
@@ -91,6 +92,7 @@ export function PushedScreen({ children, className, topBar }: { children: ReactN
       {bar.node}
       <TopBarHeadingProvider value={bar.register}>
         <ScrollView
+          showsVerticalScrollIndicator={false}
           onScroll={bar.onScroll}
           scrollEventThrottle={16}
           className="flex-1 bg-surface-page"
@@ -112,7 +114,7 @@ export function FormScreen({ bar, children, scrollRef, scrollEnabled = true }: {
   return (
     <View className="flex-1 bg-surface-page">
       <View className="px-16 pb-[14px] pt-[50px]">{bar}</View>
-      <ScrollView ref={scrollRef} scrollEnabled={scrollEnabled} className="flex-1" contentContainerClassName="gap-18 px-20 pb-[30px] pt-4" keyboardShouldPersistTaps="handled">
+      <ScrollView showsVerticalScrollIndicator={false} ref={scrollRef} scrollEnabled={scrollEnabled} className="flex-1" contentContainerClassName="gap-18 px-20 pb-[30px] pt-4" keyboardShouldPersistTaps="handled">
         {children}
       </ScrollView>
       <ToastHost />
@@ -146,7 +148,7 @@ export function PhotoScreen({ photo, topBar, banner, floating, footer, children 
   return (
     <View className="flex-1">
       <TopBarHeadingProvider value={bar.register}>
-        <ScrollView onScroll={bar.onScroll} scrollEventThrottle={16} className="flex-1 bg-surface-page">
+        <ScrollView showsVerticalScrollIndicator={false} onScroll={bar.onScroll} scrollEventThrottle={16} className="flex-1 bg-surface-page">
           <View className="h-[240px] overflow-hidden">{photo}</View>
           <View className="-mt-[30px] gap-18 rounded-t-[30px] bg-surface-page px-20 pb-[40px] pt-24">
             {banner}
@@ -183,7 +185,7 @@ export interface PublicScreenProps {
  */
 export function PublicScreen({ brand, tag, photo, children }: PublicScreenProps) {
   return (
-    <ScrollView className="flex-1 bg-surface-page">
+    <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-surface-page">
       <View className="h-[64px] flex-row items-center justify-between border-b-[1.5px] border-line bg-surface-card px-16">
         <View className="flex-row items-center gap-8">
           <Logo size={30} />

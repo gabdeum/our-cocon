@@ -95,7 +95,7 @@ export function BottomSheet({ visible, onClose, title, lead, leading, hero, head
               </View>
             </View>
             {/* The body scrolls clear of the floating button (60 + 12). */}
-            <ScrollView className="shrink" contentContainerClassName={cn('gap-16', floating != null && 'pb-[72px]')}>
+            <ScrollView showsVerticalScrollIndicator={false} className="shrink" contentContainerClassName={cn('gap-16', floating != null && 'pb-[72px]')}>
               {children}
             </ScrollView>
             {footer}

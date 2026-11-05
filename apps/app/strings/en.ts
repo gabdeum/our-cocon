@@ -1632,7 +1632,12 @@ export const strings = {
       maps: 'Maps',
       /** The who row: "James", "James and Mia", then " · Gabriel takes James". */
       who: (names: string[]) => andList(names),
-      openInMapsA11y: (place: string) => `Open ${place} in Maps`,
+      openInMapsA11y: (place: string) => `Open ${place} in Google Maps`,
+      /** Beside "Maps" on the place row: copies the place as typed. */
+      copyPlace: 'Copy',
+      copyPlaceA11y: (place: string) => `Copy ${place}`,
+      placeCopied: 'Address copied',
+      copyPlaceFailed: "Couldn't copy the address.",
       drives: (name: string) => `${name} drives`,
       /** Spec 049 FR-006, after the reminder on its line (spec 050): "1 hour before · reminds Gabriel · 13:30". */
       reminds: (names: string[], when: string) => `reminds ${andList(names)} · ${when}`,

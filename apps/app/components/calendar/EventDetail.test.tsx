@@ -26,12 +26,12 @@ function setup(event: StoredEvent = babyMusic(), over: Partial<EventDetailProps>
     today: '2026-10-31',
     weekStartsOn: 0,
     tracker,
-    os: 'web',
     now: NOW,
     onBack: vi.fn(),
     onEdit: vi.fn(),
     onShare: vi.fn(),
     onOpenUrl: vi.fn(),
+    onCopy: vi.fn(async () => undefined),
     onTick: vi.fn(async () => undefined),
     onDelete: vi.fn(async () => undo),
     onDuplicate: vi.fn(async () => undo),
@@ -65,6 +65,7 @@ describe('Event detail', () => {
       'James',
       ' · Gabriel takes James',
       'Little Notes studio, 4 Elm St',
+      'Copy',
       'Maps',
       '1 hour before',
       ' · reminds Gabriel · 08:00',
@@ -97,10 +98,19 @@ describe('Event detail', () => {
     expect(screen.getByText('Added via Claude · 2 days ago')).toBeTruthy();
   });
 
-  it('opens the place in Maps', () => {
-    const { onOpenUrl } = setup();
-    fireEvent.click(screen.getByRole('link', { name: 'Open Little Notes studio, 4 Elm St in Maps' }));
+  it('opens the place in Google Maps, or copies it', async () => {
+    const { onOpenUrl, onCopy } = setup();
+    fireEvent.click(screen.getByRole('link', { name: 'Open Little Notes studio, 4 Elm St in Google Maps' }));
     expect(onOpenUrl).toHaveBeenCalledWith('https://www.google.com/maps/search/?api=1&query=Little%20Notes%20studio%2C%204%20Elm%20St');
+    fireEvent.click(screen.getByRole('link', { name: 'Copy Little Notes studio, 4 Elm St' }));
+    expect(onCopy).toHaveBeenCalledWith('Little Notes studio, 4 Elm St');
+    expect(await screen.findByText('Address copied')).toBeTruthy();
+  });
+
+  it('says so when the place can’t be copied', async () => {
+    setup(undefined, { onCopy: vi.fn(async () => Promise.reject(new Error('no clipboard'))) });
+    fireEvent.click(screen.getByRole('link', { name: 'Copy Little Notes studio, 4 Elm St' }));
+    expect(await screen.findByText("Couldn't copy the address.")).toBeTruthy();
   });
 
   it('FR-002: anyone ticks the checklist; it shows at once and goes back if it fails', async () => {

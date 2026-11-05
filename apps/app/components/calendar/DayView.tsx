@@ -53,7 +53,7 @@ export function DayView({ members, myMemberId, events, slotTimes, hidden, date, 
   return (
     <View className="flex-1">
       <Swipeable page={date} onSwipe={onSwipe}>
-        <ScrollView contentContainerClassName="gap-16 px-20 pt-4" contentContainerStyle={{ paddingBottom: BOTTOM_PAD }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-16 px-20 pt-4" contentContainerStyle={{ paddingBottom: BOTTOM_PAD }}>
           {day.busy.length ? (
             <View role="group" aria-label={d.busyLabel} className="flex-row flex-wrap gap-8">
               {day.busy.map((c) => (
