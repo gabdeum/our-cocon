@@ -16,6 +16,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
+      "icon": "./assets/icon.png",
       "bundleIdentifier": "com.ourcocon.app",
       "supportsTablet": false,
       "infoPlist": {
@@ -31,6 +32,13 @@
       },
       "appleTeamId": "59TR87TBX2"
     },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/adaptive-icon-monochrome.png",
+        "backgroundColor": "#FEF6E3"
+      }
+    },
     "web": {
       "bundler": "metro",
       "output": "single",
@@ -39,7 +47,15 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FEF6E3"
+        }
+      ],
       [
         "expo-audio",
         {

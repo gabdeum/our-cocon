@@ -1,6 +1,6 @@
 # Logos
 
-The Our Cocon mark is a house with a heart, drawn in ink on a honey rounded square (radius 11 at 34 px). The wordmark is the name set in Nunito 900 at 18 px, letter-spacing −0.3, 8 px right of the mark. Keep the mark on surface-page or surface-card, never on honey.
+The Our Cocon mark is an olive cocoon around a honey centre (masters in `design/brand/`; app icons and favicons are exported from them). The wordmark is the name set in Nunito 900 at 18 px, letter-spacing −0.3, 8 px right of the mark. Keep the mark on surface-page or surface-card; where it must sit on olive or ink, draw it in one colour (on-olive).
 
 ## Sign-in provider marks
 

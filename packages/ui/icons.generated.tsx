@@ -1,7 +1,7 @@
 // Generated from design/system by `pnpm theme` (spec 002). Do not edit by hand.
 // Icons are the design system's SVGs (design/system/assets), copied path for path, never redrawn.
 import type { ReactElement } from 'react';
-import { Svg, Circle, G, Path, Rect } from 'react-native-svg';
+import { Svg, Circle, Path, Rect } from 'react-native-svg';
 
 type Draw = (props: { size: number; color: string }) => ReactElement;
 
@@ -130,10 +130,10 @@ export const iconShapes = {
 
 export type IconName = keyof typeof iconShapes;
 
-/** The Our Cocon mark: a house with a heart, ink on a honey rounded square. */
-export function LogoShape({ size, honey, ink }: { size: number; honey: string; ink: string }) {
+/** The Our Cocon mark: an olive cocoon around a honey centre (design/brand). */
+export function LogoShape({ size, olive, honey }: { size: number; olive: string; honey: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 34 34"><Rect width="34" height="34" rx="11" fill={honey} /><G transform="translate(5 5)" fill="none" stroke={ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" /><Path d="M12 17.5s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6Z" /></G></Svg>
+    <Svg width={size} height={size} viewBox="217 231 819 791"><Path fill={olive} fillRule="evenodd" d="M590.0 1018.3C492.3 1011.0 404.0 967.9 345.6 899.0C284.8 827.4 275.0 751.7 316.0 670.1C340.9 620.2 381.3 581.1 407.8 581.0C421.4 581.0 426.6 588.4 432.0 615.0C439.5 652.0 449.6 670.5 478.0 699.1C507.6 728.8 547.8 757.1 594.0 780.9C726.9 849.1 878.5 851.7 982.5 787.6C987.6 784.4 991.8 782.4 992.3 782.9C993.6 784.2 987.1 801.2 979.0 817.5C931.4 914.0 803.9 996.4 673.5 1014.9C647.8 1018.6 612.4 1020.0 590.0 1018.3ZM787.0 798.9C726.8 795.1 666.1 777.9 609.0 748.4C592.9 740.0 590.3 738.3 591.8 736.8C592.3 736.3 602.3 734.2 614.1 732.0C731.2 709.9 816.8 672.4 882.0 614.5C911.0 588.8 933.5 559.4 951.6 523.8C960.9 505.4 961.6 504.7 968.9 506.9C983.8 511.3 1004.1 533.1 1015.7 557.0C1028.8 584.0 1033.5 608.1 1032.7 643.5C1031.3 711.4 1007.5 747.6 947.6 773.0C900.6 793.0 842.3 802.3 787.0 798.9ZM253.5 742.5C223.4 690.8 213.7 626.9 226.5 566.0C253.6 437.7 364.7 315.0 499.2 264.6C588.5 231.2 679.9 226.4 767.3 250.4C891.7 284.7 953.2 377.6 919.3 480.0C907.3 516.2 878.6 554.4 858.4 561.0C849.7 563.9 848.3 561.1 847.6 539.5C846.7 508.2 838.4 489.3 816.1 466.9C786.8 437.7 743.1 419.3 690.1 414.0C675.2 412.5 636.8 412.8 621.0 414.5C479.0 429.6 351.8 513.5 293.2 630.5C275.6 665.8 264.8 704.2 263.4 737.0C262.8 750.9 262.4 754.0 261.1 754.0C260.6 754.0 257.2 748.8 253.5 742.5Z" /><Path fill={honey} d="M577.5 687.0C521.2 682.8 482.9 652.1 486.6 614.1C490.6 573.7 531.7 528.8 586.1 505.7C617.5 492.3 644.3 486.6 676.0 486.6C716.6 486.5 747.3 497.7 768.5 520.2C805.1 559.1 783.7 617.4 719.6 653.4C693.4 668.2 659.9 679.7 629.2 684.4C620.4 685.8 591.5 688.2 588.5 687.8C588.0 687.8 583.0 687.4 577.5 687.0Z" /></Svg>
   );
 }
 

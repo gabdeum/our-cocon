@@ -14,6 +14,8 @@ A household app for families, run from the app or from any AI assistant through 
 | `pnpm db:new <name>` · `pnpm db:types` | New migration · regenerate DB types |
 | `pnpm theme` | Regenerate the theme from `design/system/tokens.json` |
 
+Tests run 3 at a time with a 20 s limit per screen test (`vitest.config.ts`) because this laptop has 8 GB of RAM. If tests fail with "Test timed out" (or a realtime "within a second" check misses by a little), the Mac is short on memory, not the code: check nothing heavy is running (a Homebrew build, `expo export`, another test run), close what you can, then rerun only the failing files with `pnpm test <path>`. Never raise a single test's timeout to hide this.
+
 ## Structure
 
 - `apps/app`: Expo Router (web + iOS). Routes per module (`app/(tabs)`, `app/recipes`, `app/groceries`); all copy in `strings/en.ts`

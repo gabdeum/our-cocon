@@ -26,12 +26,12 @@ export function Icon({ name, size = 'sm', color = 'ink' }: IconProps) {
   );
 }
 
-/** The Our Cocon mark (Logos/README.md): never on honey. */
-export function Logo({ size = 34 }: { size?: number }) {
+/** The Our Cocon mark (Logos/README.md): olive and honey, or one colour (e.g. on-olive on an olive fill). */
+export function Logo({ size = 34, color }: { size?: number; color?: ColorName }) {
   const colors = useThemeColors();
   return (
     <View aria-hidden style={{ width: size, height: size }}>
-      <LogoShape size={size} honey={colors.honey} ink={colors.ink} />
+      <LogoShape size={size} olive={colors[color ?? 'olive']} honey={colors[color ?? 'honey']} />
     </View>
   );
 }
