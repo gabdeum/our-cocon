@@ -8,7 +8,7 @@ Reference: `design/screens/OC-CalEvent.dc.html` (`dialog: menu`): Duplicate · S
 
 | Part | Spec |
 | --- | --- |
-| Button | IconButton `--round` (48, `shadow-button`), icon `more`, `aria-haspopup`, `aria-expanded` |
+| Button | IconButton `--round` (40, `shadow-button`), icon `more`, `aria-haspopup`, `aria-expanded` |
 | Menu | 236 wide, 8 under the button, right edges aligned; surface-card, radius 18, padding 6, `shadow-popover` |
 | Item | min height 48, padding 0 12, radius 12, 16/700 ink; pressed surface-soft |
 | Danger item | 16/800 `danger` ("Delete event"); its action is confirmed by a Dialog |

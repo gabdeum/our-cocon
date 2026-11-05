@@ -5,7 +5,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { theme } from '../theme';
 import { ActionMenu } from './ActionMenu';
 import { IconButton } from './IconButton';
-import { PhotoScreen, PushedScreen } from './Layout';
+import { PhotoScreen, PushedScreen, TabScreen } from './Layout';
 import { Text } from './Text';
 import { TopBar, TopBarHeading } from './TopBar';
 
@@ -126,6 +126,24 @@ describe('PhotoScreen with a top bar', () => {
     expect(bar.style.boxShadow).toBe('');
     scrollTo(scrollerOf(screen.getByText('Photo')), 400);
     expect(bar.style.boxShadow).toBe(theme.shadow.bar);
+  });
+});
+
+describe('TabScreen with a pinned part (FR-007)', () => {
+  it('puts the header above it, sticks it, and marks it once content scrolls under it', () => {
+    render(
+      <TabScreen header={<Text role="heading">Recipes</Text>} pinned={<Text>Search</Text>}>
+        <Text>Quiche</Text>
+      </TabScreen>,
+    );
+    const pinned = screen.getByTestId('tab-pinned');
+    const text = document.body.textContent ?? '';
+    expect(text.indexOf('Recipes')).toBeLessThan(text.indexOf('Search'));
+    expect(text.indexOf('Search')).toBeLessThan(text.indexOf('Quiche'));
+    expect(getComputedStyle(pinned.parentElement as HTMLElement).position).toBe('sticky');
+    expect(pinned.style.boxShadow).toBe('');
+    act(() => scrollTo(scrollerOf(pinned), 40));
+    expect(pinned.style.boxShadow).toBe(theme.shadow.bar);
   });
 });
 

@@ -71,25 +71,24 @@ function type(text: string) {
 const settle = () => act(() => vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS));
 const names = () => screen.getAllByRole('link').map((l) => l.textContent ?? '');
 
-describe('the list (FR-001, FR-005 to FR-007)', () => {
-  it('shows the header, search, hint and pills as drawn', () => {
+describe('the list (FR-001, FR-006; 050 FR-007)', () => {
+  it('shows the header, the search with no hint, and the pills', () => {
     setup();
     expect(screen.getByRole('heading', { name: 'Recipes' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'New' })).toBeTruthy();
     expect(search().getAttribute('placeholder')).toBe('Search recipes or ingredients');
-    expect(screen.getByText('Try “leek” or “quick”')).toBeTruthy();
+    expect(screen.queryByText('Try “leek” or “quick”')).toBeNull();
     expect(screen.getByRole('button', { name: 'Filters' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'In season' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Under 30 min' })).toBeTruthy();
   });
 
-  it('groups In season this month first, then All recipes, with counts', () => {
+  it('lists every recipe under All recipes, most recently added first, with no In season group', () => {
     setup();
-    expect(screen.getByText('In season in October · 4')).toBeTruthy();
-    expect(screen.getByText('All recipes · 28')).toBeTruthy();
+    expect(screen.queryByText(/In season in/)).toBeNull();
+    expect(screen.getByText('All recipes · 32')).toBeTruthy();
     const order = names();
-    // Each group keeps the list's order: most recently added first.
-    ['Quiche Lorraine', 'Dish 1', 'Dish 2', 'Dish 3', "Grandma's apple tart", 'Dish 4'].forEach((name, i) => expect(order[i]).toMatch(new RegExp(`^${name}[A-Z0-9]`)));
+    ['Quiche Lorraine', "Grandma's apple tart", 'Dish 1', 'Dish 2'].forEach((name, i) => expect(order[i]).toMatch(new RegExp(`^${name}[A-Z0-9]`)));
   });
 
   it('shows the meta and author lines', () => {
@@ -116,7 +115,6 @@ describe('search (US1, FR-004)', () => {
   it('finds the quiche by its leeks, and updates as I type', () => {
     const { tracker } = setup();
     type('le');
-    expect(screen.queryByText('Try “leek” or “quick”')).toBeNull();
     settle();
     type('leek');
     // Not yet: the list still shows what "le" found until typing pauses.
@@ -124,7 +122,7 @@ describe('search (US1, FR-004)', () => {
     settle();
     expect(names()).toHaveLength(1);
     expect(names()[0]).toContain('Quiche Lorraine');
-    expect(screen.getByText('In season in October · 1')).toBeTruthy();
+    expect(screen.getByText('All recipes · 1')).toBeTruthy();
     expect(tracker.track).toHaveBeenLastCalledWith('recipes_searched', { query_length: 4, result_count: 1 });
 
     type('leek apple');
@@ -169,7 +167,7 @@ describe("what's new (US2)", () => {
     expect(first?.textContent).toContain('Pumpkin soup');
     expect(within(first as HTMLElement).getByText('40 min · Serves 4 · Thai')).toBeTruthy();
     expect(within(first as HTMLElement).getByText('Alex · via ChatGPT')).toBeTruthy();
-    expect(screen.getByText('In season in October · 5')).toBeTruthy();
+    expect(screen.getByText('All recipes · 33')).toBeTruthy();
   });
 });
 
@@ -251,7 +249,7 @@ describe('filters (spec 007)', () => {
     quickSetup({ initial: { ...emptyFilters, months: [6] } });
     expect(pressed('In season')).toBe('false');
     fireEvent.click(screen.getByRole('button', { name: 'In season' }));
-    // June and October now; one group still.
+    // June and October now.
     expect(screen.getByRole('button', { name: 'Filters · 1' })).toBeTruthy();
   });
 

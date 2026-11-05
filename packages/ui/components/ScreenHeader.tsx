@@ -31,38 +31,45 @@ export function TabHeader({ title, sub, action }: TabHeaderProps) {
   );
 }
 
-export interface BrandHeaderProps {
+export interface BrandRowProps {
   /** "Our Cocon". */
   brand: string;
   /** AvatarStack of the family. */
   avatars?: ReactNode;
+}
+
+/** Home's brand row: the mark and name, the family on the right; pinned (ScreenHeader README › Brand row). */
+export function BrandRow({ brand, avatars }: BrandRowProps) {
+  return (
+    <View className="flex-row items-center justify-between">
+      <View className="flex-row items-center gap-8">
+        <Logo size={34} />
+        <Text variant="titleSm" style={{ letterSpacing: -0.3 }}>
+          {brand}
+        </Text>
+      </View>
+      {avatars}
+    </View>
+  );
+}
+
+export interface BrandHeaderProps {
   /** "Thursday 16 October". */
   date: string;
   /** "Good evening, Gabriel". */
   greeting: string;
 }
 
-/** Home's brand row, date and greeting (ScreenHeader README › Brand row). */
-export function BrandHeader({ brand, avatars, date, greeting }: BrandHeaderProps) {
+/** Home's date and greeting, under the BrandRow (ScreenHeader README › Brand row). */
+export function BrandHeader({ date, greeting }: BrandHeaderProps) {
   return (
-    <View className="gap-14">
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center gap-8">
-          <Logo size={34} />
-          <Text variant="titleSm" style={{ letterSpacing: -0.3 }}>
-            {brand}
-          </Text>
-        </View>
-        {avatars}
-      </View>
-      <View>
-        <Text size={15} weight="700" color="olive">
-          {date}
-        </Text>
-        <Text variant="displayXl" role="heading" aria-level={1}>
-          {greeting}
-        </Text>
-      </View>
+    <View>
+      <Text size={15} weight="700" color="olive">
+        {date}
+      </Text>
+      <Text variant="displayXl" role="heading" aria-level={1}>
+        {greeting}
+      </Text>
     </View>
   );
 }

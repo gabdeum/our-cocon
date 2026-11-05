@@ -98,7 +98,7 @@ function useClock(fixed: number | undefined): number {
  * adds or merges; ticking is optimistic and reverts on failure; ticked items stay struck through
  * until "Clear done items" (decision 28). Long-press or swipe a row for Edit, Move to… and Remove.
  * Spec 021: each row says what to buy where the family shops, beside its name ("Heavy cream:
- * 2 × 20 cl (need 300 ml)"); the settings button beside "Add item" opens where you shop and round up.
+ * 2 × 20 cl (need 300 ml)"); the settings button beside the title opens where you shop and round up.
  * Spec 022: one row per thing, whoever added it (combineRows), in alphabetical order in each aisle;
  * ticking, Edit and Remove act on all of it.
  */
@@ -135,11 +135,10 @@ export function GroceryList(props: GroceryListProps) {
       title={g.title}
       sub={items ? g.toBuy(toBuyCount(rows)) : undefined}
       action={
-        shopping ? (
-          <View>
-            <Presence label={g.shopping(shopping)} />
-          </View>
-        ) : undefined
+        <View className="flex-row items-center gap-8">
+          {shopping ? <Presence label={g.shopping(shopping)} /> : null}
+          <IconButton icon="settings" label={g.settingsButton} variant="round" onPress={() => setSettingsOpen(true)} />
+        </View>
       }
     />
   );
@@ -263,25 +262,27 @@ export function GroceryList(props: GroceryListProps) {
   ];
 
   return (
-    <TabScreen>
-      {header}
+    <TabScreen
+      header={header}
+      pinned={
+        <View className="flex-row gap-8">
+          <TextField
+            label={g.addLabel}
+            labelHidden
+            placeholder={g.addPlaceholder}
+            value={text}
+            onChangeText={setText}
+            onSubmitEditing={() => void add()}
+            submitBehavior="submit"
+            editable={online}
+            maxLength={200}
+            className="min-w-0 flex-1"
+          />
+          <IconButton icon="plus" label={g.addButton} variant="olive-square" onPress={() => void add()} disabled={!online || adding || !text.trim()} />
+        </View>
+      }
+    >
       <OfflineBanner screen="groceries" tracker={tracker} />
-      <View className="flex-row gap-8">
-        <TextField
-          label={g.addLabel}
-          labelHidden
-          placeholder={g.addPlaceholder}
-          value={text}
-          onChangeText={setText}
-          onSubmitEditing={() => void add()}
-          submitBehavior="submit"
-          editable={online}
-          maxLength={200}
-          className="min-w-0 flex-1"
-        />
-        <IconButton icon="plus" label={g.addButton} variant="olive-square" onPress={() => void add()} disabled={!online || adding || !text.trim()} />
-        <IconButton icon="settings" label={g.settingsButton} variant="soft-square" onPress={() => setSettingsOpen(true)} />
-      </View>
 
       {cards.map((card) => (
         <Card key={card.id} tone="soft" className="flex-row items-center gap-8 py-10 pl-12 pr-4">

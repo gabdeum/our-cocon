@@ -5,7 +5,8 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Spec 012
 ## Layout
 1. Fixed header:
    - Round ✕ (IconButton `--round`, label "Exit cooking mode", spec 050) (left).
-   - Right: TimerPill while timers run, then a soft round settings button "Cooking options".
+   - Right: TimerPill while timers run, then a round settings button "Cooking options" (IconButton `--round`, like the ✕).
+   - The header's padding (safe area, at least 52, then 16 at the sides) matches the loading state's TopBar, so the ✕ doesn't move when the steps appear.
    - Cooking Progress bar (one segment per step, tappable).
    - "Step {n} of {m}" (left, olive 14/900 uppercase) and "Serves {n} · swipe up for next" (right, muted).
 2. Scrolling body, one section per step (no "Step {n}" overline: the header's "Step {n} of {m}" already says it): title 28/900, body 21/600 with honey amount highlights, then optionally the dark TimerCard (label "{timer label} timer", −1, clock, +1, honey button), the temperature callout and the chef's tip.
@@ -39,3 +40,6 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Spec 012
 
 ## Accessibility labels
 Segments: "Go to step {n}: {name}" ("Go to step {n}" for a step with no name). Settings button: "Cooking options"; the options sheet's close label: "Close cooking options". Timer buttons: "Start timer", "Pause", "Resume", "Done", "One minute less", "One minute more".
+
+## Changelog
+- 2026-11-05 (050): "Cooking options" is a round IconButton; the header lines up with the loading state's TopBar.

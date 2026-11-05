@@ -3,7 +3,7 @@
 Source `screens/OC-Home.dc.html` · Route `/` · Spec 028
 
 ## Layout (top → bottom)
-1. Brand row: logo mark + "Our Cocon"; right: avatar stack of all family members, account and without the app, in their member colors (max 4, then "+N").
+1. Brand row: logo mark + "Our Cocon"; right: avatar stack of all family members, account and without the app, in their member colors (max 4, then "+N"). Pinned under the status bar; the hairline and shadow show once content scrolls under it (spec 050 FR-007).
 2. Date line (olive 15/700), e.g. "Sunday, Oct 25", then greeting `display-xl` "Hi {firstName}" ("Good morning {firstName}" 5:00–11:59, "Good evening {firstName}" 18:00–4:59).
 3. **Calendar card** (CalCard.md).
 4. Hero card (latest recipe = most recently added): photo with white tag "Latest recipe"; title; chips "{time}", "Serves {n}", warn chip "{k} to buy" (hidden when 0). Opens the recipe.
@@ -33,3 +33,6 @@ Source `screens/OC-Home.dc.html` · Route `/` · Spec 028
 | Avatar stack | → `/settings/family` (screen readers: "Family: Gabriel, Eva, James") |
 | All · AI only | filters the card (not remembered) |
 | See all activity | → activity list (spec 026), same filter |
+
+## Changelog
+- 2026-11-05 (050 FR-007): the brand row is pinned.
