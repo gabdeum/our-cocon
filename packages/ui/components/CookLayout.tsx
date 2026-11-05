@@ -72,6 +72,7 @@ export function CookLayout(props: CookLayoutProps) {
       </View>
 
       <ScrollView
+        showsVerticalScrollIndicator={false}
         ref={scrollRef}
         className="flex-1"
         contentContainerClassName="px-20"
