@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { anchorFrom, arrowLabels, entryFrom, headerTitle, viewFrom } from './calendar-header';
+import { QueryClient } from '@tanstack/react-query';
+import type { StoredEvent } from '@cocon/data';
+import { anchorFrom, arrowLabels, cachedEvent, entryFrom, eventsKey, headerTitle, viewFrom } from './calendar-header';
 
 describe('calendar header (spec 036)', () => {
   it('US1: opens on Month unless the URL names another view', () => {
@@ -40,5 +42,17 @@ describe('calendar header (spec 036)', () => {
     expect(arrowLabels('month')).toEqual({ prev: 'Previous month', next: 'Next month' });
     expect(arrowLabels('day')).toEqual({ prev: 'Previous day', next: 'Next day' });
     expect(arrowLabels('agenda')).toEqual({ prev: 'Previous week', next: 'Next week' });
+  });
+});
+
+describe('cachedEvent', () => {
+  it("finds an event in the family's loaded ranges, not another family's", () => {
+    const queryClient = new QueryClient();
+    const picnic = { id: 'e-picnic', title: 'Picnic' } as StoredEvent;
+    queryClient.setQueryData(eventsKey('f-1', '2026-10-01', '2026-12-31'), [picnic]);
+    queryClient.setQueryData(eventsKey('f-2', '2026-10-01', '2026-12-31'), [{ id: 'e-other' } as StoredEvent]);
+    queryClient.setQueryData(['events', 'f-1', 'one', 'e-picnic'], null);
+    expect(cachedEvent(queryClient, 'f-1', 'e-picnic')).toBe(picnic);
+    expect(cachedEvent(queryClient, 'f-1', 'e-other')).toBeUndefined();
   });
 });

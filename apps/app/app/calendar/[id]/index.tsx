@@ -1,10 +1,11 @@
 import { Linking, View } from 'react-native';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { loadEvent, setChecklistDone } from '@cocon/data';
 import { CalendarDate } from '@cocon/schemas/calendar';
 import { PushedScreen, Text } from '@cocon/ui';
+import { cachedEvent } from '../../../lib/calendar-header';
 import { EventDetail } from '../../../components/calendar/EventDetail';
 import { SurpriseDetail } from '../../../components/calendar/SurpriseDetail';
 import { deleteOccurrences, duplicateEvent, duplicateInput } from '../../../lib/event-delete';
@@ -22,6 +23,8 @@ const a = strings.calendar.add;
  * same query as the edit route, so ticks and edits from others show live (lib/sync.tsx). An event
  * this member sees in full opens here; a surprise's cover opens OC-CalSurprise (spec 043); Busy, or
  * a date that isn't one of the event's, says it couldn't open (Busy opens as a sheet over the views).
+ * Opened from a view, it shows the copy that view already loaded while the event refetches; from a
+ * link with nothing cached, the header bar and skeleton blocks (OC-CalEvent, Loading).
  */
 export default function EventRoute() {
   const params = useLocalSearchParams<{ id: string; date?: string }>();
@@ -29,9 +32,26 @@ export default function EventRoute() {
   const page = useEventSheet();
   const { state, client, tracker, familyId, myMemberId } = page;
   const online = useOnline();
-  const event = useQuery({ queryKey: ['events', familyId ?? '', 'one', id ?? ''], queryFn: () => (id ? loadEvent(client, id) : null), enabled: familyId !== null && id !== null });
+  const queryClient = useQueryClient();
+  const event = useQuery({
+    queryKey: ['events', familyId ?? '', 'one', id ?? ''],
+    queryFn: () => (id ? loadEvent(client, id) : null),
+    enabled: familyId !== null && id !== null,
+    placeholderData: () => (familyId && id ? cachedEvent(queryClient, familyId, id) : undefined),
+  });
   if (state.status !== 'ready' || !familyId || !myMemberId) return null;
-  if (id && event.isPending) return null;
+  if (id && event.isPending) {
+    return (
+      <PushedScreen className="gap-16" topBar={{ back: { label: e.back, onPress: page.close } }}>
+        <View role="progressbar" aria-label={e.loading} className="gap-12">
+          <View className="h-28 w-2/3 rounded-xs bg-surface-soft" />
+          {[0, 1, 2].map((n) => (
+            <View key={n} className="h-control-md rounded-md bg-surface-soft" />
+          ))}
+        </View>
+      </PushedScreen>
+    );
+  }
 
   const ev = event.data;
   const date = CalendarDate.safeParse(params.date).success ? (params.date as string) : ev?.starts_on;

@@ -52,3 +52,4 @@ The page is `noindex` and sends no analytics. A link stops working once that dat
 ## Changelog
 - 2026-11-04 (spec 050 FR-006): compact layout. ✎ and ⋯ in the TopBar replace the Edit, Duplicate, Share and Delete buttons; the repeat moves beside the tag; date and time share one line; who, place and reminder are one-line 52 rows in one card; the Bring card shows its count and 44 rows; "anyone can tick the list" joins the Added line. Kept from spec 049: the reminder's time. The drawing's "takes him" reads "takes James".
 - 2026-11-05 (Gabriel's ask): the place gets a "Copy" pill beside "Maps", and "Maps" opens Google Maps on the iPhone too (it was Apple Maps).
+- 2026-11-05 (Gabriel's ask): opened from a calendar view or Home, the page shows the event that view already loaded at once and refetches it behind; from a link with nothing cached it shows the Loading state (header bar, skeleton blocks) instead of a blank screen.

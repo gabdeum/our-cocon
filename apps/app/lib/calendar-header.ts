@@ -1,5 +1,7 @@
 import { CALENDAR_VIEWS, CalendarView, CalendarDate } from '@cocon/schemas/calendar';
 import { VIEW_STEP, dayTitles, fitTitle, monthTitles, parts, weekRange, weekTitles, type WeekStartsOn } from '@cocon/calendar';
+import type { QueryClient } from '@tanstack/react-query';
+import type { StoredEvent } from '@cocon/data';
 import { strings } from '../strings/en';
 
 const h = strings.calendar.header;
@@ -55,3 +57,12 @@ export const calendarSettingsKey = (familyId: string) => ['family_calendar_setti
 
 /** Spec 037: the family's events for some days. Starts with 'events', so spec 035's sync refetches it live. */
 export const eventsKey = (familyId: string, from: string, to: string) => ['events', familyId, from, to] as const;
+
+/** An event the calendar or Home already loaded, so its page opens at once while it refetches. */
+export function cachedEvent(queryClient: QueryClient, familyId: string, id: string): StoredEvent | undefined {
+  for (const [, data] of queryClient.getQueriesData<StoredEvent[] | StoredEvent | null>({ queryKey: ['events', familyId] })) {
+    const found = Array.isArray(data) ? data.find((e) => e.id === id) : undefined;
+    if (found) return found;
+  }
+  return undefined;
+}
