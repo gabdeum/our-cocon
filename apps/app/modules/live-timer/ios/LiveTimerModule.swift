@@ -23,8 +23,13 @@ public final class LiveTimerModule: Module {
       return Self.showing().first?.attributes.owner
     }
 
-    AsyncFunction("start") { (owner: String, state: String, staleAt: Double?) -> Bool in
+    AsyncFunction("start") { (owner: String, state: String, staleAt: Double?) async -> Bool in
       guard #available(iOS 17.0, *), let content = Self.decode(state) else { return false }
+      // One card per phone: anything still showing goes first. Ended cards don't count against iOS's
+      // limit and iOS removes them from the list itself.
+      for activity in Self.showing() {
+        await activity.end(nil, dismissalPolicy: .immediate)
+      }
       do {
         _ = try Activity.request(
           attributes: TimerActivityAttributes(owner: owner),
