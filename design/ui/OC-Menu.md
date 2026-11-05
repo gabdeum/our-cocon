@@ -3,7 +3,7 @@
 Source `screens/OC-Menu.dc.html` · Route `/menu` (`/settings` redirects here) · Spec 029
 
 ## Layout
-1. Title "Menu" (32/900).
+1. Title "Menu" (32/900), pinned under the status bar while the page scrolls (spec 050 FR-007).
 2. **Apps** (18/900): `<nav aria-label="Apps">`, 2-column grid (2 × 2), gap 10, of AppTile links: Calendar "{n} today" · Recipes "{n} recipes" · Groceries "{n} to buy" · Timers "None running" (timer icon). The first three open their tab; Timers opens `/timers`. Future apps without a tab are added here as more tiles.
 3. **Settings** (18/900), three white cards (radius 22, padding 4 16, gap 10):
    - Family "{names} · your account" › · AI assistants "{n} connected" (olive-deep) ›
