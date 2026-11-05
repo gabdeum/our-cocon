@@ -61,7 +61,7 @@ export interface HomeScreenProps {
   };
 }
 
-/** Spec 028 (OC-Home): brand row (pinned, spec 050 FR-007), greeting, calendar card, latest recipe, the two tiles, Latest activity. */
+/** Spec 028 (OC-Home): brand row (pinned, spec 050 FR-007), greeting, calendar card, the two tiles, latest recipe, Latest activity. */
 export function HomeScreen({
   me,
   members,
@@ -134,6 +134,30 @@ export function HomeScreen({
         onSeeAll={navigate.agenda}
         onOpenCalendar={navigate.calendar}
       />
+      <View className="flex-row gap-12">
+        <StatTile
+          icon="groceries"
+          value={toBuy}
+          label={s.toBuy}
+          tone="honey"
+          className="flex-1"
+          onPress={() => {
+            tracker.track('home_tile_tapped', { tile: 'groceries' });
+            navigate.groceries();
+          }}
+        />
+        <StatTile
+          icon="recipes"
+          value={recipeCount ?? 0}
+          label={s.familyRecipes}
+          tone="sage"
+          className="flex-1"
+          onPress={() => {
+            tracker.track('home_tile_tapped', { tile: 'recipes' });
+            navigate.recipes();
+          }}
+        />
+      </View>
       {hero ? (
         <HeroCard
           title={hero.name}
@@ -168,30 +192,6 @@ export function HomeScreen({
           </Text>
         </Card>
       ) : null}
-      <View className="flex-row gap-12">
-        <StatTile
-          icon="groceries"
-          value={toBuy}
-          label={s.toBuy}
-          tone="honey"
-          className="flex-1"
-          onPress={() => {
-            tracker.track('home_tile_tapped', { tile: 'groceries' });
-            navigate.groceries();
-          }}
-        />
-        <StatTile
-          icon="recipes"
-          value={recipeCount ?? 0}
-          label={s.familyRecipes}
-          tone="sage"
-          className="flex-1"
-          onPress={() => {
-            tracker.track('home_tile_tapped', { tile: 'recipes' });
-            navigate.recipes();
-          }}
-        />
-      </View>
       <ActivitySection
         entries={activity}
         members={members}

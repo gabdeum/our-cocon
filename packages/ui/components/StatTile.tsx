@@ -2,6 +2,7 @@ import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
+import { tightLine } from './TimerCard';
 
 export interface StatTileProps {
   icon: IconName;
@@ -25,7 +26,7 @@ export function StatTile({ icon, value, label, tone, onPress, className }: StatT
     >
       <Icon name={icon} size={26} />
       <View>
-        <Text variant="stat" tabular>
+        <Text variant="stat" tabular style={tightLine(28)}>
           {value}
         </Text>
         <Text size={15} weight="700">

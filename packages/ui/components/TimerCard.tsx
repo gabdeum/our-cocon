@@ -15,10 +15,11 @@ interface Adjust {
 }
 
 /**
- * A clock whose line height equals its size. Nunito's glyphs are 1.364 em tall and the iPhone cuts
- * what passes the line box, so there the line is that tall and negative margins keep the box `size`.
+ * Big numbers (clocks, stat tiles) whose line height equals their size. Nunito's glyphs are 1.364 em
+ * tall and the iPhone cuts what passes the line box, so there the line is that tall and negative
+ * margins keep the box `size`.
  */
-function clockLine(size: number) {
+export function tightLine(size: number) {
   if (Platform.OS === 'web') return { lineHeight: size };
   const line = Math.ceil(size * 1.364);
   return { lineHeight: line, marginVertical: (size - line) / 2 };
@@ -57,7 +58,7 @@ export function CookTimerCard({ label, clock, actionLabel, onAction, announcemen
       </Text>
       <View className="flex-row items-center gap-8">
         <AdjustButton dark text={adj.minusLabel} a11y={adj.minusA11y} onPress={adj.onMinus} />
-        <Text variant="timer" color="surface-page" tabular align="center" className="flex-1" role="timer" style={clockLine(46)}>
+        <Text variant="timer" color="surface-page" tabular align="center" className="flex-1" role="timer" style={tightLine(46)}>
           {clock}
         </Text>
         <AdjustButton dark text={adj.plusLabel} a11y={adj.plusA11y} onPress={adj.onPlus} />
@@ -132,7 +133,7 @@ export function TimerCard(props: TimerCardProps) {
       </View>
       <View className="flex-row items-center gap-8">
         <AdjustButton text={props.minusLabel} a11y={props.minusA11y} onPress={props.onMinus} />
-        <Text size={44} weight="900" tabular align="center" className="flex-1" role="timer" style={{ letterSpacing: -1, ...clockLine(44) }}>
+        <Text size={44} weight="900" tabular align="center" className="flex-1" role="timer" style={{ letterSpacing: -1, ...tightLine(44) }}>
           {clock}
         </Text>
         <AdjustButton text={props.plusLabel} a11y={props.plusA11y} onPress={props.onPlus} />
