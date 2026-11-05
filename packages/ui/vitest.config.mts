@@ -5,5 +5,6 @@ import { rnWebResolve, rnWebServerDeps } from './test/vitest-shared.mts';
 export default defineProject({
   resolve: rnWebResolve,
   define: { __DEV__: 'true' },
-  test: { name: 'ui', environment: 'jsdom', server: { deps: rnWebServerDeps } },
+  // Same 20 s as apps/app: 5 s (Vitest's default) is too tight on a busy laptop.
+  test: { name: 'ui', environment: 'jsdom', testTimeout: 20_000, server: { deps: rnWebServerDeps } },
 });

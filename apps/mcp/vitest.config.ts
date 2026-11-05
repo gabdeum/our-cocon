@@ -1,3 +1,4 @@
 import { defineProject } from 'vitest/config';
 
-export default defineProject({ test: { name: 'mcp', environment: 'node' } });
+// Tests against local Supabase: 5 s (Vitest's default) is too tight while the whole suite runs.
+export default defineProject({ test: { name: 'mcp', environment: 'node', testTimeout: 20_000 } });

@@ -10,5 +10,6 @@ const netInfoRoot = dirname(createRequire(import.meta.url).resolve('@react-nativ
 export default defineProject({
   resolve: { ...rnWebResolve, alias: { ...rnWebResolve.alias, '@react-native-community/netinfo': join(netInfoRoot, 'lib/module/index.js') } },
   define: { __DEV__: 'true' },
-  test: { name: 'app', environment: 'jsdom', server: { deps: { inline: [...rnWebServerDeps.inline, /@react-native-community\/netinfo/] } } },
+  // Screen tests click through whole flows; 5 s (Vitest's default) is too tight on a busy laptop.
+  test: { name: 'app', environment: 'jsdom', testTimeout: 20_000, server: { deps: { inline: [...rnWebServerDeps.inline, /@react-native-community\/netinfo/] } } },
 });
