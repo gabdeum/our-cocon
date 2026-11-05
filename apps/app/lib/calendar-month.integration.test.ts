@@ -57,7 +57,7 @@ describe.skipIf(!local)('month view against local Supabase', () => {
     const { from, to } = eventWindow('2026-10-01');
     const occurrences = monthOccurrences(await loadEvents(gabriel, from, to), from, to, g, new Set());
     const range = monthRange('2026-10-25', 0);
-    const ctx = { range, today: '2026-10-25', look: memberLook(members), slotTimes: DEFAULT_SLOT_TIMES };
+    const ctx = { range, today: '2026-10-25', look: memberLook(members), slotTimes: DEFAULT_SLOT_TIMES, initials: true };
     const chipsOn = (date: string) =>
       layoutWeek(weekIndexOf(range, date), occurrences, ctx)
         .cells.find((c) => c.date === date)

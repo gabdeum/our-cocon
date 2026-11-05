@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PanResponder, type GestureResponderEvent, type PanResponderCallbacks, type PanResponderGestureState } from 'react-native';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { StoredEvent } from '@cocon/data';
+import { MONTH_ROW_HEIGHT } from '@cocon/ui';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { monthRange, weekIndexOf } from '../../lib/calendar-month';
 import { CalendarScreen, type CalendarScreenProps } from './CalendarScreen';
@@ -166,8 +167,9 @@ describe('Month view (spec 037)', () => {
   it('US1: shows each day with its chips, and asks for the events around the month', async () => {
     const onEventWindow = vi.fn();
     await setup({ events: [swim], onEventWindow });
-    expect(screen.getByText('E Baby swim')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'October 28: Baby swim' })).toBeTruthy();
+    // FR-003: 390 px wide, so the chip shows the title alone; the label names the people.
+    expect(screen.getByText('Baby swim')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'October 28: Baby swim (Eva)' })).toBeTruthy();
     expect(onEventWindow).toHaveBeenCalledWith({ from: '2026-04-01', to: '2027-06-30' });
   });
 
@@ -177,18 +179,18 @@ describe('Month view (spec 037)', () => {
     let scroller: HTMLElement | null = cell.parentElement;
     while (scroller && getComputedStyle(scroller).overflowY !== 'auto' && getComputedStyle(scroller).overflowY !== 'scroll') scroller = scroller.parentElement;
     if (!scroller) throw new Error('no scrolling grid');
-    // Rows are 96 tall; with Oct 25 – 31 at the top, the second row is Nov 1 – 7.
+    // Rows are 120 tall; with Oct 25 – 31 at the top, the second row is Nov 1 – 7.
     const range = monthRange('2026-10-27', 0);
-    const top = weekIndexOf(range, '2026-09-27') * 96;
+    const top = weekIndexOf(range, '2026-09-27') * MONTH_ROW_HEIGHT;
     act(() => {
-      scroller.scrollTop = top + 4 * 96;
+      scroller.scrollTop = top + 4 * MONTH_ROW_HEIGHT;
       fireEvent.scroll(scroller);
     });
     expect(screen.getByRole('heading').textContent).toBe('November');
     // Scroll events are throttled to one per 16 ms.
     await act(() => new Promise((r) => setTimeout(r, 30)));
     act(() => {
-      scroller.scrollTop = top + 3 * 96;
+      scroller.scrollTop = top + 3 * MONTH_ROW_HEIGHT;
       fireEvent.scroll(scroller);
     });
     expect(screen.getByRole('heading').textContent).toBe('October');
