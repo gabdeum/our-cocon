@@ -63,3 +63,4 @@ None.
 - 2026-10-22 (from spec 021, Gabriel's changes): rows have an "Edit" button and the long-press hint is gone; "Clear all items" (confirmed, with Undo, event `all_items_cleared`) sits beside "Clear done items"; in Edit item, "Remove" is a red button apart from the options.
 - 2026-10-22 (from spec 021, Gabriel's ask): the add field also reads the amount after the name ("Gruyere 120g", "Lemon 12", "heavy cream 240 ml"), with `parseGroceryLine` in `@cocon/quantity`; Edit reads it the same way. Recipe lines keep the spec 015 parser.
 - 2026-10-24 (from spec 022, with Gabriel): a recipe card's "Open" link became a vertical "…" button that opens the recipe card menu (Open recipe, servings, Remove its items; see 022). OC-Groceries.md updated.
+- 2026-11-05 (050 FR-007, Gabriel's ask): the Add row is pinned when the list scrolls; "Grocery settings" moves to the title's right as a round IconButton. OC-Groceries.md updated.

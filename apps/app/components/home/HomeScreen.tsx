@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { memberInitials, type ActivityEntry, type HomeCardState, type Tracker } from '@cocon/schemas';
 import { DEFAULT_SLOT_TIMES, viewFor, type SlotTimes } from '@cocon/calendar';
 import type { GroceryItem, HomeHero, StoredEvent } from '@cocon/data';
-import { AvatarStack, BrandHeader, Button, Card, HeroCard, StatTile, TabScreen, Text, type AvatarColor } from '@cocon/ui';
+import { AvatarStack, BrandHeader, BrandRow, Button, Card, HeroCard, StatTile, TabScreen, Text, type AvatarColor } from '@cocon/ui';
 import { ActivitySection, type ActivityShow } from '../activity/ActivitySection';
 import { BusySheet } from '../calendar/BusySheet';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -61,7 +61,7 @@ export interface HomeScreenProps {
   };
 }
 
-/** Spec 028 (OC-Home): brand row, greeting, calendar card, latest recipe, the two tiles, Latest activity. */
+/** Spec 028 (OC-Home): brand row (pinned, spec 050 FR-007), greeting, calendar card, latest recipe, the two tiles, Latest activity. */
 export function HomeScreen({
   me,
   members,
@@ -104,20 +104,22 @@ export function HomeScreen({
   };
 
   return (
-    <TabScreen>
-      <BrandHeader
-        brand={s.brand}
-        date={homeDate(today)}
-        greeting={greeting(now, firstName(me.display_name))}
-        avatars={
-          <AvatarStack
-            members={members.map((m) => ({ initial: initials.get(m.id) ?? '?', color: m.color as AvatarColor }))}
-            moreLabel={s.moreMembers}
-            label={s.family(members.map((m) => m.display_name))}
-            onPress={navigate.family}
-          />
-        }
-      />
+    <TabScreen
+      pinned={
+        <BrandRow
+          brand={s.brand}
+          avatars={
+            <AvatarStack
+              members={members.map((m) => ({ initial: initials.get(m.id) ?? '?', color: m.color as AvatarColor }))}
+              moreLabel={s.moreMembers}
+              label={s.family(members.map((m) => m.display_name))}
+              onPress={navigate.family}
+            />
+          }
+        />
+      }
+    >
+      <BrandHeader date={homeDate(today)} greeting={greeting(now, firstName(me.display_name))} />
       <OfflineBanner screen="home" tracker={tracker} />
       <CalendarCard
         layout={layout}

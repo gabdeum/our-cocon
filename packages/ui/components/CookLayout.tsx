@@ -4,6 +4,7 @@ import { cn } from '../cn';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
 import { Text } from './Text';
+import { useTopEdge } from './TopBar';
 import { ToastHost } from './Toast';
 
 const web = Platform.OS === 'web';
@@ -20,7 +21,7 @@ export interface CookLayoutProps {
   onExit: () => void;
   /** Right of Exit, before the options button: the TimerPill while timers run. */
   status?: ReactNode;
-  /** The options button (settings icon, soft 44) on the right: "Cooking options". */
+  /** The options button (round settings, like the TopBar's) on the right: "Cooking options". */
   optionsLabel: string;
   onOptions: () => void;
   /** The CookProgress bar with "Step N of M". */
@@ -55,17 +56,19 @@ export interface CookLayoutProps {
  */
 export function CookLayout(props: CookLayoutProps) {
   const { exitLabel, onExit, status, optionsLabel, onOptions, progress, children, endLabel, backLabel, onBack, backExits, nextLabel, onNext, nextFinishes, scrollRef, onScroll, onViewportLayout, snapOffsets } = props;
+  // The ✕ sits where the TopBar of the loading state put it, so it doesn't jump when the steps arrive.
+  const top = useTopEdge();
   return (
     <View className="flex-1 bg-surface-page">
-      <View className="gap-12 border-b-[1.5px] border-line bg-surface-page px-20 pb-12 pt-[52px]">
+      <View className="gap-12 border-b-[1.5px] border-line bg-surface-page px-16 pb-12" style={{ paddingTop: top }}>
         <View className="flex-row items-center justify-between gap-8">
-          <IconButton variant="round" icon="close" label={exitLabel} onPress={onExit} />
+          <IconButton variant="round" icon="close" iconSize={20} label={exitLabel} onPress={onExit} />
           <View className="min-w-0 flex-shrink flex-row items-center justify-end gap-8">
             {status}
-            <IconButton icon="settings" label={optionsLabel} variant="soft" onPress={onOptions} />
+            <IconButton variant="round" icon="settings" label={optionsLabel} onPress={onOptions} />
           </View>
         </View>
-        {progress}
+        <View className="px-4">{progress}</View>
       </View>
 
       <ScrollView

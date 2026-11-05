@@ -12,8 +12,7 @@ Round or rounded-square buttons holding a single icon, used over photos, in step
 | `--olive` | 44 circle | olive / white | Stepper plus |
 | `--square` | 44, radius 14 | surface-soft / ink; honey when `aria-expanded="true"` | "More options" (…) |
 | `--olive-square` | 54, radius 18 | olive / white | Add item next to an input |
-| `--soft-square` | 54, radius 18 | surface-soft / ink | A second button beside the input, the same size as Add item: "Grocery settings" |
-| `--round` | 48 circle, `shadow-button` | surface-card / ink | The top bar's back and actions, on the page or over a photo (TopBar, spec 050) |
+| `--round` | 40 circle (touch target 44 through `hitSlop`), `shadow-button`, icon 22 (✕ 20) | surface-card / ink | The top bar's back and actions, on the page or over a photo (TopBar, spec 050); cooking mode's ✕ and options; Groceries' settings beside the title |
 | `--fab` | 60 circle, `shadow-lift` | olive / white, plus icon 28 | The calendar's floating "Add event" (OC-CalMonth) |
 
 Icons are 20–22 px with stroke 2.2–2.6.
