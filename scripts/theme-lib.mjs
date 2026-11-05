@@ -206,7 +206,8 @@ export function iconsTsx(files, logo, brands = {}) {
     for (const m of children.matchAll(/<(Path|Circle|Rect|G)\b/g)) used.add(m[1]);
     return `  ${JSON.stringify(name)}: ({ size, color }) => (\n    <Svg width={size} height={size} ${rootProps}>${children}</Svg>\n  ),`;
   });
-  const mark = svgToJsx(logo, 'ink').children.replace('fill="#FFCF5C"', 'fill={honey}');
+  const { rootProps: markProps, children: markChildren } = svgToJsx(logo);
+  const mark = markChildren.replace('fill="#5B6920"', 'fill={olive}').replace('fill="#FDC752"', 'fill={honey}');
   for (const m of mark.matchAll(/<(Path|Circle|Rect|G)\b/g)) used.add(m[1]);
   const brandEntries = Object.keys(brands).sort().map((name) => {
     const { rootProps, children } = svgToJsx(brands[name]);
@@ -227,10 +228,10 @@ ${entries.join('\n')}
 
 export type IconName = keyof typeof iconShapes;
 
-/** The Our Cocon mark: a house with a heart, ink on a honey rounded square. */
-export function LogoShape({ size, honey, ink }: { size: number; honey: string; ink: string }) {
+/** The Our Cocon mark: an olive cocoon around a honey centre (design/brand). */
+export function LogoShape({ size, olive, honey }: { size: number; olive: string; honey: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 34 34">${mark}</Svg>
+    <Svg width={size} height={size} ${markProps}>${mark}</Svg>
   );
 }
 
