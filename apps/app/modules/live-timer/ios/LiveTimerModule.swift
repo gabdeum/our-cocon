@@ -20,11 +20,16 @@ public final class LiveTimerModule: Module {
 
     AsyncFunction("current") { () -> String? in
       guard #available(iOS 17.0, *) else { return nil }
-      return Activity<TimerActivityAttributes>.activities.first?.attributes.owner
+      return Self.showing().first?.attributes.owner
     }
 
-    AsyncFunction("start") { (owner: String, state: String, staleAt: Double?) -> Bool in
+    AsyncFunction("start") { (owner: String, state: String, staleAt: Double?) async -> Bool in
       guard #available(iOS 17.0, *), let content = Self.decode(state) else { return false }
+      // One card per phone: anything still showing goes first. Ended cards don't count against iOS's
+      // limit and iOS removes them from the list itself.
+      for activity in Self.showing() {
+        await activity.end(nil, dismissalPolicy: .immediate)
+      }
       do {
         _ = try Activity.request(
           attributes: TimerActivityAttributes(owner: owner),
@@ -43,7 +48,7 @@ public final class LiveTimerModule: Module {
     AsyncFunction("update") { (owner: String, state: String, staleAt: Double?) async -> Bool in
       guard #available(iOS 17.0, *), let content = Self.decode(state) else { return false }
       var updated = false
-      for activity in Activity<TimerActivityAttributes>.activities {
+      for activity in Self.showing() {
         if activity.attributes.owner == owner {
           await activity.update(ActivityContent(state: content, staleDate: Self.date(staleAt)))
           updated = true
@@ -57,7 +62,7 @@ public final class LiveTimerModule: Module {
     AsyncFunction("end") { () async in
       LiveTimerTaps.clear()
       guard #available(iOS 17.0, *) else { return }
-      for activity in Activity<TimerActivityAttributes>.activities {
+      for activity in Self.showing() {
         await activity.end(nil, dismissalPolicy: .immediate)
       }
     }
@@ -78,6 +83,13 @@ public final class LiveTimerModule: Module {
       }
       self.observer = nil
     }
+  }
+
+  /// The cards still on screen. iOS keeps a stopped or swiped-away card in `activities` for a while:
+  /// counted as showing, a new timer's update went to it and no new card started.
+  @available(iOS 17.0, *)
+  private static func showing() -> [Activity<TimerActivityAttributes>] {
+    Activity<TimerActivityAttributes>.activities.filter { $0.activityState == .active || $0.activityState == .stale }
   }
 
   private static func decode(_ json: String) -> TimerActivityAttributes.ContentState? {
