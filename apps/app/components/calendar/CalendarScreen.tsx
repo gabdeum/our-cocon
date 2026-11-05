@@ -36,7 +36,7 @@ export interface CalendarScreenProps {
   today: string;
   /** The family's home time zone (the week's now line). */
   timeZone?: string;
-  /** Screen width, for the title's short or long month names. */
+  /** Screen width, for the title's short or long month names and the month chips' initials. */
   width: number;
   weekStartsOn: WeekStartsOn;
   /** Changes the URL: another view (same day), another day, or both (a day opened from Month). */
@@ -189,6 +189,7 @@ export function CalendarScreen({
       </View>
       {view === 'month' ? (
         <MonthView
+          width={width}
           members={members}
           myMemberId={myMemberId}
           events={events}

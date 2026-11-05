@@ -5,6 +5,7 @@ import type { StoredEvent } from '@cocon/data';
 import { FloatingAdd, MonthGrid } from '@cocon/ui';
 import { layoutDaySheet } from '../../lib/calendar-day';
 import {
+  INITIALS_MIN_WIDTH,
   eventWindow,
   firstWeekOfMonth,
   layoutWeek,
@@ -25,6 +26,8 @@ import { DaySheet } from './DaySheet';
 const m = strings.calendar.month;
 
 export interface MonthViewProps {
+  /** Screen width: chips carry initials from 430 px up (FR-003). */
+  width: number;
   members: Member[];
   myMemberId: string;
   /** Loaded for `eventWindow(month)`; undefined while loading (the grid shows empty days). */
@@ -51,12 +54,14 @@ export interface MonthViewProps {
 }
 
 /** Spec 037 (OC-CalMonth): the continuous month grid, the first-visit hint and the add button. */
-export function MonthView({ members, myMemberId, events, slotTimes, hidden, month, today, timeZone, weekStartsOn, jump, onMonthShown, onDaySheetOpened, onAddEvent, onOpenEvent, showHint, onDismissHint }: MonthViewProps) {
+export function MonthView({ width, members, myMemberId, events, slotTimes, hidden, month, today, timeZone, weekStartsOn, jump, onMonthShown, onDaySheetOpened, onAddEvent, onOpenEvent, showHint, onDismissHint }: MonthViewProps) {
   const range = useMemo(() => monthRange(today, weekStartsOn), [today, weekStartsOn]);
   const look = useMemo(() => memberLook(members), [members]);
   const { from, to } = eventWindow(month);
   const occurrences = useMemo(() => monthOccurrences(events ?? [], from, to, myMemberId, hidden), [events, from, to, myMemberId, hidden]);
-  const weekAt = useCallback((index: number) => layoutWeek(index, occurrences, { range, today, look, slotTimes }), [occurrences, range, today, look, slotTimes]);
+  // FR-003: narrow phones show the title alone on chips and bars.
+  const initials = width >= INITIALS_MIN_WIDTH;
+  const weekAt = useCallback((index: number) => layoutWeek(index, occurrences, { range, today, look, slotTimes, initials }), [occurrences, range, today, look, slotTimes, initials]);
   // Opens with the month's first week at the top, and today on screen when it's this month.
   const [initialIndex] = useState(() => firstWeekOfMonth(range, month));
   const keepVisibleIndex = month === `${today.slice(0, 8)}01` ? weekIndexOf(range, today) : undefined;

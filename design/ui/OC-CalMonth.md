@@ -5,9 +5,9 @@ Source `screens/OC-CalMonth.dc.html` (interactive: scroll it, tap a day), `scree
 ## Layout
 1. CalHeader (Month). Title follows the month that fills the grid.
 2. White card, scrolling vertically as one continuous grid of weeks (late August → December in the mock). Sticky weekday row "S M T W T F S" (12/900 muted) with a soft bottom shadow.
-3. Day cell 96 px: date (12/800) or, on the 1st of a month, a dark beige (`line-handle`) banner across the top of the cell, edge to edge, "Nov 1" in ink 12/900 clipped with no "…" (decided 2026-10-29; olive when the 1st is today); today = olive date circle + 2.5 px olive inset outline; past days on surface-page with muted dates.
-4. Up to two chips (20 tall, radius 6, 11/800, 4 px padding both sides, clipped text, no "…"): "{initials} {title}", e.g. "J Baby swim", "G·E School night". Then "+N" (11/900 muted).
-5. Multi-day events: one pill per week row drawn over the cells ("All Grandma visits", next row "All Grandma visits (cont.)"); square ends where it continues.
+3. Day cell 120 px, padding 3 3 4, gap 2: date 11/800 in an 18 px row or, on the 1st of a month, an 18 px ink pill "Nov 1" (white 11/900, clipped with no "…"; olive when the 1st is today); today = 18 px olive date circle + 2.5 px olive inset outline; past days on surface-page with muted dates.
+4. Up to five chips (15 tall, radius 4, 10/800, 3 px padding both sides, clipped text, no "…"), or four and "+N" (10/900 muted) when there are more. Under 430 px wide the title only ("Baby swim"); from 430 px "{initials} {title}", e.g. "J Baby swim", "G·E School night". The cell's label lists each event with its people: "October 25: Baby swim (James)".
+5. Multi-day events: one pill per week row drawn over the cells, styled like a chip, 23 px from the top of the row ("Grandma visits", next row "Grandma visits (cont.)"; with initials from 430 px: "All Grandma visits"); square ends where it continues.
 6. First-visit hint (sage card, above the tab bar, left of the add button): "Tap a day to see details. Each color is a family member." · "Got it".
 7. Floating olive add button 60 ("Add event"); TabBar (Calendar active).
 

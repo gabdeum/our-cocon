@@ -26,8 +26,10 @@ import { strings } from '../strings/en';
 const m = strings.calendar.month;
 const words = calendarWordsEn;
 
-/** Spec 037 FR-003: a cell shows two rows (chips or the space under a bar), then "+N". */
-export const ROWS_PER_CELL = 2;
+/** Spec 037 FR-003: a cell shows up to five rows (chips or the space under a bar), or four and "+N". */
+export const ROWS_PER_CELL = 5;
+/** FR-003: chips carry initials only from this window width up; narrower, the title alone. */
+export const INITIALS_MIN_WIDTH = 430;
 /** How far the grid scrolls either way from today. */
 const YEARS_AROUND = 5;
 
@@ -103,14 +105,26 @@ export function monthOccurrences(events: readonly StoredEvent[], from: string, t
     .filter((o) => shownByFilter(o.members, hidden));
 }
 
-/** Initials and colors by member id, for the chips. */
+/** Initials, colors and names by member id, for the chips and their labels. */
 export interface MemberLook {
   initials: ReadonlyMap<string, string>;
   colors: ReadonlyMap<string, EventColor>;
+  names: ReadonlyMap<string, string>;
 }
 
 export function memberLook(members: readonly Member[]): MemberLook {
-  return { initials: memberInitials(members), colors: new Map(members.map((mb) => [mb.id, mb.color as EventColor])) };
+  return {
+    initials: memberInitials(members),
+    colors: new Map(members.map((mb) => [mb.id, mb.color as EventColor])),
+    names: new Map(members.map((mb) => [mb.id, mb.display_name])),
+  };
+}
+
+/** FR-008: an event in a day's label, with its people: "Baby swim (James)". A member who left isn't named. */
+function withPeople(o: MonthOccurrence, look: MemberLook): string {
+  const header = strings.calendar.header;
+  const names = o.members.map((id) => (id === 'everyone' ? header.everyone : id === 'others' ? header.others : look.names.get(id))).filter((n): n is string => Boolean(n));
+  return m.withPeople(o.title, names);
 }
 
 /**
@@ -128,10 +142,10 @@ export function eventLook(members: readonly EventMember[], look: MemberLook): { 
   return { initials, colors };
 }
 
-/** FR-003: "{initials} {title}" and the fill. */
-export function chipLook(members: readonly EventMember[], title: string, look: MemberLook): { text: string; colors: EventColor[] } {
+/** FR-003: "{initials} {title}" and the fill; the title alone with `initials: false` (narrow screens). */
+export function chipLook(members: readonly EventMember[], title: string, look: MemberLook, withInitials = true): { text: string; colors: EventColor[] } {
   const { initials, colors } = eventLook(members, look);
-  return { text: initials ? `${initials} ${title}` : title, colors };
+  return { text: initials && withInitials ? `${initials} ${title}` : title, colors };
 }
 
 const isMultiDay = (o: MonthOccurrence) => o.ends_on > o.starts_on;
@@ -164,13 +178,15 @@ export interface WeekContext {
   today: string;
   look: MemberLook;
   slotTimes: SlotTimes;
+  /** FR-003: initials on the chips (window 430 px wide or more). */
+  initials: boolean;
 }
 
 /**
- * One week row (FR-002–FR-004): each day's chips in order with "+N" for the rest, and every
- * multi-day event as one bar from its first to its last day in the row, stacked in rows. Days under
- * a bar keep that row empty. Only the first two rows show; "+N" counts what's left of the visible
- * events.
+ * One week row (FR-002–FR-004): each day's chips in order, and every multi-day event as a bar from
+ * its first to its last day in the row, stacked in rows. Days under a bar keep that row empty. A day
+ * shows five rows when everything fits, else four and "+N" for the rest of the visible events; a
+ * bar is drawn only over the days whose rows reach its lane.
  */
 export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[], ctx: WeekContext): MonthWeek {
   const start = weekStartAt(ctx.range, index);
@@ -179,48 +195,67 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
 
   const spans = inWeek.filter(isMultiDay).map((o) => ({ o, from: o.starts_on < start ? start : o.starts_on, to: o.ends_on > end ? end : o.ends_on }));
   const lanes = new Map(layoutSpans(spans.map((s) => ({ id: occurrenceKey(s.o), from: s.from, to: s.to }))).map((l) => [l.id, l.lane]));
-  const bars: MonthBar[] = [];
-  for (const s of spans) {
-    const lane = lanes.get(occurrenceKey(s.o)) ?? 0;
-    if (lane >= ROWS_PER_CELL) continue;
-    const { text, colors } = chipLook(s.o.members, s.from === s.o.starts_on ? s.o.title : m.cont(s.o.title), ctx.look);
-    bars.push({
-      key: occurrenceKey(s.o),
-      text,
-      colors,
-      label: m.barLabel(s.o.title, longDate(s.o.starts_on), longDate(s.o.ends_on)),
-      column: daysBetween(start, s.from),
-      days: daysBetween(s.from, s.to) + 1,
-      lane,
-      startsHere: s.from === s.o.starts_on,
-      endsHere: s.to === s.o.ends_on,
-    });
-  }
+  const laneOf = (s: (typeof spans)[number]) => lanes.get(occurrenceKey(s.o)) ?? 0;
 
-  const cells: MonthCell[] = Array.from({ length: 7 }, (_, d) => {
+  const days = Array.from({ length: 7 }, (_, d) => {
     const date = addDays(start, d);
-    const { month, day } = parts(date);
     const covering = spans.filter((s) => s.from <= date && s.to >= date);
-    const busyRows = new Set(covering.map((s) => lanes.get(occurrenceKey(s.o)) ?? 0));
     const singles = inWeek
       .filter((o) => !isMultiDay(o) && o.starts_on === date)
       .map((o) => ({ o, at: startMinutes(o, ctx.slotTimes) }))
       .sort((a, b) => a.at - b.at || a.o.title.localeCompare(b.o.title))
       .map((x) => x.o);
+    // Five rows if every bar's lane and every chip fit in them, else four and "+N".
+    const fits = covering.every((s) => laneOf(s) < ROWS_PER_CELL) && singles.length <= ROWS_PER_CELL - covering.length;
+    return { date, covering, singles, rows: fits ? ROWS_PER_CELL : ROWS_PER_CELL - 1 };
+  });
+
+  // A bar runs over the days whose rows reach its lane, in one piece per run of such days.
+  const bars: MonthBar[] = [];
+  for (const s of spans) {
+    const lane = laneOf(s);
+    let from: string | null = null;
+    for (let d = daysBetween(start, s.from); d <= daysBetween(start, s.to) + 1; d++) {
+      const day = days[d];
+      if (day && day.date <= s.to && lane < day.rows) {
+        from ??= day.date;
+        continue;
+      }
+      if (from === null) continue;
+      const to = addDays(start, d - 1);
+      const { text, colors } = chipLook(s.o.members, from === s.o.starts_on ? s.o.title : m.cont(s.o.title), ctx.look, ctx.initials);
+      bars.push({
+        key: `${occurrenceKey(s.o)}|${from}`,
+        text,
+        colors,
+        label: m.barLabel(s.o.title, longDate(s.o.starts_on), longDate(s.o.ends_on)),
+        column: daysBetween(start, from),
+        days: daysBetween(from, to) + 1,
+        lane,
+        startsHere: from === s.o.starts_on,
+        endsHere: to === s.o.ends_on,
+      });
+      from = null;
+    }
+  }
+
+  const cells: MonthCell[] = days.map(({ date, covering, singles, rows }) => {
+    const { month, day } = parts(date);
+    const busyRows = new Set(covering.map(laneOf).filter((lane) => lane < rows));
     const items: MonthCellItem[] = [];
     let next = 0;
-    for (let row = 0; row < ROWS_PER_CELL; row++) {
+    for (let row = 0; row < rows; row++) {
       const o = busyRows.has(row) ? undefined : singles[next];
       if (o) {
         next++;
-        items.push({ kind: 'chip', key: occurrenceKey(o), ...chipLook(o.members, o.title, ctx.look) });
+        items.push({ kind: 'chip', key: occurrenceKey(o), ...chipLook(o.members, o.title, ctx.look, ctx.initials) });
       } else if ([...busyRows].some((r) => r >= row)) items.push({ kind: 'space', key: `space-${row}` });
     }
-    const shown = next + [...busyRows].filter((r) => r < ROWS_PER_CELL).length;
+    const shown = next + busyRows.size;
     const total = singles.length + covering.length;
     return {
       date,
-      label: m.dayLabel(longDate(date), [...covering.map((s) => s.o.title), ...singles.map((o) => o.title)]),
+      label: m.dayLabel(longDate(date), [...covering.map((s) => withPeople(s.o, ctx.look)), ...singles.map((o) => withPeople(o, ctx.look))]),
       dateText: day === 1 ? m.firstOfMonth(words.monthsShort[month - 1] ?? '') : String(day),
       first: day === 1,
       today: date === ctx.today,

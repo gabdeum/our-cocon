@@ -5,8 +5,8 @@ import { theme } from '../theme';
 import { EventBar, EventChip, MoreCount, type EventColor } from './EventChip';
 import { Text } from './Text';
 
-/** MonthGrid README › Cell: every day is 96 tall, so a row's offset is its index × 96. */
-export const MONTH_ROW_HEIGHT = 96;
+/** MonthGrid README › Cell: every day is 120 tall, so a row's offset is its index × 120. */
+export const MONTH_ROW_HEIGHT = 120;
 /** Room under the last row for the floating tab bar (TabBar README: screens pad 180). */
 const BOTTOM_PAD = 180;
 /** The title row counts a row as visible once all but its top 24 px have scrolled away (OC-CalMonth). */
@@ -16,14 +16,14 @@ export type MonthCellItem = { kind: 'chip'; key: string; text: string; colors: r
 
 export interface MonthCell {
   date: string;
-  /** "October 25: Baby swim, Movie night" or "October 25: nothing planned". */
+  /** "October 25: Baby swim (James), Movie night (Everyone)" or "October 25: nothing planned". */
   label: string;
-  /** "25", or "Nov 1" on the 1st (a beige banner across the top of the cell). */
+  /** "25", or "Nov 1" on the 1st (an ink pill). */
   dateText: string;
   first: boolean;
   today: boolean;
   past: boolean;
-  /** At most two rows: chips, or empty space under a multi-day bar. */
+  /** At most five rows (four with "+N"): chips, or empty space under a multi-day bar. */
   items: MonthCellItem[];
   /** "+2", or null. */
   more: string | null;
@@ -74,29 +74,20 @@ export interface MonthGridProps {
 const clipOnWeb = (Platform.OS === 'web' ? { textOverflow: 'clip' } : {}) as TextStyle;
 
 function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
-  // The 1st opens its month with a beige banner from edge to edge, clipped like a chip with no "…"
-  // (decided 2026-10-29). It reaches over the cell's top padding, so the rows below don't move.
-  if (cell.first) {
+  // MonthGrid README › Date: an 18 px row. Today is an olive circle; the 1st an ink pill "Nov 1"
+  // (olive when the 1st is today), clipped with no "…".
+  if (cell.first || cell.today) {
     return (
-      <View className={cn('-mx-4 -mt-4 h-[26px] justify-center px-[7px] pt-4', cell.today ? 'bg-olive' : 'bg-line-handle')}>
-        <Text size={12} weight="900" color={cell.today ? 'on-olive' : 'ink'} numberOfLines={1} ellipsizeMode="clip" style={clipOnWeb}>
-          {cell.dateText}
-        </Text>
-      </View>
-    );
-  }
-  if (cell.today) {
-    return (
-      <View className="h-[22px] min-w-[22px] items-center justify-center self-start rounded-sm bg-olive">
-        <Text size={12} weight="900" color="on-olive" numberOfLines={1}>
+      <View className={cn('h-[18px] min-w-[18px] items-center justify-center self-start rounded-[9px]', cell.first && 'max-w-full px-[5px]', cell.today ? 'bg-olive' : 'bg-ink')}>
+        <Text size={11} weight="900" color={cell.today ? 'on-olive' : 'on-ink'} numberOfLines={1} ellipsizeMode="clip" style={[{ lineHeight: 18 }, clipOnWeb]}>
           {cell.dateText}
         </Text>
       </View>
     );
   }
   return (
-    <View className="h-[22px] justify-center pl-[3px]">
-      <Text size={12} weight="800" color={muted ? 'ink-muted' : 'ink'}>
+    <View className="h-[18px] justify-center pl-[3px]">
+      <Text size={11} weight="800" color={muted ? 'ink-muted' : 'ink'} style={{ lineHeight: 18 }}>
         {cell.dateText}
       </Text>
     </View>
@@ -114,10 +105,10 @@ function Cell({ cell, mutePast, addLabel, onPress, onLongPress }: { cell: MonthC
       onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && onLongPress()}
       onPress={onPress}
       onLongPress={onLongPress}
-      className={cn('h-[96px] min-w-0 flex-1 gap-[3px] overflow-hidden border-b border-r border-line px-4 pb-6 pt-4', muted ? 'bg-surface-page' : 'bg-surface-card', focusRing)}
+      className={cn('h-[120px] min-w-0 flex-1 gap-[2px] overflow-hidden border-b border-r border-line px-[3px] pb-4 pt-[3px]', muted ? 'bg-surface-page' : 'bg-surface-card', focusRing)}
     >
       <DateMark cell={cell} muted={muted} />
-      {cell.items.map((item) => (item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} /> : <View key={item.key} className="h-[20px]" />))}
+      {cell.items.map((item) => (item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} /> : <View key={item.key} className="h-[15px]" />))}
       {cell.more ? <MoreCount text={cell.more} /> : null}
       {cell.today ? <View aria-hidden pointerEvents="none" className="absolute inset-0 border-olive" style={{ borderWidth: 2.5 }} /> : null}
     </Pressable>
@@ -126,7 +117,7 @@ function Cell({ cell, mutePast, addLabel, onPress, onLongPress }: { cell: MonthC
 
 function Week({ week, ...p }: { week: MonthWeek } & Pick<MonthGridProps, 'onDayPress' | 'onDayLongPress' | 'addLabel'> & { mutePast: boolean }) {
   return (
-    <View className="h-[96px] bg-surface-card">
+    <View className="h-[120px] bg-surface-card">
       <View className="flex-row">
         {week.cells.map((cell) => (
           <Cell key={cell.date} cell={cell} mutePast={p.mutePast} addLabel={p.addLabel} onPress={() => p.onDayPress(cell.date)} onLongPress={() => p.onDayLongPress(cell.date)} />
@@ -141,7 +132,7 @@ function Week({ week, ...p }: { week: MonthWeek } & Pick<MonthGridProps, 'onDayP
 
 /**
  * The continuous month grid (MonthGrid README, OC-CalMonth): a fixed weekday row over one
- * virtualised vertical list of week rows, each 96 tall, with multi-day bars drawn over the cells.
+ * virtualised vertical list of week rows, each 120 tall, with multi-day bars drawn over the cells.
  */
 export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisibleIndex, jump, onTopRowChange, mutePast = true, ...p }: MonthGridProps) {
   const list = useRef<FlatList<number>>(null);

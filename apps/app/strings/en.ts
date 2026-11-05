@@ -1428,6 +1428,8 @@ export const strings = {
       /** The 1st of a month: "Nov 1". */
       firstOfMonth: (shortMonth: string) => `${shortMonth.replace('.', '')} 1`,
       dayLabel: (date: string, titles: string[]) => `${date}: ${titles.length ? titles.join(', ') : 'nothing planned'}`,
+      /** An event in a day's label, with its people: "Baby swim (James)". */
+      withPeople: (title: string, names: string[]) => (names.length ? `${title} (${names.join(', ')})` : title),
       barLabel: (title: string, from: string, to: string) => `${title}, ${from} to ${to}`,
       // OC-CalMonth.md › Day sheet (spec 037 FR-009).
       sheet: {

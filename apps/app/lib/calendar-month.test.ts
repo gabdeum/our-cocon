@@ -60,11 +60,11 @@ function ev(fields: Partial<StoredEvent>): StoredEvent {
 }
 
 const range = monthRange(TODAY, 0);
-const ctx: WeekContext = { range, today: TODAY, look: memberLook(members), slotTimes: DEFAULT_SLOT_TIMES };
+const ctx: WeekContext = { range, today: TODAY, look: memberLook(members), slotTimes: DEFAULT_SLOT_TIMES, initials: true };
 
-function week(date: string, events: StoredEvent[], hidden: ReadonlySet<string> = new Set(), me = gabriel.id) {
+function week(date: string, events: StoredEvent[], hidden: ReadonlySet<string> = new Set(), me = gabriel.id, initials = true) {
   const window = eventWindow(date);
-  return layoutWeek(weekIndexOf(range, date), monthOccurrences(events, window.from, window.to, me, hidden), ctx);
+  return layoutWeek(weekIndexOf(range, date), monthOccurrences(events, window.from, window.to, me, hidden), { ...ctx, initials });
 }
 function cell(w: ReturnType<typeof week>, date: string) {
   const found = w.cells.find((c) => c.date === date);
@@ -74,16 +74,45 @@ function cell(w: ReturnType<typeof week>, date: string) {
 const texts = (items: MonthCellItem[]) => items.map((i) => (i.kind === 'chip' ? i.text : '·'));
 
 describe('US1: read the month at a glance', () => {
-  it('shows two chips in order with initials, then "+N"', () => {
-    const w = week('2026-10-31', [
-      ev({ title: 'Halloween', starts_on: '2026-10-31', ends_on: '2026-10-31', members: ['everyone'], slots: ['afternoon'] }),
-      ev({ title: 'Surprise', starts_on: '2026-10-31', ends_on: '2026-10-31', members: [gabriel.id, james.id], slots: ['evening'] }),
-      ev({ title: 'Run', starts_on: '2026-10-31', ends_on: '2026-10-31', slots: ['early_morning'] }),
+  const busyDay = [
+    ev({ title: 'Halloween', starts_on: '2026-10-31', ends_on: '2026-10-31', members: ['everyone'], slots: ['afternoon'] }),
+    ev({ title: 'Surprise', starts_on: '2026-10-31', ends_on: '2026-10-31', members: [gabriel.id, james.id], slots: ['evening'] }),
+    ev({ title: 'Run', starts_on: '2026-10-31', ends_on: '2026-10-31', slots: ['early_morning'] }),
+    ev({ title: 'Market', starts_on: '2026-10-31', ends_on: '2026-10-31', members: [eva.id], slots: ['morning'] }),
+    ev({ title: 'Movie', starts_on: '2026-10-31', ends_on: '2026-10-31', members: ['others'], slots: ['evening'] }),
+  ];
+
+  it('shows up to five chips in order with initials, and each event with its people in the label', () => {
+    const day = cell(week('2026-10-31', busyDay), '2026-10-31');
+    expect(texts(day.items)).toEqual(['G Run', 'E Market', 'All Halloween', 'Movie', 'G·J Surprise']);
+    expect(day.more).toBeNull();
+    expect(day.label).toBe('October 31: Run (Gabriel), Market (Eva), Halloween (Everyone), Movie (Others), Surprise (Gabriel, James)');
+  });
+
+  it('shows four chips and "+N" when a day has more than five', () => {
+    const day = cell(week('2026-10-31', [...busyDay, ev({ title: 'Bath', starts_on: '2026-10-31', ends_on: '2026-10-31', members: [james.id], slots: ['evening'] })]), '2026-10-31');
+    expect(texts(day.items)).toEqual(['G Run', 'E Market', 'All Halloween', 'J Bath']);
+    expect(day.more).toBe('+2');
+  });
+
+  it('leaves the initials out on narrow screens, on chips and bars', () => {
+    const visit = ev({ title: 'Grandma visits', starts_on: '2026-10-30', ends_on: '2026-11-01', members: ['everyone'], time_type: 'all_day', slots: [] });
+    const w = week('2026-10-31', [...busyDay.slice(0, 2), visit], new Set(), gabriel.id, false);
+    expect(texts(cell(w, '2026-10-31').items)).toEqual(['·', 'Halloween', 'Surprise']);
+    expect(w.bars.map((b) => b.text)).toEqual(['Grandma visits']);
+    expect(week('2026-11-01', [visit], new Set(), gabriel.id, false).bars.map((b) => b.text)).toEqual(['Grandma visits (cont.)']);
+  });
+
+  it('draws a fifth-row bar only over the days with room for it', () => {
+    // Five stacked visits fill a whole row; one more single on Thursday leaves it four rows and "+N".
+    const visits = Array.from({ length: 5 }, (_, i) => ev({ title: `Visit ${i + 1}`, starts_on: '2026-10-25', ends_on: '2026-10-31', members: ['everyone'], time_type: 'all_day', slots: [] }));
+    const w = week('2026-10-25', [...visits, ev({ title: 'Dentist', starts_on: '2026-10-29', ends_on: '2026-10-29' })]);
+    expect(w.bars.filter((b) => b.lane === 4).map(({ column, days, startsHere, endsHere }) => ({ column, days, startsHere, endsHere }))).toEqual([
+      { column: 0, days: 4, startsHere: true, endsHere: false },
+      { column: 5, days: 2, startsHere: false, endsHere: true },
     ]);
-    const day = cell(w, '2026-10-31');
-    expect(texts(day.items)).toEqual(['G Run', 'All Halloween']);
-    expect(day.more).toBe('+1');
-    expect(day.label).toBe('October 31: Run, Halloween, Surprise');
+    expect(cell(w, '2026-10-29')).toMatchObject({ more: '+2' });
+    expect(cell(w, '2026-10-28')).toMatchObject({ more: null });
   });
 
   it('puts all-day events first and names two members "G·J" with a split fill', () => {
@@ -113,7 +142,7 @@ describe('US1: read the month at a glance', () => {
       surprise: { hidden_from: [eva.id], cover_title: 'Dinner out', cover_note: null },
     });
     expect(texts(cell(week('2026-10-31', [party], new Set(), eva.id), '2026-10-31').items)).toEqual(['G·J Dinner out']);
-    expect(cell(week('2026-10-31', [party], new Set(), eva.id), '2026-10-31').label).toBe('October 31: Dinner out');
+    expect(cell(week('2026-10-31', [party], new Set(), eva.id), '2026-10-31').label).toBe('October 31: Dinner out (Gabriel, James)');
     expect(texts(cell(week('2026-10-31', [party], new Set(), ''), '2026-10-31').items)).toEqual(['G·J Busy']);
   });
 
@@ -132,12 +161,13 @@ describe('US1: read the month at a glance', () => {
             ev({ title: 'Dentist', starts_on: '2026-10-29', ends_on: '2026-10-29' }),
             ev({ title: 'Yoga', starts_on: '2026-10-29', ends_on: '2026-10-29', members: [eva.id], slots: ['evening'] }),
             ev({ title: 'Book club', starts_on: '2026-10-29', ends_on: '2026-10-29', members: [eva.id], slots: ['evening'] }),
+            ...['Choir', 'Swim', 'Piano', 'Chess'].map((title) => ev({ title, starts_on: '2026-10-29', ends_on: '2026-10-29', members: [eva.id], slots: ['evening'] })),
           ],
           hidden,
         ),
         '2026-10-29',
       );
-    expect(day(new Set()).more).toBe('+1');
+    expect(day(new Set()).more).toBe('+3');
     expect(texts(day(new Set([eva.id])).items)).toEqual(['G Dentist']);
     expect(day(new Set([eva.id])).more).toBeNull();
   });
