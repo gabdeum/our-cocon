@@ -92,7 +92,7 @@ export const strings = {
   // design/ui/OC-Connect.md (spec 025): Settings › AI assistants, with its Connect and Manage sheets.
   // Connection steps checked against each assistant's help pages on 2026-10-26 (spec 025 FR-005).
   aiConnections: {
-    back: 'Menu',
+    back: 'Back to Menu',
     title: 'AI assistants',
     lead: 'Let your AI save recipes, fill the grocery list and add events for you. Each person connects their own.',
     connected: (timeAgo: string) => `Connected · used ${timeAgo}`,
@@ -274,7 +274,7 @@ export const strings = {
     restoreFailed: "Couldn't restore it. Check your connection and try again.",
     // design/ui/OC-Activity.md: the full list, from Home's "See all activity".
     screenTitle: 'Activity',
-    back: 'Home',
+    back: 'Back to Home',
     people: 'People',
     assistants: 'Assistants',
     otherAssistant: 'Other',
@@ -321,7 +321,7 @@ export const strings = {
   settings: {
     // Spec 046: Menu › Notifications (design/ui/OC-SettingsNotif.md).
     notifications: {
-      back: 'Menu',
+      back: 'Back to Menu',
       title: 'Notifications',
       lead: 'Just for you, on this iPhone.',
       web: 'Notifications work in the iPhone app.',
@@ -353,7 +353,7 @@ export const strings = {
     // Spec 021: where the family shops (the Groceries tab's "Grocery settings" sheet, and the
     // Groceries page, OC-SettingsGroceries, spec 029).
     groceries: {
-      back: 'Menu',
+      back: 'Back to Menu',
       title: 'Groceries',
       lead: 'For the whole family. You can also change these from the Groceries tab.',
       shopLabel: 'Where do you shop?',
@@ -370,7 +370,7 @@ export const strings = {
     },
     // Spec 027: the family's cooking defaults (design/ui/OC-SettingsRecipes.md).
     recipes: {
-      back: 'Menu',
+      back: 'Back to Menu',
       title: 'Recipes',
       lead: 'Used for every recipe, for the whole family. Each recipe can change them in its own settings.',
       cookingDefaults: 'Cooking defaults',
@@ -387,7 +387,7 @@ export const strings = {
     },
     // design/ui/OC-CalSettings.md (spec 029). The slot and time zone sheets aren't drawn.
     calendar: {
-      back: 'Menu',
+      back: 'Back to Menu',
       title: 'Calendar',
       lead: "How the family calendar looks for you, and the family's times of day.",
       forYou: 'For you',
@@ -431,7 +431,7 @@ export const strings = {
       saveFailed: "Couldn't save. Try again.",
     },
     family: {
-      back: 'Menu',
+      back: 'Back to Menu',
       title: 'Family',
       lead: "Who's in the family, and your own account.",
       heading: 'Members',
@@ -1004,7 +1004,7 @@ export const strings = {
   },
   // design/flows.md › Recently deleted (spec 018; not drawn, copy in design/ui/OC-Settings.md).
   recentlyDeleted: {
-    back: 'Menu',
+    back: 'Back to Menu',
     title: 'Recently deleted',
     /** "Deleted by Gabriel · 3 days ago · 27 days left" ("Former member" once that person left). */
     sub: (by: string, daysAgo: number, daysLeft: number) => {
@@ -1057,7 +1057,8 @@ export const strings = {
     loadFailedTitle: "We couldn't open this recipe.",
     loadFailedBody: "It may have been deleted, or you're offline.",
     retry: 'Try again',
-    back: 'Back',
+    back: 'Back to recipe',
+    backTo: (recipe: string) => `Back to ${recipe}`,
     // A variant's one line (OC-RecipeSettings › Layout 6), its changes joined by " · ".
     summary: {
       replaces: (old: string, with_: string) => `replaces ${old} with ${with_}`,
@@ -1277,6 +1278,8 @@ export const strings = {
   // design/ui/OC-Cook.md (spec 012)
   cook: {
     exit: 'Exit',
+    /** The ✕ in the header (spec 050). */
+    exitA11y: 'Exit cooking mode',
     /** The settings button in the header, and the sheet it opens. */
     options: 'Cooking options',
     closeOptions: 'Close cooking options',
@@ -1608,9 +1611,11 @@ export const strings = {
     },
     /** design/ui/OC-CalEvent.md (spec 042): the event page, its dialogs, the share sheet and the shared page. */
     event: {
-      back: 'Calendar',
+      back: 'Back to Calendar',
       /** "Morning · about 09:00–12:00"; a custom time shows its hours: "14:30–15:30". */
       slotTime: (slot: string, range: string) => `${slot} · about ${range}`,
+      /** Spec 050 FR-006, after the date on one line: "Sat, Oct 31 · Morning, about 09:00–12:00". */
+      slotTimeInline: (slot: string, range: string) => `${slot}, about ${range}`,
       allDay: 'All day',
       /** A multi-day event's dates: "Sat, Oct 31 – Mon, Nov 2". */
       span: (from: string, to: string) => `${from} – ${to}`,
@@ -1623,17 +1628,26 @@ export const strings = {
         yearly: () => 'Every year',
       },
       openInMaps: 'Open in Maps',
+      /** The compact page's pill (spec 050); read as openInMapsA11y. */
+      maps: 'Maps',
+      /** The who row: "James", "James and Mia", then " · Gabriel takes James". */
+      who: (names: string[]) => andList(names),
       openInMapsA11y: (place: string) => `Open ${place} in Maps`,
       drives: (name: string) => `${name} drives`,
-      /** Spec 049 FR-006: the reminder's sub-line, "Reminds Gabriel · 13:30". */
-      reminds: (names: string[], when: string) => `Reminds ${andList(names)} · ${when}`,
+      /** Spec 049 FR-006, after the reminder on its line (spec 050): "1 hour before · reminds Gabriel · 13:30". */
+      reminds: (names: string[], when: string) => `reminds ${andList(names)} · ${when}`,
       dayBefore: (time: string) => `${time} the day before`,
       bring: 'Bring',
-      bringHint: 'Anyone in the family can tick these.',
+      /** The Bring card's header: "1 of 3" ticked. */
+      bringCount: (done: number, total: number) => `${done} of ${total}`,
+      /** Ends the "Added by" line when there is a checklist (spec 050). */
+      anyoneCanTick: 'anyone can tick the list',
       tickFailed: "Couldn't change that. Try again.",
       addedBy: (name: string, ago: string) => `Added by ${name} · ${ago}`,
       addedVia: (assistant: string, ago: string) => `Added via ${assistant} · ${ago}`,
-      edit: 'Edit',
+      // The top bar (spec 050 FR-006): ✎ and ⋯, whose menu holds Duplicate, Share and Delete.
+      edit: 'Edit event',
+      more: 'More actions',
       duplicate: 'Duplicate',
       share: 'Share a view-only link',
       delete: 'Delete event',

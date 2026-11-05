@@ -1,5 +1,6 @@
 // Spec 042: the event page. US1 everything in one place, US2 deleting a repeating event someone
 // else added, the one-off Dialog, the live checklist (FR-002), Duplicate and Share (FR-003).
+// Spec 050 FR-006: ✎ and ⋯ in the top bar, the menu, the compact layout.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
@@ -45,53 +46,60 @@ function setup(event: StoredEvent = babyMusic(), over: Partial<EventDetailProps>
   return { ...props, tracker, undo };
 }
 
+/** Picks an item from the top bar's ⋯ menu. */
+const menu = (item: string) => {
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: item }));
+};
+
 describe('Event detail', () => {
   it('US1: shows everything about Baby music class, in order', () => {
     setup();
     const text = document.body.textContent ?? '';
     const order = [
-      'Calendar',
       'Social',
-      'Baby music class',
-      'James',
-      'Saturday, Oct 31',
-      'Morning · about 09:00–12:00',
       'Every Saturday',
+      'Baby music class',
+      'Sat, Oct 31',
+      ' · Morning, about 09:00–12:00',
+      'James',
+      ' · Gabriel takes James',
       'Little Notes studio, 4 Elm St',
-      'Open in Maps',
-      'Gabriel takes James',
+      'Maps',
       '1 hour before',
-      'Reminds Gabriel · 08:00',
+      ' · reminds Gabriel · 08:00',
       'Bring',
+      '1 of 3',
       'Diaper bag',
       'Bottle',
       'Spare clothes',
-      'Anyone in the family can tick these.',
-      'Added by Eva · 2 days ago',
-      'Edit',
-      'Duplicate',
-      'Share a view-only link',
-      'Delete event',
+      'Added by Eva · 2 days ago · anyone can tick the list',
     ];
-    let at = -1;
+    // The top bar: back, ✎ and ⋯; the page's own buttons are gone (spec 050 FR-006).
+    expect(screen.getByRole('button', { name: 'Back to Calendar' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Edit event' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'More actions' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Duplicate' })).toBeNull();
+    // After the bar, which holds the title too (shown once it scrolls under).
+    let at = text.indexOf('Social') - 1;
     for (const part of order) {
       const next = text.indexOf(part, at + 1);
       expect(next, part).toBeGreaterThan(at);
       at = next;
     }
-    expect(screen.getByRole('heading', { name: 'Baby music class' })).toBeTruthy();
+    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Baby music class']);
     expect(screen.getByRole('checkbox', { name: 'Diaper bag' }).getAttribute('aria-checked')).toBe('true');
   });
 
   it('hides rows without a value, and says an assistant added it (FR-006)', () => {
     setup(babyMusic({ category: null, recurrence: null, starts_on: '2026-10-31', ends_on: '2026-10-31', location: null, responsible_member_id: null, reminder: 'none', checklist: [], source: 'claude' }));
-    for (const gone of ['Social', 'Every Saturday', 'Open in Maps', 'takes', 'hour before', 'Bring']) expect(document.body.textContent).not.toContain(gone);
+    for (const gone of ['Social', 'Every Saturday', 'Maps', 'takes', 'hour before', 'Bring', 'anyone can tick']) expect(document.body.textContent).not.toContain(gone);
     expect(screen.getByText('Added via Claude · 2 days ago')).toBeTruthy();
   });
 
   it('opens the place in Maps', () => {
     const { onOpenUrl } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Open Little Notes studio, 4 Elm St in Maps' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Open Little Notes studio, 4 Elm St in Maps' }));
     expect(onOpenUrl).toHaveBeenCalledWith('https://www.google.com/maps/search/?api=1&query=Little%20Notes%20studio%2C%204%20Elm%20St');
   });
 
@@ -112,7 +120,7 @@ describe('Event detail', () => {
 
   it('US2: deleting a repeating event Eva added asks which ones', async () => {
     const { onDelete, tracker, undo, onChanged } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Delete event' }));
+    menu('Delete event');
     const dialog = screen.getByRole('alertdialog', { name: 'Delete “Baby music class”?' });
     expect(dialog.textContent).toContain("Eva added this. Delete only this one, or this and all future ones? It's removed for the whole family.");
     expect(within(dialog).getAllByRole('button').map((b) => b.textContent)).toEqual(['Only this one', 'This and all future ones', 'Keep it']);
@@ -130,10 +138,10 @@ describe('Event detail', () => {
 
   it('"Only this one" deletes that date; "Keep it" deletes nothing', async () => {
     const { onDelete } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Delete event' }));
+    menu('Delete event');
     fireEvent.click(screen.getByRole('button', { name: 'Keep it' }));
     expect(onDelete).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Delete event' }));
+    menu('Delete event');
     fireEvent.click(screen.getByRole('button', { name: 'Only this one' }));
     await flush();
     expect(onDelete).toHaveBeenCalledWith('this');
@@ -141,7 +149,7 @@ describe('Event detail', () => {
 
   it('a one-off event of my own: "Delete" with no one to name', async () => {
     const { onDelete, tracker } = setup(babyMusic({ recurrence: null, starts_on: '2026-10-31', ends_on: '2026-10-31', creator_member_id: gabriel.id }));
-    fireEvent.click(screen.getByRole('button', { name: 'Delete event' }));
+    menu('Delete event');
     const dialog = screen.getByRole('alertdialog', { name: 'Delete “Baby music class”?' });
     expect(dialog.textContent).toContain('This removes it for the whole family.');
     expect(dialog.textContent).not.toContain('added this');
@@ -154,7 +162,7 @@ describe('Event detail', () => {
 
   it('says so when Delete fails', async () => {
     setup(babyMusic(), { onDelete: vi.fn(async () => Promise.reject(new Error('offline'))) });
-    fireEvent.click(screen.getByRole('button', { name: 'Delete event' }));
+    menu('Delete event');
     fireEvent.click(screen.getByRole('button', { name: 'Only this one' }));
     await flush();
     expect(screen.getByText("Couldn't delete. Check your connection and try again.")).toBeTruthy();
@@ -162,7 +170,7 @@ describe('Event detail', () => {
 
   it('says so when Duplicate fails, and when the delete toast’s Undo fails', async () => {
     setup(babyMusic(), { onDuplicate: vi.fn(async () => Promise.reject(new Error('offline'))) });
-    fireEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
+    menu('Duplicate');
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
     fireEvent.click(screen.getByRole('button', { name: 'Saturday, Nov 7' }));
     await flush();
@@ -170,7 +178,7 @@ describe('Event detail', () => {
     cleanup();
     const failing = vi.fn(async () => Promise.reject(new Error('offline')));
     const { tracker } = setup(babyMusic(), { onDelete: vi.fn(async () => failing) });
-    fireEvent.click(screen.getByRole('button', { name: 'Delete event' }));
+    menu('Delete event');
     fireEvent.click(screen.getByRole('button', { name: 'Only this one' }));
     await flush();
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
@@ -181,7 +189,7 @@ describe('Event detail', () => {
 
   it('FR-003 Duplicate: pick a day, then "Copied to Sat, Nov 7" with Undo', async () => {
     const { onDuplicate, tracker, undo } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
+    menu('Duplicate');
     expect(screen.getByRole('heading', { name: 'Pick a date' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
     fireEvent.click(screen.getByRole('button', { name: 'Saturday, Nov 7' }));
@@ -194,18 +202,26 @@ describe('Event detail', () => {
     expect(undo).toHaveBeenCalledOnce();
   });
 
+  it('the ⋯ menu holds Duplicate, Share and Delete, in that order', () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Duplicate', 'Share a view-only link', 'Delete event']);
+  });
+
   it('Edit and Share go to their sheets; Share is not offered for a private event or one that is over', () => {
     const { onEdit, onShare } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Share a view-only link' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit event' }));
+    menu('Share a view-only link');
     expect(onEdit).toHaveBeenCalledOnce();
     expect(onShare).toHaveBeenCalledOnce();
     cleanup();
     setup(babyMusic({ visibility: 'private', creator_member_id: gabriel.id }));
-    expect(screen.queryByRole('button', { name: 'Share a view-only link' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Duplicate', 'Delete event']);
     cleanup();
     setup(babyMusic(), { today: '2026-11-01' });
-    expect(screen.queryByRole('button', { name: 'Share a view-only link' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(screen.queryByRole('menuitem', { name: 'Share a view-only link' })).toBeNull();
   });
 
   it('spec 043: a surprise is tagged "Surprise" for those in on it', () => {
@@ -219,6 +235,7 @@ describe('Event detail', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Bottle' }));
     expect(onTick).not.toHaveBeenCalled();
     expect(screen.getByRole('checkbox', { name: 'Bottle' }).getAttribute('aria-disabled')).toBe('true');
-    expect(screen.getByRole('button', { name: 'Delete event' }).getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Edit event' }).getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('button', { name: 'More actions' }).getAttribute('aria-disabled')).toBe('true');
   });
 });

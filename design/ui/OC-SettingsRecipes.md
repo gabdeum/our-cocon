@@ -3,7 +3,7 @@
 Source `screens/OC-SettingsRecipes.dc.html` · Route `/settings/recipes` · Specs 027, 029
 
 ## Layout
-1. Back link "Menu" ("Settings" until spec 029 builds the Menu); title "Recipes"; lead "Used for every recipe, for the whole family. Each recipe can change them in its own settings."
+1. TopBar (spec 050): back "Back to Menu", title "Recipes" (`titleMode="always"`); then the lead "Used for every recipe, for the whole family. Each recipe can change them in its own settings."
 2. **Cooking defaults** card:
    - "Keep screen on while cooking" / "So it doesn't lock with floury hands"
    - "I have a kitchen scale" / "Off: shows cups and spoons instead of grams"

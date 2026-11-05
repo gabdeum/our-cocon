@@ -22,6 +22,7 @@ A row inside a white list group: grocery items, picker items, settings links and
 | Event row `sm` (`EventListRow size="sm"`, Home's CalCard) | min 58, padding 6 0, gap 10: 5 px stripe, 32 avatar (initials 14/900, 11 for two), title 16/800, sub-line 13/700 ink-muted, "Now" Tag `md`. A reminder due today (`bell`) puts a 16 px olive bell before the title |
 | Week rows (`WeekEventGroup`, Home's CalCard "This week") | One group per day: day 13/900 ink-muted, 40 wide ("Tue"), once at the top of the group; rows min 44, gap 10, no lines inside a day, a 1.5 px `line` divider between days; 5 × 26 stripe in the member colors; one line with an ellipsis, title 15/800 then " · {when} · {who}" 15/700 ink-muted ("Morning run · 06:30 · Gabriel"). Each row is a link to the event |
 | Icon row (`IconRow`, OC-CalEvent, spec 042) | facts about an event in a `ListGroup inset` card (padding 4 16): olive icon 22, gap 12, title 16/800, optional sub-line 14/700 ink-muted, optional olive link at the end ("Open in Maps"); min 56 tall, 60 with a sub-line or a link; 1.5 px `line` divider. Not pressable; only its link is |
+| Compact icon row (`IconRow compact`, spec 050 FR-006) | min 52, one line: title 15/800 then " · " and the sub-line 15/700 ink-muted ("1 hour before · reminds Gabriel · 08:00"); the member dots (MemberStack) can stand in for the icon, an olive icon can end the row (car on the who row), and the link becomes a soft pill 36 tall, padding 0 12, 14/800 ("Maps", read as "Open {place} in Maps") |
 
 ## Rules
 

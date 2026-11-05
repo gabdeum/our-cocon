@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { BackHeader, Card, PushedScreen, SegmentedControl, SettingRow, Text } from '@cocon/ui';
+import { Card, Lead, PushedScreen, SegmentedControl, SettingRow, Text } from '@cocon/ui';
 import type { FamilySettings, FamilySettingsUpdate, StoreProfile, Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useToast } from '../../lib/toast';
@@ -86,8 +86,8 @@ export function GrocerySettings({ settings, onChange, readOnly, layout = 'sheet'
 /** Menu › Groceries (`/settings/groceries`, spec 029): the same family settings as the Groceries tab's sheet. */
 export function GroceriesSettingsPage({ onBack, tracker, ...props }: Omit<GrocerySettingsProps, 'layout'> & { onBack: () => void; tracker: Tracker }) {
   return (
-    <PushedScreen className="gap-18">
-      <BackHeader backLabel={s.back} onBack={onBack} title={s.title} lead={s.lead} />
+    <PushedScreen className="gap-18" topBar={{ back: { label: s.back, onPress: onBack }, title: s.title }}>
+      <Lead>{s.lead}</Lead>
       <OfflineBanner screen="settings" tracker={tracker} />
       <GrocerySettings {...props} layout="page" />
     </PushedScreen>

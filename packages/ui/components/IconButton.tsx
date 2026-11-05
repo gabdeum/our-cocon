@@ -1,9 +1,10 @@
-import { Pressable, type PressableProps } from 'react-native';
+import type { Ref } from 'react';
+import { Pressable, type HostInstance, type PressableProps } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { theme, type ColorName } from '../theme';
 import { Icon, type IconName } from './Icon';
 
-export type IconButtonVariant = 'default' | 'card' | 'soft' | 'olive' | 'square' | 'olive-square' | 'soft-square' | 'fab';
+export type IconButtonVariant = 'default' | 'card' | 'soft' | 'olive' | 'square' | 'olive-square' | 'soft-square' | 'fab' | 'round';
 
 // bundle.css › IconButton
 const looks: Record<IconButtonVariant, { box: string; icon: ColorName }> = {
@@ -18,7 +19,11 @@ const looks: Record<IconButtonVariant, { box: string; icon: ColorName }> = {
   'soft-square': { box: 'w-control-lg h-control-lg rounded-[18px] bg-surface-soft active:bg-surface-soft-pressed', icon: 'ink' },
   // 60, olive, floating: the calendar's add button (spec 037).
   fab: { box: 'w-[60px] h-[60px] rounded-full bg-olive active:bg-olive-pressed', icon: 'onOlive' },
+  // 48, white, floating: the top bar's back and actions (spec 050).
+  round: { box: 'w-[48px] h-[48px] rounded-full bg-surface-card active:bg-surface-card-pressed', icon: 'ink' },
 };
+
+const shadows: Partial<Record<IconButtonVariant, string>> = { fab: theme.shadow.lift, round: theme.shadow.button };
 
 export interface IconButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   icon: IconName;
@@ -30,6 +35,8 @@ export interface IconButtonProps extends Omit<PressableProps, 'children' | 'styl
   /** Icon size, 20–22 per README. */
   iconSize?: number;
   className?: string;
+  /** To measure it (a menu opening under it) or give focus back to it. */
+  ref?: Ref<HostInstance>;
 }
 
 /** A single-icon button (IconButton README). */
@@ -42,7 +49,7 @@ export function IconButton({ icon, label, variant = 'default', expanded, iconSiz
       aria-expanded={variant === 'square' ? expanded === true : undefined}
       disabled={disabled}
       className={cn('items-center justify-center', look.box, variant === 'square' && expanded && 'bg-honey', focusRing, className)}
-      style={variant === 'fab' ? { boxShadow: theme.shadow.lift } : undefined}
+      style={shadows[variant] ? { boxShadow: shadows[variant] } : undefined}
       {...props}
     >
       <Icon name={icon} size={iconSize} color={look.icon} />

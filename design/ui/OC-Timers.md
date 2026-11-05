@@ -3,7 +3,7 @@
 Source `screens/OC-Timers.dc.html` · Route `/timers` · Specs 010, 011
 
 ## Layout
-1. Back link "Back" (returns to where you came from).
+1. TopBar (spec 050): back "Back" (returns to where you came from, so it names no parent; the drawing's "Back to recipe"), title "Timers" (`titleMode="always"`); the summary "1 running · 3 total" is the first line of content.
 2. Title "Timers"; right "{running} running · {total} total".
 3. One card per timer, newest first:
    - name 17/900; sub-line "{recipe or No recipe} · {Running | Paused | Done!}"; on a step timer, the olive link "Go to step" on the right, which opens cooking mode at that step (`/recipes/[id]/cook?step=<stepId>`). It's hidden for kitchen timers and when the recipe or the step is gone (deleted or edited).

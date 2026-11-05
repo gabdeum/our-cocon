@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, type ScrollViewInstance } from 'react-native';
-import { BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, PushedScreen, SettingRow, StepText, Text } from '@cocon/ui';
+import { BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, PushedScreen, SettingRow, StepText, Text, type TopBarConfig } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
@@ -45,14 +45,14 @@ export interface CookScreenProps {
 /** Cooking mode (spec 012, design/ui/OC-Cook.md): one scrolling column of steps, Back and Next. */
 export function CookScreen(props: CookScreenProps) {
   const { recipe, failed, onRetry, onClose } = props;
-  const exit = <Button label={c.exit} variant="soft" size="sm" icon="close" onPress={onClose} />;
+  // Loading and Couldn't load have no cooking header: the TopBar gives them the same round ✕ (spec 050).
+  const bar: TopBarConfig = { back: { label: c.exitA11y, onPress: onClose, icon: 'close' } };
 
-  if (recipe === undefined && !failed) return <CookLoading exit={exit} />;
+  if (recipe === undefined && !failed) return <CookLoading bar={bar} />;
   // A recipe deleted while open can't be cooked from (OC-Cook › Couldn't load).
   if (!recipe || recipe.deleted_at) {
     return (
-      <PushedScreen>
-        {exit}
+      <PushedScreen topBar={bar}>
         <Text variant="titleLg" role="heading" aria-level={1}>
           {p.loadFailedTitle}
         </Text>
@@ -61,13 +61,12 @@ export function CookScreen(props: CookScreenProps) {
       </PushedScreen>
     );
   }
-  return <WithChoices {...props} recipe={recipe} exit={exit} />;
+  return <WithChoices {...props} recipe={recipe} bar={bar} />;
 }
 
-function CookLoading({ exit }: { exit: ReactNode }) {
+function CookLoading({ bar }: { bar: TopBarConfig }) {
   return (
-    <PushedScreen>
-      {exit}
+    <PushedScreen topBar={bar}>
       <View role="progressbar" aria-label={c.loading} className="gap-12">
         <View className="h-8 rounded-xs bg-surface-soft" />
         <View className="h-28 w-2/3 rounded-xs bg-surface-soft" />
@@ -79,11 +78,11 @@ function CookLoading({ exit }: { exit: ReactNode }) {
   );
 }
 
-type LoadedProps = CookScreenProps & { recipe: RecipeDetail; exit: ReactNode };
+type LoadedProps = CookScreenProps & { recipe: RecipeDetail; bar: TopBarConfig };
 
 /** The recipe page's current servings and variants on this device (spec 008 FR-006), then the steps. */
 function WithChoices(props: LoadedProps) {
-  const { recipe, storage, userId, exit, visit = 0 } = props;
+  const { recipe, storage, userId, bar, visit = 0 } = props;
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
   useEffect(() => {
     let live = true;
@@ -99,7 +98,7 @@ function WithChoices(props: LoadedProps) {
 
   // A variant deleted while cooking no longer counts.
   const current = useMemo(() => (choices ? startingChoices(choices, recipe, servingsMax(recipe.serves)) : null), [choices, recipe]);
-  if (!current) return <CookLoading exit={exit} />;
+  if (!current) return <CookLoading bar={bar} />;
   const update = (next: RecipeChoices) => {
     setChoices(next);
     void writeChoices(storage, userId, recipe.id, next);
@@ -202,7 +201,7 @@ function Cooking({
   return (
     <>
     <CookLayout
-      exitLabel={c.exit}
+      exitLabel={c.exitA11y}
       onExit={exit}
       status={hasPill ? <AppTimerPill onOpen={onOpenTimers} tracker={tracker} compact /> : null}
       optionsLabel={c.options}

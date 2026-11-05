@@ -10,7 +10,6 @@ import {
   ColorSwatch,
   AppGrid,
   AwakeChip,
-  BackHeader,
   BottomSheet,
   BrandHeader,
   Button,
@@ -76,7 +75,8 @@ import {
   MemberPickerChip,
   MemberBadge,
   IconRow,
-  BackLink,
+  TopBar,
+  ActionMenu,
   MoreCount,
   Toast,
   SlotChip,
@@ -186,8 +186,10 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
   const [pick, setPick] = useState('lardons');
 
   return (
-    <PushedScreen>
-      <BackHeader backLabel="Home" onBack={onBack} title="Gallery" lead="Every component in every state, next to design/system previews." />
+    <PushedScreen topBar={{ back: { label: 'Back to Home', onPress: onBack }, title: 'Gallery' }}>
+      <Text size={15} weight="600" color="ink-muted">
+        Every component in every state, next to design/system previews.
+      </Text>
 
       <Section group="Foundations" title="Text styles">
         {(Object.keys(theme.text) as TextVariant[]).map((v) => (
@@ -249,6 +251,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             <IconButton icon="more" label="More options" variant="square" expanded />
             <IconButton icon="plus" label="Add item" variant="olive-square" />
             <IconButton icon="chevron-right" label="Next month" variant="card" />
+            <IconButton icon="edit" label="Edit event" variant="round" />
           </PillRow>
         </View>
       </Section>
@@ -330,8 +333,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         />
       </Section>
 
-      <Section group="Calendar" title="Event page: BackLink, MemberBadge, IconRow, ChecklistRow (spec 042)">
-        <BackLink label="Calendar" onPress={noop} />
+      <Section group="Calendar" title="Event page: MemberBadge, IconRow, ChecklistRow (spec 042)">
         <View className="flex-row gap-8">
           <MemberBadge name="James" initial="J" color="sky" />
           <MemberBadge name="Everyone" initial="All" color="everyone" />
@@ -951,8 +953,48 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
       <Section group="Navigation" title="ScreenHeader">
         <BrandHeader brand="Our Cocon" avatars={<AvatarStack members={[...family]} moreLabel={(n) => `+${n}`} label="Gabriel, Alex and Mia" />} date="Thursday 16 October" greeting="Good evening, Gabriel" />
         <TabHeader title="Groceries" sub="7 items to buy · shared with family" action={<Presence label="Mia is shopping" />} />
-        <BackHeader backLabel="Settings" onBack={noop} title="AI assistants" lead="Use Our Cocon from the assistant you already talk to." />
         <FormBar cancelLabel="Cancel" onCancel={noop} title="New recipe" saveLabel="Save" onSave={noop} />
+      </Section>
+
+      <Section group="Navigation" title="TopBar (spec 050)">
+        <View className="-mx-20 gap-12">
+          <TopBar back={{ label: 'Back to Menu', onPress: noop }} title="Groceries" />
+          <TopBar back={{ label: 'Back to Menu', onPress: noop }} title="Notifications" scrolled />
+          <TopBar
+            back={{ label: 'Back to Calendar', onPress: noop }}
+            title="Baby music class"
+            titleMode="onScroll"
+            titleShown
+            scrolled
+            actions={[
+              <IconButton key="edit" variant="round" icon="edit" label="Edit event" />,
+              <ActionMenu
+                key="more"
+                label="More actions"
+                items={[
+                  { label: 'Duplicate', onPress: noop },
+                  { label: 'Share a view-only link', onPress: noop },
+                  { label: 'Delete event', onPress: noop, tone: 'danger' },
+                ]}
+              />,
+            ]}
+          />
+          <View className="bg-peach">
+            <TopBar
+              transparent
+              back={{ label: 'Back to recipes', onPress: noop }}
+              titleMode="onScroll"
+              actions={[<IconButton key="share" variant="round" icon="share" label="Share recipe" />, <IconButton key="settings" variant="round" icon="settings" label="Recipe settings" />]}
+            />
+          </View>
+          <TopBar back={{ label: 'Exit cooking mode', onPress: noop, icon: 'close' }} />
+        </View>
+      </Section>
+
+      <Section group="Overlays" title="ActionMenu (spec 050)">
+        <View className="items-end">
+          <ActionMenu label="More actions" items={[{ label: 'Duplicate', onPress: noop }, { label: 'Delete event', onPress: noop, tone: 'danger' }]} />
+        </View>
       </Section>
     </PushedScreen>
   );

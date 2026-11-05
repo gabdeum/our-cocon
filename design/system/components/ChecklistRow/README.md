@@ -11,6 +11,7 @@ Reference: `design/screens/OC-CalEvent.dc.html` (inline styles are the exact val
 | Row | min 52, full-width button `role="checkbox"`, gap 12, 1.5 px `line` divider |
 | Box | 26, radius 8: off 2 px `line-dashed` border; on olive with white ✓ |
 | Label | 16/700; done = strike-through + ink-muted |
+| Compact (spec 050 FR-006) | min 44, box 24: the "Bring" card on the compact event page |
 | Disabled | offline (spec 042): unchanged look and tick, not pressable, `aria-disabled` (as ListRow) |
 
 ## Rules

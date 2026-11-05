@@ -6,6 +6,7 @@ import { Logo } from './Icon';
 import { Tag } from './Tag';
 import { Text } from './Text';
 import { ToastHost } from './Toast';
+import { TopBarHeadingProvider, useTopBar, type TopBarConfig } from './TopBar';
 
 /**
  * The app's frame: cream ground, and on the web the mobile layout centred at max 720 wide
@@ -30,12 +31,26 @@ export function TabScreen({ children, className }: { children: ReactNode; classN
   );
 }
 
-/** Pushed screen without photo (Patterns.md): back link at the top, no tab bar. */
-export function PushedScreen({ children, className }: { children: ReactNode; className?: string }) {
+/**
+ * Pushed screen without photo (Patterns.md). With `topBar` the bar stays pinned above the scrolling
+ * content (spec 050); without one, the content starts 54 from the top.
+ */
+export function PushedScreen({ children, className, topBar }: { children: ReactNode; className?: string; topBar?: TopBarConfig }) {
+  const bar = useTopBar(topBar);
   return (
-    <ScrollView className="flex-1 bg-surface-page" contentContainerClassName={cn('gap-18 px-20 pb-28 pt-[54px]', className)}>
-      {children}
-    </ScrollView>
+    <View className="flex-1 bg-surface-page">
+      {bar.node}
+      <TopBarHeadingProvider value={bar.register}>
+        <ScrollView
+          onScroll={bar.onScroll}
+          scrollEventThrottle={16}
+          className="flex-1 bg-surface-page"
+          contentContainerClassName={cn('gap-18 px-20 pb-28', topBar ? 'pt-18' : 'pt-[54px]', className)}
+        >
+          {children}
+        </ScrollView>
+      </TopBarHeadingProvider>
+    </View>
   );
 }
 
@@ -56,12 +71,13 @@ export function FormScreen({ bar, children, scrollRef, scrollEnabled = true }: {
   );
 }
 
+const PHOTO = 240;
+
 export interface PhotoScreenProps {
   /** The photo, or a PhotoPlaceholder, filling the 240 header. */
   photo: ReactNode;
-  /** Round IconButtons on the photo: back on the left, actions on the right (8 apart). */
-  left?: ReactNode;
-  right?: ReactNode;
+  /** Over the photo, then pinned on the page background once the photo has scrolled away (spec 050). */
+  topBar: TopBarConfig;
   /** Above the content, e.g. a StatusBanner. */
   banner?: ReactNode;
   /** Stays put while the page scrolls, centred 108 from the top: the TimerPill (spec 011). */
@@ -72,28 +88,26 @@ export interface PhotoScreenProps {
 }
 
 /**
- * Pushed screen with photo header (Patterns.md): photo 240 edge to edge, buttons 52 from the top and
- * 16 from the sides, and the content sheet overlapping it by 30 with a top radius of 30. An optional
- * footer bar stays at the bottom (page background, top border, 20 sides, 12 top, 28 bottom).
+ * Pushed screen with photo header (Patterns.md): photo 240 edge to edge under the TopBar, and the
+ * content sheet overlapping it by 30 with a top radius of 30. An optional footer bar stays at the
+ * bottom (page background, top border, 20 sides, 12 top, 28 bottom).
  */
-export function PhotoScreen({ photo, left, right, banner, floating, footer, children }: PhotoScreenProps) {
-  const page = (
-    <ScrollView className="flex-1 bg-surface-page">
-      <View className="h-[240px] overflow-hidden">
-        {photo}
-        {left ? <View className="absolute left-16 top-[52px]">{left}</View> : null}
-        {right ? <View className="absolute right-16 top-[52px] flex-row gap-8">{right}</View> : null}
-      </View>
-      <View className="-mt-[30px] gap-18 rounded-t-[30px] bg-surface-page px-20 pb-[40px] pt-24">
-        {banner}
-        {children}
-      </View>
-    </ScrollView>
-  );
-  if (!floating && !footer) return page;
+export function PhotoScreen({ photo, topBar, banner, floating, footer, children }: PhotoScreenProps) {
+  const bar = useTopBar(topBar, PHOTO);
   return (
     <View className="flex-1">
-      {page}
+      <TopBarHeadingProvider value={bar.register}>
+        <ScrollView onScroll={bar.onScroll} scrollEventThrottle={16} className="flex-1 bg-surface-page">
+          <View className="h-[240px] overflow-hidden">{photo}</View>
+          <View className="-mt-[30px] gap-18 rounded-t-[30px] bg-surface-page px-20 pb-[40px] pt-24">
+            {banner}
+            {children}
+          </View>
+        </ScrollView>
+      </TopBarHeadingProvider>
+      <View pointerEvents="box-none" className="absolute left-0 right-0 top-0">
+        {bar.node}
+      </View>
       {floating ? (
         <View pointerEvents="box-none" className="absolute left-0 right-0 top-[108px] items-center px-16">
           {floating}

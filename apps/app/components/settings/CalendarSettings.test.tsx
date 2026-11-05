@@ -36,7 +36,7 @@ describe('Calendar settings (OC-CalSettings)', () => {
     const { onBack } = setup();
     expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual(['Calendar', 'For you', 'Times of day', 'Family']);
     expect(screen.getByText("How the family calendar looks for you, and the family's times of day.")).toBeTruthy();
-    fireEvent.click(screen.getByRole('link', { name: 'Menu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to Menu' }));
     expect(onBack).toHaveBeenCalledOnce();
   });
 

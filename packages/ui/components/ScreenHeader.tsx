@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
-import { cn, focusRing } from '../cn';
+import { View } from 'react-native';
 import { Button, Link } from './Button';
-import { Icon, Logo } from './Icon';
+import { Logo } from './Icon';
 import { Text } from './Text';
 
 export interface TabHeaderProps {
@@ -68,53 +67,12 @@ export function BrandHeader({ brand, avatars, date, greeting }: BrandHeaderProps
   );
 }
 
-export interface BackHeaderProps {
-  /** The parent's name: "Settings". */
-  backLabel: string;
-  onBack: () => void;
-  title: string;
-  lead?: string;
-  /** A summary right of the title, on its baseline: "1 running · 3 total" (Timers). The title is then 32. */
-  aside?: string;
-}
-
-/** ScreenHeader README › Back link on its own: "‹ Calendar" over a page with its own title (OC-CalEvent). */
-export function BackLink({ label, onPress }: { label: string; onPress: () => void }) {
+/** A pushed screen's lead, its first line of content under the TopBar (spec 050 FR-001a). */
+export function Lead({ children }: { children: ReactNode }) {
   return (
-    <Pressable role="link" onPress={onPress} className={cn('h-control-md flex-row items-center gap-4 self-start', focusRing)}>
-      <Icon name="back" size={22} color="olive" />
-      <Text size={16} weight="800" color="olive">
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-/** Pushed screen without a photo (ScreenHeader README › Back link). */
-export function BackHeader({ backLabel, onBack, title, lead, aside }: BackHeaderProps) {
-  return (
-    <View className={aside ? 'gap-8' : 'gap-[2px]'}>
-      <BackLink label={backLabel} onPress={onBack} />
-      {aside ? (
-        <View className="flex-row items-baseline justify-between gap-12">
-          <Text variant="displayXl" role="heading" aria-level={1}>
-            {title}
-          </Text>
-          <Text size={15} weight="700" color="ink-muted" className="shrink">
-            {aside}
-          </Text>
-        </View>
-      ) : (
-        <Text variant="displayLg" role="heading" aria-level={1}>
-          {title}
-        </Text>
-      )}
-      {lead ? (
-        <Text size={15} weight="600" color="ink-muted">
-          {lead}
-        </Text>
-      ) : null}
-    </View>
+    <Text size={15} weight="600" color="ink-muted">
+      {children}
+    </Text>
   );
 }
 

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { SLOT_KEYS, type CalendarView, type SlotKey, type TimeFormatSetting, type WeekStartSetting } from '@cocon/schemas/calendar';
 import type { MemberCalendarSettingsUpdate, Tracker } from '@cocon/schemas';
 import { calendarWordsEn, checkSlotTimes, moveSlotEdge, slotNeighbour, toMinutes, type SlotTimes } from '@cocon/calendar';
-import { BackHeader, BottomSheet, Button, Card, ListGroup, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, SheetFooter, StatusBanner, Text, TextField } from '@cocon/ui';
+import { BottomSheet, Button, Card, Lead, ListGroup, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, SheetFooter, StatusBanner, Text, TextField } from '@cocon/ui';
 import type { CalendarPrefs } from '../../lib/calendar-prefs';
 import { clock, zoneLabel } from '../../lib/clock';
 import { strings } from '../../strings/en';
@@ -104,8 +104,8 @@ export function CalendarSettings(p: CalendarSettingsProps) {
   };
 
   return (
-    <PushedScreen className="gap-18">
-      <BackHeader backLabel={s.back} onBack={p.onBack} title={s.title} lead={s.lead} />
+    <PushedScreen className="gap-18" topBar={{ back: { label: s.back, onPress: p.onBack }, title: s.title }}>
+      <Lead>{s.lead}</Lead>
       <OfflineBanner screen="settings" tracker={p.tracker} />
 
       <View role="region" aria-label={s.forYou} className="gap-8">

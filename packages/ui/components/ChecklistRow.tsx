@@ -15,11 +15,13 @@ export interface ChecklistRowProps {
   remove?: { label: string; onPress: () => void };
   /** The last row: no divider under it. */
   last?: boolean;
+  /** The compact event page (spec 050 FR-006): 44 rows, 24 box. */
+  compact?: boolean;
 }
 
-function Box({ done }: { done: boolean }) {
+function Box({ done, compact }: { done: boolean; compact?: boolean }) {
   return (
-    <View aria-hidden className={cn('h-[26px] w-[26px] flex-none items-center justify-center rounded-[8px]', done ? 'bg-olive' : 'border-2 border-line-dashed')}>
+    <View aria-hidden className={cn(compact ? 'h-[24px] w-[24px]' : 'h-[26px] w-[26px]', 'flex-none items-center justify-center rounded-[8px]', done ? 'bg-olive' : 'border-2 border-line-dashed')}>
       {done ? <Icon name="check" size={16} color="onOlive" /> : null}
     </View>
   );
@@ -29,8 +31,8 @@ function Box({ done }: { done: boolean }) {
  * ChecklistRow README: a checklist item with its box. Tickable (a full-width checkbox, spec 042),
  * or listed with a remove button in the add sheet (OC-CalAddMore).
  */
-export function ChecklistRow({ label, done, onToggle, disabled, remove, last = false }: ChecklistRowProps) {
-  const row = cn('min-h-[52px] w-full flex-row items-center gap-12', !last && 'border-b-[1.5px] border-line');
+export function ChecklistRow({ label, done, onToggle, disabled, remove, last = false, compact }: ChecklistRowProps) {
+  const row = cn(compact ? 'min-h-[44px]' : 'min-h-[52px]', 'w-full flex-row items-center gap-12', !last && 'border-b-[1.5px] border-line');
   const text = (
     <Text size={16} weight="700" color={done ? 'ink-muted' : 'ink'} strike={done} className="min-w-0 flex-1">
       {label}
@@ -46,14 +48,14 @@ export function ChecklistRow({ label, done, onToggle, disabled, remove, last = f
         onPress={onToggle}
         className={cn(row, !disabled && 'active:bg-surface-card-pressed', focusRing)}
       >
-        <Box done={done} />
+        <Box done={done} compact={compact} />
         {text}
       </Pressable>
     );
   }
   return (
     <View className={row}>
-      <Box done={done} />
+      <Box done={done} compact={compact} />
       {text}
       {remove ? <IconButton variant="card" icon="close" iconSize={18} label={remove.label} onPress={remove.onPress} /> : null}
     </View>

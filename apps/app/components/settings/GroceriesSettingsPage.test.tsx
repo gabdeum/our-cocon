@@ -67,7 +67,7 @@ const pressed = (scope: ReturnType<typeof within>, name: string) => scope.getByR
 describe('Menu › Groceries (OC-SettingsGroceries)', () => {
   it('US2: where you shop and round up, as the sheet says them, under the back link "Menu"', async () => {
     const { page } = await setup();
-    expect(page.getByRole('link', { name: 'Menu' })).toBeTruthy();
+    expect(page.getByRole('button', { name: 'Back to Menu' })).toBeTruthy();
     expect(page.getByRole('heading', { name: 'Groceries' })).toBeTruthy();
     expect(page.getByText('For the whole family. You can also change these from the Groceries tab.')).toBeTruthy();
     expect(page.getByRole('heading', { name: 'Where do you shop?' })).toBeTruthy();

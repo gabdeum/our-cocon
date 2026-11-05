@@ -3,10 +3,10 @@ import { View } from 'react-native';
 import { dateLabel, viewFor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import type { Tracker } from '@cocon/schemas';
-import { BackLink, BottomSheet, Button, ChecklistRow, DateGrid, Dialog, IconRow, Link, ListGroup, MemberBadge, PushedScreen, Tag, Text } from '@cocon/ui';
+import { ActionMenu, BottomSheet, ChecklistRow, DateGrid, Dialog, Icon, IconButton, IconRow, ListGroup, MemberStack, PushedScreen, Tag, Text, TopBarHeading } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import type { DeleteScope } from '../../lib/event-delete';
-import { addedLine, deleteBody, mapsUrl, memberBadges, reminderLines, repeatLine, responsibleLine, whenLines } from '../../lib/event-detail';
+import { addedLine, deleteBody, mapsUrl, memberBadges, reminderLines, repeatLine, responsibleLine, whenLine } from '../../lib/event-detail';
 import { dateGridMonth, shiftMonth } from '../../lib/event-form';
 import type { Member } from '../../lib/session';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
@@ -49,8 +49,9 @@ export interface EventDetailProps {
 }
 
 /**
- * OC-CalEvent (spec 042): everything about one date of an event, its live "Bring" checklist, and
- * Edit, Duplicate, Share and Delete (OC-CalEventDelete). Rows without a value are hidden (FR-001).
+ * OC-CalEvent (spec 042, compact since spec 050 FR-006): everything about one date of an event on one
+ * screen, its live "Bring" checklist, ✎ Edit in the top bar and ⋯ for Duplicate, Share and Delete
+ * (OC-CalEventDelete). Rows without a value are hidden (042 FR-001).
  */
 export function EventDetail(p: EventDetailProps) {
   const { event, occurrence: o, members } = p;
@@ -64,7 +65,7 @@ export function EventDetail(p: EventDetailProps) {
   const setTick = (id: string, done: boolean) => setPending((t) => ({ of: event.checklist, done: { ...(t.of === event.checklist ? t.done : {}), [id]: done } }));
 
   const { use24h } = useCalendarDisplay().prefs;
-  const when = whenLines(o, p.slotTimes, use24h);
+  const when = whenLine(o, p.slotTimes, use24h);
   const repeat = repeatLine(event);
   const responsible = responsibleLine(o.responsible_member_id, o.members, members);
   const reminder = reminderLines(o, members, p.slotTimes, use24h);
@@ -76,14 +77,28 @@ export function EventDetail(p: EventDetailProps) {
   const off = p.readOnly || busy;
 
   const rows = [
-    { icon: 'clock' as const, title: when.title, sub: when.sub },
-    repeat ? { icon: 'repeat' as const, title: repeat } : null,
+    badges.length
+      ? {
+          key: 'who',
+          leading: <MemberStack people={badges} filtered={false} />,
+          title: e.who(badges.map((b) => b.name)),
+          sub: responsible ?? undefined,
+          trailingIcon: responsible ? ('car' as const) : undefined,
+        }
+      : responsible
+        ? { key: 'who', icon: 'car' as const, title: responsible }
+        : null,
     o.location
-      ? { icon: 'pin' as const, title: o.location, action: { label: e.openInMaps, accessibilityLabel: e.openInMapsA11y(o.location), onPress: () => p.onOpenUrl(mapsUrl(o.location ?? '', p.os)) } }
+      ? { key: 'place', icon: 'pin' as const, title: o.location, action: { label: e.maps, accessibilityLabel: e.openInMapsA11y(o.location), onPress: () => p.onOpenUrl(mapsUrl(o.location ?? '', p.os)) } }
       : null,
-    responsible ? { icon: 'car' as const, title: responsible } : null,
-    reminder ? { icon: 'bell' as const, ...reminder } : null,
+    reminder ? { key: 'reminder', icon: 'bell' as const, ...reminder } : null,
   ].filter((r) => r !== null);
+  const ticked = checklist.filter((c) => ticks[c.id] ?? c.done).length;
+  const menu = [
+    { label: e.duplicate, onPress: () => setPicking(firstOfMonth(o.starts_on)) },
+    ...(shareable ? [{ label: e.share, onPress: p.onShare }] : []),
+    { label: e.delete, onPress: () => setDialog(true), tone: 'danger' as const },
+  ];
 
   const tick = async (id: string, done: boolean) => {
     setTick(id, done);
@@ -132,71 +147,77 @@ export function EventDetail(p: EventDetailProps) {
   const grid = picking ? dateGridMonth(picking, p.today, p.weekStartsOn) : null;
 
   return (
-    <PushedScreen className="gap-16">
-      <BackLink label={e.back} onPress={p.onBack} />
+    <PushedScreen
+      className="gap-16"
+      topBar={{
+        back: { label: e.back, onPress: p.onBack },
+        title: o.title,
+        titleMode: 'onScroll',
+        actions: [
+          <IconButton key="edit" variant="round" icon="edit" label={e.edit} disabled={off} onPress={p.onEdit} />,
+          <ActionMenu key="more" label={e.more} disabled={off} items={menu} />,
+        ],
+      }}
+    >
       <OfflineBanner screen="calendar" tracker={p.tracker} />
 
-      <View className="gap-10">
-        {o.category || surprise ? (
-          <View className="flex-row gap-8 self-start">
+      <View className="gap-4">
+        {o.category || surprise || repeat ? (
+          <View className="flex-row flex-wrap items-center gap-8">
             {o.category ? <Tag label={a.types[o.category]} tone="soft" size="md" /> : null}
             {/* Spec 043: only those in on it see the event itself, so they're the ones who get the tag. */}
             {surprise ? <Tag label={e.surprise} tone="sage" size="md" /> : null}
+            {repeat ? (
+              <View className="flex-row items-center gap-4">
+                <Icon name="repeat" size={14} color="inkMuted" />
+                <Text size={13} weight="800" color="ink-muted">
+                  {repeat}
+                </Text>
+              </View>
+            ) : null}
           </View>
         ) : null}
-        <Text size={30} weight="900" role="heading" aria-level={1}>
-          {o.title}
+        <TopBarHeading>
+          <Text variant="displayLg" role="heading" aria-level={1}>
+            {o.title}
+          </Text>
+        </TopBarHeading>
+        <Text size={16} weight="800">
+          {when.date}
+          <Text size={16} weight="700" color="ink-muted">
+            {` · ${when.time}`}
+          </Text>
         </Text>
-        {badges.length ? (
-          <View role="list" aria-label={a.who} className="flex-row flex-wrap gap-8">
-            {badges.map((b) => (
-              <MemberBadge key={b.key} name={b.name} initial={b.initial} color={b.color} />
-            ))}
-          </View>
-        ) : null}
       </View>
 
-      <ListGroup inset>
-        {rows.map((r, i) => (
-          <IconRow key={r.icon} {...r} last={i === rows.length - 1} />
-        ))}
-      </ListGroup>
+      {rows.length ? (
+        <ListGroup inset>
+          {rows.map(({ key, ...r }, i) => (
+            <IconRow key={key} compact {...r} last={i === rows.length - 1} />
+          ))}
+        </ListGroup>
+      ) : null}
 
       {checklist.length ? (
-        <View className="gap-8">
-          <Text size={18} weight="900" role="heading" aria-level={2}>
-            {e.bring}
-          </Text>
-          <ListGroup inset>
-            {checklist.map((c, i) => {
-              const done = ticks[c.id] ?? c.done;
-              return <ChecklistRow key={c.id} label={c.label} done={done} onToggle={() => void tick(c.id, !done)} disabled={off} last={i === checklist.length - 1} />;
-            })}
-          </ListGroup>
-          <Text size={14} weight="600" color="ink-muted">
-            {e.bringHint}
-          </Text>
+        <View role="region" aria-label={e.bring} className="rounded-xl bg-surface-card px-14 pb-4 pt-10">
+          <View className="flex-row items-baseline justify-between">
+            <Text size={16} weight="900" role="heading" aria-level={2}>
+              {e.bring}
+            </Text>
+            <Text size={13} weight="700" color="ink-muted">
+              {e.bringCount(ticked, checklist.length)}
+            </Text>
+          </View>
+          {checklist.map((c, i) => {
+            const done = ticks[c.id] ?? c.done;
+            return <ChecklistRow key={c.id} compact label={c.label} done={done} onToggle={() => void tick(c.id, !done)} disabled={off} last={i === checklist.length - 1} />;
+          })}
         </View>
       ) : null}
 
-      <Text size={14} weight="700" color="ink-muted">
-        {addedLine(event, members, p.now)}
+      <Text size={13} weight="700" color="ink-muted">
+        {checklist.length ? `${addedLine(event, members, p.now)} · ${e.anyoneCanTick}` : addedLine(event, members, p.now)}
       </Text>
-
-      <View className="gap-10">
-        <View className="flex-row gap-10">
-          <View className="flex-1">
-            <Button label={e.edit} variant="olive" size="dialog" block disabled={off} onPress={p.onEdit} />
-          </View>
-          <View className="flex-1">
-            <Button label={e.duplicate} variant="soft" size="dialog" block disabled={off} onPress={() => setPicking(firstOfMonth(o.starts_on))} />
-          </View>
-        </View>
-        {shareable ? <Button label={e.share} variant="soft" size="dialog" block disabled={off} onPress={p.onShare} /> : null}
-        <View className="items-center">
-          <Link label={e.delete} tone="danger" size={16} disabled={off} onPress={() => setDialog(true)} />
-        </View>
-      </View>
 
       {grid && picking ? (
         <BottomSheet visible onClose={() => setPicking(null)} title={a.pickDateTitle} closeLabel={a.close}>

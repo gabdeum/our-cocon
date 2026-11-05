@@ -25,7 +25,7 @@ const press = async (role: 'switch' | 'button', name: string) => {
 describe('Recipes settings (OC-SettingsRecipes)', () => {
   it('reads like the screen: back to the Menu, title, lead, and the Cooking defaults card', () => {
     const { onBack } = setup();
-    fireEvent.click(screen.getByRole('link', { name: 'Menu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to Menu' }));
     expect(onBack).toHaveBeenCalled();
     expect(screen.getByRole('heading', { name: 'Recipes' })).toBeTruthy();
     expect(screen.getByText('Used for every recipe, for the whole family. Each recipe can change them in its own settings.')).toBeTruthy();

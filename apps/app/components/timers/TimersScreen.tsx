@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { AppState, View } from 'react-native';
-import { BackHeader, PushedScreen, Text, TimePresets, TimerCard } from '@cocon/ui';
+import { PushedScreen, Text, TimePresets, TimerCard } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useTimers, useTimerStore } from '../../lib/timer-store';
@@ -89,8 +89,10 @@ export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep, focuse
   );
 
   return (
-    <PushedScreen className="gap-12">
-      <BackHeader backLabel={copy.back} onBack={onBack} title={copy.title} aside={copy.summary(running, timers.length)} />
+    <PushedScreen className="gap-12" topBar={{ back: { label: copy.back, onPress: onBack }, title: copy.title }}>
+      <Text size={15} weight="700" color="ink-muted">
+        {copy.summary(running, timers.length)}
+      </Text>
       <View className="gap-12 pt-6">
         {newestFirst.map(card)}
         {timers.length === 0 ? (

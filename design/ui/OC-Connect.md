@@ -3,7 +3,7 @@
 Source `screens/OC-Connect.dc.html` · Route `/settings/ai` · Specs 025, 024, 044
 
 ## Layout
-1. Back link "Menu".
+1. TopBar (spec 050): back "Back to Menu", title "AI assistants" (`titleMode="always"`); the lead is the first line of content.
 2. Title "AI assistants"; lead "Let your AI save recipes, fill the grocery list and add events for you. Each person connects their own." (spec 044; the canvas still shows the earlier lead)
 3. One row per assistant: initial tile, name, status ("Connected · used {timeAgo}" in olive-deep, or "Not connected"), action "Manage" (muted link) or olive sm "Connect".
 4. "What AI can do": caption "For the AI assistants you connect. Everyone in your family chooses for their own.", then a SettingRow with a switch per permission: "Create & edit recipes", "Change the grocery list", "Add & change events" (spec 044, not drawn: a row like the others), "Delete recipes" (on = allowed). One tap changes it (changed 2026-10-26 from the drawn "Allowed" values, which opened a choice). Settings are per person (apply to this member's assistants only).

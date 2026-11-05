@@ -7,7 +7,7 @@ The cooking-mode frame (Patterns.md › Cooking mode, OC-Cook): a fixed header, 
 | Part | Spec |
 | --- | --- |
 | Header | padding 50 20 12, gap 12, `surface-page`, 1.5 px `line` bottom border |
-| Exit | soft pill 44 tall, padding 0 14 0 8, gap 4, close icon 20, "Exit" 15/800 |
+| Exit | IconButton `--round` (48, `shadow-button`), close icon 20, label "Exit cooking mode" (TopBar README, spec 050) |
 | Right | the TimerPill (48 tall) while timers run, then a soft IconButton 44 with the settings icon: "Cooking options" |
 | Progress | Progress `--cook` under the top row |
 | Body | scrolls, padding 0 20, `scroll-snap-type: y mandatory` (iPhone: `snapToOffsets` from `snapPoints`: step tops, and the end of a step taller than the screen) |

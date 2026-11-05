@@ -270,24 +270,61 @@ function Trailing({ trailing }: { trailing: ListRowTrailing }) {
 
 export interface IconRowProps {
   /** Olive, 22: clock, repeat, pin, car, bell on the event page. */
-  icon: IconName;
-  /** 16/800: "Saturday, Oct 31". */
+  icon?: IconName;
+  /** In the icon's place: the member dots on the compact event page (spec 050). */
+  leading?: ReactNode;
+  /** 16/800: "Saturday, Oct 31"; 15/800 when compact. */
   title: string;
-  /** 14/700 muted: "Morning · about 09:00–12:00". */
+  /** 14/700 muted: "Morning · about 09:00–12:00"; compact: on the title's line after " · ". */
   sub?: string;
-  /** A link at the end: "Open in Maps". */
+  /** A link at the end: "Open in Maps"; compact: a soft 36 pill ("Maps"). */
   action?: { label: string; accessibilityLabel?: string; onPress: () => void };
+  /** Olive, 22, at the end: the car on the who row (spec 050). */
+  trailingIcon?: IconName;
+  /** Spec 050 FR-006: 52 tall, one line. */
+  compact?: boolean;
   last?: boolean;
 }
 
 /**
  * ListRow README › Icon row (spec 042, OC-CalEvent): a fact with an olive icon, inside a white
  * `ListGroup inset` card. Min 56 tall, 60 with a sub-line or a link. Not pressable; its link is.
+ * Compact (spec 050 FR-006): 52 tall, the sub-line on the title's line, the link a soft "Maps" pill.
  */
-export function IconRow({ icon, title, sub, action, last }: IconRowProps) {
+export function IconRow({ icon, leading, title, sub, action, trailingIcon, compact, last }: IconRowProps) {
+  const start = leading ?? (icon ? <Icon name={icon} size={22} color="olive" /> : null);
+  const end = trailingIcon ? <Icon name={trailingIcon} size={22} color="olive" /> : null;
+  if (compact) {
+    return (
+      <View className={cn('min-h-[52px] flex-row items-center gap-12 py-6', !last && 'border-b-[1.5px] border-line')}>
+        {start}
+        <Text size={15} weight="800" numberOfLines={action ? 1 : undefined} className="min-w-0 flex-1">
+          {title}
+          {sub ? (
+            <Text size={15} weight="700" color="ink-muted">
+              {` · ${sub}`}
+            </Text>
+          ) : null}
+        </Text>
+        {action ? (
+          <Pressable
+            role="link"
+            aria-label={action.accessibilityLabel ?? action.label}
+            onPress={action.onPress}
+            className={cn('h-[36px] flex-none items-center justify-center rounded-pill bg-surface-soft px-12 active:bg-surface-soft-pressed', focusRing)}
+          >
+            <Text size={14} weight="800">
+              {action.label}
+            </Text>
+          </Pressable>
+        ) : null}
+        {end}
+      </View>
+    );
+  }
   return (
     <View className={cn('flex-row items-center gap-12 py-8', sub || action ? 'min-h-[60px]' : 'min-h-[56px]', !last && 'border-b-[1.5px] border-line')}>
-      <Icon name={icon} size={22} color="olive" />
+      {start}
       <View className="min-w-0 flex-1">
         <Text size={16} weight="800">
           {title}
@@ -299,6 +336,7 @@ export function IconRow({ icon, title, sub, action, last }: IconRowProps) {
         ) : null}
       </View>
       {action ? <Link label={action.label} accessibilityLabel={action.accessibilityLabel} onPress={action.onPress} /> : null}
+      {end}
     </View>
   );
 }

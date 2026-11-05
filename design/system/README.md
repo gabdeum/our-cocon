@@ -63,7 +63,7 @@ Nunito is the only family. Weights: 600 for body, 700–800 for labels, 900 for 
 - Screen gutter 20. Sections 18 apart. Card padding 16. Rows 10 × 14 inside list groups.
 - Radii: 6 inline highlight · 11 segmented item · 14 small square · 16 input/callout · 22 card · 28 hero/timer · 32 sheet top · 999 pills and buttons.
 - Borders: 2 px on inputs (`line-strong`, `olive` when focused), 1.5 px row dividers (`line`), 2 px dashed for "Add …" buttons (`line-dashed`).
-- Shadows only on things that float: `shadow-nav` (tab bar), `shadow-float` (timer pill), `shadow-segment` (selected segment). Cards are flat.
+- Shadows only on things that float: `shadow-nav` (tab bar), `shadow-float` (timer pill), `shadow-button` (round top-bar buttons), `shadow-bar` (the top bar once content scrolls under it), `shadow-segment` (selected segment). Cards are flat.
 - Touch targets are at least 44 × 44 px, always.
 
 ## Iconography

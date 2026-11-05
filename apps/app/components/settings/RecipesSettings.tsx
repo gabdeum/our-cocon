@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { BackHeader, Card, PushedScreen, SegmentedControl, SettingRow, StatusBanner, Text } from '@cocon/ui';
+import { Card, Lead, PushedScreen, SegmentedControl, SettingRow, StatusBanner, Text } from '@cocon/ui';
 import type { FamilySettings, FamilySettingsUpdate, Tracker, UnitSystem } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -27,8 +27,8 @@ export function RecipesSettings({ settings, onChange, onBack, tracker, readOnly 
     setFailed((await onChange(update)) === 'failed');
   };
   return (
-    <PushedScreen className="gap-18">
-      <BackHeader backLabel={s.back} onBack={onBack} title={s.title} lead={s.lead} />
+    <PushedScreen className="gap-18" topBar={{ back: { label: s.back, onPress: onBack }, title: s.title }}>
+      <Lead>{s.lead}</Lead>
       <OfflineBanner screen="settings" tracker={tracker} />
       <View role="region" aria-label={s.cookingDefaults} className="gap-8">
         <Text size={18} weight="900" role="heading" aria-level={2}>

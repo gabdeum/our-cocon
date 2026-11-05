@@ -4,7 +4,7 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Spec 012
 
 ## Layout
 1. Fixed header:
-   - Soft pill "Exit" with a close icon (left).
+   - Round ✕ (IconButton `--round`, label "Exit cooking mode", spec 050) (left).
    - Right: TimerPill while timers run, then a soft round settings button "Cooking options".
    - Cooking Progress bar (one segment per step, tappable).
    - "Step {n} of {m}" (left, olive 14/900 uppercase) and "Serves {n} · swipe up for next" (right, muted).
@@ -27,8 +27,8 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Spec 012
 ## States
 | State | Copy |
 | --- | --- |
-| Loading | Exit, then skeleton blocks (screen reader: "Loading recipe") |
-| Couldn't load | Exit, "We couldn't open this recipe." · "It may have been deleted, or you're offline." · "Try again" (as OC-Recipe) |
+| Loading | TopBar with the round ✕ "Exit cooking mode", then skeleton blocks (screen reader: "Loading recipe") |
+| Couldn't load | TopBar with the round ✕, then "We couldn't open this recipe." · "It may have been deleted, or you're offline." · "Try again" (as OC-Recipe) |
 | No steps | Closes straight back to the recipe |
 | Screen can't stay on (a browser without Wake Lock) | The switch's hint reads "This browser may let the screen lock." |
 | "Keep screen on" off (spec 027) | The switch starts off |

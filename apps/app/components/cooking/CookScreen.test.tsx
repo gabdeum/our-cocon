@@ -104,8 +104,9 @@ const press = (name: string | RegExp) => fireEvent.click(screen.getByRole('butto
 describe('Cooking mode (spec 012)', () => {
   it('opens at step 1 with the header, every step and "Bon appétit!", and sends cooking_started', async () => {
     const { tracker } = await setup();
-    // The header's Exit, and Back reads Exit on the first step.
-    expect(screen.getAllByRole('button', { name: 'Exit' })).toHaveLength(2);
+    // The header's round ✕ (spec 050), and Back reads Exit on the first step.
+    expect(screen.getByRole('button', { name: 'Exit cooking mode' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Exit' })).toHaveLength(1);
     expect(screen.getByRole('button', { name: 'Cooking options' })).toBeTruthy();
     expect(screen.getByText(`Step 1 of ${STEPS}`)).toBeTruthy();
     expect(screen.getByText('Serves 6 · swipe up for next')).toBeTruthy();
@@ -242,15 +243,14 @@ describe('Cooking mode (spec 012)', () => {
 
   it('Back on the first step reads Exit and leaves cooking mode, like Exit', async () => {
     const { tracker, onClose } = await setup();
-    const back = screen.getAllByRole('button', { name: 'Exit' })[1] as HTMLElement;
-    fireEvent.click(back);
+    press('Exit');
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(tracker.track).toHaveBeenCalledWith('cooking_exited', { at_step: 1, step_count: STEPS });
     cleanup();
     await setup();
     press('Next step');
     expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy();
-    expect(screen.getAllByRole('button', { name: 'Exit' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Exit' })).toBeNull();
   });
 
   it('the last step reads "Finish": it closes with no prompt and sends cooking_finished', async () => {
@@ -266,7 +266,7 @@ describe('Cooking mode (spec 012)', () => {
   it('Exit closes and sends cooking_exited with the step it was on', async () => {
     const { tracker, onClose } = await setup();
     press(/^Go to step 3/);
-    press('Exit');
+    press('Exit cooking mode');
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(tracker.track).toHaveBeenCalledWith('cooking_exited', { at_step: 3, step_count: STEPS });
   });
@@ -321,7 +321,7 @@ describe('Cooking mode (spec 012)', () => {
     expect(screen.getByText("We couldn't open this recipe.")).toBeTruthy();
     press('Try again');
     expect(onRetry).toHaveBeenCalled();
-    press('Exit');
+    press('Exit cooking mode');
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -332,7 +332,7 @@ describe('Cooking mode (spec 012)', () => {
     expect(first.tracker.track).toHaveBeenCalledWith('cooking_exited', { at_step: 2, step_count: STEPS });
 
     const second = await setup();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Exit' })[0] as HTMLElement);
+    press('Exit cooking mode');
     second.unmount();
     expect(second.tracker.track.mock.calls.filter(([e]) => e === 'cooking_exited')).toHaveLength(1);
   });

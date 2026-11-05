@@ -87,9 +87,10 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 46 | 047 Timer-done alerts when the app is closed | 010, 011, 046 | OC-NotifLockDone |
 | 47 | 048 Timers on the Lock Screen and in the Dynamic Island | 010, 011, 046, 047 | OC-NotifLockTimer, OC-NotifIsland, OC-NotifLockDone |
 | 48 | 049 Event reminders on the phone | 033, 035, 041, 043, 046 | OC-NotifLockReminders, OC-SettingsNotif |
+| 49 | 050 One top bar for every pushed screen | 002, and every screen it lists | OC-Recipe, OC-RecipeSettings, OC-Timers, OC-Cook, OC-CalEvent, OC-CalEventDelete, OC-CalSurprise, OC-CalSettings, OC-Connect, OC-SettingsFamily, OC-SettingsRecipes, OC-SettingsGroceries, OC-SettingsNotif |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
-Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order.
+Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order, then the top bar (050) across every pushed screen.
 
 032 is a living list, not built in one go: each task names the spec that does it (its plan picks it up), and every build adds, edits or removes its rows.
 
@@ -164,3 +165,4 @@ These have no drawn screen; their UI spec is the source of truth: sign-in, set u
 
 ## Changelog
 - 2026-11-02: Notifications: build order rows 45–48 (specs 046–049, after 045), decisions 35 (reminder times) and 36 (reminder recipients); decision 19 points to them.
+- 2026-11-04: Build order row 49: spec 050, one top bar for every pushed screen (and the compact event page).

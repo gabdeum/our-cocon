@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { BackHeader, BottomSheet, Button, Callout, Dialog, Link, ListGroup, ListRow, PushedScreen, RecipeItemSkeleton, Text } from '@cocon/ui';
+import { BottomSheet, Button, Callout, Dialog, Link, ListGroup, ListRow, PushedScreen, RecipeItemSkeleton, Text } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useToast } from '../../lib/toast';
@@ -67,7 +67,6 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
     }
   };
 
-  const header = <BackHeader backLabel={d.back} onBack={onBack} title={d.title} />;
   const off = readOnly || busy;
 
   let body;
@@ -114,8 +113,7 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
   }
 
   return (
-    <PushedScreen className="gap-18">
-      {header}
+    <PushedScreen className="gap-18" topBar={{ back: { label: d.back, onPress: onBack }, title: d.title }}>
       <OfflineBanner screen="settings" tracker={tracker} />
       {body}
       <BottomSheet visible={selected !== null} onClose={() => setSelected(null)} title={selected?.name ?? ''} closeLabel={strings.settings.family.close}>
