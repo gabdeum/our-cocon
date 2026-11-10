@@ -4,7 +4,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
-import { zonedInstant } from '@cocon/calendar';
+import { addDays, todayIn, zonedInstant } from '@cocon/calendar';
 import { createNotifier } from '@cocon/notify';
 import { createTracker, type Database, type Json } from '@cocon/schemas';
 import { clientOptions, localSupabase, signInPerson, type Client } from '../test/local';
@@ -16,6 +16,15 @@ if (!local) console.warn('reminders.integration.test.ts skipped: local Supabase 
 
 const TZ = 'America/New_York';
 const at = (date: string, time: string) => zonedInstant(date, time, TZ);
+// The stories happen from the day after tomorrow: an event gets no reminder when it was added after
+// its reminder time, so fixed dates stopped sending once the real date passed them.
+const day = (n: number) => addDays(todayIn(TZ), 2 + n);
+const SWIM = day(0);
+const BIRTHDAY_EVE = day(1);
+const BIRTHDAY = day(2);
+const DOCTOR = day(4);
+const GONE = day(5);
+const weekdayOf = (date: string) => new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
 
 describe.skipIf(!local)('event reminders against local Supabase', () => {
   const { url, anonKey, serviceKey } = local ?? { url: '', anonKey: '', serviceKey: '' };
@@ -74,13 +83,13 @@ describe.skipIf(!local)('event reminders against local Supabase', () => {
     await register(eva, 'evamine', { reminders_scope: 'mine' });
     await register(eva, 'evaall', { reminders_scope: 'all', clock_24h: false });
 
-    // Story 1: Baby swim class, Sunday Nov 8 2026 14:30, for James; Gabriel takes him.
+    // Story 1: Baby swim class at 14:30, for James; Gabriel takes him.
     ids.swim = await save(
-      { title: 'Baby swim class', location: 'Aquatic Center', starts_on: '2026-11-08', ends_on: '2026-11-08', time_type: 'custom', start_time: '14:30', end_time: '15:15', reminder: 'hour_before', responsible_member_id: ids.gabriel },
+      { title: 'Baby swim class', location: 'Aquatic Center', starts_on: SWIM, ends_on: SWIM, time_type: 'custom', start_time: '14:30', end_time: '15:15', reminder: 'hour_before', responsible_member_id: ids.gabriel },
       [ids.james],
     );
-    // Story 2: Eva's birthday, all day Tuesday Nov 10, everyone.
-    ids.birthday = await save({ title: 'Eva’s birthday', starts_on: '2026-11-10', ends_on: '2026-11-10', time_type: 'all_day', reminder: 'day_before' }, ['everyone']);
+    // Story 2: Eva's birthday, all day, everyone.
+    ids.birthday = await save({ title: 'Eva’s birthday', starts_on: BIRTHDAY, ends_on: BIRTHDAY, time_type: 'all_day', reminder: 'day_before' }, ['everyone']);
   }, 30_000);
 
   afterAll(async () => {
@@ -94,10 +103,10 @@ describe.skipIf(!local)('event reminders against local Supabase', () => {
   });
 
   it('Story 1: Gabriel gets "Baby swim class in 1 hour" at 13:30; Eva only on her "All family events" phone', async () => {
-    now = at('2026-11-08', '13:30');
+    now = at(SWIM, '13:30');
     await job().run();
     expect(sentTo('gabriel')).toEqual([
-      expect.objectContaining({ title: 'Baby swim class in 1 hour', body: '14:30 · Aquatic Center · Gabriel takes James', data: expect.objectContaining({ route: `/calendar/${ids.swim}?date=2026-11-08` }) }),
+      expect.objectContaining({ title: 'Baby swim class in 1 hour', body: '14:30 · Aquatic Center · Gabriel takes James', data: expect.objectContaining({ route: `/calendar/${ids.swim}?date=${SWIM}` }) }),
     ]);
     expect(sentTo('evamine')).toEqual([]);
     expect(sentTo('evaall').map((m) => m.body)).toEqual(['2:30 PM · Aquatic Center · Gabriel takes James']);
@@ -105,7 +114,7 @@ describe.skipIf(!local)('event reminders against local Supabase', () => {
   });
 
   it('SC-003: never twice, even after the worker restarts', async () => {
-    now = at('2026-11-08', '13:31');
+    now = at(SWIM, '13:31');
     await job().run();
     await job().run();
     expect(sent).toEqual([]);
@@ -114,33 +123,33 @@ describe.skipIf(!local)('event reminders against local Supabase', () => {
   });
 
   it('Story 2: the evening before, to everyone on it', async () => {
-    now = at('2026-11-09', '18:00');
+    now = at(BIRTHDAY_EVE, '18:00');
     await job().run();
     expect(sent.map((m) => [m.to, m.title, m.body]).sort()).toEqual(
       [
-        [token('evaall'), 'Tomorrow: Eva’s birthday', 'All day · Tuesday'],
-        [token('evamine'), 'Tomorrow: Eva’s birthday', 'All day · Tuesday'],
-        [token('gabriel'), 'Tomorrow: Eva’s birthday', 'All day · Tuesday'],
+        [token('evaall'), 'Tomorrow: Eva’s birthday', `All day · ${weekdayOf(BIRTHDAY)}`],
+        [token('evamine'), 'Tomorrow: Eva’s birthday', `All day · ${weekdayOf(BIRTHDAY)}`],
+        [token('gabriel'), 'Tomorrow: Eva’s birthday', `All day · ${weekdayOf(BIRTHDAY)}`],
       ].sort(),
     );
   });
 
   it('Story 3: a moved event reminds at its new time; a deleted one sends nothing', async () => {
-    const fields = { title: 'Pediatrician', location: 'Dr. Lee', starts_on: '2026-11-12', ends_on: '2026-11-12', time_type: 'custom', start_time: '10:00', end_time: '10:30', reminder: 'hour_before' };
+    const fields = { title: 'Pediatrician', location: 'Dr. Lee', starts_on: DOCTOR, ends_on: DOCTOR, time_type: 'custom', start_time: '10:00', end_time: '10:30', reminder: 'hour_before' };
     const id = await save(fields, [gabrielId()]);
     await save({ ...fields, start_time: '11:00', end_time: '11:30' }, [gabrielId()], id);
-    now = at('2026-11-12', '09:00');
+    now = at(DOCTOR, '09:00');
     await job().run();
     expect(sentTo('gabriel')).toEqual([]);
-    now = at('2026-11-12', '10:00');
+    now = at(DOCTOR, '10:00');
     await job().run();
     expect(sentTo('gabriel').map((m) => m.title)).toEqual(['Pediatrician in 1 hour']);
 
-    const gone = await save({ ...fields, starts_on: '2026-11-13', ends_on: '2026-11-13' }, [gabrielId()]);
+    const gone = await save({ ...fields, starts_on: GONE, ends_on: GONE }, [gabrielId()]);
     const deleted = await admin.from('events').update({ deleted_at: new Date().toISOString() }).eq('id', gone);
     if (deleted.error) throw deleted.error;
     sent = [];
-    now = at('2026-11-13', '09:00');
+    now = at(GONE, '09:00');
     await job().run();
     expect(sent).toEqual([]);
   });
