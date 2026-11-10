@@ -56,14 +56,14 @@ function SaveReminder() {
   );
 }
 
-function setup(phone = fakePhone(), opts: { userId?: string; now?: () => number; storage?: ReturnType<typeof memoryStorage> } = {}) {
+function setup(phone = fakePhone(), opts: { userId?: string; now?: () => number; storage?: ReturnType<typeof memoryStorage>; afterSheets?: () => Promise<void> } = {}) {
   const tracker = fakeTracker();
   const rpc = vi.fn(async () => ({ data: null, error: null }));
   const navigate = vi.fn();
   const showBanner = vi.fn();
   const storage = opts.storage ?? memoryStorage();
   const tree = (userId: string) => (
-    <NotificationsProvider native={phone.native} storage={storage} client={{ rpc } as never} tracker={tracker} userId={userId} navigate={navigate} showBanner={showBanner} now={opts.now}>
+    <NotificationsProvider native={phone.native} storage={storage} client={{ rpc } as never} tracker={tracker} userId={userId} navigate={navigate} showBanner={showBanner} now={opts.now} afterSheets={opts.afterSheets ?? (async () => undefined)}>
       <Timers />
     </NotificationsProvider>
   );
@@ -143,6 +143,17 @@ describe('the ask (US1, FR-002)', () => {
     expect(screen.getByRole('heading', { name: 'Get a heads-up before events' })).toBeTruthy();
     expect(screen.getByText('Turn on notifications so reminders reach your phone, even when Our Cocon is closed.')).toBeTruthy();
     expect(tracker.track).toHaveBeenCalledWith('notifications_ask_shown', { trigger: 'reminder' });
+  });
+
+  it('waits for the sheet it follows to be gone (iOS would leave it invisible, taking every tap)', async () => {
+    let gone: () => void = () => undefined;
+    setup(fakePhone(), { afterSheets: () => new Promise<void>((resolve) => (gone = resolve)) });
+    await flush();
+    fireEvent.click(screen.getByText('Save event'));
+    await flush();
+    expect(sheet()).toBeNull();
+    await act(async () => gone());
+    expect(screen.getByRole('heading', { name: 'Get a heads-up before events' })).toBeTruthy();
   });
 
   it('never once the iPhone said no, or yes', async () => {

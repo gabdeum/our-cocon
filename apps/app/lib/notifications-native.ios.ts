@@ -42,20 +42,57 @@ Notifications.setNotificationHandler({
 // alert keeps its id after "+1 min" (spec 047), so its delivery time tells two taps apart.
 const handled = new Set<string>();
 
+// Every token request registers with Apple again, and iOS reports the token again (expo-notifications
+// sends it as a token event): reacting to the same token re-registered in a loop, thousands of
+// requests a second. Only a token unlike the last one counts as a change. While this app is asking for
+// it, a report may be that answer arriving early: it's kept and compared with the answer afterwards, so
+// a real change during the request still re-registers.
+let lastDeviceToken: string | null = null;
+let asking = 0;
+let reportedWhileAsking: string | null = null;
+const tokenListeners = new Set<() => void>();
+let tokenSub: { remove: () => void } | null = null;
+
+function tokenReported(token: string) {
+  if (asking > 0) {
+    reportedWhileAsking = token;
+    return;
+  }
+  if (token === lastDeviceToken) return;
+  lastDeviceToken = token;
+  for (const listener of tokenListeners) listener();
+}
+
 export const nativeNotifications: NativeNotifications | null = {
   permission: async () => statusOf(await Notifications.getPermissionsAsync()),
   request: async () => statusOf(await Notifications.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } })),
   async pushToken() {
     if (!Device.isDevice || !projectId) return null;
+    asking += 1;
     try {
-      return (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+      const devicePushToken = await Notifications.getDevicePushTokenAsync();
+      lastDeviceToken = String(devicePushToken.data);
+      return (await Notifications.getExpoPushTokenAsync({ projectId, devicePushToken })).data;
     } catch {
       return null;
+    } finally {
+      asking -= 1;
+      const reported = reportedWhileAsking;
+      if (asking === 0 && reported !== null) {
+        reportedWhileAsking = null;
+        tokenReported(reported);
+      }
     }
   },
   onTokenChange(listener) {
-    const sub = Notifications.addPushTokenListener(() => listener());
-    return () => sub.remove();
+    tokenListeners.add(listener);
+    tokenSub ??= Notifications.addPushTokenListener(({ data }) => tokenReported(String(data)));
+    return () => {
+      tokenListeners.delete(listener);
+      if (tokenListeners.size > 0) return;
+      tokenSub?.remove();
+      tokenSub = null;
+    };
   },
   onForeground(listener) {
     foreground.add(listener);

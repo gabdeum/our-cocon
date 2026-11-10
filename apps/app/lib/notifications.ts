@@ -19,6 +19,7 @@ export interface NativeNotifications {
   request(): Promise<PermissionStatus>;
   /** This install's Expo push token, or null when there's none (a simulator, no network). */
   pushToken(): Promise<string | null>;
+  /** Only a new token: asking for it (`pushToken`) reports the same one again, which must not re-register. */
   onTokenChange(listener: () => void): () => void;
   /** A notification that arrived while the app is open: no system banner is shown (FR-006). */
   onForeground(listener: (n: ShownNotification) => void): () => void;
