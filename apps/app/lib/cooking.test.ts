@@ -1,7 +1,7 @@
 // Spec 012: cooking mode's scroll rules (US1, FR-004) and where it opens (032-later L19).
 import { describe, expect, it } from 'vitest';
-import { quiche } from '@cocon/schemas/quiche.fixture';
-import { cookingMinutes, currentStep, isTall, scrollTarget, snapPoints, startIndex, stepStillThere } from './cooking';
+import { quiche, quicheIds } from '@cocon/schemas/quiche.fixture';
+import { cookingMinutes, currentStep, isTall, scrollTarget, snapPoints, startIndex, stepEditTarget, stepStillThere } from './cooking';
 
 describe('currentStep (US1 › 2)', () => {
   const tops = [0, 520, 1040, 1560];
@@ -82,5 +82,17 @@ describe('stepStillThere (L19)', () => {
     expect(stepStillThere({ ...recipe, deleted_at: '2026-10-20T10:00:00Z' }, (quiche.steps[0]?.id ?? ''))).toBe(false);
     expect(stepStillThere(null, (quiche.steps[0]?.id ?? ''))).toBe(false);
     expect(stepStillThere(undefined, (quiche.steps[0]?.id ?? ''))).toBe(false);
+  });
+});
+
+describe('stepEditTarget (Edit this step)', () => {
+  const none = { version: null, options: [] };
+  const dough = { version: null, options: [quicheIds.dough] };
+  it("opens the recipe's own step", () => {
+    expect(stepEditTarget(quiche, none, quicheIds.preheat)).toEqual({ step: quicheIds.preheat });
+  });
+  it('opens the variant that adds or changes the step, while it is chosen', () => {
+    expect(stepEditTarget(quiche, dough, `${quicheIds.dough}:1`)).toEqual({ variant: quicheIds.dough });
+    expect(stepEditTarget(quiche, dough, quicheIds.preheat)).toEqual({ variant: quicheIds.dough });
   });
 });

@@ -14,6 +14,7 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Spec 012
 4. Fixed footer: soft "Back" (⅓) and olive "Next step" (⅔). The buttons that leave cooking mode are ink: on the first step Back reads "Exit" with a close icon; on the last step Next reads "Finish" with a check icon.
 5. "Cooking options" sheet (BottomSheet, title "Cooking options"):
    - Switch "Screen stays on", hint "Your screen won't lock while you cook" / "Your screen locks as usual". It starts from the "Keep screen on" setting (spec 027) and lasts for this visit.
+   - "Edit step {n}" › (ListRow with a chevron, the current step): closes the sheet and opens the recipe form (full-screen) on Steps with that step open. A step a chosen variant adds or changes opens that variant in Variants instead, since it decides what the step says. Saved or cancelled, it comes back to cooking mode at the same step.
    - Then the recipe page's "…" options, as in OC-Recipe: "I'm using a kitchen scale", "Scale by an ingredient ›", "Unit converter ›", "Units" Metric · Imperial. They change the steps at once and are remembered for the recipe page too.
 
 ## Behaviour
@@ -43,3 +44,4 @@ Segments: "Go to step {n}: {name}" ("Go to step {n}" for a step with no name). S
 
 ## Changelog
 - 2026-11-05 (050): "Cooking options" is a round IconButton; the header lines up with the loading state's TopBar.
+- 2026-11-10: "Edit step {n}" in the options sheet opens the recipe form at the current step.

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { addDays, dateLabel, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
+import { addDays, dateLabel, formatTime, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import { loadEvents, type Db, type StoredEvent } from '@cocon/data';
 import { EVENT_CATEGORIES, Reminder as ReminderSchema, type EventInput, type Reminder, type Visibility } from '@cocon/schemas/calendar';
 import type { Tracker } from '@cocon/schemas';
@@ -24,6 +24,7 @@ import {
   SlotChip,
   Text,
   TextField,
+  TimeRange,
   WeekdayPicker,
 } from '@cocon/ui';
 import { firstOfMonth, eventWindow, weekdayLetters } from '../../lib/calendar-month';
@@ -38,6 +39,8 @@ import {
   hiddenNames,
   isChipOn,
   managedOn,
+  pickerFallback,
+  pickTime,
   shiftMonth,
   surpriseHiddenFrom,
   slotChips,
@@ -225,26 +228,19 @@ export function EventSheet(p: EventSheetProps) {
             <SlotChip key={s.key} label={s.label} hours={s.hours} selected={isChipOn(d.time, s.key)} onPress={() => set({ time: toggleSlot(d.time, s.key) })} />
           ))}
         </ScrollView>
-        <View className="flex-row gap-8">
-          <TextField
-            className="flex-1"
-            label={a.starts}
-            value={shown.start}
-            keyboardType="numbers-and-punctuation"
-            maxLength={5}
-            onChangeText={(start) => set({ time: typeTime(d.time, 'start', start, slotTimes) })}
-            warning={tried ? times.start : undefined}
-          />
-          <TextField
-            className="flex-1"
-            label={a.ends}
-            value={shown.end}
-            keyboardType="numbers-and-punctuation"
-            maxLength={5}
-            onChangeText={(end) => set({ time: typeTime(d.time, 'end', end, slotTimes) })}
-            warning={tried ? times.end : undefined}
-          />
-        </View>
+        {/* Typed on the web; the phone's time picker on iOS and Android. */}
+        <TimeRange
+          startLabel={a.starts}
+          endLabel={a.ends}
+          start={shown.start}
+          end={shown.end}
+          onChange={(field, value) => set({ time: (Platform.OS === 'web' ? typeTime : pickTime)(d.time, field, value, slotTimes) })}
+          startWarning={tried ? times.start : undefined}
+          endWarning={tried ? times.end : undefined}
+          use24h={use24h}
+          format={(t) => formatTime(t, use24h)}
+          fallback={pickerFallback(d.time, slotTimes, new Date())}
+        />
       </Section>
 
       <Section title={a.who}>

@@ -269,6 +269,12 @@ describe('edge cases', () => {
     expect(field('Step name').value).toBe('Blind bake');
   });
 
+  it('opened at a step (cooking mode\'s "Edit step 2"), that step is the open one', () => {
+    setup({ openStep: quiche.steps?.[1]?.id });
+    expect(screen.getAllByRole('textbox', { name: 'Step name' })).toHaveLength(1);
+    expect(field('Step name').value).toBe('Blind bake');
+  });
+
   it('a chip whose ingredient is gone shows "Missing ingredient", with what to do', () => {
     setup({ recipe: { ...quiche, steps: [saved(0, { name: 'Top', body: `Top with {ing:${GONE}}.` })] } });
     openStep(1, 'Top');

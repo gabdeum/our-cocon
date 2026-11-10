@@ -52,6 +52,12 @@ export default function CookRoute() {
       onOpenTimers={() => router.push('/timers')}
       onScaleByIngredient={sheet('scale')}
       onConvert={sheet('convert')}
+      onEditStep={(target) => {
+        if (!id) return;
+        // Saved or cancelled, the form goes back to cooking mode at the same step.
+        const at = 'step' in target ? `section=steps&step=${target.step}` : `section=variants&variant=${target.variant}`;
+        router.push(`/recipes/${id}/edit?${at}` as Href);
+      }}
       visit={visit}
       cooking={cooking}
     />

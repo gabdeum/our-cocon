@@ -28,6 +28,8 @@ import {
   toggleSlot,
   toggleWho,
   typeTime,
+  pickTime,
+  pickerFallback,
   shownTimes,
   secretFrom,
   surpriseHiddenFrom,
@@ -146,6 +148,22 @@ describe('slots (FR-002)', () => {
     expect(typeTime(slots('evening'), 'end', '23:00', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'custom', start: '18:00', end: '23:00' });
     expect(typeTime({ kind: 'all_day' }, 'start', '10', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'custom', start: '10', end: '' });
     expect(typeTime({ kind: 'custom', start: '10', end: '' }, 'start', '', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'all_day' });
+  });
+
+  it('a picked start moves an end that’s missing or not after it to an hour later', () => {
+    expect(pickTime({ kind: 'all_day' }, 'start', '10:00', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'custom', start: '10:00', end: '11:00' });
+    expect(pickTime(slots('evening'), 'start', '22:30', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'custom', start: '22:30', end: '23:30' });
+    expect(pickTime(slots('evening'), 'start', '19:00', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'custom', start: '19:00', end: '22:00' });
+    expect(pickTime({ kind: 'custom', start: '20:00', end: '21:00' }, 'start', '23:30', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'custom', start: '23:30', end: '24:00' });
+    // An end is taken as picked, even before the start: Save says so.
+    expect(pickTime({ kind: 'custom', start: '20:00', end: '21:00' }, 'end', '19:00', DEFAULT_SLOT_TIMES)).toEqual({ kind: 'custom', start: '20:00', end: '19:00' });
+  });
+
+  it('opens an empty picker on the next whole hour, and the end an hour after the start', () => {
+    const at = (h: number, m: number) => new Date(2026, 10, 10, h, m);
+    expect(pickerFallback({ kind: 'all_day' }, DEFAULT_SLOT_TIMES, at(14, 20))).toEqual({ start: '15:00', end: '16:00' });
+    expect(pickerFallback({ kind: 'all_day' }, DEFAULT_SLOT_TIMES, at(23, 40))).toEqual({ start: '23:00', end: '24:00' });
+    expect(pickerFallback({ kind: 'custom', start: '18:30', end: '' }, DEFAULT_SLOT_TIMES, at(9, 0))).toEqual({ start: '10:00', end: '19:30' });
   });
 
   it('shows the chips with the family’s hours, and which are on', () => {

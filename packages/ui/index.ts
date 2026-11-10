@@ -65,6 +65,7 @@ export { StepCard, StepFootnote, StepRow, StepText, TimerRow, type StepTextPart,
 export { CookTimerCard, TimerCard, type TimersScreenState } from './components/TimerCard';
 export { TimerPill, type TimerPillProps } from './components/TimerPill';
 export { TimePresets, type TimePreset, type TimePresetsProps } from './components/TimePresets';
+export { TimeRange, type TimeRangeField, type TimeRangeProps } from './components/TimeRange';
 export { TabBar, TAB_LABEL_MIN_SCALE, type TabBarItem, type TabBarProps } from './components/TabBar';
 export { BottomSheet, SheetFooter, type BottomSheetProps } from './components/BottomSheet';
 export { Dialog, type DialogProps } from './components/Dialog';

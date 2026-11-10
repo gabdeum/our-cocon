@@ -14,13 +14,15 @@ const f = strings.recipeForm;
  * /recipes/[id]/edit?section=… (spec 014): the recipe form for a saved recipe, a full-screen modal.
  * Its entry is "Edit recipe" in recipe settings (017); saved or cancelled, it goes back to the recipe.
  * `&variant=<id>` opens that variant in Variants, `&variant=new` starts one (recipe settings, 017).
+ * `&step=<id>` opens that step in Steps (cooking mode's "Edit step {n}").
  * Deleted (018), it closes everything over Recipes, which shows "Recipe deleted · Undo".
  */
 export default function EditRecipeRoute() {
-  const params = useLocalSearchParams<{ id: string; section?: string; variant?: string }>();
+  const params = useLocalSearchParams<{ id: string; section?: string; variant?: string; step?: string }>();
   const parsed = z.uuid().safeParse(params.id);
   const id = parsed.success ? parsed.data : null;
   const variant = params.variant === 'new' || z.uuid().safeParse(params.variant).success ? params.variant : undefined;
+  const step = z.uuid().safeParse(params.step).success ? params.step : undefined;
   const { state, client, tracker } = useSession();
   const familyId = state.status === 'ready' ? state.family.id : null;
   const recipe = useQuery({
@@ -62,6 +64,7 @@ export default function EditRecipeRoute() {
       section={sectionOf(params.section)}
       onSectionChange={(section) => router.setParams({ section })}
       openVariant={variant}
+      openStep={step}
       client={client}
       tracker={tracker}
       storage={deviceStorage}
