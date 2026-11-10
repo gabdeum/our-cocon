@@ -89,6 +89,7 @@ async function setup(props: Partial<CookScreenProps> = {}) {
       onOpenTimers={onOpenTimers}
       onScaleByIngredient={vi.fn()}
       onConvert={vi.fn()}
+      onEditStep={vi.fn()}
       {...props}
     />,
     { wrapper },
@@ -207,6 +208,16 @@ describe('Cooking mode (spec 012)', () => {
     expect(screen.queryByRole('switch', { name: 'Screen stays on' })).toBeNull();
   });
 
+  it('"Edit step {n}" in the options opens the recipe form at the current step and closes the sheet', async () => {
+    const onEditStep = vi.fn();
+    await setup({ onEditStep });
+    press('Next step');
+    press('Cooking options');
+    fireEvent.click(screen.getByRole('link', { name: 'Edit step 2' }));
+    expect(onEditStep).toHaveBeenCalledWith({ step: detail.steps[1]?.id });
+    expect(screen.queryByRole('switch', { name: 'Screen stays on' })).toBeNull();
+  });
+
   it('L21: "Keep screen on" arriving after the recipe (the family\'s settings load) is followed', async () => {
     keepAwake.isAvailableAsync.mockResolvedValue(true);
     const { rerender, onClose, onOpenTimers } = await setup();
@@ -220,6 +231,7 @@ describe('Cooking mode (spec 012)', () => {
         onOpenTimers={onOpenTimers}
         onScaleByIngredient={vi.fn()}
         onConvert={vi.fn()}
+        onEditStep={vi.fn()}
         cooking={{ ...defaultCooking, keepAwake: false }}
       />,
     );
@@ -349,6 +361,7 @@ describe('Cooking mode (spec 012)', () => {
         onOpenTimers={vi.fn()}
         onScaleByIngredient={vi.fn()}
         onConvert={vi.fn()}
+        onEditStep={vi.fn()}
       />,
     );
     await settle();

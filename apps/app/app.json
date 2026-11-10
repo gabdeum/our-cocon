@@ -85,7 +85,8 @@
           "iosUrlScheme": "com.googleusercontent.apps.1056584882565-1kosa2us2rv00lqvn9mbif6uf6se267d"
         }
       ],
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

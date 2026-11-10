@@ -1287,6 +1287,8 @@ export const strings = {
     awakeOffHint: 'Your screen locks as usual',
     /** The switch's hint when this browser can't keep the screen on (OC-Cook › States). */
     awakeUnsupported: 'This browser may let the screen lock.',
+    /** The options sheet's row to the recipe form at the current step. */
+    editStep: (n: number) => `Edit step ${n}`,
     stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
     hint: (serves: string) => `Serves ${serves} · swipe up for next`,
     timerLabel: (label: string) => `${label} timer`,

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, type ScrollViewInstance } from 'react-native';
-import { BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, PushedScreen, SettingRow, StepText, Text, type TopBarConfig } from '@cocon/ui';
+import { BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, ListRow, PushedScreen, SettingRow, StepText, Text, type TopBarConfig } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
 import { defaultCooking, formatOf, recipeView, servingsMax, servingsText, type CookingSettings } from '../../lib/recipe-view';
-import { cookingMinutes, startIndex } from '../../lib/cooking';
+import { cookingMinutes, startIndex, stepEditTarget } from '../../lib/cooking';
 import { useCookAwake } from '../../lib/keep-awake';
 import { AppTimerPill, useHasTimers } from '../timers/AppTimerPill';
 import { useStepTimerControl, type StepTimerInput } from '../recipes/step-timer';
@@ -35,6 +35,8 @@ export interface CookScreenProps {
   /** The options sheet's Scale by an ingredient and Unit converter (spec 013). */
   onScaleByIngredient: () => void;
   onConvert: () => void;
+  /** The options sheet's "Edit step {n}": the recipe form at that step, or the variant that makes it. */
+  onEditStep: (target: { step: string } | { variant: string }) => void;
   /** Changes when the screen is shown again, so choices a sheet saved are read back. */
   visit?: number;
   /** The recipe's settings in force (spec 027): units, kitchen scale, thermometer checks and "Keep screen on". */
@@ -116,6 +118,7 @@ function Cooking({
   onOpenTimers,
   onScaleByIngredient,
   onConvert,
+  onEditStep,
   cooking = defaultCooking,
   now = Date.now,
 }: LoadedProps & { choices: RecipeChoices; onChoices: (next: RecipeChoices) => void }) {
@@ -253,16 +256,30 @@ function Cooking({
         title={c.options}
         closeLabel={c.closeOptions}
       >
-        <SettingRow
-          label={c.awake}
-          hint={awake === 'unsupported' ? c.awakeUnsupported : keepAwake ? c.awakeOnHint : c.awakeOffHint}
-          value={keepAwake}
-          onValueChange={(on) => {
-            setKeepAwake(on);
-            tracker.track('cook_screen_awake_toggled', { on });
-          }}
-        />
-        <MoreOptions choices={choices} settings={cooking} tracker={tracker} onChange={onChoices} onScaleByIngredient={openSheet(onScaleByIngredient)} onConvert={openSheet(onConvert)} />
+        {/* One list: the sheet's gap would space the rows apart. */}
+        <View>
+          <SettingRow
+            label={c.awake}
+            hint={awake === 'unsupported' ? c.awakeUnsupported : keepAwake ? c.awakeOnHint : c.awakeOffHint}
+            value={keepAwake}
+            onValueChange={(on) => {
+              setKeepAwake(on);
+              tracker.track('cook_screen_awake_toggled', { on });
+            }}
+          />
+          <ListRow
+            flush
+            title={c.editStep(at + 1)}
+            trailing={{ kind: 'chevron' }}
+            onPress={() => {
+              const step = steps[at];
+              if (!step) return;
+              setOptionsOpen(false);
+              onEditStep(stepEditTarget(recipe, choices, step.id));
+            }}
+          />
+          <MoreOptions choices={choices} settings={cooking} tracker={tracker} onChange={onChoices} onScaleByIngredient={openSheet(onScaleByIngredient)} onConvert={openSheet(onConvert)} />
+        </View>
       </BottomSheet>
     ) : null}
     </>

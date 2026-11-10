@@ -95,6 +95,8 @@ export interface RecipeFormProps {
   newId?: () => string;
   /** Spec 017: the variant to open in Variants (from recipe settings), or "new" to start one. */
   openVariant?: string;
+  /** The saved step to open, and scroll to, in Steps (cooking mode's "Edit step {n}"). */
+  openStep?: string;
 }
 
 /** What the photo is doing between picking and Save. */
@@ -146,6 +148,7 @@ export function RecipeForm({
   onDeleted,
   newId = randomUUID,
   openVariant,
+  openStep: openStepId,
 }: RecipeFormProps) {
   const isNew = recipe === null;
   const online = useOnline();
@@ -192,11 +195,14 @@ export function RecipeForm({
   // Spec 016: the steps. A recipe with none opens with one empty, open step; left empty, Save drops it.
   const [startSteps] = useState(() => draftsFromSteps(recipe?.steps ?? []));
   const [steps, setSteps] = useState<StepDraft[]>(() => (startSteps.length > 0 ? startSteps : [emptyStep(newId())]));
-  const [openStep, setOpenStep] = useState<string | null>(() => (startSteps.length > 0 ? null : (steps[0]?.key ?? null)));
+  const [openStep, setOpenStep] = useState<string | null>(() =>
+    startSteps.length > 0 ? (startSteps.find((d) => d.id === openStepId)?.key ?? null) : (steps[0]?.key ?? null),
+  );
   const [stepWarnings, setStepWarnings] = useState<StepWarnings>({});
   const [removeStepAsk, setRemoveStepAsk] = useState<string | null>(null);
   const stepY = useRef<Record<string, number>>({});
-  const pendingStep = useRef<string | null>(null);
+  // Opened at a step, it's brought into view once laid out.
+  const pendingStep = useRef<string | null>(openStepId ? openStep : null);
   // Spec 017: the variants. "Add a variant" on recipe settings opens the form with a new one.
   const [startVariants] = useState(() => draftsFromVariants(recipe?.variants ?? [], recipe?.steps ?? [], recipe?.facts ?? {}));
   const [variants, setVariants] = useState<VariantDraft[]>(() =>

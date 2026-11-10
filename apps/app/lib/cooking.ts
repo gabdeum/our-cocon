@@ -1,3 +1,4 @@
+import { activeVariants, type VariantChoice } from '@cocon/schemas';
 import type { RecipeDetail } from './recipe';
 
 /**
@@ -84,4 +85,16 @@ export function stepStillThere(
   if (!recipe || recipe.deleted_at) return false;
   if (recipe.steps.some((s) => s.id === stepId)) return true;
   return recipe.variants.some((v) => v.changes.some((change, i) => change.type === 'add_step' && `${v.id}:${i}` === stepId));
+}
+
+/**
+ * Where the options' "Edit this step" opens the recipe form: the step itself in Steps, or, for a
+ * step a chosen variant adds or changes (the last one that does), that variant in Variants, since
+ * it decides what this step says.
+ */
+export function stepEditTarget(recipe: Pick<RecipeDetail, 'variants'>, choice: VariantChoice, stepId: string): { step: string } | { variant: string } {
+  const added = recipe.variants.find((v) => v.changes.some((change, i) => change.type === 'add_step' && `${v.id}:${i}` === stepId));
+  if (added) return { variant: added.id };
+  const changed = activeVariants(recipe.variants, choice).findLast((v) => v.changes.some((change) => change.type === 'change_step' && change.step_id === stepId));
+  return changed ? { variant: changed.id } : { step: stepId };
 }

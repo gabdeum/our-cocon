@@ -4,6 +4,7 @@ import {
   conflictWho,
   daysBetween,
   findConflict,
+  fromMinutes,
   parts,
   rangeLabel,
   reminderRecipients,
@@ -192,6 +193,27 @@ export function shownTimes(time: DraftTime, slotTimes: SlotTimes): { start: stri
 export function typeTime(time: DraftTime, field: 'start' | 'end', value: string, slotTimes: SlotTimes): DraftTime {
   const next = { ...shownTimes(time, slotTimes), [field]: value };
   return next.start.trim() === '' && next.end.trim() === '' ? { kind: 'all_day' } : { kind: 'custom', ...next };
+}
+
+/** An hour after "HH:MM", at most the end of the day. */
+const hourAfter = (time: string) => fromMinutes(Math.min(toMinutes(time) + 60, 24 * 60));
+
+/**
+ * Picking a time on the phone (TimeRange): as typing, and a picked start moves an end that's
+ * missing or not after it to an hour later, as calendar apps do.
+ */
+export function pickTime(time: DraftTime, field: 'start' | 'end', value: string, slotTimes: SlotTimes): DraftTime {
+  const next = typeTime(time, field, value, slotTimes);
+  if (field !== 'start' || next.kind !== 'custom') return next;
+  const endOk = ClockTime.safeParse(next.end).success && toMinutes(next.end) > toMinutes(value);
+  return endOk ? next : { ...next, end: hourAfter(value) };
+}
+
+/** Where an empty field's picker opens: the next whole hour, and an hour after the start. */
+export function pickerFallback(time: DraftTime, slotTimes: SlotTimes, now: Date): { start: string; end: string } {
+  const start = fromMinutes(Math.min(now.getHours() + 1, 23) * 60);
+  const shown = shownTimes(time, slotTimes).start;
+  return { start, end: hourAfter(ClockTime.safeParse(shown).success && shown !== '24:00' ? shown : start) };
 }
 
 /**

@@ -100,6 +100,7 @@ import {
   TimerCard,
   TimerPill,
   TimePresets,
+  TimeRange,
   TimerRow,
   ShareTile,
   LinkField,
@@ -175,6 +176,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
   const [moreOpen, setMoreOpen] = useState(false);
   const [photo, setPhoto] = useState<number | null>(null);
   const [sheet, setSheet] = useState(false);
+  const [times, setTimes] = useState({ start: '18:00', end: '' });
   const [dialog, setDialog] = useState(false);
   const [scopeDialog, setScopeDialog] = useState(false);
   const [calendarView, setCalendarView] = useState<(typeof calendarViews)[number]['key']>('month');
@@ -294,7 +296,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         </View>
       </Section>
 
-      <Section group="Calendar" title="Add sheet: DayChip, SlotChip, MemberPickerChip (spec 041)">
+      <Section group="Calendar" title="Add sheet: DayChip, SlotChip, TimeRange, MemberPickerChip (spec 041)">
         <View className="flex-row gap-8">
           <DayChip label="Today" sub="Sun 25" selected onPress={noop} />
           <DayChip label="Tomorrow" sub="Mon 26" selected={false} onPress={noop} />
@@ -310,6 +312,15 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <MemberPickerChip name="Everyone" initial="All" color="everyone" selected={false} onPress={noop} />
           <MemberPickerChip name="Others" initial="" color="others" selected onPress={noop} />
         </PillRow>
+        <TimeRange
+          startLabel="Starts"
+          endLabel="Ends"
+          start={times.start}
+          end={times.end}
+          onChange={(field, value) => setTimes((t) => ({ ...t, [field]: value }))}
+          endWarning={times.end ? undefined : 'Use a time like 18:30.'}
+          fallback={{ start: '18:00', end: '19:00' }}
+        />
         <DisclosureButton label="More options" sub="Place, repeat, reminder…" expanded={false} onPress={noop} />
         <WeekdayPicker label="On" letters={['S', 'M', 'T', 'W', 'T', 'F', 'S']} names={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} value={[6]} onToggle={noop} />
         <View className="rounded-lg bg-surface-card px-14 py-4">
