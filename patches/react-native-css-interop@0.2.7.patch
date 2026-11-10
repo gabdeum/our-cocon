@@ -1,0 +1,43 @@
+diff --git a/dist/runtime/native/native-interop.js b/dist/runtime/native/native-interop.js
+index 254b7ba65bd7e77982db73d793b157b15272f434..833d2fe77f92d75363bf5001fd0c72e111910a90 100644
+--- a/dist/runtime/native/native-interop.js
++++ b/dist/runtime/native/native-interop.js
+@@ -215,8 +215,7 @@ function getDeclarations(previousState, refs, action) {
+     if (action.type === "new-declarations") {
+         state.className = action.className;
+     }
+-    state.declarationTracking.guards.push((refs) => !Object.is(refs.props?.[config.source], state.className) ||
+-        !Object.is((0, resolve_value_1.getTarget)(refs.props, config), state.inline));
++    state.declarationTracking.guards.push(declarationGuard(config, state.className, state.inline));
+     const normalRules = [];
+     const importantRules = [];
+     if (state.className) {
+@@ -249,6 +248,13 @@ function getDeclarations(previousState, refs, action) {
+         containersAreEqual(previousState.containerNames, state.containerNames);
+     return areEqual ? previousState : state;
+ }
++// Made outside getDeclarations, and given only what it compares, so the guard keeps no state alive:
++// Hermes closures hold their whole scope, so a guard holding `previousState` (or a state still
++// carrying its previous style guards) kept every earlier state, and each component's styles grew a chain.
++function declarationGuard(config, className, inline) {
++    return (refs) => !Object.is(refs.props?.[config.source], className) ||
++        !Object.is((0, resolve_value_1.getTarget)(refs.props, config), inline);
++}
+ function applyStyles(state, refs) {
+     (0, observable_1.cleanupEffect)(state.styleTracking.effect);
+     state = {
+diff --git a/dist/runtime/observable.js b/dist/runtime/observable.js
+index ef2c6a30599158296c24ae6fdd06b3c6a81aa73d..f9197444eba74d3ef07f79f56990640eb8eb1866 100644
+--- a/dist/runtime/observable.js
++++ b/dist/runtime/observable.js
+@@ -7,7 +7,9 @@ function observable(value, { fallback, name } = {}) {
+     return {
+         name,
+         get(effect) {
+-            if (effect) {
++            // Subscribed once: a new cleanup on every read (guards read on every render) grew each
++            // component's dependencies without limit until its styles were next recomputed.
++            if (effect && !effects.has(effect)) {
+                 effects.add(effect);
+                 effect.dependencies.add(() => effects.delete(effect));
+             }

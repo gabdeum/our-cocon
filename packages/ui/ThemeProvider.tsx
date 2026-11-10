@@ -5,6 +5,10 @@ import { defaultTheme, themeColors, themeVars, type ThemeId } from './theme';
 
 const ThemeContext = createContext<ThemeId>(defaultTheme);
 
+// Made once per theme: a new `vars()` on each render makes NativeWind recreate every colour variable,
+// and every component on screen then subscribed to the new ones (memory grew until they restyled).
+const themeStyles = Object.fromEntries(Object.entries(themeVars).map(([id, v]) => [id, vars(v)])) as Record<ThemeId, ReturnType<typeof vars>>;
+
 /**
  * Applies one theme's colours to everything inside it. Classes like `bg-honey` read these
  * variables, so another theme (e.g. dark, once tokens.json has it) needs no component change.
@@ -13,7 +17,7 @@ const ThemeContext = createContext<ThemeId>(defaultTheme);
 export function ThemeProvider({ theme = defaultTheme, children }: { theme?: ThemeId; children: ReactNode }) {
   return (
     <ThemeContext.Provider value={theme}>
-      <View className="flex-1" style={vars(themeVars[theme])}>
+      <View className="flex-1" style={themeStyles[theme]}>
         {children}
       </View>
     </ThemeContext.Provider>

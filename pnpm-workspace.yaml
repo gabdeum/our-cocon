@@ -21,3 +21,5 @@ overrides:
   tar@>=7 <7.5.22: ^7.5.22
   minimatch@>=5 <5.1.9: ^5.1.9
   '@xmldom/xmldom@>=0.7 <0.8.15': ^0.8.15 # via @bacons/apple-targets (prebuild only, spec 048)
+patchedDependencies:
+  react-native-css-interop@0.2.7: patches/react-native-css-interop@0.2.7.patch

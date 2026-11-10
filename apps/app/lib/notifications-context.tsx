@@ -47,6 +47,10 @@ const off: NotificationsContextValue = {
 };
 const NotificationsContext = createContext<NotificationsContextValue>(off);
 
+/** A sheet's fade out (BottomSheet's Modal) and its route's dismissal, with some margin. */
+const SHEET_GONE_MS = 600;
+const sheetsGone = () => new Promise<void>((resolve) => setTimeout(resolve, SHEET_GONE_MS));
+
 export interface NotificationsProviderProps {
   native: NativeNotifications | null;
   storage: Storage;
@@ -59,11 +63,16 @@ export interface NotificationsProviderProps {
   /** A reminder that arrived while the app is open: a StatusBanner with the same text, "Open" goes to the event. */
   showBanner: (text: string, onOpen: () => void) => void;
   now?: () => number;
+  /**
+   * Resolves once the sheet the ask follows (Add event, a quick timer) is gone. iOS can't show a
+   * Modal while another is still being dismissed: the ask would stay invisible and take every tap.
+   */
+  afterSheets?: () => Promise<void>;
   children: ReactNode;
 }
 
 /** Spec 046 for every screen (root layout): permission, the ask sheet, this phone's registration and taps. */
-export function NotificationsProvider({ native, storage, client, tracker, userId, navigate, showBanner, now = Date.now, children }: NotificationsProviderProps) {
+export function NotificationsProvider({ native, storage, client, tracker, userId, navigate, showBanner, now = Date.now, afterSheets = sheetsGone, children }: NotificationsProviderProps) {
   const [status, setStatus] = useState<PermissionStatus | null>(null);
   const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIFICATION_PREFS);
   const [asking, setAsking] = useState<'timer' | 'reminder' | null>(null);
@@ -142,13 +151,15 @@ export function NotificationsProvider({ native, storage, client, tracker, userId
       void (async () => {
         const current = status ?? (await native.permission().catch(() => 'undetermined' as const));
         if (!shouldAsk(ask.current, current, now())) return;
+        await afterSheets();
+        if (!userRef.current) return;
         setAsking((open) => {
           if (open === null) tracker.track('notifications_ask_shown', { trigger });
           return open ?? trigger;
         });
       })();
     },
-    [native, status, now, tracker],
+    [native, status, now, tracker, afterSheets],
   );
 
   const turnOn = useCallback(
