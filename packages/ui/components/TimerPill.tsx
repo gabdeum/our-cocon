@@ -59,6 +59,8 @@ export function TimerPill({ name, clock, more, label, onPress, onHide, hideLabel
             role="button"
             aria-label={hideLabel}
             onPress={onHide}
+            // 40 drawn, 44 to tap (spec 030).
+            hitSlop={{ left: 2, right: 2 }}
             className={cn('h-[44px] w-[40px] flex-none items-center justify-center rounded-pill', focusRing)}
           >
             <Icon name="close" size={16} color="inkMuted" />

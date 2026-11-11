@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
 import { FlatList, Platform, Pressable, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent, type TextStyle } from 'react-native';
+import { LARGE_TEXT_SCALE, useLargeText } from '../a11y';
+import { useReduceMotion } from '../reduceMotion';
 import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
-import { EventBar, EventChip, MoreCount, type EventColor } from './EventChip';
+import { EventBar, EventChip, Fill, MoreCount, type EventColor } from './EventChip';
 import { Text } from './Text';
 
 /** MonthGrid README › Cell: every day is 120 tall, so a row's offset is its index × 120. */
@@ -79,7 +81,7 @@ function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
   if (cell.first || cell.today) {
     return (
       <View className={cn('h-[18px] min-w-[18px] items-center justify-center self-start rounded-[9px]', cell.first && 'max-w-full px-[5px]', cell.today ? 'bg-olive' : 'bg-ink')}>
-        <Text size={11} weight="900" color={cell.today ? 'on-olive' : 'on-ink'} numberOfLines={1} ellipsizeMode="clip" style={[{ lineHeight: 18 }, clipOnWeb]}>
+        <Text size={11} weight="900" color={cell.today ? 'on-olive' : 'on-ink'} numberOfLines={1} ellipsizeMode="clip" maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={[{ lineHeight: 18 }, clipOnWeb]}>
           {cell.dateText}
         </Text>
       </View>
@@ -87,15 +89,44 @@ function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
   }
   return (
     <View className="h-[18px] justify-center pl-[3px]">
-      <Text size={11} weight="800" color={muted ? 'ink-muted' : 'ink'} style={{ lineHeight: 18 }}>
+      <Text size={11} weight="800" color={muted ? 'ink-muted' : 'ink'} maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={{ lineHeight: 18 }}>
         {cell.dateText}
       </Text>
     </View>
   );
 }
 
+/**
+ * Largest text sizes (spec 030 User Story 3): the first chip, then a dot per further event, so nothing
+ * is cut mid-word in a 120 px cell. The cell's label still names every event; the day sheet shows them.
+ */
+function LargeTextItems({ cell }: { cell: MonthCell }) {
+  const chips = cell.items.filter((i): i is Extract<MonthCellItem, { kind: 'chip' }> => i.kind === 'chip');
+  const [first, ...rest] = chips;
+  const spaces = cell.items.length - chips.length;
+  return (
+    <>
+      {Array.from({ length: spaces }, (_, i) => (
+        <View key={`space-${i}`} className="h-[15px]" />
+      ))}
+      {first ? <EventChip text={first.text} colors={first.colors} /> : null}
+      {rest.length || cell.more ? (
+        <View aria-hidden className="flex-row flex-wrap gap-[3px] pl-[3px] pt-[2px]">
+          {rest.map((c) => (
+            <View key={c.key} className="h-[8px] w-[8px]">
+              <Fill colors={c.colors} rounded="rounded-full" />
+            </View>
+          ))}
+          {cell.more ? <MoreCount text={cell.more} /> : null}
+        </View>
+      ) : null}
+    </>
+  );
+}
+
 function Cell({ cell, mutePast, addLabel, onPress, onLongPress }: { cell: MonthCell; mutePast: boolean; addLabel: string; onPress: () => void; onLongPress: () => void }) {
   const muted = mutePast && cell.past && !cell.today;
+  const largeText = useLargeText();
   return (
     <Pressable
       role="button"
@@ -108,8 +139,14 @@ function Cell({ cell, mutePast, addLabel, onPress, onLongPress }: { cell: MonthC
       className={cn('h-[120px] min-w-0 flex-1 gap-[2px] overflow-hidden border-b border-r border-line px-[3px] pb-4 pt-[3px]', muted ? 'bg-surface-page' : 'bg-surface-card', focusRing)}
     >
       <DateMark cell={cell} muted={muted} />
-      {cell.items.map((item) => (item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} /> : <View key={item.key} className="h-[15px]" />))}
-      {cell.more ? <MoreCount text={cell.more} /> : null}
+      {largeText ? (
+        <LargeTextItems cell={cell} />
+      ) : (
+        <>
+          {cell.items.map((item) => (item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} /> : <View key={item.key} className="h-[15px]" />))}
+          {cell.more ? <MoreCount text={cell.more} /> : null}
+        </>
+      )}
       {cell.today ? <View aria-hidden pointerEvents="none" className="absolute inset-0 border-olive" style={{ borderWidth: 2.5 }} /> : null}
     </Pressable>
   );
@@ -139,9 +176,15 @@ export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisib
   const top = useRef(initialIndex);
   const placed = useRef(false);
   const data = useMemo(() => Array.from({ length: weekCount }, (_, i) => i), [weekCount]);
+  // Reduce Motion: month jumps are instant (spec 030 FR-004). Read through a ref: only a new jump scrolls.
+  const reduce = useReduceMotion();
+  const reduceMotion = useRef(reduce);
+  useEffect(() => {
+    reduceMotion.current = reduce;
+  }, [reduce]);
 
   useEffect(() => {
-    if (jump) list.current?.scrollToOffset({ offset: jump.index * MONTH_ROW_HEIGHT, animated: true });
+    if (jump) list.current?.scrollToOffset({ offset: jump.index * MONTH_ROW_HEIGHT, animated: !reduceMotion.current });
   }, [jump]);
 
   // FR-001: open on the first week of the month, moved down just enough to show today's row.

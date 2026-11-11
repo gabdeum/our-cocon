@@ -155,7 +155,7 @@ export function EventDetail(p: EventDetailProps) {
         titleMode: 'onScroll',
         actions: [
           <IconButton key="edit" variant="round" icon="edit" label={e.edit} disabled={off} onPress={p.onEdit} />,
-          <ActionMenu key="more" label={e.more} disabled={off} items={menu} />,
+          <ActionMenu key="more" label={e.more} disabled={off} items={menu} closeLabel={strings.calendar.header.close} />,
         ],
       }}
     >

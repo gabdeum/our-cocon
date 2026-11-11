@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { OAuthConsent, describeClient, safeRedirect } from './OAuthConsent';
 import { flush } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-linking', () => ({ createURL: (p: string) => p }));
 afterEach(cleanup);
@@ -35,6 +36,8 @@ it('asks whether the assistant may act as the member, and says where it goes bac
   await flush();
   expect(screen.getByRole('heading', { name: 'Let Claude use Our Cocon?' })).toBeTruthy();
   expect(screen.getByText("After this you'll go back to claude.ai.")).toBeTruthy();
+  // Spec 030 SC-001.
+  await expectAccessible();
 });
 
 it('Allow sends the assistant its code', async () => {

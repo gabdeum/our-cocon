@@ -1,5 +1,6 @@
 import type { ReactNode, Ref } from 'react';
-import { Platform, ScrollView, View, type LayoutChangeEvent, type ScrollViewInstance, type NativeScrollEvent, type NativeSyntheticEvent, type ViewStyle } from 'react-native';
+import { Platform, ScrollView, View, type HostInstance, type LayoutChangeEvent, type ScrollViewInstance, type NativeScrollEvent, type NativeSyntheticEvent, type ViewStyle } from 'react-native';
+import { useReduceMotion } from '../reduceMotion';
 import { cn } from '../cn';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
@@ -24,6 +25,8 @@ export interface CookLayoutProps {
   /** The options button (round settings, like the TopBar's) on the right: "Cooking options". */
   optionsLabel: string;
   onOptions: () => void;
+  /** The options button, so its sheet can give focus back to it (spec 030 FR-003). */
+  optionsRef?: Ref<HostInstance>;
   /** The CookProgress bar with "Step N of M". */
   progress: ReactNode;
   /** The CookSections. */
@@ -55,7 +58,7 @@ export interface CookLayoutProps {
  * on the last) are ink, so they never pass for Back or Next.
  */
 export function CookLayout(props: CookLayoutProps) {
-  const { exitLabel, onExit, status, optionsLabel, onOptions, progress, children, endLabel, backLabel, onBack, backExits, nextLabel, onNext, nextFinishes, scrollRef, onScroll, onViewportLayout, snapOffsets } = props;
+  const { exitLabel, onExit, status, optionsLabel, onOptions, optionsRef, progress, children, endLabel, backLabel, onBack, backExits, nextLabel, onNext, nextFinishes, scrollRef, onScroll, onViewportLayout, snapOffsets } = props;
   // The ✕ sits where the TopBar of the loading state put it, so it doesn't jump when the steps arrive.
   const top = useTopEdge();
   return (
@@ -65,7 +68,7 @@ export function CookLayout(props: CookLayoutProps) {
           <IconButton variant="round" icon="close" iconSize={20} label={exitLabel} onPress={onExit} />
           <View className="min-w-0 flex-shrink flex-row items-center justify-end gap-8">
             {status}
-            <IconButton variant="round" icon="settings" label={optionsLabel} onPress={onOptions} />
+            <IconButton ref={optionsRef} variant="round" icon="settings" label={optionsLabel} onPress={onOptions} />
           </View>
         </View>
         <View className="px-4">{progress}</View>
@@ -117,13 +120,15 @@ export interface CookSectionProps {
 
 /** One step in cooking mode: at least 500 tall, a dashed divider under it, dimmed unless current (250 ms). */
 export function CookSection({ title, current, onLayout, snapEnd, children, testID }: CookSectionProps) {
+  const reduceMotion = useReduceMotion();
   return (
     <View
       testID={testID}
       aria-current={current ? 'step' : undefined}
       onLayout={onLayout}
       className={cn(
-        'min-h-[500px] gap-16 border-b-[1.5px] border-dashed border-line-strong pb-28 pt-24 transition-opacity duration-[250ms]',
+        'min-h-[500px] gap-16 border-b-[1.5px] border-dashed border-line-strong pb-28 pt-24',
+        !reduceMotion && 'transition-opacity duration-[250ms]',
         current ? 'opacity-100' : 'opacity-dimmed',
       )}
       style={snapStart}

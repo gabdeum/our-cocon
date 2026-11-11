@@ -20,6 +20,7 @@ const { ConvertSheet, CONVERT_SETTLE_MS } = await import('./ConvertSheet');
 import { defaultPanelChoices, type RecipeChoices } from '../../lib/recipe-choices';
 import { fakeTracker } from '../../test/fakes';
 import { quicheDetail } from '../../test/quiche-detail';
+import { expectAccessible } from '../../test/axe';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -38,7 +39,7 @@ function setup() {
 const type = (text: string) => fireEvent.change(screen.getByLabelText('Convert'), { target: { value: text } });
 
 describe('Unit converter', () => {
-  it('US3: Volume, 300 ml → 1¼ cups, 20 tbsp, 61 tsp, 10.1 fl oz, and the heavy cream note', () => {
+  it('US3: Volume, 300 ml → 1¼ cups, 20 tbsp, 61 tsp, 10.1 fl oz, and the heavy cream note', async () => {
     const { tracker } = setup();
     expect(screen.getByRole('button', { name: 'Volume' }).getAttribute('aria-pressed')).toBe('true');
     type('300');
@@ -55,6 +56,8 @@ describe('Unit converter', () => {
     expect(tracker.track).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(CONVERT_SETTLE_MS));
     expect(tracker.track).toHaveBeenCalledWith('unit_converter_used', { from_unit: 'ml', to_unit: 'cup' });
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('Oven temp: 180 °C → 350 °F, gas mark 4, fan 160 °C; no recipe note', () => {

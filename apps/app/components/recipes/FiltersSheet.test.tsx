@@ -6,6 +6,7 @@ import { emptyFilters, type RecipeFilters } from '@cocon/schemas';
 import { FiltersSheet, type FiltersSheetProps } from './FiltersSheet';
 import type { RecipeListItem } from '../../lib/recipes';
 import { alex, fakeTracker, gabriel, mia } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -52,7 +53,7 @@ const press = (name: string) => fireEvent.click(screen.getByRole('button', { nam
 const pressed = (name: string) => screen.getByRole('button', { name }).getAttribute('aria-pressed');
 
 describe('layout (OC-Filters)', () => {
-  it('shows the groups and copy as drawn', () => {
+  it('shows the groups and copy as drawn', async () => {
     setup();
     expect(screen.getByRole('dialog', { name: 'Filters' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Clear all' })).toBeTruthy();
@@ -63,6 +64,8 @@ describe('layout (OC-Filters)', () => {
     for (const time of ['Under 30 min', '30–60 min', 'Over 1 hour']) expect(screen.getByRole('button', { name: time })).toBeTruthy();
     for (const person of ['Gabriel', 'Alex', 'Mia']) expect(screen.getByRole('button', { name: new RegExp(person) })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Show 12 recipes' })).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 });
 

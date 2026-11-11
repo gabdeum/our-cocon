@@ -1,4 +1,5 @@
 import { Pressable, View } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Text } from './Text';
 
@@ -30,7 +31,7 @@ export function MonthPicker({ value, onChange, monthLabels, label, hint }: Month
                 <Pressable
                   key={m}
                   role="button"
-                  aria-pressed={on}
+                  {...pressedState(on)}
                   onPress={() => toggle(m)}
                   className={cn('h-[40px] flex-1 items-center justify-center rounded-[12px]', on ? 'bg-olive' : 'bg-surface-soft', focusRing)}
                 >

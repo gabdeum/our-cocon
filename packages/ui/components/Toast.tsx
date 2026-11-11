@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+import { announce } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
 import { IconButton } from './IconButton';
@@ -80,6 +81,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setHosts((h) => (base ? [id, ...h] : [...h, id]));
     return () => setHosts((h) => h.filter((x) => x !== id));
   }, []);
+
+  // The web hears StatusBanner's live region; VoiceOver and TalkBack ignore it (spec 030).
+  useEffect(() => {
+    if (toast && Platform.OS !== 'web') announce(toast.text);
+  }, [toast]);
 
   useEffect(() => {
     if (!toast) return;

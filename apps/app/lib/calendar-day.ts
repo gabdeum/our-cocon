@@ -1,7 +1,7 @@
 import { SLOT_KEYS, type SlotKey } from '@cocon/schemas/calendar';
 import { calendarWordsEn, daysBetween, slotAt, sortSlots, timeLabel, timeRange, toMinutes, weekday, type SlotTimes } from '@cocon/calendar';
 import type { DayAllDayItem, DayBand, DayEventItem, MemberChipColor } from '@cocon/ui';
-import { eventLook, longDate, occurrenceKey, type MemberLook, type MonthOccurrence } from './calendar-month';
+import { eventLook, longDate, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import type { Member } from './session';
 import { strings } from '../strings/en';
 import { clock } from './clock';
@@ -53,7 +53,7 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
 
   const allDay: DayAllDayItem[] = onDay.filter(inAllDay).map((o) => {
     const tag = dayOf(o, date) ?? (isBirthday(o) ? d.birthday : null);
-    return { key: occurrenceKey(o), title: o.title, tag, colors: eventLook(o.members, ctx.look).colors, label: d.allDayLabel(o.title, tag) };
+    return { key: occurrenceKey(o), title: o.title, tag, colors: eventLook(o.members, ctx.look).colors, label: d.allDayLabel(o.title, whoText(o.members, ctx.look), tag) };
   });
 
   const timed = timedRows(onDay, date, ctx);
@@ -115,7 +115,7 @@ export function layoutDaySheet(date: string, occurrences: readonly MonthOccurren
       const { initials, colors } = eventLook(o.members, ctx.look);
       const span = dayOf(o, date);
       const time = span ? d.at(words.allDay, span.toLowerCase()) : words.allDay;
-      return { key: occurrenceKey(o), title: o.title, time, driver: null, nowText: null, initials, colors, label: d.rowLabel([o.title, time], false) };
+      return { key: occurrenceKey(o), title: o.title, time, driver: null, nowText: null, initials, colors, label: d.rowLabel([o.title, whoText(o.members, ctx.look), time], false) };
     });
   const rows = [...allDay, ...timedRows(onDay, date, ctx).map((t) => t.item)];
   const title = s.title(words.weekdays[weekday(date)] ?? '', longDate(date));
@@ -138,7 +138,7 @@ function eventRow(o: MonthOccurrence, range: { start: string; end: string }, dat
     nowText: now ? d.now : null,
     initials,
     colors,
-    label: d.rowLabel([o.title, time, ...(driver ? [driver] : [])], now),
+    label: d.rowLabel([o.title, whoText(o.members, ctx.look), time, ...(driver ? [driver] : [])], now),
   };
 }
 

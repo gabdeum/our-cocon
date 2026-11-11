@@ -49,6 +49,7 @@ Rules:
 - At most one olive-filled control group per screen region, and at most one ink main button per screen.
 - `ink-faint` is only for struck-through done items; it fails 4.5:1 on purpose.
 - The only theme is Light. Dark mode hasn't been designed yet.
+- Member colours (`member-*`) are pale fills with ink text. Where a fill is the only mark (event chips, bars, week blocks, dots, swatches) it has a 1 px outline in its `member-*-edge` tone, the same hue at 3:1 against white (spec 030).
 
 ## Typography
 
@@ -72,11 +73,12 @@ Line icons on a 24 px grid: stroke 2.2 (2.4–2.6 for chevrons, close and plus),
 
 ## Motion
 
-Keep it quiet. Use 250 ms ease-out for opacity and colour changes, smooth scrolling between cooking steps, and native sheet slide-up. No bounces and no confetti. Respect Reduce Motion.
+Keep it quiet. Use 250 ms ease-out for opacity and colour changes, smooth scrolling between cooking steps, and native sheet slide-up. No bounces and no confetti. Respect Reduce Motion (`useReduceMotion`): slides, scrolls and fades become instant.
 
 ## Accessibility
 
 - Contrast is at least 4.5:1 for text (checked for every pairing above), and at least 3:1 for borders and icons.
 - Every icon-only button has a label ("Share recipe", "One minute more").
 - Switches use `role="switch"`, segmented controls use pressed or selected states, and timers are announced politely.
-- Layouts must survive the largest system text size: wrap rows, don't truncate amounts.
+- Layouts must survive the largest system text size: wrap rows, don't truncate amounts. From 135% (`useLargeText`) buttons wrap to two lines and month cells show their first chip and dots.
+- Say what changed when nothing on screen does: `announce("5 servings")` (VoiceOver and TalkBack ignore `aria-live`). Toggles use `pressedState(on)` so iOS hears "selected" too. A sheet or dialog takes `returnFocusRef` to give focus back on close (spec 030).

@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { FamilySetup } from './FamilySetup';
 import { fakeApi, fakeTracker, flush } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -18,6 +19,8 @@ it('creates the family with me as owner, tracks it and goes on', async () => {
   expect(api.createFamily).toHaveBeenCalledWith('The Demanges', 'Gabriel');
   expect(tracker.track).toHaveBeenCalledWith('family_created', {});
   expect(onCreated).toHaveBeenCalled();
+  // Spec 030 SC-001.
+  await expectAccessible();
 });
 
 it('asks for both names before creating', async () => {

@@ -55,7 +55,6 @@ function StepTimer(props: StepTimerInput) {
       plusA11y={stepCopy.plusA11y}
       onMinus={t.onMinus}
       onPlus={t.onPlus}
-      announcement={t.announcement}
     />
   );
 }

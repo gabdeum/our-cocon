@@ -1,5 +1,7 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, type RefObject } from 'react';
 import { Modal, View, type HostInstance } from 'react-native';
+import { useReturnFocus } from '../a11y';
+import { useReduceMotion } from '../reduceMotion';
 import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
@@ -23,14 +25,18 @@ export interface DialogProps {
   cancelLabel: string;
   onCancel: () => void;
   icon?: IconName;
+  /** The button that opened the dialog: focus goes back to it on close (spec 030 FR-003). */
+  returnFocusRef?: RefObject<HostInstance | null>;
 }
 
 /** Centred confirmation for destructive or irreversible actions only (Dialog README). */
-export function Dialog({ visible, title, body, confirmLabel, onConfirm, secondaryLabel, onSecondary, cancelLabel, onCancel, icon = 'trash', emphasis }: DialogProps) {
+export function Dialog({ visible, title, body, confirmLabel, onConfirm, secondaryLabel, onSecondary, cancelLabel, onCancel, icon = 'trash', emphasis, returnFocusRef }: DialogProps) {
+  useReturnFocus(visible, returnFocusRef);
   const titleId = useId();
   const bodyId = useId();
   const safeRef = useRef<HostInstance>(null);
   const at = emphasis ? body.indexOf(emphasis) : -1;
+  const reduceMotion = useReduceMotion();
 
   useEffect(() => {
     if (!visible) return;
@@ -39,7 +45,7 @@ export function Dialog({ visible, title, body, confirmLabel, onConfirm, secondar
   }, [visible]);
 
   return (
-    <Modal transparent visible={visible} animationType="fade" onRequestClose={onCancel}>
+    <Modal transparent visible={visible} animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={onCancel}>
       <View className="flex-1 items-center justify-center bg-scrim px-20">
         <View
           role="alertdialog"

@@ -1,4 +1,6 @@
+import { useId } from 'react';
 import { Pressable, View } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
 import { Text } from './Text';
@@ -35,10 +37,10 @@ const items: Record<SegmentedVariant, string> = {
 };
 
 /** Two to four exclusive options in one track (SegmentedControl README). */
-export function SegmentedControl<K extends string>({ segments, value, onChange, variant = 'light', label, disabled }: SegmentedControlProps<K>) {
+export function SegmentedControl<K extends string>({ segments, value, onChange, variant = 'light', label, disabled, describedBy }: SegmentedControlProps<K> & { describedBy?: string }) {
   const tabs = variant === 'tabs';
   return (
-    <View role={tabs ? 'tablist' : 'group'} aria-label={label} aria-disabled={disabled || undefined} className={cn(tracks[variant], disabled && 'opacity-dimmed')}>
+    <View role={tabs ? 'tablist' : 'group'} aria-label={label} aria-describedby={describedBy} aria-disabled={disabled || undefined} className={cn(tracks[variant], disabled && 'opacity-dimmed')}>
       {segments.map((s) => {
         const on = s.key === value;
         return (
@@ -46,7 +48,7 @@ export function SegmentedControl<K extends string>({ segments, value, onChange, 
             key={s.key}
             role={tabs ? 'tab' : 'button'}
             aria-selected={tabs ? on : undefined}
-            aria-pressed={tabs ? undefined : on}
+            {...(tabs ? {} : pressedState(on))}
             onPress={() => onChange(s.key)}
             disabled={disabled}
             aria-disabled={disabled || undefined}
@@ -75,19 +77,21 @@ export function SegmentedSettingRow<K extends string>({
   last,
   ...control
 }: Omit<SegmentedControlProps<K>, 'label' | 'variant'> & { label: string; hint?: string; last?: boolean }) {
+  const hintId = useId();
+  // The group carries the label, so it's said once; the hint is linked to it on the web (spec 030).
   return (
     <View className={cn('gap-10 py-14', !last && 'border-b-[1.5px] border-line')}>
       <View>
-        <Text size={16} weight="800">
+        <Text size={16} weight="800" aria-hidden>
           {label}
         </Text>
         {hint ? (
-          <Text variant="caption" color="ink-muted">
+          <Text variant="caption" color="ink-muted" nativeID={hintId}>
             {hint}
           </Text>
         ) : null}
       </View>
-      <SegmentedControl<K> label={label} {...control} />
+      <SegmentedControl<K> label={label} describedBy={hint ? hintId : undefined} {...control} />
     </View>
   );
 }

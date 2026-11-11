@@ -10,6 +10,9 @@ import type { ChoiceStorage } from './recipe-choices';
 import { fakeTracker } from '../test/fakes';
 import type { LiveActionRecord } from './live-activity';
 import { handleTimerAction } from './timer-alert-actions';
+import { announce } from '@cocon/ui';
+
+vi.mock('@cocon/ui', async (actual) => ({ ...(await actual<typeof import('@cocon/ui')>()), announce: vi.fn() }));
 
 const T0 = 1_760_000_000_000;
 
@@ -180,6 +183,25 @@ describe('timer store (spec 010)', () => {
     expect(finished.mock.calls[0]?.[0]).toMatchObject({ label: 'Blind bake', state: 'done' });
     expect(tracker.track).toHaveBeenCalledWith('timer_finished', {});
     expect(tracker.track.mock.calls.filter(([e]) => e === 'timer_finished')).toHaveLength(1);
+    store.destroy();
+  });
+
+  it('spec 030 FR-002: says "1 minute left on …" once as a timer passes 60 s, even after a slow tick, and again after +1 min', () => {
+    vi.mocked(announce).mockClear();
+    const store = createTimerStore({ storage: memoryStorage(), userId: 'u1', tracker: fakeTracker(), isForeground: () => true });
+    const id = store.start('Blind bake', 3 * 60, 'step');
+    store.start('Simmer', 30, 'step');
+    act(() => vi.advanceTimersByTime(119_000));
+    expect(announce).not.toHaveBeenCalled();
+    // A throttled tick that jumps straight from 61 s to 59 s still counts.
+    act(() => vi.advanceTimersByTime(2_000));
+    expect(announce).toHaveBeenCalledTimes(1);
+    expect(announce).toHaveBeenCalledWith('1 minute left on Blind bake');
+    act(() => vi.advanceTimersByTime(10_000));
+    expect(announce).toHaveBeenCalledTimes(1);
+    act(() => store.add(id, 60));
+    act(() => vi.advanceTimersByTime(60_000));
+    expect(announce).toHaveBeenCalledTimes(2);
     store.destroy();
   });
 

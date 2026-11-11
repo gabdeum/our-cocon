@@ -1,4 +1,5 @@
 import { Pressable, type PressableProps } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Text } from './Text';
 
@@ -20,7 +21,7 @@ export function ToggleTile({ label, selectedLabel, selected, className, ...props
     <Pressable
       role="button"
       aria-label={label}
-      aria-pressed={selected}
+      {...pressedState(selected)}
       className={cn(
         'h-[48px] flex-1 items-center justify-center rounded-[14px] px-10',
         selected ? 'bg-olive active:bg-olive-pressed' : 'border-2 border-line-strong bg-surface-card active:bg-surface-soft',

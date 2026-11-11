@@ -8,6 +8,7 @@ import type { AssistantConnections } from '@cocon/data';
 import { DEFAULT_AI_PERMISSIONS } from '@cocon/schemas';
 import { fakeTracker, flush, last } from '../../test/fakes';
 import { ASSISTANTS } from '../../lib/assistants';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-image-picker', () => ({}));
 vi.mock('expo-image-manipulator', () => ({ ImageManipulator: {}, SaveFormat: { JPEG: 'jpeg' } }));
@@ -51,7 +52,7 @@ function setup(over: Partial<Props> = {}) {
 }
 
 describe('AI assistants', () => {
-  it('lists Claude, ChatGPT and Gemini with their status, then permissions and phrases to try', () => {
+  it('lists Claude, ChatGPT and Gemini with their status, then permissions and phrases to try', async () => {
     setup();
     expect(screen.getByRole('heading', { name: 'AI assistants' })).toBeTruthy();
     expect(screen.getByText('Let your AI save recipes, fill the grocery list and add events for you. Each person connects their own.')).toBeTruthy();
@@ -74,6 +75,8 @@ describe('AI assistants', () => {
     expect(screen.getByText('“Save my mum\'s ratatouille to Our Cocon. It serves 4.”')).toBeTruthy();
     expect(screen.getByText('“Add what I need for the quiche to our groceries.”')).toBeTruthy();
     expect(screen.getByText('“Add James’s pediatrician on Wednesday morning.”')).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US1: Connect guides through the steps, copies the address, and checks the connection', async () => {

@@ -6,6 +6,7 @@ import type { HomeHero, StoredEvent } from '@cocon/data';
 import { ToastProvider } from '../../lib/toast';
 import { fakeTracker, gabriel, groceryItem, james, mia, storedEvent } from '../../test/fakes';
 import { HomeScreen, type HomeScreenProps } from './HomeScreen';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -71,7 +72,7 @@ describe('Home', () => {
     expect(navigate.family).toHaveBeenCalled();
   });
 
-  it('US1: today’s events under a Today · This week toggle, the birthday banner, "Now" and Open calendar', () => {
+  it('US1: today’s events under a Today · This week toggle, the birthday banner, "Now" and Open calendar', async () => {
     const { navigate, tracker } = setup({
       events: [
         ev({ title: 'Movie night', slots: ['evening'], members: ['everyone'] }),
@@ -98,7 +99,9 @@ describe('Home', () => {
     // The toggle shows the week, and isn't remembered.
     fireEvent.click(card().getByRole('button', { name: 'This week' }));
     expect(tracker.track).toHaveBeenCalledWith('homepage_calendar_toggled', { to: 'week' });
-    expect(card().getByRole('button', { name: 'Today, October 25, 2 people busy' })).toBeTruthy();
+    expect(card().getByRole('button', { name: /^Today, October 25: \S/ })).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2.1: nothing today: "This week", the strip, five rows and See all', () => {
@@ -133,12 +136,12 @@ describe('Home', () => {
         on('2026-10-28', 'Pediatrician', { time_type: 'custom', slots: [], start_time: '10:00', end_time: '11:00', members: [james.id] }),
       ],
     });
-    const wed = () => card().getByRole('button', { name: 'October 28, 1 person busy' });
+    const wed = () => card().getByRole('button', { name: 'October 28: Pediatrician' });
     fireEvent.click(wed());
     expect(wed().getAttribute('aria-pressed')).toBe('true');
     expect(tracker.track).toHaveBeenCalledWith('homepage_calendar_day_picked', { day_offset: 3 });
     expect(card().getByRole('heading', { name: 'Wednesday, Oct. 28' })).toBeTruthy();
-    expect(card().getByRole('link', { name: /^Pediatrician, 10:00/ })).toBeTruthy();
+    expect(card().getByRole('link', { name: /^Pediatrician, James, 10:00/ })).toBeTruthy();
     expect(card().queryByRole('link', { name: /Morning run/ })).toBeNull();
     // "+" adds on the picked day.
     fireEvent.click(card().getByRole('button', { name: 'Add event on Wednesday' }));
@@ -147,7 +150,7 @@ describe('Home', () => {
     fireEvent.click(wed());
     expect(card().getByRole('link', { name: 'Mon, Morning run, 06:30 · Gabriel' })).toBeTruthy();
     // An empty day, then "Whole week".
-    fireEvent.click(card().getByRole('button', { name: 'October 29, nothing planned' }));
+    fireEvent.click(card().getByRole('button', { name: 'October 29: nothing planned' }));
     expect(card().getByText('Nothing planned on Thursday.')).toBeTruthy();
     fireEvent.click(card().getByRole('button', { name: 'Whole week' }));
     expect(card().getByRole('link', { name: 'Mon, Morning run, 06:30 · Gabriel' })).toBeTruthy();

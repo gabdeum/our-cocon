@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Platform, Pressable, View } from 'react-native';
+import { pressedState, useLargeText } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Icon } from './Icon';
 import { Tag } from './Tag';
@@ -156,24 +157,16 @@ export interface TimerRowProps {
   plusA11y: string;
   onMinus: () => void;
   onPlus: () => void;
-  /**
-   * Said politely by screen readers. The clock itself is never live (it would talk every second):
-   * set this only at 1 minute left and at zero (OC-RecipeSteps › Accessibility labels).
-   */
-  announcement?: string;
 }
 
-/** Read by screen readers, not drawn. */
-export const srOnly = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 } as const;
-
 /** Timer row inside a step (StepCard README): honey button (olive while running) and −1 / +1. */
-export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, minusA11y, plusA11y, onMinus, onPlus, announcement }: TimerRowProps) {
+export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, minusA11y, plusA11y, onMinus, onPlus }: TimerRowProps) {
   const running = state === 'running';
   return (
     <View className="flex-row gap-6">
       <Pressable
         role="button"
-        aria-pressed={running}
+        {...pressedState(running)}
         onPress={onPress}
         className={cn('min-h-[52px] min-w-0 flex-1 flex-row items-center gap-10 rounded-lg px-14', running ? 'bg-olive' : 'bg-honey active:bg-honey-pressed', focusRing)}
       >
@@ -185,9 +178,6 @@ export function TimerRow({ state, label, clock, onPress, minusLabel, plusLabel, 
           {clock}
         </Text>
       </Pressable>
-      <View aria-live="polite" style={srOnly}>
-        <Text>{announcement ?? ''}</Text>
-      </View>
       {[
         { text: minusLabel, a11y: minusA11y, onPress: onMinus },
         { text: plusLabel, a11y: plusA11y, onPress: onPlus },
@@ -257,13 +247,14 @@ export interface StepRowProps {
   title: string;
   /** The step timer's length ("35:00"), in a honey chip on the right. */
   clock?: string;
-  /** "Open step 3 in cooking mode". */
+  /** "Step 3: Bake, 35:00 timer. Opens in cooking mode": the name stays in what's said (spec 030). */
   accessibilityLabel: string;
   onPress: () => void;
 }
 
 /** One step in the recipe page's step list (StepCard README › StepRow): a quick look that opens the step in cooking mode. */
 export function StepRow({ number, title, clock, accessibilityLabel, onPress }: StepRowProps) {
+  const largeText = useLargeText();
   return (
     <Pressable
       role="link"
@@ -276,7 +267,7 @@ export function StepRow({ number, title, clock, accessibilityLabel, onPress }: S
           {number}
         </Text>
       </View>
-      <Text size={16} weight="800" numberOfLines={1} className="min-w-0 flex-1">
+      <Text size={16} weight="800" numberOfLines={largeText ? undefined : 1} className="min-w-0 flex-1">
         {title}
       </Text>
       {clock ? (

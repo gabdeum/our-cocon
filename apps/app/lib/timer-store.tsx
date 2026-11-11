@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 import type { Tracker } from '@cocon/schemas';
+import { announce } from '@cocon/ui';
 import { strings } from '../strings/en';
 import { applyLiveAction, type LiveActionRecord, type LiveTimerActivity } from './live-activity';
 import type { ChoiceStorage } from './recipe-choices';
@@ -146,6 +147,8 @@ export function createTimerStore({ storage, userId, tracker, alerts, live, isFor
   const listeners = new Set<() => void>();
   const finishedListeners = new Set<(t: Timer) => void>();
   const startedListeners = new Set<() => void>();
+  // Each running timer's time left at the last tick, to say "1 minute left" once as it passes 60 s.
+  let lastLeft = new Map<string, number>();
 
   /** What the screens show: only a change here re-renders them, so 10 timers stay cheap (SC-002). */
   const shownKey = (at: number) => timers.map((t) => `${t.id}:${t.state}:${T.remaining(t, at)}`).join('|');
@@ -185,6 +188,7 @@ export function createTimerStore({ storage, userId, tracker, alerts, live, isFor
     // Seen only if on screen now and a moment ago too: not asleep, not running unseen in the background.
     const onScreen = isForeground() && at - seenAt <= SEEN_GAP_MS;
     markSeen(at);
+    announceLastMinute(at, onScreen);
     const { timers: settled, finished } = T.settle(timers, at);
     const next = T.expire(settled, at);
     const cleared = next.length !== settled.length;
@@ -204,6 +208,20 @@ export function createTimerStore({ storage, userId, tracker, alerts, live, isFor
     }
     publish(at, finished.length > 0 || cleared);
     schedule();
+  }
+
+  // Spec 030 FR-002: compared with the last tick, not "exactly 60 s left", so a slow tick can't skip it.
+  // At zero the done toast speaks (Toast README).
+  function announceLastMinute(at: number, onScreen: boolean) {
+    const next = new Map<string, number>();
+    for (const t of timers) {
+      if (t.state !== 'running') continue;
+      const left = T.remaining(t, at);
+      const before = lastLeft.get(t.id);
+      if (onScreen && before !== undefined && before > T.MINUTE && left <= T.MINUTE && left > 0) announce(strings.timers.oneMinuteLeft(t.label));
+      next.set(t.id, left);
+    }
+    lastLeft = next;
   }
 
   function schedule() {

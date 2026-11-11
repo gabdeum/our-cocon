@@ -1,4 +1,5 @@
 import { Pressable, View } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { useThemeColors } from '../ThemeProvider';
 import { avatarFills, type MemberColor } from './Avatar';
@@ -26,7 +27,7 @@ export function MemberChip({ name, initial, color, pressed, onPress, last = fals
   return (
     <Pressable
       role="button"
-      aria-pressed={pressed}
+      {...pressedState(pressed)}
       onPress={onPress}
       className={cn('min-h-[52px] w-full flex-row items-center gap-12', !last && 'border-b-[1.5px] border-line', focusRing)}
     >
@@ -57,7 +58,7 @@ export function MemberPickerChip({ name, initial, color, selected, onPress }: Me
   return (
     <Pressable
       role="button"
-      aria-pressed={selected}
+      {...pressedState(selected)}
       aria-label={name}
       onPress={onPress}
       className={cn(

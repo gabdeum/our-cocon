@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Animated, Dimensions, Easing, Modal, PanResponder, Pressable, ScrollView, StyleSheet, View, type HostInstance } from 'react-native';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { Animated, Dimensions, Easing, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View, type HostInstance } from 'react-native';
+import { useReturnFocus } from '../a11y';
 import { cn } from '../cn';
 import { useReduceMotion } from '../reduceMotion';
 import { theme } from '../theme';
@@ -29,6 +30,8 @@ export interface BottomSheetProps {
   closeLabel: string;
   /** A field inside takes focus on open (`autoFocus`), so the title doesn't: the add sheet's keyboard opens at once. */
   fieldFocus?: boolean;
+  /** The button that opened the sheet: focus goes back to it on close (spec 030 FR-003). */
+  returnFocusRef?: RefObject<HostInstance | null>;
 }
 
 const SWIPE_CLOSE = 80;
@@ -37,10 +40,12 @@ const DURATION = 250;
 /**
  * A sheet over a dimmed screen for one focused task (BottomSheet README). Hugs its content up to
  * 92% of the screen; the body scrolls, the footer doesn't. Swipe down closes; focus moves to the
- * title on open; Reduce Motion skips the slide.
+ * title on open; Reduce Motion skips the slide. On the iPhone the sheet rises above the keyboard,
+ * so the field being typed in stays in view (spec 030, L98).
  */
-export function BottomSheet({ visible, onClose, title, lead, leading, hero, headerAction, children, footer, floating, dirty, closeLabel, fieldFocus = false }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, title, lead, leading, hero, headerAction, children, footer, floating, dirty, closeLabel, fieldFocus = false, returnFocusRef }: BottomSheetProps) {
   const titleId = useId();
+  useReturnFocus(visible, returnFocusRef);
   const titleRef = useRef<HostInstance>(null);
   const reduce = useReduceMotion();
   const [offset] = useState(() => new Animated.Value(0));
@@ -92,7 +97,7 @@ export function BottomSheet({ visible, onClose, title, lead, leading, hero, head
 
   return (
     <Modal transparent visible={visible} animationType={reduce || swiped ? 'none' : 'fade'} onRequestClose={requestClose}>
-      <View className="flex-1 justify-end">
+      <Frame>
         <Animated.View style={[StyleSheet.absoluteFill, { opacity: scrim }]}>
           <Pressable role="button" aria-label={closeLabel} onPress={requestClose} className="absolute inset-0 bg-scrim" />
         </Animated.View>
@@ -118,7 +123,7 @@ export function BottomSheet({ visible, onClose, title, lead, leading, hero, head
               </View>
             </View>
             {/* The body scrolls clear of the floating button (60 + 12). */}
-            <ScrollView showsVerticalScrollIndicator={false} className="shrink" contentContainerClassName={cn('gap-16', floating != null && 'pb-[72px]')}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" className="shrink" contentContainerClassName={cn('gap-16', floating != null && 'pb-[72px]')}>
               {children}
             </ScrollView>
             {footer}
@@ -126,10 +131,23 @@ export function BottomSheet({ visible, onClose, title, lead, leading, hero, head
           </View>
         </Animated.View>
         {visible ? <ToastHost /> : null}
-      </View>
+      </Frame>
     </Modal>
   );
 }
+
+/** The sheet's place on screen. On the iPhone it rises with the keyboard (L98); elsewhere it needn't. */
+function Frame({ children }: { children: ReactNode }) {
+  if (Platform.OS !== 'ios') return <View className="flex-1 justify-end">{children}</View>;
+  // NativeWind doesn't style KeyboardAvoidingView.
+  return (
+    <KeyboardAvoidingView behavior="padding" style={styles.fill}>
+      {children}
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({ fill: { flex: 1, justifyContent: 'flex-end' } });
 
 export interface SheetFooterProps {
   /** Soft Cancel (≈110 wide) on the left. */

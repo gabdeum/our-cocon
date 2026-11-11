@@ -90,8 +90,8 @@ describe('layoutDayView', () => {
       ['Movie night', 'Evening · Living room', null, null, 'All'],
       ['Poker night', 'Evening · at Sam’s', null, null, 'G'],
     ]);
-    expect(rows[1]?.label).toBe('Baby swim class, 14:30 · Aquatic Center, Gabriel takes James');
-    expect(rows[0]?.label).toBe('Brunch at Grandma’s, Lunch · Grandma’s house, happening now');
+    expect(rows[1]?.label).toBe('Baby swim class, James, 14:30 · Aquatic Center, Gabriel takes James');
+    expect(rows[0]?.label).toBe('Brunch at Grandma’s, Everyone, Lunch · Grandma’s house, happening now');
   });
 
   it('FR-003: Now only on today', () => {
@@ -112,7 +112,7 @@ describe('layoutDayView', () => {
       ['Eva’s birthday', 'Birthday', ['rose']],
       ['Lyon trip', 'Day 2 of 3', ['rose']],
     ]);
-    expect(allDay[1]?.label).toBe('Lyon trip, all day, Day 2 of 3');
+    expect(allDay[1]?.label).toBe('Lyon trip, Eva, all day, Day 2 of 3');
     expect(busy.map((c) => c.text)).toEqual(['Eva 2']);
   });
 

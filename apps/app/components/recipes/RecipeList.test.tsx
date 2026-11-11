@@ -8,6 +8,7 @@ import { emptyFilters, type RecipeFilters } from '@cocon/schemas';
 import { RecipeList, SEARCH_DEBOUNCE_MS, type RecipeListProps } from './RecipeList';
 import type { RecipeListItem } from '../../lib/recipes';
 import { alex, fakeTracker, gabriel, mia } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -72,7 +73,7 @@ const settle = () => act(() => vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS));
 const names = () => screen.getAllByRole('link').map((l) => l.textContent ?? '');
 
 describe('the list (FR-001, FR-006; 050 FR-007)', () => {
-  it('shows the header, the search with no hint, and the pills', () => {
+  it('shows the header, the search with no hint, and the pills', async () => {
     setup();
     expect(screen.getByRole('heading', { name: 'Recipes' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'New' })).toBeTruthy();
@@ -81,6 +82,8 @@ describe('the list (FR-001, FR-006; 050 FR-007)', () => {
     expect(screen.getByRole('button', { name: 'Filters' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'In season' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Under 30 min' })).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('lists every recipe under All recipes, most recently added first, with no In season group', () => {

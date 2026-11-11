@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ToastProvider } from '../../lib/toast';
 import { COPIED_MS, ShareSheet, type ShareSheetApi } from './ShareSheet';
 import { fakeTracker } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-linking', () => ({ createURL: (p: string) => `ourcocon://${p}` }));
 vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn() }));
@@ -49,6 +50,8 @@ describe('Share sheet', () => {
     for (const name of ['Copy link', 'Message', 'Email', 'More', 'Stop sharing this link']) expect(screen.getByRole('button', { name })).toBeTruthy();
     expect(screen.getByRole('switch', { name: 'Include variants' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('switch', { name: "Include chef's tips" }).getAttribute('aria-checked')).toBe('true');
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('makes the link when it opens, and says so while it does', async () => {

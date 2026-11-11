@@ -1,4 +1,5 @@
 import { Pressable } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Text } from './Text';
 
@@ -16,7 +17,7 @@ export function SlotChip({ label, hours, selected, onPress }: SlotChipProps) {
   return (
     <Pressable
       role="button"
-      aria-pressed={selected}
+      {...pressedState(selected)}
       aria-label={`${label}, ${hours}`}
       onPress={onPress}
       className={cn(

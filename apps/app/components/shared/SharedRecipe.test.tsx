@@ -8,6 +8,7 @@ import type { SharedRecipe as Shared } from '@cocon/schemas';
 import { INGREDIENTS_SHOWN, SharedRecipe, type SharedRecipeProps } from './SharedRecipe';
 import { TimersProvider } from '../../lib/timer-store';
 import { fakeTracker } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -70,6 +71,8 @@ describe('Shared recipe page', () => {
     expect(screen.getByText("Keep your family's recipes together")).toBeTruthy();
     expect(screen.getByText('Save this leek & bacon quiche to your own Our Cocon and cook it with timers and servings that adapt.')).toBeTruthy();
     expect(tracker.track).toHaveBeenCalledWith('shared_recipe_viewed', {});
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2: nothing to edit, and no family data', async () => {

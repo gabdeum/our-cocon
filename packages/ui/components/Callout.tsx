@@ -39,7 +39,8 @@ export function Callout({ variant, text, label, icon, cook, className }: Callout
 
   const iconName: IconName | undefined = variant === 'temp' ? 'thermometer' : variant === 'warn' ? 'warning' : icon;
   return (
-    <View className={cn(box, 'flex-row items-start gap-10')}>
+    // A warning is said as soon as it shows: it's usually why something didn't work (spec 030).
+    <View role={variant === 'warn' ? 'alert' : undefined} className={cn(box, 'flex-row items-start gap-10')}>
       {variant === 'ai' && label ? (
         <View className="rounded-[8px] bg-surface-card px-[7px] py-[3px]">
           <Text size={12} weight="900">

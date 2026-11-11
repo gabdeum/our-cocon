@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, View, type PressableProps } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarColor } from './Avatar';
 import { Icon } from './Icon';
@@ -16,7 +17,8 @@ export function Pill({ label, selected = false, className, ...props }: TogglePro
   return (
     <Pressable
       role="button"
-      aria-pressed={selected}
+      hitSlop={2}
+      {...pressedState(selected)}
       className={cn(
         'h-[40px] flex-row items-center gap-6 rounded-pill px-14',
         selected ? 'bg-honey active:bg-honey-pressed' : 'bg-surface-soft active:bg-surface-soft-pressed',
@@ -37,6 +39,7 @@ export function FilterButton({ label, className, ...props }: Omit<ToggleProps, '
   return (
     <Pressable
       role="button"
+      hitSlop={2}
       className={cn('h-[40px] flex-row items-center gap-6 rounded-pill bg-ink px-14 active:bg-ink-pressed', focusRing, className)}
       {...props}
     >
@@ -53,7 +56,7 @@ export function Choice({ label, selected = false, className, ...props }: ToggleP
   return (
     <Pressable
       role="button"
-      aria-pressed={selected}
+      {...pressedState(selected)}
       className={cn(
         'h-control-md items-center justify-center rounded-pill px-18',
         selected ? 'bg-olive active:bg-olive-pressed' : 'bg-surface-soft active:bg-surface-soft-pressed',
@@ -79,7 +82,7 @@ export function PersonPill({ label, initial, color, selected = false, className,
   return (
     <Pressable
       role="button"
-      aria-pressed={selected}
+      {...pressedState(selected)}
       className={cn(
         'h-control-md flex-row items-center gap-8 rounded-pill pl-6 pr-14',
         selected ? 'bg-honey active:bg-honey-pressed' : 'bg-surface-soft active:bg-surface-soft-pressed',

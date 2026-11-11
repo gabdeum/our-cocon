@@ -1,5 +1,6 @@
-import { createContext, useContext, type ReactNode } from 'react';
-import { View } from 'react-native';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Platform, Text, View } from 'react-native';
+import { setWebAnnouncer } from './a11y';
 import { vars } from 'nativewind';
 import { defaultTheme, themeColors, themeVars, type ThemeId } from './theme';
 
@@ -19,10 +20,31 @@ export function ThemeProvider({ theme = defaultTheme, children }: { theme?: Them
     <ThemeContext.Provider value={theme}>
       <View className="flex-1" style={themeStyles[theme]}>
         {children}
+        {Platform.OS === 'web' ? <WebAnnouncer /> : null}
       </View>
     </ThemeContext.Provider>
   );
 }
+
+/** The web's one polite live region, fed by `announce()` (spec 030 FR-002). */
+function WebAnnouncer() {
+  const [text, setText] = useState('');
+  useEffect(() => {
+    // Clear first so the same words said twice are announced twice.
+    setWebAnnouncer((next) => {
+      setText('');
+      setTimeout(() => setText(next), 50);
+    });
+    return () => setWebAnnouncer(null);
+  }, []);
+  return (
+    <Text aria-live="polite" role="status" style={visuallyHidden}>
+      {text}
+    </Text>
+  );
+}
+
+const visuallyHidden = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 } as const;
 
 /** Raw colour values of the current theme, for props that can't take a class (SVG strokes). */
 export function useThemeColors() {

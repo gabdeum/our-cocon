@@ -67,12 +67,14 @@ export function PhotoPlaceholder({ label, initial, className }: { label?: string
 }
 
 /** A stored photo filling its box (cover): recipe headers and step photos. Read out by its label. */
-export function Photo({ uri, label, className }: { uri: string; label: string; className?: string }) {
+/** Without `label` the photo is decoration, skipped by screen readers (its text says the same, spec 030). */
+export function Photo({ uri, label, className }: { uri: string; label?: string; className?: string }) {
+  if (!label) return <Image source={{ uri }} resizeMode="cover" aria-hidden className={cn('h-full w-full', className)} />;
   return <Image source={{ uri }} resizeMode="cover" role="img" aria-label={label} className={cn('h-full w-full', className)} />;
 }
 
 /** 40 × 40, radius 12: a recipe's photo on a grocery recipe card (OC-Groceries), peach when it has none. */
-export function Thumb({ uri, label }: { uri?: string; label: string }) {
+export function Thumb({ uri, label }: { uri?: string; label?: string }) {
   return <View className="h-[40px] w-[40px] overflow-hidden rounded-[12px]">{uri ? <Photo uri={uri} label={label} /> : <PhotoPlaceholder className="h-full w-full" />}</View>;
 }
 

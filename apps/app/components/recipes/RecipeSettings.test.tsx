@@ -9,6 +9,7 @@ import { quicheIds } from '@cocon/schemas/quiche.fixture';
 import { flush } from '../../test/fakes';
 import { quicheDetail } from '../../test/quiche-detail';
 import { RecipeSettings, type RecipeSettingsProps } from './RecipeSettings';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -63,7 +64,7 @@ const toggle = async (name: string) => {
 };
 
 describe('Recipe settings: cooking settings (spec 027)', () => {
-  it('shows each setting as the family has it, "Same as default", and units on Default', () => {
+  it('shows each setting as the family has it, "Same as default", and units on Default', async () => {
     settingsScreen({ ...DEFAULT_FAMILY_SETTINGS, has_thermometer: false });
     expect(screen.getByRole('switch', { name: 'Keep screen on' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('switch', { name: "I'll use a kitchen scale" }).getAttribute('aria-checked')).toBe('true');
@@ -71,6 +72,8 @@ describe('Recipe settings: cooking settings (spec 027)', () => {
     expect(screen.getAllByText('Same as default')).toHaveLength(2);
     expect(screen.getByText('Shows “100 g” instead of “about 1 cup”')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Default' }).getAttribute('aria-pressed')).toBe('true');
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2: turning "Thermometer checks" on shows "Changed for this recipe · Reset"; Reset puts it back', async () => {

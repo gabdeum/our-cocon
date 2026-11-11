@@ -19,3 +19,5 @@ A sheet that slides up over a dimmed screen for focused tasks: filters, scaling,
 - One task per sheet. The primary button states the result: "Show 12 recipes", "Apply to recipe", "Add 3 items".
 - Swipe down closes. Focus moves to the title on open.
 - A sheet whose field takes focus on open (`fieldFocus`, the add sheet's title so the keyboard opens at once) doesn't move focus to its title.
+- On the iPhone the sheet rises above the keyboard (KeyboardAvoidingView), so the field being typed in stays in view (spec 030).
+- `returnFocusRef`: the button that opened it gets focus back on close (spec 030 FR-003). Keep the sheet mounted with `visible` for this to work.

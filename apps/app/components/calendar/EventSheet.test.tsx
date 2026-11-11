@@ -8,6 +8,7 @@ import { storedEvent } from '@cocon/data';
 import { draftFromEvent, newDraft, toastText } from '../../lib/event-form';
 import { EventSheet, type EventSheetProps } from './EventSheet';
 import { alex as alexFake, fakeTracker, flush, gabriel as gabrielFake, james as jamesFake } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -100,6 +101,8 @@ describe('EventSheet (spec 041)', () => {
     expect(button('More options').getAttribute('aria-expanded')).toBe('false');
     expect(screen.getByText('Place, repeat, reminder…')).toBeTruthy();
     expect(button('Save').getAttribute('aria-disabled')).toBeNull();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US1: "Poker night", Today, Evening, Save', async () => {

@@ -9,6 +9,7 @@ import { defaultPanelChoices } from '../../lib/recipe-choices';
 import type { GroceryItem } from '../../lib/groceries';
 import { fakeTracker, flush, groceryItem } from '../../test/fakes';
 import { quicheDetail } from '../../test/quiche-detail';
+import { expectAccessible } from '../../test/axe';
 
 beforeEach(() => onlineManager.setOnline(true));
 afterEach(cleanup);
@@ -28,7 +29,7 @@ const row = (name: RegExp) => screen.getByRole('checkbox', { name });
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 
 describe('Add to groceries', () => {
-  it('US1: all 8 ticked with amounts; untick butter, eggs and nutmeg → "Add 5 items"', () => {
+  it('US1: all 8 ticked with amounts; untick butter, eggs and nutmeg → "Add 5 items"', async () => {
     setup();
     expect(screen.getByText('Add to groceries')).toBeTruthy();
     expect(screen.getByText('Leek & bacon quiche · serves 6. Untick what you already have at home.')).toBeTruthy();
@@ -44,6 +45,8 @@ describe('Add to groceries', () => {
     fireEvent.click(row(/^Nutmeg/));
     expect(row(/^Butter/).getAttribute('aria-checked')).toBe('false');
     expect(button('Add 5 items')).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('edge: nothing ticked is disabled "Nothing selected"; one reads "Add 1 item"', () => {

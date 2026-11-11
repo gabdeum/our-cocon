@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, type ScrollViewInstance } from 'react-native';
-import { BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, ListRow, PushedScreen, SettingRow, StepText, Text, type TopBarConfig } from '@cocon/ui';
+import { View, type HostInstance, type ScrollViewInstance } from 'react-native';
+import { announce, BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, ListRow, PushedScreen, SettingRow, StepText, Text, useReduceMotion, type TopBarConfig } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
@@ -138,12 +138,21 @@ function Cooking({
   }
   const awake = useCookAwake(keepAwake);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const optionsButton = useRef<HostInstance>(null);
   const hasPill = useHasTimers();
 
   const scroller = useRef<ScrollViewInstance>(null);
-  const scrollTo = useCallback((y: number, animated: boolean) => scroller.current?.scrollTo({ y, animated }), []);
+  // Reduce Motion: steps jump instead of gliding (spec 030 FR-004).
+  const reduceMotion = useReduceMotion();
+  const scrollTo = useCallback((y: number, animated: boolean) => scroller.current?.scrollTo({ y, animated: animated && !reduceMotion }), [reduceMotion]);
   const [initial] = useState(() => startIndex(steps.map((s) => s.id), stepId));
-  const { current, onStepLayout, onViewport, onScroll, jump, snaps, tall } = useStepScroll(count, initial, scrollTo);
+  const { current, onStepLayout, onViewport, onScroll, jump: scrollToStep, snaps, tall } = useStepScroll(count, initial, scrollTo);
+  // Next, Back and the segments say where they landed: the scroll alone is silent (spec 030).
+  const jump = (i: number) => {
+    scrollToStep(i);
+    const to = Math.min(Math.max(i, 0), count - 1);
+    announce(c.stepAnnouncement(to + 1, count, steps[to]?.name ?? null));
+  };
 
   // Once per visit; `minutes` counts from here.
   const startedAt = useRef<number | null>(null);
@@ -209,6 +218,7 @@ function Cooking({
       status={hasPill ? <AppTimerPill onOpen={onOpenTimers} tracker={tracker} compact /> : null}
       optionsLabel={c.options}
       onOptions={() => setOptionsOpen(true)}
+      optionsRef={optionsButton}
       progress={
         <CookProgress
           count={count}
@@ -249,39 +259,38 @@ function Cooking({
       ))}
     </CookLayout>
     {/* Mounted only while open (a closed react-native-web Modal can still catch taps). */}
-    {optionsOpen ? (
-      <BottomSheet
-        visible
-        onClose={() => setOptionsOpen(false)}
-        title={c.options}
-        closeLabel={c.closeOptions}
-      >
-        {/* One list: the sheet's gap would space the rows apart. */}
-        <View>
-          <SettingRow
-            label={c.awake}
-            hint={awake === 'unsupported' ? c.awakeUnsupported : keepAwake ? c.awakeOnHint : c.awakeOffHint}
-            value={keepAwake}
-            onValueChange={(on) => {
-              setKeepAwake(on);
-              tracker.track('cook_screen_awake_toggled', { on });
-            }}
-          />
-          <ListRow
-            flush
-            title={c.editStep(at + 1)}
-            trailing={{ kind: 'chevron' }}
-            onPress={() => {
-              const step = steps[at];
-              if (!step) return;
-              setOptionsOpen(false);
-              onEditStep(stepEditTarget(recipe, choices, step.id));
-            }}
-          />
-          <MoreOptions choices={choices} settings={cooking} tracker={tracker} onChange={onChoices} onScaleByIngredient={openSheet(onScaleByIngredient)} onConvert={openSheet(onConvert)} />
-        </View>
-      </BottomSheet>
-    ) : null}
+    <BottomSheet
+      visible={optionsOpen}
+      returnFocusRef={optionsButton}
+      onClose={() => setOptionsOpen(false)}
+      title={c.options}
+      closeLabel={c.closeOptions}
+    >
+      {/* One list: the sheet's gap would space the rows apart. */}
+      <View>
+        <SettingRow
+          label={c.awake}
+          hint={awake === 'unsupported' ? c.awakeUnsupported : keepAwake ? c.awakeOnHint : c.awakeOffHint}
+          value={keepAwake}
+          onValueChange={(on) => {
+            setKeepAwake(on);
+            tracker.track('cook_screen_awake_toggled', { on });
+          }}
+        />
+        <ListRow
+          flush
+          title={c.editStep(at + 1)}
+          trailing={{ kind: 'chevron' }}
+          onPress={() => {
+            const step = steps[at];
+            if (!step) return;
+            setOptionsOpen(false);
+            onEditStep(stepEditTarget(recipe, choices, step.id));
+          }}
+        />
+        <MoreOptions choices={choices} settings={cooking} tracker={tracker} onChange={onChoices} onScaleByIngredient={openSheet(onScaleByIngredient)} onConvert={openSheet(onConvert)} />
+      </View>
+    </BottomSheet>
     </>
   );
 }
@@ -303,7 +312,6 @@ function CookTimer(props: StepTimerInput) {
       plusA11y={copy.plusA11y}
       onMinus={t.onMinus}
       onPlus={t.onPlus}
-      announcement={t.announcement}
     />
   );
 }

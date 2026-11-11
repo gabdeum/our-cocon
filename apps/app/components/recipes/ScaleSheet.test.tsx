@@ -6,6 +6,7 @@ import { ScaleSheet } from './ScaleSheet';
 import { defaultPanelChoices, type RecipeChoices } from '../../lib/recipe-choices';
 import { fakeTracker } from '../../test/fakes';
 import { quicheDetail } from '../../test/quiche-detail';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -23,13 +24,15 @@ const apply = () => screen.getByRole('button', { name: 'Apply to recipe' });
 const type = (text: string) => fireEvent.change(screen.getByLabelText('2. How much do you have?'), { target: { value: text } });
 
 describe('Scale by an ingredient', () => {
-  it('FR-003: 3 ingredients, then "Show all 7 ingredients" (no pinch)', () => {
+  it('FR-003: 3 ingredients, then "Show all 7 ingredients" (no pinch)', async () => {
     setup();
     expect(screen.getByText('Scale by an ingredient')).toBeTruthy();
     expect(screen.getAllByRole('radio')).toHaveLength(3);
     fireEvent.click(screen.getByRole('button', { name: 'Show all 7 ingredients' }));
     expect(screen.getAllByRole('radio')).toHaveLength(7);
     expect(screen.queryByRole('radio', { name: /Nutmeg/ })).toBeNull();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2: Bacon lardons, 250 g → Recipe × 1.25 → about 7½ servings, eggs rounded; Apply', () => {

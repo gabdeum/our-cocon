@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Join, type JoinViewer } from './Join';
 import { fakeApi, fakeTracker, flush, last } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-linking', () => ({ createURL: (p: string) => p }));
 afterEach(cleanup);
@@ -43,6 +44,8 @@ describe('expired invites (US2.2)', () => {
     expect(screen.getByText('This invite has expired. Ask for a new one.')).toBeTruthy();
     expect(tracker.track).toHaveBeenCalledWith('invite_expired_seen', {});
     expect(tracker.track).toHaveBeenCalledTimes(1);
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('treats a malformed link the same way, without asking the server', async () => {

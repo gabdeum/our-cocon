@@ -108,13 +108,14 @@ export function PushedScreen({ children, className, topBar }: { children: ReactN
 /**
  * Create/edit form (Patterns.md › Form): the form bar and Progress stay at the top (50 16 0), the
  * fields scroll under them (4 20 30, 18 apart). `scrollRef` lets Save bring a warned field into view;
- * `scrollEnabled` false holds the page still while a row is dragged.
+ * `scrollEnabled` false holds the page still while a row is dragged. On the iPhone the fields
+ * scroll clear of the keyboard (spec 030, L98).
  */
 export function FormScreen({ bar, children, scrollRef, scrollEnabled = true }: { bar: ReactNode; children: ReactNode; scrollRef?: Ref<ScrollViewInstance>; scrollEnabled?: boolean }) {
   return (
     <View className="flex-1 bg-surface-page">
       <View className="px-16 pb-[14px] pt-[50px]">{bar}</View>
-      <ScrollView showsVerticalScrollIndicator={false} ref={scrollRef} scrollEnabled={scrollEnabled} className="flex-1" contentContainerClassName="gap-18 px-20 pb-[30px] pt-4" keyboardShouldPersistTaps="handled">
+      <ScrollView showsVerticalScrollIndicator={false} ref={scrollRef} scrollEnabled={scrollEnabled} className="flex-1" contentContainerClassName="gap-18 px-20 pb-[30px] pt-4" keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         {children}
       </ScrollView>
       <ToastHost />

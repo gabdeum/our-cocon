@@ -76,12 +76,14 @@ export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep, focuse
       progress={progress(t, now)}
       actionLabel={actionLabel[t.state]}
       onAction={() => (t.state === 'running' ? store.pause(t.id) : t.state === 'paused' ? store.resume(t.id) : store.add(t.id, MINUTE))}
+      actionA11y={copy.forTimer(actionLabel[t.state], t.label)}
       secondaryLabel={t.state === 'done' ? copy.dismiss : copy.stop}
+      secondaryA11y={copy.forTimer(t.state === 'done' ? copy.dismiss : copy.stop, t.label)}
       onSecondary={() => (t.state === 'done' ? store.dismiss(t.id) : store.stop(t.id))}
       minusLabel={copy.minus}
       plusLabel={copy.plus}
-      minusA11y={copy.minusA11y}
-      plusA11y={copy.plusA11y}
+      minusA11y={copy.forTimer(copy.minusA11y, t.label)}
+      plusA11y={copy.forTimer(copy.plusA11y, t.label)}
       onMinus={() => store.add(t.id, -MINUTE)}
       onPlus={() => store.add(t.id, MINUTE)}
       link={goTo(t)}

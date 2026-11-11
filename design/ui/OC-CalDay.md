@@ -15,3 +15,6 @@ Band name when the event starts at the band's start (Lunch at 12:00 → "Lunch �
 
 ## Interactions
 Swipe left/right (or ‹ ›): next/previous day, same feel as the week. Tap row → OC-CalEvent. Tap "+ Add in the …" → OC-CalAdd with that day and slot.
+
+## Screen readers (spec 030)
+Rows name who after the title: "Brunch, Everyone, Lunch · Grandma's house, happening now"; all-day rows "Lyon trip, Eva, all day, Day 2 of 3". The date is the screen's title, so rows don't repeat it.

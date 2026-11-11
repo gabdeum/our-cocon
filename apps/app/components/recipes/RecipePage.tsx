@@ -191,7 +191,7 @@ function LoadedRecipe({
     <PhotoScreen
       photo={
         headerPhoto ? (
-          <Photo uri={headerPhoto} label={p.photo} />
+          <Photo uri={headerPhoto} label={p.photo(recipe.name)} />
         ) : (
           <PhotoPlaceholder initial={recipe.name.charAt(0).toUpperCase()} className="h-full" />
         )
@@ -271,6 +271,7 @@ function LoadedRecipe({
             <Stepper
               value={shown}
               display={scaledName ? servingsText(shown) : undefined}
+              announcement={p.servingsAnnouncement(scaledName ? servingsText(shown) : String(shown))}
               onChange={changeServings}
               min={SERVINGS_MIN}
               max={max}
@@ -331,7 +332,7 @@ function LoadedRecipe({
                     number={step.number}
                     title={step.name ?? stepText(step)}
                     clock={step.timer?.clock}
-                    accessibilityLabel={p.openStep(step.number)}
+                    accessibilityLabel={p.openStep(step.number, step.name ?? stepText(step), step.timer?.clock)}
                     onPress={() => onOpenStep(step.id)}
                   />
                 </View>

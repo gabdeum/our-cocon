@@ -6,6 +6,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { DEFAULT_FAMILY_SETTINGS, type FamilySettings } from '@cocon/schemas';
 import { fakeTracker } from '../../test/fakes';
 import { RecipesSettings } from './RecipesSettings';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -23,7 +24,7 @@ const press = async (role: 'switch' | 'button', name: string) => {
 };
 
 describe('Recipes settings (OC-SettingsRecipes)', () => {
-  it('reads like the screen: back to the Menu, title, lead, and the Cooking defaults card', () => {
+  it('reads like the screen: back to the Menu, title, lead, and the Cooking defaults card', async () => {
     const { onBack } = setup();
     fireEvent.click(screen.getByRole('button', { name: 'Back to Menu' }));
     expect(onBack).toHaveBeenCalled();
@@ -41,6 +42,8 @@ describe('Recipes settings (OC-SettingsRecipes)', () => {
     expect(screen.getByText('Units')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Metric · g, ml, °C' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('button', { name: 'Imperial · oz, °F' }).getAttribute('aria-pressed')).toBe('false');
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US1: turning off "I have a thermometer" saves it for the whole family', async () => {

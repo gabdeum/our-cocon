@@ -17,7 +17,7 @@ The full step (text, temperature check, timer, tip) is in cooking mode; the shar
 | A step row | → cooking mode at that step (`/recipes/[id]/cook?step={id}&from=recipe`); Exit or Finish returns here |
 
 ## Accessibility labels
-A step row is a link: "Open step {n} in cooking mode".
+A step row is a link: "Step {n}: {name or text}, {35:00} timer. Opens in cooking mode" (the timer part only when it has one; spec 030). A step timer says "1 minute left on {timer}" once, politely, when it gets to 1 minute, and the toast "{timer} is done" at zero.
 
 ## States not drawn
 | State | Copy |

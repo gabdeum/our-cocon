@@ -10,6 +10,7 @@ import { ToastProvider } from '../../lib/toast';
 import { family, fakeTracker, gabriel } from '../../test/fakes';
 import { GrocerySettings } from './GrocerySettings';
 import GroceriesSettingsRoute from '../../app/settings/groceries';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-router', () => ({ router: { canGoBack: () => true, back: vi.fn(), replace: vi.fn() } }));
 
@@ -73,6 +74,8 @@ describe('Menu › Groceries (OC-SettingsGroceries)', () => {
     expect(page.getByRole('heading', { name: 'Where do you shop?' })).toBeTruthy();
     expect(page.getByText('Buy 1 pint')).toBeTruthy();
     expect(page.getByRole('switch', { name: /Round up to store sizes/ })).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('SC-003: a change on the page shows in the sheet, and the other way round', async () => {

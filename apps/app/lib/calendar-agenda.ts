@@ -1,7 +1,7 @@
 import { addDays, dateLabel, timeLabel, timeRange, toMinutes, type SlotTimes } from '@cocon/calendar';
 import type { EventListItem } from '@cocon/ui';
 import { dayOf, driverLine, hiddenFromLine, inAllDay, isBirthday, isNow } from './calendar-day';
-import { eventLook, occurrenceKey, type MemberLook, type MonthOccurrence } from './calendar-month';
+import { eventLook, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import type { Member } from './session';
 import { strings } from '../strings/en';
 
@@ -85,7 +85,7 @@ export function agendaRow(o: MonthOccurrence, date: string, ctx: AgendaContext):
   const tag = tagFor(o, date, range, ctx);
   return {
     order: range ? toMinutes(range.start) : -1,
-    item: { key: occurrenceKey(o), title: o.title, sub, tag, initials, colors, label: a.rowLabel(o.title, sub, tag?.label ?? null) },
+    item: { key: occurrenceKey(o), title: o.title, sub, tag, initials, colors, label: a.rowLabel(o.title, whoText(o.members, ctx.look), sub, tag?.label ?? null) },
   };
 }
 

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { fakeTracker } from '../../test/fakes';
 import { MenuScreen, type MenuScreenProps } from './MenuScreen';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -22,7 +23,7 @@ function setup(over: Partial<MenuScreenProps> = {}) {
 }
 
 describe('Menu (OC-Menu)', () => {
-  it('US1: the title, then Apps, then Settings, as drawn', () => {
+  it('US1: the title, then Apps, then Settings, as drawn', async () => {
     setup();
     expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual(['Menu', 'Apps', 'Settings']);
     const apps = screen.getByRole('navigation', { name: 'Apps' });
@@ -42,6 +43,8 @@ describe('Menu (OC-Menu)', () => {
       'GroceriesWhere you shop, store sizes',
       'Recently deleted1 item',
     ]);
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('SC-001: every tile and row opens its screen, and says which', () => {

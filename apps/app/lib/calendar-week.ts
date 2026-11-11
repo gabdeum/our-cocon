@@ -1,6 +1,6 @@
 import { addDays, calendarWordsEn, daysBetween, fromMinutes, layoutDay, layoutSpans, parts, sortSlots, timeRange, toMinutes, weekRange, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import { GRID_FIRST_HOUR, GRID_HOURS, HOUR_HEIGHT, type HourGridProps, type WeekAllDayBar, type WeekBlock, type WeekColumn, type WeekDayHead } from '@cocon/ui';
-import { chipLook, eventLook, longDate, occurrenceKey, weekdayLetters, type MemberLook, type MonthOccurrence } from './calendar-month';
+import { chipLook, eventLook, longDate, occurrenceKey, weekdayLetters, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import { strings } from '../strings/en';
 import { clock, hourOnly } from './clock';
 
@@ -67,8 +67,8 @@ export function layoutWeekGrid(anchor: string, occurrences: readonly MonthOccurr
     ...chipLook(s.o.members, s.from === s.o.starts_on ? s.o.title : m.cont(s.o.title), ctx.look),
     label:
       s.o.ends_on > s.o.starts_on
-        ? m.barLabel(s.o.title, longDate(s.o.starts_on), longDate(s.o.ends_on))
-        : w.blockLabel(s.o.title, w.dayLabel(dayName(s.o.starts_on), longDate(s.o.starts_on)), words.allDay),
+        ? m.barLabel(s.o.title, whoText(s.o.members, ctx.look), longDate(s.o.starts_on), longDate(s.o.ends_on))
+        : w.blockLabel(s.o.title, whoText(s.o.members, ctx.look), w.dayLabel(dayName(s.o.starts_on), longDate(s.o.starts_on)), words.allDay),
     column: daysBetween(start, s.from),
     days: daysBetween(s.from, s.to) + 1,
     lane: rows.get(occurrenceKey(s.o)) ?? 0,
@@ -115,7 +115,7 @@ function dayBlocks(events: readonly MonthOccurrence[], date: string, ctx: WeekGr
       key,
       top: lane.lanes > 1 ? initials : [initials, when].filter(Boolean).join(' '),
       title: o.title,
-      label: w.blockLabel(o.title, dayName(date), slot ? slotNames.join(', ') : w.timeRange(clock(range.start, use24h), clock(range.end, use24h))),
+      label: w.blockLabel(o.title, whoText(o.members, ctx.look), w.dayLabel(dayName(date), longDate(date)), slot ? slotNames.join(', ') : w.timeRange(clock(range.start, use24h), clock(range.end, use24h))),
       colors,
       kind: slot ? 'slot' : 'custom',
       y: yOf(from) + 1,

@@ -1,6 +1,7 @@
 import { Platform, Pressable, View, type TextStyle } from 'react-native';
+import { LARGE_TEXT_SCALE } from '../a11y';
 import { cn, focusRing } from '../cn';
-import type { AvatarColor } from './Avatar';
+import { memberEdges, type AvatarColor } from './Avatar';
 import { Text } from './Text';
 
 /** An event's fill: a member color, Everyone, Others, or a member who left (grey). */
@@ -22,7 +23,7 @@ const fills: Record<EventColor, string> = {
 
 /**
  * EventChip README › Fill: one color, or two split 50/50 (two flat halves: React Native has no CSS
- * gradient). Others adds a 1 px line-handle outline so it shows on white.
+ * gradient), inside a 1 px outline in the first color's edge so it shows on white (spec 030 FR-007).
  */
 export function Fill({ colors, rounded }: { colors: readonly EventColor[]; rounded: string }) {
   const [first = 'others', second] = colors;
@@ -30,7 +31,7 @@ export function Fill({ colors, rounded }: { colors: readonly EventColor[]; round
     <View aria-hidden className={cn('absolute inset-0 flex-row overflow-hidden', rounded)}>
       <View className={cn('flex-1', fills[first])} />
       {second ? <View className={cn('flex-1', fills[second])} /> : null}
-      {colors.includes('others') ? <View className={cn('absolute inset-0 border border-line-handle', rounded)} /> : null}
+      <View className={cn('absolute inset-0 border', memberEdges[first], rounded)} />
     </View>
   );
 }
@@ -40,8 +41,9 @@ const clipOnWeb = (Platform.OS === 'web' ? { textOverflow: 'clip' } : {}) as Tex
 
 /** 10/800 ink, one line, clipped at the padding with no "…" (EventChip README › Chip). */
 function ChipText({ text }: { text: string }) {
+  // A 15 px chip can't grow: past the large-text size the month shows dots instead (spec 030).
   return (
-    <Text size={10} weight="800" numberOfLines={1} ellipsizeMode="clip" style={[{ lineHeight: CHIP_HEIGHT }, clipOnWeb]}>
+    <Text size={10} weight="800" numberOfLines={1} ellipsizeMode="clip" maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={[{ lineHeight: CHIP_HEIGHT }, clipOnWeb]}>
       {text}
     </Text>
   );
@@ -83,7 +85,7 @@ export function EventChip({ text, colors, onPress }: EventChipProps & { onPress?
 /** The cell's "+N" after four rows: 10/900 ink-muted. */
 export function MoreCount({ text }: { text: string }) {
   return (
-    <Text size={10} weight="900" color="ink-muted" className="pl-[3px]">
+    <Text size={10} weight="900" color="ink-muted" className="pl-[3px]" maxFontSizeMultiplier={LARGE_TEXT_SCALE}>
       {text}
     </Text>
   );

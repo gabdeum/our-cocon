@@ -7,6 +7,7 @@ import { NOW, babyMusic, eva, members } from '../../test/baby-music';
 import { gabriel } from '../../test/fakes';
 import { ToastProvider } from '../../lib/toast';
 import { SurpriseDetail, type SurpriseDetailProps } from './SurpriseDetail';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -41,7 +42,7 @@ function setup(over: Partial<SurpriseDetailProps> = {}) {
 }
 
 describe('SurpriseDetail (OC-CalSurprise)', () => {
-  it('US2: shows the cover, the time, the place and the note from Gabriel, in order', () => {
+  it('US2: shows the cover, the time, the place and the note from Gabriel, in order', async () => {
     setup();
     const text = document.body.textContent ?? '';
     // The top bar first (spec 050): back, and the title it shows once the heading scrolls under it.
@@ -50,6 +51,8 @@ describe('SurpriseDetail (OC-CalSurprise)', () => {
     const order = ['Dinner out', 'Eva', 'Saturday, Oct 31', 'Evening · about 18:00–22:00', 'Café Lalo', 'Copy', 'Open in Maps', 'Note from Gabriel', 'Meet at Café Lalo at 19:30. Dress nice!', 'Added by Gabriel'];
     expect(order.map((t) => text.indexOf(t))).toEqual([...order.map((t) => text.indexOf(t))].sort((x, y) => x - y));
     expect(order.every((t) => text.includes(t))).toBe(true);
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('offers nothing to change: no Edit, Duplicate, Share or Delete', () => {

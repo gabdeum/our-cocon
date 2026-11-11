@@ -10,6 +10,7 @@ import { strings } from '../../strings/en';
 import { buyText } from '../../lib/groceries';
 import { flush } from '../../test/fakes';
 import { GrocerySettings } from './GrocerySettings';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -20,7 +21,7 @@ function setup(settings: FamilySettings = { ...DEFAULT_FAMILY_SETTINGS, store_pr
 }
 
 describe('Grocery settings', () => {
-  it('shows where the family shops, with an example', () => {
+  it('shows where the family shops, with an example', async () => {
     setup();
     expect(screen.getByText('Where do you shop?')).toBeTruthy();
     expect(screen.getByText('So the list shows packs you can actually buy')).toBeTruthy();
@@ -29,6 +30,8 @@ describe('Grocery settings', () => {
     expect(screen.getByText('Buy 1 pint')).toBeTruthy();
     expect(screen.getByRole('switch', { name: 'Round up to store sizes' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByText('Off: the list shows only what recipes need')).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2: picking European stores saves it for the family, and the example follows', async () => {

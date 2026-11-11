@@ -1,5 +1,5 @@
 // TimerRow (StepCard README): what screen readers get. The clock never talks on its own;
-// the announcement is said once, politely (OC-RecipeSteps › Accessibility labels).
+// "1 minute left" and "done" come from the timer store (spec 030 FR-002).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { stepWords, TimerRow, type TimerRowProps } from './StepCard';
@@ -25,11 +25,9 @@ const row = (props: Partial<TimerRowProps> = {}) => {
 };
 
 describe('TimerRow', () => {
-  it('keeps the clock silent and puts the announcement in a polite live region', () => {
-    row({ announcement: '1 minute left' });
+  it('keeps the clock silent', () => {
+    row();
     expect(screen.getByText('01:00').getAttribute('aria-live')).toBe('off');
-    const live = screen.getByText('1 minute left');
-    expect(live.closest('[aria-live="polite"]')).toBeTruthy();
   });
 
   it('works: the button and −1 / +1 call back, and the button reads as pressed while running', () => {

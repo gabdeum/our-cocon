@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Link } from './Button';
-import { srOnly } from './StepCard';
 import { Text } from './Text';
 
 interface Adjust {
@@ -42,17 +41,14 @@ export interface CookTimerCardProps extends Adjust {
   /** "Start timer" · "Pause" · "Resume" · "Done". */
   actionLabel: string;
   onAction: () => void;
-  /** Said once, politely ("1 minute left"); the ticking clock itself stays silent. */
-  announcement?: string;
+  /** Screen-reader name of the action button when it should name the timer ("Pause: Blind bake"). */
+  actionA11y?: string;
 }
 
 /** The dark timer inside a cooking-mode step (TimerCard README › Dark); its logic is the app's (spec 012). */
-export function CookTimerCard({ label, clock, actionLabel, onAction, announcement, ...adj }: CookTimerCardProps) {
+export function CookTimerCard({ label, clock, actionLabel, onAction, actionA11y, ...adj }: CookTimerCardProps) {
   return (
     <View className="gap-10 rounded-[26px] bg-ink px-16 py-14">
-      <View aria-live="polite" style={srOnly}>
-        <Text>{announcement ?? ''}</Text>
-      </View>
       <Text size={14} weight="700" color="on-ink">
         {label}
       </Text>
@@ -63,7 +59,7 @@ export function CookTimerCard({ label, clock, actionLabel, onAction, announcemen
         </Text>
         <AdjustButton dark text={adj.plusLabel} a11y={adj.plusA11y} onPress={adj.onPlus} />
       </View>
-      <Pressable role="button" onPress={onAction} className={cn('h-control-lg items-center justify-center rounded-pill bg-honey active:bg-honey-pressed', focusRing)}>
+      <Pressable role="button" aria-label={actionA11y} onPress={onAction} className={cn('min-h-control-lg items-center justify-center rounded-pill bg-honey active:bg-honey-pressed', focusRing)}>
         <Text size={18} weight="900">
           {actionLabel}
         </Text>
@@ -79,7 +75,7 @@ function AdjustButton({ text, a11y, onPress, dark }: { text: string; a11y: strin
     </Text>
   );
   return (
-    <Pressable role="button" aria-label={a11y} onPress={onPress} className={cn('h-[48px] w-[48px] rounded-full', focusRing)}>
+    <Pressable role="button" aria-label={a11y} onPress={onPress} className={cn('min-h-[48px] min-w-[48px] rounded-full', focusRing)}>
       {dark ? (
         <View className="h-full w-full items-center justify-center rounded-full bg-ink-raised">{inner}</View>
       ) : (
@@ -105,6 +101,9 @@ export interface TimerCardProps extends Adjust {
   /** "Stop" or "Dismiss". */
   secondaryLabel: string;
   onSecondary: () => void;
+  /** Screen-reader names that say which timer: "Pause: Blind bake", "Stop: Blind bake". */
+  actionA11y?: string;
+  secondaryA11y?: string;
   /** A step timer's "Go to step": an olive link at the right of the name, opening its step. */
   link?: { label: string; a11y: string; onPress: () => void };
 }
@@ -117,7 +116,7 @@ const fills: Record<TimersScreenState, string> = {
 
 /** A timer on the Timers screen, tinted by state (TimerCard README › Timers screen, OC-Timers). */
 export function TimerCard(props: TimerCardProps) {
-  const { name, sub, state, clock, progress, actionLabel, onAction, secondaryLabel, onSecondary, link } = props;
+  const { name, sub, state, clock, progress, actionLabel, onAction, secondaryLabel, onSecondary, actionA11y, secondaryA11y, link } = props;
   return (
     <View className={cn('gap-12 rounded-[24px] px-16 py-14', fills[state])}>
       <View className="flex-row items-center gap-8">
@@ -138,18 +137,18 @@ export function TimerCard(props: TimerCardProps) {
         </Text>
         <AdjustButton text={props.plusLabel} a11y={props.plusA11y} onPress={props.onPlus} />
       </View>
-      <View role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} className="h-6 overflow-hidden rounded-[3px]">
+      <View role="progressbar" aria-label={name} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} className="h-6 overflow-hidden rounded-[3px]">
         <View aria-hidden className="absolute inset-0 bg-ink opacity-[0.12]" />
         <View className="h-full bg-ink" style={{ width: `${Math.min(1, Math.max(0, progress)) * 100}%` }} />
       </View>
       <View className="flex-row gap-8">
-        <Pressable role="button" onPress={onAction} className={cn('h-[50px] flex-1 items-center justify-center rounded-pill bg-ink active:bg-ink-pressed', focusRing)}>
+        <Pressable role="button" aria-label={actionA11y} onPress={onAction} className={cn('min-h-[50px] flex-1 items-center justify-center rounded-pill bg-ink active:bg-ink-pressed', focusRing)}>
           <Text size={16} weight="900" color="on-olive">
             {actionLabel}
           </Text>
         </Pressable>
-        <Pressable role="button" onPress={onSecondary} className={cn('rounded-pill', focusRing)}>
-          <SoftWhite className="h-[50px] items-center justify-center rounded-pill px-16">
+        <Pressable role="button" aria-label={secondaryA11y} onPress={onSecondary} className={cn('rounded-pill', focusRing)}>
+          <SoftWhite className="min-h-[50px] items-center justify-center rounded-pill px-16">
             <Text size={15} weight="800">
               {secondaryLabel}
             </Text>

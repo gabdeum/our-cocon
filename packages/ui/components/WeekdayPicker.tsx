@@ -1,4 +1,5 @@
 import { Pressable, View } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Text } from './Text';
 
@@ -23,7 +24,7 @@ export function WeekdayPicker({ letters, names, value, onToggle, label }: Weekda
           <Pressable
             key={day}
             role="button"
-            aria-pressed={on}
+            {...pressedState(on)}
             aria-label={names[day]}
             onPress={() => onToggle(day)}
             className={cn('h-control-md flex-1 items-center justify-center rounded-[12px]', on ? 'bg-olive active:bg-olive-pressed' : 'bg-surface-soft active:bg-surface-soft-pressed', focusRing)}

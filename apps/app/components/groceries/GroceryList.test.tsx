@@ -10,6 +10,7 @@ import { ToastProvider } from '../../lib/toast';
 import { onlineManager } from '@tanstack/react-query';
 import { alex, fakeTracker, flush, gabriel, groceryItem, mia, packData } from '../../test/fakes';
 import type { GroceryItem } from '../../lib/groceries';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-image-picker', () => ({}));
 vi.mock('expo-image-manipulator', () => ({ ImageManipulator: {}, SaveFormat: { JPEG: 'jpeg' } }));
@@ -70,7 +71,7 @@ const row = (name: string) => screen.getByRole('checkbox', { name: new RegExp(na
 const aisle = (name: string) => screen.getByRole('heading', { name }).parentElement as HTMLElement;
 
 describe('Groceries', () => {
-  it('groups rows by aisle in store order, with the source and amount (FR-001, FR-003)', () => {
+  it('groups rows by aisle in store order, with the source and amount (FR-001, FR-003)', async () => {
     setup();
     const headings = screen.getAllByRole('heading').map((h) => h.textContent);
     expect(headings).toEqual(['Groceries', 'Produce', 'Bakery', 'Dairy & eggs', 'Spices & baking']);
@@ -82,6 +83,8 @@ describe('Groceries', () => {
     expect(within(aisle('Produce')).getByText('Added by Mia')).toBeTruthy();
     // No quantity, no Need.
     expect(within(aisle('Spices & baking')).getByText('Salt')).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US1: a tick from Mia shows struck through and the count drops', () => {
@@ -460,7 +463,7 @@ describe('Groceries › what to buy (spec 021)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit Heavy cream' }));
     await flush();
     const remove = screen.getByRole('button', { name: 'Remove' });
-    const options = screen.getByRole('link', { name: /Move to…/ }).parentElement as HTMLElement;
+    const options = screen.getByRole('link', { name: /Move to…/ }).closest('[role="list"]') as HTMLElement;
     expect(options.contains(remove)).toBe(false);
     expect(within(options).getByRole('link', { name: /Store size/ })).toBeTruthy();
     fireEvent.click(remove);
