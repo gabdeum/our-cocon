@@ -1,4 +1,4 @@
-import { foldText, singularWord } from '@cocon/schemas/ingredient-text';
+import { foldText, singularWord, splitIngredientDetail } from '@cocon/schemas/ingredient-text';
 import type { SizeWord, Unit } from '@cocon/schemas/recipes';
 import { readAmount } from './parse-amount';
 import { en, type ParserWords } from './words.en';
@@ -12,6 +12,8 @@ export interface ParsedLine {
   size_word: SizeWord | null;
   /** "2 cloves garlic": what one piece is called. */
   piece_noun: { singular: string; plural: string } | null;
+  /** Spec 051 FR-011: what follows the first comma ("grated"), the row's detail. */
+  prep_note: string | null;
 }
 
 const BULLET = /^\s*(?:[-•*·▪–—]+|\d+[.)](?=\s))\s*/;
@@ -65,8 +67,19 @@ export function splitPastedList(text: string, words: ParserWords = en): string[]
 
 const unitOf = (word: string, words: ParserWords): Unit | undefined => words.units[word.toLowerCase().replace(/\.$/, '')];
 
-/** One line ("200 g lardons", "3 eggs", "1½ cups flour", "2 small onions"), or null when it's empty. */
+/**
+ * One recipe line ("200 g lardons", "3 eggs", "1½ cups flour", "2 small onions"), or null when
+ * it's empty. "100 g Gruyère, grated": the name is "Gruyère" and the detail "grated".
+ */
 export function parseIngredientLine(line: string, words: ParserWords = en): ParsedLine | null {
+  const parsed = readLine(line, words, 200);
+  if (!parsed) return null;
+  const { name, detail } = splitIngredientDetail(parsed.name);
+  return { ...parsed, name: name.slice(0, 80).trim(), prep_note: detail };
+}
+
+/** The amount, unit and name of a line, the name as written (a grocery line keeps its comma). */
+function readLine(line: string, words: ParserWords, maxName = 80): ParsedLine | null {
   let rest = line.replace(BULLET, '').trim().replace(/\.$/, '').trim();
   if (!rest) return null;
 
@@ -119,9 +132,9 @@ export function parseIngredientLine(line: string, words: ParserWords = en): Pars
     if (of && words.of.includes((of[1] as string).toLowerCase())) rest = (of[2] as string).trim();
   }
 
-  const name = upperFirst(rest.trim()).slice(0, 80).trim();
+  const name = upperFirst(rest.trim()).slice(0, maxName).trim();
   if (!name) return null;
-  return { name, quantity, unit, size_word, piece_noun };
+  return { name, quantity, unit, size_word, piece_noun, prep_note: null };
 }
 
 /** A pasted list as rows, in order; lines with no name are left out. */
@@ -161,7 +174,7 @@ export function pieceNouns(name: string): { singular: string; plural: string } {
  * "Size 4 nappies" stays a name.
  */
 export function parseGroceryLine(line: string, words: ParserWords = en): ParsedLine | null {
-  const parsed = parseIngredientLine(line, words);
+  const parsed = readLine(line, words);
   if (!parsed || parsed.quantity !== null) return parsed;
   const tokens = line.trim().replace(/\.$/, '').split(/\s+/);
   for (let i = Math.max(1, tokens.length - 2); i < tokens.length; i++) {
@@ -170,7 +183,7 @@ export function parseGroceryLine(line: string, words: ParserWords = en): ParsedL
     if (!amount || !(amount.value > 0)) continue;
     const rest = tail.slice(amount.length).trim().toLowerCase().replace(/\.$/, '');
     if (rest && !unitOf(rest, words)) continue;
-    const reordered = parseIngredientLine(`${tail} ${tokens.slice(0, i).join(' ')}`, words);
+    const reordered = readLine(`${tail} ${tokens.slice(0, i).join(' ')}`, words);
     if (reordered && reordered.quantity !== null && reordered.name) return reordered;
   }
   return parsed;

@@ -3,6 +3,7 @@ export { loadFacts, loadRecipe, type RecipeDetail } from './recipe-detail';
 export { loadHomeHero, loadRecipeList, searchRecipes, visibleRecipes, type HomeHero, type RecipeListItem } from './recipe-list';
 export { matchIngredients, type MatchedFacts } from './match';
 export * from './recipe-lines';
+export * from './cook-sessions';
 export * from './groceries';
 export { loadFamilySettings } from './family-settings';
 export { loadAiPermissions, setAiPermission } from './ai-permissions';

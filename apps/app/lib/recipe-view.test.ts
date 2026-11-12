@@ -150,14 +150,14 @@ describe('bestMonthsLabel (FR-001)', () => {
 
 describe('recipeChips (FR-001)', () => {
   const members = [{ user_id: 'u-g', display_name: 'Gabriel' }];
-  it('shows time, cuisine, best months and "via" the assistant', () => {
-    expect(recipeChips({ total_minutes: 70, cuisine: 'french', best_months: [10, 11, 12, 1, 2, 3], created_by: 'u-g', source: 'claude' }, members)).toEqual({
+  it('shows time, cuisine, best months and the source (spec 051 FR-015)', () => {
+    expect(recipeChips({ total_minutes: 70, cuisine: 'french', best_months: [10, 11, 12, 1, 2, 3], created_by: 'u-g', source: 'claude', source_text: 'La Cuisine de Mamie · p. 48' }, members)).toEqual({
       facts: ['1 h 10', 'French', 'Best Oct – Mar'],
-      author: 'Gabriel · via Claude',
+      source: 'La Cuisine de Mamie · p. 48',
     });
   });
-  it('hides an empty time, cuisine Other and all-year months', () => {
-    expect(recipeChips({ total_minutes: null, cuisine: null, best_months: [], created_by: 'u-g', source: 'app' }, members)).toEqual({ facts: [], author: 'Gabriel' });
+  it('hides an empty time, cuisine Other and all-year months; no source names who added it', () => {
+    expect(recipeChips({ total_minutes: null, cuisine: null, best_months: [], created_by: 'u-g', source: 'app', source_text: null }, members)).toEqual({ facts: [], source: 'Gabriel' });
   });
 });
 

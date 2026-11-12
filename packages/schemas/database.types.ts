@@ -165,6 +165,38 @@ isOneToOne: false
       referencedColumns: ["key"]
     }
                   ]
+                },"cook_sessions": {
+                  Row: {
+                    "cancel_reason": string | null,"created_at": string,"created_by": string | null,"current_step": number,"family_id": string,"finished_at": string | null,"finished_by": string | null,"id": string,"last_active_at": string,"recipe_id": string,"servings": number,"source": string,"started_at": string,"started_by": string | null,"status": string,"updated_at": string,"updated_by": string | null,"variant_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancel_reason"?: string | null,"created_at"?: string,"created_by"?: string | null,"current_step"?: number,"family_id": string,"finished_at"?: string | null,"finished_by"?: string | null,"id"?: string,"last_active_at"?: string,"recipe_id": string,"servings": number,"source"?: string,"started_at"?: string,"started_by"?: string | null,"status"?: string,"updated_at"?: string,"updated_by"?: string | null,"variant_id"?: string | null
+                  }
+                  Update: {
+                    "cancel_reason"?: string | null,"created_at"?: string,"created_by"?: string | null,"current_step"?: number,"family_id"?: string,"finished_at"?: string | null,"finished_by"?: string | null,"id"?: string,"last_active_at"?: string,"recipe_id"?: string,"servings"?: number,"source"?: string,"started_at"?: string,"started_by"?: string | null,"status"?: string,"updated_at"?: string,"updated_by"?: string | null,"variant_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cook_sessions_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cook_sessions_recipe_id_family_id_fkey"
+      columns: ["recipe_id","family_id"]
+isOneToOne: false
+      referencedRelation: "recipes"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "cook_sessions_variant_id_fkey"
+      columns: ["variant_id"]
+isOneToOne: false
+      referencedRelation: "recipe_variants"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"event_checklist_items": {
                   Row: {
                     "created_at": string,"created_by": string | null,"done": boolean,"done_by": string | null,"event_id": string,"family_id": string,"id": string,"label": string,"position": number,"source": string,"updated_at": string,"updated_by": string | null
@@ -415,14 +447,14 @@ isOneToOne: true
                   ]
                 },"grocery_items": {
                   Row: {
-                    "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"checked": boolean,"checked_at": string | null,"checked_by": string | null,"created_at": string,"created_by": string | null,"deleted_at": string | null,"deleted_by": string | null,"family_id": string,"from_recipe": boolean,"id": string,"name": string,"quantity": number | null,"recipe_id": string | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null
+                    "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"checked": boolean,"checked_at": string | null,"checked_by": string | null,"created_at": string,"created_by": string | null,"deleted_at": string | null,"deleted_by": string | null,"family_id": string,"from_recipe": boolean,"id": string,"name": string,"quantity": number | null,"recipe_detail": string | null,"recipe_id": string | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"family_id": string,"from_recipe"?: boolean,"id"?: string,"name": string,"quantity"?: number | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"family_id": string,"from_recipe"?: boolean,"id"?: string,"name": string,"quantity"?: number | null,"recipe_detail"?: string | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"family_id"?: string,"from_recipe"?: boolean,"id"?: string,"name"?: string,"quantity"?: number | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"family_id"?: string,"from_recipe"?: boolean,"id"?: string,"name"?: string,"quantity"?: number | null,"recipe_detail"?: string | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -951,6 +983,9 @@ isOneToOne: false
 "_sees_logged_event":
 { Args: { "actor": string,"eid": string,"secret": boolean }; Returns: boolean
                            },
+"_shared_recipe_base":
+{ Args: { "p_token": string }; Returns: Json
+                           },
 "_slot_times_ok":
 { Args: { "t": Json }; Returns: boolean
                            },
@@ -1007,6 +1042,9 @@ isOneToOne: false
                            },
 "assistant_for_redirect":
 { Args: { "uri": string }; Returns: string
+                           },
+"cancel_stale_cook_sessions":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "check_request":
 { Args: Record<PropertyKey, never>; Returns: undefined

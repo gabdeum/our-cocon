@@ -42,9 +42,18 @@ export function assistantName(source: string): string | null {
   return source in strings.assistants ? strings.assistants[source as keyof typeof strings.assistants] : strings.assistants.other;
 }
 
-/** "Alex · via ChatGPT", or just "Mia" (RecipeItem README: "via" only when an AI created it). */
-export function recipeAuthor(createdBy: string | null, source: string, members: readonly Pick<Member, 'user_id' | 'display_name'>[]): string {
-  const name = members.find((m) => m.user_id === createdBy)?.display_name ?? strings.recipe.formerMember;
-  const assistant = assistantName(source);
-  return assistant ? strings.recipe.via(name, assistant) : name;
+/**
+ * Spec 051 FR-015: where a recipe comes from, as the list, its page and the shared page show it:
+ * its source ("La Cuisine de Mamie · p. 48"), else the assistant that made it ("ChatGPT"), else
+ * who added it ("Mia"). Never "{name} · via {assistant}"; the activity log keeps that.
+ */
+export function recipeSource(recipe: { source_text: string | null; source: string }, creatorName: string | null): string {
+  const text = recipe.source_text?.trim();
+  if (text) return text;
+  if (recipe.source !== 'app') return recipe.source in strings.assistants && recipe.source !== 'other' ? (assistantName(recipe.source) as string) : strings.recipe.anAssistant;
+  return creatorName ?? strings.recipe.formerMember;
 }
+
+/** A member's name by user id, or null when they left (`recipeSource` then says "Former member"). */
+export const memberName = (userId: string | null, members: readonly Pick<Member, 'user_id' | 'display_name'>[]) =>
+  members.find((m) => m.user_id === userId)?.display_name ?? null;

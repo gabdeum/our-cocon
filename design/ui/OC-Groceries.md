@@ -1,6 +1,6 @@
 # OC-Groceries — Groceries
 
-Source `screens/OC-Groceries.dc.html` · Route `/groceries` · Specs 020, 021, 031
+Source `screens/OC-Groceries.dc.html` · Route `/groceries` · Specs 020, 021, 031, 051
 
 ## Layout
 1. ScreenHeader "Groceries"; sub-line "{n} items to buy · shared with family" ("1 item"); right: presence "{name} is shopping" (when someone else ticked in the last 10 min; never yourself).
@@ -8,7 +8,7 @@ Source `screens/OC-Groceries.dc.html` · Route `/groceries` · Specs 020, 021, 0
    - "Grocery settings": IconButton `--round` (settings icon) at the title's right, after the Presence pill when someone is shopping; it opens the Grocery settings sheet (spec 050 FR-007).
 3. One soft card per linked recipe: thumb, "For {recipe}", "{n} items · serves {n}" (the servings it's on the list for, spec 022), then a vertical "…" soft IconButton (`more-vertical`, 44 × 44, the card's own fill until pressed; screen reader: "Options for {recipe}") that opens the recipe card menu. The card itself isn't tappable.
 4. Aisle groups in catalog order (spec 031): overline aisle name; white list group; rows in alphabetical order of the name shown (ticked ones too, so nothing moves when ticked). One row per thing still to buy (spec 022): everything of the same catalog entry, or the same name for custom items, is one row whoever added it, its amounts added up in the unit of the item added first ("Apple: 15 pieces" from 11 pieces and 600 g, through the catalog's piece weights and densities; counts round up; "11 pieces + 600 g" when they don't convert). Ticked items make their own row. Rows:
-   - checkbox · title line "{name}: {to buy}" (800) then " (need {amount})" (15/600 ink-muted) · source sub-line ("For {recipe}" / "Added by {name}" / "{name} via {assistant}"; "From a deleted recipe" once its recipe is in Recently deleted or gone, spec 018). A row from several sources names each once, recipes first, joined by " · ": "For Apple crumble + Leek & bacon quiche · Added by Mia"; when more than one person typed it in, "Added manually" instead of their names
+   - checkbox · title line "{name}: {to buy}" (800) then " (need {amount})" (15/600 ink-muted) · source sub-line (13/600 ink-soft, line-height 1.35; spec 051 FR-009): from one recipe, "In recipe: {detail}" ("In recipe: grated"); from several, "In recipes: {detail} · {detail}" (each detail once, in recipe order: "In recipes: for the pan · cold, cubed"); from recipes whose ingredient has no detail, no line; typed in, "Added by {member}" (also when an assistant added it for them; never "via"); "From a deleted recipe" once its recipe is in Recently deleted or gone (spec 018). The detail is copied from the recipe when the item is added. A row from several sources names each once, recipes first, joined by " · ": "In recipe: grated · Added by Mia"; when more than one person typed it in, "Added manually" instead of their names
    - the title line reads "Heavy cream: 1 pint carton (need 300 ml)"; "(need …)" is left out when what to buy is exactly what's needed ("Pumpkin: 1 kg loose", "Lemon: 2 pieces"); counts always say pieces ("1 piece", "2 pieces", "½ piece"). The name is the catalog's singular when it's the same word as typed ("2 lemons" → "Lemon"); a name the matcher only got close to stays as typed ("Meyer lemons"); "Heavy cream: 300 ml" when no pack is known or round-up is off; just "Salt" when there's no quantity. No leftover is shown.
    - trailing: a vertical "…" icon button (`more-vertical`, 44 × 44, ink-muted, vertically centred; screen reader: "Edit {name}"), beside the row rather than inside it; it opens the row menu.
 5. Under the list: soft "Clear done items" (when something is ticked) and outline "Clear all items" (when the list isn't empty), side by side.
@@ -20,7 +20,7 @@ Produce · Bakery · Dairy & eggs · Meat & fish · Dry goods · Spices & baking
 ## States not drawn
 | State | Copy |
 | --- | --- |
-| Empty list | "Your list is empty." · "Add items above, or from any recipe with “Add groceries”." |
+| Empty list | "Your list is empty." · "Add items above, or from any recipe with “Add to groceries”." |
 | Clear all items | Dialog (warning icon): "Clear all {n} items on the list?" ("Clear the 1 item on the list?") / "This removes every item, ticked or not, for everyone in the family. You can undo it right after." · "Clear all items" · "Keep the list". Confirming clears them all and shows StatusBanner "Cleared {n} items" with "Undo". |
 | One or more ticked | Soft button "Clear done items" at the end of the list. Pressing it removes ticked items and shows StatusBanner "Cleared {n} items" with "Undo". Nothing is cleared automatically. |
 | Item in Other | row long-press menu "Move to…" with the aisle list; the choice is remembered for the family |
@@ -58,3 +58,4 @@ A BottomSheet titled "For {recipe}", lead "{n} items · serves {n}" (close label
 
 ## Changelog
 - 2026-11-05 (050 FR-007): the Add row pinned under the status bar; "Grocery settings" moves to the title's right as a round IconButton.
+- 2026-11-12 (051 FR-009): the row source line shows the recipes' detail ("In recipe: {detail}", "In recipes: …"), "Added by {member}", never "via". The recipe card is unchanged.

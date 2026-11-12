@@ -1,11 +1,12 @@
 # OC-AddGroceries — Add to groceries (sheet)
 
-Source `screens/OC-AddGroceries.dc.html` · Route `/recipes/[id]/add-to-groceries` · Spec 022
+Source `screens/OC-AddGroceries.dc.html` · Route `/recipes/[id]/add-to-groceries` · Specs 022, 051
 
 ## Layout
 1. Title "Add to groceries"; lead "{recipe name} · serves {n}. Untick what you already have at home."; on the right of the title, an olive link "Untick all" (when anything is ticked) or "Tick all" (when nothing is). Not drawn; added at Gabriel's request.
 2. One list group, overline "From this recipe", right note "All ticked to start". One checkbox row per ingredient (current servings, variants and units): name, amount on the right.
-   - When the item is already on the grocery list, the sub-line (warn 13/700) reads "Already on the list ({existing}) → will be {total}", with the amounts as the list's combined row will show them ("Already on the list (6 pieces) → will be 9 pieces").
+   - When the ingredient has a detail, "In recipe: {detail}" under the name (13/600 ink-soft; spec 051 FR-010).
+   - When the item is already on the grocery list, a sub-line of its own (warn 13/700) reads "Already on the list ({existing}) → will be {total}", with the amounts as the list's combined row will show them ("Already on the list (6 pieces) → will be 9 pieces").
 3. Footer: soft "Cancel" (110 wide) and ink "Add {n} items".
 
 ## Dynamic copy
@@ -31,3 +32,6 @@ Sage disc with check · "Added {n} items to groceries" · "The whole family can 
 - Every ingredient starts ticked; there's no pantry. Untick what you have.
 - Items with no quantity ("Salt and pepper") are listed with no amount, ticked like the rest.
 - Amounts follow the recipe page (servings, scale by an ingredient, version and options, units). Counted items show their weight ("2 · 300 g"); the list gets whole counts, rounded up.
+
+## Changelog
+- 2026-11-12 (051 FR-010): "In recipe: {detail}" under the name; the merge note stays its own line.

@@ -1,5 +1,6 @@
 import { useState, type ReactNode, type Ref } from 'react';
 import { ScrollView, View, type ScrollViewInstance } from 'react-native';
+import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
 import { cn } from '../cn';
 import { theme } from '../theme';
 import { Logo } from './Icon';
@@ -134,7 +135,7 @@ export interface PhotoScreenProps {
   banner?: ReactNode;
   /** Stays put while the page scrolls, centred 108 from the top: the TimerPill (spec 011). */
   floating?: ReactNode;
-  /** Fixed at the bottom while the page scrolls under it: the recipe page's "Start cooking". */
+  /** Fixed at the bottom while the page scrolls under it, on a cream fade: the recipe page's action bar (spec 051 FR-014). */
   footer?: ReactNode;
   children: ReactNode;
 }
@@ -142,7 +143,8 @@ export interface PhotoScreenProps {
 /**
  * Pushed screen with photo header (Patterns.md): photo 240 edge to edge under the TopBar, and the
  * content sheet overlapping it by 30 with a top radius of 30. An optional footer bar stays at the
- * bottom (page background, top border, 20 sides, 12 top, 28 bottom).
+ * bottom over the content (14 top, 16 sides, 28 bottom), on a fade from clear to the page
+ * background by 26% of its height, so the page reads as it scrolls under it.
  */
 export function PhotoScreen({ photo, topBar, banner, floating, footer, children }: PhotoScreenProps) {
   const bar = useTopBar(topBar, PHOTO);
@@ -151,7 +153,7 @@ export function PhotoScreen({ photo, topBar, banner, floating, footer, children 
       <TopBarHeadingProvider value={bar.register}>
         <ScrollView showsVerticalScrollIndicator={false} onScroll={bar.onScroll} scrollEventThrottle={16} className="flex-1 bg-surface-page">
           <View className="h-[240px] overflow-hidden">{photo}</View>
-          <View className="-mt-[30px] gap-18 rounded-t-[30px] bg-surface-page px-20 pb-[40px] pt-24">
+          <View className={cn('-mt-[30px] gap-18 rounded-t-[30px] bg-surface-page px-20 pt-24', footer ? 'pb-[120px]' : 'pb-[40px]')}>
             {banner}
             {children}
           </View>
@@ -165,7 +167,30 @@ export function PhotoScreen({ photo, topBar, banner, floating, footer, children 
           {floating}
         </View>
       ) : null}
-      {footer ? <View className="border-t-[1.5px] border-line bg-surface-page px-20 pb-28 pt-12">{footer}</View> : null}
+      {footer ? (
+        <View pointerEvents="box-none" className="absolute bottom-0 left-0 right-0 z-[9] px-16 pb-28 pt-14">
+          <FooterFade />
+          {footer}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/** The footer's backdrop: surface-page from clear to full by 26% (OC-Recipe's action bar). */
+function FooterFade() {
+  const page = theme.color.surfacePage;
+  return (
+    <View pointerEvents="none" aria-hidden className="absolute inset-0">
+      <Svg width="100%" height="100%" preserveAspectRatio="none">
+        <Defs>
+          <LinearGradient id="footer-fade" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={page} stopOpacity={0} />
+            <Stop offset="0.26" stopColor={page} stopOpacity={1} />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill="url(#footer-fade)" />
+      </Svg>
     </View>
   );
 }

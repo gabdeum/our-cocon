@@ -1,6 +1,6 @@
 # OC-EditBasics — Recipe form: Details
 
-Source `screens/OC-EditBasics.dc.html` · Route `/recipes/new` · `/recipes/[id]/edit?section=details` · Spec 014
+Source `screens/OC-EditBasics.dc.html` · Route `/recipes/new` · `/recipes/[id]/edit?section=details` · Specs 014, 027, 051
 
 ## Shared form chrome (all four sections)
 - Form bar: "Cancel" (muted link) · title "New recipe" or "Edit recipe" · olive sm "Save".
@@ -15,7 +15,23 @@ Source `screens/OC-EditBasics.dc.html` · Route `/recipes/new` · `/recipes/[id]
 5. Row: "Serves" | "Total time" inputs.
 6. "Best months to make it": MonthPicker; hint "Leave empty if it's good all year."
 7. Ink switch card "Advanced mode", hint "Show every field: prep time, cuisine, source".
-8. Advanced only: "Prep time" | "Cuisine"; "Source (optional)" with placeholder "A book, a website or “Grandma”".
+8. Advanced only: "Prep time" | "Cuisine"; "Source (optional)" with placeholder "A book and page, a website or “Grandma”" and hint "Book and page, a website, or a person. Assistants fill this in, or put their own name if there's nothing else." (spec 051 FR-015).
+9. Editing only (never on New recipe): the "This recipe" section, at the end before "Next: Ingredients". See below.
+
+## This recipe (spec 051 FR-013; editing only)
+The recipe's own cooking settings (spec 027) and Delete, which used to be on the retired Recipe settings page.
+1. Heading "This recipe" (20/900); lead "Only for this recipe. Family defaults are in Menu › Recipes."
+2. White card, each row a Switch row:
+   - "Keep screen on"
+   - "I'll use a kitchen scale", hint "Shows “100 g” instead of “about 1 cup”" while it follows the default
+   - "Thermometer checks"
+   - "Units": segmented "Default" · "Metric" · "Imperial" (no hint: "Default" is the reset)
+   Each switch's hint reads "Same as default" or, in warn, "Changed for this recipe · Reset". Reset puts the family default back.
+3. "Delete recipe": white button, danger text, trash icon. It opens spec 018's Dialog (OC-Delete), then Recipes with "Recipe deleted · Undo".
+
+- The settings save with the form's Save, like every other field (not at once); each setting changed is tracked as `recipe_setting_changed`.
+- Offline: the switches and Units show, dimmed, and can't change; no Reset; "Delete recipe" is off.
+- `&focus=this-recipe` opens Details scrolled to this section ("Units: {x}" on the recipe page and in cooking mode, and the old `/recipes/[id]/settings`, which redirects here).
 
 ## Cuisine picker
 - The Cuisine field looks like an input with a chevron, showing the label ("French") or the placeholder "Pick one".
@@ -38,7 +54,7 @@ Source `screens/OC-EditBasics.dc.html` · Route `/recipes/new` · `/recipes/[id]
 ## States
 | State | What shows |
 | --- | --- |
-| Saving | Save (and "Save recipe") reads "Saving…" and waits |
+| Saving | Save (and "Save recipe") reads "Saving…" and waits; "Delete recipe" waits too |
 | Save failed | warn callout at the top of the form "Couldn't save. Try again."; the form stays as typed |
 | Offline | the StatusBanner "You're offline. You can read, but changes need a connection."; Save is disabled |
 | Edit: recipe can't be loaded | "We couldn't open this recipe." · "It may have been deleted, or you're offline." · soft "Try again" · soft "Cancel" |
@@ -47,3 +63,6 @@ Source `screens/OC-EditBasics.dc.html` · Route `/recipes/new` · `/recipes/[id]
 
 ## Leaving
 Cancel with changes → Dialog "Discard your changes?" · body "Your edits to this recipe won't be saved." · danger "Discard" · soft "Keep editing".
+
+## Changelog
+- 2026-11-12 (051): Source placeholder and hint; the "This recipe" section (the recipe's own settings and "Delete recipe"), moved here from the retired Recipe settings page.

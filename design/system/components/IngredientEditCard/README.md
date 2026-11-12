@@ -1,6 +1,6 @@
 # IngredientEditCard
 
-One ingredient being edited in the recipe form: drag handle, name and remove, then quantity, unit and, for pieces, the weight of one (OC-EditIngredients).
+One ingredient being edited in the recipe form: drag handle, name and remove, then quantity, unit and, for pieces, the weight of one, then its detail (OC-EditIngredients).
 
 ## Specs
 
@@ -11,6 +11,7 @@ One ingredient being edited in the recipe form: drag handle, name and remove, th
 | Inputs | TextField `--sm` look: 46 tall, radius 12, 2 px `line-strong`, 16 px text (name 700, quantity 800); focus border `olive` |
 | Remove | 44 square, radius 12, `surface-soft`, 18 px close icon in `ink-muted`; label "Remove {name}" |
 | Second row | indented 30 (under the name): quantity 1fr, unit button 1.2fr, weight box 1.4fr; gap 8 |
+| Detail (spec 051) | indented 30, under the second row: one field 42 tall, radius 12, 2 px `line-strong` on `surface-card`, 14/600 ink-muted, placeholder "Detail (optional) · sliced, at room temp…", 80 characters. The design draws its fill `#FFFCF2`, which isn't a token; `surface-card` is used |
 | Unit button | 46 tall, radius 12, 2 px `line-strong`, white; 15/800 label and a 16 px chevron-down; no unit: label in `ink-muted` |
 | Weight box | 46 tall, radius 12, `surface-soft`, padding 0 10: "each ≈" 14/700, the value input 16/900, "g" 14/700 |
 | Extra content | under the name row, indented 30: suggestions, the aisle line, advanced fields |

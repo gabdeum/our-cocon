@@ -48,9 +48,9 @@ describe('parseAmount (FR-001)', () => {
 describe('the paste parser (FR-003)', () => {
   it('US1: "200 g lardons, 3 eggs, 300 ml cream" makes 3 rows', () => {
     expect(parsePastedList('200 g lardons, 3 eggs, 300 ml cream')).toEqual([
-      { name: 'Lardons', quantity: 200, unit: 'g', size_word: null, piece_noun: null },
-      { name: 'Eggs', quantity: 3, unit: 'piece', size_word: null, piece_noun: null },
-      { name: 'Cream', quantity: 300, unit: 'ml', size_word: null, piece_noun: null },
+      { name: 'Lardons', quantity: 200, unit: 'g', size_word: null, piece_noun: null, prep_note: null },
+      { name: 'Eggs', quantity: 3, unit: 'piece', size_word: null, piece_noun: null, prep_note: null },
+      { name: 'Cream', quantity: 300, unit: 'ml', size_word: null, piece_noun: null, prep_note: null },
     ]);
   });
 
@@ -62,6 +62,15 @@ describe('the paste parser (FR-003)', () => {
 
   it('keeps commas in brackets and decimal commas', () => {
     expect(splitPastedList('1 can (400 g, drained) beans, 1,5 kg flour')).toEqual(['1 can (400 g, drained) beans', '1,5 kg flour']);
+  });
+
+  it('puts what follows the first comma in the detail (spec 051 FR-011)', () => {
+    expect(parsePastedList('100 g Gruyère, grated')).toEqual([
+      { name: 'Gruyère', quantity: 100, unit: 'g', size_word: null, piece_noun: null, prep_note: 'grated' },
+    ]);
+    expect(parseIngredientLine('2 leeks, white and light green parts, sliced')).toMatchObject({ name: 'Leeks', prep_note: 'white and light green parts, sliced' });
+    expect(parseIngredientLine('400 g chickpeas (cooked, drained)')).toMatchObject({ name: 'Chickpeas (cooked, drained)', prep_note: null });
+    expect(parseGroceryLine('Gruyère, grated 100 g')).toMatchObject({ name: 'Gruyère, grated', prep_note: null });
   });
 
   it('understands the four FR-003 shapes', () => {

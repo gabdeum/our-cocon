@@ -109,6 +109,22 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
     expect(steps?.payload.call_id).toMatch(/^[0-9a-f-]{36}$/);
   });
 
+  it('spec 051: no source names the assistant; a detail after a comma goes to prep_note; get_recipe says how often it was cooked', async () => {
+    const { data, error } = await call('create_recipe', {
+      name: 'Cheese toast',
+      serves: 2,
+      ingredients: [{ name: 'Gruyère, grated', quantity: 100, unit: 'g' }, '2 slices of bread'],
+      steps: ['Toast the bread, top with the cheese and grill until it bubbles.'],
+    });
+    expect(error).toBeNull();
+    const toast = data as Result;
+    expect(toast.for_editing.source_text).toBe('Claude');
+    expect(toast.cooking).toEqual({ times_cooked: 0, last_cooked_at: null });
+    const { data: row } = await gabriel.from('recipes').select('source_text, recipe_ingredients(name, prep_note)').eq('id', toast.id).single();
+    expect(row?.source_text).toBe('Claude');
+    expect(row?.recipe_ingredients).toContainEqual({ name: 'Gruyère', prep_note: 'grated' });
+  });
+
   describe('edge cases: errors the assistant can fix and retry', () => {
     it('an unknown unit', async () => {
       const { error } = await call('create_recipe', { name: 'Pancakes', serves: 2, ingredients: [{ name: 'Flour', quantity: 1, unit: 'cupz' }], steps: [] });

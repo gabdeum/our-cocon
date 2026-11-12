@@ -4,7 +4,7 @@ import { deleteRecipe } from './recipe-delete';
 import type { Client } from './supabase';
 
 /**
- * Spec 018: "Delete this recipe" from the edit form or recipe settings. Moves it to Recently deleted,
+ * Spec 018: "Delete recipe" from the edit form's This recipe (spec 051). Moves it to Recently deleted,
  * records `recipe_deleted` and refreshes every recipe list. Throws when nothing was deleted.
  */
 export function useDeleteRecipe(client: Pick<Client, 'from'>, tracker: Tracker, familyId: string) {

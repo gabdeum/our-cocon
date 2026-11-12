@@ -4,6 +4,7 @@ import {
   IngredientInput,
   normaliseName,
   pieceSnapshot,
+  splitIngredientDetail,
   type Aisle,
   type IngredientFacts,
   type IngredientRow,
@@ -39,7 +40,7 @@ export interface IngredientDraft {
   /** The catalog has no such name: Save adds it to the family's ingredients with this aisle. */
   isNew: boolean;
   newAisle: Aisle | null;
-  /** Kept as saved: the form doesn't edit it. */
+  /** Spec 051 FR-011: the "Detail (optional)" field, saved as the row's prep note. */
   prepNote: string | null;
 }
 
@@ -117,6 +118,7 @@ export function draftFromParsed(line: ParsedLine, id: string): IngredientDraft {
     sizeWord: line.size_word,
     nounSingular: line.piece_noun?.singular ?? '',
     nounPlural: line.piece_noun?.plural ?? '',
+    prepNote: line.prep_note,
   };
 }
 
@@ -236,8 +238,10 @@ export function readIngredients(drafts: IngredientDraft[]): { rows: IngredientSa
     else if (!name) warnings[d.key] = 'nameMissing';
     if (warnings[d.key] || quantity === 'invalid' || weight === 'invalid') continue;
     const nouns = piece ? nounsOf(d, name) : null;
+    // FR-007: the name never keeps a detail typed after a comma; one in the Detail field wins.
+    const split = splitIngredientDetail(name);
     const row = {
-      name: name.slice(0, 80).trim(),
+      name: split.name.slice(0, 80).trim(),
       catalog_key: d.catalogKey,
       quantity,
       unit: d.unit,
@@ -245,7 +249,7 @@ export function readIngredients(drafts: IngredientDraft[]): { rows: IngredientSa
       weight_per_piece_g: weight,
       piece_noun_singular: nouns?.singular.slice(0, 40) ?? null,
       piece_noun_plural: nouns?.plural.slice(0, 40) ?? null,
-      prep_note: d.prepNote,
+      prep_note: d.prepNote?.trim().slice(0, 80) || split.detail,
     };
     const parsed = IngredientInput.safeParse({ ...row, position: rows.length });
     if (!parsed.success) {
@@ -262,7 +266,7 @@ export function readIngredients(drafts: IngredientDraft[]): { rows: IngredientSa
 export function ingredientsChanged(start: IngredientDraft[], now: IngredientDraft[]): boolean {
   const norm = (ds: IngredientDraft[]) =>
     JSON.stringify(
-      ds.filter((d) => !isBlank(d)).map((d) => [d.id, d.name, d.quantity, d.unit, d.sizeWord, d.weight, d.nounSingular, d.nounPlural, d.catalogKey, d.newAisle]),
+      ds.filter((d) => !isBlank(d)).map((d) => [d.id, d.name, d.quantity, d.unit, d.sizeWord, d.weight, d.nounSingular, d.nounPlural, d.catalogKey, d.newAisle, d.prepNote?.trim() || null]),
     );
   return norm(start) !== norm(now);
 }

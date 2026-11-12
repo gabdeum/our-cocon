@@ -17,22 +17,27 @@ export interface RecipeListItem {
   photo_path: string | null;
   created_by: string | null;
   source: string;
+  /** Where it comes from (spec 051 FR-015). */
+  source_text: string | null;
   created_at: string;
   ingredientNames: string[];
   variantCount: number;
+  /** The recipe's own steps, for a cook's "Step 3 of 6" (spec 051). */
+  stepCount: number;
 }
 
 const columns =
-  'id, name, description, serves, total_minutes, cuisine, best_months, photo_path, created_by, source, created_at, recipe_ingredients(name), recipe_variants(count)';
+  'id, name, description, serves, total_minutes, cuisine, best_months, photo_path, created_by, source, source_text, created_at, recipe_ingredients(name), recipe_variants(count), recipe_steps(count)';
 
 /** The family's recipes (RLS returns only theirs), not deleted, most recently added first (decision 13). */
 export async function loadRecipeList(client: Pick<Db, 'from'>): Promise<RecipeListItem[]> {
   const { data, error } = await client.from('recipes').select(columns).is('deleted_at', null).order('created_at', { ascending: false });
   if (error) throw error;
-  return data.map(({ recipe_ingredients, recipe_variants, ...recipe }) => ({
+  return data.map(({ recipe_ingredients, recipe_variants, recipe_steps, ...recipe }) => ({
     ...recipe,
     ingredientNames: recipe_ingredients.map((i) => i.name),
     variantCount: recipe_variants[0]?.count ?? 0,
+    stepCount: recipe_steps[0]?.count ?? 0,
   }));
 }
 

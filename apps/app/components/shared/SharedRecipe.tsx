@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Callout, Card, Choice, IngredientRow, Link, Photo, PhotoPlaceholder, PillRow, PublicScreen, SegmentedControl, SettingRow, Stepper, Text } from '@cocon/ui';
+import { Button, Callout, Card, Choice, IngredientRow, Link, Meta, Photo, PhotoPlaceholder, PillRow, PublicScreen, SegmentedControl, SettingRow, Stepper, Text } from '@cocon/ui';
 import { noVariants, validChoice, type AnonymousTracker, type SharedRecipe as Shared, type Tracker, type VariantChoice } from '@cocon/schemas';
 import type { UnitSystem } from '@cocon/quantity';
 import { strings } from '../../strings/en';
 import type { SharedLoad } from '../../lib/shared-recipe';
 import { optionHint, recipeView, servingsMax, SERVINGS_MIN } from '../../lib/recipe-view';
+import { recipeSource } from '../../lib/recipe-format';
 import { RecipeStep } from '../recipes/RecipeStep';
 
 const v = strings.sharedView;
@@ -94,6 +95,8 @@ function Loaded({
   const ingredients = showAll || hidden <= 0 ? view.ingredients : view.ingredients.slice(0, INGREDIENTS_SHOWN);
   const headerPhoto = recipe.photo_path ? photoUrls[recipe.photo_path] : undefined;
   const nameInText = `${recipe.name.charAt(0).toLowerCase()}${recipe.name.slice(1)}`;
+  // Older answers had no source: no chip rather than a guess.
+  const source = recipe.source ? recipeSource({ source_text: recipe.source_text ?? null, source: recipe.source }, recipe.author_name ?? null) : null;
 
   const switchUnits = (next: UnitSystem) => {
     if (next === system) return;
@@ -118,6 +121,12 @@ function Loaded({
           <Text variant="body" color="ink-muted" className="mt-6">
             {recipe.description}
           </Text>
+        ) : null}
+        {/* Spec 051 FR-015: where it comes from, as on the family's own page. */}
+        {source ? (
+          <PillRow className="mt-12">
+            <Meta label={source} icon="book" accessibilityLabel={strings.recipePage.sourceA11y(source)} tone="sage" />
+          </PillRow>
         ) : null}
       </View>
 

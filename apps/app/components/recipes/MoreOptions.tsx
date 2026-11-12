@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { ListRow, SegmentedControl, SettingRow } from '@cocon/ui';
+import { ListRow, SettingRow } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeChoices } from '../../lib/recipe-choices';
@@ -9,9 +9,10 @@ import { formatOf } from '../../lib/recipe-view';
 const more = strings.recipePage.more;
 
 /**
- * The "…" options (spec 013, OC-Recipe): the kitchen scale and units are quick toggles for this
- * recipe on this device; the two sheets sit between them, as drawn. Shown under Servings on the
- * recipe page and in cooking mode's options sheet (OC-Cook).
+ * The "…" options (spec 013, OC-Recipe): the kitchen scale is a quick toggle for this recipe on
+ * this device; then the two sheets, and the units in force, which change in the recipe form's
+ * "This recipe" (spec 051 FR-013). Shown under Servings on the recipe page and in cooking mode's
+ * options sheet (OC-Cook).
  */
 export function MoreOptions({
   choices,
@@ -20,6 +21,7 @@ export function MoreOptions({
   onChange,
   onScaleByIngredient,
   onConvert,
+  onEditUnits,
 }: {
   choices: RecipeChoices;
   /** The recipe's units and kitchen scale in force (spec 027), under the toggles. */
@@ -29,13 +31,14 @@ export function MoreOptions({
   onChange: (next: RecipeChoices) => void;
   onScaleByIngredient: () => void;
   onConvert: () => void;
+  /** "Units: Metric": the recipe form, scrolled to "This recipe". */
+  onEditUnits: () => void;
 }) {
   // What's in force: the toggles, else the settings.
   const format = formatOf(choices, settings);
   const change = (next: RecipeChoices) => {
     // Tapping what's already in force changes nothing, and keeps following the settings.
     if (next.kitchenScale !== null && next.kitchenScale !== format.scale) tracker.track('kitchen_scale_toggled', { on: next.kitchenScale });
-    else if (next.system !== null && next.system !== format.system) tracker.track('units_toggled', { system: next.system });
     else return;
     onChange(next);
   };
@@ -52,22 +55,10 @@ export function MoreOptions({
       <ListRow
         flush
         last
-        title={more.units}
-        trailing={{
-          kind: 'node',
-          node: (
-            <SegmentedControl
-              variant="pill"
-              label={more.units}
-              value={format.system}
-              onChange={(system) => change({ ...choices, system })}
-              segments={[
-                { key: 'metric', label: more.metric },
-                { key: 'imperial', label: more.imperial },
-              ]}
-            />
-          ),
-        }}
+        title={more.unitsIn(format.system === 'metric' ? more.metric : more.imperial)}
+        sub={more.unitsChange}
+        trailing={{ kind: 'chevron' }}
+        onPress={onEditUnits}
       />
     </View>
   );

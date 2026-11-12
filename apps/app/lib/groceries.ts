@@ -3,7 +3,6 @@ import { familyIngredientRow, GroceryItemUpdate, type Aisle, type FamilySettings
 import * as data from '@cocon/data';
 import type { AddResult, GroceryItem, GroceryRow, GroceryServings, PackData, RowAmounts } from '@cocon/data';
 import { strings } from '../strings/en';
-import { assistantName } from './recipe-format';
 import { matchIngredients } from './recipe-ingredients';
 import type { Member } from './session';
 import type { Client } from './supabase';
@@ -49,19 +48,20 @@ export const groceryServingsKey = (familyId: string) => ['grocery_recipes', fami
 /** The header's count: rows not ticked yet (combineRows). */
 export const toBuyCount = (rows: readonly Pick<GroceryRow, 'checked'>[]) => rows.filter((r) => !r.checked).length;
 
+const fromLiveRecipe = (item: Pick<GroceryItem, 'recipes'>) => !!item.recipes && !item.recipes.deleted_at;
+
 /**
- * FR-003: "For Leek & bacon quiche", "Added by Mia" or "Alex via ChatGPT". An item from a recipe
- * that's in Recently deleted, or gone for good, reads "From a deleted recipe" (spec 018).
+ * Spec 051 FR-009: "In recipe: grated", or nothing for a recipe ingredient without a detail.
+ * Typed in: "Added by Mia", an assistant's too (who asked, not what typed it). An item from a
+ * recipe that's in Recently deleted, or gone for good, reads "From a deleted recipe" (spec 018).
  */
 export function sourceLine(
-  item: Pick<GroceryItem, 'recipes' | 'from_recipe' | 'created_by' | 'source'>,
+  item: Pick<GroceryItem, 'recipes' | 'recipe_detail' | 'from_recipe' | 'created_by'>,
   members: readonly Pick<Member, 'user_id' | 'display_name'>[],
-): string {
-  if (item.recipes && !item.recipes.deleted_at) return strings.groceries.forRecipe(item.recipes.name);
+): string | null {
+  if (fromLiveRecipe(item)) return item.recipe_detail ? strings.groceries.inRecipe(item.recipe_detail) : null;
   if (item.recipes || item.from_recipe) return strings.groceries.fromDeletedRecipe;
-  const name = members.find((m) => m.user_id === item.created_by)?.display_name ?? strings.recipe.formerMember;
-  const assistant = assistantName(item.source);
-  return assistant ? strings.groceries.via(name, assistant) : strings.groceries.addedBy(name);
+  return strings.groceries.addedBy(members.find((m) => m.user_id === item.created_by)?.display_name ?? strings.recipe.formerMember);
 }
 
 /** The amount as a row shows it, beside the name: "300 ml", "2 pieces". Null with no quantity. */
@@ -79,17 +79,23 @@ export const groceryPacksKey = (familyId: string, keys: readonly string[]) => ['
 export const buyText = (plan: PackPlan) => data.buyText(plan, strings.groceries);
 
 /**
- * A row's sources, each once: "For Apple crumble + Leek & bacon quiche · Added by Gabriel",
- * "From a deleted recipe · Alex via ChatGPT", or "Added manually" when several people typed it in.
+ * A row's sources, each once (spec 051 FR-009): "In recipes: for the pan · cold, cubed" (the
+ * details, in the recipes' order), "From a deleted recipe · Added by Gabriel", or "Added
+ * manually" when several people typed it in. Null when there's nothing to say: recipe
+ * ingredients without a detail (the recipe card above the list still names the recipe).
  */
-export function rowSource(row: Pick<GroceryRow, 'items'>, members: readonly Pick<Member, 'user_id' | 'display_name'>[]): string {
-  const recipes = [...new Set(row.items.flatMap((i) => (i.recipes && !i.recipes.deleted_at ? [i.recipes.name] : [])))];
-  const rest = row.items.filter((i) => !(i.recipes && !i.recipes.deleted_at));
+export function rowSource(row: Pick<GroceryRow, 'items'>, members: readonly Pick<Member, 'user_id' | 'display_name'>[]): string | null {
+  const fromRecipes = row.items.filter(fromLiveRecipe);
+  const recipes = new Set(fromRecipes.map((i) => i.recipe_id));
+  const details = [...new Set(fromRecipes.flatMap((i) => (i.recipe_detail ? [i.recipe_detail] : [])))];
+  const rest = row.items.filter((i) => !fromLiveRecipe(i));
   // Typed in by more than one person: "Added manually" rather than naming only one of them.
-  const byHand = rest.filter((i) => !i.recipes && !i.from_recipe && !assistantName(i.source));
+  const byHand = rest.filter((i) => !i.recipes && !i.from_recipe);
   const several = new Set(byHand.map((i) => i.created_by)).size > 1;
   const others = [...new Set(rest.map((i) => (several && byHand.includes(i) ? strings.groceries.addedManually : sourceLine(i, members))))];
-  return [...(recipes.length > 0 ? [strings.groceries.forRecipe(recipes.join(strings.groceries.sourcesJoin))] : []), ...others].join(strings.groceries.sourcePartsJoin);
+  const inRecipes = details.length === 0 ? [] : [(recipes.size > 1 ? strings.groceries.inRecipes : strings.groceries.inRecipe)(details.join(strings.groceries.sourcePartsJoin))];
+  const parts = [...inRecipes, ...others].filter((p): p is string => !!p);
+  return parts.length > 0 ? parts.join(strings.groceries.sourcePartsJoin) : null;
 }
 
 const factsOf = (row: GroceryRow, packs: Record<string, PackData> | undefined) => {

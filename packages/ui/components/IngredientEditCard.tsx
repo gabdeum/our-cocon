@@ -29,6 +29,8 @@ export interface IngredientEditCardProps {
   unitPlaceholder: string;
   unitLabel: string;
   onUnitPress: () => void;
+  /** Spec 051 FR-011: how it's prepared ("grated"), a quiet field under the quantity row. */
+  detail?: { value: string; onChange: (text: string) => void; label: string; placeholder: string } | null;
   /** Pieces only: "each ≈ [150] g". */
   weight?: { value: string; onChange: (text: string) => void; label: string; prefix: string; suffix: string; placeholder?: string } | null;
   removeLabel: string;
@@ -41,7 +43,7 @@ export interface IngredientEditCardProps {
   onLayout?: (e: LayoutChangeEvent) => void;
 }
 
-function RowInput({ invalid, bold, className, ...props }: Omit<TextInputProps, 'style'> & { invalid?: boolean; bold?: boolean; className?: string }) {
+function RowInput({ invalid, bold, quiet, className, ...props }: Omit<TextInputProps, 'style'> & { invalid?: boolean; bold?: boolean; quiet?: boolean; className?: string }) {
   const colors = useThemeColors();
   const [focused, setFocused] = useState(false);
   return (
@@ -58,19 +60,20 @@ function RowInput({ invalid, bold, className, ...props }: Omit<TextInputProps, '
       }}
       {...props}
       className={cn(
-        'h-[46px] min-w-0 rounded-[12px] border-2 px-12 web:outline-none',
-        invalid ? 'border-warn-border bg-warn-soft text-warn' : cn('bg-surface-card text-ink', focused ? 'border-olive' : 'border-line-strong'),
+        quiet ? 'h-[42px]' : 'h-[46px]',
+        'min-w-0 rounded-[12px] border-2 px-12 web:outline-none',
+        invalid ? 'border-warn-border bg-warn-soft text-warn' : cn('bg-surface-card', quiet ? 'text-ink-muted' : 'text-ink', focused ? 'border-olive' : 'border-line-strong'),
         className,
       )}
-      style={{ fontFamily: theme.font[bold ? 800 : 700], fontSize: 16 }}
+      style={{ fontFamily: theme.font[bold ? 800 : quiet ? 600 : 700], fontSize: quiet ? 14 : 16 }}
     />
   );
 }
 
 /**
  * One ingredient in the recipe form (IngredientEditCard README; OC-EditIngredients): handle, name
- * and remove, then quantity, unit and, for pieces, the weight of one. A problem gives the card a
- * warn border and says what to do.
+ * and remove, then quantity, unit and, for pieces, the weight of one, then its detail (spec 051).
+ * A problem gives the card a warn border and says what to do.
  */
 export function IngredientEditCard({
   handle,
@@ -89,6 +92,7 @@ export function IngredientEditCard({
   unitLabel,
   onUnitPress,
   weight,
+  detail,
   removeLabel,
   onRemove,
   warning,
@@ -181,6 +185,11 @@ export function IngredientEditCard({
           <View className="flex-[1.4]" />
         )}
       </View>
+      {detail ? (
+        <View className="pl-[30px]">
+          <RowInput aria-label={detail.label} value={detail.value} placeholder={detail.placeholder} onChangeText={detail.onChange} maxLength={80} quiet />
+        </View>
+      ) : null}
       {warning ? (
         <View role="alert" className="flex-row items-center gap-8 pl-[30px]">
           <Icon name="warning" size={18} color="warn" />

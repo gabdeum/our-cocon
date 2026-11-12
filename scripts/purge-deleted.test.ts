@@ -90,6 +90,11 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
          from public.events, lateral (values (starts_on), (starts_on + 7)) v(d) where family_id = $1 and title = 'Recent swim'`,
       [familyId, member.rows[0]?.id],
     );
+    // Spec 051: a cook left in progress 73 hours ago (the trigger stamps now(), so it's set after).
+    await db.query('insert into public.cook_sessions (family_id, recipe_id, servings) values ($1, $2, 4)', [familyId, live]);
+    await db.query("set session_replication_role = replica");
+    await db.query("update public.cook_sessions set last_active_at = now() - interval '73 hours' where recipe_id = $1", [live]);
+    await db.query("set session_replication_role = default");
     for (const path of [...photos.old, photos.recent]) await upload(path);
   }, 30_000);
 
@@ -115,6 +120,12 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
     // Its grocery items stay on the list.
     const items = await db.query<{ recipe_id: string | null }>("select recipe_id from public.grocery_items where family_id = $1 and name = 'Leeks'", [familyId]);
     expect(items.rows).toEqual([{ recipe_id: null }]);
+  });
+
+  it('cancels cooks left in progress for over 72 hours as stale (spec 051)', async () => {
+    await purgeDeleted({ url, serviceKey });
+    const { rows } = await db.query<{ status: string; cancel_reason: string }>('select status, cancel_reason from public.cook_sessions where recipe_id = $1', [live]);
+    expect(rows).toEqual([{ status: 'cancelled', cancel_reason: 'stale' }]);
   });
 
   it('removes grocery items cleared more than a day ago (spec 020)', async () => {

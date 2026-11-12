@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RecipeFormSection } from '@cocon/schemas';
 import { fakeTracker, flush } from '../../../test/fakes';
+import { expectAccessible } from '../../../test/axe';
 import type { RecipeDetails } from '../../../lib/recipe-form';
 
 // Native pickers aren't used: the form gets fake photo functions.
@@ -190,6 +191,8 @@ describe('US2: advanced details', () => {
     expect(screen.getByLabelText('Prep time')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cuisine: Pick one' })).toBeTruthy();
     expect(screen.getByLabelText('Source')).toBeTruthy();
+    // Spec 051 FR-015.
+    expect(screen.getByText("Book and page, a website, or a person. Assistants fill this in, or put their own name if there's nothing else.")).toBeTruthy();
     await flush();
     expect(saved.get('cocon.form.u-gabriel.advanced')).toBe('true');
   });
@@ -307,5 +310,34 @@ describe('photos (FR-004)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add a photo (optional)' }));
     await flush();
     expect(screen.getByText("Our Cocon can't see your photos. Allow access in Settings.")).toBeTruthy();
+  });
+});
+
+describe('This recipe (spec 051 FR-013)', () => {
+  it('US5: only when editing: the four settings, each "Same as default" until changed, then Delete recipe', async () => {
+    setup();
+    await flush();
+    expect(screen.queryByRole('heading', { name: 'This recipe' })).toBeNull();
+    cleanup();
+    setup({ recipe: { ...quiche, overrides: { keep_awake: null, has_scale: null, has_thermometer: false, units: null } }, recipeId: 'r1', onDeleted: vi.fn() });
+    await flush();
+    expect(screen.getByRole('heading', { name: 'This recipe' })).toBeTruthy();
+    expect(screen.getByText('Only for this recipe. Family defaults are in Menu › Recipes.')).toBeTruthy();
+    expect(screen.getAllByText('Same as default')).toHaveLength(1);
+    expect(screen.getByText(/^Changed for this recipe/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Delete recipe' })).toBeTruthy();
+    await expectAccessible();
+  });
+
+  it('saves the changed settings with the form, and tracks each one', async () => {
+    const { update, tracker } = setup({ recipe: { ...quiche, overrides: { keep_awake: null, has_scale: null, has_thermometer: false, units: null } }, recipeId: 'r1' });
+    await flush();
+    fireEvent.click(screen.getByRole('button', { name: 'Imperial' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Reset/ }));
+    expect(update).not.toHaveBeenCalled();
+    await save();
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ name: 'Leek & bacon quiche', units: 'imperial', has_thermometer: null }));
+    expect(tracker.track).toHaveBeenCalledWith('recipe_setting_changed', { setting: 'units' });
+    expect(tracker.track).toHaveBeenCalledWith('recipe_setting_changed', { setting: 'has_thermometer' });
   });
 });

@@ -59,6 +59,9 @@ describe.skipIf(!local)('adding a recipe to groceries against local Supabase', (
     expect(combinedText('Heavy cream', creamRow?.items ?? [], null)).toBe('400 ml');
     expect(list.filter((i) => i.recipe_id === recipeId).every((i) => i.recipes?.name === 'Leek & bacon quiche')).toBe(true);
     expect(added.addedIds).toHaveLength(5);
+    // Spec 051 FR-009: how the recipe prepares it, for "In recipe: grated"; none without one.
+    expect(list.find((i) => i.name === 'Gruyère')?.recipe_detail).toBe('grated');
+    expect(list.find((i) => i.recipe_id === recipeId && i.name === 'Heavy cream')?.recipe_detail).toBeNull();
 
     expect(await undoAddFromRecipe(alex, added)).toBe(true);
     list = await loadGroceryList(alex);

@@ -1,22 +1,24 @@
 # OC-EditIngredients — Recipe form: Ingredients
 
-Source `screens/OC-EditIngredients.dc.html` · Route `…/edit?section=ingredients` · Specs 015, 031
+Source `screens/OC-EditIngredients.dc.html` · Route `…/edit?section=ingredients` · Specs 015, 031, 051
 
 ## Layout
 1. Title "Ingredients"; right "For {n} servings".
-2. Lead "For things you count (eggs, leeks), add the weight of one too. Then steps can show both: “2 leeks (300 g)”."
+2. Lead "For things you count (eggs, leeks), add the weight of one too. Detail is how it's prepared; it shows under the name and on the grocery list."
 3. One white card per ingredient:
    - drag handle, name input (with catalog suggestions, spec 031), remove "×" ("Remove {name}")
    - quantity input, unit dropdown, and for pieces the "each ≈ {g} g" field, prefilled from the catalog's medium size
    - for catalog items with sizes, the unit dropdown offers "small", "medium", "large" pieces (e.g. "1 small onion")
+   - under the quantity row, "Detail (optional)" (spec 051 FR-011): 42 tall, fill `surface-card` (the canvas's `#FFFCF2` isn't a token), placeholder "Detail (optional) · sliced, at room temp…", at most 80 characters
 4. Buttons: dashed "+ Add ingredient" and soft "Paste a list".
-5. Hint "Tip: paste “200 g lardons, 3 eggs…” and we'll split it into rows."
+5. Hint "Tip: paste “200 g lardons, 100 g Gruyère, grated…” and we'll split it into rows. Anything after a comma goes into Detail."
 6. Ink "Next: Steps".
 
 ## Interactions (spec 015; not drawn)
 - **Unit button:** opens a BottomSheet titled "Unit" with choice pills: "No unit", g, kg, ml, L, tsp, tbsp, cup, oz, lb, pieces, pinch, then "small", "medium", "large" when the catalog has sizes. Picking one closes it. With no unit yet, the button reads "Unit ▾" (muted).
 - **Suggestions:** while a name is typed (2 letters or more), up to 5 catalog names show under it, in a list read as "Suggestions". Tapping one fills the name and links the row to the catalog.
-- **Paste a list:** a BottomSheet titled "Paste a list" with the field "Your ingredients", hint "One per line, or separated by commas.", and ink "Add ingredients". A comma part that only says how to prepare ("finely chopped", "to taste") stays with its line.
+- **Paste a list:** a BottomSheet titled "Paste a list" with the field "Your ingredients", hint "One per line, or separated by commas.", and ink "Add ingredients". A comma part that only says how to prepare ("grated", "finely chopped") stays with its line. Each line then splits at its first comma outside brackets: before goes to the name, after to Detail ("100 g Gruyère, grated" → "Gruyère" · "grated"; "Flour (00, fine)" stays whole).
+- **Detail:** a comma typed in the name moves what follows it to Detail on Save, unless Detail is already filled (then Detail wins). The detail shows under the name on the recipe page and as "In recipe: {detail}" on the grocery list.
 - **Aisle:** "New ingredient. Pick its aisle:" is followed by an olive link "Pick an aisle" (or the aisle picked), opening a BottomSheet titled "Aisle" with the aisles in store order (OC-Groceries › Aisles).
 - **What a piece is called** ("2 leeks", "2 cloves garlic") isn't edited: it comes from the pasted line, else the catalog, else the name.
 - **Reorder:** drag the handle (screen-reader name "Drag to reorder"); screen readers also get the actions "Move up" and "Move down", and the arrow keys move the row on the web.
@@ -24,7 +26,7 @@ Source `screens/OC-EditIngredients.dc.html` · Route `…/edit?section=ingredien
 - **Placeholders:** name "Ingredient, like leeks", quantity "Amount", the unit button "Unit", the weight of one "?" ("each ≈ ? g").
 - **Amounts:** the quantity field takes only digits, a decimal point (a typed comma becomes one), "/", spaces, "-" and ½-style fractions; the weight of one takes only digits and a point.
 - **New recipe:** opens with one empty row; an untouched row is dropped on Save.
-- Fields are labelled for screen readers only: "Ingredient name", "Quantity", "Unit", "Weight of one (g)". A row with no name yet has the remove label "Remove ingredient".
+- Fields are labelled for screen readers only: "Ingredient name", "Quantity", "Unit", "Weight of one (g)", "Detail (optional)". A row with no name yet has the remove label "Remove ingredient".
 
 ## Validation copy
 | Case | Message |
@@ -42,3 +44,6 @@ Source `screens/OC-EditIngredients.dc.html` · Route `…/edit?section=ingredien
 | Paste found nothing | StatusBanner "We couldn't find any ingredients in that." |
 
 Save checks Details first, then Ingredients: with a problem, it opens Ingredients and scrolls to the first warned row. Rows left completely empty are dropped.
+
+## Changelog
+- 2026-11-12 (051): "Detail (optional)" field under the quantity; lead and tip; paste and Save split the detail off at the first comma.

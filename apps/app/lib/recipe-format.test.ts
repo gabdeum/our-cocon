@@ -1,6 +1,6 @@
 // Spec 006 FR-001 and FR-002: the meta line, the author line and the one total-time format.
 import { describe, expect, it } from 'vitest';
-import { formatTotalTime, recipeAuthor, recipeMeta } from './recipe-format';
+import { formatTotalTime, memberName, recipeMeta, recipeSource } from './recipe-format';
 import { alex, gabriel, mia } from '../test/fakes';
 
 describe('formatTotalTime', () => {
@@ -38,18 +38,19 @@ describe('recipeMeta', () => {
   });
 });
 
-describe('recipeAuthor', () => {
+describe('recipeSource (spec 051 FR-015)', () => {
   const members = [gabriel, alex, mia];
+  const of = (source_text: string | null, source: string, by: string | null) => recipeSource({ source_text, source }, memberName(by, members));
 
-  it('names the member, and the assistant when an AI made it', () => {
-    expect(recipeAuthor(mia.user_id, 'app', members)).toBe('Mia');
-    expect(recipeAuthor(alex.user_id, 'chatgpt', members)).toBe('Alex · via ChatGPT');
-    expect(recipeAuthor(gabriel.user_id, 'claude', members)).toBe('Gabriel · via Claude');
+  it('US6: the source when there is one, never "via"', () => {
+    expect(of('La Cuisine de Mamie · p. 48', 'claude', gabriel.user_id)).toBe('La Cuisine de Mamie · p. 48');
+    expect(of('  ', 'app', mia.user_id)).toBe('Mia');
   });
 
-  it('copes with an unknown assistant or a member who left', () => {
-    expect(recipeAuthor(alex.user_id, 'mcp', members)).toBe('Alex · via an AI assistant');
-    expect(recipeAuthor('u-gone', 'app', members)).toBe('Former member');
-    expect(recipeAuthor(null, 'gemini', members)).toBe('Former member · via Gemini');
+  it('else the assistant that made it, or who added it', () => {
+    expect(of(null, 'chatgpt', alex.user_id)).toBe('ChatGPT');
+    expect(of(null, 'mcp', alex.user_id)).toBe('An AI assistant');
+    expect(of(null, 'app', mia.user_id)).toBe('Mia');
+    expect(of(null, 'app', 'u-gone')).toBe('Former member');
   });
 });

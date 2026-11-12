@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { cn } from '../cn';
+import { Icon, type IconName } from './Icon';
 import { Text, type TextColor, type Weight } from './Text';
 
 export type TagTone = 'sage' | 'warn' | 'honey' | 'white' | 'soft';
@@ -38,10 +39,19 @@ const metas: Record<MetaTone, string> = {
   warn: 'bg-warn-soft',
 };
 
-/** Meta chip (Tag README › oc-meta): "1 h 10", "Best Oct – Mar", "2 to buy". */
-export function Meta({ label, tone = 'soft', className }: { label: string; tone?: MetaTone; className?: string }) {
+/**
+ * Meta chip (Tag README › oc-meta): "1 h 10", "Best Oct – Mar", "2 to buy". An `icon` (15, gap 6)
+ * says what it is: the book before a recipe's Source (spec 051), which `accessibilityLabel` reads
+ * in full ("Source: La Cuisine de Mamie, page 48").
+ */
+export function Meta({ label, tone = 'soft', icon, accessibilityLabel, className }: { label: string; tone?: MetaTone; icon?: IconName; accessibilityLabel?: string; className?: string }) {
   return (
-    <View className={cn('self-start flex-row items-center rounded-pill px-12 py-6', metas[tone], className)}>
+    <View
+      aria-label={accessibilityLabel}
+      role={accessibilityLabel ? 'img' : undefined}
+      className={cn('self-start flex-row items-center gap-6 rounded-pill px-12 py-6', metas[tone], className)}
+    >
+      {icon ? <Icon name={icon} size={15} color="ink" /> : null}
       <Text size={14} weight={tone === 'warn' ? '800' : '700'} color={tone === 'warn' ? 'warn' : 'ink'}>
         {label}
       </Text>

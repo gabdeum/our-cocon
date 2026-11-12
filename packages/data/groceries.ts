@@ -78,6 +78,8 @@ export interface GroceryItem {
   checked_by: string | null;
   checked_at: string | null;
   recipe_id: string | null;
+  /** How the recipe prepares it ("grated"), copied when added from it (spec 051 FR-009). */
+  recipe_detail: string | null;
   /** Added from a recipe, even once that recipe is gone (spec 022, set by the database). */
   from_recipe: boolean;
   created_by: string | null;
@@ -87,7 +89,7 @@ export interface GroceryItem {
 }
 
 const columns =
-  'id, name, catalog_key, quantity, unit, aisle, checked, checked_by, checked_at, recipe_id, from_recipe, created_by, source, created_at, recipes(id, name, serves, photo_path, deleted_at)';
+  'id, name, catalog_key, quantity, unit, aisle, checked, checked_by, checked_at, recipe_id, recipe_detail, from_recipe, created_by, source, created_at, recipes(id, name, serves, photo_path, deleted_at)';
 
 /** The list as it stands (RLS returns only the family's), without cleared or removed items, oldest first. */
 export async function loadGroceryList(client: Pick<Db, 'from'>): Promise<GroceryItem[]> {
@@ -384,6 +386,8 @@ export interface RecipeGroceryLine {
   id: string;
   /** "Large eggs", "Gruyère": the name as the page's list shows it. */
   name: string;
+  /** Spec 051 FR-010: how the recipe prepares it ("grated"), the rows' details joined; null without one. */
+  detail: string | null;
   /** "300 ml", "2 · 300 g", "1 pinch", in the page's units; empty with no quantity ("Salt and pepper"). */
   shown: string;
   /** What goes on the list. */
@@ -413,6 +417,7 @@ export function recipeGroceryLines(
       return {
         id: ing.id,
         name: line.name.trim().slice(0, 80),
+        detail: line.detail,
         // Counted items show their weight ("2 · 300 g", "3½ · 600 g" for apples saved in grams); a
         // volume reads on its own here ("300 ml").
         shown: ing.quantity == null ? '' : [line.amount, ing.unit && kindOf(ing.unit) === 'volume' ? null : line.sub].filter(Boolean).join(' · '),
@@ -479,7 +484,15 @@ export async function addFromRecipe(
     const facts = (await matchIngredients(client, custom.map((i) => i.name))) ?? [];
     const aisles = new Map<string, Aisle | null>(custom.map((i, n) => [i.name, facts[n]?.aisle ?? null]));
     const rows = plan.inserts.map((i) =>
-      GroceryItemInput.parse({ name: i.name, catalog_key: i.catalog_key, quantity: i.quantity, unit: i.unit, aisle: aisles.get(i.name) ?? null, recipe_id: recipeId }),
+      GroceryItemInput.parse({
+        name: i.name,
+        catalog_key: i.catalog_key,
+        quantity: i.quantity,
+        unit: i.unit,
+        aisle: aisles.get(i.name) ?? null,
+        recipe_id: recipeId,
+        recipe_detail: i.detail?.slice(0, 200) ?? null,
+      }),
     );
     const updates = plan.merges.map((m) => ({ id: m.id, change: GroceryItemUpdate.parse(m.after) }));
 

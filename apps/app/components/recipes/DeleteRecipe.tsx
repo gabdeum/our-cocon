@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Callout, Dialog, Link } from '@cocon/ui';
+import { Button, Callout, Dialog } from '@cocon/ui';
 import { useOnline } from '../../lib/online';
 import { strings } from '../../strings/en';
 
@@ -14,8 +14,8 @@ export interface DeleteRecipeProps {
 }
 
 /**
- * Spec 018 (OC-Delete): the danger link "Delete this recipe", which asks in a Dialog naming the
- * recipe and its variants. At the end of the edit form's Variants and of recipe settings. Off offline.
+ * Spec 018 (OC-Delete): "Delete recipe", which asks in a Dialog naming the recipe and its variants.
+ * At the end of the edit form's "This recipe" (spec 051 FR-013). Off offline.
  */
 export function DeleteRecipe({ name, variants, disabled, onDelete }: DeleteRecipeProps) {
   const online = useOnline();
@@ -38,7 +38,7 @@ export function DeleteRecipe({ name, variants, disabled, onDelete }: DeleteRecip
   return (
     <>
       {failed ? <Callout variant="warn" text={d.failed} /> : null}
-      <Link label={d.link} tone="danger" icon="trash" onPress={() => setConfirm(true)} disabled={!online || deleting || disabled} />
+      <Button label={d.link} variant="danger-card" icon="trash" block onPress={() => setConfirm(true)} disabled={!online || deleting || disabled} />
       <Dialog
         visible={confirm}
         title={d.title(name)}

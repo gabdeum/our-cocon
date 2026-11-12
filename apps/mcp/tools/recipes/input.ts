@@ -11,6 +11,7 @@ import {
   StepInput,
   Unit,
   ingredientName,
+  splitIngredientDetail,
   VariantChange,
   VariantKind,
   normalizeText,
@@ -28,11 +29,11 @@ const UNITS = Unit.options.join(', ');
 
 /** An ingredient row's fields; a variant's new ingredients have no id to keep. */
 const ingredientRow = {
-  name: z.string().max(80).describe('The canonical ingredient, as a shop sells it, no amount: "All-purpose flour". Used in several parts: one row per part, the part in brackets ("All-purpose flour (dough)"). Details after a comma ("Onion, sliced").'),
+  name: z.string().max(80).describe('The canonical ingredient, as a shop sells it, no amount: "All-purpose flour". Used in several parts: one row per part, the part in brackets ("All-purpose flour (dough)"). The detail after a comma ("Onion, sliced"), saved as prep_note.'),
   quantity: z.number().positive().lt(100000).optional().describe('A number (1.5). Leave out for "to taste".'),
   unit: z.string().max(20).optional().describe(`One of: ${UNITS}. "piece" for counted things.`),
   size: SizeWord.optional().describe('small, medium or large, for counted things.'),
-  prep_note: z.string().max(80).optional().describe('The same as text after a comma in the name.'),
+  prep_note: z.string().max(80).optional().describe('The detail: how it’s cut, prepared or bought ("sliced"). Same as text after a comma in the name.'),
 };
 const IngredientLine = z.string().min(1).max(200).describe('A line as in a recipe: "2 leeks, sliced".');
 const Id = (what: string) => z.uuid().optional().describe(`Its id from get_recipe, to keep the ${what}. Leave out for a new one.`);
@@ -73,7 +74,7 @@ export const INGREDIENT_WRITING = [
   '- Parts of the recipe never go in a name: "Tangzhong flour", "Dough water" and "Sauce onion" aren’t ingredients, and Our Cocon can’t match them.',
   '- One ingredient in several parts (a tangzhong and a dough, a sauce and a topping): one row per part, each with that part’s amount, the canonical name and the part in brackets: "All-purpose flour (tangzhong)", "All-purpose flour (dough)", "Water (tangzhong)", "Water (dough)". The app matches, scales and adds them up as one ingredient: one line in the ingredient list, one on the grocery list. Used in one part only: no bracket.',
   '- What the recipe makes (a tangzhong, a roux, a dough, a sauce, a marinade) isn’t an ingredient: list what goes into it, and name it in the steps as plain text ("Add the tangzhong to the dough"). List one only when it’s bought ready-made ("Puff pastry", "Chicken stock").',
-  '- After a comma: any other detail, how it’s cut, prepared or bought ("Onion, finely chopped", "Butter, softened", "Chicken thighs, skin on"). It shows after the amount in the steps.',
+  '- After a comma: any other detail, how it’s cut, prepared or bought ("Onion, finely chopped", "Butter, softened", "Chicken thighs, skin on"). It shows under the name in the ingredient list, on the grocery list and after the amount in the steps.',
   '- No amount in a name or after the comma: use quantity and unit, so it scales.',
   '- The reply’s warnings name each ingredient Our Cocon doesn’t know. Check it isn’t a part or something the recipe makes; a real ingredient it doesn’t know yet can stay.',
 ].join('\n');
@@ -117,11 +118,6 @@ interface Draft {
   prep_note: string | null;
 }
 
-/** "Leeks, sliced" → name and prep note, as the app keeps them apart. */
-function splitPrep(name: string): { name: string; prep: string | null } {
-  const at = name.indexOf(', ');
-  return at > 0 ? { name: name.slice(0, at).trim(), prep: name.slice(at + 2).trim() || null } : { name: name.trim(), prep: null };
-}
 
 /** Refuses an amount written into a name or note, which wouldn't scale with the servings. */
 function checkNoAmount(where: string, name: string, ...texts: (string | null | undefined)[]) {
@@ -137,7 +133,8 @@ function checkNoAmount(where: string, name: string, ...texts: (string | null | u
 function draftOf(input: IngredientIn, n: number, keep: ReadonlySet<string>): Draft {
   const where = `Ingredient #${n}`;
   const draft = readDraft(input, where, keep);
-  checkNoAmount(where, draft.name, draft.name, draft.prep_note);
+  // Named as sent, so the assistant finds it: "Onion, need 3g", not "Onion".
+  checkNoAmount(where, typeof input === 'string' ? draft.name : input.name.trim(), draft.name, draft.prep_note);
   return draft;
 }
 
@@ -145,9 +142,8 @@ function readDraft(input: IngredientIn, where: string, keep: ReadonlySet<string>
   if (typeof input === 'string') {
     const parsed = parseIngredientLine(input);
     if (!parsed) throw new ToolError(`${where} is empty. Write it like "2 leeks" or "salt to taste".`);
-    const { name, prep } = splitPrep(parsed.name);
     const countedOnly = parsed.unit === 'piece' && !parsed.piece_noun && !parsed.size_word;
-    return { id: randomUUID(), countedOnly, name, quantity: parsed.quantity, unit: parsed.unit, size_word: parsed.size_word, nouns: parsed.piece_noun, prep_note: prep };
+    return { id: randomUUID(), countedOnly, name: parsed.name, quantity: parsed.quantity, unit: parsed.unit, size_word: parsed.size_word, nouns: parsed.piece_noun, prep_note: parsed.prep_note };
   }
   if (input.id && !keep.has(input.id)) throw new ToolError(`${where} has an id that isn't one of this recipe's ingredients. Leave the id out for a new ingredient.`);
   // FR-006: an amount needs its unit; only a size says "counted" by itself ("1 large onion").
@@ -156,15 +152,17 @@ function readDraft(input: IngredientIn, where: string, keep: ReadonlySet<string>
   const unit = input.unit ? unitOf(input.unit) : input.size ? 'piece' : null;
   if (unit && input.quantity == null) throw new ToolError(`${where} (${input.name}) has a unit but no amount. Add the amount, or leave both out ("salt to taste").`);
   if (input.size && unit !== 'piece') throw new ToolError(`${where} (${input.name}): a size (small, medium, large) only goes with counted things. Use the unit "piece" or leave the size out.`);
+  // Spec 051 FR-007: the name never keeps the detail; one sent as prep_note wins.
+  const { name, detail } = splitIngredientDetail(input.name);
   return {
     id: input.id ?? randomUUID(),
     countedOnly: false,
-    name: input.name.trim(),
+    name,
     quantity: input.quantity ?? null,
     unit,
     size_word: input.size ?? null,
     nouns: null,
-    prep_note: input.prep_note?.trim() || null,
+    prep_note: input.prep_note?.trim() || detail,
   };
 }
 

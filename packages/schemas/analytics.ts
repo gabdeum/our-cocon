@@ -102,16 +102,26 @@ export const events = {
   timer_pill_tapped: z.strictObject({ timer_count: z.int().min(1).max(100) }),
   timer_pill_hidden: z.strictObject({ timer_count: z.int().min(1).max(100) }),
   timers_screen_opened: z.strictObject({ timer_count: z.int().min(0).max(100) }),
-  // Spec 012: cooking mode opened, finished ("Finish" on the last step) or left with Exit.
-  // `at_step` counts from 1; `minutes` from opening to Finish.
+  // Spec 012: cooking mode opened or left with ✕ (the session stays in progress, spec 051).
+  // `at_step` counts from 1.
   cooking_started: z.strictObject({ step_count: z.int().min(1).max(MAX_TRACKED_STEPS) }),
-  cooking_finished: z.strictObject({ step_count: z.int().min(1).max(MAX_TRACKED_STEPS), minutes: z.int().min(0).max(1440) }),
   cooking_exited: z.strictObject({ at_step: z.int().min(1).max(MAX_TRACKED_STEPS), step_count: z.int().min(1).max(MAX_TRACKED_STEPS) }),
+  // Spec 051: a cooking session started (`resumed_existing`: "Resume" on the "already cooking"
+  // sheet), resumed from a card, and ended. `steps_seen` counts from 1; `minutes` from its start.
+  cook_started: z.strictObject({ recipe_id: z.uuid(), resumed_existing: z.boolean() }),
+  cook_resumed: z.strictObject({ from: z.enum(['list', 'recipe']), step: z.int().min(1).max(MAX_TRACKED_STEPS) }),
+  cook_finished: z.strictObject({
+    status: z.enum(['done', 'cancelled']),
+    cancel_reason: z.enum(['user', 'replaced']).nullable(),
+    steps_seen: z.int().min(1).max(MAX_TRACKED_STEPS),
+    minutes: z.int().min(0).max(4320),
+  }),
+  // Spec 051: the recipe form opened from the recipe page's pencil or the "Units" row.
+  recipe_edit_opened: z.strictObject({ from: z.enum(['top_bar', 'units_row']) }),
   // Spec 012: "Screen stays on" switched in cooking mode's options sheet, for this visit.
   cook_screen_awake_toggled: z.strictObject({ on: z.boolean() }),
-  // Spec 013: the "…" panel's quick toggles, per recipe on this device.
+  // Spec 013: the "…" panel's quick toggle, per recipe on this device (its Units toggle went in spec 051).
   kitchen_scale_toggled: z.strictObject({ on: z.boolean() }),
-  units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
   // Spec 013: "Apply to recipe" in Scale by an ingredient. Never which ingredient or how much.
   scaled_by_ingredient: z.strictObject({}),
   // Spec 013: the converter settled on a value; the unit typed in and the main (honey) result.

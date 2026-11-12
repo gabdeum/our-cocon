@@ -83,9 +83,14 @@ async function setup(props: Partial<RecipePageProps> = {}) {
       storage={storage}
       onBack={vi.fn()}
       onShare={vi.fn()}
-      onSettings={vi.fn()}
+      onEdit={vi.fn()}
+      onEditUnits={vi.fn()}
       onAddToGroceries={vi.fn()}
-      onStartCooking={vi.fn()}
+      onStart={vi.fn()}
+      onCookResume={vi.fn()}
+      onCookDone={vi.fn()}
+      onCookCancel={vi.fn()}
+      now={() => new Date('2026-11-12T19:00:00')}
       onOpenStep={vi.fn()}
       onOpenTimers={onOpenTimers}
       onScaleByIngredient={vi.fn()}
@@ -106,8 +111,9 @@ describe('header (FR-001)', () => {
   it('shows the title, description and chips', async () => {
     await setup();
     expect(screen.getByRole('heading', { level: 1, name: 'Leek & bacon quiche' })).toBeTruthy();
-    for (const chip of ['1 h 10', 'French', 'Best Oct – Mar', 'Gabriel · via Claude']) expect(screen.getByText(chip)).toBeTruthy();
-    for (const label of ['Back to recipes', 'Share recipe', 'Recipe settings']) expect(screen.getByRole('button', { name: label })).toBeTruthy();
+    for (const chip of ['1 h 10', 'French', 'Best Oct – Mar', 'Claude']) expect(screen.getByText(chip)).toBeTruthy();
+    for (const label of ['Back to recipes', 'Share recipe', 'Edit recipe']) expect(screen.getByRole('button', { name: label })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Recipe settings' })).toBeNull();
     // Spec 030 SC-001.
     await expectAccessible();
   });
@@ -209,9 +215,13 @@ describe('US3: tabs', () => {
         storage={memoryStorage()}
         onBack={vi.fn()}
         onShare={vi.fn()}
-        onSettings={vi.fn()}
+        onEdit={vi.fn()}
+        onEditUnits={vi.fn()}
         onAddToGroceries={vi.fn()}
-        onStartCooking={vi.fn()}
+        onStart={vi.fn()}
+        onCookResume={vi.fn()}
+        onCookDone={vi.fn()}
+        onCookCancel={vi.fn()}
         onOpenStep={vi.fn()}
         onOpenTimers={vi.fn()}
         onScaleByIngredient={vi.fn()}
@@ -220,7 +230,7 @@ describe('US3: tabs', () => {
     );
     await settle();
     expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Start cooking' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Start recipe' })).toBeTruthy();
   });
 });
 
@@ -300,8 +310,7 @@ describe('More options (spec 013)', () => {
     tap('More options');
     expect(screen.getByRole('switch', { name: "I'm using a kitchen scale" }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByText('Showing exact weights, like 100 g')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Metric' }).getAttribute('aria-pressed')).toBe('true');
-    const order = ["I'm using a kitchen scale", 'Scale by an ingredient', 'Unit converter', 'Units'].map((t) => screen.getAllByText(t)[0] as Node);
+    const order = ["I'm using a kitchen scale", 'Scale by an ingredient', 'Unit converter', 'Units: Metric'].map((t) => screen.getAllByText(t)[0] as Node);
     for (let i = 1; i < order.length; i++) expect((order[i - 1] as Node).compareDocumentPosition(order[i] as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(screen.getByRole('link', { name: 'Scale by an ingredient' }));
     fireEvent.click(screen.getByRole('link', { name: 'Unit converter' }));
@@ -323,24 +332,26 @@ describe('More options (spec 013)', () => {
     expect(saved(storage).kitchenScale).toBe(false);
   });
 
-  it('units: Imperial at once, remembered for this recipe', async () => {
-    const storage = memoryStorage();
-    const { tracker } = await setup({ storage });
+  it('051 FR-013: "Units: Metric" reads the units in force and opens the form at This recipe', async () => {
+    const onEditUnits = vi.fn();
+    await setup({ onEditUnits });
     tap('More options');
-    tap('Imperial');
-    expect(row('Heavy cream')?.textContent).toContain('1¼ cups');
-    expect(row('Bacon lardons')?.textContent).toContain('7.1 oz');
-    expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial' });
-    expect(saved(storage).system).toBe('imperial');
+    expect(screen.getByText('Change in Edit › This recipe')).toBeTruthy();
+    fireEvent.click(screen.getByRole('link', { name: /^Units: Metric/ }));
+    expect(onEditUnits).toHaveBeenCalled();
   });
 
-  it('027 US3: a recipe set to Imperial opens in imperial; the panel shows it, and tapping it changes nothing', async () => {
-    const { tracker } = await setup({ cooking: { ...defaultCooking, system: 'imperial' } });
+  it('027 US3: a recipe set to Imperial opens in imperial, and the panel says so', async () => {
+    await setup({ cooking: { ...defaultCooking, system: 'imperial' } });
     expect(row('Bacon lardons')?.textContent).toContain('7.1 oz');
     tap('More options');
-    expect(screen.getByRole('button', { name: 'Imperial' }).getAttribute('aria-pressed')).toBe('true');
-    tap('Imperial');
-    expect(tracker.track).not.toHaveBeenCalledWith('units_toggled', expect.anything());
+    expect(screen.getByText('Units: Imperial')).toBeTruthy();
+  });
+
+  it('051: a Metric · Imperial choice saved on this device before no longer counts', async () => {
+    const storage = memoryStorage({ [`cocon.recipe.${gabriel.user_id}.${detail.id}`]: JSON.stringify({ servings: 6, version: null, options: [], system: 'imperial' }) });
+    await setup({ storage });
+    expect(row('Bacon lardons')?.textContent).toContain('200 g');
   });
 
   it('US2: scaled by lardons, servings read 7½ with a chip; Reset goes back to 6', async () => {
@@ -383,9 +394,13 @@ describe('More options (spec 013)', () => {
         storage={storage}
         onBack={vi.fn()}
         onShare={vi.fn()}
-        onSettings={vi.fn()}
+        onEdit={vi.fn()}
+        onEditUnits={vi.fn()}
         onAddToGroceries={vi.fn()}
-        onStartCooking={vi.fn()}
+        onStart={vi.fn()}
+        onCookResume={vi.fn()}
+        onCookDone={vi.fn()}
+        onCookCancel={vi.fn()}
         onOpenStep={vi.fn()}
         onOpenTimers={vi.fn()}
         onScaleByIngredient={vi.fn()}
@@ -399,14 +414,17 @@ describe('More options (spec 013)', () => {
 });
 
 describe('FR-005: actions', () => {
-  it('opens add to groceries and cooking mode', async () => {
+  it('opens add to groceries, starts the recipe and opens the form (051 FR-012, FR-014)', async () => {
     const onAddToGroceries = vi.fn();
-    const onStartCooking = vi.fn();
-    await setup({ onAddToGroceries, onStartCooking });
-    tap('Add groceries');
-    tap('Start cooking');
+    const onStart = vi.fn();
+    const onEdit = vi.fn();
+    await setup({ onAddToGroceries, onStart, onEdit });
+    tap('Add to groceries');
+    tap('Start recipe');
+    tap('Edit recipe');
     expect(onAddToGroceries).toHaveBeenCalled();
-    expect(onStartCooking).toHaveBeenCalled();
+    expect(onStart).toHaveBeenCalled();
+    expect(onEdit).toHaveBeenCalled();
   });
 });
 
@@ -432,14 +450,15 @@ describe('Steps tab (spec 009)', () => {
     expect(onOpenStep).toHaveBeenCalledWith(quiche.steps[2]?.id);
   });
 
-  it('"Add groceries" and "Start cooking" are side by side in the fixed footer, on both tabs', async () => {
+  it('051 FR-014: the cart and "Start recipe" are side by side in the action bar, on both tabs', async () => {
     await setup({ tab: 'steps' });
-    expect(screen.getByRole('button', { name: 'Start cooking' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Add groceries' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Start recipe' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Add to groceries' })).toBeTruthy();
     cleanup();
     await setup();
-    expect(screen.getAllByRole('button', { name: 'Add groceries' })).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Start cooking' }).parentElement).toBe(screen.getByRole('button', { name: 'Add groceries' }).parentElement);
+    expect(screen.getAllByRole('button', { name: 'Add to groceries' })).toHaveLength(1);
+    // Below 430 wide the cart is an icon (jsdom is 1024 wide: the label shows).
+    expect(screen.getByRole('button', { name: 'Start recipe' }).parentElement).toBe(screen.getByRole('button', { name: 'Add to groceries' }).parentElement);
   });
 
   it('edge: a variant step is listed and numbering stays continuous', async () => {
@@ -449,5 +468,67 @@ describe('Steps tab (spec 009)', () => {
     expect(steps()).toHaveLength(7);
     expect(steps()[0]?.textContent).toBe('1Make the dough30:00');
     expect(steps()[1]?.textContent).toBe('2Preheat and line');
+  });
+});
+
+describe('spec 051: cooking in progress, cooked, detail, source', () => {
+  const cook = (step: number) => ({
+    id: 'c1',
+    recipe_id: detail.id,
+    started_by: gabriel.user_id,
+    started_at: '2026-11-12T18:40:00',
+    last_active_at: '2026-11-12T18:55:00',
+    current_step: step,
+    variant_id: null,
+    servings: 6,
+    status: 'in_progress' as const,
+  });
+
+  it('US1.2: the In progress card under the chips, and the main button reads "Resume · step 3"', async () => {
+    const onCookResume = vi.fn();
+    const onCookCancel = vi.fn();
+    const onCookDone = vi.fn();
+    await setup({ cook: cook(2), onCookResume, onCookCancel, onCookDone });
+    const card = screen.getByRole('status');
+    expect(within(card).getByText('Cooking now · step 3 of 6')).toBeTruthy();
+    expect(screen.getByText('Gabriel started at 18:40 · Classic, serves 6')).toBeTruthy();
+    tap('Resume · step 3');
+    tap('Resume');
+    tap('Cancel');
+    tap('Done');
+    expect(onCookResume).toHaveBeenCalledTimes(2);
+    expect(onCookCancel).toHaveBeenCalled();
+    expect(onCookDone).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Start recipe' })).toBeNull();
+    await expectAccessible();
+  });
+
+  it('US1.5: on the last step the main button reads "Done cooking" and logs it', async () => {
+    const onCookDone = vi.fn();
+    await setup({ cook: cook(5), onCookDone });
+    tap('Done cooking');
+    expect(onCookDone).toHaveBeenCalled();
+  });
+
+  it('US2: "Cooked 4 times · last by Alex, 3 weeks ago", or "Cooked once · today"', async () => {
+    await setup({ cooked: { times: 4, lastBy: alex.user_id, lastAt: '2026-10-22T19:00:00' } });
+    expect(screen.getByText('Cooked 4 times · last by Alex, 3 weeks ago')).toBeTruthy();
+    cleanup();
+    await setup({ cooked: { times: 1, lastBy: gabriel.user_id, lastAt: '2026-11-12T18:00:00' } });
+    expect(screen.getByText('Cooked once · today')).toBeTruthy();
+  });
+
+  it('US3: "Gruyère" with "grated" on its own line under it', async () => {
+    await setup();
+    const gruyere = row('Gruyère');
+    expect(within(gruyere as HTMLElement).getByText('Gruyère')).toBeTruthy();
+    expect(within(gruyere as HTMLElement).getByText('grated')).toBeTruthy();
+    expect(row('Heavy cream')?.textContent).not.toContain(',');
+  });
+
+  it('US6: the Source chip, read in full', async () => {
+    await setup({ recipe: { ...detail, source_text: 'La Cuisine de Mamie · p. 48' } });
+    expect(screen.getByRole('img', { name: 'Source: La Cuisine de Mamie · p. 48' })).toBeTruthy();
+    expect(screen.queryByText(/via/)).toBeNull();
   });
 });

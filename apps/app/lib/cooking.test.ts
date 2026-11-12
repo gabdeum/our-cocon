@@ -1,7 +1,7 @@
 // Spec 012: cooking mode's scroll rules (US1, FR-004) and where it opens (032-later L19).
 import { describe, expect, it } from 'vitest';
 import { quiche, quicheIds } from '@cocon/schemas/quiche.fixture';
-import { cookingMinutes, currentStep, isTall, scrollTarget, snapPoints, startIndex, stepEditTarget, stepStillThere } from './cooking';
+import { currentStep, isTall, scrollTarget, snapPoints, startIndex, stepEditTarget, stepStillThere } from './cooking';
 
 describe('currentStep (US1 › 2)', () => {
   const tops = [0, 520, 1040, 1560];
@@ -48,14 +48,6 @@ describe('snapPoints (OC-Cook › Behaviour)', () => {
     expect(isTall(900, 700)).toBe(true);
     expect(isTall(520, 700)).toBe(false);
     expect(isTall(undefined, 700)).toBe(false);
-  });
-});
-
-describe('cookingMinutes', () => {
-  it('rounds to whole minutes, at most a day', () => {
-    expect(cookingMinutes(0, 42 * 60_000 + 20_000)).toBe(42);
-    expect(cookingMinutes(0, 3 * 86_400_000)).toBe(1440);
-    expect(cookingMinutes(10, 0)).toBe(0);
   });
 });
 

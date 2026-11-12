@@ -12,6 +12,7 @@ enum Theme {
   static let oliveMuted = Color(red: 0.6627, green: 0.7059, blue: 0.4157, opacity: 1)
   static let ink = Color(red: 0.1647, green: 0.1412, blue: 0.0784, opacity: 1)
   static let inkMuted = Color(red: 0.3529, green: 0.3137, blue: 0.2275, opacity: 1)
+  static let inkSoft = Color(red: 0.4784, green: 0.4353, blue: 0.3333, opacity: 1)
   static let inkFaint = Color(red: 0.5608, green: 0.5255, blue: 0.4235, opacity: 1)
   static let inkRaised = Color(red: 0.2431, green: 0.2118, blue: 0.1333, opacity: 1)
   static let onInk = Color(red: 0.902, green: 0.8745, blue: 0.7882, opacity: 1)

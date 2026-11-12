@@ -60,6 +60,10 @@ export const SharedRecipeResponse = z.object({
     photo_path: PhotoPath.nullable(),
     /** Who made the link; null when they've left the family. */
     shared_by: z.string().nullable(),
+    /** Spec 051 FR-015: the parts of its Source line (`recipeSource`); absent from older answers. */
+    source_text: z.string().nullish(),
+    source: z.string().nullish(),
+    author_name: z.string().nullish(),
     ingredients: z.array(Ingredient),
     steps: z.array(Step),
     variants: z.array(z.object({ id: z.uuid(), name: z.string(), kind: VariantKind, changes: z.unknown() })),
@@ -82,6 +86,9 @@ export interface SharedRecipe {
   best_months: number[];
   photo_path: string | null;
   shared_by: string | null;
+  source_text?: string | null;
+  source?: string | null;
+  author_name?: string | null;
   ingredients: IngredientRow[];
   steps: StepRow[];
   variants: RecipeVariant[];

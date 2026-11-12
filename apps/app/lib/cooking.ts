@@ -63,11 +63,6 @@ export function isTall(stepHeight: number | undefined, viewportHeight: number): 
   return stepHeight !== undefined && viewportHeight > 0 && stepHeight + SCROLL_OFFSET > viewportHeight;
 }
 
-/** Whole minutes spent cooking, for `cooking_finished` (at most a day). */
-export function cookingMinutes(startedAt: number, now: number): number {
-  return Math.min(1440, Math.max(0, Math.round((now - startedAt) / 60_000)));
-}
-
 /** Where cooking mode opens: the step with this id (from the Timers screen), else step 1. */
 export function startIndex(stepIds: readonly string[], stepId: string | undefined): number {
   const i = stepId ? stepIds.indexOf(stepId) : -1;

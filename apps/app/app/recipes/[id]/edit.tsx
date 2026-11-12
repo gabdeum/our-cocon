@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { Button, FormScreen, RecipeItemSkeleton, Text } from '@cocon/ui';
 import { RecipeForm } from '../../../components/recipes/form/RecipeForm';
+import { useFamilySettings } from '../../../lib/family-settings';
 import { deviceStorage } from '../../../lib/recipe-choices';
 import { loadRecipeForm, recipeFormKey, sectionOf } from '../../../lib/recipe-form';
 import { useSession } from '../../../lib/session';
@@ -12,18 +13,20 @@ const f = strings.recipeForm;
 
 /**
  * /recipes/[id]/edit?section=… (spec 014): the recipe form for a saved recipe, a full-screen modal.
- * Its entry is "Edit recipe" in recipe settings (017); saved or cancelled, it goes back to the recipe.
- * `&variant=<id>` opens that variant in Variants, `&variant=new` starts one (recipe settings, 017).
+ * Its entry is the recipe page's pencil (spec 051 FR-012); saved or cancelled, it goes back to the recipe.
+ * `&focus=this-recipe` opens Details at "This recipe" (the recipe page's "Units: Metric", FR-013).
+ * `&variant=<id>` opens that variant in Variants, `&variant=new` starts one (017).
  * `&step=<id>` opens that step in Steps (cooking mode's "Edit step {n}").
  * Deleted (018), it closes everything over Recipes, which shows "Recipe deleted · Undo".
  */
 export default function EditRecipeRoute() {
-  const params = useLocalSearchParams<{ id: string; section?: string; variant?: string; step?: string }>();
+  const params = useLocalSearchParams<{ id: string; section?: string; variant?: string; step?: string; focus?: string }>();
   const parsed = z.uuid().safeParse(params.id);
   const id = parsed.success ? parsed.data : null;
   const variant = params.variant === 'new' || z.uuid().safeParse(params.variant).success ? params.variant : undefined;
   const step = z.uuid().safeParse(params.step).success ? params.step : undefined;
   const { state, client, tracker } = useSession();
+  const { settings: defaults } = useFamilySettings();
   const familyId = state.status === 'ready' ? state.family.id : null;
   const recipe = useQuery({
     queryKey: recipeFormKey(familyId ?? '', id ?? ''),
@@ -65,6 +68,8 @@ export default function EditRecipeRoute() {
       onSectionChange={(section) => router.setParams({ section })}
       openVariant={variant}
       openStep={step}
+      focus={params.focus === 'this-recipe' ? 'this-recipe' : undefined}
+      defaults={defaults}
       client={client}
       tracker={tracker}
       storage={deviceStorage}

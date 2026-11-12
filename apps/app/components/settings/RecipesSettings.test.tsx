@@ -29,7 +29,7 @@ describe('Recipes settings (OC-SettingsRecipes)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Back to Menu' }));
     expect(onBack).toHaveBeenCalled();
     expect(screen.getByRole('heading', { name: 'Recipes' })).toBeTruthy();
-    expect(screen.getByText('Used for every recipe, for the whole family. Each recipe can change them in its own settings.')).toBeTruthy();
+    expect(screen.getByText('Used for every recipe, for the whole family. Each recipe can change them in Edit › This recipe.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Cooking defaults' })).toBeTruthy();
     for (const [name, hint] of [
       ['Keep screen on while cooking', "So it doesn't lock with floury hands"],

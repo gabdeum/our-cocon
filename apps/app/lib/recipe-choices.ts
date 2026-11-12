@@ -48,11 +48,12 @@ const key = (userId: string, recipeId: string) => `cocon.recipe.${userId}.${reci
 export function startingChoices(stored: unknown, recipe: { serves: number; variants: readonly RecipeVariant[] }, max: number): RecipeChoices {
   const parsed = Stored.safeParse(stored);
   if (!parsed.success) return { servings: Math.min(recipe.serves, max), version: null, options: [], ...defaultPanelChoices, scaledBy: null };
-  const { system, kitchenScale, scaledBy } = parsed.data;
+  const { kitchenScale, scaledBy } = parsed.data;
   return {
     servings: Math.min(parsed.data.servings, max),
     ...validChoice(recipe.variants, parsed.data),
-    system: system ?? defaultPanelChoices.system,
+    // Units follow the recipe's own setting (spec 051 FR-013): a Metric · Imperial choice once saved on this device no longer counts.
+    system: defaultPanelChoices.system,
     kitchenScale: kitchenScale ?? defaultPanelChoices.kitchenScale,
     scaledBy: scaledBy ?? null,
   };

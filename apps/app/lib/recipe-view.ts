@@ -3,7 +3,7 @@ import { groupSameIngredient, renderStep, renderTemperatureCheck, type FormatOpt
 import { strings } from '../strings/en';
 import type { Member } from './session';
 import type { RecipeDetail } from './recipe';
-import { formatTotalTime, recipeAuthor } from './recipe-format';
+import { formatTotalTime, memberName, recipeSource } from './recipe-format';
 import type { RecipeChoices } from './recipe-choices';
 import { mergedLine, scaleRecipe, withFacts, type IngredientLine, type LineIngredient, type PageScale } from '@cocon/data';
 
@@ -151,14 +151,14 @@ export function bestMonthsLabel(months: readonly number[]): string | null {
   return p.bestRuns(runs.map(([from, to]) => (from === to ? name(from) : p.monthRun(name(from), name(to)))));
 }
 
-/** The header's chips (FR-001): time, cuisine, best months, author. Empty ones are left out. */
-export function recipeChips(recipe: Pick<RecipeDetail, 'total_minutes' | 'cuisine' | 'best_months' | 'created_by' | 'source'>, members: readonly Pick<Member, 'user_id' | 'display_name'>[]) {
+/** The header's chips (FR-001): time, cuisine, best months, and the source (spec 051 FR-015). Empty ones are left out. */
+export function recipeChips(recipe: Pick<RecipeDetail, 'total_minutes' | 'cuisine' | 'best_months' | 'created_by' | 'source' | 'source_text'>, members: readonly Pick<Member, 'user_id' | 'display_name'>[]) {
   const cuisine = cuisineOf(recipe.cuisine);
   return {
     facts: [recipe.total_minutes ? formatTotalTime(recipe.total_minutes) : null, cuisine ? strings.cuisines[cuisine] : null, bestMonthsLabel(recipe.best_months)].filter(
       (c): c is string => c !== null,
     ),
-    author: recipeAuthor(recipe.created_by, recipe.source, members),
+    source: recipeSource(recipe, memberName(recipe.created_by, members)),
   };
 }
 

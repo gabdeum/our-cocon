@@ -6,7 +6,7 @@ import type { ColorName } from '../theme';
 import { BrandMark, Icon, type BrandName, type IconName } from './Icon';
 import { Text, type TextColor, type Weight } from './Text';
 
-export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'tile' | 'danger' | 'danger-outline';
+export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'tile' | 'danger' | 'danger-outline' | 'danger-card';
 /** sm 44 · md 58 · lg 60 (cooking mode, recipe CTA) · dialog 56 (Dialog README). */
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'dialog';
 
@@ -59,6 +59,16 @@ const looks: Record<ButtonVariant, Look> = {
   danger: { fill: 'bg-danger active:bg-danger-pressed', text: 'on-olive', icon: 'onOlive', weight: '900' },
   // The second destructive choice in a Dialog: "This and all future ones" (OC-CalEventDelete, spec 042).
   'danger-outline': { fill: 'bg-surface-card border-2 border-danger active:bg-surface-card-pressed', text: 'danger', icon: 'danger', weight: '900' },
+  // A destructive action at the end of a form, on the page: "Delete recipe" (OC-EditBasics › This recipe, spec 051).
+  'danger-card': {
+    fill: 'bg-surface-card active:bg-surface-card-pressed',
+    radius: 'rounded-[18px]',
+    text: 'danger',
+    icon: 'danger',
+    weight: '800',
+    fontSize: 16,
+    fixedHeight: 'h-control-lg',
+  },
 };
 
 /** A fixed height becomes a minimum, with room above and below a wrapped label. */
@@ -198,9 +208,9 @@ export function Button({
 }
 
 /** `warn`: an action that ends something but can be redone, like "Stop sharing this link" (OC-Share). */
-export type LinkTone = 'olive' | 'danger' | 'warn' | 'quiet';
-const linkColor: Record<LinkTone, TextColor> = { olive: 'olive', danger: 'danger', warn: 'warn', quiet: 'ink-muted' };
-const linkIconColor: Record<LinkTone, ColorName> = { olive: 'olive', danger: 'danger', warn: 'warn', quiet: 'inkMuted' };
+export type LinkTone = 'olive' | 'danger' | 'warn' | 'quiet' | 'ink';
+const linkColor: Record<LinkTone, TextColor> = { olive: 'olive', danger: 'danger', warn: 'warn', quiet: 'ink-muted', ink: 'ink' };
+const linkIconColor: Record<LinkTone, ColorName> = { olive: 'olive', danger: 'danger', warn: 'warn', quiet: 'inkMuted', ink: 'ink' };
 
 export interface LinkProps extends Omit<PressableProps, 'children' | 'style'> {
   label: string;
