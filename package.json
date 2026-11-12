@@ -15,6 +15,7 @@
     "lint": "eslint --quiet .",
     "typecheck": "pnpm -r --silent typecheck && tsc --noEmit --pretty false -p scripts && tsc --noEmit --pretty false -p infra",
     "db:new": "supabase migration new",
+    "db:backfill": "tsx scripts/db-backfill.ts",
     "db:types": "supabase gen types typescript --local > packages/schemas/database.types.ts",
     "theme": "node scripts/theme.mjs",
     "catalog": "tsx scripts/catalog.ts",

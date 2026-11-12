@@ -84,6 +84,8 @@ export interface RecipePageProps {
   onConvert: () => void;
   /** Changes when the page is shown again, so choices a sheet saved are read back. */
   visit?: number;
+  /** Opened from a grocery-list card (spec 052 FR-006): starts at the servings it's on the list for, once. */
+  openAtServings?: number;
   /** Signed links of the recipe's and steps' photos, by path (032-later L10). */
   photoUrls?: PhotoUrls;
 }
@@ -146,6 +148,7 @@ function LoadedRecipe({
   onScaleByIngredient,
   onConvert,
   visit = 0,
+  openAtServings,
   photoUrls = {},
 }: RecipePageProps & { recipe: RecipeDetail }) {
   const max = servingsMax(recipe.serves);
@@ -156,11 +159,17 @@ function LoadedRecipe({
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
 
-  // FR-006: open with what was picked last time on this device.
+  // FR-006: open with what was picked last time on this device; from a grocery card (spec 052), at
+  // its servings, the first time only (back from a sheet, the page reads what the sheet saved).
+  const openAt = useRef(openAtServings);
   useEffect(() => {
     let live = true;
     void readChoices(storage, userId, recipe.id).then((stored) => {
-      if (live) setChoices(startingChoices(stored, recipe, max));
+      if (!live) return;
+      const start = startingChoices(stored, recipe, max);
+      const at = openAt.current;
+      openAt.current = undefined;
+      setChoices(at ? { ...start, servings: Math.min(max, Math.max(SERVINGS_MIN, at)), scaledBy: null } : start);
     });
     return () => {
       live = false;

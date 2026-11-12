@@ -58,7 +58,7 @@ export const listGroceries = defineTool({
   access: 'read',
   description: [
     'Read the family’s shared grocery list, by aisle, as the app shows it.',
-    '- Each item has an id (for check_grocery and remove_grocery), its name and amount: what to buy in the family’s store sizes ("1 pint carton"), or what’s needed when there’s no pack. A note says what’s needed when that differs ("need 300 ml").',
+    '- Each item has an id (for check_grocery and remove_grocery), its name and amount: what to buy in the family’s store sizes ("1 pint carton"), or, with no pack known, in the store’s units ("2 oz"). A note says what’s needed when that differs ("need 300 ml").',
     '- ticked items are in the trolley already. for_recipes and added_by say where an item comes from.',
     '- recipes lists the recipes on the list, with the servings they’re on it for.',
     'Quote amounts as given; never work them out yourself. Link to the list when it helps.',

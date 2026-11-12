@@ -1,0 +1,12 @@
+ingredient,lines,recipes,families,units_used,example_recipes
+beef,1,1,1,g,"[""Traditional Boeuf Bourguignon""]"
+canadian bacon,1,1,1,piece,"[""Classic eggs Benedict""]"
+crispy fried onions,1,1,1,g,"[""Yellowfin tuna poke bowl""]"
+english muffins,1,1,1,piece,"[""Classic eggs Benedict""]"
+garlic bulb,1,1,1,piece,"[""Slow-Roasted Lamb Shoulder with Garlic, Rosemary and Thyme""]"
+japanese short-grain rice,1,1,1,g,"[""Steak Donburi with Soy-Marinated Egg Yolks""]"
+lamb shoulder,1,1,1,kg,"[""Slow-Roasted Lamb Shoulder with Garlic, Rosemary and Thyme""]"
+pearl onion,1,1,1,g,"[""Traditional Boeuf Bourguignon""]"
+shelled edamame,1,1,1,g,"[""Yellowfin tuna poke bowl""]"
+sourdough starter,1,1,1,g,"[""Sourdough Bread""]"
+yellowfin tuna,1,1,1,g,"[""Yellowfin tuna poke bowl""]"

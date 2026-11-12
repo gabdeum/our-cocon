@@ -72,3 +72,4 @@ No user-facing copy; unmatched ingredients fall back to aisle Other.
 - 2026-10-18 (from spec 005): Piece packs now count the pieces recipes use (a garlic head is 10 cloves, not 1): garlic, celery, spring onion, beetroot and radish fixed, with a test that a pack label's count matches its size. Catalog version 3, new data migration.
 - 2026-10-18 (from spec 005): Parsley and cilantro (55, 70, 100 g) and kale (225, 350, 450 g) are counted in bunches, with Gabriel's weights; medium is the default. "40 g parsley" now reads "½ bunch of parsley (40 g)", and the existing bunch packs match. Catalog version 4, new data migration.
 - 2026-10-19: Diet flags kept in the data but no longer used (diet filters removed from 007).
+- 2026-11-12 (from spec 052, Gabriel's grocery review): a new catalog version from the ingredients prod recipes didn't match, plus a backfill of unmatched recipe lines and grocery items (052 FR-002, FR-003).

@@ -1,6 +1,8 @@
 import { Image, Pressable, View } from 'react-native';
 import { useLargeText } from '../a11y';
 import { cn, focusRing } from '../cn';
+import { Thumb } from './Card';
+import { Icon } from './Icon';
 import { Text } from './Text';
 
 export type ThumbTone = 'peach' | 'honey' | 'sage';
@@ -94,6 +96,56 @@ export function RecipeSummary({ name, sub, photoUri, photoLabel }: RecipeSummary
           {sub}
         </Text>
       </View>
+    </View>
+  );
+}
+
+export interface GroceryRecipeCardProps {
+  name: string;
+  /** "3 items on the list · serves 6", or "From a deleted recipe". */
+  meta: string;
+  photoUri?: string;
+  /** Screen-reader names: "Open Leek & bacon quiche", "More for Leek & bacon quiche". */
+  openLabel: string;
+  moreLabel: string;
+  /** Null for a recipe in Recently deleted: the body does nothing and shows no chevron. */
+  onOpen: (() => void) | null;
+  onMore: () => void;
+}
+
+/**
+ * A recipe on the grocery list (RecipeItem README › Grocery card; OC-Groceries, spec 052 FR-006):
+ * soft, radius 18. The body (40 thumbnail, name, meta, chevron) opens the recipe; the 48 × 60 "…"
+ * at the right opens its menu.
+ */
+export function GroceryRecipeCard({ name, meta, photoUri, openLabel, moreLabel, onOpen, onMore }: GroceryRecipeCardProps) {
+  const body = (
+    <>
+      {/* The name is right beside it: the photo isn't read again (spec 030). */}
+      <Thumb uri={photoUri} />
+      <View className="min-w-0 flex-1">
+        <Text size={15} weight="800">
+          {name}
+        </Text>
+        <Text size={13} weight="600" color="ink-muted">
+          {meta}
+        </Text>
+      </View>
+      {onOpen ? <Icon name="chevron-right" size={18} color="inkMuted" /> : null}
+    </>
+  );
+  return (
+    <View className="flex-row items-center rounded-[18px] bg-surface-soft">
+      {onOpen ? (
+        <Pressable role="link" aria-label={openLabel} onPress={onOpen} className={cn('min-w-0 flex-1 flex-row items-center gap-10 rounded-[18px] py-10 pl-12 active:bg-surface-soft-pressed', focusRing)}>
+          {body}
+        </Pressable>
+      ) : (
+        <View className="min-w-0 flex-1 flex-row items-center gap-10 py-10 pl-12">{body}</View>
+      )}
+      <Pressable role="button" aria-label={moreLabel} onPress={onMore} className={cn('h-[60px] w-[48px] items-center justify-center rounded-[18px] active:bg-surface-soft-pressed', focusRing)}>
+        <Icon name="more-vertical" size={22} color="ink" />
+      </Pressable>
     </View>
   );
 }

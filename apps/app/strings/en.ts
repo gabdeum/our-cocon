@@ -1130,7 +1130,6 @@ export const strings = {
     addFailed: "Couldn't add this item. Try again.",
     merged: (total: string) => `Already on the list. Updated to ${total}.`,
     mergedNoAmount: 'Already on the list.',
-    forRecipe: (recipe: string) => `For ${recipe}`,
     // A row's source line (spec 051 FR-009): how its recipes prepare it.
     inRecipe: (detail: string) => `In recipe: ${detail}`,
     inRecipes: (details: string) => `In recipes: ${details}`,
@@ -1139,14 +1138,18 @@ export const strings = {
     addedManually: 'Added manually',
     // A row added to by several: "In recipes: for the pan · cold, cubed · Added by Gabriel".
     sourcePartsJoin: ' · ',
-    recipeMeta: (items: number, serves: number) => `${items === 1 ? '1 item' : `${items} items`} · serves ${serves}`,
-    // A recipe card's menu (spec 022, OC-Groceries › Recipe card menu).
-    recipeOptions: (recipe: string) => `Options for ${recipe}`,
-    openRecipeRow: 'Open recipe',
+    // A recipe card (spec 052 FR-006): its body opens the recipe, its "…" the menu.
+    onTheList: (items: number) => `${items === 1 ? '1 item' : `${items} items`} on the list`,
+    recipeMeta: (items: number, serves: number) => `${items === 1 ? '1 item' : `${items} items`} on the list · serves ${serves}`,
+    openRecipe: (recipe: string) => `Open ${recipe}`,
+    moreForRecipe: (recipe: string) => `More for ${recipe}`,
+    // The recipe card's menu (spec 052 FR-008, OC-GroceryRecipeMenu).
     servings: 'Servings',
     fewerServings: 'Fewer servings',
     moreServings: 'More servings',
-    servingsHint: 'Changes what is still to buy. Ticked items stay as they are.',
+    onTheListFor: (n: number) => `On the list for ${n}`,
+    wasServings: (n: number) => `Was ${n}`,
+    servingsHint: "Changes this recipe's items still to buy. Ticked items stay as they are.",
     saveServings: (n: number) => `Save for ${n}`,
     removeRecipeItems: 'Remove its items',
     removedRecipe: (items: number, recipe: string) => `Removed ${items === 1 ? '1 item' : `${items} items`} for ${recipe}.`,
@@ -1163,7 +1166,8 @@ export const strings = {
     settingsButton: 'Grocery settings',
     settingsTitle: 'Grocery settings',
     editItem: (name: string) => `Edit ${name}`,
-    // "Clear all items" and its Dialog.
+    // "Clear all" (screen reader "Clear all items") and its Dialog.
+    clearAllButton: 'Clear all',
     clearAll: 'Clear all items',
     clearAllTitle: (n: number) => (n === 1 ? 'Clear the 1 item on the list?' : `Clear all ${n} items on the list?`),
     clearAllBody: 'This removes every item, ticked or not, for everyone in the family. You can undo it right after.',
@@ -1179,6 +1183,7 @@ export const strings = {
     storeSizePieces: (n: string) => `pack of ${n}`,
     emptyTitle: 'Your list is empty.',
     emptyBody: 'Add items above, or from any recipe with “Add to groceries”.',
+    clearDoneButton: 'Clear done',
     clearDone: 'Clear done items',
     cleared: (n: number) => `Cleared ${n === 1 ? '1 item' : `${n} items`}`,
     removed: (name: string) => `Removed ${name}.`,

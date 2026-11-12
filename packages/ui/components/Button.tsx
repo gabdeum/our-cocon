@@ -8,7 +8,7 @@ import { Text, type TextColor, type Weight } from './Text';
 
 export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'tile' | 'danger' | 'danger-outline' | 'danger-card';
 /** sm 44 · md 58 · lg 60 (cooking mode, recipe CTA) · dialog 56 (Dialog README). */
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'dialog';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'dialog' | 'pair';
 
 interface Look {
   fill: string;
@@ -79,6 +79,8 @@ const sizes: Record<ButtonSize, { height: string; padding: string; paddingPx: nu
   md: { height: 'h-control-xl', padding: 'px-24', paddingPx: 24, fontSize: 17 },
   lg: { height: 'h-[60px]', padding: 'px-24', paddingPx: 24, fontSize: 18 },
   dialog: { height: 'h-[56px]', padding: 'px-24', paddingPx: 24, fontSize: 17 },
+  // Two equal buttons ending a list: "Clear done" · "Clear all" (OC-Groceries, spec 052).
+  pair: { height: 'h-[52px]', padding: 'px-18', paddingPx: 18, fontSize: 16 },
 };
 
 /** The icon (20) and its gap (10) before the label. */

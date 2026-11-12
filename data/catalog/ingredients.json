@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "ingredients": [
     {
       "key": "onion",
@@ -4893,7 +4893,8 @@
           "beef stew meat",
           "braising steak",
           "braising beef",
-          "beef cheek"
+          "beef cheek",
+          "beef"
         ]
       },
       "aisle": "meat_fish",
@@ -5570,7 +5571,11 @@
           "brown rice",
           "basmati",
           "sushi rice",
-          "uncooked rice"
+          "uncooked rice",
+          "japanese short grain rice",
+          "short grain rice",
+          "japanese rice",
+          "calrose rice"
         ]
       },
       "aisle": "dry_goods",
@@ -10168,7 +10173,9 @@
           "snow pea",
           "sugar snap pea",
           "edamame",
-          "mangetout"
+          "mangetout",
+          "shelled edamame",
+          "edamame bean"
         ]
       },
       "aisle": "frozen",
@@ -11048,6 +11055,454 @@
         ]
       },
       "source": "Packs: typical US and EU supermarket listings."
+    },
+    {
+      "key": "canadian_bacon",
+      "names": {
+        "en": {
+          "singular": "Canadian bacon",
+          "plural": "Canadian bacon"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "back bacon",
+          "peameal bacon",
+          "canadian style bacon"
+        ]
+      },
+      "aisle": "meat_fish",
+      "sizes": {
+        "small": 20,
+        "medium": 25,
+        "large": 35
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "slice of Canadian bacon",
+        "plural": "slices of Canadian bacon"
+      },
+      "diet": [
+        "meat"
+      ],
+      "packs": {
+        "us": [
+          {
+            "size": 6,
+            "unit": "oz",
+            "label": "6 oz pack (about 6 slices)",
+            "loose": false
+          },
+          {
+            "size": 12,
+            "unit": "oz",
+            "label": "12 oz pack",
+            "loose": false
+          },
+          {
+            "size": 1,
+            "unit": "lb",
+            "label": "per lb at the deli",
+            "loose": true
+          }
+        ],
+        "eu": [
+          {
+            "size": 150,
+            "unit": "g",
+            "label": "150 g pack (about 6 slices)",
+            "loose": false
+          },
+          {
+            "size": 300,
+            "unit": "g",
+            "label": "300 g pack (about 12 slices)",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Slice weights: USDA FoodData Central (Canadian bacon, 1 slice). Packs: typical US and EU supermarket listings (2026-11)."
+    },
+    {
+      "key": "fried_onions",
+      "names": {
+        "en": {
+          "singular": "Crispy fried onion",
+          "plural": "Crispy fried onions"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "french fried onion",
+          "crispy onion",
+          "fried onion",
+          "fried shallot",
+          "crispy shallot"
+        ]
+      },
+      "aisle": "dry_goods",
+      "density_g_per_ml": 0.24,
+      "diet": [
+        "gluten"
+      ],
+      "packs": {
+        "us": [
+          {
+            "size": 2.8,
+            "unit": "oz",
+            "label": "2.8 oz can",
+            "loose": false
+          },
+          {
+            "size": 6,
+            "unit": "oz",
+            "label": "6 oz can",
+            "loose": false
+          },
+          {
+            "size": 24,
+            "unit": "oz",
+            "label": "24 oz tub",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 100,
+            "unit": "g",
+            "label": "100 g tub",
+            "loose": false
+          },
+          {
+            "size": 200,
+            "unit": "g",
+            "label": "200 g bag",
+            "loose": false
+          },
+          {
+            "size": 400,
+            "unit": "g",
+            "label": "400 g tub",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Density: French's label (2 tbsp = 7 g). Packs: typical US and EU supermarket listings (2026-11)."
+    },
+    {
+      "key": "english_muffin",
+      "names": {
+        "en": {
+          "singular": "English muffin",
+          "plural": "English muffins"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "breakfast muffin"
+        ]
+      },
+      "aisle": "bakery",
+      "sizes": {
+        "small": 50,
+        "medium": 57,
+        "large": 66
+      },
+      "default_size": "medium",
+      "diet": [
+        "gluten"
+      ],
+      "packs": {
+        "us": [
+          {
+            "size": 6,
+            "unit": "piece",
+            "label": "pack of 6",
+            "loose": false
+          },
+          {
+            "size": 12,
+            "unit": "piece",
+            "label": "pack of 12",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 4,
+            "unit": "piece",
+            "label": "pack of 4",
+            "loose": false
+          },
+          {
+            "size": 6,
+            "unit": "piece",
+            "label": "pack of 6",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Piece weights: USDA FoodData Central (English muffin, plain). Packs: typical US and EU supermarket listings (2026-11)."
+    },
+    {
+      "key": "garlic_bulb",
+      "names": {
+        "en": {
+          "singular": "Head of garlic",
+          "plural": "Heads of garlic"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "garlic bulb",
+          "garlic head",
+          "whole garlic",
+          "bulb of garlic"
+        ]
+      },
+      "aisle": "produce",
+      "sizes": {
+        "small": 40,
+        "medium": 50,
+        "large": 70
+      },
+      "default_size": "medium",
+      "whole_only": true,
+      "packs": {
+        "us": [
+          {
+            "size": 1,
+            "unit": "piece",
+            "label": "each",
+            "loose": true
+          },
+          {
+            "size": 3,
+            "unit": "piece",
+            "label": "sleeve of 3",
+            "loose": false
+          },
+          {
+            "size": 1,
+            "unit": "lb",
+            "label": "1 lb bag (about 8 heads)",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 1,
+            "unit": "piece",
+            "label": "each",
+            "loose": true
+          },
+          {
+            "size": 3,
+            "unit": "piece",
+            "label": "net of 3",
+            "loose": false
+          },
+          {
+            "size": 4,
+            "unit": "piece",
+            "label": "net of 4",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Head weights: USDA FoodData Central (garlic) and supermarket listings. Separate from garlic, which counts cloves. Packs: typical US and EU supermarket listings (2026-11)."
+    },
+    {
+      "key": "lamb_shoulder",
+      "names": {
+        "en": {
+          "singular": "Lamb shoulder",
+          "plural": "Lamb shoulders"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "shoulder of lamb",
+          "bone in lamb shoulder",
+          "leg of lamb",
+          "lamb leg"
+        ]
+      },
+      "aisle": "meat_fish",
+      "diet": [
+        "meat"
+      ],
+      "packs": {
+        "us": [
+          {
+            "size": 1,
+            "unit": "lb",
+            "label": "per lb",
+            "loose": true
+          },
+          {
+            "size": 2,
+            "unit": "lb",
+            "label": "about 2 lb boneless",
+            "loose": false
+          },
+          {
+            "size": 4,
+            "unit": "lb",
+            "label": "about 4 lb bone-in",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 1,
+            "unit": "kg",
+            "label": "per kg",
+            "loose": true
+          },
+          {
+            "size": 1,
+            "unit": "kg",
+            "label": "half shoulder, about 1 kg",
+            "loose": false
+          },
+          {
+            "size": 2,
+            "unit": "kg",
+            "label": "whole shoulder, about 2 kg",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Packs: typical US and EU supermarket listings (2026-11)."
+    },
+    {
+      "key": "pearl_onion",
+      "names": {
+        "en": {
+          "singular": "Pearl onion",
+          "plural": "Pearl onions"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "baby onion",
+          "silverskin onion",
+          "pickling onion",
+          "boiling onion"
+        ]
+      },
+      "aisle": "produce",
+      "sizes": {
+        "small": 8,
+        "medium": 12,
+        "large": 18
+      },
+      "default_size": "medium",
+      "packs": {
+        "us": [
+          {
+            "size": 10,
+            "unit": "oz",
+            "label": "10 oz bag",
+            "loose": false
+          },
+          {
+            "size": 14.4,
+            "unit": "oz",
+            "label": "14.4 oz frozen bag",
+            "loose": false
+          },
+          {
+            "size": 1,
+            "unit": "lb",
+            "label": "1 lb bag",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 250,
+            "unit": "g",
+            "label": "250 g tray",
+            "loose": false
+          },
+          {
+            "size": 500,
+            "unit": "g",
+            "label": "500 g net",
+            "loose": false
+          },
+          {
+            "size": 400,
+            "unit": "g",
+            "label": "400 g frozen bag",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Piece weights: supermarket listings (about 80 per kg). Packs: typical US and EU supermarket listings (2026-11)."
+    },
+    {
+      "key": "tuna_steak",
+      "names": {
+        "en": {
+          "singular": "Tuna steak",
+          "plural": "Tuna steaks"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "yellowfin tuna",
+          "ahi tuna",
+          "ahi",
+          "sushi grade tuna",
+          "sashimi grade tuna",
+          "bluefin tuna",
+          "fresh tuna steak"
+        ]
+      },
+      "aisle": "meat_fish",
+      "sizes": {
+        "small": 120,
+        "medium": 170,
+        "large": 225
+      },
+      "default_size": "medium",
+      "diet": [
+        "fish"
+      ],
+      "packs": {
+        "us": [
+          {
+            "size": 1,
+            "unit": "lb",
+            "label": "per lb",
+            "loose": true
+          },
+          {
+            "size": 2,
+            "unit": "piece",
+            "label": "pack of 2 steaks (about 12 oz)",
+            "loose": false
+          },
+          {
+            "size": 1,
+            "unit": "lb",
+            "label": "1 lb frozen bag",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 1,
+            "unit": "kg",
+            "label": "per kg",
+            "loose": true
+          }
+        ]
+      },
+      "source": "Steak weights: USDA FoodData Central (tuna, yellowfin) and fishmonger listings. Fresh tuna; canned is canned_tuna. Packs: typical US and EU supermarket listings (2026-11)."
     }
   ]
 }

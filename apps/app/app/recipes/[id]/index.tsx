@@ -24,7 +24,7 @@ const recipeRoute = (id: string, page: string) => `/recipes/${id}/${page}` as Hr
  * opens the Done sheet for a cook cooking mode just logged (spec 051 FR-005).
  */
 export default function RecipeRoute() {
-  const params = useLocalSearchParams<{ id: string; tab?: string; cooked?: string }>();
+  const params = useLocalSearchParams<{ id: string; tab?: string; cooked?: string; servings?: string }>();
   // A link with a malformed id is a recipe that isn't there, not a failed load.
   const parsed = z.uuid().safeParse(params.id);
   const id = parsed.success ? parsed.data : null;
@@ -117,6 +117,7 @@ export default function RecipeRoute() {
         onScaleByIngredient={go('scale')}
         onConvert={go('convert')}
         visit={visit}
+        openAtServings={z.coerce.number().int().min(1).max(50).safeParse(params.servings).data}
         photoUrls={photoUrls}
         cooking={cooking}
       />

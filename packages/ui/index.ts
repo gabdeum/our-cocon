@@ -29,7 +29,7 @@ export { PhotoCrop, PHOTO_ASPECT, type CropRect, type PhotoCropProps } from './c
 export { IconRow, ListGroup, ListRow, Overline, IngredientRow, type IconRowProps, type ListRowProps } from './components/ListRow';
 export { Card, HeroCard, Photo, PhotoPlaceholder, Thumb, type CardProps } from './components/Card';
 export { CookSessionCard, type CookSessionCardProps } from './components/CookSessionCard';
-export { RecipeItem, RecipeItemSkeleton, RecipeSummary, type RecipeItemProps, type RecipeSummaryProps } from './components/RecipeItem';
+export { GroceryRecipeCard, RecipeItem, RecipeItemSkeleton, RecipeSummary, type GroceryRecipeCardProps, type RecipeItemProps, type RecipeSummaryProps } from './components/RecipeItem';
 export { LinkField, type LinkFieldProps } from './components/LinkField';
 export { StatTile, type StatTileProps } from './components/StatTile';
 export { ActivityRow, LatestActivityCard, type ActivityRowProps, type LatestActivityCardProps } from './components/ActivityRow';
