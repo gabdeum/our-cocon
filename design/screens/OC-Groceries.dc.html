@@ -58,7 +58,7 @@ button,input{font-family:inherit}
               <input type="checkbox" checked="{{it.done}}" onChange="{{it.toggle}}" style="width: 26px; height: 26px; accent-color: #5A6820; flex: none; margin: 0">
               <span style="flex: 1; min-width: 0">
                 <span style="{{it.nameStyle}}">{{it.name}}</span>
-                <span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A">{{it.source}}</span>
+                <sc-if value="{{it.hasSource}}" hint-placeholder-val="{{true}}"><span style="display: block; font-size: 13px; font-weight: 600; color: #7A6F55; line-height: 1.35">{{it.source}}</span></sc-if>
               </span>
               <span style="text-align: right; flex: none; max-width: 138px">
                 <span style="display: block; font-size: 15px; font-weight: 900; color: #2A2414">{{it.buy}}</span>
@@ -83,17 +83,18 @@ class Component extends DCLogic {
     this.state = { done: { bread: true }, store: props.store || 'us' };
     this.data = [
       { name: 'Dairy & eggs', items: [
-        { id: 'cream', name: 'Heavy cream', source: 'For Leek & bacon quiche', need: '300 ml', us: '1 pint carton', usLeft: '~170 ml left over', eu: '2 × 20 cl', euLeft: '100 ml left over' },
-        { id: 'cheese', name: 'Gruyère', source: 'For Leek & bacon quiche', need: '100 g', us: '1 block · 8 oz', usLeft: '~125 g left over', eu: '1 pack · 200 g', euLeft: '100 g left over' },
-        { id: 'milk', name: 'Milk', source: 'Alex via ChatGPT', need: '2 L', us: '½ gallon', usLeft: '', eu: '2 × 1 L', euLeft: '' }
+        { id: 'cream', name: 'Heavy cream', source: 'In recipe: cold', need: '300 ml', us: '1 pint carton', usLeft: '~170 ml left over', eu: '2 × 20 cl', euLeft: '100 ml left over' },
+        { id: 'butter', name: 'Butter', source: 'In recipes: for the pan · cold, cubed', need: '120 g', us: '1 pack · 4 sticks', usLeft: '~330 g left over', eu: '1 pack · 250 g', euLeft: '130 g left over' },
+        { id: 'cheese', name: 'Gruyère', source: 'In recipe: grated', need: '100 g', us: '1 block · 8 oz', usLeft: '~125 g left over', eu: '1 pack · 200 g', euLeft: '100 g left over' },
+        { id: 'milk', name: 'Milk', source: 'Added by Eva', need: '2 L', us: '½ gallon', usLeft: '', eu: '2 × 1 L', euLeft: '' }
       ]},
       { name: 'Produce', items: [
-        { id: 'pumpkin', name: 'Pumpkin', source: 'For Pumpkin soup', need: '1 kg', us: '1 small pumpkin', usLeft: 'about 2 lb', eu: '1 kg loose', euLeft: '' },
-        { id: 'apples', name: 'Apples', source: 'Added by Mia', need: '6', us: '1 bag · 3 lb', usLeft: 'about 8 apples', eu: '1 bag · 1 kg', euLeft: 'about 7 apples' }
+        { id: 'pumpkin', name: 'Pumpkin', source: 'In recipe: peeled, cubed', need: '1 kg', us: '1 small pumpkin', usLeft: 'about 2 lb', eu: '1 kg loose', euLeft: '' },
+        { id: 'apples', name: 'Apples', source: 'Added by Eva', need: '6', us: '1 bag · 3 lb', usLeft: 'about 8 apples', eu: '1 bag · 1 kg', euLeft: 'about 7 apples' }
       ]},
       { name: 'Bakery', items: [
         { id: 'bread', name: 'Sourdough loaf', source: 'Added by Gabriel', need: '1', us: '1 loaf', usLeft: '', eu: '1 loaf', euLeft: '' },
-        { id: 'croissant', name: 'Croissants', source: 'Added by Mia', need: '4', us: '1 pack of 4', usLeft: '', eu: '4', euLeft: '' }
+        { id: 'croissant', name: 'Croissants', source: 'Added by Eva', need: '4', us: '1 pack of 4', usLeft: '', eu: '4', euLeft: '' }
       ]}
     ];
   }
@@ -105,7 +106,7 @@ class Component extends DCLogic {
         if (!d) remaining++;
         var left = us ? it.usLeft : it.euLeft;
         return {
-          name: it.name, source: it.source, done: d,
+          name: it.name, source: it.source || '', hasSource: !!it.source, done: d,
           buy: 'Buy ' + (us ? it.us : it.eu),
           need: 'Need ' + it.need + (left ? ' · ' + left : ''),
           nameStyle: 'display: block; font-size: 16px; font-weight: 800; ' + (d ? 'text-decoration: line-through; color: #8F866C' : 'color: #2A2414'),

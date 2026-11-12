@@ -15,10 +15,10 @@ a{color:#5A6820}a:hover{color:#424D17}
 button,input,textarea{font-family:inherit}
 </style>
 </helmet>
-<div style="width: 390px; height: 1250px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; display: flex; flex-direction: column">
+<div style="width: 390px; height: 1790px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; display: flex; flex-direction: column">
   <header style="flex: none; padding: 50px 16px 12px; display: flex; align-items: center; justify-content: space-between">
-    <a href="OC-Recipes.dc.html" style="height: 44px; display: flex; align-items: center; padding: 0 6px; font-size: 16px; font-weight: 800; color: #5A503A; text-decoration: none">Cancel</a>
-    <span style="font-size: 17px; font-weight: 900">New recipe</span>
+    <a href="OC-Recipe.dc.html" style="height: 44px; display: flex; align-items: center; padding: 0 6px; font-size: 16px; font-weight: 800; color: #5A503A; text-decoration: none">Cancel</a>
+    <span style="font-size: 17px; font-weight: 900">Edit recipe</span>
     <button style="height: 44px; padding: 0 18px; border-radius: 999px; border: none; background: #5A6820; color: #FFFFFF; font-size: 15px; font-weight: 900">Save</button>
   </header>
 
@@ -97,14 +97,34 @@ button,input,textarea{font-family:inherit}
     </div>
     <div style="display: flex; flex-direction: column; gap: 6px">
       <label for="src" style="font-size: 15px; font-weight: 900">Source <span style="font-weight: 600; color: #5A503A">(optional)</span></label>
-      <input id="src" placeholder="A book, a website or “Grandma”" style="height: 54px; box-sizing: border-box; border-radius: 16px; border: 2px solid #EEDFB5; background: #FFFFFF; padding: 0 16px; font-size: 16px; font-weight: 600; color: #2A2414">
+      <input id="src" value="La Cuisine de Mamie · p. 48" placeholder="A book and page, a website or “Grandma”" style="height: 54px; box-sizing: border-box; border-radius: 16px; border: 2px solid #EEDFB5; background: #FFFFFF; padding: 0 16px; font-size: 16px; font-weight: 600; color: #2A2414">
+      <span style="font-size: 13px; font-weight: 600; color: #5A503A">Book and page, a website, or a person. Assistants fill this in, or put their own name if there's nothing else.</span>
     </div>
+
+    <section aria-labelledby="this-recipe" style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px">
+      <h2 id="this-recipe" style="margin: 0; font-size: 20px; font-weight: 900">This recipe</h2>
+      <p style="margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; color: #5A503A">Only for this recipe. Family defaults are in Menu › Recipes.</p>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 4px 16px">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid #F2E6C4"><div style="flex: 1"><div style="font-size: 16px; font-weight: 800">Keep screen on</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">Same as default</div></div><span role="switch" aria-checked="true" aria-label="Keep screen on" style="width: 52px; height: 32px; flex: none; border-radius: 16px; background: #5A6820; padding: 3px; box-sizing: border-box; display: flex; justify-content: flex-end"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span></div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid #F2E6C4"><div style="flex: 1"><div style="font-size: 16px; font-weight: 800">I'll use a kitchen scale</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">Shows “100 g” instead of “about 1 cup”</div></div><span role="switch" aria-checked="true" aria-label="Use a kitchen scale" style="width: 52px; height: 32px; flex: none; border-radius: 16px; background: #5A6820; padding: 3px; box-sizing: border-box; display: flex; justify-content: flex-end"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span></div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid #F2E6C4"><div style="flex: 1"><div style="font-size: 16px; font-weight: 800">Thermometer checks</div><div style="font-size: 13px; font-weight: 600; color: #8A4B00">Changed for this recipe · <a href="#" style="color: #8A4B00">Reset</a></div></div><span role="switch" aria-checked="true" aria-label="Thermometer checks" style="width: 52px; height: 32px; flex: none; border-radius: 16px; background: #5A6820; padding: 3px; box-sizing: border-box; display: flex; justify-content: flex-end"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span></div>
+        <div style="padding: 14px 0; display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 16px; font-weight: 800">Units</div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; background: #FFF0C9; border-radius: 14px; padding: 4px">
+            <button aria-pressed="true" style="height: 42px; border-radius: 11px; border: none; background: #FFFFFF; color: #2A2414; font-size: 14px; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)">Default</button>
+            <button style="height: 42px; border-radius: 11px; border: none; background: transparent; color: #5A503A; font-size: 14px; font-weight: 700">Metric</button>
+            <button style="height: 42px; border-radius: 11px; border: none; background: transparent; color: #5A503A; font-size: 14px; font-weight: 700">Imperial</button>
+          </div>
+        </div>
+      </div>
+      <a href="OC-Delete.dc.html" style="min-height: 54px; border-radius: 18px; background: #FFFFFF; color: #A3341F; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; font-weight: 800"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Delete recipe</a>
+    </section>
 
     <a href="OC-EditIngredients.dc.html" style="height: 58px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900">Next: Ingredients</a>
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1250}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1790}}'>
 class Component extends DCLogic {
   renderVals() { return {}; }
 }
