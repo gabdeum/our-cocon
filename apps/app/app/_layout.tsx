@@ -197,7 +197,7 @@ export default function RootLayout() {
         <SessionProvider client={supabase} tracker={tracker} persister={queryPersister} restored={restored} clearDevice={clearDevice} beforeSignOut={beforeSignOut}>
           <FamilySync>
             <AppFrame>
-              <ToastProvider>
+              <ToastProvider tracker={tracker}>
               <Notifications>
               <Timers>
               <CalendarPrefsProvider>

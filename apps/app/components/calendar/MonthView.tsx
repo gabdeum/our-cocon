@@ -41,8 +41,8 @@ export interface MonthViewProps {
   /** The family's home time zone, for "Now" in the day sheet. */
   timeZone: string;
   weekStartsOn: WeekStartsOn;
-  /** ‹ › and Today: scroll so this month's first week is at the top. */
-  jump?: { month: string; nonce: number };
+  /** ‹ ›: scroll so this month's first week is at the top. Today (`toToday`): today's week is the second row (spec 053 FR-008). */
+  jump?: { month: string; toToday?: boolean; nonce: number };
   /** The month that fills the grid changed (FR-005), as its 1st. */
   onMonthShown: (month: string) => void;
   /** FR-008: a day's sheet opened, with how many events it lists (`calendar_day_sheet_opened`). */
@@ -85,7 +85,10 @@ export function MonthView({ width, members, myMemberId, events, slotTimes, hidde
     setSheetDate(null);
     onOpenEvent(id, date);
   };
-  const gridJump = useMemo(() => (jump ? { index: firstWeekOfMonth(range, jump.month), nonce: jump.nonce } : undefined), [jump, range]);
+  const gridJump = useMemo(
+    () => (jump ? { index: jump.toToday ? Math.max(0, weekIndexOf(range, today) - 1) : firstWeekOfMonth(range, jump.month), nonce: jump.nonce } : undefined),
+    [jump, range, today],
+  );
 
   return (
     <View className="flex-1">

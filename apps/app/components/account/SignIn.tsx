@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button, Callout, Link, StatusBanner, Text, TextField } from '@cocon/ui';
+import { Button, Link, StatusBanner, Text, TextField } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import { sendMagicLink, signInNatively, signInWithProvider, type SendLinkResult, type SignInOptions } from '../../lib/auth';
 import { signInOptions } from '../../lib/native-sign-in';
@@ -38,6 +39,8 @@ export function SignIn({ auth, next, title = t.title, lead = t.lead, options = s
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(error);
   const [busy, setBusy] = useState(false);
   const [resent, setResent] = useState(false);
 
@@ -80,7 +83,6 @@ export function SignIn({ auth, next, title = t.title, lead = t.lead, options = s
     return (
       <View className="gap-18">
         <WelcomeHeader title={t.checkTitle} lead={t.checkBody(sentTo)} />
-        {error ? <Callout variant="warn" text={error} /> : null}
         <Button label={t.sendAgain} variant="outline" block busy={busy} busyLabel={t.sending} onPress={() => void send(true)} />
         {resent ? <StatusBanner message={t.sentAgain} /> : null}
         <Link
@@ -98,7 +100,6 @@ export function SignIn({ auth, next, title = t.title, lead = t.lead, options = s
   return (
     <View className="gap-18">
       <WelcomeHeader title={title} lead={lead} />
-      {error ? <Callout variant="warn" text={error} /> : null}
       {sheets ? <Button label={t.apple} variant="outline" brand="apple" block onPress={() => void signInWith('apple')} /> : null}
       {sheets?.google ? <Button label={t.google} variant="outline" brand="google" block onPress={() => void signInWith('google')} /> : null}
       {options.webGoogle ? <Button label={t.google} variant="outline" brand="google" block onPress={() => void google()} /> : null}

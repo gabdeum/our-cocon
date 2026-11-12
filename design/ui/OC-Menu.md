@@ -36,5 +36,5 @@ Route `/settings/deleted`, pushed from the "Recently deleted" row ("{n} item(s) 
 | "Delete now" | Dialog: "Delete “{name}” for good?" / "Its photos and variants go with it. This can't be undone." (an event: "This can't be undone.") · "Delete now" · "Keep it" |
 | Empty | "Nothing here." / "Recipes and events you delete stay here for 30 days." |
 | Couldn't load | Callout "Couldn't load. Try again." + soft "Try again" |
-| Restore failed / Delete now failed | StatusBanner "Couldn't restore. Try again." / "Couldn't delete. Try again." |
+| Restore failed / Delete now failed | warn toast "Couldn't restore. Try again." / "Couldn't delete. Try again." |
 | Offline | Readable; "Restore" and the row's sheet are off (Patterns.md › Offline) |

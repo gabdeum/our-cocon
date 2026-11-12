@@ -1,7 +1,8 @@
 // Spec 051 (design/ui/OC-CookDone.md, Warnings and errors): the Done sheet's Undo and "Mark as
 // done", and the "already cooking" sheet's Resume and Start over.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
+import { render } from '../../test/render';
 import { CookDoneSheet } from './CookDoneSheet';
 import { AlreadyCookingSheet } from './AlreadyCookingSheet';
 import { expectAccessible } from '../../test/axe';

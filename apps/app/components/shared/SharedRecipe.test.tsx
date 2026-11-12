@@ -2,7 +2,8 @@
 // public page (design/ui/OC-SharedView.md).
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { render } from '../../test/render';
 import { quiche } from '@cocon/schemas/quiche.fixture';
 import type { SharedRecipe as Shared } from '@cocon/schemas';
 import { INGREDIENTS_SHOWN, SharedRecipe, type SharedRecipeProps } from './SharedRecipe';

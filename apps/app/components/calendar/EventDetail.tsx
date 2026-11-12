@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { dateLabel, viewFor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import type { Tracker } from '@cocon/schemas';
-import { ActionMenu, BottomSheet, ChecklistRow, DateGrid, Dialog, Icon, IconButton, IconRow, ListGroup, MemberStack, PushedScreen, Tag, Text, TopBarHeading } from '@cocon/ui';
+import { ActionMenu, BottomSheet, ChecklistRow, DateGrid, Dialog, Icon, IconButton, IconRow, Link, ListGroup, MemberStack, PushedScreen, Tag, Text, TopBarHeading } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import type { DeleteScope } from '../../lib/event-delete';
 import { addedLine, deleteBody, memberBadges, placeActions, reminderLines, repeatLine, responsibleLine, whenLine } from '../../lib/event-detail';
@@ -15,6 +15,10 @@ import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const e = strings.calendar.event;
+/** Spec 053 FR-007: notes past 6 lines are cut, with "Show more". */
+const NOTES_LINES = 6;
+// Lines can't be measured the same on every platform; a note this long likely runs past 6.
+const longNotes = (notes: string) => notes.split('\n').length > NOTES_LINES || notes.length > 280;
 const a = strings.calendar.add;
 
 export interface EventDetailProps {
@@ -59,6 +63,7 @@ export function EventDetail(p: EventDetailProps) {
   const [dialog, setDialog] = useState(false);
   const [picking, setPicking] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
   // Ticks shown at once, until the next load (a new checklist) brings them back from the database.
   const [pending, setPending] = useState<{ of: StoredEvent['checklist']; done: Record<string, boolean> }>({ of: event.checklist, done: {} });
   const ticks = pending.of === event.checklist ? pending.done : {};
@@ -76,18 +81,9 @@ export function EventDetail(p: EventDetailProps) {
   const surprise = viewFor(o, p.myMemberId).is_surprise;
   const off = p.readOnly || busy;
 
+  // Spec 053 FR-006: who is in the meta row; the card keeps who takes or drives.
   const rows = [
-    badges.length
-      ? {
-          key: 'who',
-          leading: <MemberStack people={badges} filtered={false} />,
-          title: e.who(badges.map((b) => b.name)),
-          sub: responsible ?? undefined,
-          trailingIcon: responsible ? ('car' as const) : undefined,
-        }
-      : responsible
-        ? { key: 'who', icon: 'car' as const, title: responsible }
-        : null,
+    responsible ? { key: 'who', icon: 'car' as const, title: responsible } : null,
     o.location
       ? { key: 'place', icon: 'pin' as const, title: o.location, actions: placeActions(o.location, true, { openUrl: p.onOpenUrl, copy: p.onCopy, toast: toast.show }) }
       : null,
@@ -162,8 +158,17 @@ export function EventDetail(p: EventDetailProps) {
       <OfflineBanner screen="calendar" tracker={p.tracker} />
 
       <View className="gap-4">
-        {o.category || surprise || repeat ? (
-          <View className="flex-row flex-wrap items-center gap-8">
+        {/* Spec 053 FR-005: the people first, then the type and the repeat, 16 above the title. */}
+        {badges.length || o.category || surprise || repeat ? (
+          <View className="mb-12 flex-row flex-wrap items-center gap-8">
+            {badges.length ? (
+              <View className="flex-row items-center gap-6">
+                <MemberStack people={badges} filtered={false} />
+                <Text size={13} weight="800">
+                  {e.who(badges.map((b) => b.name))}
+                </Text>
+              </View>
+            ) : null}
             {o.category ? <Tag label={a.types[o.category]} tone="soft" size="md" /> : null}
             {/* Spec 043: only those in on it see the event itself, so they're the ones who get the tag. */}
             {surprise ? <Tag label={e.surprise} tone="sage" size="md" /> : null}
@@ -188,6 +193,14 @@ export function EventDetail(p: EventDetailProps) {
             {` · ${when.time}`}
           </Text>
         </Text>
+        {o.notes ? (
+          <View className="mt-4 gap-2">
+            <Text size={15} weight="600" color="ink-soft" numberOfLines={notesOpen ? undefined : NOTES_LINES} style={{ lineHeight: 15 * 1.4 }}>
+              {o.notes}
+            </Text>
+            {longNotes(o.notes) ? <Link label={notesOpen ? e.notesLess : e.notesMore} onPress={() => setNotesOpen((v) => !v)} /> : null}
+          </View>
+        ) : null}
       </View>
 
       {rows.length ? (

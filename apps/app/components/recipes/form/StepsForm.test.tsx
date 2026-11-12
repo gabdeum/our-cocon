@@ -2,7 +2,8 @@
 // "@" and "+ Leeks" with a live Preview, US2 a step timer, US3 a temperature check, the edge cases
 // (one step open, badges, a missing ingredient), Save's checks, reorder and typed temperatures.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { render } from '../../../test/render';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { IngredientFacts, RecipeFormSection } from '@cocon/schemas';
 import { fakeTracker, flush } from '../../../test/fakes';

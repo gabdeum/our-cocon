@@ -40,8 +40,8 @@ select public.create_family('The Others', 'Sam');
 
 select ok(has_function_privilege('authenticated', 'public.undo_ai_change(uuid, boolean)', 'execute'), 'members can undo');
 select ok(not has_function_privilege('cocon_assistant', 'public.undo_ai_change(uuid, boolean)', 'execute'), 'assistants can''t undo');
-select ok(not has_function_privilege('cocon_assistant', 'public.activity_entries(int, timestamptz, uuid, text)', 'execute'), 'assistants can''t read the activity list');
-select ok(not has_function_privilege('anon', 'public.activity_entries(int, timestamptz, uuid, text)', 'execute'), 'signed out: no activity list');
+select ok(not has_function_privilege('cocon_assistant', 'public.activity_entries(int, timestamptz, uuid, text, uuid)', 'execute'), 'assistants can''t read the activity list');
+select ok(not has_function_privilege('anon', 'public.activity_entries(int, timestamptz, uuid, text, uuid)', 'execute'), 'signed out: no activity list');
 
 -- Alex's ChatGPT adds two items in one call.
 select pg_temp.login('00000000-0000-0000-0000-00000000000b', 'cocon_assistant', 'c1');

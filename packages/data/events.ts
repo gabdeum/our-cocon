@@ -116,6 +116,34 @@ export async function loadEvent(client: Pick<Db, 'from'>, id: string): Promise<S
   return data ? storedEvent(data) : null;
 }
 
+/** A past title to offer while typing a new one (spec 053 FR-001): one per title and start time, with its latest event's time. */
+export interface TitleSuggestion {
+  title: string;
+  lastEventId: string;
+  category: string | null;
+  location: string | null;
+  time: { time_type: string; slots: string[]; start_time: string | null; end_time: string | null };
+}
+
+/** Spec 053 FR-002: the family's past titles matching `text`, best first. Empty on any failure: it's only a help. */
+export async function suggestEventTitles(client: Pick<Db, 'rpc'>, text: string, limit = 8): Promise<TitleSuggestion[]> {
+  const q = text.trim();
+  if (!q) return [];
+  try {
+    const { data, error } = await client.rpc('suggest_event_titles', { p_query: q.slice(0, 60), p_limit: limit });
+    if (error || !data) return [];
+    return data.map((r) => ({
+      title: r.title,
+      lastEventId: r.last_event_id,
+      category: r.category,
+      location: r.location,
+      time: { time_type: r.time_type, slots: r.slots ?? [], start_time: r.start_time, end_time: r.end_time },
+    }));
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Saves a whole event (FR-005): a new one without `id`. Checked with the shared schema and the
  * calendar engine first (adjacent slots, a valid repeat), then saved in one go with who it's for,

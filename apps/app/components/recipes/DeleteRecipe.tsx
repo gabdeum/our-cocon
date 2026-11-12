@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button, Callout, Dialog } from '@cocon/ui';
+import { Button, Dialog } from '@cocon/ui';
 import { useOnline } from '../../lib/online';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 
 const d = strings.deleteRecipe;
@@ -35,9 +36,10 @@ export function DeleteRecipe({ name, variants, disabled, onDelete }: DeleteRecip
     }
   };
 
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(failed && d.failed);
   return (
     <>
-      {failed ? <Callout variant="warn" text={d.failed} /> : null}
       <Button label={d.link} variant="danger-card" icon="trash" block onPress={() => setConfirm(true)} disabled={!online || deleting || disabled} />
       <Dialog
         visible={confirm}

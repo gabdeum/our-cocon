@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Callout, Card, Choice, IngredientRow, Link, Meta, Photo, PhotoPlaceholder, PillRow, PublicScreen, SegmentedControl, SettingRow, Stepper, Text } from '@cocon/ui';
+import { Button, Card, Choice, IngredientRow, Link, Meta, Photo, PhotoPlaceholder, PillRow, PublicScreen, SegmentedControl, SettingRow, Stepper, Text } from '@cocon/ui';
 import { noVariants, validChoice, type AnonymousTracker, type SharedRecipe as Shared, type Tracker, type VariantChoice } from '@cocon/schemas';
 import type { UnitSystem } from '@cocon/quantity';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import type { SharedLoad } from '../../lib/shared-recipe';
 import { optionHint, recipeView, servingsMax, SERVINGS_MIN } from '../../lib/recipe-view';
@@ -104,6 +105,8 @@ function Loaded({
     tracker.track('shared_units_toggled', { system: next });
   };
 
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(saveFailed && v.saveFailed);
   return (
     <PublicScreen
       brand={v.brand}
@@ -235,7 +238,6 @@ function Loaded({
         <Text size={15} weight="600" color="on-ink">
           {v.promoBody(nameInText)}
         </Text>
-        {saveFailed ? <Callout variant="warn" text={v.saveFailed} /> : null}
         <Button label={v.save} busyLabel={v.saving} busy={saving} variant="honey" block onPress={onSave} />
       </Card>
     </PublicScreen>

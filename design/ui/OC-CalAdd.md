@@ -5,7 +5,9 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 ## Layout (BottomSheet, scrolling body, fixed Save)
 1. Handle; title "New event" (edit: "Edit event"); muted link "Cancel".
 2. "What's happening?" — input 56, 18/800, placeholder "e.g. Poker night", max 60.
+   - Suggestions (spec 053 FR-001, new event only): while it holds text, up to 8 SuggestionPills in one row under it that scrolls sideways, edge to edge (`role="list"`, "Suggestions"): "{title} · {start}", the title 14/800, the dot and start ("Morning", "17:30", "All day") 14/600 ink-muted. One pill per title and start time. Picking one fills everything like the latest event of that kind (type, place, time of day, who, who takes, reminder, visibility, checklist unticked), keeps the day, and opens More options when it holds values.
 3. "When" — three tiles: "Today" / "Sun 25", "Tomorrow" / "Mon 26", "Other day" / "Pick a date". Selected olive.
+   - "Ends" (spec 053 FR-009): pills "Same day" (selected) · "Pick a last day". Picking opens the date sheet "Last day" (DateGrid), days before the first day off; the pill then reads "Mon, Nov 2" with a ✕ ("Back to same day"). Moving the first day keeps the length. Hidden for "This event only".
 4. "Time of day" + hint "Pick a time of day — no need for exact hours." — scrolling SlotChips (92×66): "All day" / "Whole day", "Early morning" / "06–09", "Morning" / "09–12", "Lunch" / "12–14", "Afternoon" / "14–18", "Evening" / "18–22". Under them, "Starts" / "Ends" time inputs, always shown (decided 2026-10-28, replacing the "Custom" chip): empty for All day, the picked slots' hours otherwise; typing a time makes it a custom time (no slot highlighted), and emptying both is All day. On the phone, Starts and Ends are a TimeRange: each opens the system time picker (iOS: the wheel under the fields, 5-minute steps; Android: the clock dialog), in the person's 12- or 24-hour clock. An empty field opens on the next whole hour (Ends: an hour after Starts), and a picked start moves an Ends that's missing or not after it to an hour later.
 5. "Who" — MemberChips (48): "Everyone", each member, "Others". Selected = 2.5 px ink border. Starts on Everyone (decided 2026-10-29, replacing the signed-in member); anyone can be unpicked, and Save with nobody shows "Pick at least one person." (warn, `role="alert"`) under the chips.
 6. Conflict callout (warn-soft): "You already have Movie night this evening. Add anyway?"
@@ -25,7 +27,7 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 | --- | --- |
 | Save with no title | input border warn-border; "Give your event a name." (warn, `role="alert"`) |
 | Saved | sheet closes; toast "{title} added for tonight, 18:00–22:00." (or "for tomorrow", "for Sat, Oct 31"; all-day: "for Sat, Oct 31") with "Undo" |
-| Save failed | "Couldn't save. Check your connection and try again." (warn callout; sheet stays) |
+| Save failed | warn toast "Couldn't save. Check your connection and try again." with ✕ (spec 053 FR-015); the sheet stays as typed |
 | Undo failed (032-later L99, spec 042) | toast "Couldn't undo. Check your connection and try again." (no button); the event stays |
 | Conflict | "{Name} already has {title} this {slot}. Add anyway?" ("You already have …" for yourself) |
 
@@ -34,6 +36,8 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 | --- | --- |
 | Saved today before 18:00 | toast "{title} added for today, {time range}." |
 | Saved, all day | toast "{title} added for {Sat, Oct 31 · today · tomorrow}." (no range) |
+| Saved, several days | toast "{title} added for Sat, Oct 31 – Mon, Nov 2." (no range; spec 053) |
+| Last day over a year after the first | "Pick a last day within a year." (warn, `role="alert"`, under Ends) |
 | Typed time not a time | "Use a time like 18:30." |
 | Typed end not after start | "Pick an end time after the start." |
 | Save with nobody in Who | "Pick at least one person." |
@@ -44,4 +48,8 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 | Event can't be opened | "We couldn't open this event." / "It may have been deleted, or you're offline." · "Cancel" |
 
 ## Rules
-Adjacent slots combine (Afternoon + Evening = 14:00–22:00); a non-adjacent tap starts over; All day stands alone. Nothing picked (or the last slot unpicked) is All day. Type Birthday sets All day and Repeat Yearly (spec 035 FR-006). Ends shows for every repeat; "On" weekdays only for Weekly. "This event only" hides Repeat, Reminder and the checklist (they belong to the series). Everyone replaces members; Others adds to anything and needs no names. Member colors: `member-*` tokens; Everyone `member-everyone` (coral) with label "All"; Others `member-others` (light sand) with a person-outline icon and a `line-handle` outline. Two-member items split 50/50; initials always shown ("G·J").
+Adjacent slots combine (Afternoon + Evening = 14:00–22:00); a non-adjacent tap starts over; All day stands alone. Nothing picked (or the last slot unpicked) is All day. Type Birthday sets All day and Repeat Yearly (spec 035 FR-006). Daily repeat is hidden for an event over several days (spec 053). Ends shows for every repeat; "On" weekdays only for Weekly. "This event only" hides Repeat, Reminder and the checklist (they belong to the series). Everyone replaces members; Others adds to anything and needs no names. Member colors: `member-*` tokens; Everyone `member-everyone` (coral) with label "All"; Others `member-others` (light sand) with a person-outline icon and a `line-handle` outline. Two-member items split 50/50; initials always shown ("G·J").
+
+## Changelog
+- 2026-11-12 (spec 053): title suggestions under "What's happening?" that fill the event like last time; an "Ends" row for events over several days; Save failed is a toast, not a callout.
+- 2026-11-12 (spec 053, follow-up): suggestions are a sideways row of up to 8 pills, "{title} · {start}", one per title and start time.

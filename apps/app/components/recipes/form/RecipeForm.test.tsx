@@ -1,7 +1,8 @@
 // Spec 014 (design/ui/OC-EditBasics.md): the recipe form's Details section. US1 Save, US2 Advanced
 // mode, US3 Cancel with changes, and the edge cases (empty name, photo upload failed).
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { render } from '../../../test/render';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RecipeFormSection } from '@cocon/schemas';
 import { fakeTracker, flush } from '../../../test/fakes';
@@ -280,7 +281,7 @@ describe('photos (FR-004)', () => {
     await flush();
     fireEvent.click(screen.getByRole('button', { name: 'Use photo' }));
     await flush();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     await flush();
     expect(photos.uploadPhoto).toHaveBeenCalledTimes(2);
     expect(screen.queryByText("The photo didn't upload. Try again.")).toBeNull();

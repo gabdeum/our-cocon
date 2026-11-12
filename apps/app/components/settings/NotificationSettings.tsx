@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { DefaultReminder, type NotificationPrefs, type Tracker } from '@cocon/schemas';
-import { BottomSheet, Button, Card, cn, Lead, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, StatusBanner, Text } from '@cocon/ui';
+import { BottomSheet, Button, Card, cn, Lead, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, Text } from '@cocon/ui';
 import type { PermissionStatus } from '../../lib/notifications';
+import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
@@ -39,7 +40,7 @@ function Heading({ children }: { children: string }) {
 export function NotificationSettings(p: NotificationSettingsProps) {
   const { prefs, status } = p;
   const [picking, setPicking] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const toast = useToast();
   const denied = status === 'denied';
   const notAsked = p.supported && status === 'undetermined';
   const off = denied || p.readOnly;
@@ -53,7 +54,8 @@ export function NotificationSettings(p: NotificationSettingsProps) {
 
   const pick = async (value: DefaultReminder) => {
     setPicking(false);
-    if (value !== p.defaultReminder) setFailed((await p.onDefaultReminder(value)) === 'failed');
+    // A failed save is a warn toast (spec 053 FR-015).
+    if (value !== p.defaultReminder && (await p.onDefaultReminder(value)) === 'failed') toast.show({ text: s.saveFailed, tone: 'warn' });
   };
 
   return (
@@ -130,7 +132,6 @@ export function NotificationSettings(p: NotificationSettingsProps) {
               ) : null}
             </View>
           </View>
-          {failed && !p.readOnly ? <StatusBanner tone="warn" message={s.saveFailed} /> : null}
         </>
       )}
 

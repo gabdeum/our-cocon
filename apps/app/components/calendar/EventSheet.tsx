@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { addDays, dateLabel, formatTime, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
-import { loadEvents, type Db, type StoredEvent } from '@cocon/data';
+import { addDays, dateLabel, daysBetween, formatTime, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
+import { loadEvent, loadEvents, suggestEventTitles, type Db, type StoredEvent, type TitleSuggestion } from '@cocon/data';
 import { EVENT_CATEGORIES, Reminder as ReminderSchema, type EventInput, type Reminder, type Visibility } from '@cocon/schemas/calendar';
 import type { Tracker } from '@cocon/schemas';
 import {
@@ -14,6 +14,7 @@ import {
   Choice,
   DateGrid,
   DayChip,
+  IconButton,
   DisclosureButton,
   FieldWarning,
   Link,
@@ -22,6 +23,7 @@ import {
   PillRow,
   SegmentedControl,
   SlotChip,
+  SuggestionPill,
   Text,
   TextField,
   TimeRange,
@@ -38,7 +40,11 @@ import {
   reminderHint,
   hiddenNames,
   isChipOn,
+  fromSuggestion,
+  suggestionTime,
+  lastDay,
   managedOn,
+  MAX_SPAN,
   pickerFallback,
   pickTime,
   shiftMonth,
@@ -60,6 +66,7 @@ import {
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
+import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 
 const a = strings.calendar.add;
@@ -70,6 +77,8 @@ const MAX_CHECKLIST = 50;
 
 export interface SaveMeta {
   usedMoreOptions: boolean;
+  /** A suggested title filled it (spec 053 FR-003). */
+  usedSuggestion: boolean;
   secondsToSave: number;
 }
 
@@ -84,7 +93,7 @@ export interface EventSheetProps {
   canChangeVisibility?: boolean;
   /** Who made the event (a new one is mine): a surprise is kept from everyone else in Who. */
   creatorMemberId?: string;
-  client: Pick<Db, 'from'>;
+  client: Pick<Db, 'from' | 'rpc'>;
   familyId: string;
   members: readonly Member[];
   myMemberId: string;
@@ -97,7 +106,7 @@ export interface EventSheetProps {
   onClose: () => void;
 }
 
-type DateSheet = { for: 'date' | 'ends'; month: string } | null;
+type DateSheet = { for: 'date' | 'last' | 'ends'; month: string } | null;
 
 /**
  * OC-CalAdd / OC-CalAddMore (spec 041): add an event in about three taps, more options folded
@@ -115,11 +124,43 @@ export function EventSheet(p: EventSheetProps) {
   const [more, setMore] = useState(p.mode === 'edit' && hasMoreOptions(initial));
   const [tried, setTried] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const toast = useToast();
   const [dateSheet, setDateSheet] = useState<DateSheet>(null);
   const [adding, setAdding] = useState<string | null>(null);
   const conflictSeen = useRef(false);
-  const set = (patch: Partial<EventDraft>) => setD((prev) => ({ ...prev, ...patch }));
+  // Spec 053 FR-003: what the person changed by hand, which a picked suggestion doesn't overwrite.
+  const touched = useRef(new Set<keyof EventDraft>());
+  const set = (patch: Partial<EventDraft>) => {
+    for (const key of Object.keys(patch) as (keyof EventDraft)[]) touched.current.add(key);
+    setD((prev) => ({ ...prev, ...patch }));
+  };
+
+  // Spec 053 FR-001: past titles while typing a new event's; none when editing.
+  const offerTitles = p.mode === 'new' && !p.occurrenceOnly;
+  const [titleFocused, setTitleFocused] = useState(false);
+  const [suggested, setSuggested] = useState(false);
+  const [suggestions, setSuggestions] = useState<TitleSuggestion[]>([]);
+  useEffect(() => {
+    if (!offerTitles) return;
+    let stale = false;
+    const timer = setTimeout(() => void suggestEventTitles(p.client, d.title).then((s) => !stale && setSuggestions(s)), 150);
+    return () => {
+      stale = true;
+      clearTimeout(timer);
+    };
+  }, [offerTitles, p.client, d.title]);
+  const shownSuggestions = titleFocused && d.title.trim() ? suggestions : [];
+  const pickSuggestion = async (s: TitleSuggestion, position: number) => {
+    setTitleFocused(false);
+    setD((prev) => ({ ...prev, title: s.title }));
+    p.tracker.track('event_title_suggestion_picked', { position, query_length: Math.min(Math.max(d.title.trim().length, 1), 60) });
+    const event = await loadEvent(p.client, s.lastEventId).catch(() => null);
+    if (!event) return;
+    // From the draft as it is now: whatever was typed while it loaded stays (it's in `touched`).
+    setSuggested(true);
+    setD((prev) => fromSuggestion(prev, event, touched.current));
+    if (hasMoreOptions(fromSuggestion(d, event, new Set()))) setMore(true);
+  };
 
   // The draft's days, from the same query the calendar uses for that month (spec 035's sync keeps it live).
   const w = eventWindow(firstOfMonth(d.date));
@@ -163,13 +204,13 @@ export function EventSheet(p: EventSheetProps) {
     setTried(true);
     if (!hasTitle || noOne || Object.keys(times).length || endsProblem(d) || Object.keys(secret).length || revealed.length || saving) return;
     setSaving(true);
-    setFailed(false);
     try {
-      await p.onSave(toInput(out, members, { occurrence: p.occurrenceOnly }), { usedMoreOptions: more || p.mode === 'edit', secondsToSave: Math.round((Date.now() - opened.current) / 1000) });
+      await p.onSave(toInput(out, members, { occurrence: p.occurrenceOnly }), { usedMoreOptions: more || p.mode === 'edit', usedSuggestion: suggested, secondsToSave: Math.round((Date.now() - opened.current) / 1000) });
       if (conflictSeen.current) p.tracker.track('event_conflict_shown', { proceeded: conflict !== null });
       if (d.visibility !== initial.visibility) p.tracker.track('event_visibility_set', { visibility: d.visibility });
     } catch {
-      setFailed(true);
+      // Spec 053 FR-015: a warn toast over the sheet, which stays as typed.
+      toast.show({ text: a.saveFailed, tone: 'warn' });
       setSaving(false);
     }
   };
@@ -185,7 +226,11 @@ export function EventSheet(p: EventSheetProps) {
     else set({ date: choice === 'today' ? today : addDays(today, 1) });
   };
 
-  const grid = dateSheet ? dateGridMonth(dateSheet.month, today, p.weekStartsOn, dateSheet.for === 'ends' ? d.date : undefined) : null;
+  const last = lastDay(d);
+  const pickLast = () => setDateSheet({ for: 'last', month: firstOfMonth(last ?? d.date) });
+  const grid = dateSheet
+    ? dateGridMonth(dateSheet.month, today, p.weekStartsOn, dateSheet.for === 'date' ? undefined : d.date, dateSheet.for === 'last' ? addDays(d.date, MAX_SPAN) : undefined)
+    : null;
 
   return (
     <BottomSheet
@@ -198,7 +243,6 @@ export function EventSheet(p: EventSheetProps) {
       headerAction={<Link label={a.cancel} tone="quiet" size={16} onPress={close} />}
       footer={
         <View className="gap-12">
-          {failed ? <Callout variant="warn" text={a.saveFailed} /> : null}
           <Button label={a.save} busy={saving} busyLabel={a.saving} block inactive={!hasTitle} disabled={!online} onPress={() => void save()} />
         </View>
       }
@@ -212,7 +256,17 @@ export function EventSheet(p: EventSheetProps) {
         placeholder={a.whatPlaceholder}
         autoFocus={p.mode === 'new'}
         warning={showError ? a.noTitle : undefined}
+        onFocus={() => setTitleFocused(true)}
+        // Later than the tap, so tapping a suggestion still lands on it.
+        onBlur={() => setTimeout(() => setTitleFocused(false), 200)}
       />
+      {shownSuggestions.length ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" role="list" aria-label={a.suggestions} className="-mx-20 -mt-8" contentContainerClassName="gap-8 px-20">
+          {shownSuggestions.map((s, i) => (
+            <SuggestionPill key={s.lastEventId} title={s.title} detail={suggestionTime(s, slotTimes, use24h)} onPress={() => void pickSuggestion(s, i + 1)} />
+          ))}
+        </ScrollView>
+      ) : null}
 
       <Section title={a.when}>
         <View className="flex-row gap-8">
@@ -220,6 +274,17 @@ export function EventSheet(p: EventSheetProps) {
           <DayChip label={a.tomorrow} sub={tiles.tomorrow} selected={tiles.picked === 'tomorrow'} onPress={() => pickDay('tomorrow')} />
           <DayChip label={a.otherDay} sub={tiles.other} selected={tiles.picked === 'other'} onPress={() => pickDay('other')} />
         </View>
+        {/* Spec 053 FR-009: the last day of an event over several days; the length belongs to the series, so not for one date. */}
+        {p.occurrenceOnly ? null : (
+          <View className="flex-row flex-wrap items-center gap-8">
+            <Text size={14} weight="800">
+              {a.endsDay}
+            </Text>
+            <Choice label={a.sameDay} selected={last === null} onPress={() => set({ span: 0 })} />
+            <Choice label={last ? dateLabel(last) : a.pickLastDay} selected={last !== null} onPress={pickLast} />
+            {last ? <IconButton variant="soft" icon="close" iconSize={18} label={a.backToSameDay} onPress={() => set({ span: 0 })} /> : null}
+          </View>
+        )}
       </Section>
 
       <Section title={a.timeOfDay} hint={a.timeHint}>
@@ -293,7 +358,8 @@ export function EventSheet(p: EventSheetProps) {
           {p.occurrenceOnly ? null : (
             <Section title={a.repeat}>
               <PillRow>
-                {REPEATS.map((r) => (
+                {/* Spec 053 FR-012: a daily repeat of an event over several days would overlap itself. */}
+                {REPEATS.filter((r) => r !== 'daily' || d.span === 0).map((r) => (
                   <Choice
                     key={r}
                     label={a.repeats[r]}
@@ -383,14 +449,17 @@ export function EventSheet(p: EventSheetProps) {
       ) : null}
 
       {dateSheet && grid ? (
-        <BottomSheet visible onClose={() => setDateSheet(null)} title={dateSheet.for === 'date' ? a.pickDateTitle : a.endsOnTitle} closeLabel={a.close}>
+        <BottomSheet visible onClose={() => setDateSheet(null)} title={dateSheet.for === 'date' ? a.pickDateTitle : dateSheet.for === 'last' ? a.lastDayTitle : a.endsOnTitle} closeLabel={a.close}>
           <DateGrid
             title={grid.title}
             weekdays={weekdayLetters(p.weekStartsOn)}
             weeks={grid.weeks}
-            selected={dateSheet.for === 'date' ? d.date : d.ends.type === 'on' ? d.ends.date : null}
+            selected={dateSheet.for === 'date' ? d.date : dateSheet.for === 'last' ? last : d.ends.type === 'on' ? d.ends.date : null}
             onSelect={(date) => {
-              set(dateSheet.for === 'date' ? { date } : { ends: { type: 'on', date } });
+              if (dateSheet.for === 'last') {
+                const span = daysBetween(d.date, date);
+                set(span > 0 && d.repeat === 'daily' ? { span, repeat: 'never' } : { span });
+              } else set(dateSheet.for === 'date' ? { date } : { ends: { type: 'on', date } });
               setDateSheet(null);
             }}
             previous={{ label: a.previousMonth, onPress: () => setDateSheet({ ...dateSheet, month: shiftMonth(dateSheet.month, -1) }) }}

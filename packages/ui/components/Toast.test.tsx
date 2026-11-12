@@ -1,5 +1,6 @@
 // Toast README: one sage toast at the top, over any screen, a sheet included; it goes by itself
-// (5 s, 8 s with a button), and a new one replaces it.
+// (5 s, 8 s with a button), and a new one replaces it. Spec 053: a round ✕ on every toast, round
+// icon buttons for Undo and Try again, and a failure stays until it's closed.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { BottomSheet } from './BottomSheet';
@@ -76,5 +77,46 @@ describe('ToastProvider', () => {
     const toasts = screen.getAllByRole('status');
     expect(toasts).toHaveLength(1);
     expect(screen.getByRole('dialog').parentElement?.parentElement?.contains(toasts[0] as Node)).toBe(true);
+  });
+
+  it('✕ hides it at once and says so, with its tone', () => {
+    const onDismiss = vi.fn();
+    render(
+      <ToastProvider onDismiss={onDismiss}>
+        <Show toast={{ text: 'Onion removed.', actionLabel: 'Undo', actionIcon: 'undo', onAction: () => undefined }} />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByText('show'));
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(onDismiss).toHaveBeenCalledWith('sage');
+  });
+
+  it('Undo and Try again are round icon buttons, named', () => {
+    const onAction = vi.fn();
+    render(
+      <ToastProvider>
+        <Show toast={{ text: "Couldn't load activity.", tone: 'warn', actionLabel: 'Try again', actionIcon: 'retry', onAction }} />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByText('show'));
+    const retry = screen.getByRole('button', { name: 'Try again' });
+    expect(retry.textContent).toBe('');
+    fireEvent.click(retry);
+    expect(onAction).toHaveBeenCalledOnce();
+  });
+
+  it('a failure stays until closed', () => {
+    vi.useFakeTimers();
+    render(
+      <ToastProvider>
+        <Show toast={{ text: "Couldn't save. Try again.", tone: 'warn' }} />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByText('show'));
+    act(() => vi.advanceTimersByTime(TOAST_ACTION_MS * 10));
+    expect(screen.queryByRole('status')).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });

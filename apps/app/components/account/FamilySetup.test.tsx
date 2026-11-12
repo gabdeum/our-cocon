@@ -1,6 +1,7 @@
 // Spec 003 User Story 1: a new account names its family and lands on Home.
 import { afterEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { render } from '../../test/render';
 import { FamilySetup } from './FamilySetup';
 import { fakeApi, fakeTracker, flush } from '../../test/fakes';
 import { expectAccessible } from '../../test/axe';

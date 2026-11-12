@@ -28,6 +28,6 @@ Under 335 px (iPhone SE 1st generation, 320) a two-month week's shortest title (
 Short months: Jan. Feb. Mar. Apr. May Jun. Jul. Aug. Sep. Oct. Nov. Dec. Never "…".
 
 ## Interactions
-"‹"/"›": previous/next month, week or day (accessible names "Previous week" etc.). "Today": back to today. The view and people buttons open their popovers (`aria-haspopup`, `aria-expanded`); outside tap or Escape closes. Picking a view closes the menu; the people filter stays open while ticking. The filter is remembered per user per device.
+"‹"/"›": previous/next month, week or day (accessible names "Previous week" etc.). "Today": back to today (in Month, today's week on the second row, spec 053 FR-008). The view and people buttons open their popovers (`aria-haspopup`, `aria-expanded`); outside tap or Escape closes. Picking a view closes the menu; the people filter stays open while ticking. The filter is remembered per user per device.
 
 Member colors: `member-*` tokens; Everyone `member-everyone` (coral) with label "All"; Others `member-others` (light sand) with a person-outline icon and a `line-handle` outline. Two-member items split 50/50; initials always shown ("G·J").

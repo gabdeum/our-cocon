@@ -80,3 +80,4 @@ From the build (2026-10-18):
     - The demo variant is named "Make my own dough", as on the canvas.
     - A spec 003 test now finds its family by owner, not by name, so the seeded family doesn't clash.
 - 2026-10-19: Clarified: the time shown is `total_minutes`; `cuisine` holds a key from the list in spec 006 (no schema change).
+- 2026-11-12 (spec 053): the StatusBanner `warn` tone is for offline only; a failed save is a warn toast (053 FR-015).

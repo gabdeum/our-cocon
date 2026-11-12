@@ -34,13 +34,13 @@
 ## Tracking (PostHog)
 | Event | Properties |
 | --- | --- |
-| `event_created` | source (app/assistant), time_type (slot/all_day/custom), slot, member_count, has_repeat, used_more_options, seconds_to_save |
+| `event_created` | source (app/assistant), time_type (slot/all_day/custom), slot, member_count, has_repeat, used_more_options, seconds_to_save, days and used_suggestion (spec 053) |
 | `event_updated` | fields_changed, scope |
 | `event_conflict_shown` | proceeded (bool) |
 | `event_create_undone` | — |
 
 ## Warnings and errors
-All copy (labels, hints, error, conflict, toast) is in `design/ui/OC-CalAdd.md`. Save failed: "Couldn't save. Check your connection and try again." (sheet stays open).
+All copy (labels, hints, error, conflict, toast) is in `design/ui/OC-CalAdd.md`. Save failed: warn toast "Couldn't save. Check your connection and try again." (sheet stays open; spec 053 FR-015).
 
 ## Needs your attention
 - `seconds_to_save` and `time_type` show whether quick add works; review after two weeks of use.
@@ -86,3 +86,4 @@ All copy (labels, hints, error, conflict, toast) is in `design/ui/OC-CalAdd.md`.
 - 2026-11-02 (037 day sheet): the month view opens Add event for a day from the day sheet's add button as well as by long-press (FR-007).
 - 2026-11-02: Reminder gains "15 minutes before", is pre-filled with the member's default (spec 046) and its hint becomes "Reminds {names} on their phones." (spec 049 FR-001).
 - 2026-11-10: With Gabriel: on the iPhone (and Android) Starts and Ends use the system time picker instead of typing: new design-system component `TimeRange` (typed fields on the web, `@react-native-community/datetimepicker` on the phone; a native module, so it needs a new app build). A picked start moves an end that's missing or not after it to an hour later (`pickTime`), and an empty field opens on the next whole hour (`pickerFallback`). OC-CalAdd.md and the TimeRange README updated.
+- 2026-11-12 (spec 053): title suggestions under "What's happening?" fill the event like the latest one with that title (053 FR-001 to FR-004); an "Ends" row under When makes events over several days (053 FR-009 to FR-012); Save failed is a warn toast; `event_created` gains `days` and `used_suggestion`. OC-CalAdd.md updated.

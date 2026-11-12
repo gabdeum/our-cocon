@@ -17,9 +17,20 @@ import type { Client } from './supabase';
 export const activityKey = (familyId: string, filter: ActivityFilter = {}) => ['activity', familyId, filter.ai ?? false, filter.actor ?? null, filter.source ?? null] as const;
 export const activityFiltersKey = (familyId: string) => ['activity', familyId, 'filters'] as const;
 
-/** Home shows the latest four (spec 028 FR-006); the list loads 50 at a time. */
+/** Home shows the latest four (spec 028 FR-006); the list loads 20 at a time (spec 053 FR-018). */
 export const HOME_ENTRIES = 4;
-export const PAGE_SIZE = 50;
+export const PAGE_SIZE = 20;
+
+/** Where the next page starts: the last entry shown. Entries can share a time, so its key breaks the tie (spec 053 FR-019). */
+export interface ActivityCursor {
+  at: string;
+  key: string;
+}
+
+export const nextCursor = (page: readonly ActivityEntry[]): ActivityCursor | undefined => {
+  const last = page.at(-1);
+  return page.length === PAGE_SIZE && last ? { at: last.created_at, key: last.key } : undefined;
+};
 
 export interface ActivityFilter {
   /** "AI only" (spec 028 FR-006); everyone's changes otherwise. */
@@ -29,10 +40,10 @@ export interface ActivityFilter {
   source?: string | null;
 }
 
-export async function loadActivity(client: Pick<Client, 'rpc'>, limit: number, filter: ActivityFilter = {}, before?: string): Promise<ActivityEntry[]> {
+export async function loadActivity(client: Pick<Client, 'rpc'>, limit: number, filter: ActivityFilter = {}, before?: ActivityCursor): Promise<ActivityEntry[]> {
   const { data, error } = await client.rpc('activity_entries', {
     p_limit: limit,
-    ...(before ? { p_before: before } : {}),
+    ...(before ? { p_before: before.at, p_before_key: before.key } : {}),
     ...(filter.actor ? { p_actor: filter.actor } : {}),
     ...(filter.ai ? { p_source: filter.source ?? 'ai' } : {}),
   });

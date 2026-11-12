@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { calendarWordsEn, conflictWho, findConflict, viewFor } from '@cocon/calendar';
+import { calendarWordsEn, conflictWho, daysBetween, findConflict, viewFor } from '@cocon/calendar';
 import {
   changedFields,
   deleteOccurrences,
@@ -72,6 +72,8 @@ export const createEvent = defineTool({
       has_repeat: saved.recurrence != null,
       used_more_options: false,
       seconds_to_save: 0,
+      days: daysBetween(saved.starts_on, saved.ends_on) + 1,
+      used_suggestion: false,
     });
     const event = await loadEvent(ctx.db, id);
     const heads = await clash(ctx, cal, saved, id);

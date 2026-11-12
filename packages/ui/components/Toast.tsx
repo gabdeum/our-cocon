@@ -4,6 +4,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { announce } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
+import type { IconName } from './Icon';
 import { IconButton } from './IconButton';
 import { StatusBanner } from './StatusBanner';
 import { Text } from './Text';
@@ -43,9 +44,11 @@ export interface ToastRequest {
   /** "Undo", "Open timers". The toast closes as soon as it's tapped. */
   actionLabel?: string;
   onAction?: () => void;
+  /** A round icon button instead of the text one: `undo`, `retry` (spec 053 FR-013). */
+  actionIcon?: IconName;
 }
 
-/** Toast README › Timing: 5 s, or 8 s with a button to give time to reach it. */
+/** Toast README › Timing: 5 s, or 8 s with a button to give time to reach it. A failure stays until closed (spec 053 FR-014). */
 export const TOAST_MS = 5000;
 export const TOAST_ACTION_MS = 8000;
 
@@ -58,6 +61,9 @@ interface ToastApi {
 interface HostApi {
   toast: (ToastRequest & { key: number }) | null;
   hide: () => void;
+  /** The ✕: hides it and tells `onDismiss`. */
+  dismiss: () => void;
+  dismissLabel: string;
   /** The newest host draws the toast: the one on the sheet or modal that's on top. */
   register: (id: string, base: boolean) => () => void;
   top: string | null;
@@ -71,7 +77,15 @@ const HostContext = createContext<HostApi | null>(null);
  * status bar, over any screen, that goes by itself. Wrap the app once; BottomSheet, Dialog,
  * FormScreen and CookLayout carry a ToastHost so it also shows over a modal.
  */
-export function ToastProvider({ children }: { children: ReactNode }) {
+export interface ToastProviderProps {
+  children: ReactNode;
+  /** The ✕'s name: "Dismiss". */
+  dismissLabel?: string;
+  /** A toast closed with its ✕ (`toast_dismissed`). */
+  onDismiss?: (tone: 'sage' | 'warn') => void;
+}
+
+export function ToastProvider({ children, dismissLabel = 'Dismiss', onDismiss }: ToastProviderProps) {
   const [toast, setToast] = useState<HostApi['toast']>(null);
   const [hosts, setHosts] = useState<string[]>([]);
   const next = useRef(0);
@@ -88,13 +102,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [toast]);
 
   useEffect(() => {
-    if (!toast) return;
+    if (!toast || toast.tone === 'warn') return;
     const timer = setTimeout(() => setToast(null), toast.onAction ? TOAST_ACTION_MS : TOAST_MS);
     return () => clearTimeout(timer);
   }, [toast]);
 
+  const dismiss = useCallback(() => {
+    if (toast) onDismiss?.(toast.tone ?? 'sage');
+    setToast(null);
+  }, [toast, onDismiss]);
   const api = useMemo(() => ({ show, hide }), [show, hide]);
-  const host = useMemo(() => ({ toast, hide, register, top: hosts.at(-1) ?? null }), [toast, hide, register, hosts]);
+  const host = useMemo(() => ({ toast, hide, dismiss, dismissLabel, register, top: hosts.at(-1) ?? null }), [toast, hide, dismiss, dismissLabel, register, hosts]);
   return (
     <ToastContext.Provider value={api}>
       <HostContext.Provider value={host}>
@@ -125,6 +143,9 @@ export function ToastHost({ base = false }: { base?: boolean }) {
           message={toast.text}
           tone={toast.tone}
           actionLabel={toast.actionLabel}
+          actionIcon={toast.actionIcon}
+          dismissLabel={ctx.dismissLabel}
+          onDismiss={ctx.dismiss}
           onAction={
             toast.onAction
               ? () => {

@@ -1,7 +1,8 @@
 // Spec 022 (design/ui/OC-AddGroceries.md): US1 untick what you have, US2 the merge note, US3 the
 // success state and Undo, and the edge cases (nothing ticked, one item, offline, a failed add).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { render } from '../../test/render';
 import { onlineManager } from '@tanstack/react-query';
 import { AddGroceriesSheet, type AddGroceriesApi } from './AddGroceriesSheet';
 import { recipeGroceryLines, type AddedFromRecipe } from '../../lib/add-from-recipe';

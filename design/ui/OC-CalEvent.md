@@ -5,11 +5,11 @@ Sources `screens/OC-CalEvent.dc.html` (interactive: checklist, Edit, Delete) and
 ## Layout
 Compact since spec 050 FR-006: a typical event fits one 390 × 844 screen without scrolling.
 1. TopBar (`titleMode="onScroll"`): round "Back to Calendar"; on the right ✎ "Edit event" and ⋯ "More actions". ⋯ opens a menu (ActionMenu): "Duplicate" · "Share a view-only link" · "Delete event" (danger). The title fades into the bar once it has scrolled under it.
-2. Meta row: type tag (soft) "Social" (and "Surprise", sage, for those in on one, spec 043), then the repeat 13/800 muted with the repeat icon, "Every Saturday". Title 28/900 "Baby music class". One line: "Sat, Oct 31" 16/800 · "Morning, about 09:00–12:00" 16/700 muted.
+2. Meta row (spec 053 FR-005): the member dots and names ("James", "James and Mia", "Everyone"), then the type tag (soft) "Social" (and "Surprise", sage, for those in on one, spec 043), then the repeat 13/800 muted with the repeat icon, "Every Saturday"; it wraps when it doesn't fit. 16 below it, the title 28/900 "Baby music class". One line: "Sat, Oct 31" 16/800 · "Morning, about 09:00–12:00" 16/700 muted. Then, 8 below, the notes (spec 053 FR-007): 15/600 `ink-soft`, line-height 1.4, line breaks kept; past 6 lines cut with the link "Show more" ("Show less"); hidden when empty.
    - When: "Morning, about 09:00–12:00" for a time of day; a custom time shows its hours ("14:30–15:30"); "All day"; several days: "Sat, Oct 31 – Mon, Nov 2".
    - Repeat: "Every Saturday", "Every Tuesday and Thursday", "Every other Saturday", "Every day", "Every month", "Every year".
 3. One white card of compact rows (52), each one line, its second part muted after " · ". Rows without a value are hidden.
-   - Who: the member dots, "James · Gabriel takes James", car icon at the end. The names are joined ("James and Mia"); the responsible part is "{name} takes {members without the app}", or "{name} drives" when everyone on it has the app, and is left out (with the car) when nobody is responsible. Names, not pronouns: the app doesn't know anyone's.
+   - Who (spec 053 FR-006: the people moved to the meta row): car icon, "Gabriel takes James": "{name} takes {members without the app}", or "{name} drives" when everyone on it has the app; the row is hidden when nobody is responsible. Names, not pronouns: the app doesn't know anyone's.
    - Place: pin, "Little Notes studio, 4 Elm St", soft pills "Copy" (read as "Copy {place}") and "Maps" (read as "Open {place} in Google Maps"), 8 apart. "Copy" puts the place as typed on the clipboard, then the toast "Address copied" ("Couldn't copy the address." in warn if it fails). "Maps" opens Google Maps (the app on iPhone when installed), searching for the place as typed.
    - Reminder: bell, "1 hour before · reminds Gabriel · 08:00" (spec 049 FR-006): the people the phones remind (spec 049 FR-003) and when, in the home time zone and the member's clock; "1 day before" reads "· reminds Gabriel · 18:00 the day before". No names (a private event of someone without the app): "1 hour before" alone.
 4. "Bring" card: heading 16/900 with "{ticked} of {total}" (13/700 muted) on the right; rows 44 with a 24 checkbox; ticked = olive box + strike-through.
@@ -31,9 +31,9 @@ Compact since spec 050 FR-006: a typical event fits one 390 × 844 screen withou
 | Duplicate's date sheet | title "Pick a date" (DateGrid); picking a day copies that date of the event there as a one-off, checklist unticked |
 | Share (from ⋯) | the link field, Message / Email / More and "Stop sharing this link" with OC-Share's states (Creating link…, Copied ✓, Not shared, Create a new link, the Stop sharing Dialog). Message, Email and More send "{title} — {link}". Not offered for a private or surprise event, or once that date is over |
 | Can't open (deleted, not one of the event's dates, offline) | TopBar with "Back to Calendar" and no title, then "We couldn't open this event." / "It may have been deleted, or you're offline." |
-| A tick failed | the box goes back; StatusBanner "Couldn't change that. Try again." |
-| Delete failed | StatusBanner "Couldn't delete. Check your connection and try again."; the page stays |
-| Duplicate failed | StatusBanner "Couldn't copy. Check your connection and try again." |
+| A tick failed | the box goes back; warn toast "Couldn't change that. Try again." with ✕ |
+| Delete failed | warn toast "Couldn't delete. Check your connection and try again." with ✕; the page stays |
+| Duplicate failed | warn toast "Couldn't copy. Check your connection and try again." with ✕ |
 | Undo failed | toast "Couldn't undo. Check your connection and try again." (no button) |
 | Offline | readable; the checklist, ✎ and ⋯ are off (Patterns.md › Offline) |
 | "This and all future ones" | the dates from then on go to Recently deleted as one entry with the event's title; on the series' first date the whole event does |
@@ -53,3 +53,4 @@ The page is `noindex` and sends no analytics. A link stops working once that dat
 - 2026-11-04 (spec 050 FR-006): compact layout. ✎ and ⋯ in the TopBar replace the Edit, Duplicate, Share and Delete buttons; the repeat moves beside the tag; date and time share one line; who, place and reminder are one-line 52 rows in one card; the Bring card shows its count and 44 rows; "anyone can tick the list" joins the Added line. Kept from spec 049: the reminder's time. The drawing's "takes him" reads "takes James".
 - 2026-11-05 (Gabriel's ask): the place gets a "Copy" pill beside "Maps", and "Maps" opens Google Maps on the iPhone too (it was Apple Maps).
 - 2026-11-05 (Gabriel's ask): opened from a calendar view or Home, the page shows the event that view already loaded at once and refetches it behind; from a link with nothing cached it shows the Loading state (header bar, skeleton blocks) instead of a blank screen.
+- 2026-11-12 (spec 053): the people move above the title, first in the meta row, with 16 below it; the Who row keeps only who takes or drives; the notes show under the date line (they weren't shown anywhere); failures are warn toasts with ✕.

@@ -3,7 +3,7 @@ import type { ScrollViewInstance } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { parsePastedList } from '@cocon/quantity';
-import { Button, Callout, Dialog, FormBar, FormProgress, FormScreen, PhotoCrop, type CropRect } from '@cocon/ui';
+import { Button, Dialog, FormBar, FormProgress, FormScreen, PhotoCrop, type CropRect } from '@cocon/ui';
 import { DEFAULT_FAMILY_SETTINGS, MAX_VARIANTS, type CookingSetting, type FamilySettings, type IngredientFacts, type RecipeFormSection, type Tracker } from '@cocon/schemas';
 import { strings } from '../../../strings/en';
 import { useOnline } from '../../../lib/online';
@@ -59,7 +59,7 @@ import {
 import type { Client } from '../../../lib/supabase';
 import { createdVariantEvents, draftsFromVariants, emptyVariant, readVariants, variantsChanged, type VariantDraft, type VariantSaveRow, type VariantWarnings } from '../../../lib/recipe-variants';
 import { OfflineBanner } from '../../sync/OfflineBanner';
-import { useToast } from '../../../lib/toast';
+import { useToast, useFailureToast } from '../../../lib/toast';
 import { DeleteRecipe } from '../DeleteRecipe';
 import { CuisineSheet } from './CuisineSheet';
 import { DetailsSection } from './DetailsSection';
@@ -170,6 +170,8 @@ export function RecipeForm({
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(saveFailed && f.saveFailed);
   const [crop, setCrop] = useState<(photoIO.PickedPhoto & { target: PhotoTarget }) | null>(null);
   const [photo, setPhoto] = useState<PhotoWork>(idle);
   // Spec 016: each step's photo work, by step key.
@@ -678,7 +680,6 @@ export function RecipeForm({
         }
       >
         <OfflineBanner screen="recipe_form" tracker={tracker} />
-        {saveFailed ? <Callout variant="warn" text={f.saveFailed} /> : null}
         {section === 'details' ? (
           <DetailsSection
             form={form}

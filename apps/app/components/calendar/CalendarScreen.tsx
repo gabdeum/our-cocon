@@ -93,7 +93,7 @@ export function CalendarScreen({
   };
   // Month view: the month that fills the grid (FR-005), and ‹ › / Today's scroll requests.
   const [shown, setShown] = useState(() => firstOfMonth(anchor));
-  const [jump, setJump] = useState<{ month: string; nonce: number }>();
+  const [jump, setJump] = useState<{ month: string; toToday?: boolean; nonce: number }>();
   // Back on Month from another view: open on the day that view showed.
   const [lastView, setLastView] = useState(view);
   if (view !== lastView) {
@@ -141,9 +141,9 @@ export function CalendarScreen({
   };
   // The day other views open on from Month: today in this month, else the 1st.
   const dayInMonth = (month: string) => (firstOfMonth(today) === month ? today : month);
-  const goToMonth = (month: string) => {
+  const goToMonth = (month: string, toToday = false) => {
     setShown(month);
-    setJump((j) => ({ month, nonce: (j?.nonce ?? 0) + 1 }));
+    setJump((j) => ({ month, toToday, nonce: (j?.nonce ?? 0) + 1 }));
   };
   const paging =
     view === 'month'
@@ -151,7 +151,7 @@ export function CalendarScreen({
           title: headerTitle('month', shown, today, width, weekStartsOn),
           onPrev: () => goToMonth(shiftAnchor('month', shown, -1)),
           onNext: () => goToMonth(shiftAnchor('month', shown, 1)),
-          onToday: () => goToMonth(firstOfMonth(today)),
+          onToday: () => goToMonth(firstOfMonth(today), true),
         }
       : {
           title: headerTitle(view, anchor, today, width, weekStartsOn),

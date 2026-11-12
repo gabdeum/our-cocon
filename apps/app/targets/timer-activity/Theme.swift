@@ -43,5 +43,7 @@ enum Theme {
   static let memberOthers = Color(red: 0.9373, green: 0.9098, blue: 0.8471, opacity: 1)
   static let memberRemoved = Color(red: 0.8471, green: 0.8235, blue: 0.7686, opacity: 1)
   static let calendarTodayTint = Color(red: 1, green: 0.8118, blue: 0.3608, opacity: 0.12)
+  static let toastButton = Color(red: 0.1647, green: 0.1412, blue: 0.0784, opacity: 0.08)
+  static let toastButtonPressed = Color(red: 0.1647, green: 0.1412, blue: 0.0784, opacity: 0.16)
   static let eventOutline = Color(red: 0.1647, green: 0.1412, blue: 0.0784, opacity: 0.18)
 }
