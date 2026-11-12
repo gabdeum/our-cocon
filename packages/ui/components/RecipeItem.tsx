@@ -108,14 +108,14 @@ export interface GroceryRecipeCardProps {
   /** Screen-reader names: "Open Leek & bacon quiche", "More for Leek & bacon quiche". */
   openLabel: string;
   moreLabel: string;
-  /** Null for a recipe in Recently deleted: the body does nothing and shows no chevron. */
+  /** Null for a recipe in Recently deleted: the body does nothing. */
   onOpen: (() => void) | null;
   onMore: () => void;
 }
 
 /**
  * A recipe on the grocery list (RecipeItem README › Grocery card; OC-Groceries, spec 052 FR-006):
- * soft, radius 18. The body (40 thumbnail, name, meta, chevron) opens the recipe; the 48 × 60 "…"
+ * soft, radius 18. The body (40 thumbnail, name, meta) opens the recipe; the 48 × 60 "…"
  * at the right opens its menu.
  */
 export function GroceryRecipeCard({ name, meta, photoUri, openLabel, moreLabel, onOpen, onMore }: GroceryRecipeCardProps) {
@@ -131,7 +131,6 @@ export function GroceryRecipeCard({ name, meta, photoUri, openLabel, moreLabel, 
           {meta}
         </Text>
       </View>
-      {onOpen ? <Icon name="chevron-right" size={18} color="inkMuted" /> : null}
     </>
   );
   return (

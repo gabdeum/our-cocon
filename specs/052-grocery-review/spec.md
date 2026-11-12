@@ -124,3 +124,4 @@ Existing events are unchanged. `grocery_recipe_servings_changed` still fires on 
   - **Clear buttons (FR-007):** new Button size `pair` (52 px, label 16). Both buttons always show, each disabled when it has nothing to clear (before, they were hidden).
   - **Recipe menu (FR-008):** the footer is the standard SheetFooter (Cancel 110 px, Save the rest), close to the drawn 1 fr / 2 fr.
   - **Not changed:** the board draws Grocery settings beside "Add item"; it stays at the title's right (spec 050 FR-007), as the spec doesn't ask to move it.
+- 2026-11-12 (after Gabriel's test): the recipe card has no chevron (FR-006 and the board draw one); tapping its body still opens the recipe.

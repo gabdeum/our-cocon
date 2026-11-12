@@ -30,10 +30,10 @@ A recipe on the grocery list (OC-Groceries, spec 052 FR-006). Two hit areas side
 
 | Part | Spec |
 | --- | --- |
-| Body | a link: padding 10 · 0 · 10 · 12, gap 10; thumbnail 40, radius 12 (peach placeholder); name 15/800; meta 13/600 ink-muted ("3 items on the list · serves 6"); chevron-right 18 ink-muted. Screen reader: "Open {recipe}" |
+| Body | a link: padding 10 · 0 · 10 · 12, gap 10; thumbnail 40, radius 12 (peach placeholder); name 15/800; meta 13/600 ink-muted ("3 items on the list · serves 6"); no chevron (Gabriel, 052). Screen reader: "Open {recipe}" |
 | "…" | 48 × 60, `more-vertical` 22 ink, at the card's right. Screen reader: "More for {recipe}" |
 | Pressed | each part fills `surface-soft-pressed` on its own |
-| Deleted recipe | the body isn't a link and has no chevron; the meta reads "From a deleted recipe" |
+| Deleted recipe | the body isn't a link; the meta reads "From a deleted recipe" |
 
 
 
