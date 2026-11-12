@@ -2,8 +2,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { memberInitials, type ActivityEntry, type HomeCardState, type Tracker } from '@cocon/schemas';
 import { DEFAULT_SLOT_TIMES, viewFor, type SlotTimes } from '@cocon/calendar';
-import type { GroceryItem, HomeHero, StoredEvent } from '@cocon/data';
-import { AvatarStack, BrandHeader, BrandRow, Button, Card, HeroCard, StatTile, TabScreen, Text, type AvatarColor } from '@cocon/ui';
+import type { CookSession, GroceryItem, HomeHero, StoredEvent } from '@cocon/data';
+import { AvatarStack, BrandHeader, BrandRow, Button, Card, HeroCard, HeroCarousel, StatTile, TabScreen, Text, type AvatarColor } from '@cocon/ui';
 import { ActivitySection, type ActivityShow } from '../activity/ActivitySection';
 import { BusySheet } from '../calendar/BusySheet';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -12,6 +12,7 @@ import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { eventOccurrence } from '../../lib/event-detail';
 import { memberLook, parseOccurrenceKey } from '../../lib/calendar-month';
 import { firstName, greeting, homeDate, layoutCalendarCard, recipeToBuy } from '../../lib/home';
+import { stepTotal } from '../../lib/cook-sessions';
 import { formatTotalTime } from '../../lib/recipe-format';
 import type { UndoOutcome } from '../../lib/activity';
 import type { AccountMember, Member } from '../../lib/session';
@@ -19,6 +20,16 @@ import { strings } from '../../strings/en';
 import { CalendarCard } from './CalendarCard';
 
 const s = strings.home;
+const r = strings.recipes;
+const p = strings.recipePage;
+
+/** A cook in progress and its recipe, for its card on Home. */
+export interface HomeCook {
+  cook: CookSession;
+  name: string;
+  stepCount: number;
+  photoUri?: string;
+}
 
 export interface HomeScreenProps {
   me: AccountMember;
@@ -33,6 +44,11 @@ export interface HomeScreenProps {
   /** The hero's recipe (`loadHomeHero`): null with no recipes; undefined while loading. */
   hero?: HomeHero | null;
   heroPhotoUri?: string;
+  /** Recipes being cooked (spec 051), newest first, with what their card shows: they replace the latest recipe. */
+  cooking?: HomeCook[];
+  onCookResume?: (cook: CookSession) => void;
+  onCookDone?: (cook: CookSession, recipeName: string) => void;
+  onCookCancel?: (cook: CookSession) => void;
   /** The grocery list, as the Groceries tab reads it. */
   groceries?: GroceryItem[];
   /** How many recipes the Recipes tab lists. */
@@ -71,6 +87,10 @@ export function HomeScreen({
   events,
   hero,
   heroPhotoUri,
+  cooking = [],
+  onCookResume,
+  onCookDone,
+  onCookCancel,
   groceries,
   recipeCount,
   activity,
@@ -158,7 +178,32 @@ export function HomeScreen({
           }}
         />
       </View>
-      {hero ? (
+      {cooking.length > 0 ? (
+        // Something is cooking: its card replaces the latest recipe; several swipe side by side.
+        <HeroCarousel label={s.cookingRegion(cooking.length)} pageLabels={cooking.map((c) => s.showCook(c.name))}>
+          {cooking.map(({ cook, name, stepCount, photoUri }) => {
+            const total = stepTotal(stepCount, cook);
+            const resume = r.resumeA11y(name, cook.current_step + 1, total);
+            return (
+              <HeroCard
+                key={cook.id}
+                title={name}
+                badge={s.cookingNow(cook.current_step + 1, total)}
+                photoUri={photoUri}
+                chips={[]}
+                openLabel={resume}
+                onPress={() => onCookResume?.(cook)}
+                actionsDisabled={readOnly}
+                actions={[
+                  { label: p.cancel, a11y: r.cancelA11y(name), tone: 'danger', onPress: () => onCookCancel?.(cook) },
+                  { label: p.done, a11y: r.doneA11y(name), tone: 'white', onPress: () => onCookDone?.(cook, name) },
+                  { label: p.resume, a11y: resume, tone: 'ink', icon: 'play', onPress: () => onCookResume?.(cook) },
+                ]}
+              />
+            );
+          })}
+        </HeroCarousel>
+      ) : hero ? (
         <HeroCard
           title={hero.name}
           badge={s.latestRecipe}

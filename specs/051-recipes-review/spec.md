@@ -101,7 +101,7 @@
 | Event | Properties |
 | --- | --- |
 | `cook_started` | recipe_id, resumed_existing (bool) |
-| `cook_resumed` | from (list · recipe), step |
+| `cook_resumed` | from (list · recipe · home), step |
 | `cook_finished` | status (done · cancelled), cancel_reason, steps_seen, minutes |
 | `recipe_edit_opened` | from (top_bar · units_row) |
 

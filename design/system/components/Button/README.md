@@ -7,7 +7,7 @@ Pill-shaped buttons for actions, from the one main step on a screen (ink) down t
 | Part | Spec |
 | --- | --- |
 | Shape | `radius-pill` (dashed: 18, tile: 12), no border unless the variant has one |
-| Height | default 58 · `--lg` 60 (cooking mode, recipe CTA) · `--sm` 44 (header Save, "New", Connect) · outline and dashed 54 (outline `--lg` 60, beside an ink `--lg`) · tile 44 |
+| Height | default 58 · `--lg` 60 (cooking mode, recipe CTA) · `--sm` 44 (header Save, "New", Connect) · `--compact` 44 with 12 side padding (three in a row on a phone: Home's cook card) · outline and dashed 54 (outline `--lg` 60, beside an ink `--lg`) · tile 44 |
 | Padding | 0 24 (sm: 0 18); full width with `--block` |
 | Label | Nunito 17/900 (sm 15/900, lg 18/900; soft, outline and dashed 15–16/800) |
 | Icon | optional, 20 px, 10 before the label |
@@ -21,6 +21,7 @@ Pill-shaped buttons for actions, from the one main step on a screen (ink) down t
 | `olive` | olive / white | Positive confirm inside a region: Save (form bar), Next step, Connect, New |
 | `honey` | honey / ink | Time actions: Start timer, Save to my Our Cocon |
 | `soft` | surface-soft / ink | Cancel, Back, Keep it |
+| `white` | surface-card / ink 800 | On a soft card where soft wouldn't show: a cook's Done on Home's hero (spec 028) |
 | `outline` | white, 2 px olive / olive-deep | Secondary action on a content page: Add to groceries… |
 | `dashed` | transparent, 2 px dashed line-dashed / olive-deep | Add a step, Add ingredient, Invite someone, Add a variant |
 | `tile` | surface-card, 2 px line-strong / ink 14/800 | A choice in a two-column grid of actions: "Add a change" (OC-EditVariants). Pressed: surface-soft |
