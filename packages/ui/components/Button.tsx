@@ -6,9 +6,9 @@ import type { ColorName } from '../theme';
 import { BrandMark, Icon, type BrandName, type IconName } from './Icon';
 import { Text, type TextColor, type Weight } from './Text';
 
-export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'outline' | 'dashed' | 'tile' | 'danger' | 'danger-outline' | 'danger-card';
+export type ButtonVariant = 'ink' | 'olive' | 'honey' | 'soft' | 'white' | 'outline' | 'dashed' | 'tile' | 'danger' | 'danger-outline' | 'danger-card';
 /** sm 44 · md 58 · lg 60 (cooking mode, recipe CTA) · dialog 56 (Dialog README). */
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'dialog';
+export type ButtonSize = 'sm' | 'compact' | 'md' | 'lg' | 'dialog';
 
 interface Look {
   fill: string;
@@ -29,6 +29,8 @@ const looks: Record<ButtonVariant, Look> = {
   olive: { fill: 'bg-olive active:bg-olive-pressed', text: 'on-olive', icon: 'onOlive', weight: '900' },
   honey: { fill: 'bg-honey active:bg-honey-pressed', text: 'ink', icon: 'ink', weight: '900' },
   soft: { fill: 'bg-surface-soft active:bg-surface-soft-pressed', text: 'ink', icon: 'ink', weight: '800' },
+  // On a soft card, where soft wouldn't show: a cook's Cancel and Done on Home's hero (spec 028).
+  white: { fill: 'bg-surface-card active:bg-surface-card-pressed', text: 'ink', icon: 'ink', weight: '800' },
   outline: {
     fill: 'bg-surface-card border-2 border-olive active:bg-surface-card-pressed',
     text: 'olive-deep',
@@ -76,6 +78,8 @@ const grow = (height: string, largeText: boolean) => (largeText ? `min-${height}
 
 const sizes: Record<ButtonSize, { height: string; padding: string; paddingPx: number; fontSize: number }> = {
   sm: { height: 'h-control-md', padding: 'px-18', paddingPx: 18, fontSize: 15 },
+  // Three in a row on a phone: a cook's Cancel · Done · Resume on Home's hero (spec 028).
+  compact: { height: 'h-control-md', padding: 'px-12', paddingPx: 12, fontSize: 15 },
   md: { height: 'h-control-xl', padding: 'px-24', paddingPx: 24, fontSize: 17 },
   lg: { height: 'h-[60px]', padding: 'px-24', paddingPx: 24, fontSize: 18 },
   dialog: { height: 'h-[56px]', padding: 'px-24', paddingPx: 24, fontSize: 17 },

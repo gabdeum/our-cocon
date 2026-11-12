@@ -8,6 +8,7 @@ Source `screens/OC-Home.dc.html` · Route `/` · Spec 028
 3. **Calendar card** (CalCard.md).
 4. Two StatTiles: honey "{count}" / "to buy" → Groceries; sage "{count}" / "family recipes" → Recipes.
 5. Hero card (latest recipe = most recently added): photo with white tag "Latest recipe"; title; chips "{time}", "Serves {n}", warn chip "{k} to buy" (hidden when 0). Opens the recipe.
+   - **While something is cooking** (spec 051), the cooks replace it, newest first, in a Hero carousel (Card README): one card each, swipe for the next, dots under them when there are several ("Show {recipe}"). Each card: photo with white tag "Cooking now: step {k}/{n}"; title; no chips; then small buttons "Cancel" (red outline) · "Done" (white) · "Resume" (ink, play icon), screen reader "Cancel cooking {recipe}", "Done cooking {recipe}", "Resume {recipe}, step {k} of {n}". Tapping the card resumes too (cooking mode at its step). Done and Cancel work as on Recipes › In progress (Done sheet; "Cancelled · Undo"). Offline: the buttons are off; the card still resumes. Once nothing is cooking, the latest recipe is back.
 6. **Latest activity** (white card, radius 26): title 20/900 + small segmented "All" · "AI only" (36 tall, default All). 4 rows (56, dividers): badge 36 — person avatar in member color, or "AI" rounded square (radius 12) in the person's color with a 2 px olive ring; title 15/800 "Eva added Pumpkin soup" · "Gabriel ticked 4 items" · "Gabriel added Pediatrician" · "Eva edited Leek & bacon quiche"; sub 13/600 muted "Recipes · via ChatGPT · 1 h ago", "Groceries · 2 h ago", "Calendar · Wed, 10:00 · via Claude · 3 h ago"; AI rows end with "Undo" (or "Restore" for deletes). Link "See all activity".
 7. TabBar (Home active) with TimerPill when timers exist.
 
@@ -26,7 +27,7 @@ Source `screens/OC-Home.dc.html` · Route `/` · Spec 028
 ## Interactions
 | Element | Result |
 | --- | --- |
-| Hero | → `/recipes/[id]` |
+| Hero | → `/recipes/[id]`; a cook's card → `/recipes/[id]/cook` (resume) |
 | Groceries tile | → `/groceries` |
 | Recipes tile | → `/recipes` |
 | Undo | reverts that activity (spec 026), StatusBanner "Undone" |
@@ -37,3 +38,4 @@ Source `screens/OC-Home.dc.html` · Route `/` · Spec 028
 ## Changelog
 - 2026-11-05 (050 FR-007): the brand row is pinned.
 - 2026-11-05: The two StatTiles move above the hero, right under the calendar card (Gabriel's ask).
+- 2026-11-12 (Gabriel's ask): recipes being cooked replace the latest-recipe hero, one swipeable card each, with Cancel · Done · Resume.

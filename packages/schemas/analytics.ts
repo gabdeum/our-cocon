@@ -109,7 +109,7 @@ export const events = {
   // Spec 051: a cooking session started (`resumed_existing`: "Resume" on the "already cooking"
   // sheet), resumed from a card, and ended. `steps_seen` counts from 1; `minutes` from its start.
   cook_started: z.strictObject({ recipe_id: z.uuid(), resumed_existing: z.boolean() }),
-  cook_resumed: z.strictObject({ from: z.enum(['list', 'recipe']), step: z.int().min(1).max(MAX_TRACKED_STEPS) }),
+  cook_resumed: z.strictObject({ from: z.enum(['list', 'recipe', 'home']), step: z.int().min(1).max(MAX_TRACKED_STEPS) }),
   cook_finished: z.strictObject({
     status: z.enum(['done', 'cancelled']),
     cancel_reason: z.enum(['user', 'replaced']).nullable(),

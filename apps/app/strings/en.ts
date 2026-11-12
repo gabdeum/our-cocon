@@ -166,6 +166,10 @@ export const strings = {
     family: (names: string[]) => `Family: ${names.join(', ')}`,
     moreMembers: (n: number) => `+${n}`,
     latestRecipe: 'Latest recipe',
+    // In place of the latest recipe while something is cooking (spec 051), one card per cook.
+    cookingNow: (step: number, total: number) => `Cooking now: step ${step}/${total}`,
+    cookingRegion: (n: number) => `${n} recipes cooking`,
+    showCook: (recipe: string) => `Show ${recipe}`,
     serves: (n: number) => `Serves ${n}`,
     toBuyChip: (n: number) => `${n} to buy`,
     toBuy: 'to buy',
