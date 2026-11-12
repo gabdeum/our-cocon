@@ -49,7 +49,7 @@ Rules:
 - At most one olive-filled control group per screen region, and at most one ink main button per screen.
 - `ink-faint` is only for struck-through done items; it fails 4.5:1 on purpose.
 - The only theme is Light. Dark mode hasn't been designed yet.
-- Member colours (`member-*`) are pale fills with ink text. Where a fill is the only mark (event chips, bars, week blocks, dots, swatches) it has a 1 px outline in its `member-*-edge` tone, the same hue at 3:1 against white (spec 030).
+- Member colours (`member-*`) are pale fills with ink text. Every member-coloured fill (event chips, bars, week blocks, dots, swatches, avatars and member badges) has a 1 px outline in its `member-*-edge` tone, the same hue at 3:1 against white (spec 030). Circles use `EdgeRing`; a photo avatar has none.
 
 ## Typography
 

@@ -2,7 +2,7 @@ import { Pressable, View } from 'react-native';
 import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { useThemeColors } from '../ThemeProvider';
-import { avatarFills, type MemberColor } from './Avatar';
+import { avatarFills, EdgeRing, type MemberColor } from './Avatar';
 import { Icon } from './Icon';
 import { Text } from './Text';
 
@@ -116,6 +116,7 @@ function MemberDot({ initial, color, size, className, style }: { initial: string
           {initial}
         </Text>
       )}
+      <EdgeRing color={color} />
     </View>
   );
 }

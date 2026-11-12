@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '../cn';
-import { avatarFills, type AvatarColor } from './Avatar';
+import { avatarFills, EdgeRing, type AvatarColor } from './Avatar';
 import { Link } from './Button';
 import { Text } from './Text';
 
@@ -33,6 +33,7 @@ export function ActivityRow({ badge, title, sub, action, last }: ActivityRowProp
         <Text size={ai ? 12 : 14} weight="900">
           {ai ? badge.label : badge.initial}
         </Text>
+        {ai ? null : <EdgeRing color={badge.color} />}
       </View>
       <View className="min-w-0 flex-1">
         <Text size={15} weight="800">
