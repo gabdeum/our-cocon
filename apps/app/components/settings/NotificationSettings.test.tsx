@@ -1,6 +1,7 @@
 // Spec 046 US2 (one place to control it) and US3 (off in iPhone Settings), design/ui/OC-SettingsNotif.md.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
+import { render } from '../../test/render';
 import { DEFAULT_NOTIFICATION_PREFS } from '@cocon/schemas';
 import { fakeTracker } from '../../test/fakes';
 import { NotificationSettings, type NotificationSettingsProps } from './NotificationSettings';

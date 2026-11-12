@@ -20,6 +20,7 @@ import {
   TokenEditor,
   type TokenPart,
 } from '@cocon/ui';
+import { useFailureToast } from '../../../lib/toast';
 import { strings } from '../../../strings/en';
 import {
   editBody,
@@ -240,6 +241,8 @@ export function StepFieldsEditor({ draft: d, number, names, ingredients, knownNa
     preview = [shown];
   }
   const photo = photoProps?.state;
+  // A failed upload is a warn toast with Try again (spec 053 FR-015).
+  useFailureToast(d.photoOn && photo?.failed && f.photoFailed, photoProps?.onRetry);
   const temp = tempLine(d);
   const tiles: Record<StepAddOn, React.ReactNode> = {
     timer: (
@@ -441,14 +444,6 @@ export function StepFieldsEditor({ draft: d, number, names, ingredients, knownNa
           busyLabel={photo.uploading ? f.uploadingPhoto : undefined}
           disabled={photo.uploading}
         />
-      ) : null}
-      {d.photoOn && photo?.failed && photoProps ? (
-        <View className="flex-row items-center gap-12">
-          <Text size={14} weight="700" color="warn" className="flex-1">
-            {f.photoFailed}
-          </Text>
-          <Link label={f.photoRetry} onPress={photoProps.onRetry} />
-        </View>
       ) : null}
     </>
   );

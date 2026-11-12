@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
+import { IconButton } from './IconButton';
 import { Link } from './Button';
 import { Text } from './Text';
 
@@ -13,28 +14,36 @@ export interface StatusBannerProps {
   /** The trailing button: "Undo", or "Reload" when someone else just changed what you're looking at. */
   actionLabel?: string;
   onAction?: () => void;
+  /** Draws the button as a round icon (Undo, Try again) with `actionLabel` as its name (spec 053). */
+  actionIcon?: IconName;
+  /** A round ✕ at the end ("Dismiss"): the toast always has one (spec 053). */
+  dismissLabel?: string;
+  onDismiss?: () => void;
   className?: string;
 }
 
 /** Confirmation with Undo (StatusBanner README › oc-status). Never stack two; a new one replaces the old. */
-export function StatusBanner({ message, tone = 'sage', actionLabel, onAction, className }: StatusBannerProps) {
+export function StatusBanner({ message, tone = 'sage', actionLabel, onAction, actionIcon, dismissLabel, onDismiss, className }: StatusBannerProps) {
   const color = tone === 'warn' ? 'warn' : 'ink';
   return (
     <View
       role="status"
       aria-live="polite"
-      className={cn('min-h-control-lg flex-row items-center justify-between gap-8 rounded-[18px] pl-16 pr-8', tone === 'warn' ? 'bg-warn-soft' : 'bg-sage', className)}
+      className={cn('min-h-control-lg flex-row items-center justify-between gap-8 rounded-[18px] pl-16 pr-8', onDismiss && 'py-8', tone === 'warn' ? 'bg-warn-soft' : 'bg-sage', className)}
     >
       <Text size={15} weight="800" color={color} className="flex-1">
         {message}
       </Text>
-      {actionLabel && onAction ? (
+      {actionLabel && onAction && actionIcon ? (
+        <IconButton variant="tint" icon={actionIcon} iconSize={20} iconColor={color} label={actionLabel} onPress={onAction} />
+      ) : actionLabel && onAction ? (
         <Pressable role="button" onPress={onAction} className={cn('h-control-md justify-center px-12', focusRing)}>
           <Text size={15} weight="900" color={color} underline>
             {actionLabel}
           </Text>
         </Pressable>
       ) : null}
+      {dismissLabel && onDismiss ? <IconButton variant="tint" icon="close" iconSize={20} iconColor={color} label={dismissLabel} onPress={onDismiss} /> : null}
     </View>
   );
 }

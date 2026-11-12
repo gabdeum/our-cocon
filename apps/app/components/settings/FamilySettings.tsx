@@ -156,7 +156,8 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
         ? await api.addManagedMember(name.data, free ? nameSheet.color : undefined)
         : await api.renameManagedMember(nameSheet.member.id, name.data);
     setSavingSheet(false);
-    if (!result.ok) return setNameSheet({ ...nameSheet, warning: result.error === 'color_taken' ? f.colorTaken : f.actionFailed });
+    // A taken color is the field's; a failed save is a warn toast (spec 053 FR-015).
+    if (!result.ok) return result.error === 'color_taken' ? setNameSheet({ ...nameSheet, warning: f.colorTaken }) : toast.show({ text: f.actionFailed, tone: 'warn' });
     if (nameSheet.kind === 'add') tracker.track('member_added_without_app', {});
     setNameSheet(null);
     await onChanged();
@@ -195,7 +196,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
     setSavingName(true);
     const result = await api.setDisplayName(name.data);
     setSavingName(false);
-    if (!result.ok) return setNameWarning(a.failed);
+    if (!result.ok) return toast.show({ text: a.failed, tone: 'warn' });
     setEditingName(null);
     await onChanged();
   }

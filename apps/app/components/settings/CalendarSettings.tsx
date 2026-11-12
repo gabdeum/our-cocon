@@ -3,9 +3,10 @@ import { View } from 'react-native';
 import { SLOT_KEYS, type CalendarView, type SlotKey, type TimeFormatSetting, type WeekStartSetting } from '@cocon/schemas/calendar';
 import type { MemberCalendarSettingsUpdate, Tracker } from '@cocon/schemas';
 import { calendarWordsEn, checkSlotTimes, moveSlotEdge, slotNeighbour, toMinutes, type SlotTimes } from '@cocon/calendar';
-import { BottomSheet, Button, Card, Lead, ListGroup, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, SheetFooter, StatusBanner, Text, TextField } from '@cocon/ui';
+import { BottomSheet, Button, Card, Lead, ListGroup, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, SheetFooter, Text, TextField } from '@cocon/ui';
 import type { CalendarPrefs } from '../../lib/calendar-prefs';
 import { clock, zoneLabel } from '../../lib/clock';
+import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
@@ -33,7 +34,7 @@ export interface CalendarSettingsProps {
 }
 
 /** The slot sheet's fields as typed, with a warning on the one that's wrong. */
-type SlotEdit = { slot: SlotKey; start: string; end: string; warning?: { field: 'start' | 'end'; text: string }; failed?: boolean };
+type SlotEdit = { slot: SlotKey; start: string; end: string; warning?: { field: 'start' | 'end'; text: string } };
 
 /**
  * The slot edit's problem, if any: a time like 18:30, an end after the start, and room left for
@@ -57,13 +58,16 @@ const edited = (times: SlotTimes, e: SlotEdit) => moveSlotEdge(moveSlotEdge(time
 /** Menu › Calendar (`/settings/calendar`, spec 029; design/ui/OC-CalSettings.md). */
 export function CalendarSettings(p: CalendarSettingsProps) {
   const { prefs, slotTimes, readOnly } = p;
-  const [failed, setFailed] = useState(false);
+  const toast = useToast();
+  // Failed saves are warn toasts (spec 053 FR-015).
+  const saveFailed = () => toast.show({ text: s.saveFailed, tone: 'warn' });
   const [editing, setEditing] = useState<SlotEdit | null>(null);
   const [saving, setSaving] = useState(false);
   const [zoneOpen, setZoneOpen] = useState(false);
-  const [zoneFailed, setZoneFailed] = useState(false);
   const hours = (slot: SlotKey) => s.hours(clock(slotTimes[slot].start, prefs.use24h), clock(slotTimes[slot].end, prefs.use24h));
-  const change = async (update: MemberCalendarSettingsUpdate) => setFailed((await p.onChange(update)) === 'failed');
+  const change = async (update: MemberCalendarSettingsUpdate) => {
+    if ((await p.onChange(update)) === 'failed') saveFailed();
+  };
   const ownerEdits = p.isOwner && !readOnly;
 
   async function saveSlot() {
@@ -76,7 +80,7 @@ export function CalendarSettings(p: CalendarSettingsProps) {
       p.tracker.track('calendar_settings_changed', { setting: 'times_of_day', value: editing.slot });
       setEditing(null);
     } catch {
-      setEditing({ ...editing, failed: true });
+      saveFailed();
     } finally {
       setSaving(false);
     }
@@ -89,7 +93,7 @@ export function CalendarSettings(p: CalendarSettingsProps) {
       p.tracker.track('calendar_settings_changed', { setting: 'home_time_zone', value: 'phone' });
       setZoneOpen(false);
     } catch {
-      setZoneFailed(true);
+      saveFailed();
     } finally {
       setSaving(false);
     }
@@ -138,7 +142,6 @@ export function CalendarSettings(p: CalendarSettingsProps) {
           <SettingRow label={s.fadePast} hint={s.fadePastHint} value={prefs.fade_past} onValueChange={(on) => void change({ fade_past: on })} disabled={readOnly} last />
         </Card>
       </View>
-      {failed && !readOnly ? <StatusBanner tone="warn" message={s.saveFailed} /> : null}
 
       <View role="region" aria-label={s.timesOfDay} className="gap-8">
         <Heading>{s.timesOfDay}</Heading>
@@ -168,10 +171,7 @@ export function CalendarSettings(p: CalendarSettingsProps) {
             trailing={ownerEdits ? { kind: 'chevron' } : undefined}
             onPress={
               ownerEdits
-                ? () => {
-                    setZoneFailed(false);
-                    setZoneOpen(true);
-                  }
+                ? () => setZoneOpen(true)
                 : undefined
             }
           />
@@ -204,8 +204,8 @@ export function CalendarSettings(p: CalendarSettingsProps) {
                   keyboardType="numbers-and-punctuation"
                   maxLength={5}
                   hint={movesWith(editing, field)}
-                  warning={editing.warning?.field === field ? editing.warning.text : field === 'end' && editing.failed ? s.saveFailed : undefined}
-                  onChangeText={(v) => setEditing({ ...editing, [field]: v, warning: undefined, failed: false })}
+                  warning={editing.warning?.field === field ? editing.warning.text : undefined}
+                  onChangeText={(v) => setEditing({ ...editing, [field]: v, warning: undefined })}
                 />
               ))}
             </View>
@@ -228,7 +228,6 @@ export function CalendarSettings(p: CalendarSettingsProps) {
           ) : (
             <Button label={s.usePhoneZone(zoneLabel(p.phoneTimeZone))} block busy={saving} busyLabel={s.saving} onPress={() => void applyPhoneZone()} />
           )}
-          {zoneFailed ? <StatusBanner tone="warn" message={s.saveFailed} /> : null}
         </View>
       </BottomSheet>
     </PushedScreen>

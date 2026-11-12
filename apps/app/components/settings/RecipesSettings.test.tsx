@@ -2,7 +2,8 @@
 // a thermometer" saves it for the whole family; the recipes that follow it are in
 // lib/recipe-settings.integration.test.ts and RecipePage.test.tsx.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
+import { render } from '../../test/render';
 import { DEFAULT_FAMILY_SETTINGS, type FamilySettings } from '@cocon/schemas';
 import { fakeTracker } from '../../test/fakes';
 import { RecipesSettings } from './RecipesSettings';

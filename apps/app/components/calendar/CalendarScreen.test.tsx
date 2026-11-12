@@ -211,6 +211,20 @@ describe('Month view (spec 037)', () => {
     expect(screen.getByRole('heading').textContent).toBe('October');
   });
 
+  // Spec 053 FR-008: Today puts today's week (Oct 25 – 31) on the second row, the week before above it.
+  it('Today scrolls today\'s week to the second row', async () => {
+    await setup();
+    const cell = screen.getByRole('button', { name: 'October 28: nothing planned' });
+    let scroller: HTMLElement | null = cell.parentElement;
+    while (scroller && getComputedStyle(scroller).overflowY !== 'auto' && getComputedStyle(scroller).overflowY !== 'scroll') scroller = scroller.parentElement;
+    if (!scroller) throw new Error('no scrolling grid');
+    const range = monthRange('2026-10-27', 0);
+    fireEvent.click(screen.getByRole('button', { name: 'Previous month' }));
+    expect(scroller.scrollTop).toBe(weekIndexOf(range, '2026-09-01') * MONTH_ROW_HEIGHT);
+    fireEvent.click(screen.getByRole('button', { name: 'Today' }));
+    expect(scroller.scrollTop).toBe((weekIndexOf(range, '2026-10-27') - 1) * MONTH_ROW_HEIGHT);
+  });
+
   const monthEvent = (id: number, fields: Record<string, unknown>) => ({
     id: `00000000-0000-4000-8000-00000000010${id}`,
     title: 'Event',

@@ -2,7 +2,8 @@
 // (spec 051 FR-013) asks in a Dialog that names the recipe and its variants, then moves it to
 // Recently deleted for everyone.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
+import { render } from '../../../test/render';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import type { RecipeFormSection } from '@cocon/schemas';
 import { quiche } from '@cocon/schemas/quiche.fixture';

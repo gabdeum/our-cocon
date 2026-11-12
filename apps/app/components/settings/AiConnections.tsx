@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { BottomSheet, Button, Callout, Card, Dialog, Lead, Link, LinkField, ListGroup, ListRow, Overline, PushedScreen, SettingRow, StepText, Text } from '@cocon/ui';
 import type { AssistantConnection, AssistantConnections } from '@cocon/data';
 import { AiPermission, type AiPermissions, type ConnectionAssistant, type KnownAssistant, type Tracker } from '@cocon/schemas';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import { ASSISTANTS, highlightParts, minutesSince, type AssistantEntry } from '../../lib/assistants';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -68,6 +69,10 @@ export function AiConnections({
   // A switch moves at once; the saved value takes over once it's back.
   const [saving, setSaving] = useState<Partial<AiPermissions>>({});
   const [permissionFailed, setPermissionFailed] = useState(false);
+  // Failures are toasts (spec 053 FR-015).
+  useFailureToast(assistants === undefined && failed && c.loadFailed, onRetry);
+  useFailureToast(permissionFailed && !readOnly && c.permissionFailed);
+  useFailureToast(disconnectFailed && c.disconnectFailed);
   const ago = (date: Date) => strings.time.ago(minutesSince(date, now));
   const name = (key: KnownAssistant) => strings.assistants[key];
 
@@ -107,14 +112,8 @@ export function AiConnections({
   };
 
   let rows;
-  if (assistants === undefined && failed) {
-    rows = (
-      <View className="gap-12">
-        <Callout variant="warn" text={c.loadFailed} />
-        <Button label={c.retry} variant="soft" onPress={onRetry} />
-      </View>
-    );
-  } else if (assistants === undefined) {
+  // A failed load is a toast with Try again (spec 053 FR-015); the rows stay without their status.
+  if (assistants === undefined) {
     // The rows without their status until it loads.
     rows = (
       <View role="progressbar" aria-label={c.loading}>
@@ -198,7 +197,6 @@ export function AiConnections({
         <Text variant="caption" color="ink-muted">
           {c.permissionLead}
         </Text>
-        {permissionFailed && !readOnly ? <Callout variant="warn" text={c.permissionFailed} /> : null}
         <ListGroup inset>
           {PERMISSIONS.map((p, i) => (
             <SettingRow
@@ -239,7 +237,6 @@ export function AiConnections({
               {c.lastUsed(ago(managing.connection.lastUsed))}
             </Text>
             <ListGroup title={c.permissionsHeading}>{permissionSummary}</ListGroup>
-            {disconnectFailed ? <Callout variant="warn" text={c.disconnectFailed} /> : null}
             <Button label={c.disconnect} variant="danger" block disabled={readOnly} onPress={() => setConfirm(managing)} />
           </View>
         ) : null}

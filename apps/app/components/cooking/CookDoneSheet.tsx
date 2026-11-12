@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { announce, BottomSheet, Button, IconTile, Link, Text } from '@cocon/ui';
+import { announce, BottomSheet, Button, IconTile, Link } from '@cocon/ui';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 
 const d = strings.cookDone;
@@ -21,6 +22,8 @@ export function CookDoneSheet({ done, onUndo, onMarkDone, onClose }: CookDoneShe
   const [undone, setUndone] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(failed && d.failed);
   const title = done ? (undone ? d.undoneTitle : d.title(done.recipeName)) : '';
   const body = done ? (undone ? d.undoneBody(done.step) : d.body(done.member, done.times)) : '';
   // The sheet is a status: what it says is read out when it opens and after Undo or Mark as done.
@@ -30,6 +33,7 @@ export function CookDoneSheet({ done, onUndo, onMarkDone, onClose }: CookDoneShe
   if (!done) return null;
   const toggle = async () => {
     setBusy(true);
+    setFailed(false);
     const saved = await (undone ? onMarkDone() : onUndo());
     setBusy(false);
     setFailed(!saved);
@@ -47,11 +51,6 @@ export function CookDoneSheet({ done, onUndo, onMarkDone, onClose }: CookDoneShe
     >
       <View role="status" className="items-center gap-8">
         <Link label={undone ? d.markDone : d.undo} size={15} weight="900" tone="ink" underline disabled={busy} className="self-center" onPress={() => void toggle()} />
-        {failed ? (
-          <Text size={14} weight="700" color="warn" align="center">
-            {d.failed}
-          </Text>
-        ) : null}
       </View>
     </BottomSheet>
   );

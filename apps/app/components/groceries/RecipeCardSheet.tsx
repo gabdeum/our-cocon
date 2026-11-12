@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Button, Callout, Card, SheetFooter, Stepper, Text, Thumb } from '@cocon/ui';
+import { BottomSheet, Button, Card, SheetFooter, Stepper, Text, Thumb } from '@cocon/ui';
 import { strings } from '../../strings/en';
+import { useToast } from '../../lib/toast';
 import type { RecipeCard } from '../../lib/groceries';
 import { servingsMax, SERVINGS_MIN } from '../../lib/recipe-view';
 
@@ -27,13 +28,13 @@ export interface RecipeCardSheetProps {
 export function RecipeCardSheet({ card, photoUri, online, onSaveServings, onRemove, onClose }: RecipeCardSheetProps) {
   const [servings, setServings] = useState(card.serves);
   const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const toast = useToast();
   const changed = servings !== card.serves;
   const save = async () => {
     setSaving(true);
-    setFailed(false);
     try {
-      if (!(await onSaveServings(servings))) setFailed(true);
+      // A failure is a toast over the sheet, which stays open (spec 053 FR-015).
+      if (!(await onSaveServings(servings))) toast.show({ text: g.syncFailed, tone: 'warn' });
     } finally {
       setSaving(false);
     }
@@ -79,7 +80,6 @@ export function RecipeCardSheet({ card, photoUri, online, onSaveServings, onRemo
           </Text>
         </View>
       )}
-      {failed ? <Callout variant="warn" text={g.syncFailed} /> : null}
       {/* Apart from the servings, in red: it takes the recipe's items off the list (with Undo). */}
       <Button label={g.removeRecipeItems} variant="danger-card" icon="trash" block disabled={!online} onPress={onRemove} />
     </BottomSheet>

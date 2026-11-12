@@ -1,6 +1,8 @@
-import type { ReactNode } from 'react';
-import { Image, Pressable, View } from 'react-native';
+import { Children, useRef, useState, type ReactNode } from 'react';
+import { Image, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { cn, focusRing } from '../cn';
+import { Button } from './Button';
+import type { IconName } from './Icon';
 import { Meta } from './Tag';
 import { Text } from './Text';
 
@@ -79,21 +81,41 @@ export function Thumb({ uri, label, size = 'md' }: { uri?: string; label?: strin
   return <View className={size === 'lg' ? 'h-[48px] w-[48px] overflow-hidden rounded-md' : 'h-[40px] w-[40px] overflow-hidden rounded-[12px]'}>{uri ? <Photo uri={uri} label={label} /> : <PhotoPlaceholder className="h-full w-full" />}</View>;
 }
 
+export interface HeroAction {
+  label: string;
+  /** Screen-reader name, naming the recipe ("Resume Leek & bacon quiche, step 3 of 6"). */
+  a11y?: string;
+  /** danger (Cancel, red outline), white (Done) or ink (Resume, the main one: wider, with its icon). */
+  tone: 'danger' | 'white' | 'ink';
+  icon?: IconName;
+  onPress: () => void;
+}
+
 export interface HeroCardProps {
   title: string;
-  /** "Latest recipe". */
+  /** "Latest recipe", "Cooking now: step 3/10". */
   badge: string;
   /** Meta chips: white, or warn for things to act on ("2 to buy"). */
   chips: { label: string; tone?: 'white' | 'warn' }[];
   photoUri?: string;
   photoLabel?: string;
+  /** Screen-reader name of the tappable part, when it says more than the title ("Resume …"). */
+  openLabel?: string;
   onPress: () => void;
+  /** Small buttons under the chips (a cook: Cancel · Done · Resume, spec 028). The photo and title still open. */
+  actions?: HeroAction[];
+  /** Offline: the actions can't save. */
+  actionsDisabled?: boolean;
 }
 
-/** The photo hero card on Home (Card README › Hero): radius 28, photo 170, white badge at 14,14. */
-export function HeroCard({ title, badge, chips, photoUri, photoLabel, onPress }: HeroCardProps) {
-  return (
-    <Pressable role="link" onPress={onPress} className={cn('overflow-hidden rounded-2xl bg-surface-soft', focusRing)}>
+/**
+ * The photo hero card on Home (Card README › Hero): radius 28, photo 170, white badge at 14,14.
+ * With `actions`, the photo and title are the link and the buttons sit under them (never a button
+ * inside a link).
+ */
+export function HeroCard({ title, badge, chips, photoUri, photoLabel, openLabel, onPress, actions, actionsDisabled }: HeroCardProps) {
+  const top = (
+    <>
       <View className="h-[170px]">
         {photoUri ? (
           <Image source={{ uri: photoUri }} resizeMode="cover" className="h-full w-full" />
@@ -107,14 +129,102 @@ export function HeroCard({ title, badge, chips, photoUri, photoLabel, onPress }:
           </Text>
         </View>
       </View>
-      <View className="px-18 pb-16 pt-14">
+      <View className={cn('px-18 pt-14', actions ? 'pb-0' : 'pb-16')}>
         <Text variant="titleMd">{title}</Text>
-        <View className="mt-10 flex-row flex-wrap gap-8">
-          {chips.map((c) => (
-            <Meta key={c.label} label={c.label} tone={c.tone ?? 'white'} />
-          ))}
-        </View>
+        {chips.length > 0 ? (
+          <View className="mt-10 flex-row flex-wrap gap-8">
+            {chips.map((c) => (
+              <Meta key={c.label} label={c.label} tone={c.tone ?? 'white'} />
+            ))}
+          </View>
+        ) : null}
       </View>
-    </Pressable>
+    </>
+  );
+  if (!actions) {
+    return (
+      <Pressable role="link" aria-label={openLabel} onPress={onPress} className={cn('overflow-hidden rounded-2xl bg-surface-soft', focusRing)}>
+        {top}
+      </Pressable>
+    );
+  }
+  return (
+    <View className="overflow-hidden rounded-2xl bg-surface-soft">
+      <Pressable role="link" aria-label={openLabel} onPress={onPress} className={cn('rounded-2xl', focusRing)}>
+        {top}
+      </Pressable>
+      <View className="flex-row gap-6 px-14 pb-16 pt-12">
+        {actions.map((a) => (
+          <View key={a.label} className={a.tone === 'ink' ? 'flex-[1.3]' : 'flex-1'}>
+            <Button label={a.label} aria-label={a.a11y} icon={a.icon} variant={a.tone === 'danger' ? 'danger-outline' : a.tone} size="compact" block disabled={actionsDisabled} onPress={a.onPress} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+export interface HeroCarouselProps {
+  /** "2 recipes cooking". */
+  label: string;
+  /** Each dot's screen-reader name: "Show Leek & bacon quiche". */
+  pageLabels: string[];
+  children: ReactNode;
+}
+
+/**
+ * Hero cards side by side, one per screen width: swipe for the next (Card README › Hero carousel).
+ * Dots under them say which one shows; tapping a dot goes there (the web has no swipe with a mouse).
+ * One card shows on its own, without dots.
+ */
+/** The space between two cards. Each page is a card and this gap, so a swipe stops on the next card. */
+const CAROUSEL_GAP = 12;
+
+export function HeroCarousel({ label, pageLabels, children }: HeroCarouselProps) {
+  const pages = Children.toArray(children);
+  const scroller = useRef<ScrollViewInstance>(null);
+  const [width, setWidth] = useState(0);
+  const [index, setIndex] = useState(0);
+  const page = width + CAROUSEL_GAP;
+  if (pages.length <= 1) return <>{pages}</>;
+  return (
+    <View role="region" aria-label={label} className="gap-6" onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      <ScrollView
+        ref={scroller}
+        horizontal
+        pagingEnabled
+        // A gap wider than the card, out into the screen's side margin, so pages are card + gap.
+        className="-mr-12"
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={(e) => width > 0 && setIndex(Math.round(e.nativeEvent.contentOffset.x / page))}
+      >
+        {pages.map((card, i) => (
+          // A width only known once laid out: the card is the carousel's width, then the gap.
+          <View key={i} className="pr-12" style={{ width: width ? page : undefined }}>
+            {card}
+          </View>
+        ))}
+      </ScrollView>
+      <View className="flex-row justify-center gap-4">
+        {pages.map((_, i) => (
+          <Pressable
+            key={i}
+            role="button"
+            aria-label={pageLabels[i]}
+            // 20 tall so the list below stays close; the target still reaches 44.
+            hitSlop={{ top: 12, bottom: 12 }}
+            aria-current={i === index ? true : undefined}
+            onPress={() => {
+              scroller.current?.scrollTo({ x: i * page, animated: true });
+              setIndex(i);
+            }}
+            className={cn('h-[20px] w-[28px] items-center justify-center rounded-pill', focusRing)}
+          >
+            <View className={cn('h-[8px] rounded-pill', i === index ? 'w-[20px] bg-olive' : 'w-[8px] bg-line-strong')} />
+          </Pressable>
+        ))}
+      </View>
+    </View>
   );
 }

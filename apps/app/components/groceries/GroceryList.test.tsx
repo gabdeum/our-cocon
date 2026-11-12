@@ -303,15 +303,16 @@ describe('Groceries', () => {
     expect(screen.queryByRole('button', { name: 'Save for 8' })).toBeNull();
   });
 
-  it('spec 052: a failed servings change says so in the sheet, which stays open', async () => {
+  it('spec 052: a failed servings change says so in a toast, and the sheet stays open', async () => {
     setup({ onSetServings: vi.fn(async () => false) });
     fireEvent.click(screen.getByRole('button', { name: 'More for Leek & bacon quiche' }));
     await flush();
     fireEvent.click(screen.getByRole('button', { name: 'Fewer servings' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save for 5' }));
     await flush();
+    // Spec 053 FR-015: a warn toast over the sheet.
+    expect(screen.getAllByRole('status').some((s) => s.textContent === "Couldn't update. Try again.")).toBe(true);
     const sheet = screen.getByRole('dialog', { name: 'Leek & bacon quiche' });
-    expect(within(sheet).getByText("Couldn't update. Try again.")).toBeTruthy();
     expect(within(sheet).getByRole('button', { name: 'Save for 5' })).toBeTruthy();
   });
 

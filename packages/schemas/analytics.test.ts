@@ -188,7 +188,7 @@ describe('spec 051 events', () => {
     tracker.track('my_units_changed', { system: 'imperial' });
     expect(t.capture).toHaveBeenCalledTimes(5);
     expect(() => tracker.track('cook_started', { recipe_id: 'Leek & bacon quiche', resumed_existing: false } as never)).toThrow();
-    expect(() => tracker.track('cook_resumed', { from: 'home', step: 3 } as never)).toThrow();
+    expect(() => tracker.track('cook_resumed', { from: 'search', step: 3 } as never)).toThrow();
   });
 });
 

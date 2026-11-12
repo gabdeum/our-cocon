@@ -1,9 +1,9 @@
 // Spec 004 US1: a change on the family's channel refetches what's on screen; the conflict notice.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { InfiniteQueryObserver, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { SyncProvider, useRecipeChangedBy, type SyncClient } from './sync';
+import { refetchLive, SyncProvider, useRecipeChangedBy, type SyncClient } from './sync';
 import { alex, family, flush, gabriel, mia } from '../test/fakes';
 
 afterEach(cleanup);
@@ -78,18 +78,18 @@ describe('SyncProvider', () => {
     const { emit, invalidate } = setup();
     await flush();
     emit({ table: 'grocery_items', op: 'update', id: recipe, by: alexId, source: 'app' });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['grocery_items'] });
+    expect(invalidate).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['grocery_items'] }));
   });
 
   it("refetches the calendar's events when who they're for, an exception or a checklist changes", async () => {
     const { emit, invalidate } = setup();
     await flush();
     emit({ table: 'event_checklist_items', op: 'update', id: recipe, by: alexId, source: 'app' });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['event_checklist_items'] });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['events'] });
+    expect(invalidate).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['event_checklist_items'] }));
+    expect(invalidate).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['events'] }));
     invalidate.mockClear();
     emit({ table: 'events', op: 'insert', id: recipe, by: alexId, source: 'app' });
-    expect(invalidate.mock.calls).toEqual([[{ queryKey: ['events'] }]]);
+    expect(invalidate.mock.calls).toEqual([[expect.objectContaining({ queryKey: ['events'] })]]);
   });
 
   it('ignores messages that are not changes', async () => {
@@ -107,7 +107,37 @@ describe('SyncProvider', () => {
     expect(invalidate).not.toHaveBeenCalled();
     status('CHANNEL_ERROR');
     status('SUBSCRIBED');
-    expect(invalidate).toHaveBeenCalledWith();
+    expect(invalidate).toHaveBeenCalledWith(expect.objectContaining({ queryKey: undefined }));
+  });
+});
+
+// Spec 053 FR-020: a live change while "Show more" loads keeps that page, then refetches.
+describe('refetchLive', () => {
+  it('lets a list finish loading its next page, then refetches it', async () => {
+    const queryClient = new QueryClient();
+    let release: (() => void) | undefined;
+    const fetches: (number | undefined)[] = [];
+    const observer = new InfiniteQueryObserver(queryClient, {
+      queryKey: ['activity', 'f'],
+      queryFn: ({ pageParam }: { pageParam: number }) => {
+        fetches.push(pageParam);
+        return pageParam === 1 ? new Promise<number[]>((r) => (release = () => r([1]))) : Promise.resolve([pageParam]);
+      },
+      initialPageParam: 0,
+      getNextPageParam: (_last: number[], pages: number[][]) => (pages.length < 3 ? pages.length : undefined),
+    });
+    const stop = observer.subscribe(() => undefined);
+    await flush();
+    const more = observer.fetchNextPage();
+    await flush();
+    void refetchLive(queryClient, ['activity']);
+    release?.();
+    const result = await more;
+    expect(result.data?.pages).toEqual([[0], [1]]);
+    await flush();
+    await flush();
+    expect(fetches.slice(2)).toEqual([0, 1]);
+    stop();
   });
 });
 

@@ -1,10 +1,12 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
-import { Button, Callout, Overline, PersonPill, Pill, PillRow, PushedScreen, RecipeItemSkeleton, SegmentedControl, Text } from '@cocon/ui';
+import { Button, Overline, PersonPill, Pill, PillRow, PushedScreen, RecipeItemSkeleton, SegmentedControl, Text } from '@cocon/ui';
 import { memberInitials, type ActivityEntry } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { ActivityFilter } from '../../lib/activity';
 import { assistantName } from '../../lib/recipe-format';
 import type { Member } from '../../lib/session';
+import { useToast } from '../../lib/toast';
 import { OfflineBanner } from '../sync/OfflineBanner';
 import { ActivityEntries, type ActivityEntriesProps } from './ActivityEntries';
 
@@ -23,7 +25,8 @@ export interface ActivityScreenProps extends Omit<ActivityEntriesProps, 'entries
   onRetry: () => void;
   hasMore?: boolean;
   loadingMore?: boolean;
-  onShowMore: () => void;
+  /** Loads the next 20; false when that failed. */
+  onShowMore: () => Promise<boolean>;
   onBack: () => void;
 }
 
@@ -37,16 +40,20 @@ export function ActivityScreen({ entries, members, actors, sources, filter, onFi
   const people = members.filter((m): m is typeof m & { user_id: string } => m.user_id !== null && actors.includes(m.user_id));
   const filtered = Boolean(filter.actor || filter.source);
   const ai = Boolean(filter.ai);
+  const toast = useToast();
+  const loadFailed = entries === undefined && Boolean(failed);
+
+  // Failures are toasts (spec 053 FR-015): the skeleton stays under it.
+  useEffect(() => {
+    if (loadFailed) toast.show({ text: a.loadFailed, tone: 'warn', retry: onRetry });
+  }, [loadFailed, toast, onRetry]);
+
+  const showMore = async () => {
+    if (!(await onShowMore())) toast.show({ text: a.loadMoreFailed, tone: 'warn', retry: () => void showMore() });
+  };
 
   let body;
-  if (entries === undefined && failed) {
-    body = (
-      <View className="gap-12">
-        <Callout variant="warn" text={a.loadFailed} />
-        <Button label={a.tryAgain} variant="soft" onPress={onRetry} />
-      </View>
-    );
-  } else if (entries === undefined) {
+  if (entries === undefined) {
     body = (
       <View role="progressbar" aria-label={a.loading}>
         <RecipeItemSkeleton />
@@ -67,7 +74,7 @@ export function ActivityScreen({ entries, members, actors, sources, filter, onFi
     body = (
       <View className="gap-12">
         <ActivityEntries entries={entries} members={members} {...rest} />
-        {hasMore ? <Button label={a.showMore} variant="soft" disabled={loadingMore} onPress={onShowMore} /> : null}
+        {hasMore ? <Button label={loadingMore ? a.loadingMore : a.showMore} variant="soft" disabled={loadingMore} onPress={() => void showMore()} /> : null}
       </View>
     );
   }

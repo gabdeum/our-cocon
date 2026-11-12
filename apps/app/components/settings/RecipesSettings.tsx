@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { View } from 'react-native';
-import { Card, Lead, PushedScreen, SegmentedControl, SettingRow, StatusBanner, Text } from '@cocon/ui';
+import { Card, Lead, PushedScreen, SegmentedControl, SettingRow, Text } from '@cocon/ui';
 import type { FamilySettings, FamilySettingsUpdate, Tracker, UnitSystem } from '@cocon/schemas';
+import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
@@ -25,12 +25,16 @@ export interface RecipesSettingsProps {
  * Saved at once; a failed save reverts and says so.
  */
 export function RecipesSettings({ settings, onChange, units, onUnitsChange, onBack, tracker, readOnly }: RecipesSettingsProps) {
-  const [failed, setFailed] = useState(false);
+  const toast = useToast();
+  // A failed save reverts and is a warn toast (spec 053 FR-015).
+  const said = (result: 'saved' | 'failed') => {
+    if (result === 'failed') toast.show({ text: s.saveFailed, tone: 'warn' });
+  };
   const change = async (update: FamilySettingsUpdate) => {
-    setFailed((await onChange(update)) === 'failed');
+    said(await onChange(update));
   };
   const changeUnits = async (next: UnitSystem) => {
-    setFailed((await onUnitsChange(next)) === 'failed');
+    said(await onUnitsChange(next));
   };
   return (
     <PushedScreen className="gap-18" topBar={{ back: { label: s.back, onPress: onBack }, title: s.title }}>
@@ -77,7 +81,6 @@ export function RecipesSettings({ settings, onChange, units, onUnitsChange, onBa
           />
         </Card>
       </View>
-      {failed && !readOnly ? <StatusBanner tone="warn" message={s.saveFailed} /> : null}
     </PushedScreen>
   );
 }

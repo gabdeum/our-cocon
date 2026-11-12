@@ -57,5 +57,5 @@ These are the layouts every Our Cocon screen is built from. Compose new screens 
 
 - **Empty:** a centred `body` muted sentence that says what to do ("No timers running. Start one from any recipe step."), plus the screen's primary action.
 - **Loading:** skeleton blocks in `surface-soft` at the size of the real content, with no spinners on cards.
-- **Error:** a `warn` Callout with the plain-language cause and a retry button.
+- **Error:** a `warn` Toast with the plain-language cause, a round Try again and ✕ (spec 053); the list keeps its skeleton or what it had. Messages tied to one field stay under that field.
 - **Offline:** a `StatusBanner` in `warn-soft` at the top of the content: "You're offline. You can read, but changes need a connection."

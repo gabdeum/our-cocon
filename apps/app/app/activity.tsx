@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ActivityScreen } from '../components/activity/ActivityScreen';
-import { activityFiltersKey, activityKey, loadActivity, loadActivityFilters, PAGE_SIZE, undoActivity, type ActivityFilter } from '../lib/activity';
+import { activityFiltersKey, activityKey, loadActivity, loadActivityFilters, nextCursor, PAGE_SIZE, undoActivity, type ActivityCursor, type ActivityFilter } from '../lib/activity';
 import { useOnline } from '../lib/online';
 import { useSession } from '../lib/session';
+import { refetchLive } from '../lib/sync';
 
 /** /activity (spec 026 FR-002): every change, from Home's "See all activity" (`?show=ai` for AI only). */
 export default function ActivityRoute() {
@@ -17,8 +18,8 @@ export default function ActivityRoute() {
   const list = useInfiniteQuery({
     queryKey: activityKey(familyId ?? '', filter),
     queryFn: ({ pageParam }) => loadActivity(client, PAGE_SIZE, filter, pageParam),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last) => (last.length === PAGE_SIZE ? last[last.length - 1]?.created_at : undefined),
+    initialPageParam: undefined as ActivityCursor | undefined,
+    getNextPageParam: nextCursor,
     enabled: familyId !== null,
   });
   const filters = useQuery({ queryKey: activityFiltersKey(familyId ?? ''), queryFn: () => loadActivityFilters(client), enabled: familyId !== null });
@@ -35,13 +36,18 @@ export default function ActivityRoute() {
       onRetry={() => void list.refetch()}
       hasMore={list.hasNextPage}
       loadingMore={list.isFetchingNextPage}
-      onShowMore={() => void list.fetchNextPage()}
+      onShowMore={async () => {
+        const result = await list.fetchNextPage();
+        if (result.isFetchNextPageError) return false;
+        tracker.track('activity_show_more', { page: result.data?.pages.length ?? 2 });
+        return true;
+      }}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       tracker={tracker}
       readOnly={!online}
       onUndo={async (entry, skipChanged) => {
         const outcome = await undoActivity(client, entry.key, skipChanged);
-        if (outcome.status === 'done' || outcome.status === 'expired') await queryClient.invalidateQueries();
+        if (outcome.status === 'done' || outcome.status === 'expired') await refetchLive(queryClient);
         return outcome;
       }}
     />

@@ -33,9 +33,9 @@ Every change saves instantly and applies to the whole family. Only the owner can
 | State | Copy and behaviour |
 | --- | --- |
 | Share sheet not available (some browsers) | The message is copied; StatusBanner "Invite link copied. Send it to them by message." |
-| Invite couldn't be created | StatusBanner "Couldn't create an invite. Try again." |
+| Invite couldn't be created | warn toast "Couldn't create an invite. Try again." |
 | Too many invites | StatusBanner "Too many tries. Wait a minute, then try again." |
-| A change failed | StatusBanner "Couldn't save. Try again." |
+| A change failed | warn toast "Couldn't save. Try again." |
 | Name missing | TextField warning "Add your name so your family knows who you are." |
 | Color just taken by someone else | StatusBanner "Someone else just took that color. Pick another." |
 | A member added before you left | Sub-line "Added by a former member" |

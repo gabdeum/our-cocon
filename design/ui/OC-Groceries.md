@@ -51,7 +51,7 @@ A standard BottomSheet, laid out like Edit item (close label "Close"):
 2. **Servings:** section heading "Servings" and a Stepper (screen reader "Fewer servings" / "More servings", 1 to 16, or the stored servings if more, at most 50) with the hint "On the list for {n}", which becomes "Was {n}" once changed. Under it, muted 13/600: "Changes this recipe's items still to buy. Ticked items stay as they are."
 3. **Remove its items:** a red text button with a trash icon.
 4. **Footer, always shown:** "Cancel" (1 fr) · "Save" (2 fr). Save is disabled and reads "Save" until the number changes, then "Save for {n}".
-- Saving multiplies the recipe's items still to buy by new ÷ old servings (counts round up, as when adding from a recipe), saves the servings for the family and closes. Ticked items are left as they are. If it fails: the sheet's inline error "Couldn't update. Try again.", and the sheet stays open.
+- Saving multiplies the recipe's items still to buy by new ÷ old servings (counts round up, as when adding from a recipe), saves the servings for the family and closes. Ticked items are left as they are. If it fails: a warn toast "Couldn't update. Try again." over the sheet, which stays open (spec 053).
 - "Remove its items" removes all the recipe's items, ticked or not, closes, and shows StatusBanner "Removed {n} items for {recipe}." with "Undo".
 - The servings: "Add groceries" records them (8 after a scale by an ingredient to 7½). Adding the recipe again while it still has items on the list adds them up (4, then 2 more, is 6); once its items are gone, the next add starts again.
 - There's no "Open recipe" here: the card's body opens the recipe.

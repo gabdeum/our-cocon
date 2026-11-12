@@ -46,3 +46,4 @@ None.
 - 2026-10-28: Seen on the iPhone (Expo Go): a tab once selected stayed wider than the others, pushing the bar off screen; on the iPhone a tab is now made anew when it's selected or unselected (the web keeps it, for keyboard focus). The bar sat 60 from the bottom (26 + the 34 safe area); it now sits 26 from the bottom or the safe area if larger. TabBar README updated.
 - 2026-10-28: Compact header (Gabriel's review): view menu and people filter popovers; title gets the full first row.
 - 2026-11-02: Titles are the first format that fits (spec 034 FR-007), measured by `headerTitle` against screen width − 128 ("Today" is 80 px); `CalendarHeader` is unchanged.
+- 2026-11-12 (spec 053): FR-005: in Month, "Today" scrolls today's week to the second row (053 FR-008).

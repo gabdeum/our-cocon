@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type Query, type QueryClient, type QueryKey } from '@tanstack/react-query';
 import { ChangeEvent, familyChannel } from '@cocon/schemas';
 import type { Client } from './supabase';
 import type { Member } from './session';
@@ -15,6 +15,25 @@ const alsoRefetches: Partial<Record<ChangeEvent['table'], string>> = {
   event_exceptions: 'events',
   event_checklist_items: 'events',
 };
+
+const loadingMore = (q: Query) => q.state.fetchStatus === 'fetching' && (q.state.fetchMeta as { fetchMore?: unknown } | null)?.fetchMore !== undefined;
+
+/**
+ * Refetches the queries under `queryKey`, but never cancels a list loading its next page ("Show
+ * more", spec 053 FR-020): that one refetches once its page is in, so the page isn't lost.
+ */
+export function refetchLive(queryClient: QueryClient, queryKey?: QueryKey): Promise<void> {
+  const busy = queryClient.getQueryCache().findAll({ queryKey, predicate: loadingMore });
+  const done = queryClient.invalidateQueries({ queryKey, predicate: (q) => !busy.includes(q) });
+  for (const q of busy) {
+    const stop = queryClient.getQueryCache().subscribe((e) => {
+      if (e.query !== q || e.query.state.fetchStatus !== 'idle') return;
+      stop();
+      void queryClient.invalidateQueries({ queryKey: q.queryKey, exact: true });
+    });
+  }
+  return done;
+}
 
 /**
  * Live changes for the signed-in family (spec 004 US1). Listens on the family's private channel;
@@ -34,9 +53,9 @@ export function SyncProvider({ client, familyId, children }: { client: SyncClien
     channel.on('broadcast', { event: 'change' }, ({ payload }) => {
       const change = ChangeEvent.safeParse(payload);
       if (!change.success) return;
-      void queryClient.invalidateQueries({ queryKey: [change.data.table] });
+      void refetchLive(queryClient, [change.data.table]);
       const parent = alsoRefetches[change.data.table];
-      if (parent) void queryClient.invalidateQueries({ queryKey: [parent] });
+      if (parent) void refetchLive(queryClient, [parent]);
       for (const listener of listeners) listener(change.data);
     });
     // Private channels check the member's token (realtime.messages policy).
@@ -44,7 +63,7 @@ export function SyncProvider({ client, familyId, children }: { client: SyncClien
       if (stopped) return;
       channel.subscribe((status) => {
         if (status !== 'SUBSCRIBED') return;
-        if (joinedBefore) void queryClient.invalidateQueries();
+        if (joinedBefore) void refetchLive(queryClient);
         joinedBefore = true;
       });
     });

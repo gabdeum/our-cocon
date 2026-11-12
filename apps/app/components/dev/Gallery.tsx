@@ -28,6 +28,7 @@ import {
   FormBar,
   FormProgress,
   HeroCard,
+  HeroCarousel,
   Icon,
   IconButton,
   IconTile,
@@ -782,6 +783,34 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <PhotoPlaceholder initial="L" className="flex-1 rounded-xl py-28" />
         </View>
         <HeroCard title="Leek & bacon quiche" badge="Latest recipe" photoLabel="[Quiche photo]" chips={[{ label: '1 h 10' }, { label: 'Serves 6' }, { label: '2 to buy', tone: 'warn' }]} onPress={noop} />
+        <HeroCarousel label="2 recipes cooking" pageLabels={['Show Leek & bacon quiche', 'Show Pumpkin soup']}>
+          <HeroCard
+            title="Leek & bacon quiche"
+            badge="Cooking now: step 3/6"
+            photoLabel="[Photo]"
+            chips={[]}
+            openLabel="Resume Leek & bacon quiche"
+            onPress={noop}
+            actions={[
+              { label: 'Cancel', tone: 'danger', onPress: noop },
+              { label: 'Done', tone: 'white', onPress: noop },
+              { label: 'Resume', tone: 'ink', icon: 'play', onPress: noop },
+            ]}
+          />
+          <HeroCard
+            title="Pumpkin soup"
+            badge="Cooking now: step 1/4"
+            photoLabel="[Photo]"
+            chips={[]}
+            openLabel="Resume Pumpkin soup"
+            onPress={noop}
+            actions={[
+              { label: 'Cancel', tone: 'danger', onPress: noop },
+              { label: 'Done', tone: 'white', onPress: noop },
+              { label: 'Resume', tone: 'ink', icon: 'play', onPress: noop },
+            ]}
+          />
+        </HeroCarousel>
         <Card tone="soft" className="flex-row items-center">
           <View className="flex-1">
             <Text size={15} weight="800">

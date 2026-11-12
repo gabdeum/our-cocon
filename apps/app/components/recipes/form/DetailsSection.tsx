@@ -1,6 +1,7 @@
 import { View, type LayoutChangeEvent } from 'react-native';
-import { Callout, Link, MonthPicker, PhotoField, PickerField, SettingRow, Text, TextField } from '@cocon/ui';
+import { Callout, MonthPicker, PhotoField, PickerField, SettingRow, Text, TextField } from '@cocon/ui';
 import type { ImageSourcePropType } from 'react-native';
+import { useFailureToast } from '../../../lib/toast';
 import { strings } from '../../../strings/en';
 import type { DetailsField, DetailsForm, DetailsWarnings } from '../../../lib/recipe-form';
 
@@ -38,6 +39,8 @@ export interface DetailsSectionProps {
 export function DetailsSection(p: DetailsSectionProps) {
   const { form, onChange, warnings } = p;
   const at = (field: DetailsField) => (e: LayoutChangeEvent) => p.onFieldLayout(field, e.nativeEvent.layout.y);
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(p.photo.failed && f.photoFailed, p.onRetryPhoto);
   return (
     <>
       {p.isNew ? <Callout variant="ai" label={f.aiBadge} text={f.aiHint} /> : null}
@@ -55,12 +58,6 @@ export function DetailsSection(p: DetailsSectionProps) {
           photoLabel={f.photoLabel}
           busyLabel={p.photo.uploading ? f.uploadingPhoto : undefined}
         />
-        {p.photo.failed ? (
-          <View className="gap-4">
-            <Callout variant="warn" text={f.photoFailed} />
-            <Link label={f.photoRetry} onPress={p.onRetryPhoto} />
-          </View>
-        ) : null}
         {p.photo.denied ? <Callout variant="warn" text={f.photoDenied} /> : null}
       </View>
 

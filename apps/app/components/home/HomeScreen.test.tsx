@@ -227,3 +227,65 @@ describe('Home', () => {
     expect(card().getByRole('button', { name: 'Add event' }).getAttribute('aria-disabled')).toBe('true');
   });
 });
+
+describe('Home › cooking now (spec 051 on 028)', () => {
+  const cook = (id: string, step: number, servings = 6) => ({
+    id,
+    recipe_id: `r-${id}`,
+    started_by: gabriel.user_id,
+    started_at: '2026-11-12T18:40:00Z',
+    last_active_at: '2026-11-12T18:50:00Z',
+    current_step: step,
+    variant_id: null,
+    servings,
+    status: 'in_progress' as const,
+  });
+  const quicheCook = { cook: cook('quiche', 2, 8), name: 'Leek & bacon quiche', stepCount: 6 };
+  const soupCook = { cook: cook('soup', 0), name: 'Pumpkin soup', stepCount: 4 };
+
+  it('replaces the latest recipe with what is cooking: "Cooking now: step 3/6", no chips', () => {
+    setup({ cooking: [quicheCook] });
+    expect(screen.getByText('Cooking now: step 3/6')).toBeTruthy();
+    expect(screen.queryByText('Latest recipe')).toBeNull();
+    expect(screen.queryByText('Serves 8')).toBeNull();
+    expect(screen.queryByText('1 h 10')).toBeNull();
+    expect(screen.queryByText('2 to buy')).toBeNull();
+    // One cook: no dots.
+    expect(screen.queryByRole('button', { name: 'Show Leek & bacon quiche' })).toBeNull();
+  });
+
+  it('tapping the card resumes; Cancel, Done and Resume name the recipe', () => {
+    const onCookResume = vi.fn();
+    const onCookDone = vi.fn();
+    const onCookCancel = vi.fn();
+    setup({ cooking: [quicheCook], onCookResume, onCookDone, onCookCancel });
+    fireEvent.click(screen.getByRole('link', { name: 'Resume Leek & bacon quiche, step 3 of 6' }));
+    expect(onCookResume).toHaveBeenCalledWith(quicheCook.cook);
+    fireEvent.click(screen.getByRole('button', { name: 'Resume Leek & bacon quiche, step 3 of 6' }));
+    expect(onCookResume).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Done cooking Leek & bacon quiche' }));
+    expect(onCookDone).toHaveBeenCalledWith(quicheCook.cook, 'Leek & bacon quiche');
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel cooking Leek & bacon quiche' }));
+    expect(onCookCancel).toHaveBeenCalledWith(quicheCook.cook);
+  });
+
+  it('several cooks swipe side by side, with a dot for each', async () => {
+    setup({ cooking: [quicheCook, soupCook] });
+    const region = screen.getByRole('region', { name: '2 recipes cooking' });
+    expect(within(region).getByText('Leek & bacon quiche')).toBeTruthy();
+    expect(within(region).getByText('Pumpkin soup')).toBeTruthy();
+    expect(within(region).getByRole('button', { name: 'Show Leek & bacon quiche' }).getAttribute('aria-current')).toBe('true');
+    fireEvent.click(within(region).getByRole('button', { name: 'Show Pumpkin soup' }));
+    expect(within(region).getByRole('button', { name: 'Show Pumpkin soup' }).getAttribute('aria-current')).toBe('true');
+    expect(within(region).getByRole('button', { name: 'Show Leek & bacon quiche' }).getAttribute('aria-current')).toBeNull();
+    await expectAccessible();
+  });
+
+  it('offline: the card still resumes, the buttons are off', () => {
+    const onCookResume = vi.fn();
+    setup({ cooking: [quicheCook], onCookResume, readOnly: true });
+    expect(screen.getByRole('button', { name: 'Done cooking Leek & bacon quiche' }).getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(screen.getByRole('link', { name: 'Resume Leek & bacon quiche, step 3 of 6' }));
+    expect(onCookResume).toHaveBeenCalled();
+  });
+});

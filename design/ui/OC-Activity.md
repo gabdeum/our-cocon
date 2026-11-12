@@ -8,7 +8,7 @@ No drawn screen: this spec is the source of truth (built from ActivityRow, Segme
 3. SegmentedControl (pill) "All" · "AI only", opened with Home's choice. Switching to All drops the assistant pill.
 4. "People" overline, then a row of PersonPills: each member who has entries (in the filter's sense). Shown only with 2 or more. One at a time; tapping the selected one clears it.
 5. Under AI only: "Assistants" overline, then a row of filter Pills: "Claude", "ChatGPT", "Gemini", "Other" (an assistant we can't name), only those that made changes. Shown only with 2 or more. One at a time; tapping the selected one clears it.
-6. ActivityRows, newest first, in a list: every change by the family and their assistants (or AI ones only), 50 at a time, then a soft button "Show more".
+6. ActivityRows, newest first, in a list: every change by the family and their assistants (or AI ones only), 20 at a time, then a soft button "Show more" ("Loading…" and off while the next 20 load; hidden once a page has fewer than 20). Live changes add to the top without dropping the pages already loaded (spec 053 FR-018 to FR-020).
 
 ## Entries
 One per AI tool call (spec 026 FR-001), or one action in the app (spec 028 FR-009: a recipe and its rows within 10 minutes, a burst of grocery adds or clears, ticks within 10 minutes). A private event's entries read "a private event" for the others, and a surprise's are never seen by the people it's kept from (spec 044). Titles, "{person} {verb} {thing}":
@@ -31,7 +31,11 @@ Badge: the person's avatar in their color; an AI change has "AI" in a rounded sq
 | State | Copy and behaviour |
 | --- | --- |
 | Loading | Skeleton row, screen reader "Loading activity". |
-| Load failed | Callout (warn) "Couldn't load activity. Check your connection and try again." and soft button "Try again". |
+| Load failed | skeleton rows stay; warn toast "Couldn't load activity. Check your connection and try again." with round Try again and ✕ (spec 053 FR-015). |
+| Show more failed | the loaded entries stay; warn toast "Couldn't load more activity. Check your connection and try again." with Try again and ✕. |
 | No activity | Title "No activity yet", body "When anyone in the family adds or changes something, it shows up here." |
 | AI only, none | Title "No AI changes yet", body "When an AI assistant changes something for your family, it shows up here. You can undo it for 7 days." |
 | Filters match nothing | "Nothing matches these filters." |
+
+## Changelog
+- 2026-11-12 (spec 053): 20 entries a page (was 50); "Show more" pages by a stable cursor and survives live updates; failures are warn toasts with Try again.

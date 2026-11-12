@@ -88,6 +88,9 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L137 | P2 | **Check the catalog gaps on prod (052 SC-001).** After 052 is released, run `specs/052-grocery-review/unmatched-ingredients.sql` on prod again: only "sourdough starter" should be left (kept in Other). Query 2 (names only on grocery lists) wasn't exported for 052; run it too and send anything new for the next catalog version. | 052 | none (Gabriel runs it) |
 | L138 | P3 | **`ingredient_backfill_matched` in PostHog.** 052's backfill runs in the deploy's migration container, which has no PostHog key, so it prints its counts in the deploy log instead of sending the event. Pass `POSTHOG_KEY` to the migrate container (`infra/bin/cocon-deploy`, needs a bootstrap) if the counts should be in PostHog. | 052 | none |
 | L139 | P3 | **"Fresh tuna" matches canned tuna.** "fresh" is a descriptor, so "fresh tuna" reads as "tuna", which `canned_tuna` owns; 052 added `tuna_steak` with "yellowfin", "ahi" and "fresh tuna steak". Move "tuna" or keep "fresh" for fish if families' recipes say "fresh tuna". | 052 | none |
+| L140 | P2 | **Redraw the screens 053 changed.** The canvas still shows the old layouts: OC-CalAdd (no title suggestions, no "Ends" row), OC-CalEvent (people in the card, no notes) and the toast in OC-CalDay (underlined "Undo", no ✕). The UI specs are the source until then. | 053 | none |
+| L141 | P3 | **Measure long notes instead of guessing.** The event page cuts notes at 6 lines and offers "Show more" when they have more than 6 lines or 280 characters; a note of long lines can be cut without the link. Measure the lines (`onTextLayout` on the phone, the element's height on the web). | 053 | none |
+| L142 | P3 | **Unused "Try again" strings.** The lists that showed a "Try again" button under a load failure (recipes, groceries, Recently deleted, AI assistants, the share sheets) now use the toast's own; their `retry` strings in `apps/app/strings/en.ts` can go once nothing reads them. | 053 | none |
 
 ## Changelog
 - 2026-10-19: Created. Seeded with the open items from the Needs your attention sections of 003, 004 and 006.
@@ -150,3 +153,4 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 - 2026-11-12 (051): no tasks named 051. Added L132 (cooking notes, deferred), L133 (the grocery card as drawn in 051), L134 (`variantSummary` without a screen) and L135 (a cook's variant options).
 - 2026-11-12 (051, after review): added L136 (drop the unused units columns).
 - 2026-11-12 (052): did L133 (the grocery recipe card: its body opens the recipe, its "…" keeps the menu, without "Open recipe"). Added L137 (check the catalog gaps on prod), L138 (the backfill's PostHog event) and L139 ("fresh tuna").
+- 2026-11-12 (053): no tasks named 053. Added L140 (redraw the screens it changed), L141 (measure long notes) and L142 (unused retry strings). Numbered from L140: 052, on its own branch, uses up to L139.

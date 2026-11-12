@@ -21,5 +21,5 @@ Owner only. BottomSheet "Home time zone": lead "All dates in the family calendar
 | Not a time | "Use a time like 18:30." |
 | End before start | "Pick an end time after the start." |
 | Time zone not set yet | Row sub-line "Not set yet" |
-| A change failed | StatusBanner "Couldn't save. Try again." (on the page; inside a sheet, under its field) |
+| A change failed | warn toast "Couldn't save. Try again." (over the sheet when one is open; spec 053) |
 | Offline | OfflineBanner; segmented controls and switches disabled, no chevrons |

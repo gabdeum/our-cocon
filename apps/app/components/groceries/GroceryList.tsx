@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import {
   BottomSheet,
   Button,
-  Callout,
   Dialog,
   GroceryRecipeCard,
   IconButton,
@@ -40,7 +39,7 @@ import {
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
 import { OfflineBanner } from '../sync/OfflineBanner';
-import { useToast } from '../../lib/toast';
+import { useFailureToast, useToast } from '../../lib/toast';
 import { GrocerySettings } from '../settings/GrocerySettings';
 import { GroceryActions, type ActionView } from './GroceryActions';
 import { RecipeCardSheet } from './RecipeCardSheet';
@@ -105,6 +104,7 @@ function useClock(fixed: number | undefined): number {
 export function GroceryList(props: GroceryListProps) {
   const { items, failed, onRetry, me, members, tracker, photoUrls, settings, packs } = props;
   const online = useOnline();
+  useFailureToast(items === undefined && failed && g.loadFailed, onRetry);
   const now = useClock(props.now);
   const [text, setText] = useState('');
   const [adding, setAdding] = useState(false);
@@ -246,14 +246,8 @@ export function GroceryList(props: GroceryListProps) {
       <TabScreen>
         {header}
         <OfflineBanner screen="groceries" tracker={tracker} />
-        {failed ? (
-          <View className="gap-12">
-            <Callout variant="warn" text={g.loadFailed} />
-            <Button label={g.retry} variant="soft" size="sm" onPress={onRetry} />
-          </View>
-        ) : (
-          <View role="progressbar" aria-label={g.loading} aria-busy />
-        )}
+        {/* A failed first load is a toast with Try again (spec 053 FR-015). */}
+        <View role="progressbar" aria-label={g.loading} aria-busy />
       </TabScreen>
     );
   }

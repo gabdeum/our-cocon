@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Callout, Dialog, Text, TextField } from '@cocon/ui';
 import { DisplayName, InviteToken, type InviteStatus, type Tracker } from '@cocon/schemas';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import type { FamilyApi } from '../../lib/family';
 import type { Client } from '../../lib/supabase';
@@ -36,6 +37,8 @@ export function Join({ token, viewer, api, auth, tracker, onJoined, onOpenApp }:
   const [name, setName] = useState(viewer.kind === 'signedIn' ? viewer.name : '');
   const [warning, setWarning] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(error);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const expiredSeen = useRef(false);
@@ -105,7 +108,6 @@ export function Join({ token, viewer, api, auth, tracker, onJoined, onOpenApp }:
         </>
       ) : (
         <>
-          {error ? <Callout variant="warn" text={error} /> : null}
           {asMember ? (
             <Text size={16} weight="700">
               {t.asMemberLead(asMember)}

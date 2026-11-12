@@ -10,6 +10,7 @@ import {
   reminderRecipients,
   slotsToRange,
   sortSlots,
+  timeLabel,
   toMinutes,
   weekday,
   whenWord,
@@ -19,7 +20,7 @@ import {
   type SlotTimes,
   type WeekStartsOn,
 } from '@cocon/calendar';
-import { firstRepeatDay, type StoredEvent } from '@cocon/data';
+import { firstRepeatDay, type StoredEvent, type TitleSuggestion } from '@cocon/data';
 import { memberInitials, memberKind } from '@cocon/schemas';
 import {
   ClockTime,
@@ -52,7 +53,7 @@ export type EndsChoice = { type: 'never' } | { type: 'on'; date: string } | { ty
 export interface EventDraft {
   title: string;
   date: string;
-  /** Extra days a multi-day event keeps when it's edited; 0 for the sheet's one-day events. */
+  /** Days after the first that it lasts (spec 053 FR-010): 0 for one day; moving the first day keeps it. */
   span: number;
   time: DraftTime;
   who: EventMember[];
@@ -411,6 +412,8 @@ export function toastText(input: EventInput, today: string, slotTimes: SlotTimes
   // "Tonight" goes by the 24-hour start, whatever the member's clock.
   const start = rangeLabel(timed, { use24h: true, slotTimes })?.split('–')[0] ?? null;
   const word = whenWord(input.starts_on, today, start);
+  // Spec 053 FR-011: several days read "for Sat, Oct 31 – Mon, Nov 2", without the hours.
+  if (input.ends_on !== input.starts_on) return a.added(input.title, strings.calendar.event.span(dateLabel(input.starts_on), dateLabel(input.ends_on)), null);
   const when = word === 'tonight' ? a.tonight : word === 'today' ? a.todayWord : word === 'tomorrow' ? a.tomorrowWord : dateLabel(input.starts_on);
   return a.added(input.title, when, range);
 }
@@ -441,13 +444,19 @@ export function hasMoreOptions(draft: EventDraft): boolean {
   return draft.category !== null || draft.location !== '' || draft.responsible !== null || draft.repeat !== 'never' || draft.reminder !== 'none' || draft.notes !== '' || draft.checklist.length > 0 || draft.visibility !== 'family';
 }
 
-/** The date sheet's month (DateGrid): "November 2026" and its days in weeks; days before `min` are off. */
-export function dateGridMonth(month: string, today: string, weekStartsOn: WeekStartsOn, min?: string): { title: string; weeks: (DateGridDay | null)[][] } {
+/** Spec 053 FR-010: an event lasts at most 367 days (the database's check, `ends_on - starts_on <= 366`). */
+export const MAX_SPAN = 366;
+
+/** "Ends": the last day, or null for Same day (spec 053 FR-009). */
+export const lastDay = (draft: Pick<EventDraft, 'date' | 'span'>): string | null => (draft.span > 0 ? addDays(draft.date, draft.span) : null);
+
+/** The date sheet's month (DateGrid): "November 2026" and its days in weeks; days before `min` and after `max` are off. */
+export function dateGridMonth(month: string, today: string, weekStartsOn: WeekStartsOn, min?: string, max?: string): { title: string; weeks: (DateGridDay | null)[][] } {
   const { year, month: mo } = parts(month);
   const days: (DateGridDay | null)[] = Array.from({ length: (weekday(makeDate(year, mo, 1)) - weekStartsOn + 7) % 7 }, () => null);
   for (let d = 1; d <= daysInMonth(year, mo); d++) {
     const date = makeDate(year, mo, d);
-    days.push({ date, day: d, label: dateLabel(date, 'long'), today: date === today, ...(min && date < min ? { disabled: true } : {}) });
+    days.push({ date, day: d, label: dateLabel(date, 'long'), today: date === today, ...((min && date < min) || (max && date > max) ? { disabled: true } : {}) });
   }
   while (days.length % 7) days.push(null);
   const weeks = Array.from({ length: days.length / 7 }, (_, i) => days.slice(i * 7, i * 7 + 7));
@@ -458,4 +467,32 @@ export function dateGridMonth(month: string, today: string, weekStartsOn: WeekSt
 export function shiftMonth(month: string, delta: number): string {
   const { year, month: mo } = parts(month);
   return makeDate(year, mo + delta, 1);
+}
+
+/** Spec 053 FR-001: when a suggestion starts, after its title on the pill: "Morning", "17:30" or "All day". */
+export function suggestionTime(s: TitleSuggestion, slotTimes: SlotTimes, use24h = true): string {
+  return timeLabel({ time_type: s.time.time_type as EventInput['time_type'], slots: s.time.slots as SlotKey[], start_time: s.time.start_time, end_time: s.time.end_time }, { use24h, slotTimes });
+}
+
+/**
+ * Spec 053 FR-003: the sheet filled like the latest event with a suggested title. The day stays as
+ * picked, and so does its length; whatever the person already changed (`touched`) keeps their value. Notes aren't copied:
+ * they were about that day. A surprise, or an event no longer seen in full (made private, a cover),
+ * fills nothing: copying it could hand its secret to the people it's kept from.
+ */
+export function fromSuggestion(draft: EventDraft, event: StoredEvent, touched: ReadonlySet<keyof EventDraft>): EventDraft {
+  if (event.visibility === 'surprise' || event.view === 'busy' || event.view === 'cover') return draft;
+  const like = draftFromEvent(event);
+  const filled: Partial<EventDraft> = {
+    time: like.time,
+    who: like.who,
+    category: like.category,
+    location: like.location,
+    responsible: like.responsible,
+    reminder: like.reminder,
+    visibility: like.visibility,
+    checklist: like.checklist.map((c) => ({ label: c.label })),
+  };
+  const kept = Object.fromEntries(Object.entries(filled).filter(([key]) => !touched.has(key as keyof EventDraft)));
+  return { ...draft, ...kept };
 }

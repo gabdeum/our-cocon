@@ -5,6 +5,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import { storedEvent } from '@cocon/data';
+import { ToastProvider } from '@cocon/ui';
 import { draftFromEvent, newDraft, toastText } from '../../lib/event-form';
 import { EventSheet, type EventSheetProps } from './EventSheet';
 import { alex as alexFake, fakeTracker, flush, gabriel as gabrielFake, james as jamesFake } from '../../test/fakes';
@@ -49,20 +50,32 @@ const movieNight = {
   view: 'full',
 };
 
-/** A client whose events_visible holds `rows`, whatever the query. */
-function fakeClient(rows: unknown[]) {
-  const query: Record<string, unknown> = new Proxy(
-    {},
-    { get: (_t, name) => (name === 'then' ? (resolve: (v: unknown) => void) => resolve({ data: rows, error: null }) : () => query) },
-  );
-  return { from: () => query } as unknown as EventSheetProps['client'];
+/** A client whose events_visible holds `rows`, whatever the query (one row for `maybeSingle`); `suggest_event_titles` gives `titles`. */
+function fakeClient(rows: unknown[], titles: unknown[] = []) {
+  const from = () => {
+    let single = false;
+    const query: Record<string, unknown> = new Proxy(
+      {},
+      {
+        get: (_t, name) =>
+          name === 'then'
+            ? (resolve: (v: unknown) => void) => resolve({ data: single ? (rows[0] ?? null) : rows, error: null })
+            : () => {
+                if (name === 'maybeSingle') single = true;
+                return query;
+              },
+      },
+    );
+    return query;
+  };
+  return { from, rpc: async () => ({ data: titles, error: null }) } as unknown as EventSheetProps['client'];
 }
 
-async function setup(over: Partial<EventSheetProps> = {}, rows: unknown[] = []) {
+async function setup(over: Partial<EventSheetProps> = {}, rows: unknown[] = [], titles: unknown[] = []) {
   const props: EventSheetProps = {
     mode: 'new',
     initial: newDraft({}, TODAY),
-    client: fakeClient(rows),
+    client: fakeClient(rows, titles),
     familyId: 'f',
     members: [gabriel, eva, james],
     myMemberId: gabriel.id,
@@ -76,7 +89,9 @@ async function setup(over: Partial<EventSheetProps> = {}, rows: unknown[] = []) 
   };
   render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <EventSheet {...props} />
+      <ToastProvider>
+        <EventSheet {...props} />
+      </ToastProvider>
     </QueryClientProvider>,
   );
   await flush();
@@ -196,7 +211,8 @@ describe('EventSheet (spec 041)', () => {
     fireEvent.change(title(), { target: { value: 'Poker night' } });
     fireEvent.click(button('Save'));
     await flush();
-    expect(screen.getByText("Couldn't save. Check your connection and try again.")).toBeTruthy();
+    // Spec 053 FR-015: a warn toast over the sheet.
+    expect(screen.getByRole('status').textContent).toBe("Couldn't save. Check your connection and try again.");
     expect(props.onClose).not.toHaveBeenCalled();
   });
 
@@ -370,5 +386,51 @@ describe('Who can see it? (spec 043)', () => {
     fireEvent.click(button('Save'));
     await flush();
     expect(props.tracker.track).not.toHaveBeenCalledWith('event_visibility_set', expect.anything());
+  });
+
+  // Spec 053 FR-009 to FR-012: the last day of an event over several days.
+  it('Ends: a last day makes it several days; moving the first day keeps the length; ✕ is back to Same day', async () => {
+    const props = await setup({ initial: { ...newDraft({}, TODAY), title: 'Grandma visits', repeat: 'daily' } });
+    expect(button('Same day').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(button('Pick a last day'));
+    expect(screen.getByRole('heading', { name: 'Last day' })).toBeTruthy();
+    expect(button('Tuesday, Oct 27').getAttribute('aria-disabled') ?? String(button('Tuesday, Oct 27').hasAttribute('disabled'))).toBeTruthy();
+    fireEvent.click(button('Friday, Oct 30'));
+    expect(button('Fri, Oct 30').getAttribute('aria-pressed')).toBe('true');
+    // A daily repeat would overlap itself: it's dropped, and not offered.
+    expect(screen.queryByRole('button', { name: 'Daily' })).toBeNull();
+    fireEvent.click(button('Tomorrow, Thu 29'));
+    expect(button('Sat, Oct 31')).toBeTruthy();
+    fireEvent.click(button('Save'));
+    await flush();
+    expect(saved(props)).toMatchObject({ starts_on: '2026-10-29', ends_on: '2026-10-31', recurrence: null });
+    expect(toastText(saved(props), TODAY, DEFAULT_SLOT_TIMES)).toBe('Grandma visits added for Thu, Oct 29 – Sat, Oct 31.');
+    fireEvent.click(button('Back to same day'));
+    expect(button('Same day').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  // Spec 053 FR-001 to FR-003: past titles, and picking one fills the event like last time.
+  it('suggests past titles while typing, and a pick fills it like last time but keeps the day', async () => {
+    const swim = { ...movieNight, title: 'Swim', category: 'sport', location: 'Aquatic centre', starts_on: '2026-10-24', ends_on: '2026-10-24', slots: ['morning'], members: [james.id], responsible_member_id: gabriel.id, reminder: 'hour_before', checklist: [{ id: '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a99', position: 0, label: 'Towel', done: true, done_by: null }] };
+    const titles = [
+      { title: 'Swim', score: 3, last_event_id: swim.id, category: 'sport', location: 'Aquatic centre', time_type: 'slot', slots: ['morning'], start_time: null, end_time: null },
+      { title: 'Swim', score: 1, last_event_id: '7d1e2f3a-4b5c-4d6e-8f70-112233445566', category: 'sport', location: null, time_type: 'custom', slots: [], start_time: '17:30', end_time: '18:30' },
+    ];
+    const tracker = fakeTracker();
+    const props = await setup({ tracker }, [swim], titles);
+    fireEvent.focus(title());
+    fireEvent.change(title(), { target: { value: 'sw' } });
+    await act(() => new Promise((r) => setTimeout(r, 200)));
+    const list = screen.getByRole('list', { name: 'Suggestions' });
+    expect(list.textContent).toBe('Swim · MorningSwim · 17:30');
+    fireEvent.click(screen.getByRole('button', { name: 'Swim, Morning' }));
+    await flush();
+    expect((title() as HTMLInputElement).value).toBe('Swim');
+    expect(tracker.track).toHaveBeenCalledWith('event_title_suggestion_picked', { position: 1, query_length: 2 });
+    fireEvent.click(button('Save'));
+    await flush();
+    expect(saved(props)).toMatchObject({ title: 'Swim', starts_on: TODAY, category: 'sport', location: 'Aquatic centre', slots: ['morning'], members: [james.id], responsible_member_id: gabriel.id, reminder: 'hour_before' });
+    expect(saved(props).checklist).toEqual([{ label: 'Towel' }]);
+    expect((props.onSave as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]).toMatchObject({ usedSuggestion: true });
   });
 });

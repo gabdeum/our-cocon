@@ -101,7 +101,7 @@
 Existing events are unchanged. `grocery_recipe_servings_changed` still fires on Save.
 
 ## Warnings and errors
-- Save fails: show the sheet's inline error "Couldn't update. Try again.", and the sheet stays open.
+- Save fails: a warn toast "Couldn't update. Try again." over the sheet, which stays open (spec 053 FR-015: failures are toasts).
 
 ## Needs your attention
 - Run `unmatched-ingredients.sql` on prod and add the CSV to the repo before `/build-spec 052`. FR-002 depends on it.
@@ -125,3 +125,4 @@ Existing events are unchanged. `grocery_recipe_servings_changed` still fires on 
   - **Recipe menu (FR-008):** the footer is the standard SheetFooter (Cancel 110 px, Save the rest), close to the drawn 1 fr / 2 fr.
   - **Not changed:** the board draws Grocery settings beside "Add item"; it stays at the title's right (spec 050 FR-007), as the spec doesn't ask to move it.
 - 2026-11-12 (after Gabriel's test): the recipe card has no chevron (FR-006 and the board draw one); tapping its body still opens the recipe.
+- 2026-11-12 (merged with spec 053): the recipe menu's failed Save is a warn toast over the sheet, not an inline callout, as 053 made every failure a toast.

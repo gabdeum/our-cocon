@@ -99,6 +99,36 @@ export function PersonPill({ label, initial, color, selected = false, className,
   );
 }
 
+export interface SuggestionPillProps extends Omit<PressableProps, 'children' | 'style'> {
+  /** "Swim", emphasised. */
+  title: string;
+  /** "Morning", "17:30" or "All day", muted after a dot. */
+  detail?: string;
+  className?: string;
+}
+
+/** A past choice to pick again (spec 053 FR-001): 40 tall, surface-soft, "**Swim** · Morning". Scrolls in a row. */
+export function SuggestionPill({ title, detail, className, ...props }: SuggestionPillProps) {
+  return (
+    <Pressable
+      role="button"
+      hitSlop={2}
+      aria-label={detail ? `${title}, ${detail}` : title}
+      className={cn('h-[40px] flex-row items-center rounded-pill bg-surface-soft px-14 active:bg-surface-soft-pressed', focusRing, className)}
+      {...props}
+    >
+      <Text size={14} weight="800" numberOfLines={1}>
+        {title}
+        {detail ? (
+          <Text size={14} weight="600" color="ink-muted">
+            {` · ${detail}`}
+          </Text>
+        ) : null}
+      </Text>
+    </Pressable>
+  );
+}
+
 /** A row of pills: filters scroll horizontally (wrap them in a ScrollView), choices wrap. */
 export function PillRow({ children, wrap = true, className }: { children: ReactNode; wrap?: boolean; className?: string }) {
   return <View className={cn('flex-row items-center gap-8', wrap && 'flex-wrap', className)}>{children}</View>;

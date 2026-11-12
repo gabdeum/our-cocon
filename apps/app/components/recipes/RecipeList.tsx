@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useMemo, useState, type ReactNode } from 're
 import { ScrollView, View } from 'react-native';
 import { announce, Button, Callout, CookSessionCard, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
 import { activeFilterKeys, emptyFilters, type RecipeFilters, type Tracker } from '@cocon/schemas';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import type { PhotoUrls } from '../../lib/recipe-photo';
 import { visibleRecipes, type RecipeListItem } from '../../lib/recipes';
@@ -77,6 +78,7 @@ export function RecipeList({
   use24h = true,
 }: RecipeListProps) {
   const online = useOnline();
+  useFailureToast(recipes === undefined && failed && r.loadFailed, onRetry);
   const [query, setQuery] = useState('');
   const debounced = useDebounced(query, SEARCH_DEBOUNCE_MS);
   // Clearing the field shows the whole list right away; only typing waits.
@@ -117,18 +119,12 @@ export function RecipeList({
       <TabScreen>
         {header}
         <OfflineBanner screen="recipes" tracker={tracker} />
-        {failed ? (
-          <View className="gap-12">
-            <Callout variant="warn" text={r.loadFailed} />
-            {onRetry ? <Button label={r.retry} variant="soft" size="sm" onPress={onRetry} /> : null}
-          </View>
-        ) : (
-          <View role="progressbar" aria-label={r.loading} aria-busy className="gap-14">
-            <RecipeItemSkeleton />
-            <RecipeItemSkeleton />
-            <RecipeItemSkeleton />
-          </View>
-        )}
+        {/* A failed first load is a toast with Try again (spec 053 FR-015); the skeleton stays. */}
+        <View role="progressbar" aria-label={r.loading} aria-busy className="gap-14">
+          <RecipeItemSkeleton />
+          <RecipeItemSkeleton />
+          <RecipeItemSkeleton />
+        </View>
         {footer}
       </TabScreen>
     );

@@ -3,7 +3,8 @@
 // and permissions, and Disconnect asks first. FR-003: "What AI can do" changes a permission (L67).
 // Edge: an assistant that can't connect yet reads "Not available yet".
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { render } from '../../test/render';
 import type { AssistantConnections } from '@cocon/data';
 import { DEFAULT_AI_PERMISSIONS } from '@cocon/schemas';
 import { fakeTracker, flush, last } from '../../test/fakes';
@@ -204,6 +205,9 @@ describe('AI assistants', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
     fireEvent.click(last(screen.getAllByRole('button', { name: 'Disconnect' })));
     await flush();
+    // Spec 053 FR-015: the failure is a toast; closed, it doesn't come back with the next Manage.
+    expect(screen.getByRole('status').textContent).toBe("Couldn't disconnect. Check your connection and try again.");
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
     fireEvent.click(screen.getByRole('button', { name: 'Manage ChatGPT' }));
     expect(screen.queryByText("Couldn't disconnect. Check your connection and try again.")).toBeNull();
   });

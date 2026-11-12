@@ -58,13 +58,14 @@ describe('Event detail', () => {
     setup();
     const text = document.body.textContent ?? '';
     const order = [
+      // Spec 053 FR-005: the people lead the meta row, above the title.
+      'James',
       'Social',
       'Every Saturday',
       'Baby music class',
       'Sat, Oct 31',
       ' · Morning, about 09:00–12:00',
-      'James',
-      ' · Gabriel takes James',
+      'Gabriel takes James',
       'Little Notes studio, 4 Elm St',
       'Copy',
       'Maps',
@@ -83,7 +84,7 @@ describe('Event detail', () => {
     expect(screen.getByRole('button', { name: 'More actions' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Duplicate' })).toBeNull();
     // After the bar, which holds the title too (shown once it scrolls under).
-    let at = text.indexOf('Social') - 1;
+    let at = text.indexOf('James') - 1;
     for (const part of order) {
       const next = text.indexOf(part, at + 1);
       expect(next, part).toBeGreaterThan(at);
@@ -93,6 +94,19 @@ describe('Event detail', () => {
     expect(screen.getByRole('checkbox', { name: 'Diaper bag' }).getAttribute('aria-checked')).toBe('true');
     // Spec 030 SC-001.
     await expectAccessible();
+  });
+
+  // Spec 053 FR-007: the notes were saved but shown nowhere.
+  it('shows the notes under the date line; long ones are cut with Show more', () => {
+    setup(babyMusic({ notes: 'Bring the yellow socks' }));
+    const text = document.body.textContent ?? '';
+    expect(text.indexOf('Bring the yellow socks')).toBeGreaterThan(text.indexOf('Morning, about 09:00–12:00'));
+    expect(text.indexOf('Bring the yellow socks')).toBeLessThan(text.indexOf('Gabriel takes James'));
+    expect(screen.queryByRole('button', { name: 'Show more' })).toBeNull();
+    cleanup();
+    setup(babyMusic({ notes: ['1', '2', '3', '4', '5', '6', '7'].join('\n') }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show more' }));
+    expect(screen.getByRole('button', { name: 'Show less' })).toBeTruthy();
   });
 
   it('hides rows without a value, and says an assistant added it (FR-006)', () => {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Callout, Text } from '@cocon/ui';
 import { normalizeText } from '@cocon/schemas';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import type { Client } from '../../lib/supabase';
 import { SignIn } from './SignIn';
@@ -79,6 +80,8 @@ export function OAuthConsent({ authorizationId, signedIn, auth, verify, onRedire
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [busy, setBusy] = useState<'allow' | 'deny' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(error);
   const next = `/oauth/consent?authorization_id=${encodeURIComponent(authorizationId)}`;
   // An id that isn't the right shape reads like any other old request.
   const malformed = !/^[A-Za-z0-9_-]{1,128}$/.test(authorizationId);
@@ -129,7 +132,6 @@ export function OAuthConsent({ authorizationId, signedIn, auth, verify, onRedire
           {t.sendsBackTo(host)}
         </Text>
       ) : null}
-      {error ? <Callout variant="warn" text={error} /> : null}
       <View className="gap-12">
         <Button label={t.allow} block busy={busy === 'allow'} busyLabel={t.allowing} disabled={busy !== null} onPress={() => void decide(true)} />
         <Button label={t.deny} variant="soft" block disabled={busy !== null} onPress={() => void decide(false)} />

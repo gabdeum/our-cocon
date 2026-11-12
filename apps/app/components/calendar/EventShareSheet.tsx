@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Button, Callout, Dialog, IconButton, Link, LinkField, ShareTile } from '@cocon/ui';
+import { BottomSheet, Dialog, IconButton, Link, LinkField, ShareTile } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
-import { useToast } from '../../lib/toast';
+import { useToast, useFailureToast } from '../../lib/toast';
 import { eventShareUrl, type EventShareLink } from '../../lib/event-share';
 import { COPIED_MS } from '../recipes/ShareSheet';
 
@@ -83,16 +83,13 @@ export function EventShareSheet({ api, tracker, onClose }: { api: EventShareShee
 
   const field = state.kind === 'creating' ? s.creating : state.kind === 'shared' ? (url ?? '') : state.kind === 'stopped' ? s.notShared : '';
 
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(state.kind === 'failed' && s.failed, again);
   return (
     <>
       <BottomSheet visible title={e.shareTitle} lead={e.shareLead} closeLabel={s.close} onClose={onClose} headerAction={<IconButton icon="close" label={s.close} variant="soft" onPress={onClose} />}>
 
-        {state.kind === 'failed' ? (
-          <View className="gap-10">
-            <Callout variant="warn" text={s.failed} />
-            <Button label={s.retry} variant="soft" onPress={again} />
-          </View>
-        ) : state.kind === 'stopped' ? (
+        {state.kind === 'stopped' ? (
           <LinkField label={s.linkLabel} value={field} actionLabel={s.createNew} onAction={again} />
         ) : (
           <LinkField label={s.linkLabel} value={field} actionLabel={copied ? s.copied : s.copy} actionDisabled={!url} onAction={() => void copy()} />

@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Button, Callout, Link, ListGroup, ListRow, SheetFooter, SuccessPanel } from '@cocon/ui';
+import { BottomSheet, Button, Link, ListGroup, ListRow, SheetFooter, SuccessPanel } from '@cocon/ui';
 import type { IngredientFactsInput } from '@cocon/quantity';
 import type { Tracker, UnitSystem } from '@cocon/schemas';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import type { AddedFromRecipe, RecipeGroceryLine } from '../../lib/add-from-recipe';
 import { mergeNotes } from '../../lib/add-from-recipe';
@@ -41,6 +42,8 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, un
   const [off, setOff] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(failed);
   const [done, setDone] = useState<{ count: number; added: AddedFromRecipe } | null>(null);
   // On the web a Modal can stay over the next screen while this one leaves: take it away first.
   const [leaving, setLeaving] = useState(false);
@@ -105,7 +108,6 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, un
   return (
     <BottomSheet visible title={a.title} lead={a.lead(recipeName, servings)} headerAction={tickAll} closeLabel={a.close} onClose={close} footer={footer}>
       <OfflineBanner screen="recipe" tracker={tracker} />
-      {failed ? <Callout variant="warn" text={failed} /> : null}
       {done ? (
         <SuccessPanel title={a.added(done.count)} body={a.addedBody} undoLabel={a.undo} onUndo={() => void undo()} actions={null} />
       ) : (
