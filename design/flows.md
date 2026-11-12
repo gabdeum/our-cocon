@@ -16,7 +16,7 @@
 | (retired) OC-RecipeSettings | `/recipes/[id]/settings` redirects to `/recipes/[id]/edit?section=details&focus=this-recipe` | — | 027, 051 |
 | OC-Share | `/recipes/[id]/share` | sheet | 019 |
 | OC-SharedView | `/r/[token]` (public, no tab bar) | page | 019 |
-| OC-EditBasics | `/recipes/new` · `/recipes/[id]/edit?section=details` (`&focus=this-recipe` scrolls to This recipe) | full-screen modal | 014, 051 |
+| OC-EditBasics | `/recipes/new` · `/recipes/[id]/edit?section=details` (`&focus=this-recipe` scrolls to This recipe, for the retired settings route) | full-screen modal | 014, 051 |
 | OC-EditIngredients | `…/edit?section=ingredients` | same modal | 015 |
 | OC-EditSteps | `…/edit?section=steps` | same modal | 016 |
 | OC-EditVariants | `…/edit?section=variants` | same modal | 017 |
@@ -43,7 +43,7 @@
 3. **Timers.** Any timed step → "Start timer" → pill appears on every screen → tap the pill → Timers. With nothing running: Menu › Timers tile.
 4. **Scale or convert.** Recipe → "…" next to Servings → panel → "Scale by an ingredient" (ScaleIng → "Apply to recipe" → Recipe) or "Unit converter" (Units → close → Recipe).
 5. **Create.** Recipes → "New" → EditBasics → "Next: Ingredients" → EditIngredients → "Next: Steps" → EditSteps → "Next: Variants" → EditVariants → "Save recipe" → Recipe.
-6. **Edit and delete.** Recipe → "Edit recipe" (pencil in the top bar) → Edit modal at Details → … → Save. To delete: Details › This recipe → "Delete recipe" → Delete dialog → "Delete recipe" → Recipes, with a StatusBanner "Recipe deleted · Undo". The recipe's own settings are in This recipe too ("Units: {x}" on the recipe page opens it there).
+6. **Edit and delete.** Recipe → "Edit recipe" (pencil in the top bar) → Edit modal at Details → … → Save. To delete: Details › This recipe → "Delete recipe" → Delete dialog → "Delete recipe" → Recipes, with a StatusBanner "Recipe deleted · Undo". The recipe's own settings (screen, scale, thermometer) are in This recipe too; units are each member's (Menu › Recipes).
 7. **Share.** Recipe → share icon → Share → "Copy link" → friend opens `/r/[token]` → SharedView.
 8. **Connect AI.** Menu → "AI assistants" → Connect → "Connect" on an assistant → guided sheet (spec 025). In the assistant, adding Our Cocon opens Approve access (`/oauth/consent`; signed out, sign in first and come back) → "Allow" → back to the assistant.
 9. **Start and invite.** Sign in → (first time) Set up your family → Home. Menu → "Family" → "Invite someone" → share sheet → the invitee opens `/join/[token]` → signs in → "Join {family}" → Home.

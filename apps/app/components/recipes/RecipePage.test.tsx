@@ -84,7 +84,6 @@ async function setup(props: Partial<RecipePageProps> = {}) {
       onBack={vi.fn()}
       onShare={vi.fn()}
       onEdit={vi.fn()}
-      onEditUnits={vi.fn()}
       onAddToGroceries={vi.fn()}
       onStart={vi.fn()}
       onCookResume={vi.fn()}
@@ -216,7 +215,6 @@ describe('US3: tabs', () => {
         onBack={vi.fn()}
         onShare={vi.fn()}
         onEdit={vi.fn()}
-        onEditUnits={vi.fn()}
         onAddToGroceries={vi.fn()}
         onStart={vi.fn()}
         onCookResume={vi.fn()}
@@ -310,7 +308,8 @@ describe('More options (spec 013)', () => {
     tap('More options');
     expect(screen.getByRole('switch', { name: "I'm using a kitchen scale" }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByText('Showing exact weights, like 100 g')).toBeTruthy();
-    const order = ["I'm using a kitchen scale", 'Scale by an ingredient', 'Unit converter', 'Units: Metric'].map((t) => screen.getAllByText(t)[0] as Node);
+    expect(screen.getByRole('button', { name: 'Metric' }).getAttribute('aria-pressed')).toBe('true');
+    const order = ["I'm using a kitchen scale", 'Scale by an ingredient', 'Unit converter', 'Units'].map((t) => screen.getAllByText(t)[0] as Node);
     for (let i = 1; i < order.length; i++) expect((order[i - 1] as Node).compareDocumentPosition(order[i] as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(screen.getByRole('link', { name: 'Scale by an ingredient' }));
     fireEvent.click(screen.getByRole('link', { name: 'Unit converter' }));
@@ -332,20 +331,27 @@ describe('More options (spec 013)', () => {
     expect(saved(storage).kitchenScale).toBe(false);
   });
 
-  it('051 FR-013: "Units: Metric" reads the units in force and opens the form at This recipe', async () => {
-    const onEditUnits = vi.fn();
-    await setup({ onEditUnits });
+  it('units: Imperial at once, for this visit only (spec 051: nothing saved, the page forgets it when it closes)', async () => {
+    const storage = memoryStorage();
+    const { tracker, unmount } = await setup({ storage });
     tap('More options');
-    expect(screen.getByText('Change in Edit › This recipe')).toBeTruthy();
-    fireEvent.click(screen.getByRole('link', { name: /^Units: Metric/ }));
-    expect(onEditUnits).toHaveBeenCalled();
+    tap('Imperial');
+    expect(row('Heavy cream')?.textContent).toContain('1¼ cups');
+    expect(row('Bacon lardons')?.textContent).toContain('7.1 oz');
+    expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial' });
+    expect(saved(storage).system ?? null).toBeNull();
+    unmount();
+    await setup({ storage });
+    expect(row('Bacon lardons')?.textContent).toContain('200 g');
   });
 
-  it('027 US3: a recipe set to Imperial opens in imperial, and the panel says so', async () => {
-    await setup({ cooking: { ...defaultCooking, system: 'imperial' } });
+  it('051: your own Imperial opens in imperial; the panel shows it, and tapping it changes nothing', async () => {
+    const { tracker } = await setup({ cooking: { ...defaultCooking, system: 'imperial' } });
     expect(row('Bacon lardons')?.textContent).toContain('7.1 oz');
     tap('More options');
-    expect(screen.getByText('Units: Imperial')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Imperial' }).getAttribute('aria-pressed')).toBe('true');
+    tap('Imperial');
+    expect(tracker.track).not.toHaveBeenCalledWith('units_toggled', expect.anything());
   });
 
   it('051: a Metric · Imperial choice saved on this device before no longer counts', async () => {
@@ -395,7 +401,6 @@ describe('More options (spec 013)', () => {
         onBack={vi.fn()}
         onShare={vi.fn()}
         onEdit={vi.fn()}
-        onEditUnits={vi.fn()}
         onAddToGroceries={vi.fn()}
         onStart={vi.fn()}
         onCookResume={vi.fn()}
@@ -518,12 +523,12 @@ describe('spec 051: cooking in progress, cooked, detail, source', () => {
     expect(screen.getByText('Cooked once · today')).toBeTruthy();
   });
 
-  it('US3: "Gruyère" with "grated" on its own line under it', async () => {
+  it('US3: "Gruyère · grated" on one line, the detail muted; nothing without one', async () => {
     await setup();
-    const gruyere = row('Gruyère');
-    expect(within(gruyere as HTMLElement).getByText('Gruyère')).toBeTruthy();
-    expect(within(gruyere as HTMLElement).getByText('grated')).toBeTruthy();
-    expect(row('Heavy cream')?.textContent).not.toContain(',');
+    const gruyere = rows().find((r) => r.textContent?.includes('Gruyère')) as HTMLElement;
+    expect(gruyere.textContent).toContain('Gruyère · grated');
+    expect(within(gruyere).getByText('· grated')).toBeTruthy();
+    expect(row('Heavy cream')?.textContent).not.toContain(' · ');
   });
 
   it('US6: the Source chip, read in full', async () => {

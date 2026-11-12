@@ -385,7 +385,7 @@ export interface IngredientRowProps {
   /** From @cocon/quantity: "300 ml". */
   amount: string;
   name: string;
-  /** Spec 051 FR-008: how it's prepared ("grated"), on its own line under the name. */
+  /** Spec 051 FR-008: how it's prepared ("grated"), after the name on its line: "Gruyère · grated", muted. */
   detail?: string | null;
   /** Weight of counted items: "about 300 g". */
   sub?: string;
@@ -421,8 +421,12 @@ export function IngredientRow({ amount, name, detail, sub, tag, last, layout = '
       <View className="min-w-0 flex-1">
         <Text size={16} weight="700">
           {name}
+          {detail ? (
+            <Text size={15} weight="600" color="ink-soft">
+              {` · ${detail}`}
+            </Text>
+          ) : null}
         </Text>
-        {detail ? <DetailText>{detail}</DetailText> : null}
         {sub ? (
           <Text variant="caption" color="ink-muted">
             {sub}

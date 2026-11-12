@@ -371,7 +371,10 @@ export const strings = {
     recipes: {
       back: 'Back to Menu',
       title: 'Recipes',
-      lead: 'Used for every recipe, for the whole family. Each recipe can change them in Edit › This recipe.',
+      lead: 'Your units, and the cooking defaults for the whole family. Each recipe can change those in Edit › This recipe.',
+      // Spec 051: units are each person's.
+      forYou: 'For you',
+      unitsHint: 'Only for you. A recipe’s “…” can switch them for one visit.',
       cookingDefaults: 'Cooking defaults',
       keepAwake: 'Keep screen on while cooking',
       keepAwakeHint: "So it doesn't lock with floury hands",
@@ -668,9 +671,7 @@ export const strings = {
       scaleOffHint: 'Showing cups and spoons, like about ¾ cup',
       scaleByIngredient: 'Scale by an ingredient',
       converter: 'Unit converter',
-      /** Spec 051 FR-013: "Units: Metric", which opens the recipe form at "This recipe". */
-      unitsIn: (system: string) => `Units: ${system}`,
-      unitsChange: 'Change in Edit › This recipe',
+      units: 'Units',
       metric: 'Metric',
       imperial: 'Imperial',
       /** The chip under Servings after "Apply to recipe": "Scaled by lardons · Reset". */

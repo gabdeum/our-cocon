@@ -76,10 +76,12 @@ function AdjustButton({ text, a11y, onPress, dark }: { text: string; a11y: strin
   );
   return (
     <Pressable role="button" aria-label={a11y} onPress={onPress} className={cn('min-h-[48px] min-w-[48px] rounded-full', focusRing)}>
+      {/* Its own 48 minimum, not h-full: a percentage of a parent with only a minimum collapses on
+          the web and stretches the whole card on the iPhone. It still grows with large text. */}
       {dark ? (
-        <View className="h-full w-full items-center justify-center rounded-full bg-ink-raised">{inner}</View>
+        <View className="min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-ink-raised px-6">{inner}</View>
       ) : (
-        <SoftWhite className="h-full w-full items-center justify-center rounded-full">{inner}</SoftWhite>
+        <SoftWhite className="min-h-[48px] min-w-[48px] items-center justify-center rounded-full px-6">{inner}</SoftWhite>
       )}
     </Pressable>
   );

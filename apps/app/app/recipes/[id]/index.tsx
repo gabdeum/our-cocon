@@ -48,10 +48,10 @@ export default function RecipeRoute() {
   const go = (page: string) => () => {
     if (id) router.push(recipeRoute(id, page));
   };
-  const edit = (from: 'top_bar' | 'units_row') => () => {
+  const edit = () => {
     if (!id) return;
-    tracker.track('recipe_edit_opened', { from });
-    router.push(`${recipeRoute(id, 'edit')}?section=details${from === 'units_row' ? '&focus=this-recipe' : ''}` as Href);
+    tracker.track('recipe_edit_opened', { from: 'top_bar' });
+    router.push(`${recipeRoute(id, 'edit')}?section=details` as Href);
   };
   const cookAt = (query: string) => {
     if (id) router.push(`${recipeRoute(id, 'cook')}?${query}` as Href);
@@ -99,8 +99,7 @@ export default function RecipeRoute() {
         storage={deviceStorage}
         onBack={back}
         onShare={go('share')}
-        onEdit={edit('top_bar')}
-        onEditUnits={edit('units_row')}
+        onEdit={edit}
         onAddToGroceries={go('add-to-groceries')}
         onStart={() => void start()}
         cook={cook}

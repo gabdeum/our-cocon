@@ -25,6 +25,7 @@ import type { CookedSummary, Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { cookedLine, pageCard, stepTotal, type CookSession } from '../../lib/cook-sessions';
+import { forgetVisitUnits, useVisitUnits } from '../../lib/visit-units';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
 import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type CookingSettings, type StepLine } from '../../lib/recipe-view';
 import type { PhotoUrls } from '../../lib/recipe-photo';
@@ -57,8 +58,6 @@ export interface RecipePageProps {
   onShare: () => void;
   /** The pencil (spec 051 FR-012): the recipe form's Details. */
   onEdit: () => void;
-  /** "Units: Metric" in the "…" panel: the form at "This recipe" (FR-013). */
-  onEditUnits: () => void;
   onAddToGroceries: () => void;
   /** "Start recipe" (FR-002). */
   onStart: () => void;
@@ -132,7 +131,6 @@ function LoadedRecipe({
   onBack,
   onShare,
   onEdit,
-  onEditUnits,
   onAddToGroceries,
   onStart,
   cook = null,
@@ -144,13 +142,17 @@ function LoadedRecipe({
   now = () => new Date(),
   onOpenStep,
   onOpenTimers,
-  cooking = defaultCooking,
+  cooking: settingsInForce = defaultCooking,
   onScaleByIngredient,
   onConvert,
   visit = 0,
   photoUrls = {},
 }: RecipePageProps & { recipe: RecipeDetail }) {
   const max = servingsMax(recipe.serves);
+  // Spec 051: Metric · Imperial in "…" holds for this visit only; closing the page forgets it.
+  const [visitUnits, setVisitUnits] = useVisitUnits(recipe.id);
+  useEffect(() => () => forgetVisitUnits(recipe.id), [recipe.id]);
+  const cooking = useMemo(() => (visitUnits ? { ...settingsInForce, system: visitUnits } : settingsInForce), [settingsInForce, visitUnits]);
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -350,7 +352,7 @@ function LoadedRecipe({
           </View>
         ) : null}
         {moreOpen && current ? (
-          <MoreOptions choices={current} settings={cooking} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} onEditUnits={onEditUnits} />
+          <MoreOptions choices={current} settings={cooking} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} onUnits={setVisitUnits} />
         ) : null}
       </Card>
 

@@ -116,12 +116,16 @@ export const events = {
     steps_seen: z.int().min(1).max(MAX_TRACKED_STEPS),
     minutes: z.int().min(0).max(4320),
   }),
-  // Spec 051: the recipe form opened from the recipe page's pencil or the "Units" row.
-  recipe_edit_opened: z.strictObject({ from: z.enum(['top_bar', 'units_row']) }),
+  // Spec 051: the recipe form opened from the recipe page's pencil.
+  recipe_edit_opened: z.strictObject({ from: z.enum(['top_bar']) }),
+  // Spec 051: a member picked their own units (Menu › Recipes › For you).
+  my_units_changed: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
   // Spec 012: "Screen stays on" switched in cooking mode's options sheet, for this visit.
   cook_screen_awake_toggled: z.strictObject({ on: z.boolean() }),
-  // Spec 013: the "…" panel's quick toggle, per recipe on this device (its Units toggle went in spec 051).
+  // Spec 013: the "…" panel's quick toggles: the kitchen scale per recipe on this device; units for
+  // this visit only (spec 051).
   kitchen_scale_toggled: z.strictObject({ on: z.boolean() }),
+  units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
   // Spec 013: "Apply to recipe" in Scale by an ingredient. Never which ingredient or how much.
   scaled_by_ingredient: z.strictObject({}),
   // Spec 013: the converter settled on a value; the unit typed in and the main (honey) result.

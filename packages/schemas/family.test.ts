@@ -73,11 +73,11 @@ describe('resolveCooking', () => {
     ['imperial', 'metric', 'metric'],
     ['metric', 'metric', 'metric'],
     ['imperial', 'imperial', 'imperial'],
-  ] as const)('units: family %s, recipe %s → %s', (family, recipe, expected) => {
-    expect(resolveCooking({ ...DEFAULT_FAMILY_SETTINGS, units: family }, { units: recipe }).system).toBe(expected);
+  ] as const)('spec 051: units are yours: family %s, you %s → %s (a recipe\'s no longer count)', (family, mine, expected) => {
+    expect(resolveCooking({ ...DEFAULT_FAMILY_SETTINGS, units: family }, { units: family === 'metric' ? 'imperial' : 'metric' }, { units: mine }).system).toBe(expected);
   });
   it('changes one setting without touching the others', () => {
-    expect(resolveCooking({ ...DEFAULT_FAMILY_SETTINGS, has_thermometer: false }, { has_thermometer: true, units: 'imperial' })).toEqual({
+    expect(resolveCooking({ ...DEFAULT_FAMILY_SETTINGS, has_thermometer: false }, { has_thermometer: true }, { units: 'imperial' })).toEqual({
       keepAwake: true,
       scale: true,
       thermometer: true,

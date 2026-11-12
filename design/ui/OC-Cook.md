@@ -15,7 +15,7 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Specs 012, 051
 5. "Cooking options" sheet (BottomSheet, title "Cooking options"):
    - Switch "Screen stays on", hint "Your screen won't lock while you cook" / "Your screen locks as usual". It starts from the "Keep screen on" setting (spec 027) and lasts for this visit.
    - "Edit step {n}" › (ListRow with a chevron, the current step): closes the sheet and opens the recipe form (full-screen) on Steps with that step open. A step a chosen variant adds or changes opens that variant in Variants instead, since it decides what the step says. Saved or cancelled, it comes back to cooking mode at the same step.
-   - Then the recipe page's "…" options, as in OC-Recipe: "I'm using a kitchen scale", "Scale by an ingredient ›", "Unit converter ›", and the link row "Units: {Metric|Imperial}" with the sub-line "Change in Edit › This recipe" (it opens the recipe form at This recipe). They change the steps at once and are remembered for the recipe page too.
+   - Then the recipe page's "…" options, as in OC-Recipe: "I'm using a kitchen scale", "Scale by an ingredient ›", "Unit converter ›", and "Units" Metric | Imperial. They change the steps at once; the kitchen scale is remembered for the recipe on this device, the units only for this visit (shared with the recipe page under it, spec 051).
 
 ## Behaviour
 - Next, Back and segment taps scroll smoothly to the step's top (−8 px offset). Scroll position tracking pauses for 700 ms during that scroll.

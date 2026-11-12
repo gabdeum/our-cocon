@@ -1,18 +1,18 @@
 import { View } from 'react-native';
-import { ListRow, SettingRow } from '@cocon/ui';
+import { ListRow, SegmentedControl, SettingRow } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeChoices } from '../../lib/recipe-choices';
-import type { FormatOptions } from '@cocon/quantity';
+import type { FormatOptions, UnitSystem } from '@cocon/quantity';
 import { formatOf } from '../../lib/recipe-view';
 
 const more = strings.recipePage.more;
 
 /**
  * The "…" options (spec 013, OC-Recipe): the kitchen scale is a quick toggle for this recipe on
- * this device; then the two sheets, and the units in force, which change in the recipe form's
- * "This recipe" (spec 051 FR-013). Shown under Servings on the recipe page and in cooking mode's
- * options sheet (OC-Cook).
+ * this device; units switch for this visit only (spec 051: the member's own are on Menu ›
+ * Recipes); the two sheets sit between them, as drawn. Shown under Servings on the recipe page and
+ * in cooking mode's options sheet (OC-Cook).
  */
 export function MoreOptions({
   choices,
@@ -21,7 +21,7 @@ export function MoreOptions({
   onChange,
   onScaleByIngredient,
   onConvert,
-  onEditUnits,
+  onUnits,
 }: {
   choices: RecipeChoices;
   /** The recipe's units and kitchen scale in force (spec 027), under the toggles. */
@@ -31,8 +31,8 @@ export function MoreOptions({
   onChange: (next: RecipeChoices) => void;
   onScaleByIngredient: () => void;
   onConvert: () => void;
-  /** "Units: Metric": the recipe form, scrolled to "This recipe". */
-  onEditUnits: () => void;
+  /** Metric · Imperial for this visit (lib/visit-units.ts). */
+  onUnits: (system: UnitSystem) => void;
 }) {
   // What's in force: the toggles, else the settings.
   const format = formatOf(choices, settings);
@@ -55,10 +55,26 @@ export function MoreOptions({
       <ListRow
         flush
         last
-        title={more.unitsIn(format.system === 'metric' ? more.metric : more.imperial)}
-        sub={more.unitsChange}
-        trailing={{ kind: 'chevron' }}
-        onPress={onEditUnits}
+        title={more.units}
+        trailing={{
+          kind: 'node',
+          node: (
+            <SegmentedControl
+              variant="pill"
+              label={more.units}
+              value={format.system}
+              onChange={(system) => {
+                if (system === format.system) return;
+                tracker.track('units_toggled', { system });
+                onUnits(system);
+              }}
+              segments={[
+                { key: 'metric', label: more.metric },
+                { key: 'imperial', label: more.imperial },
+              ]}
+            />
+          ),
+        }}
       />
     </View>
   );

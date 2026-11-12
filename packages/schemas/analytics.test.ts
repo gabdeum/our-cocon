@@ -184,8 +184,9 @@ describe('spec 051 events', () => {
     tracker.track('cook_started', { recipe_id: '00000000-0000-4000-8000-0000000000e1', resumed_existing: false });
     tracker.track('cook_resumed', { from: 'list', step: 3 });
     tracker.track('cook_finished', { status: 'cancelled', cancel_reason: 'user', steps_seen: 3, minutes: 12 });
-    tracker.track('recipe_edit_opened', { from: 'units_row' });
-    expect(t.capture).toHaveBeenCalledTimes(4);
+    tracker.track('recipe_edit_opened', { from: 'top_bar' });
+    tracker.track('my_units_changed', { system: 'imperial' });
+    expect(t.capture).toHaveBeenCalledTimes(5);
     expect(() => tracker.track('cook_started', { recipe_id: 'Leek & bacon quiche', resumed_existing: false } as never)).toThrow();
     expect(() => tracker.track('cook_resumed', { from: 'home', step: 3 } as never)).toThrow();
   });
@@ -197,8 +198,9 @@ describe('spec 013 events', () => {
     const tracker = createTracker(t);
     tracker.track('unit_converter_used', { from_unit: 'ml', to_unit: 'cup' });
     tracker.track('kitchen_scale_toggled', { on: false });
+    tracker.track('units_toggled', { system: 'imperial' });
     tracker.track('scaled_by_ingredient', {});
-    expect(t.capture).toHaveBeenCalledTimes(3);
+    expect(t.capture).toHaveBeenCalledTimes(4);
     expect(() => tracker.track('unit_converter_used', { from_unit: 'stone', to_unit: 'cup' } as never)).toThrow();
     expect(() => tracker.track('scaled_by_ingredient', { ingredient: 'Bacon' } as never)).toThrow();
   });

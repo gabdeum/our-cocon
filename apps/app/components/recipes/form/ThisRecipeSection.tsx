@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { resolveCooking, type FamilySettings, type RecipeOverrides, type RecipeOverridesUpdate } from '@cocon/schemas';
-import { Card, SegmentedControl, SettingRow, Text } from '@cocon/ui';
+import { Card, SettingRow, Text } from '@cocon/ui';
 import { strings } from '../../../strings/en';
 
 const f = strings.recipeForm;
@@ -21,12 +21,13 @@ export interface ThisRecipeSectionProps {
 }
 
 /**
- * Spec 051 FR-013 (OC-EditBasics › This recipe), editing only: spec 027's four settings, each "Same
- * as default" until changed ("Changed for this recipe · Reset"), then Delete recipe.
+ * Spec 051 FR-013 (OC-EditBasics › This recipe), editing only: spec 027's settings, each "Same as
+ * default" until changed ("Changed for this recipe · Reset"), then Delete recipe. Units aren't a
+ * recipe's: each member picks their own (Menu › Recipes), and switches for a visit in "…".
  */
 export function ThisRecipeSection({ overrides, defaults, onChange, readOnly, deleteButton, onLayout }: ThisRecipeSectionProps) {
   const inForce = resolveCooking(defaults, overrides);
-  const row = (setting: 'keep_awake' | 'has_scale' | 'has_thermometer', label: string, value: boolean, hint: string = r.sameAsDefault) => {
+  const row = (setting: 'keep_awake' | 'has_scale' | 'has_thermometer', label: string, value: boolean, hint: string = r.sameAsDefault, last = false) => {
     const changed = overrides[setting] !== null;
     return (
       <SettingRow
@@ -39,6 +40,7 @@ export function ThisRecipeSection({ overrides, defaults, onChange, readOnly, del
         resetLabel={changed && !readOnly ? r.reset : undefined}
         onReset={changed && !readOnly ? () => onChange({ [setting]: null }) : undefined}
         disabled={readOnly}
+        last={last}
       />
     );
   };
@@ -54,23 +56,7 @@ export function ThisRecipeSection({ overrides, defaults, onChange, readOnly, del
         {row('keep_awake', r.keepAwake, inForce.keepAwake)}
         {/* Drawn with what the scale does, rather than "Same as default". */}
         {row('has_scale', r.kitchenScale, inForce.scale, r.kitchenScaleHint)}
-        {row('has_thermometer', r.thermometer, inForce.thermometer)}
-        <View className="gap-10 py-14">
-          <Text size={16} weight="800">
-            {r.units}
-          </Text>
-          <SegmentedControl<'default' | 'metric' | 'imperial'>
-            label={r.units}
-            value={overrides.units ?? 'default'}
-            onChange={(key) => onChange({ units: key === 'default' ? null : key })}
-            segments={[
-              { key: 'default', label: r.unitsDefault },
-              { key: 'metric', label: r.metric },
-              { key: 'imperial', label: r.imperial },
-            ]}
-            disabled={readOnly}
-          />
-        </View>
+        {row('has_thermometer', r.thermometer, inForce.thermometer, r.sameAsDefault, true)}
       </Card>
       {deleteButton}
     </View>

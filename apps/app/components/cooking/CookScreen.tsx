@@ -12,6 +12,7 @@ import { AppTimerPill, useHasTimers } from '../timers/AppTimerPill';
 import { useStepTimerControl, type StepTimerInput } from '../recipes/step-timer';
 import { MoreOptions } from '../recipes/MoreOptions';
 import { useStepScroll } from './use-step-scroll';
+import { useVisitUnits } from '../../lib/visit-units';
 
 const c = strings.cook;
 const p = strings.recipePage;
@@ -39,8 +40,6 @@ export interface CookScreenProps {
   onStep?: (index: number) => void;
   /** "Done cooking" on the last step (FR-005). */
   onDone: () => void;
-  /** The options' "Units: Metric": the recipe form at "This recipe" (FR-013). */
-  onEditUnits: () => void;
   /** The TimerPill opens the Timers screen. */
   onOpenTimers: () => void;
   /** The options sheet's Scale by an ingredient and Unit converter (spec 013). */
@@ -142,14 +141,16 @@ function Cooking({
   onScaleByIngredient,
   onConvert,
   onEditStep,
-  onEditUnits,
   session,
   onStep,
   onDone,
-  cooking = defaultCooking,
+  cooking: settingsInForce = defaultCooking,
   now = Date.now,
 }: LoadedProps & { choices: RecipeChoices; onChoices: (next: RecipeChoices) => void }) {
   // The recipe page's units, kitchen scale and scale by an ingredient too (013, 032-later L22).
+  // Spec 051: the units picked on this visit (here or on the recipe page under it).
+  const [visitUnits, setVisitUnits] = useVisitUnits(recipe.id);
+  const cooking = useMemo(() => (visitUnits ? { ...settingsInForce, system: visitUnits } : settingsInForce), [settingsInForce, visitUnits]);
   const view = useMemo(() => recipeView(recipe, choices, choices, formatOf(choices, cooking), cooking), [recipe, choices, cooking]);
   const steps = view.steps;
   const count = steps.length;
@@ -326,7 +327,7 @@ function Cooking({
           onChange={onChoices}
           onScaleByIngredient={openSheet(onScaleByIngredient)}
           onConvert={openSheet(onConvert)}
-          onEditUnits={openSheet(onEditUnits)}
+          onUnits={setVisitUnits}
         />
       </View>
     </BottomSheet>

@@ -134,11 +134,6 @@ export default function CookRoute() {
       onOpenTimers={() => router.push('/timers')}
       onScaleByIngredient={sheet('scale')}
       onConvert={sheet('convert')}
-      onEditUnits={() => {
-        if (!id) return;
-        tracker.track('recipe_edit_opened', { from: 'units_row' });
-        router.push(`/recipes/${id}/edit?section=details&focus=this-recipe` as Href);
-      }}
       onEditStep={(target) => {
         if (!id) return;
         // Saved or cancelled, the form goes back to cooking mode at the same step.

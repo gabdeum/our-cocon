@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AddGroceriesSheet, type AddGroceriesApi } from '../../../components/groceries/AddGroceriesSheet';
 import { addFromRecipe, recipeGroceryLines, undoAddFromRecipe } from '../../../lib/add-from-recipe';
 import { groceryListKey, groceryServingsKey, loadGroceryList } from '../../../lib/groceries';
-import { useFamilySettings } from '../../../lib/family-settings';
+import { useFamilySettings, useMyRecipeSettings } from '../../../lib/family-settings';
 import { useRecipeSheet } from '../../../lib/use-recipe-sheet';
 import { useSession } from '../../../lib/session';
 
@@ -12,6 +12,8 @@ import { useSession } from '../../../lib/session';
 export default function AddToGroceriesRoute() {
   const { recipe, choices, cooking, tracker } = useRecipeSheet();
   const { settings } = useFamilySettings();
+  // Spec 051: the member's own units.
+  const units = useMyRecipeSettings().settings.units ?? settings.units;
   const { state, client } = useSession();
   const queryClient = useQueryClient();
   const familyId = state.status === 'ready' ? state.family.id : null;
@@ -47,7 +49,7 @@ export default function AddToGroceriesRoute() {
       lines={view.lines}
       list={list.data ?? []}
       facts={recipe.facts}
-      units={settings.units}
+      units={units}
       api={api}
       tracker={tracker}
       // Opened straight from a link there's nothing to go back to: the recipe page.

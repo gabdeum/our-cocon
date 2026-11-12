@@ -88,7 +88,8 @@ select pg_temp.as_endpoint();
 create temp table shared as select public.shared_recipe((select token from links where name = 'first')) as j;
 select is((select array_agg(k order by k) from shared, jsonb_object_keys(j) k), array['photo_prefix', 'recipe'], 'the endpoint gets the recipe and the photo folder');
 select is((select array_agg(k order by k) from shared, jsonb_object_keys(j -> 'recipe') k),
-  array['best_months', 'cuisine', 'description', 'facts', 'ingredients', 'name', 'photo_path', 'prep_minutes', 'serves', 'shared_by', 'steps', 'total_minutes', 'variants'], 'only the shared fields, no ids of the family, recipe or members');
+  -- Spec 051: the source line's parts (this recipe has a source, so not who added it).
+  array['best_months', 'cuisine', 'description', 'facts', 'ingredients', 'name', 'photo_path', 'prep_minutes', 'serves', 'shared_by', 'source', 'source_text', 'steps', 'total_minutes', 'variants'], 'only the shared fields, no ids of the family, recipe or members');
 select is((select j -> 'recipe' ->> 'name' from shared), 'Quiche', 'the shared recipe, not another');
 select is((select j -> 'recipe' ->> 'shared_by' from shared), 'Gabriel', 'with who shared it');
 select is((select j ->> 'photo_prefix' from shared), (select family_id || '/00000000-0000-4000-8000-000000000001/' from public.recipes where id = '00000000-0000-4000-8000-000000000001'), 'photos only from its own folder');

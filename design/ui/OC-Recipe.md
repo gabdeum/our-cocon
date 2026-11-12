@@ -13,9 +13,9 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab; at 430 wide, in p
    - Switch "I'm using a kitchen scale" with hint "Showing exact weights, like 100 g" / "Showing cups and spoons, like about ¾ cup"
    - Row "Scale by an ingredient ›"
    - Row "Unit converter ›"
-   - Link row "Units: {Metric|Imperial}" with the sub-line "Change in Edit › This recipe"
+   - Row "Units" with a pill SegmentedControl "Metric" | "Imperial": for this visit only (spec 051), sent as `units_toggled`
 6. Dark tabs: "Ingredients · {n}" | "Steps · {n}".
-7. Ingredient rows: amount (17/900), name, then the detail on its own line when it has one ("grated"; 13/600 ink-soft `#7A6F55`, line-height 1.35), then the optional weight sub-line, optional sage tag "Variant".
+7. Ingredient rows: amount (17/900), name (16/700) with its detail after it on the same line when it has one ("Gruyère · grated"; " · grated" 15/600 ink-soft `#7A6F55`), then the optional weight sub-line, optional sage tag "Variant".
 8. A sticky action bar at the bottom (on both tabs), on a cream fade, padding 14/16/28 (spec 051 FR-014):
    - Cart button 60: icon only, named "Add to groceries" for screen readers; from 430 px wide it shows the icon and "Add to groceries".
    - Then the main ink button (the rest of the width) with a play icon: "Start recipe", "Resume · step {k}" while it's in progress, or "Done cooking" when the cook is on its last step.
@@ -25,7 +25,7 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab; at 430 wide, in p
 - The amount format comes from spec 005 ("2", "300 ml", "about ¾ cup", "1 pinch"), with sub-line weights like "300 g".
 - When scaled by an ingredient: Servings shows the scaled number to the nearest ½ ("7½"), and a sage chip under Servings reads "Scaled by {ingredient}" (name in lower case, "bacon lardons") with a "Reset" link beside it (screen reader: "Reset the scale by {ingredient}").
 - The kitchen scale is a quick toggle for this recipe on this device. Until it's toggled, the recipe's or family's setting applies (spec 027); toggling it overrides that setting on this device only.
-- Units follow the recipe's own setting, else the family's (spec 027); they change amounts, weights and temperatures in the list, the steps and cooking mode. A Metric · Imperial choice saved on a device before spec 051 no longer counts. "Units: {x}" names the units in force.
+- Units are the member's own (Menu › Recipes › For you; the family's old setting until they pick, spec 051). The "…" toggle switches them for this visit only: the recipe page and cooking mode over it, forgotten when the page closes, never saved. They change amounts, weights and temperatures in the list, the steps and cooking mode. A recipe's own units and a choice saved on a device before 051 no longer count.
 - Best months: "Best Oct – Mar" for one run (it may wrap round the new year), "Best Apr" for a single month, "Best Jan, May – Jun" for several runs.
 - Option hint: "Adds {n} ingredient(s) and {n} step(s)", then ". Removes …" and ". Changes {n} step(s)" when the option does those. A swap counts what it brings in as added.
 - The default size is never named ("2½" · "Leeks"); another size moves from the amount into the name: "2" · "Small eggs".
@@ -55,7 +55,7 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab; at 430 wide, in p
 | Scale by an ingredient | → scale sheet |
 | Unit converter | → convert sheet |
 | Kitchen scale switch | weights ↔ cups and spoons at once, on this device |
-| Units: {x} | → the recipe form at This recipe (`…/edit?section=details&focus=this-recipe`) |
+| Units Metric \| Imperial | switches the page and cooking mode for this visit |
 | Reset (scaled chip) | back to the servings from before the scale |
 | − / + while scaled | from 7½: − to 7, + to 8; the scale ends |
 | Tabs | switch Ingredients / Steps in place, keeping scroll |
@@ -75,3 +75,4 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab; at 430 wide, in p
 
 ## Changelog
 - 2026-11-12 (051): top bar Back · Share · Edit (no Recipe settings); Source chip; "Cooked …" meta line; in-progress card; ingredient detail line; "Units: {x}" link row; sticky action bar (cart + "Start recipe" / "Resume · step {k}" / "Done cooking") replaces "Add groceries" · "Start cooking".
+- 2026-11-12 (051, after review with Gabriel): the detail sits after the name on its line ("Gruyère · grated"); the "…" Units toggle is back, for this visit only; units are each member's own (Menu › Recipes), no longer a recipe's.

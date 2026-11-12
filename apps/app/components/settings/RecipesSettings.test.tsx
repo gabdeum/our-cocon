@@ -12,9 +12,12 @@ afterEach(cleanup);
 
 function setup(settings: FamilySettings = DEFAULT_FAMILY_SETTINGS, result: 'saved' | 'failed' = 'saved', readOnly = false) {
   const onChange = vi.fn(async () => result);
+  const onUnitsChange = vi.fn(async () => result);
   const onBack = vi.fn();
-  render(<RecipesSettings settings={settings} onChange={onChange} onBack={onBack} tracker={fakeTracker()} readOnly={readOnly} />);
-  return { onChange, onBack };
+  render(
+    <RecipesSettings settings={settings} onChange={onChange} units={settings.units} onUnitsChange={onUnitsChange} onBack={onBack} tracker={fakeTracker()} readOnly={readOnly} />,
+  );
+  return { onChange, onUnitsChange, onBack };
 }
 
 const press = async (role: 'switch' | 'button', name: string) => {
@@ -29,7 +32,10 @@ describe('Recipes settings (OC-SettingsRecipes)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Back to Menu' }));
     expect(onBack).toHaveBeenCalled();
     expect(screen.getByRole('heading', { name: 'Recipes' })).toBeTruthy();
-    expect(screen.getByText('Used for every recipe, for the whole family. Each recipe can change them in Edit › This recipe.')).toBeTruthy();
+    expect(screen.getByText('Your units, and the cooking defaults for the whole family. Each recipe can change those in Edit › This recipe.')).toBeTruthy();
+    // Spec 051: units are yours.
+    expect(screen.getByRole('heading', { name: 'For you' })).toBeTruthy();
+    expect(screen.getByText('Only for you. A recipe’s “…” can switch them for one visit.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Cooking defaults' })).toBeTruthy();
     for (const [name, hint] of [
       ['Keep screen on while cooking', "So it doesn't lock with floury hands"],
@@ -52,12 +58,13 @@ describe('Recipes settings (OC-SettingsRecipes)', () => {
     expect(onChange).toHaveBeenCalledWith({ has_thermometer: false });
   });
 
-  it('each setting saves at once: screen, scale and units', async () => {
-    const { onChange } = setup();
+  it('each setting saves at once: screen and scale for the family, units for you (spec 051)', async () => {
+    const { onChange, onUnitsChange } = setup();
     await press('switch', 'Keep screen on while cooking');
     await press('switch', 'I have a kitchen scale');
     await press('button', 'Imperial · oz, °F');
-    expect(onChange.mock.calls).toEqual([[{ keep_awake: false }], [{ has_scale: false }], [{ units: 'imperial' }]]);
+    expect(onChange.mock.calls).toEqual([[{ keep_awake: false }], [{ has_scale: false }]]);
+    expect(onUnitsChange).toHaveBeenCalledWith('imperial');
   });
 
   it('a failed save says so', async () => {

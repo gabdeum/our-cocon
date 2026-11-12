@@ -125,7 +125,7 @@ All 36 open questions are answered. The specs, UI specs and screens already refl
 | 22 | Home hero | Latest recipe; a calendar will replace it later |
 | 23 | Share links | Last until you stop sharing |
 | 24 | Shared view units | Opens in metric, with a Metric · Imperial toggle |
-| 25 | Defaults | Per family; units can be overridden per recipe |
+| 25 | Defaults | Per family; each recipe can change them, except units, which are each person's (spec 051) and switch for one visit in a recipe's "…" |
 | 26 | Scale switch | Only affects your device |
 | 27 | Account section | Built from existing components |
 | 28 | Ticked groceries | Cleared only when "Clear done items" is pressed |

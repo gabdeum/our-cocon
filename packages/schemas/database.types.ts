@@ -549,6 +549,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"member_recipe_settings": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"family_id": string,"id": string,"source": string,"units": Database["public"]['Enums']["unit_system"] | null,"updated_at": string,"updated_by": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id": string,"id"?: string,"source"?: string,"units"?: Database["public"]['Enums']["unit_system"] | null,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"family_id"?: string,"id"?: string,"source"?: string,"units"?: Database["public"]['Enums']["unit_system"] | null,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "member_recipe_settings_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"members": {
                   Row: {
                     "color": Database["public"]['Enums']["member_color"],"created_at": string,"created_by": string | null,"display_name": string,"family_id": string,"id": string,"joined_at": string,"managed_by": string | null,"role": Database["public"]['Enums']["member_role"],"source": string,"updated_at": string,"updated_by": string | null,"user_id": string | null

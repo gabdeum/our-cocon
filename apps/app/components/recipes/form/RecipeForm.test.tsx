@@ -314,7 +314,7 @@ describe('photos (FR-004)', () => {
 });
 
 describe('This recipe (spec 051 FR-013)', () => {
-  it('US5: only when editing: the four settings, each "Same as default" until changed, then Delete recipe', async () => {
+  it('US5: only when editing: the three settings, each "Same as default" until changed, then Delete recipe', async () => {
     setup();
     await flush();
     expect(screen.queryByRole('heading', { name: 'This recipe' })).toBeNull();
@@ -332,12 +332,15 @@ describe('This recipe (spec 051 FR-013)', () => {
   it('saves the changed settings with the form, and tracks each one', async () => {
     const { update, tracker } = setup({ recipe: { ...quiche, overrides: { keep_awake: null, has_scale: null, has_thermometer: false, units: null } }, recipeId: 'r1' });
     await flush();
-    fireEvent.click(screen.getByRole('button', { name: 'Imperial' }));
+    // Units are each person's (Menu › Recipes), not a recipe's.
+    expect(screen.queryByRole('button', { name: 'Imperial' })).toBeNull();
+    // Reset the thermometer first, while it's the only one changed.
     fireEvent.click(screen.getByRole('button', { name: /^Reset/ }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Keep screen on' }));
     expect(update).not.toHaveBeenCalled();
     await save();
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({ name: 'Leek & bacon quiche', units: 'imperial', has_thermometer: null }));
-    expect(tracker.track).toHaveBeenCalledWith('recipe_setting_changed', { setting: 'units' });
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ name: 'Leek & bacon quiche', keep_awake: false, has_thermometer: null }));
+    expect(tracker.track).toHaveBeenCalledWith('recipe_setting_changed', { setting: 'keep_awake' });
     expect(tracker.track).toHaveBeenCalledWith('recipe_setting_changed', { setting: 'has_thermometer' });
   });
 });

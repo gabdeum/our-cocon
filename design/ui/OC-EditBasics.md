@@ -25,13 +25,13 @@ The recipe's own cooking settings (spec 027) and Delete, which used to be on the
    - "Keep screen on"
    - "I'll use a kitchen scale", hint "Shows “100 g” instead of “about 1 cup”" while it follows the default
    - "Thermometer checks"
-   - "Units": segmented "Default" · "Metric" · "Imperial" (no hint: "Default" is the reset)
+   No Units: they're each member's own (Menu › Recipes), switched for a visit in the recipe's "…" (spec 051, after review).
    Each switch's hint reads "Same as default" or, in warn, "Changed for this recipe · Reset". Reset puts the family default back.
 3. "Delete recipe": white button, danger text, trash icon. It opens spec 018's Dialog (OC-Delete), then Recipes with "Recipe deleted · Undo".
 
 - The settings save with the form's Save, like every other field (not at once); each setting changed is tracked as `recipe_setting_changed`.
-- Offline: the switches and Units show, dimmed, and can't change; no Reset; "Delete recipe" is off.
-- `&focus=this-recipe` opens Details scrolled to this section ("Units: {x}" on the recipe page and in cooking mode, and the old `/recipes/[id]/settings`, which redirects here).
+- Offline: the switches show, dimmed, and can't change; no Reset; "Delete recipe" is off.
+- `&focus=this-recipe` opens Details scrolled to this section (the old `/recipes/[id]/settings` redirects here).
 
 ## Cuisine picker
 - The Cuisine field looks like an input with a chevron, showing the label ("French") or the placeholder "Pick one".

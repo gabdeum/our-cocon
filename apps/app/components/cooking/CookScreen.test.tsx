@@ -10,6 +10,7 @@ import type { RecipeDetail } from '../../lib/recipe';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { defaultCooking } from '../../lib/recipe-view';
 import { TimersProvider } from '../../lib/timer-store';
+import { forgetVisitUnits } from '../../lib/visit-units';
 import { fakeTracker, gabriel } from '../../test/fakes';
 import { expectAccessible } from '../../test/axe';
 
@@ -76,7 +77,6 @@ async function setup(props: Partial<CookScreenProps> = {}) {
   const onClose = vi.fn();
   const onOpenTimers = vi.fn();
   const onDone = vi.fn();
-  const onEditUnits = vi.fn();
   const wrapper = ({ children }: { children: ReactNode }) => (
     <TimersProvider userId={gabriel.user_id} storage={memoryStorage()} tracker={tracker}>
       {children}
@@ -94,13 +94,12 @@ async function setup(props: Partial<CookScreenProps> = {}) {
       onConvert={vi.fn()}
       onEditStep={vi.fn()}
       onDone={onDone}
-      onEditUnits={onEditUnits}
       {...props}
     />,
     { wrapper },
   );
   await settle();
-  return { ...utils, tracker, onClose, onOpenTimers, onDone, onEditUnits };
+  return { ...utils, tracker, onClose, onOpenTimers, onDone };
 }
 
 const section = (i: number) => screen.getByTestId(`cook-step-${i}`);
@@ -200,14 +199,17 @@ describe('Cooking mode (spec 012)', () => {
     expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
   });
 
-  it('the options sheet has the recipe page\'s "…" options; "Units: Metric" opens the form at This recipe (spec 051)', async () => {
+  it('the options sheet has the recipe page\'s "…" options: Imperial changes the steps at once, for this visit only (spec 051)', async () => {
+    const storage = memoryStorage();
     const onConvert = vi.fn();
-    const { onEditUnits } = await setup({ onConvert });
+    const { tracker } = await setup({ storage, onConvert });
     press('Cooking options');
     expect(screen.getByRole('switch', { name: "I'm using a kitchen scale" })).toBeTruthy();
-    fireEvent.click(screen.getByRole('link', { name: /^Units: Metric/ }));
-    expect(onEditUnits).toHaveBeenCalledOnce();
-    press('Cooking options');
+    press('Imperial');
+    expect(within(section(0)).getByText(/350 °F \(180 °C\)/)).toBeTruthy();
+    expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial' });
+    expect(JSON.parse((await storage.getItem(`cocon.recipe.${gabriel.user_id}.${detail.id}`)) ?? '{}').system ?? null).toBeNull();
+    forgetVisitUnits(detail.id);
     fireEvent.click(screen.getByRole('link', { name: 'Unit converter' }));
     expect(onConvert).toHaveBeenCalledOnce();
     expect(screen.queryByRole('switch', { name: 'Screen stays on' })).toBeNull();
@@ -238,7 +240,6 @@ describe('Cooking mode (spec 012)', () => {
         onConvert={vi.fn()}
         onEditStep={vi.fn()}
         onDone={vi.fn()}
-        onEditUnits={vi.fn()}
         cooking={{ ...defaultCooking, keepAwake: false }}
       />,
     );
@@ -375,7 +376,6 @@ describe('Cooking mode (spec 012)', () => {
         onConvert={vi.fn()}
         onEditStep={vi.fn()}
         onDone={vi.fn()}
-        onEditUnits={vi.fn()}
       />,
     );
     await settle();
