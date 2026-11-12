@@ -2,7 +2,8 @@
 // through ChatGPT shows at the top), FR-005 to FR-008 and the edge cases.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useState } from 'react';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { render } from '../../test/render';
 import { onlineManager } from '@tanstack/react-query';
 import { emptyFilters, type RecipeFilters } from '@cocon/schemas';
 import { RecipeList, SEARCH_DEBOUNCE_MS, type RecipeListProps } from './RecipeList';

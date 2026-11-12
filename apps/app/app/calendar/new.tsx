@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
+import { daysBetween } from '@cocon/calendar';
 import { saveEvent, undoCreateEvent } from '@cocon/data';
 import { EventSheet } from '../../components/calendar/EventSheet';
 import { newDraft, prefillFrom, toastText } from '../../lib/event-form';
@@ -43,6 +44,8 @@ export default function NewEventRoute() {
           has_repeat: input.recurrence != null,
           used_more_options: meta.usedMoreOptions,
           seconds_to_save: meta.secondsToSave,
+          days: daysBetween(input.starts_on, input.ends_on) + 1,
+          used_suggestion: meta.usedSuggestion,
         });
         sheet.refreshEvents();
         toast.show({

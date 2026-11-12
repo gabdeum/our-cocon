@@ -119,7 +119,7 @@ describe.skipIf(!local)('calendar tools and permission against local Supabase', 
     // 032-later L102, and the call itself.
     expect(captured).toContainEqual([
       'event_created',
-      { source: 'assistant', time_type: 'slot', slot: 'morning', member_count: 1, has_repeat: true, used_more_options: false, seconds_to_save: 0 },
+      { source: 'assistant', time_type: 'slot', slot: 'morning', member_count: 1, has_repeat: true, used_more_options: false, seconds_to_save: 0, days: 1, used_suggestion: false },
     ]);
     expect(captured).toContainEqual(['mcp_tool_called', { tool: 'create_event', assistant: 'claude', ok: true }]);
     // It starts on the first Saturday, as the app's sheet saves it.

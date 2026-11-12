@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button, Callout, TextField } from '@cocon/ui';
+import { Button, TextField } from '@cocon/ui';
 import { DisplayName, FamilyName, type Tracker } from '@cocon/schemas';
+import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import type { FamilyApi } from '../../lib/family';
 import { WelcomeHeader } from './WelcomeHeader';
@@ -22,6 +23,8 @@ export function FamilySetup({ api, tracker, suggestedName, onCreated }: FamilySe
   const [familyName, setFamilyName] = useState('');
   const [warnings, setWarnings] = useState<{ name?: string; family?: string }>({});
   const [error, setError] = useState<string | null>(null);
+  // Failures are warn toasts (spec 053 FR-015).
+  useFailureToast(error);
   const [busy, setBusy] = useState(false);
 
   async function create() {
@@ -32,6 +35,7 @@ export function FamilySetup({ api, tracker, suggestedName, onCreated }: FamilySe
       return;
     }
     setBusy(true);
+    setError(null);
     const result = await api.createFamily(family.data, me.data);
     if (!result.ok) {
       setBusy(false);
@@ -45,7 +49,6 @@ export function FamilySetup({ api, tracker, suggestedName, onCreated }: FamilySe
   return (
     <View className="gap-18">
       <WelcomeHeader title={t.familyTitle} lead={t.familyLead} />
-      {error ? <Callout variant="warn" text={error} /> : null}
       <TextField
         label={t.yourName}
         hint={t.yourNameHint}

@@ -3,6 +3,8 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import { storedEvent, type StoredEvent } from '@cocon/data';
+import { babyMusic } from '../test/baby-music';
+import { fromSuggestion } from './event-form';
 import {
   changedFields,
   conflictLine,
@@ -501,5 +503,20 @@ describe('who can see it (spec 043)', () => {
     const d = draftFromEvent(stored({ visibility: 'surprise', surprise: { hidden_from: [eva.id], cover_title: 'Dinner out', cover_note: null } }));
     expect(d).toMatchObject({ visibility: 'surprise', hiddenFrom: [eva.id], coverTitle: 'Dinner out', coverNote: '' });
     expect(hasMoreOptions(d)).toBe(true);
+  });
+});
+
+// Spec 053 FR-003: a suggestion fills the sheet like its latest event, but keeps the day, its length,
+// and what was changed by hand; a surprise or a masked event fills nothing (security review).
+describe('fromSuggestion', () => {
+  const draft = { ...newDraft({}, '2026-11-12'), title: 'Baby music class' };
+  it('copies like last time, keeping the day, the length and what was touched', () => {
+    const filled = fromSuggestion({ ...draft, location: 'Typed place' }, babyMusic({ ends_on: '2026-11-02' }), new Set(['location']));
+    expect(filled).toMatchObject({ date: '2026-11-12', span: 0, category: 'social', location: 'Typed place', time: { kind: 'slot', slots: ['morning'] } });
+    expect(filled.checklist.every((c) => c.id === undefined)).toBe(true);
+  });
+  it('a surprise, or an event no longer seen in full, fills nothing', () => {
+    expect(fromSuggestion(draft, babyMusic({ visibility: 'surprise' }), new Set())).toBe(draft);
+    expect(fromSuggestion(draft, babyMusic({ view: 'busy' }), new Set())).toBe(draft);
   });
 });

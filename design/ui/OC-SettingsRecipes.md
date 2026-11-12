@@ -16,7 +16,7 @@ Saves instantly: units for the member only (`member_recipe_settings`, sent as `m
 ## States
 | State | Copy and behaviour |
 | --- | --- |
-| A change failed | StatusBanner "Couldn't save. Try again." |
+| A change failed | warn toast "Couldn't save. Try again." |
 
 ## Changelog
 - 2026-11-12 (051): per-recipe overrides moved from Recipe settings (retired) to the recipe form's "This recipe".

@@ -284,7 +284,9 @@ export const strings = {
     showMore: 'Show more',
     loading: 'Loading activity',
     loadFailed: "Couldn't load activity. Check your connection and try again.",
-    tryAgain: 'Try again',
+    // Spec 053 FR-018, FR-021: "Show more" while the next 20 load, and when they couldn't.
+    loadingMore: 'Loading…',
+    loadMoreFailed: "Couldn't load more activity. Check your connection and try again.",
     allEmptyTitle: 'No activity yet',
     allEmptyBody: 'When anyone in the family adds or changes something, it shows up here.',
     emptyTitle: 'No AI changes yet',
@@ -808,7 +810,6 @@ export const strings = {
     photoLabel: 'Recipe photo',
     uploadingPhoto: 'Uploading photo…',
     photoFailed: "The photo didn't upload. Try again.",
-    photoRetry: 'Retry',
     photoDenied: "Our Cocon can't see your photos. Allow access in Settings.",
     crop: {
       title: 'Fit your photo',
@@ -1477,6 +1478,9 @@ export const strings = {
   },
   toast: {
     undo: 'Undo',
+    // Spec 053 FR-013: the round buttons' names.
+    tryAgain: 'Try again',
+    dismiss: 'Dismiss',
     // When an Undo fails (032-later L99), unless the screen says it its own way.
     undoFailed: "Couldn't undo. Check your connection and try again.",
   },
@@ -1649,6 +1653,14 @@ export const strings = {
       nextMonth: 'Next month',
       /** The date sheet's title, for "Other day" and "Ends: On a date". */
       pickDateTitle: 'Pick a date',
+      // Spec 053 FR-001: the past titles under "What's happening?".
+      suggestions: 'Suggestions',
+      // Spec 053 FR-009: an event over several days.
+      endsDay: 'Ends',
+      sameDay: 'Same day',
+      pickLastDay: 'Pick a last day',
+      lastDayTitle: 'Last day',
+      backToSameDay: 'Back to same day',
       endsOnTitle: 'Ends on',
       /** The toast: "Poker night added for tonight, 18:00–22:00."; all day: "… added for Sat, Oct 31." */
       added: (title: string, when: string, range: string | null) => `${title} added for ${when}${range ? `, ${range}` : ''}.`,
@@ -1701,6 +1713,9 @@ export const strings = {
     /** design/ui/OC-CalEvent.md (spec 042): the event page, its dialogs, the share sheet and the shared page. */
     event: {
       back: 'Back to Calendar',
+      // Spec 053 FR-007: long notes are cut at 6 lines.
+      notesMore: 'Show more',
+      notesLess: 'Show less',
       /** "Morning · about 09:00–12:00"; a custom time shows its hours: "14:30–15:30". */
       slotTime: (slot: string, range: string) => `${slot} · about ${range}`,
       /** Spec 050 FR-006, after the date on one line: "Sat, Oct 31 · Morning, about 09:00–12:00". */

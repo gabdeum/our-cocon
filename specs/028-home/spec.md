@@ -73,3 +73,4 @@ None.
 - 2026-11-05 (050 FR-007, Gabriel's ask): the brand row is pinned when Home scrolls. OC-Home.md updated.
 - 2026-11-05 (Gabriel's ask): the two stat tiles sit right under the calendar card, above the latest-recipe hero (FR-001). On iOS the tile number no longer clips: its line box is the font's full height (StatTile). OC-Home.md updated.
 - 2026-11-12 (Gabriel's ask, with spec 051): while recipes are being cooked, they replace the latest-recipe hero: one card each (tag "Cooking now: step 3/10", the title, no chips), swiped side by side with dots when there are several, with small Cancel (red) · Done · Resume buttons; tapping the card resumes. The latest recipe comes back when nothing is cooking. New `HeroCard` actions, `HeroCarousel` and Button `white` (Card and Button READMEs). Event: `cook_resumed` gains `from: 'home'`. OC-Home.md updated.
+- 2026-11-12 (spec 053): "See all activity" opens a list of 20 at a time with a working "Show more" (053 FR-018).

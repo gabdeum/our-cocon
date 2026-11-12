@@ -14,7 +14,7 @@ export { Button, DisclosureButton, Link, type ButtonProps, type ButtonVariant, t
 export { IconButton, type IconButtonProps, type IconButtonVariant } from './components/IconButton';
 export { AppGrid, AppTile, type AppTileProps } from './components/AppTile';
 export { IconTile, type IconTileProps, type IconTileTone } from './components/IconTile';
-export { Pill, FilterButton, Choice, PersonPill, PillRow } from './components/Pill';
+export { Pill, FilterButton, Choice, PersonPill, PillRow, SuggestionPill, type SuggestionPillProps } from './components/Pill';
 export { Tag, Meta, type TagTone, type MetaTone } from './components/Tag';
 export { Switch, SettingRow, type SwitchProps, type SettingRowProps } from './components/Switch';
 export { SegmentedControl, SegmentedSettingRow, type SegmentedControlProps, type Segment } from './components/SegmentedControl';
@@ -60,7 +60,7 @@ export { Swipeable, SWIPE_COMMIT, type SwipeableProps } from './components/Swipe
 export { EventListGroup, EventListRow, WeekEventGroup, type EventListItem, type WeekEventDay, type WeekEventItem } from './components/EventListRow';
 export { CalCard, CalCardBanner, WeekStrip, type CalCardProps, type WeekStripDay } from './components/CalCard';
 export { AllDayRow, DayEventRow, SlotBand, type DayAllDayItem, type DayBand, type DayEventItem, type SlotBandProps } from './components/SlotBand';
-export { FloatingAdd, Toast, ToastHost, ToastProvider, useToast, TOAST_MS, TOAST_ACTION_MS, type FloatingAddProps, type ToastProps, type ToastRequest } from './components/Toast';
+export { FloatingAdd, Toast, ToastHost, ToastProvider, useToast, TOAST_MS, TOAST_ACTION_MS, type FloatingAddProps, type ToastProps, type ToastProviderProps, type ToastRequest } from './components/Toast';
 export { CalendarHeader, type CalendarHeaderChip, type CalendarHeaderProps } from './components/CalendarHeader';
 export { ColorSwatch, type ColorSwatchProps, type SwatchOption } from './components/ColorSwatch';
 export { StatusBanner, Presence, AwakeChip, SuccessPanel } from './components/StatusBanner';

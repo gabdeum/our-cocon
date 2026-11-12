@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Button, Callout, Dialog, Link, ListGroup, ListRow, PushedScreen, RecipeItemSkeleton, Text } from '@cocon/ui';
+import { BottomSheet, Button, Dialog, Link, ListGroup, ListRow, PushedScreen, RecipeItemSkeleton, Text } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
-import { useToast } from '../../lib/toast';
+import { useFailureToast, useToast } from '../../lib/toast';
 import { daysLeft, daysSinceDelete } from '../../lib/recipe-delete';
 import type { DeletedItem } from '../../lib/recently-deleted';
 import type { Member } from '../../lib/session';
@@ -36,6 +36,7 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
   const [confirm, setConfirm] = useState<DeletedItem | null>(null);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
+  useFailureToast(items === undefined && failed && d.loadFailed, onRetry);
 
   const nameOf = (userId: string | null) => members.find((m) => m.user_id === userId)?.display_name ?? strings.recipe.formerMember;
 
@@ -70,14 +71,8 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
   const off = readOnly || busy;
 
   let body;
-  if (items === undefined && failed) {
-    body = (
-      <View className="gap-12">
-        <Callout variant="warn" text={d.loadFailed} />
-        <Button label={d.retry} variant="soft" onPress={onRetry} />
-      </View>
-    );
-  } else if (items === undefined) {
+  // A failed load is a toast with Try again (spec 053 FR-015); the skeleton stays.
+  if (items === undefined) {
     body = (
       <View role="progressbar" aria-label={d.loading}>
         <RecipeItemSkeleton />

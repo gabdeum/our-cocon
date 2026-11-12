@@ -1,6 +1,7 @@
 // Spec 003 FR-001: magic link and Google, no passwords.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { render } from '../../test/render';
 import { SignIn } from './SignIn';
 import type { NativeSignIn } from '../../lib/auth';
 import { fakeTracker, flush } from '../../test/fakes';

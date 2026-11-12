@@ -19,7 +19,7 @@ Source `screens/OC-CalMonth.dc.html` (interactive: scroll it, tap a day), `scree
 | Private event of someone else | chip "Busy" in their color |
 
 ## Interactions
-Tap anywhere on a day (chips and bars included) → day sheet. Long-press a day → OC-CalAdd for that day. "+" → OC-CalAdd (today).
+"Today" (CalHeader) scrolls so today's week is the second row on screen, the week before above it (spec 053 FR-008); ‹ › and the first open keep the month's first week at the top. Tap anywhere on a day (chips and bars included) → day sheet. Long-press a day → OC-CalAdd for that day. "+" → OC-CalAdd (today).
 
 ## Day sheet
 Scrim ink 38%; sheet `surface-page`, radius 28 top, padding 10 20 34, max 640 tall. Handle 44×5 `line-handle`. Title "Sunday, October 25" 22/900; count "3 events" · "1 event" · "Nothing planned" 14/700 muted; close (44, soft, ✕, "Close"). Rows: white, radius 20, padding 12 14 12 12, 6 px stripe, 36 avatar (initials, "All"), title 17/800, time line 14/700 muted ("Lunch", "14:30", "All day", "All day · day 2 of 4"). Empty: "Nothing planned yet." (16/700 muted). Round olive add (60) bottom-right, 20 from the side and 34 from the bottom, "Add event on Sunday, October 25" → OC-CalAdd for that day. Row → OC-CalEvent.
@@ -30,3 +30,6 @@ Scrim ink 38%; sheet `surface-page`, radius 28 top, padding 10 20 34, max 640 ta
 - **Initials:** under 430 px wide, chips keep the title only, as drawn; their label names who.
 - **Reduce Motion:** ‹ ›, Today and month jumps are instant.
 - **Bars:** "{title}, {who}, {from} to {to}".
+
+## Changelog
+- 2026-11-12 (spec 053): "Today" puts today's week on the second row (it put the 1st of the month at the top).

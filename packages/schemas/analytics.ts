@@ -219,7 +219,12 @@ export const events = {
     has_repeat: z.boolean(),
     used_more_options: z.boolean(),
     seconds_to_save: z.int().min(0),
+    // Spec 053: how many days it spans (1 for one day), and whether a suggested title filled it.
+    days: z.int().min(1).max(367),
+    used_suggestion: z.boolean(),
   }),
+  // Spec 053 FR-001: a suggested title picked in the add sheet (its place in the list, how much was typed; never the text).
+  event_title_suggestion_picked: z.strictObject({ position: z.int().min(1).max(10), query_length: z.int().min(1).max(60) }),
   event_updated: z.strictObject({ fields_changed: z.array(EventField), scope: z.enum(['all', 'this', 'future']) }),
   event_conflict_shown: z.strictObject({ proceeded: z.boolean() }),
   event_create_undone: z.strictObject({}),
@@ -244,6 +249,10 @@ export const events = {
   homepage_calendar_day_picked: z.strictObject({ day_offset: z.int().min(0).max(6) }),
   // Spec 028 FR-006: Latest activity's "All · AI only".
   homepage_activity_filter_changed: z.strictObject({ to: z.enum(['all', 'ai']) }),
+  // Spec 053 FR-018: Activity's "Show more" loaded another page (2 is the first one it adds).
+  activity_show_more: z.strictObject({ page: z.int().min(2) }),
+  // Spec 053 FR-013: a toast closed with its ✕, by tone (sage confirmation, warn failure).
+  toast_dismissed: z.strictObject({ tone: z.enum(['sage', 'warn']) }),
   // Spec 046: asking for notifications (never at launch), tapping one, and Menu › Notifications.
   notifications_ask_shown: z.strictObject({ trigger: NotificationAskTrigger }),
   notifications_permission_result: z.strictObject({ granted: z.boolean(), trigger: NotificationAskTrigger }),
