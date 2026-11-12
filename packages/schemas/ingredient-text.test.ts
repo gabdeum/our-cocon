@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { foldText, ingredientName, ingredientNote, normaliseName, parseIngredientText, singularWord } from './ingredient-text';
+import { foldText, ingredientName, ingredientNote, normaliseName, parseIngredientText, singularWord, splitIngredientDetail } from './ingredient-text';
 
 describe('foldText', () => {
   it('lower-cases and drops accents and punctuation', () => {
@@ -70,6 +70,17 @@ describe('parseIngredientText', () => {
     expect(parseIngredientText('chopped and toasted walnuts').core).toBe('walnut');
     const long = parseIngredientText(`onion, ${'very '.repeat(30)}finely chopped`);
     expect(long.prep?.length).toBeLessThanOrEqual(80);
+  });
+});
+
+describe('splitIngredientDetail (spec 051 FR-007)', () => {
+  it('splits at the first comma outside brackets', () => {
+    expect(splitIngredientDetail('Gruyère, grated')).toEqual({ name: 'Gruyère', detail: 'grated' });
+    expect(splitIngredientDetail('Butter, cold,  cubed')).toEqual({ name: 'Butter', detail: 'cold, cubed' });
+    expect(splitIngredientDetail('Onion (sauce), finely chopped')).toEqual({ name: 'Onion (sauce)', detail: 'finely chopped' });
+    expect(splitIngredientDetail('Chickpeas (cooked, drained)')).toEqual({ name: 'Chickpeas (cooked, drained)', detail: null });
+    expect(splitIngredientDetail('Leeks,')).toEqual({ name: 'Leeks', detail: null });
+    expect(splitIngredientDetail(', grated')).toEqual({ name: ', grated', detail: null });
   });
 });
 

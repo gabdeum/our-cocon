@@ -31,7 +31,7 @@ const quiche = { id: 'r-quiche', name: 'Leek & bacon quiche', serves: 6, photo_p
 /** The sample list (OC-Groceries): six to buy, the sourdough ticked. */
 const sample: GroceryItem[] = [
   groceryItem({ id: 'cream', name: 'Heavy cream', catalog_key: 'heavy_cream', quantity: 300, unit: 'ml', aisle: 'dairy_eggs', recipes: quiche, recipe_id: quiche.id }),
-  groceryItem({ id: 'cheese', name: 'Gruyère', catalog_key: 'gruyere', quantity: 100, unit: 'g', aisle: 'dairy_eggs', recipes: quiche, recipe_id: quiche.id }),
+  groceryItem({ id: 'cheese', name: 'Gruyère', catalog_key: 'gruyere', quantity: 100, unit: 'g', aisle: 'dairy_eggs', recipes: quiche, recipe_id: quiche.id, recipe_detail: 'grated' }),
   groceryItem({ id: 'milk', name: 'Milk', catalog_key: 'milk', quantity: 2, unit: 'l', aisle: 'dairy_eggs', created_by: alex.user_id, source: 'chatgpt' }),
   groceryItem({ id: 'apples', name: 'Apples', catalog_key: 'apple', quantity: 6, unit: 'piece', aisle: 'produce', created_by: mia.user_id }),
   groceryItem({ id: 'salt', name: 'Salt', catalog_key: 'salt', quantity: null, aisle: 'spices_baking' }),
@@ -77,9 +77,11 @@ describe('Groceries', () => {
     expect(headings).toEqual(['Groceries', 'Produce', 'Bakery', 'Dairy & eggs', 'Spices & baking']);
     expect(screen.getByText('6 items to buy · shared with family')).toBeTruthy();
     const dairy = within(aisle('Dairy & eggs'));
-    expect(dairy.getAllByText('For Leek & bacon quiche')).toHaveLength(2);
+    // Spec 051 FR-009: the recipe's detail, none without one; who typed it in, never their assistant.
+    expect(dairy.getByText('In recipe: grated')).toBeTruthy();
+    expect(dairy.queryByText(/^For /)).toBeNull();
     expect(dairy.getByText('Heavy cream: 300 ml')).toBeTruthy();
-    expect(dairy.getByText('Alex via ChatGPT')).toBeTruthy();
+    expect(dairy.getByText('Added by Alex')).toBeTruthy();
     expect(within(aisle('Produce')).getByText('Added by Mia')).toBeTruthy();
     // No quantity, no Need.
     expect(within(aisle('Spices & baking')).getByText('Salt')).toBeTruthy();
@@ -320,20 +322,20 @@ describe('Groceries', () => {
   it('shows the empty list', () => {
     setup({ items: [] });
     expect(screen.getByText('Your list is empty.')).toBeTruthy();
-    expect(screen.getByText('Add items above, or from any recipe with “Add groceries”.')).toBeTruthy();
+    expect(screen.getByText('Add items above, or from any recipe with “Add to groceries”.')).toBeTruthy();
     expect(screen.getByText('0 items to buy · shared with family')).toBeTruthy();
   });
 });
 
 describe('Groceries › one row per thing (spec 022)', () => {
   const crumble = { ...quiche, id: 'r-crumble', name: 'Apple crumble', serves: 4 };
-  const fromCrumble = groceryItem({ id: 'crumble-apples', name: 'Apples', catalog_key: 'apple', quantity: 600, unit: 'g', aisle: 'produce', recipes: crumble, recipe_id: crumble.id });
+  const fromCrumble = groceryItem({ id: 'crumble-apples', name: 'Apples', catalog_key: 'apple', quantity: 600, unit: 'g', aisle: 'produce', recipes: crumble, recipe_id: crumble.id, recipe_detail: 'peeled' });
   const items = [...sample, fromCrumble];
 
   it('adds my apples and the crumble’s up in one row that names both', () => {
     setup({ items });
     expect(screen.getAllByRole('checkbox', { name: /Apples/ })).toHaveLength(1);
-    expect(screen.getByText('For Apple crumble · Added by Mia')).toBeTruthy();
+    expect(screen.getByText('In recipe: peeled · Added by Mia')).toBeTruthy();
     expect(screen.getByText(/^Apples: 6 pieces \+ 600 g/)).toBeTruthy();
     expect(screen.getByText('6 items to buy · shared with family')).toBeTruthy();
   });

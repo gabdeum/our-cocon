@@ -77,3 +77,17 @@ export function CookProgress({ count, current, onSelect, stepLabel, hint, segmen
     </View>
   );
 }
+
+/**
+ * Spec 051: where a cook is, on its "In progress" card (Progress README › Step bar): 5-tall
+ * segments, gap 3, display only. Hidden from screen readers; the card's text says the step.
+ */
+export function StepBar({ count, current }: { count: number; current: number }) {
+  return (
+    <View aria-hidden className="flex-row gap-[3px]">
+      {Array.from({ length: count }, (_, i) => (
+        <View key={i} className={cn('h-[5px] flex-1 rounded-[3px]', segment(i, current))} />
+      ))}
+    </View>
+  );
+}

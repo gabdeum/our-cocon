@@ -126,6 +126,7 @@ export function DetailsSection(p: DetailsSectionProps) {
             onChangeText={(source) => onChange({ source })}
             maxLength={200}
             placeholder={f.sourcePlaceholder}
+            hint={f.sourceHint}
           />
         </>
       ) : null}

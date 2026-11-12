@@ -32,27 +32,36 @@ describe('toBuyCount', () => {
   });
 });
 
-describe('rowSource and byName (spec 022)', () => {
-  it('names every recipe and person a row came from, each once', () => {
+describe('rowSource and byName (spec 022, spec 051 FR-009)', () => {
+  it('US3: one recipe reads "In recipe: {detail}"; several, their details in order', () => {
     const soup = { ...quiche, id: 'r-soup', name: 'Pumpkin soup' };
-    const [row] = combineRows([
-      groceryItem({ id: 'a', recipes: quiche }),
-      groceryItem({ id: 'b', created_by: gabriel.user_id }),
-      groceryItem({ id: 'c', recipes: soup }),
-      groceryItem({ id: 'd', created_by: gabriel.user_id }),
-      groceryItem({ id: 'e', created_by: alex.user_id, source: 'chatgpt' }),
+    const [one] = combineRows([groceryItem({ id: 'a', recipe_id: quiche.id, recipes: quiche, recipe_detail: 'grated' })]);
+    expect(rowSource(one as never, members)).toBe('In recipe: grated');
+    const [two] = combineRows([
+      groceryItem({ id: 'a', recipe_id: quiche.id, recipes: quiche, recipe_detail: 'for the pan' }),
+      groceryItem({ id: 'b', recipe_id: soup.id, recipes: soup, recipe_detail: 'cold, cubed' }),
+      groceryItem({ id: 'c', recipe_id: soup.id, recipes: soup, recipe_detail: 'for the pan' }),
     ]);
-    expect(rowSource(row as never, members)).toBe('For Leek & bacon quiche + Pumpkin soup · Added by Gabriel · Alex via ChatGPT');
+    expect(rowSource(two as never, members)).toBe('In recipes: for the pan · cold, cubed');
   });
 
-  it('says "Added manually" when more than one person typed it in', () => {
+  it('edge: recipe items without a detail have no line; people who typed it in are named', () => {
+    const [plain] = combineRows([groceryItem({ id: 'a', recipe_id: quiche.id, recipes: quiche })]);
+    expect(rowSource(plain as never, members)).toBeNull();
+    const [mixed] = combineRows([
+      groceryItem({ id: 'a', recipe_id: quiche.id, recipes: quiche }),
+      groceryItem({ id: 'b', created_by: gabriel.user_id }),
+    ]);
+    expect(rowSource(mixed as never, members)).toBe('Added by Gabriel');
+  });
+
+  it('says "Added manually" when more than one person typed it in, an assistant\'s member too', () => {
     const [row] = combineRows([
       groceryItem({ id: 'a', created_by: mia.user_id }),
-      groceryItem({ id: 'b', created_by: gabriel.user_id }),
-      groceryItem({ id: 'c', recipes: quiche }),
+      groceryItem({ id: 'c', recipe_id: quiche.id, recipes: quiche, recipe_detail: 'grated' }),
       groceryItem({ id: 'd', created_by: alex.user_id, source: 'chatgpt' }),
     ]);
-    expect(rowSource(row as never, members)).toBe('For Leek & bacon quiche · Added manually · Alex via ChatGPT');
+    expect(rowSource(row as never, members)).toBe('In recipe: grated · Added manually');
     const [mine] = combineRows([groceryItem({ id: 'a' }), groceryItem({ id: 'b' })]);
     expect(rowSource(mine as never, members)).toBe('Added by Gabriel');
   });
@@ -62,11 +71,12 @@ describe('rowSource and byName (spec 022)', () => {
   });
 });
 
-describe('sourceLine (FR-003)', () => {
-  it('names the recipe, the person, or the person and their assistant', () => {
-    expect(sourceLine(groceryItem({ recipes: quiche }), members)).toBe('For Leek & bacon quiche');
+describe('sourceLine (FR-003, spec 051 FR-009)', () => {
+  it('gives the detail, or names the person, never their assistant', () => {
+    expect(sourceLine(groceryItem({ recipes: quiche, recipe_detail: 'grated' }), members)).toBe('In recipe: grated');
+    expect(sourceLine(groceryItem({ recipes: quiche }), members)).toBeNull();
     expect(sourceLine(groceryItem({ created_by: mia.user_id }), members)).toBe('Added by Mia');
-    expect(sourceLine(groceryItem({ created_by: alex.user_id, source: 'chatgpt' }), members)).toBe('Alex via ChatGPT');
+    expect(sourceLine(groceryItem({ created_by: alex.user_id, source: 'chatgpt' }), members)).toBe('Added by Alex');
     expect(sourceLine(groceryItem({ created_by: 'u-gone' }), members)).toBe('Added by Former member');
   });
 

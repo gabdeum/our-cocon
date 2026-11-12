@@ -146,14 +146,23 @@ export interface CookingSettings {
   system: UnitSystem;
 }
 
-export function resolveCooking(family: Pick<FamilySettings, CookingSetting>, recipe: Partial<RecipeOverrides> = {}): CookingSettings {
+export function resolveCooking(
+  family: Pick<FamilySettings, CookingSetting>,
+  recipe: Partial<RecipeOverrides> = {},
+  member: Partial<MemberRecipeSettings> = {},
+): CookingSettings {
   return {
     keepAwake: recipe.keep_awake ?? family.keep_awake,
     scale: recipe.has_scale ?? family.has_scale,
     thermometer: recipe.has_thermometer ?? family.has_thermometer,
-    system: recipe.units ?? family.units,
+    // Spec 051: units are each person's (Menu › Recipes); the family's old setting until they pick. A recipe's no longer count.
+    system: member.units ?? family.units,
   };
 }
+
+/** Spec 051: a member's own recipe settings (`member_recipe_settings`); null units follow the family's. */
+export const MemberRecipeSettings = z.object({ units: UnitSystem.nullable() });
+export type MemberRecipeSettings = z.infer<typeof MemberRecipeSettings>;
 
 /**
  * Spec 024: what a member's AI assistants may do (FR-002; `events` from spec 044), each Allowed (true) or Not allowed. One

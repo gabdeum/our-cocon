@@ -25,7 +25,7 @@ import {
   type StepOut,
   type VariantSaveRow,
 } from './input.js';
-import { cuisineKey, RecipeId } from './shared.js';
+import { assistantLabels, cuisineKey, RecipeId } from './shared.js';
 
 /** The recipe's details as assistants send them (spec 004's RecipeInput, in their words). */
 const details = {
@@ -35,7 +35,15 @@ const details = {
   total_minutes: z.int().min(1).max(10080).nullable().optional().describe('Total time in minutes, start to finish.'),
   prep_minutes: z.int().min(1).max(10080).nullable().optional().describe('Hands-on time in minutes.'),
   cuisine: z.string().max(40).nullable().optional().describe('A cuisine key: american, british, caribbean, chinese, french, german, greek, indian, italian, japanese, korean, latin_american, mexican, middle_eastern, moroccan, portuguese, scandinavian, spanish, thai, turkish, vietnamese, west_african. Leave empty if none fits.'),
-  source_text: z.string().max(200).nullable().optional().describe('Where it comes from: "Mum", a book, a website.'),
+  // Spec 051 FR-016, word for word.
+  source_text: z
+    .string()
+    .max(200)
+    .nullable()
+    .optional()
+    .describe(
+      "Where the recipe comes from, shown to the family as its Source. Use the most specific real source you know: a book's title and page ('La Cuisine de Mamie · p. 48'), a website's name or URL, a person ('Grandma Jeanne'), a show. If the user gives you a photo or text from a book, magazine or site, put that here. Only if there's no other source, leave it empty and we use your name.",
+    ),
   best_months: z.array(z.int().min(1).max(12)).max(12).optional().describe('Months it’s best in, 1–12. Leave empty for all year.'),
 };
 
@@ -104,6 +112,8 @@ export const createRecipe = defineTool({
   }),
   async run(args, ctx) {
     const input = recipeInput(pickDetails(args));
+    // FR-016: no source given, the assistant's name is the source (an unknown one stays empty: the app says "An AI assistant").
+    if (!input.source_text?.trim() && assistantLabels[ctx.assistant]) input.source_text = assistantLabels[ctx.assistant];
     const warnings: string[] = [];
     const ingredients = await ingredientRows(ctx, args.ingredients, new Set(), warnings);
     const targets = mentionTargets(ingredients);
@@ -145,6 +155,7 @@ export const updateRecipe = defineTool({
     'Change a recipe. Send only what changes: details, the whole ingredient list, the whole step list, step_changes (some steps, by number: "add a tip to step 5") or the whole variant list. Write them by create_recipe’s rules.',
     '- scale_to makes it serve more or fewer by default, rescaling every amount. serves alone corrects the number only.',
     '- Start from get_recipe’s for_editing. Whole lists replace what’s there: items with an id are kept, items without one are new, items left out are removed (a removed ingredient leaves the steps too). Send kept ingredients complete. A kept step keeps its title, timer, tip and temperature check unless you send a new one, or null to remove it. Variants are matched by name; [] removes them all.',
+    '- Keep source_text as it is once set; change it only if the member asks.',
     '- Every change shows in the app’s activity, where the member can undo it. Returns the updated recipe.',
   ].join('\n'),
   input: z.strictObject({

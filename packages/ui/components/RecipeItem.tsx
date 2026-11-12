@@ -10,7 +10,7 @@ export interface RecipeItemProps {
   name: string;
   /** "1 h 10 · Serves 6 · 2 variants". */
   meta: string;
-  /** "Gabriel · via Claude", or just "Mia". */
+  /** The recipe's source (spec 051 FR-015): "La Cuisine de Mamie · p. 48", "ChatGPT" or "Mia". */
   author: string;
   photoUri?: string;
   placeholderTone?: ThumbTone;

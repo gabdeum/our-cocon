@@ -118,6 +118,7 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, un
                 key={line.id}
                 title={line.name}
                 dim={!on}
+                detail={line.detail ? strings.groceries.inRecipe(line.detail) : undefined}
                 sub={note}
                 subTone="warn"
                 leading={{ kind: 'checkbox', checked: on }}

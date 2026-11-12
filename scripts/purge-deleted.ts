@@ -30,6 +30,8 @@ export interface PurgeResult {
   events: number;
   /** Rows of `notification_log` and `reminder_deliveries` over 90 days old. */
   notifications: number;
+  /** Cooks untouched for 72 hours, cancelled as stale (spec 051). */
+  staleCooks: number;
   /** Recipes kept for the next night because their photos couldn't be removed. */
   failed: string[];
   /** Apple sign-ins revoked, and left for the next night; null when the function couldn't be reached. */
@@ -68,11 +70,12 @@ export async function purgeDeleted({ url, serviceKey, fetch: http = fetch }: Pur
   const groceries = await call<number>('POST', '/rest/v1/rpc/purge_cleared_groceries', {});
   const events = await call<number>('POST', '/rest/v1/rpc/purge_deleted_events', {});
   const notifications = await call<number>('POST', '/rest/v1/rpc/purge_notification_history', {});
+  const staleCooks = await call<number>('POST', '/rest/v1/rpc/cancel_stale_cook_sessions', {});
   const apple = await call<{ revoked: number; left: number }>('POST', '/functions/v1/apple-sign-in', { retry: true }).catch((error: unknown) => {
     console.error(`Couldn't retry the Apple revokes: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   });
-  return { recipes, photos, groceries, events, notifications, failed, apple };
+  return { recipes, photos, groceries, events, notifications, staleCooks, failed, apple };
 }
 
 /** Local development: the URL and service key from the Supabase CLI (never printed). */
@@ -96,11 +99,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
   purgeDeleted(config).then(
-    ({ recipes, photos, groceries, events, notifications, failed, apple }) => {
+    ({ recipes, photos, groceries, events, notifications, staleCooks, failed, apple }) => {
       if (recipes > 0 || photos > 0) console.log(`Removed ${recipes} recipe(s) deleted over 30 days ago, and ${photos} photo(s).`);
       if (groceries > 0) console.log(`Removed ${groceries} grocery item(s) cleared over a day ago.`);
       if (events > 0) console.log(`Removed ${events} event(s) deleted over 30 days ago.`);
       if (notifications > 0) console.log(`Removed ${notifications} notification record(s) over 90 days old.`);
+      if (staleCooks > 0) console.log(`Cancelled ${staleCooks} cook(s) left in progress for over 72 hours.`);
       if (apple && apple.revoked > 0) console.log(`Revoked ${apple.revoked} Sign in with Apple of deleted accounts.`);
       if (apple && apple.left > 0) console.log(`${apple.left} Sign in with Apple revoke(s) left for the next night (Apple didn't answer).`);
       if (failed.length > 0) process.exit(1);

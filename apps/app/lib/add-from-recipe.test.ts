@@ -27,6 +27,12 @@ describe('recipeGroceryLines', () => {
     expect(lines.find((l) => l.id === cream)).toMatchObject({ name: 'Heavy cream', catalog_key: 'heavy_cream', quantity: 300, unit: 'ml' });
   });
 
+  it('spec 051 FR-010: each line carries its detail ("In recipe: grated"), none without one', () => {
+    const { lines } = recipeGroceryLines(quicheDetail, choices);
+    expect(lines.find((l) => l.name === 'Gruyère')?.detail).toBe('grated');
+    expect(lines.find((l) => l.id === cream)?.detail).toBeNull();
+  });
+
   it('edge: follows the servings and the version, and counts round up', () => {
     const { servings, lines } = recipeGroceryLines(quicheDetail, { ...choices, servings: 4, version: quicheIds.vegetarian });
     expect(servings).toBe('4');

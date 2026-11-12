@@ -9,12 +9,12 @@ Same header, version and servings blocks as OC-Recipe, then one StepRow per step
 3. When the step has a timer, a honey chip on the right with a timer icon and its length ("12:00").
 4. A chevron.
 
-The full step (text, temperature check, timer, tip) is in cooking mode; the shared page (OC-SharedView) keeps the full StepCards. "Start cooking" stays in the fixed footer.
+The full step (text, temperature check, timer, tip) is in cooking mode; the shared page (OC-SharedView) keeps the full StepCards. The action bar stays at the bottom, as on the Ingredients tab: "Start recipe" (or "Resume · step {k}").
 
 ## Interactions
 | Element | Result |
 | --- | --- |
-| A step row | → cooking mode at that step (`/recipes/[id]/cook?step={id}&from=recipe`); Exit or Finish returns here |
+| A step row | → cooking mode at that step (`/recipes/[id]/cook?step={id}&from=recipe`): it resumes the cook in progress there, or starts one. ✕ returns here; "Done cooking" returns here with the Done sheet (OC-CookDone) |
 
 ## Accessibility labels
 A step row is a link: "Step {n}: {name or text}, {35:00} timer. Opens in cooking mode" (the timer part only when it has one; spec 030). A step timer says "1 minute left on {timer}" once, politely, when it gets to 1 minute, and the toast "{timer} is done" at zero.

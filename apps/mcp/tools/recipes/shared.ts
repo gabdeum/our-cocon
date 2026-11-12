@@ -3,7 +3,7 @@ import { Cuisine } from '@cocon/schemas';
 import { ToolError, type ToolContext } from '../../src/tools.js';
 
 /** How the app names each assistant ("Gabriel · via Claude"). */
-const assistantLabels: Record<string, string> = { claude: 'Claude', chatgpt: 'ChatGPT', gemini: 'Gemini' };
+export const assistantLabels: Record<string, string> = { claude: 'Claude', chatgpt: 'ChatGPT', gemini: 'Gemini' };
 export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as const;
 
 export const RecipeId = z.uuid({ error: 'Use a recipe id from search_recipes.' }).describe('The recipe’s id, from search_recipes.');

@@ -7,7 +7,7 @@ import { Icon, type IconName } from './Icon';
 import { IconTile, type IconTileTone } from './IconTile';
 import { Tag, type TagTone } from './Tag';
 import { Link } from './Button';
-import { Text } from './Text';
+import { DetailText, Text } from './Text';
 
 /** Uppercase group label above a list (bundle.css › oc-overline). Write it in sentence case. */
 export function Overline({ children, className }: { children: string; className?: string }) {
@@ -84,9 +84,15 @@ export interface ListRowProps {
    * (need 300 ml)". `text` is 16/800 like the title, `note` 15/600 ink-muted.
    */
   titleDetail?: { text: string; note?: string };
+  /** Spec 051 FR-010: how the recipe prepares it ("In recipe: grated"), a quiet line above `sub`. */
+  detail?: string;
   sub?: string;
-  /** Merge notes ("Already on the list (100 ml) → will be 400 ml") in warn 700; `olive`: a good status in olive-deep 700 ("Connected · used 2 h ago"). */
-  subTone?: 'muted' | 'warn' | 'olive';
+  /**
+   * Merge notes ("Already on the list (100 ml) → will be 400 ml") in warn 700; `olive`: a good
+   * status in olive-deep 700 ("Connected · used 2 h ago"); `soft`: a grocery row's source line
+   * (spec 051 FR-009), as `DetailText`.
+   */
+  subTone?: 'muted' | 'warn' | 'olive' | 'soft';
   /** Ticked grocery: struck through in ink-faint. */
   done?: boolean;
   /** Left out (an unticked row in Add to groceries): the title in ink-muted, still readable. */
@@ -140,6 +146,7 @@ function useSwipeLeft(onSwipeLeft: (() => void) | undefined) {
 export function ListRow({
   title,
   titleDetail,
+  detail,
   sub,
   subTone = 'muted',
   done,
@@ -179,7 +186,9 @@ export function ListRow({
             </Text>
           ) : null}
         </Text>
-        {sub ? (
+        {detail ? <DetailText className="mt-[1px]">{detail}</DetailText> : null}
+        {sub && subTone === 'soft' ? <DetailText className="mt-[1px]">{sub}</DetailText> : null}
+        {sub && subTone !== 'soft' ? (
           <Text variant="caption" weight={subTone === 'muted' ? '600' : '700'} color={subTone === 'warn' ? 'warn' : subTone === 'olive' ? 'olive-deep' : 'ink-muted'} className="mt-[1px]">
             {sub}
           </Text>
@@ -376,6 +385,8 @@ export interface IngredientRowProps {
   /** From @cocon/quantity: "300 ml". */
   amount: string;
   name: string;
+  /** Spec 051 FR-008: how it's prepared ("grated"), after the name on its line: "Gruyère · grated", muted. */
+  detail?: string | null;
   /** Weight of counted items: "about 300 g". */
   sub?: string;
   tag?: { label: string; tone: TagTone };
@@ -388,7 +399,7 @@ export interface IngredientRowProps {
 }
 
 /** Ingredient line on the recipe page (bundle.css › oc-ingredient): no card, amount column 104. */
-export function IngredientRow({ amount, name, sub, tag, last, layout = 'column' }: IngredientRowProps) {
+export function IngredientRow({ amount, name, detail, sub, tag, last, layout = 'column' }: IngredientRowProps) {
   if (layout === 'compact') {
     return (
       <View role="listitem" className={cn('flex-row items-center gap-12 py-10', !last && 'border-b-[1.5px] border-line')}>
@@ -410,6 +421,11 @@ export function IngredientRow({ amount, name, sub, tag, last, layout = 'column' 
       <View className="min-w-0 flex-1">
         <Text size={16} weight="700">
           {name}
+          {detail ? (
+            <Text size={15} weight="600" color="ink-soft">
+              {` · ${detail}`}
+            </Text>
+          ) : null}
         </Text>
         {sub ? (
           <Text variant="caption" color="ink-muted">

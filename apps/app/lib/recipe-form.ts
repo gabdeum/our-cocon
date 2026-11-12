@@ -1,4 +1,18 @@
-import { cuisineOf, parseMinutes, parseVariantChanges, RecipeInput, VariantChange, type Cuisine, type Json, type RecipeFormSection, type RecipeVariant } from '@cocon/schemas';
+import {
+  cuisineOf,
+  NO_RECIPE_OVERRIDES,
+  parseMinutes,
+  parseVariantChanges,
+  RecipeInput,
+  RecipeOverridesUpdate,
+  VariantChange,
+  type CookingSetting,
+  type Cuisine,
+  type Json,
+  type RecipeFormSection,
+  type RecipeOverrides,
+  type RecipeVariant,
+} from '@cocon/schemas';
 import { strings } from '../strings/en';
 import { loadFacts } from './recipe';
 import type { ChoiceStorage } from './recipe-choices';
@@ -38,6 +52,8 @@ export interface DetailsForm {
   /** 1–12. */
   bestMonths: number[];
   photoPath: string | null;
+  /** Spec 051 FR-013: the recipe's own cooking settings ("This recipe"), saved with the rest. */
+  overrides: RecipeOverrides;
 }
 
 /** A recipe's saved details, as the form loads them (`loadRecipeForm`). */
@@ -52,6 +68,8 @@ export interface RecipeDetails {
   source_text: string | null;
   best_months: number[];
   photo_path: string | null;
+  /** Spec 027's settings, edited in "This recipe" (spec 051). */
+  overrides?: RecipeOverrides;
   /** Spec 015: the ingredients and catalog facts by key; spec 016: the steps. */
   ingredients?: SavedIngredient[];
   steps?: SavedStep[];
@@ -78,6 +96,7 @@ export async function loadRecipeForm(client: Pick<Client, 'from'>, id: string): 
     .from('recipes')
     .select(
       `id, name, description, serves, total_minutes, prep_minutes, cuisine, source_text, best_months, photo_path,
+      keep_awake, has_scale, has_thermometer, units,
       recipe_ingredients(${ingredientColumns}), recipe_steps(${stepColumns}), recipe_variants(id, position, name, kind, changes)`,
     )
     .eq('id', id)
@@ -85,7 +104,7 @@ export async function loadRecipeForm(client: Pick<Client, 'from'>, id: string): 
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  const { recipe_ingredients, recipe_steps, recipe_variants, ...details } = data;
+  const { recipe_ingredients, recipe_steps, recipe_variants, keep_awake, has_scale, has_thermometer, units, ...details } = data;
   const variants = [...recipe_variants]
     .sort((a, b) => a.position - b.position)
     .map((v) => ({
@@ -100,6 +119,7 @@ export async function loadRecipeForm(client: Pick<Client, 'from'>, id: string): 
   const keys = [...new Set([...recipe_ingredients.flatMap((i) => (i.catalog_key ? [i.catalog_key] : [])), ...variantKeys])];
   return {
     ...details,
+    overrides: { keep_awake, has_scale, has_thermometer, units: units === 'metric' || units === 'imperial' ? units : null },
     ingredients: recipe_ingredients,
     steps: recipe_steps,
     variants,
@@ -129,7 +149,14 @@ export function formFromRecipe(recipe: RecipeDetails | null): DetailsForm {
     source: recipe?.source_text ?? '',
     bestMonths: [...(recipe?.best_months ?? [])].sort((a, b) => a - b),
     photoPath: recipe?.photo_path ?? null,
+    overrides: recipe?.overrides ?? NO_RECIPE_OVERRIDES,
   };
+}
+
+/** The settings "This recipe" changed (spec 051), as Save sends and tracks them. */
+export function changedSettings(start: RecipeOverrides, now: RecipeOverrides): RecipeOverridesUpdate {
+  const keys = (Object.keys(now) as CookingSetting[]).filter((k) => start[k] !== now[k]);
+  return RecipeOverridesUpdate.parse(Object.fromEntries(keys.map((k) => [k, now[k]])));
 }
 
 /** Whether Cancel should ask before throwing the edits away (US3). */
@@ -188,13 +215,14 @@ export async function saveRecipe(
   ingredients?: { rows: IngredientSaveRow[]; drafts: IngredientDraft[] },
   steps?: StepSaveRow[],
   variants?: VariantSaveRow[],
+  settings: RecipeOverridesUpdate = {},
 ): Promise<{ ok: boolean; created: boolean; detailsSaved: boolean }> {
   const { id, familyId, isNew } = target;
   try {
     // The database sets the family from who's signed in, whatever is sent (spec 004).
     const { error } = isNew
       ? await client.from('recipes').insert({ id, family_id: familyId, ...input })
-      : await client.from('recipes').update(input).eq('id', id);
+      : await client.from('recipes').update({ ...input, ...settings }).eq('id', id);
     if (error) return { ok: false, created: false, detailsSaved: false };
   } catch {
     return { ok: false, created: false, detailsSaved: false };

@@ -40,6 +40,8 @@ export interface IngredientLine {
   name: string;
   /** The row's full name, as the form shows it: "Large eggs (glaze)". */
   fullName: string;
+  /** Spec 051 FR-008: how it's prepared ("grated"), the rows' details joined; null without one. */
+  detail: string | null;
   /** Pieces' weight: "300 g". */
   sub: string | null;
   variant: boolean;
@@ -50,17 +52,23 @@ const sizeWords = new Set(['small', 'medium', 'large']);
 
 export type LineIngredient = Applied<IngredientRow> & QuantityIngredient;
 
+/** The rows' details ("cold", "cubed" → "cold, cubed"), each once, in order; null without one (spec 051). */
+export function lineDetail(rows: readonly { prep_note?: string | null }[]): string | null {
+  const notes = [...new Set(rows.map((r) => r.prep_note?.trim()).filter((n): n is string => !!n))];
+  return notes.length > 0 ? notes.join(', ') : null;
+}
+
 /**
  * How one ingredient reads in the list (FR-004), from the quantity engine. A size word ("large")
- * moves from the amount to the name ("3" · "Large eggs"). Brackets and how it's prepared stay out
- * of the list; steps say how it's prepared.
+ * moves from the amount to the name ("3" · "Large eggs"). Brackets stay out of the name; how it's
+ * prepared is its own line under it (spec 051 FR-008).
  */
 export function ingredientLine(ing: LineIngredient, options: FormatOptions): IngredientLine {
   const f = format(ing, options);
   const size = sizeWords.has(f.unit) ? f.unit : null;
   const amount = size ? f.amount : [f.amount, f.unit].filter(Boolean).join(' ');
   const sized = (name: string) => (size ? `${upperFirst(size)} ${name.charAt(0).toLowerCase()}${name.slice(1)}` : name);
-  return { id: ing.id, ids: [ing.id], amount, name: sized(ingredientName(ing.name)), fullName: sized(ing.name), sub: f.sub, variant: ing.fromVariant };
+  return { id: ing.id, ids: [ing.id], amount, name: sized(ingredientName(ing.name)), fullName: sized(ing.name), detail: lineDetail([ing]), sub: f.sub, variant: ing.fromVariant };
 }
 
 /**
@@ -74,9 +82,10 @@ export function mergedLine(rows: LineIngredient[], options: FormatOptions): Ingr
   const ids = rows.map((r) => r.id);
   const variant = rows.some((r) => r.fromVariant);
   const sum = sumIngredients(rows);
-  if (sum) return { ...ingredientLine(sum, options), id: first.id, ids, name: ingredientLine(first, options).name, variant };
+  const detail = lineDetail(rows);
+  if (sum) return { ...ingredientLine(sum, options), id: first.id, ids, name: ingredientLine(first, options).name, detail, variant };
   const lines = rows.map((r) => ingredientLine(r, options));
-  return { ...ingredientLine(first, options), ids, amount: lines.map((l) => l.amount).filter(Boolean).join(' + '), sub: null, variant };
+  return { ...ingredientLine(first, options), ids, amount: lines.map((l) => l.amount).filter(Boolean).join(' + '), detail, sub: null, variant };
 }
 
 /**

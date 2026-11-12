@@ -14,6 +14,8 @@ const GroceryItemFields = z.strictObject({
   aisle: Aisle.nullish(),
   checked: z.boolean().optional(),
   recipe_id: z.uuid().nullish(),
+  /** Spec 051 FR-009: how the recipe prepares it ("grated"), copied when it's added from one. */
+  recipe_detail: z.string().trim().max(200).nullish(),
 });
 const unitNeedsAmount = (i: { unit?: unknown; quantity?: unknown }) => i.unit == null || i.quantity != null;
 
@@ -22,7 +24,7 @@ export const GroceryItemInput = GroceryItemFields.refine(unitNeedsAmount, 'A uni
 export type GroceryItemInput = z.infer<typeof GroceryItemInput>;
 
 /** Spec 020: a change to an item (Edit, a merge). Clearing and ticking are set by the database. */
-export const GroceryItemUpdate = GroceryItemFields.omit({ checked: true, recipe_id: true }).partial().refine(unitNeedsAmount, 'A unit needs an amount');
+export const GroceryItemUpdate = GroceryItemFields.omit({ checked: true, recipe_id: true, recipe_detail: true }).partial().refine(unitNeedsAmount, 'A unit needs an amount');
 export type GroceryItemUpdate = z.infer<typeof GroceryItemUpdate>;
 
 /** Spec 022: the servings a recipe is on the list for (grocery_recipes, same limits as a recipe's). */

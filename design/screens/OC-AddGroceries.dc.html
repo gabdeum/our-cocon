@@ -36,6 +36,7 @@ a{color:#5A6820}a:hover{color:#424D17}
                   <input type="checkbox" checked="{{it.on}}" onChange="{{it.toggle}}" style="width: 26px; height: 26px; accent-color: #5A6820; flex: none; margin: 0">
                   <span style="flex: 1; min-width: 0">
                     <span style="{{it.nameStyle}}">{{it.name}}</span>
+                    <sc-if value="{{it.hasDetail}}" hint-placeholder-val="{{false}}"><span style="display: block; font-size: 13px; font-weight: 600; color: #7A6F55">In recipe: {{it.detail}}</span></sc-if>
                     <sc-if value="{{it.hasNote}}" hint-placeholder-val="{{false}}"><span style="display: block; font-size: 13px; font-weight: 700; color: #8A4B00">{{it.note}}</span></sc-if>
                   </span>
                   <span style="font-size: 15px; font-weight: 800; color: #5A503A">{{it.qty}}</span>
@@ -73,12 +74,12 @@ class Component extends DCLogic {
     this.data = [
       { name: 'From this recipe', hint: 'All ticked to start', items: [
         { id: 'pastry', name: 'Shortcrust pastry', qty: '1 sheet' },
-        { id: 'butter', name: 'Butter', qty: '20 g' },
-        { id: 'leek', name: 'Leeks', qty: '2 · 300 g' },
+        { id: 'butter', name: 'Butter', detail: 'for the pan', qty: '20 g' },
+        { id: 'leek', name: 'Leeks', detail: 'white and light green parts', qty: '2 · 300 g' },
         { id: 'lardons', name: 'Bacon lardons', qty: '200 g' },
         { id: 'eggs', name: 'Large eggs', qty: '3' },
-        { id: 'cream', name: 'Heavy cream', qty: '300 ml', note: 'Already on the list (100 ml) → will be 400 ml' },
-        { id: 'cheese', name: 'Gruyère', qty: '100 g' },
+        { id: 'cream', name: 'Heavy cream', detail: 'cold', qty: '300 ml', note: 'Already on the list (100 ml) → will be 400 ml' },
+        { id: 'cheese', name: 'Gruyère', detail: 'grated', qty: '100 g' },
         { id: 'nutmeg', name: 'Nutmeg', qty: '1 pinch' }
       ]}
     ];
@@ -91,7 +92,7 @@ class Component extends DCLogic {
         var on = !!s.on[it.id];
         if (on) count++;
         return {
-          name: it.name, qty: it.qty, on: on, hasNote: !!it.note && on, note: it.note || '',
+          name: it.name, qty: it.qty, on: on, hasDetail: !!it.detail, detail: it.detail || '', hasNote: !!it.note && on, note: it.note || '',
           nameStyle: 'display: block; font-size: 16px; font-weight: 800; color: ' + (on ? '#2A2414' : '#8F866C'),
           toggle: function () { var n = Object.assign({}, self.state.on); n[it.id] = !on; self.setState({ on: n }); }
         };

@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 import { resolveCooking, type Database } from '@cocon/schemas';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
 import { loadFamilySettings, saveFamilySettings } from './family-settings';
+import { loadMyRecipeSettings, saveMyUnits } from '@cocon/data';
 import { addItem, combineRows, loadGroceryList, rowAmounts } from './groceries';
 import { loadRecipe } from './recipe';
 import { saveRecipeOverrides } from './recipe-settings';
@@ -36,9 +37,9 @@ describe.skipIf(!local)('cooking settings against local Supabase', () => {
 
   /** A recipe as its page shows it, with the family's settings as they are now. */
   const page = async (client: Client, id: string) => {
-    const [recipe, family] = await Promise.all([loadRecipe(client, id), loadFamilySettings(client)]);
+    const [recipe, family, mine] = await Promise.all([loadRecipe(client, id), loadFamilySettings(client), loadMyRecipeSettings(client)]);
     if (!recipe) throw new Error('No such recipe');
-    const cooking = resolveCooking(family, recipe.overrides);
+    const cooking = resolveCooking(family, recipe.overrides, mine);
     const choices = { servings: recipe.serves, version: null, options: [], ...defaultPanelChoices, scaledBy: null };
     return { cooking, view: recipeView(recipe, choices, choices, formatOf(choices, cooking), cooking) };
   };
@@ -100,10 +101,11 @@ describe.skipIf(!local)('cooking settings against local Supabase', () => {
     expect((await loadRecipe(alex, quiche))?.overrides.has_thermometer).toBeNull();
   });
 
-  it('US3: the quiche in imperial, while the soup follows the family in metric', async () => {
-    expect((await saveRecipeOverrides(alex, quiche, { units: 'imperial' })).error).toBeNull();
+  it('spec 051: units are each person\'s: Alex picks imperial, Mia stays on the family\'s metric; a recipe\'s units no longer count', async () => {
+    expect((await saveRecipeOverrides(alex, quiche, { units: 'metric' })).error).toBeNull();
+    expect((await saveMyUnits(alex, familyId, 'imperial')).error).toBeNull();
     expect((await page(alex, quiche)).view.ingredients[0]?.sub).toMatch(/oz/);
-    expect((await page(alex, soup)).view.ingredients[0]?.sub).toMatch(/ g/);
+    expect((await page(mia, soup)).view.ingredients[0]?.sub).toMatch(/ g/);
   });
 
   it('L48: the grocery list shows Need in the family’s units', async () => {

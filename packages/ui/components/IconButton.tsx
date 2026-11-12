@@ -4,7 +4,7 @@ import { cn, focusRing } from '../cn';
 import { theme, type ColorName } from '../theme';
 import { Icon, type IconName } from './Icon';
 
-export type IconButtonVariant = 'default' | 'card' | 'soft' | 'olive' | 'square' | 'olive-square' | 'fab' | 'round';
+export type IconButtonVariant = 'default' | 'card' | 'soft' | 'olive' | 'square' | 'olive-square' | 'fab' | 'round' | 'outline';
 
 // bundle.css › IconButton
 const looks: Record<IconButtonVariant, { box: string; icon: ColorName }> = {
@@ -19,11 +19,13 @@ const looks: Record<IconButtonVariant, { box: string; icon: ColorName }> = {
   fab: { box: 'w-[60px] h-[60px] rounded-full bg-olive active:bg-olive-pressed', icon: 'onOlive' },
   // 40, white, floating: the top bar's back and actions (spec 050); `hitSlop` keeps the 44 target.
   round: { box: 'w-[40px] h-[40px] rounded-full bg-surface-card active:bg-surface-card-pressed', icon: 'ink' },
+  // 60, white with a 2 px olive ring, beside an ink `lg` Button: the recipe page's cart (spec 051 FR-014).
+  outline: { box: 'w-[60px] h-[60px] rounded-full border-2 border-olive bg-surface-card active:bg-surface-card-pressed', icon: 'oliveDeep' },
 };
 
 const shadows: Partial<Record<IconButtonVariant, string>> = { fab: theme.shadow.lift, round: theme.shadow.button };
 // Round buttons carry a bigger icon for their size (spec 050).
-const iconSizes: Partial<Record<IconButtonVariant, number>> = { round: 22 };
+const iconSizes: Partial<Record<IconButtonVariant, number>> = { round: 22, outline: 22 };
 const slops: Partial<Record<IconButtonVariant, number>> = { round: 2 };
 
 export interface IconButtonProps extends Omit<PressableProps, 'children' | 'style'> {

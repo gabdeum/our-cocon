@@ -1,12 +1,13 @@
 import { useEffect, useEffectEvent, useMemo, useState, type ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
-import { announce, Button, Callout, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
+import { announce, Button, Callout, CookSessionCard, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
 import { activeFilterKeys, emptyFilters, type RecipeFilters, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { PhotoUrls } from '../../lib/recipe-photo';
 import { visibleRecipes, type RecipeListItem } from '../../lib/recipes';
 import { inSeasonOn, toggleInSeason, toggleUnder30, under30On } from '../../lib/recipe-filters';
-import { recipeAuthor, recipeMeta } from '../../lib/recipe-format';
+import { memberName, recipeMeta, recipeSource } from '../../lib/recipe-format';
+import { listLine, stepTotal, type CookSession } from '../../lib/cook-sessions';
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -36,6 +37,13 @@ export interface RecipeListProps {
   footer?: ReactNode;
   /** Signed links of the recipes' photos, by path (032-later L10). */
   photoUrls?: PhotoUrls;
+  /** Spec 051 FR-003: the family's recipes being cooked, newest first. */
+  cooks?: readonly CookSession[];
+  onCookResume?: (cook: CookSession) => void;
+  onCookDone?: (cook: CookSession, recipeName: string) => void;
+  onCookCancel?: (cook: CookSession) => void;
+  /** The member's clock (spec 029): "since 18:40" or "since 6:40 PM". */
+  use24h?: boolean;
 }
 
 function useDebounced<T>(value: T, ms: number): T {
@@ -62,6 +70,11 @@ export function RecipeList({
   now = new Date(),
   footer,
   photoUrls = {},
+  cooks = [],
+  onCookResume,
+  onCookDone,
+  onCookCancel,
+  use24h = true,
 }: RecipeListProps) {
   const online = useOnline();
   const [query, setQuery] = useState('');
@@ -145,12 +158,44 @@ export function RecipeList({
         key={recipe.id}
         name={recipe.name}
         meta={recipeMeta(recipe)}
-        author={recipeAuthor(recipe.created_by, recipe.source, members)}
+        author={recipeSource(recipe, memberName(recipe.created_by, members))}
         placeholderTone={tone.get(recipe.id)}
         photoUri={recipe.photo_path ? photoUrls[recipe.photo_path] : undefined}
         onPress={() => open(recipe.id)}
       />
     ));
+
+  // FR-003: cooks of recipes still on the list (a deleted recipe's is cancelled anyway).
+  const cooking = cooks.flatMap((cook) => {
+    const recipe = recipes.find((x) => x.id === cook.recipe_id);
+    return recipe ? [{ cook, recipe }] : [];
+  });
+  const inProgress =
+    cooking.length > 0 ? (
+      <View role="region" aria-label={r.inProgress(cooking.length)} className="gap-8">
+        <Overline>{r.inProgress(cooking.length)}</Overline>
+        {cooking.map(({ cook, recipe }) => {
+          const total = stepTotal(recipe.stepCount, cook);
+          return (
+            <CookSessionCard
+              key={cook.id}
+              variant="list"
+              title={recipe.name}
+              line={listLine(cook, total, members, now, use24h)}
+              steps={{ count: total, current: cook.current_step }}
+              photoUri={recipe.photo_path ? photoUrls[recipe.photo_path] : undefined}
+              openLabel={r.resumeA11y(recipe.name, cook.current_step + 1, total)}
+              labels={{ cancel: strings.recipePage.cancel, done: strings.recipePage.done, resume: strings.recipePage.resume }}
+              a11y={{ cancel: r.cancelA11y(recipe.name), done: r.doneA11y(recipe.name), resume: r.resumeA11y(recipe.name, cook.current_step + 1, total) }}
+              disabled={!online}
+              onCancel={() => onCookCancel?.(cook)}
+              onDone={() => onCookDone?.(cook, recipe.name)}
+              onResume={() => onCookResume?.(cook)}
+            />
+          );
+        })}
+      </View>
+    ) : null;
 
   return (
     <TabScreen
@@ -177,6 +222,7 @@ export function RecipeList({
       }
     >
       <OfflineBanner screen="recipes" tracker={tracker} />
+      {inProgress}
       {results.length === 0 && !settled ? (
         <View className="gap-12">
           <Text size={18} weight="900" role="heading" aria-level={2}>

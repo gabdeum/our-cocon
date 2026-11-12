@@ -24,7 +24,7 @@ export interface IngredientsSectionProps {
   servings: number;
   /** The row whose name is focused, with what the catalog suggests for it. */
   suggestions: { key: string; items: IngredientFacts[] } | null;
-  onChangeRow: (key: string, patch: Partial<Pick<IngredientDraft, 'quantity' | 'weight'>>) => void;
+  onChangeRow: (key: string, patch: Partial<Pick<IngredientDraft, 'quantity' | 'weight' | 'prepNote'>>) => void;
   onNameChange: (key: string, name: string) => void;
   onNameFocus: (key: string) => void;
   onNameBlur: (key: string) => void;
@@ -93,6 +93,13 @@ export function IngredientsSection(p: IngredientsSectionProps) {
                 unitPlaceholder={warning === 'unitMissing' ? ing.unitMissingButton : ing.unit}
                 unitLabel={ing.unit}
                 onUnitPress={() => p.onOpenUnit(d.key)}
+                detail={{
+                  value: d.prepNote ?? '',
+                  // An emptied field is no detail.
+                  onChange: (t) => p.onChangeRow(d.key, { prepNote: t === '' ? null : t }),
+                  label: ing.detail,
+                  placeholder: ing.detailPlaceholder,
+                }}
                 weight={
                   piece
                     ? { value: d.weight, onChange: (t) => p.onChangeRow(d.key, { weight: amountInput(t, { fractions: false }) }), label: ing.weight, prefix: ing.each, suffix: ing.grams, placeholder: ing.weightPlaceholder }

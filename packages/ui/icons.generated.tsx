@@ -12,6 +12,9 @@ export const iconShapes = {
   "bell": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><Path d="M10.3 21a1.9 1.9 0 0 0 3.4 0" /></Svg>
   ),
+  "book": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3Z" /><Path d="M5 17a3 3 0 0 1 3-3h11" /></Svg>
+  ),
   "cake": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M4 21h16v-8H4ZM4 17c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5M12 13V9M12 6.5a1.5 1.5 0 0 1-1-2.5L12 3l1 1a1.5 1.5 0 0 1-1 2.5Z" /></Svg>
   ),
@@ -86,6 +89,9 @@ export const iconShapes = {
   ),
   "plus": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><Path d="M12 5v14M5 12h14" /></Svg>
+  ),
+  "pot": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M4 11h16v2a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7Z" /><Path d="M8 4c0 2 2 2 2 4M14 4c0 2 2 2 2 4" /></Svg>
   ),
   "recipes": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2Z" /><Path d="M8 7h6M8 11h6" /></Svg>

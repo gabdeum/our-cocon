@@ -10,6 +10,9 @@ const s = strings.settings.recipes;
 export interface RecipesSettingsProps {
   settings: FamilySettings;
   onChange: (change: FamilySettingsUpdate) => Promise<'saved' | 'failed'>;
+  /** Spec 051: the member's own units (the family's old setting until they pick). */
+  units: UnitSystem;
+  onUnitsChange: (units: UnitSystem) => Promise<'saved' | 'failed'>;
   onBack: () => void;
   tracker: Tracker;
   /** Offline: the settings show, but can't change (decision 11). */
@@ -17,19 +20,46 @@ export interface RecipesSettingsProps {
 }
 
 /**
- * Spec 027 FR-006 (design/ui/OC-SettingsRecipes.md): the family's cooking defaults, used by every
- * recipe that hasn't changed them in its own settings. Saved at once for the whole family; a
- * failed save reverts and says so.
+ * Spec 027 FR-006 (design/ui/OC-SettingsRecipes.md): the member's own units (spec 051), then the
+ * family's cooking defaults, used by every recipe that hasn't changed them in Edit › This recipe.
+ * Saved at once; a failed save reverts and says so.
  */
-export function RecipesSettings({ settings, onChange, onBack, tracker, readOnly }: RecipesSettingsProps) {
+export function RecipesSettings({ settings, onChange, units, onUnitsChange, onBack, tracker, readOnly }: RecipesSettingsProps) {
   const [failed, setFailed] = useState(false);
   const change = async (update: FamilySettingsUpdate) => {
     setFailed((await onChange(update)) === 'failed');
+  };
+  const changeUnits = async (next: UnitSystem) => {
+    setFailed((await onUnitsChange(next)) === 'failed');
   };
   return (
     <PushedScreen className="gap-18" topBar={{ back: { label: s.back, onPress: onBack }, title: s.title }}>
       <Lead>{s.lead}</Lead>
       <OfflineBanner screen="settings" tracker={tracker} />
+      <View role="region" aria-label={s.forYou} className="gap-8">
+        <Text size={18} weight="900" role="heading" aria-level={2}>
+          {s.forYou}
+        </Text>
+        <Card className="gap-10 px-16 py-14">
+          {/* The control is named "Units" too: said once (spec 030). */}
+          <Text size={16} weight="800" aria-hidden>
+            {s.units}
+          </Text>
+          <SegmentedControl<UnitSystem>
+            label={s.units}
+            value={units}
+            onChange={(next) => void changeUnits(next)}
+            segments={[
+              { key: 'metric', label: s.metric },
+              { key: 'imperial', label: s.imperial },
+            ]}
+            disabled={readOnly}
+          />
+          <Text size={13} weight="600" color="ink-muted">
+            {s.unitsHint}
+          </Text>
+        </Card>
+      </View>
       <View role="region" aria-label={s.cookingDefaults} className="gap-8">
         <Text size={18} weight="900" role="heading" aria-level={2}>
           {s.cookingDefaults}
@@ -43,23 +73,8 @@ export function RecipesSettings({ settings, onChange, onBack, tracker, readOnly 
             value={settings.has_thermometer}
             onValueChange={(on) => void change({ has_thermometer: on })}
             disabled={readOnly}
+            last
           />
-          <View className="gap-10 py-14">
-            {/* The control is named "Units" too: said once (spec 030). */}
-            <Text size={16} weight="800" aria-hidden>
-              {s.units}
-            </Text>
-            <SegmentedControl<UnitSystem>
-              label={s.units}
-              value={settings.units}
-              onChange={(units) => void change({ units })}
-              segments={[
-                { key: 'metric', label: s.metric },
-                { key: 'imperial', label: s.imperial },
-              ]}
-              disabled={readOnly}
-            />
-          </View>
         </Card>
       </View>
       {failed && !readOnly ? <StatusBanner tone="warn" message={s.saveFailed} /> : null}

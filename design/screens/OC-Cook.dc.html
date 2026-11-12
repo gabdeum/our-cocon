@@ -17,7 +17,7 @@ body{margin:0}
 
   <header style="flex: none; padding: 52px 20px 12px; display: flex; flex-direction: column; gap: 12px; background: #FFF8E3; border-bottom: 1.5px solid #F2E6C4">
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
-      <a href="OC-RecipeSteps.dc.html" aria-label="Exit cooking mode" style="text-decoration: none; width: 48px; height: 48px; flex: none; border-radius: 50%; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(42,36,20,0.18)">
+      <a href="OC-RecipeSteps.dc.html" aria-label="Leave cooking mode, stays in progress" style="text-decoration: none; width: 48px; height: 48px; flex: none; border-radius: 50%; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(42,36,20,0.18)">
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </a>
       <sc-if value="{{hasPill}}" hint-placeholder-val="{{false}}">
@@ -78,13 +78,13 @@ body{margin:0}
         </sc-if>
       </section>
     </sc-for>
-    <div style="height: 280px; display: flex; align-items: flex-start; justify-content: center; padding-top: 30px; font-size: 18px; font-weight: 900; color: #5A6820">Bon appétit!</div>
+    <div style="height: 280px; display: flex; align-items: flex-start; justify-content: center; padding-top: 30px; font-size: 18px; font-weight: 900; color: #5A6820">Bon appétit! Tap Done cooking to log it.</div>
   </div>
 
   <div style="flex: none; padding: 12px 20px 28px; display: grid; grid-template-columns: 1fr 2fr; gap: 10px; background: #FFF8E3; border-top: 1.5px solid #F2E6C4">
-    <!-- First step: Back reads "Exit" (ink, close icon). Last step: "Finish" (ink, check icon). -->
-    <button onClick="{{prev}}" style="{{prevStyle}}">{{prevLabel}}</button>
-    <button onClick="{{next}}" style="{{nextStyle}}">{{nextLabel}}</button>
+    <button onClick="{{prev}}" style="height: 60px; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; cursor: pointer">Back</button>
+    <sc-if value="{{notLast}}" hint-placeholder-val="{{true}}"><button onClick="{{next}}" style="height: 60px; border-radius: 999px; border: none; background: #5A6820; color: #FFFFFF; font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; cursor: pointer">{{nextLabel}}</button></sc-if>
+    <sc-if value="{{isLast}}" hint-placeholder-val="{{false}}"><a href="OC-CookDone.dc.html" style="height: 60px; border-radius: 999px; background: #5A6820; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900">Done cooking</a></sc-if>
   </div>
 </div>
 </x-dc>
@@ -157,10 +157,7 @@ class Component extends DCLogic {
       bars: this.steps.map(function (st, k) {
         return { label: 'Go to step ' + (k + 1) + ': ' + st.name, go: function () { self.jump(k); }, style: 'display: block; height: 8px; border-radius: 4px; background: ' + (k < s.i ? '#A9B46A' : k === s.i ? '#5A6820' : '#EEDFB5') };
       }),
-      nextLabel: s.i === n - 1 ? '✓ Finish' : 'Next step',
-      prevLabel: s.i === 0 ? '✕ Exit' : 'Back',
-      prevStyle: "height: 60px; border-radius: 999px; border: none; font-family: 'Nunito', sans-serif; font-size: 17px; cursor: pointer; " + (s.i === 0 ? 'background: #2A2414; color: #FFFFFF; font-weight: 900' : 'background: #FFF0C9; color: #2A2414; font-weight: 800'),
-      nextStyle: "height: 60px; border-radius: 999px; border: none; color: #FFFFFF; font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; cursor: pointer; background: " + (s.i === n - 1 ? '#2A2414' : '#5A6820'),
+      nextLabel: 'Next step', isLast: s.i === n - 1, notLast: s.i < n - 1,
       onScroll: function (e) {
         if (self.lock) return;
         var box = e.currentTarget, best = 0;

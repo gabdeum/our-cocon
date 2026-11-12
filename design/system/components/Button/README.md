@@ -26,7 +26,8 @@ Pill-shaped buttons for actions, from the one main step on a screen (ink) down t
 | `tile` | surface-card, 2 px line-strong / ink 14/800 | A choice in a two-column grid of actions: "Add a change" (OC-EditVariants). Pressed: surface-soft |
 | `danger` | danger / white | Delete recipe (in a Dialog only) |
 | `danger-outline` | white, 2 px danger / danger 16/900 | A Dialog's second destructive choice: "This and all future ones" (spec 042) |
-| link | text olive 15/800 (danger, warn and muted versions; warn for "Stop sharing this link"); optional 18 px icon 8 before the label, in its colour | Tertiary: Clear all, See all, Stop sharing, Delete this recipe (trash icon) |
+| `danger-card` | white, radius 18, 54 tall / danger 16/800, optional trash icon | A destructive action ending a form section: "Delete recipe" in the recipe form's This recipe (spec 051) |
+| link | text olive 15/800 (danger, warn, muted and ink versions; warn for "Stop sharing this link"; ink, underlined 15/900, for the Done sheet's "Undo", spec 051); optional 18 px icon 8 before the label, in its colour | Tertiary: Clear all, See all, Stop sharing, Delete this recipe (trash icon) |
 
 ## States
 

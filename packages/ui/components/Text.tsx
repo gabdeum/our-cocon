@@ -5,11 +5,12 @@ import { cn } from '../cn';
 export type TextVariant = keyof typeof theme.text;
 export type Weight = keyof typeof theme.font;
 /** Text colours allowed by Extending.md's pairing table (plus danger and ink-faint for their one use). */
-export type TextColor = 'ink' | 'ink-muted' | 'ink-faint' | 'olive' | 'olive-deep' | 'warn' | 'on-olive' | 'on-ink' | 'peach-ink' | 'danger' | 'surface-page';
+export type TextColor = 'ink' | 'ink-muted' | 'ink-soft' | 'ink-faint' | 'olive' | 'olive-deep' | 'warn' | 'on-olive' | 'on-ink' | 'peach-ink' | 'danger' | 'surface-page';
 
 const colorClass: Record<TextColor, string> = {
   ink: 'text-ink',
   'ink-muted': 'text-ink-muted',
+  'ink-soft': 'text-ink-soft',
   'ink-faint': 'text-ink-faint',
   olive: 'text-olive',
   'olive-deep': 'text-olive-deep',
@@ -35,6 +36,18 @@ export interface TextProps extends RNTextProps {
   strike?: boolean;
   underline?: boolean;
   className?: string;
+}
+
+/**
+ * Spec 051 FR-008: a quiet second line people still read (an ingredient's detail, a grocery row's
+ * source), 13/600 ink-soft at 1.35.
+ */
+export function DetailText({ children, className }: { children: string; className?: string }) {
+  return (
+    <Text size={13} weight="600" color="ink-soft" className={className} style={{ lineHeight: 17.5 }}>
+      {children}
+    </Text>
+  );
 }
 
 /** Nunito text from the type tokens. Weights map to their own font files (Nunito_900Black…). */

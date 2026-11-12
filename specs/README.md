@@ -88,6 +88,7 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 47 | 048 Timers on the Lock Screen and in the Dynamic Island | 010, 011, 046, 047 | OC-NotifLockTimer, OC-NotifIsland, OC-NotifLockDone |
 | 48 | 049 Event reminders on the phone | 033, 035, 041, 043, 046 | OC-NotifLockReminders, OC-SettingsNotif |
 | 49 | 050 One top bar for every pushed screen | 002, and every screen it lists | OC-Recipe, OC-RecipeSettings, OC-Timers, OC-Cook, OC-CalEvent, OC-CalEventDelete, OC-CalSurprise, OC-CalSettings, OC-Connect, OC-SettingsFamily, OC-SettingsRecipes, OC-SettingsGroceries, OC-SettingsNotif |
+| 50 | 051 Recipes review: cooking in progress, ingredient detail, source, actions | 004, 006, 008, 012, 014, 015, 020, 022, 023, 027, 031 | OC-Recipes, OC-Recipe, OC-RecipeWide, OC-Cook, OC-CookDone, OC-EditBasics, OC-EditIngredients, OC-AddGroceries, OC-Groceries |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
 Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order, then the top bar (050) across every pushed screen.
@@ -120,11 +121,11 @@ All 36 open questions are answered. The specs, UI specs and screens already refl
 | 18 | Timers | Personal, on your device |
 | 19 | Background alerts | V2: timers 047 and 048, event reminders 049 |
 | 20 | Timer sound | Soft kitchen-bell chime |
-| 21 | Finish cooking | Just closes |
+| 21 | Finish cooking | "Done cooking" logs it as cooked (spec 051; was "Just closes") |
 | 22 | Home hero | Latest recipe; a calendar will replace it later |
 | 23 | Share links | Last until you stop sharing |
 | 24 | Shared view units | Opens in metric, with a Metric · Imperial toggle |
-| 25 | Defaults | Per family; units can be overridden per recipe |
+| 25 | Defaults | Per family; each recipe can change them, except units, which are each person's (spec 051) and switch for one visit in a recipe's "…" |
 | 26 | Scale switch | Only affects your device |
 | 27 | Account section | Built from existing components |
 | 28 | Ticked groceries | Cleared only when "Clear done items" is pressed |

@@ -322,7 +322,8 @@ export function GroceryList(props: GroceryListProps) {
                   key={row.id}
                   title={title}
                   titleDetail={detail ? { text: detail, note } : undefined}
-                  sub={rowSource(row, members)}
+                  sub={rowSource(row, members) ?? undefined}
+                  subTone="soft"
                   done={row.checked}
                   leading={{ kind: 'checkbox', checked: row.checked }}
                   action={{ icon: 'more-vertical', accessibilityLabel: g.editItem(title), onPress: () => openRow(row, 'menu'), disabled: !online }}

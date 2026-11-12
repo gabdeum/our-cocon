@@ -145,7 +145,8 @@ describe('the section (OC-EditIngredients › Layout)', () => {
     expect((screen.getByLabelText('Weight of one (g)') as HTMLInputElement).value).toBe('150');
     expect(screen.getByRole('button', { name: '+ Add ingredient' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Paste a list' })).toBeTruthy();
-    expect(screen.getByText("Tip: paste “200 g lardons, 3 eggs…” and we'll split it into rows.")).toBeTruthy();
+    expect(screen.getByText("Tip: paste “200 g lardons, 100 g Gruyère, grated…” and we'll split it into rows. Anything after a comma goes into Detail.")).toBeTruthy();
+    expect(screen.getByText(/Detail is how it's prepared; it shows under the name and on the grocery list\./)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Next: Steps' })).toBeTruthy();
   });
 });
@@ -279,6 +280,31 @@ describe('remove and reorder (FR-002)', () => {
     await save();
     expect(update).toHaveBeenCalled();
     expect(savedRows(rpc)).toBeUndefined();
+  });
+});
+
+describe('spec 051 US4: the ingredient detail', () => {
+  it('each row has "Detail (optional)"; pasting "100 g Gruyère, grated" fills the name and the detail', async () => {
+    const { rpc } = setup();
+    expect(screen.getAllByLabelText('Detail (optional)')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Paste a list' }));
+    fireEvent.change(screen.getByLabelText('Your ingredients'), { target: { value: '100 g Gruyère, grated' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add ingredients' }));
+    await flush();
+    expect(names()).toEqual(['Butter', 'Leeks', 'Gruyère']);
+    const detail = screen.getAllByLabelText('Detail (optional)').at(-1) as HTMLInputElement;
+    expect(detail.value).toBe('grated');
+    expect(detail.placeholder).toBe('Detail (optional) · sliced, at room temp…');
+    await save();
+    expect(savedRows(rpc)?.at(-1)).toMatchObject({ name: 'Gruyère', prep_note: 'grated' });
+  });
+
+  it('a detail edited alone is saved; a comma typed in the name moves to the detail', async () => {
+    const { rpc } = setup();
+    fireEvent.change(screen.getAllByLabelText('Detail (optional)')[0] as HTMLElement, { target: { value: 'softened' } });
+    fireEvent.change(last('Ingredient name'), { target: { value: 'Leeks, sliced' } });
+    await save();
+    expect(savedRows(rpc)).toEqual([expect.objectContaining({ name: 'Butter', prep_note: 'softened' }), expect.objectContaining({ name: 'Leeks', prep_note: 'sliced' })]);
   });
 });
 

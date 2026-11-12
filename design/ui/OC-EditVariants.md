@@ -12,7 +12,7 @@ Source `screens/OC-EditVariants.dc.html` · Route `…/edit?section=variants` ·
    - "Add a change": buttons "Swap ingredient", "Add ingredient", "Remove ingredient", "Add a step", "Change a step", "Remove a step"; each opens an inline editor reusing the ingredient and step editors
 4. Dashed "+ New variant".
 5. Ink "Save recipe".
-6. Danger link with trash icon "Delete this recipe" (edit mode only) → delete dialog.
+6. (Moved in spec 051: "Delete recipe" is at the end of Details › This recipe, OC-EditBasics.)
 
 ## Validation copy
 | Case | Message |

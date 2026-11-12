@@ -2,10 +2,14 @@ import { useCallback } from 'react';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
+import { useCookActions } from '../../components/cooking/use-cook-actions';
 import { RecipeList } from '../../components/recipes/RecipeList';
 import { useUndoDelete } from '../../components/recipes/UndoDelete';
 import { DebugFooter } from '../../components/DebugFooter';
 import { config } from '../../lib/tracker';
+import { useCalendarDisplay } from '../../lib/calendar-prefs';
+import { useOpenCooks } from '../../lib/cook-sessions';
+import { MAX_TRACKED_STEPS } from '@cocon/schemas';
 import { useRecipePhotoUrls } from '../../lib/recipe-photo';
 import { restoreRecipe } from '../../lib/recipe-delete';
 import { loadRecipeList, recipeListKey } from '../../lib/recipes';
@@ -35,6 +39,10 @@ export default function RecipesTab() {
     enabled: familyId !== null,
   });
   const photoUrls = useRecipePhotoUrls(client, familyId, list.data?.map((r) => r.photo_path) ?? []);
+  // Spec 051 FR-003: recipes being cooked, live for the whole family.
+  const cooks = useOpenCooks();
+  const actions = useCookActions();
+  const { use24h } = useCalendarDisplay().prefs;
   useUndoDelete({
     deleted,
     tracker,
@@ -46,6 +54,7 @@ export default function RecipesTab() {
     onShown: clearDeleted,
   });
   return (
+    <>
     <RecipeList
       recipes={list.data}
       members={state.status === 'ready' ? state.members : []}
@@ -62,6 +71,16 @@ export default function RecipesTab() {
       }}
       footer={<DebugFooter config={config} />}
       photoUrls={photoUrls}
+      cooks={cooks.data}
+      use24h={use24h}
+      onCookResume={(cook) => {
+        tracker.track('cook_resumed', { from: 'list', step: Math.min(cook.current_step + 1, MAX_TRACKED_STEPS) });
+        router.push(`/recipes/${cook.recipe_id}/cook` as Href);
+      }}
+      onCookDone={(cook, name) => void actions.finish(cook, name)}
+      onCookCancel={(cook) => void actions.cancel(cook)}
     />
+    {actions.sheet}
+    </>
   );
 }

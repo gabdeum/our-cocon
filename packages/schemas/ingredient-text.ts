@@ -131,6 +131,26 @@ export function ingredientName(name: string): string {
   return short || name.trim();
 }
 
+/**
+ * Spec 051 FR-007: "Gruyère, grated" → name "Gruyère", detail "grated". Splits at the first comma
+ * outside brackets, so "Flour (00, fine)" stays whole. The detail is saved as `prep_note`; a name
+ * never keeps it.
+ */
+export function splitIngredientDetail(text: string): { name: string; detail: string | null } {
+  let depth = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text[i];
+    if (c === '(') depth += 1;
+    else if (c === ')') depth = Math.max(0, depth - 1);
+    else if (c === ',' && depth === 0) {
+      const name = text.slice(0, i).trim();
+      if (!name) break;
+      return { name, detail: text.slice(i + 1).replace(/\s+/g, ' ').trim().slice(0, 80).trim() || null };
+    }
+  }
+  return { name: text.trim(), detail: null };
+}
+
 /** How it's prepared, shown in steps: the row's prep note, else what follows a comma in its name. */
 export function ingredientNote(name: string, prepNote?: string | null): string | null {
   if (prepNote?.trim()) return prepNote.trim();

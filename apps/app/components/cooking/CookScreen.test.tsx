@@ -10,6 +10,7 @@ import type { RecipeDetail } from '../../lib/recipe';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { defaultCooking } from '../../lib/recipe-view';
 import { TimersProvider } from '../../lib/timer-store';
+import { forgetVisitUnits } from '../../lib/visit-units';
 import { fakeTracker, gabriel } from '../../test/fakes';
 import { expectAccessible } from '../../test/axe';
 
@@ -75,6 +76,7 @@ async function setup(props: Partial<CookScreenProps> = {}) {
   const tracker = fakeTracker();
   const onClose = vi.fn();
   const onOpenTimers = vi.fn();
+  const onDone = vi.fn();
   const wrapper = ({ children }: { children: ReactNode }) => (
     <TimersProvider userId={gabriel.user_id} storage={memoryStorage()} tracker={tracker}>
       {children}
@@ -91,12 +93,13 @@ async function setup(props: Partial<CookScreenProps> = {}) {
       onScaleByIngredient={vi.fn()}
       onConvert={vi.fn()}
       onEditStep={vi.fn()}
+      onDone={onDone}
       {...props}
     />,
     { wrapper },
   );
   await settle();
-  return { ...utils, tracker, onClose, onOpenTimers };
+  return { ...utils, tracker, onClose, onOpenTimers, onDone };
 }
 
 const section = (i: number) => screen.getByTestId(`cook-step-${i}`);
@@ -106,14 +109,14 @@ const press = (name: string | RegExp) => fireEvent.click(screen.getByRole('butto
 describe('Cooking mode (spec 012)', () => {
   it('opens at step 1 with the header, every step and "Bon appétit!", and sends cooking_started', async () => {
     const { tracker } = await setup();
-    // The header's round ✕ (spec 050), and Back reads Exit on the first step.
-    expect(screen.getByRole('button', { name: 'Exit cooking mode' })).toBeTruthy();
-    expect(screen.getAllByRole('button', { name: 'Exit' })).toHaveLength(1);
+    // The header's round ✕ (spec 050), and Back reads Back even on the first step (spec 051).
+    expect(screen.getByRole('button', { name: 'Leave cooking mode, stays in progress' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Back' })).toHaveLength(1);
     expect(screen.getByRole('button', { name: 'Cooking options' })).toBeTruthy();
     expect(screen.getByText(`Step 1 of ${STEPS}`)).toBeTruthy();
     expect(screen.getByText('Serves 6 · swipe up for next')).toBeTruthy();
     expect(screen.getByRole('heading', { level: 2, name: 'Blind bake' })).toBeTruthy();
-    expect(screen.getByText('Bon appétit!')).toBeTruthy();
+    expect(screen.getByText('Bon appétit! Tap Done cooking to log it.')).toBeTruthy();
     expect(isCurrent(0)).toBe(true);
     expect(isCurrent(1)).toBe(false);
     expect(tracker.track).toHaveBeenCalledWith('cooking_started', { step_count: STEPS });
@@ -196,7 +199,7 @@ describe('Cooking mode (spec 012)', () => {
     expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
   });
 
-  it('the options sheet has the recipe page\'s "…" options: Imperial changes the steps at once and is remembered', async () => {
+  it('the options sheet has the recipe page\'s "…" options: Imperial changes the steps at once, for this visit only (spec 051)', async () => {
     const storage = memoryStorage();
     const onConvert = vi.fn();
     const { tracker } = await setup({ storage, onConvert });
@@ -205,7 +208,8 @@ describe('Cooking mode (spec 012)', () => {
     press('Imperial');
     expect(within(section(0)).getByText(/350 °F \(180 °C\)/)).toBeTruthy();
     expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial' });
-    expect(JSON.parse((await storage.getItem(`cocon.recipe.${gabriel.user_id}.${detail.id}`)) ?? '{}').system).toBe('imperial');
+    expect(JSON.parse((await storage.getItem(`cocon.recipe.${gabriel.user_id}.${detail.id}`)) ?? '{}').system ?? null).toBeNull();
+    forgetVisitUnits(detail.id);
     fireEvent.click(screen.getByRole('link', { name: 'Unit converter' }));
     expect(onConvert).toHaveBeenCalledOnce();
     expect(screen.queryByRole('switch', { name: 'Screen stays on' })).toBeNull();
@@ -235,6 +239,7 @@ describe('Cooking mode (spec 012)', () => {
         onScaleByIngredient={vi.fn()}
         onConvert={vi.fn()}
         onEditStep={vi.fn()}
+        onDone={vi.fn()}
         cooking={{ ...defaultCooking, keepAwake: false }}
       />,
     );
@@ -256,32 +261,37 @@ describe('Cooking mode (spec 012)', () => {
     expect(within(section(0)).getByText(/350 °F \(180 °C\)/)).toBeTruthy();
   });
 
-  it('Back on the first step reads Exit and leaves cooking mode, like Exit', async () => {
+  it('Back on the first step leaves cooking mode, like ✕ (the cook stays in progress)', async () => {
     const { tracker, onClose } = await setup();
-    press('Exit');
+    press('Back');
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(tracker.track).toHaveBeenCalledWith('cooking_exited', { at_step: 1, step_count: STEPS });
-    cleanup();
-    await setup();
-    press('Next step');
-    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Exit' })).toBeNull();
   });
 
-  it('the last step reads "Finish": it closes with no prompt and sends cooking_finished', async () => {
-    const { tracker, onClose } = await setup();
+  it('051 US1.5: the last step reads "Done cooking", which logs the cook instead of closing', async () => {
+    const { onClose, onDone } = await setup();
     press(new RegExp(`^Go to step ${STEPS}`));
     expect(screen.queryByRole('button', { name: 'Next step' })).toBeNull();
-    act(() => vi.advanceTimersByTime(42 * 60_000));
-    press('Finish');
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(tracker.track).toHaveBeenCalledWith('cooking_finished', { step_count: STEPS, minutes: 42 });
+    press('Done cooking');
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('051 US1.3: a resumed cook opens at its step with its servings and version, and reports each step', async () => {
+    const onStep = vi.fn();
+    await setup({ session: { current_step: 2, servings: 4, variant_id: quicheIds.vegetarian }, onStep });
+    expect(screen.getByText(/^Step 3 of/)).toBeTruthy();
+    expect(screen.getByText('Serves 4 · swipe up for next')).toBeTruthy();
+    expect(onStep).toHaveBeenLastCalledWith(2);
+    press('Next step');
+    expect(onStep).toHaveBeenLastCalledWith(3);
   });
 
   it('Exit closes and sends cooking_exited with the step it was on', async () => {
     const { tracker, onClose } = await setup();
     press(/^Go to step 3/);
-    press('Exit cooking mode');
+    press('Leave cooking mode, stays in progress');
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(tracker.track).toHaveBeenCalledWith('cooking_exited', { at_step: 3, step_count: STEPS });
   });
@@ -305,12 +315,12 @@ describe('Cooking mode (spec 012)', () => {
         servings: 6,
         version: null,
         options: [],
-        system: 'imperial',
         kitchenScale: false,
         scaledBy: { ingredientId: quicheIds.lardons, amount: 250, unit: 'g' },
       }),
     });
-    await setup({ storage });
+    // Units follow the recipe's setting (spec 051 FR-013).
+    await setup({ storage, cooking: { ...defaultCooking, system: 'imperial' } });
     expect(screen.getByText('Serves 7½ · swipe up for next')).toBeTruthy();
     // Imperial and ×1.25: the oven reads °F first, and leeks drop their weight with no scale.
     expect(within(section(0)).getByText(/350 °F \(180 °C\)/)).toBeTruthy();
@@ -336,7 +346,7 @@ describe('Cooking mode (spec 012)', () => {
     expect(screen.getByText("We couldn't open this recipe.")).toBeTruthy();
     press('Try again');
     expect(onRetry).toHaveBeenCalled();
-    press('Exit cooking mode');
+    press('Leave cooking mode, stays in progress');
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -347,7 +357,7 @@ describe('Cooking mode (spec 012)', () => {
     expect(first.tracker.track).toHaveBeenCalledWith('cooking_exited', { at_step: 2, step_count: STEPS });
 
     const second = await setup();
-    press('Exit cooking mode');
+    press('Leave cooking mode, stays in progress');
     second.unmount();
     expect(second.tracker.track.mock.calls.filter(([e]) => e === 'cooking_exited')).toHaveLength(1);
   });
@@ -365,6 +375,7 @@ describe('Cooking mode (spec 012)', () => {
         onScaleByIngredient={vi.fn()}
         onConvert={vi.fn()}
         onEditStep={vi.fn()}
+        onDone={vi.fn()}
       />,
     );
     await settle();

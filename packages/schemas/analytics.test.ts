@@ -148,14 +148,14 @@ describe('createTracker', () => {
     const t = fakeTransport();
     const tracker = createTracker(t);
     tracker.track('cooking_started', { step_count: 6 });
-    tracker.track('cooking_finished', { step_count: 6, minutes: 42 });
+    tracker.track('cook_finished', { status: 'done', cancel_reason: null, steps_seen: 6, minutes: 42 });
     tracker.track('cooking_exited', { at_step: 3, step_count: 6 });
     expect(t.capture).toHaveBeenCalledWith('cooking_started', { step_count: 6 });
-    expect(t.capture).toHaveBeenCalledWith('cooking_finished', { step_count: 6, minutes: 42 });
+    expect(t.capture).toHaveBeenCalledWith('cook_finished', { status: 'done', cancel_reason: null, steps_seen: 6, minutes: 42 });
     expect(t.capture).toHaveBeenCalledWith('cooking_exited', { at_step: 3, step_count: 6 });
     expect(() => tracker.track('cooking_started', { step_count: 0 })).toThrow();
     expect(() => tracker.track('cooking_exited', { at_step: 0, step_count: 6 })).toThrow();
-    expect(() => tracker.track('cooking_finished', { step_count: 6, minutes: 1.5 })).toThrow();
+    expect(() => tracker.track('cook_finished', { status: 'done', cancel_reason: null, steps_seen: 6, minutes: 1.5 })).toThrow();
     expect(() => tracker.track('cooking_started', { step_count: 6, recipe: 'Quiche' } as never)).toThrow();
     tracker.track('cook_screen_awake_toggled', { on: false });
     expect(t.capture).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false });
@@ -174,6 +174,21 @@ describe('grocery recipe card events (spec 022)', () => {
     expect(() => tracker.track('grocery_recipe_removed', { item_count: 0 })).toThrow();
     expect(() => tracker.track('grocery_recipe_servings_changed', { from: 4, to: 51 })).toThrow();
     expect(() => tracker.track('grocery_recipe_removed', { item_count: 2, recipe: 'Quiche' } as never)).toThrow();
+  });
+});
+
+describe('spec 051 events', () => {
+  it('sends ids, steps and minutes, never names', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('cook_started', { recipe_id: '00000000-0000-4000-8000-0000000000e1', resumed_existing: false });
+    tracker.track('cook_resumed', { from: 'list', step: 3 });
+    tracker.track('cook_finished', { status: 'cancelled', cancel_reason: 'user', steps_seen: 3, minutes: 12 });
+    tracker.track('recipe_edit_opened', { from: 'top_bar' });
+    tracker.track('my_units_changed', { system: 'imperial' });
+    expect(t.capture).toHaveBeenCalledTimes(5);
+    expect(() => tracker.track('cook_started', { recipe_id: 'Leek & bacon quiche', resumed_existing: false } as never)).toThrow();
+    expect(() => tracker.track('cook_resumed', { from: 'home', step: 3 } as never)).toThrow();
   });
 });
 

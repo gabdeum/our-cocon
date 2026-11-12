@@ -35,6 +35,8 @@ function recipe(name: string, fields: Partial<RecipeListItem> = {}): RecipeListI
     photo_path: null,
     created_by: mia.user_id,
     source: 'app',
+    source_text: null,
+    stepCount: 6,
     created_at: `2026-10-${String(30 - (seq % 28)).padStart(2, '0')}T10:00:00Z`,
     ingredientNames: [],
     variantCount: 0,
@@ -94,11 +96,11 @@ describe('the list (FR-001, FR-006; 050 FR-007)', () => {
     ['Quiche Lorraine', "Grandma's apple tart", 'Dish 1', 'Dish 2'].forEach((name, i) => expect(order[i]).toMatch(new RegExp(`^${name}[A-Z0-9]`)));
   });
 
-  it('shows the meta and author lines', () => {
+  it('shows the meta and source lines (spec 051 FR-015)', () => {
     setup();
     const item = screen.getByRole('link', { name: /Quiche Lorraine/ });
     expect(within(item).getByText('1 h 10 · Serves 6 · French · 2 variants')).toBeTruthy();
-    expect(within(item).getByText('Gabriel · via Claude')).toBeTruthy();
+    expect(within(item).getByText('Claude')).toBeTruthy();
     const tartItem = screen.getByRole('link', { name: /apple tart/ });
     expect(within(tartItem).getByText('1 h 30 · Serves 8')).toBeTruthy();
     expect(within(tartItem).getByText('Mia')).toBeTruthy();
@@ -169,7 +171,8 @@ describe("what's new (US2)", () => {
     const first = screen.getAllByRole('link')[0];
     expect(first?.textContent).toContain('Pumpkin soup');
     expect(within(first as HTMLElement).getByText('40 min · Serves 4 · Thai')).toBeTruthy();
-    expect(within(first as HTMLElement).getByText('Alex · via ChatGPT')).toBeTruthy();
+    // Spec 051 US2: "ChatGPT", never "Alex · via ChatGPT".
+    expect(within(first as HTMLElement).getByText('ChatGPT')).toBeTruthy();
     expect(screen.getByText('All recipes · 33')).toBeTruthy();
   });
 });
@@ -283,5 +286,46 @@ describe('filters (spec 007)', () => {
     // Filters are on too, so they can be cleared from here.
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     expect(names()).toEqual([expect.stringContaining('Quiche Lorraine')]);
+  });
+});
+
+describe('In progress (spec 051 FR-003)', () => {
+  const cook = {
+    id: 'c1',
+    recipe_id: quiche.id,
+    started_by: gabriel.user_id,
+    started_at: '2026-10-19T18:40:00',
+    last_active_at: '2026-10-19T18:50:00',
+    current_step: 2,
+    variant_id: null,
+    servings: 6,
+    status: 'in_progress' as const,
+  };
+  const evening = new Date('2026-10-19T19:00:00');
+
+  it('US1.1: "In progress · 1" above the list, with the step, who and since when, and Cancel · Done · Resume', async () => {
+    const onCookResume = vi.fn();
+    const onCookDone = vi.fn();
+    const onCookCancel = vi.fn();
+    setup({ cooks: [cook], now: evening, onCookResume, onCookDone, onCookCancel });
+    const section = screen.getByRole('region', { name: 'In progress · 1' });
+    expect(within(section).getByText('Quiche Lorraine')).toBeTruthy();
+    expect(within(section).getByText('Step 3 of 6 · Gabriel · since 18:40')).toBeTruthy();
+    fireEvent.click(within(section).getByRole('button', { name: 'Resume Quiche Lorraine, step 3 of 6' }));
+    fireEvent.click(within(section).getByRole('button', { name: 'Done cooking Quiche Lorraine' }));
+    fireEvent.click(within(section).getByRole('button', { name: 'Cancel cooking Quiche Lorraine' }));
+    expect(onCookResume).toHaveBeenCalledWith(cook);
+    expect(onCookDone).toHaveBeenCalledWith(cook, 'Quiche Lorraine');
+    expect(onCookCancel).toHaveBeenCalledWith(cook);
+    vi.useRealTimers();
+    await expectAccessible();
+  });
+
+  it('edge: untouched for a day reads "started yesterday"; nothing in progress, no section', () => {
+    setup({ cooks: [{ ...cook, last_active_at: '2026-10-18T18:50:00' }], now: evening });
+    expect(screen.getByText('Step 3 of 6 · Gabriel · started yesterday')).toBeTruthy();
+    cleanup();
+    setup({ cooks: [] });
+    expect(screen.queryByRole('region', { name: /In progress/ })).toBeNull();
   });
 });

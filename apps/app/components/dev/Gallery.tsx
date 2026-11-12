@@ -20,6 +20,7 @@ import {
   Card,
   Choice,
   CookProgress,
+  CookSessionCard,
   CookSection,
   CookTimerCard,
   Dialog,
@@ -388,7 +389,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <PillRow>
           <Meta label="1 h 10" />
           <Meta label="Best Oct – Mar" />
-          <Meta label="Gabriel · via Claude" tone="sage" />
+          <Meta label="La Cuisine de Mamie · p. 48" icon="book" accessibilityLabel="Source: La Cuisine de Mamie, page 48" tone="sage" />
           <Meta label="2 to buy" tone="warn" />
         </PillRow>
       </Section>
@@ -792,7 +793,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
       </Section>
 
       <Section group="Lists and cards" title="RecipeItem">
-        <RecipeItem name="Leek & bacon quiche" meta="1 h 10 · Serves 6 · 2 variants" author="Gabriel · via Claude" onPress={noop} />
+        <RecipeItem name="Leek & bacon quiche" meta="1 h 10 · Serves 6 · 2 variants" author="La Cuisine de Mamie · p. 48" onPress={noop} />
         <RecipeItem name="Grandma's apple tart" meta="1 h 30 · Serves 8" author="Mia" placeholderTone="sage" onPress={noop} />
         <RecipeItemSkeleton />
       </Section>
@@ -960,6 +961,30 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           onSelect={setSection}
         />
         <CookProgress count={6} current={cookStep} onSelect={setCookStep} stepLabel={`Step ${cookStep + 1} of 6`} hint="Swipe or tap" segmentLabel={(i) => `Go to step ${i + 1}`} />
+      </Section>
+
+      <Section group="Cooking" title="CookSessionCard and StepBar (spec 051)">
+        <CookSessionCard
+          variant="list"
+          title="Leek & bacon quiche"
+          line="Step 3 of 6 · Gabriel · since 18:40"
+          steps={{ count: 6, current: 2 }}
+          openLabel="Resume Leek & bacon quiche, step 3 of 6"
+          labels={{ cancel: 'Cancel', done: 'Done', resume: 'Resume' }}
+          onCancel={noop}
+          onDone={noop}
+          onResume={noop}
+        />
+        <CookSessionCard
+          variant="page"
+          title="Cooking now · step 3 of 6"
+          line="Gabriel started at 18:40 · Classic, serves 6"
+          labels={{ cancel: 'Cancel', done: 'Done', resume: 'Resume' }}
+          onCancel={noop}
+          onDone={noop}
+          onResume={noop}
+        />
+        <CookSessionCard variant="page" title="Cooking now · step 1 of 6" line="Offline" labels={{ cancel: 'Cancel', done: 'Done', resume: 'Resume' }} disabled onCancel={noop} onDone={noop} onResume={noop} />
       </Section>
 
       <Section group="Navigation" title="ScreenHeader">

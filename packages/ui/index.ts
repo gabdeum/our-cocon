@@ -6,7 +6,7 @@ export { cn } from './cn';
 export { announce, pressedState, useLargeText, useReturnFocus, LARGE_TEXT_SCALE } from './a11y';
 export { useReduceMotion } from './reduceMotion';
 
-export { Text, type TextProps, type TextVariant, type TextColor, type Weight } from './components/Text';
+export { DetailText, Text, type TextProps, type TextVariant, type TextColor, type Weight } from './components/Text';
 export { BrandMark, Icon, Logo, type BrandName, type IconName, type IconProps } from './components/Icon';
 export { AppFrame, TabScreen, PushedScreen, PhotoScreen, PublicScreen, FormScreen, type PhotoScreenProps, type PublicScreenProps } from './components/Layout';
 
@@ -28,6 +28,7 @@ export { PhotoField, type PhotoFieldProps } from './components/PhotoField';
 export { PhotoCrop, PHOTO_ASPECT, type CropRect, type PhotoCropProps } from './components/PhotoCrop';
 export { IconRow, ListGroup, ListRow, Overline, IngredientRow, type IconRowProps, type ListRowProps } from './components/ListRow';
 export { Card, HeroCard, Photo, PhotoPlaceholder, Thumb, type CardProps } from './components/Card';
+export { CookSessionCard, type CookSessionCardProps } from './components/CookSessionCard';
 export { RecipeItem, RecipeItemSkeleton, RecipeSummary, type RecipeItemProps, type RecipeSummaryProps } from './components/RecipeItem';
 export { LinkField, type LinkFieldProps } from './components/LinkField';
 export { StatTile, type StatTileProps } from './components/StatTile';
@@ -71,7 +72,7 @@ export { TimeRange, type TimeRangeField, type TimeRangeProps } from './component
 export { TabBar, TAB_LABEL_MIN_SCALE, type TabBarItem, type TabBarProps } from './components/TabBar';
 export { BottomSheet, SheetFooter, type BottomSheetProps } from './components/BottomSheet';
 export { Dialog, type DialogProps } from './components/Dialog';
-export { FormProgress, CookProgress } from './components/Progress';
+export { FormProgress, CookProgress, StepBar } from './components/Progress';
 export { CookLayout, CookSection, type CookLayoutProps, type CookSectionProps } from './components/CookLayout';
 export { TabHeader, BrandRow, BrandHeader, Lead, FormBar } from './components/ScreenHeader';
 export { TopBar, TopBarHeading, type TopBarConfig, type TopBarProps } from './components/TopBar';

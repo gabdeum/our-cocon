@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CookingSetting, DEFAULT_FAMILY_SETTINGS, FamilySettingsUpdate, type FamilySettings, type Tracker } from '@cocon/schemas';
-import { loadFamilySettings } from '@cocon/data';
+import { CookingSetting, DEFAULT_FAMILY_SETTINGS, FamilySettingsUpdate, type FamilySettings, type MemberRecipeSettings, type Tracker, type UnitSystem } from '@cocon/schemas';
+import { loadFamilySettings, loadMyRecipeSettings, saveMyUnits } from '@cocon/data';
 import { useSession } from './session';
 import type { Client } from './supabase';
 import { optimisticWrite } from './write';
@@ -54,4 +54,28 @@ export function useFamilySettings() {
   const change = (update: FamilySettingsUpdate) =>
     familyId ? changeFamilySettings({ queryClient, client, tracker, familyId, current: settings }, update) : Promise.resolve('failed' as const);
   return { settings, loaded: query.data !== undefined, change };
+}
+
+/** Spec 051: the member's own units; the key starts with the table's name. */
+export const myRecipeSettingsKey = (familyId: string, userId: string) => ['member_recipe_settings', familyId, userId] as const;
+
+/**
+ * Spec 051: the member's own units (Menu › Recipes › For you), null until they pick one (the
+ * family's old setting applies then), and a way to change them: shown at once, reverted on failure.
+ */
+export function useMyRecipeSettings() {
+  const { state, client, tracker } = useSession();
+  const queryClient = useQueryClient();
+  const familyId = state.status === 'ready' ? state.family.id : null;
+  const userId = state.status === 'ready' ? state.userId : '';
+  const key = myRecipeSettingsKey(familyId ?? '', userId);
+  const query = useQuery({ queryKey: key, queryFn: () => loadMyRecipeSettings(client), enabled: familyId !== null });
+  const settings: MemberRecipeSettings = query.data ?? { units: null };
+  const changeUnits = async (units: UnitSystem): Promise<'saved' | 'failed'> => {
+    if (!familyId) return 'failed';
+    const result = await optimisticWrite<MemberRecipeSettings>(queryClient, key, () => ({ units }), () => saveMyUnits(client, familyId, units));
+    if (result === 'saved') tracker.track('my_units_changed', { system: units });
+    return result;
+  };
+  return { settings, changeUnits };
 }

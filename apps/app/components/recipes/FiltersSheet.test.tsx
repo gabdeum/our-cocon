@@ -24,6 +24,8 @@ function recipe(fields: Partial<RecipeListItem> = {}): RecipeListItem {
     photo_path: null,
     created_by: mia.user_id,
     source: 'app',
+    source_text: null,
+    stepCount: 6,
     created_at: '2026-10-01T10:00:00Z',
     ingredientNames: [],
     variantCount: 0,

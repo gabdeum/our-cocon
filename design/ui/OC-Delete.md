@@ -17,4 +17,4 @@ The app goes to Recipes; StatusBanner "Recipe deleted" with "Undo" (8 s). Focus 
 | --- | --- |
 | Deleting failed | warn Callout above the link "Couldn't delete. Try again."; the form stays open |
 | Undo failed | StatusBanner (warn) "Couldn't restore. Try again."; the recipe is still in Recently deleted |
-| Offline | "Delete this recipe" is off |
+| Offline | "Delete recipe" is off |

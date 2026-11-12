@@ -371,7 +371,10 @@ export const strings = {
     recipes: {
       back: 'Back to Menu',
       title: 'Recipes',
-      lead: 'Used for every recipe, for the whole family. Each recipe can change them in its own settings.',
+      lead: 'Your units, and the cooking defaults for the whole family. Each recipe can change those in Edit › This recipe.',
+      // Spec 051: units are each person's.
+      forYou: 'For you',
+      unitsHint: 'Only for you. A recipe’s “…” can switch them for one visit.',
       cookingDefaults: 'Cooking defaults',
       keepAwake: 'Keep screen on while cooking',
       keepAwakeHint: "So it doesn't lock with floury hands",
@@ -531,6 +534,13 @@ export const strings = {
     inSeason: 'In season',
     under30: 'Under 30 min',
     allGroup: (n: number) => `All recipes · ${n}`,
+    // Spec 051 FR-003: recipes being cooked, above the list.
+    inProgress: (n: number) => `In progress · ${n}`,
+    /** "Step 3 of 6 · Gabriel · since 18:40", or "… · started yesterday" after 24 hours untouched. */
+    cookLine: (step: number, total: number, member: string, since: string | null) => `Step ${step} of ${total} · ${member} · ${since ? `since ${since}` : 'started yesterday'}`,
+    resumeA11y: (recipe: string, step: number, total: number) => `Resume ${recipe}, step ${step} of ${total}`,
+    cancelA11y: (recipe: string) => `Cancel cooking ${recipe}`,
+    doneA11y: (recipe: string) => `Done cooking ${recipe}`,
     emptyTitle: "Your family's recipes will live here.",
     emptyBody: 'Add one yourself, or ask your AI assistant to save one.',
     emptyNew: 'New recipe',
@@ -575,7 +585,30 @@ export const strings = {
   recipePage: {
     back: 'Back to recipes',
     share: 'Share recipe',
-    settings: 'Recipe settings',
+    /** The pencil in the top bar (spec 051 FR-012). */
+    edit: 'Edit recipe',
+    /** The Source chip's spoken name (FR-015): "Source: La Cuisine de Mamie · p. 48". */
+    sourceA11y: (source: string) => `Source: ${source}`,
+    /** FR-005: from the family's done sessions. */
+    cookedOnce: (when: string) => `Cooked once · ${when}`,
+    cookedTimes: (n: number, member: string, when: string) => `Cooked ${n} times · last by ${member}, ${when}`,
+    // The "In progress" card under the chips (FR-004).
+    cookingNow: (step: number, total: number) => `Cooking now · step ${step} of ${total}`,
+    /** "Gabriel started at 18:40 · Classic, serves 6". */
+    cookStarted: (member: string, at: string | null, variant: string | null, serves: number) =>
+      `${member} ${at ? `started at ${at}` : 'started yesterday'} · ${variant ? `${variant}, serves ${serves}` : `Serves ${serves}`}`,
+    cancel: 'Cancel',
+    done: 'Done',
+    resume: 'Resume',
+    cancelled: 'Cancelled',
+    cookFailed: "Couldn't save. Check your connection and try again.",
+    // Starting while someone's cooking it (spec 051 › Warnings and errors).
+    alreadyCooking: (member: string, step: number) => `${member} is cooking this (step ${step})`,
+    alreadyCookingYou: (step: number) => `You're cooking this (step ${step})`,
+    alreadyCookingLead: 'Pick up where it is, or start again from step 1.',
+    resumeTheirs: (member: string) => `Resume ${member}'s`,
+    resumeYours: 'Resume',
+    startOver: 'Start over',
     bestMonths: (from: string, to: string) => `Best ${from} – ${to}`,
     bestMonth: (month: string) => `Best ${month}`,
     /** Several separate runs of months: "Best Jan, May – Jun". */
@@ -594,11 +627,12 @@ export const strings = {
     stepsTab: (n: number) => `Steps · ${n}`,
     ingredientsLabel: 'Ingredients',
     variantTag: 'Variant',
-    addToGroceries: 'Add groceries',
-    startCooking: 'Start cooking',
-    /** The footer's labels when the full ones don't fit side by side (screen readers keep the full ones). */
-    addToGroceriesShort: 'Groceries',
-    startCookingShort: 'Cook',
+    // The action bar (spec 051 FR-014): the cart (its label shows from 430 wide) and the main button.
+    addToGroceries: 'Add to groceries',
+    startRecipe: 'Start recipe',
+    resumeAt: (step: number) => `Resume · step ${step}`,
+    /** On a cook's last step (FR-005). */
+    doneCooking: 'Done cooking',
     stepsLabel: 'Steps',
     /** A row in the Steps tab opens cooking mode there. */
     /** A step row's screen-reader name (spec 030): "Step 3: Bake, 35:00 timer. Opens in cooking mode". */
@@ -797,7 +831,12 @@ export const strings = {
     close: 'Close',
     source: 'Source',
     optional: '(optional)',
-    sourcePlaceholder: 'A book, a website or “Grandma”',
+    sourcePlaceholder: 'A book and page, a website or “Grandma”',
+    // Spec 051 FR-015: what Source is for, and that assistants fill it in.
+    sourceHint: "Book and page, a website, or a person. Assistants fill this in, or put their own name if there's nothing else.",
+    // Spec 051 FR-013: the recipe's own settings and Delete, at the end of Details when editing.
+    thisRecipe: 'This recipe',
+    thisRecipeLead: 'Only for this recipe. Family defaults are in Menu › Recipes.',
     nameMissing: 'Give your recipe a name',
     servesInvalid: 'Enter a number from 1 to 50',
     timeInvalid: 'Try “1 h 10” or “70 min”',
@@ -809,10 +848,10 @@ export const strings = {
     ingredients: {
       title: 'Ingredients',
       servings: (n: number) => `For ${n} servings`,
-      lead: 'For things you count (eggs, leeks), add the weight of one too. Then steps can show both: “2 leeks (300 g)”.',
+      lead: "For things you count (eggs, leeks), add the weight of one too. Detail is how it's prepared; it shows under the name and on the grocery list.",
       add: '+ Add ingredient',
       paste: 'Paste a list',
-      tip: "Tip: paste “200 g lardons, 3 eggs…” and we'll split it into rows.",
+      tip: "Tip: paste “200 g lardons, 100 g Gruyère, grated…” and we'll split it into rows. Anything after a comma goes into Detail.",
       name: 'Ingredient name',
       namePlaceholder: 'Ingredient, like leeks',
       quantity: 'Quantity',
@@ -824,6 +863,9 @@ export const strings = {
       each: 'each ≈',
       grams: 'g',
       weight: 'Weight of one (g)',
+      // Spec 051 FR-011: how it's prepared, saved as its prep note.
+      detail: 'Detail (optional)',
+      detailPlaceholder: 'Detail (optional) · sliced, at room temp…',
       remove: (name: string) => `Remove ${name || 'ingredient'}`,
       handle: 'Drag to reorder',
       moveUp: 'Move up',
@@ -992,7 +1034,7 @@ export const strings = {
   },
   // design/ui/OC-Delete.md (spec 018): the danger link at the end of the edit form, and its Dialog.
   deleteRecipe: {
-    link: 'Delete this recipe',
+    link: 'Delete recipe',
     title: (name: string) => `Delete “${name}”?`,
     body: (variants: number) =>
       variants === 0
@@ -1089,11 +1131,13 @@ export const strings = {
     merged: (total: string) => `Already on the list. Updated to ${total}.`,
     mergedNoAmount: 'Already on the list.',
     forRecipe: (recipe: string) => `For ${recipe}`,
+    // A row's source line (spec 051 FR-009): how its recipes prepare it.
+    inRecipe: (detail: string) => `In recipe: ${detail}`,
+    inRecipes: (details: string) => `In recipes: ${details}`,
     fromDeletedRecipe: 'From a deleted recipe',
     // A row more than one person typed in (spec 022).
     addedManually: 'Added manually',
-    // A row added to by several (spec 022): "For Apple crumble + Leek & bacon quiche · Added by Gabriel".
-    sourcesJoin: ' + ',
+    // A row added to by several: "In recipes: for the pan · cold, cubed · Added by Gabriel".
     sourcePartsJoin: ' · ',
     recipeMeta: (items: number, serves: number) => `${items === 1 ? '1 item' : `${items} items`} · serves ${serves}`,
     // A recipe card's menu (spec 022, OC-Groceries › Recipe card menu).
@@ -1107,7 +1151,6 @@ export const strings = {
     removeRecipeItems: 'Remove its items',
     removedRecipe: (items: number, recipe: string) => `Removed ${items === 1 ? '1 item' : `${items} items`} for ${recipe}.`,
     addedBy: (name: string) => `Added by ${name}`,
-    via: (name: string, assistant: string) => `${name} via ${assistant}`,
     // Spec 021: what to buy, beside the name: "Heavy cream: 1 pint carton (need 300 ml)".
     needNote: (amount: string) => `(need ${amount})`,
     // A count, as read by @cocon/quantity: "1 piece", "2 pieces", "½ piece", "1½ pieces".
@@ -1135,7 +1178,7 @@ export const strings = {
     storeSizeReset: 'Use the usual sizes',
     storeSizePieces: (n: string) => `pack of ${n}`,
     emptyTitle: 'Your list is empty.',
-    emptyBody: 'Add items above, or from any recipe with “Add groceries”.',
+    emptyBody: 'Add items above, or from any recipe with “Add to groceries”.',
     clearDone: 'Clear done items',
     cleared: (n: number) => `Cleared ${n === 1 ? '1 item' : `${n} items`}`,
     removed: (name: string) => `Removed ${name}.`,
@@ -1230,7 +1273,8 @@ export const strings = {
   recipe: {
     serves: (n: number) => `Serves ${n}`,
     variants: (n: number) => (n === 1 ? '1 variant' : `${n} variants`),
-    via: (name: string, assistant: string) => `${name} · via ${assistant}`,
+    /** Spec 051: a recipe an assistant we don't know by name made, with no other source. */
+    anAssistant: 'An AI assistant',
     /** The author left the family or deleted their account. */
     formerMember: 'Former member',
   },
@@ -1282,9 +1326,8 @@ export const strings = {
   },
   // design/ui/OC-Cook.md (spec 012)
   cook: {
-    exit: 'Exit',
-    /** The ✕ in the header (spec 050). */
-    exitA11y: 'Exit cooking mode',
+    /** The ✕ in the header (spec 050): leaving keeps the cook in progress (spec 051 FR-002). */
+    exitA11y: 'Leave cooking mode, stays in progress',
     /** The settings button in the header, and the sheet it opens. */
     options: 'Cooking options',
     closeOptions: 'Close cooking options',
@@ -1308,15 +1351,42 @@ export const strings = {
     done: 'Done',
     back: 'Back',
     next: 'Next step',
-    finish: 'Finish',
-    bonAppetit: 'Bon appétit!',
+    /** The last step's button: logs the cook (spec 051 FR-005). */
+    doneCooking: 'Done cooking',
+    bonAppetit: 'Bon appétit! Tap Done cooking to log it.',
     loading: 'Loading recipe',
+  },
+  // design/ui/OC-CookDone.md (spec 051 FR-005): after "Done".
+  cookDone: {
+    title: (recipe: string) => `${recipe} is done!`,
+    /** "Logged as cooked today by Gabriel. That’s 5 times now." */
+    body: (member: string, times: number) => `Logged as cooked today by ${member}. ${times === 1 ? 'That’s the first time.' : `That’s ${times} times now.`}`,
+    undo: 'Undo',
+    undoneTitle: 'Still in progress',
+    undoneBody: (step: number) => `It’s back at the top of Recipes, at step ${step}.`,
+    markDone: 'Mark as done',
+    back: 'Back to the recipe',
+    close: 'Close',
+    failed: "Couldn't save. Check your connection and try again.",
   },
   // Total time (spec 006 FR-002): "40 min", "2 h", "1 h 05".
   time: {
     minutes: (m: number) => `${m} min`,
     hours: (h: number) => `${h} h`,
     hoursMinutes: (h: number, mm: string) => `${h} h ${mm}`,
+    /** Spec 051: when a recipe was last cooked, by calendar day ("today", "3 weeks ago"). */
+    daysAgo: (days: number) =>
+      days <= 0
+        ? 'today'
+        : days === 1
+          ? 'yesterday'
+          : days < 7
+            ? `${days} days ago`
+            : days < 30
+              ? `${Math.floor(days / 7) === 1 ? '1 week' : `${Math.floor(days / 7)} weeks`} ago`
+              : days < 365
+                ? `${Math.floor(days / 30) === 1 ? '1 month' : `${Math.floor(days / 30)} months`} ago`
+                : 'over a year ago',
     /** "used 2 h ago" (OC-Connect), "· 4 h ago" (AI activity). */
     ago: (minutes: number) =>
       minutes < 1 ? 'just now' : minutes < 60 ? `${minutes} min ago` : minutes < 24 * 60 ? `${Math.floor(minutes / 60)} h ago` : `${Math.floor(minutes / 1440)} ${Math.floor(minutes / 1440) === 1 ? 'day' : 'days'} ago`,

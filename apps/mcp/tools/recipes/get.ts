@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { loadRecipe, type RecipeDetail } from '@cocon/data';
+import { loadCooked, loadRecipe, type RecipeDetail } from '@cocon/data';
 import { format, groupSameIngredient, renderStep, renderTemperatureCheck, scale, sumIngredients, type FormatOptions } from '@cocon/quantity';
 import { applyVariants, normalizeText, type IngredientRow, type RecipeVariant, type StepRow, type VariantChoice } from '@cocon/schemas';
 import { defineTool, ToolError, type ToolContext } from '../../src/tools.js';
@@ -132,7 +132,7 @@ export type ReadOptions = { servings?: number; variants?: readonly string[]; uni
  * written by the quantity engine, temperatures in both scales. Assistants never work out amounts.
  */
 export async function readRecipe(ctx: Pick<ToolContext, 'db' | 'appUrl'>, id: string, args: ReadOptions = {}) {
-  const [recipe, members] = await Promise.all([familyRecipe(ctx, id), loadMembers(ctx)]);
+  const [recipe, members, cooked] = await Promise.all([familyRecipe(ctx, id), loadMembers(ctx), loadCooked(ctx.db, id)]);
   const choice = variantChoice(recipe, args.variants ?? []);
   const options: FormatOptions = { system: args.units ?? 'metric', scale: true };
   const applied = applyVariants(recipe, recipe.variants, choice);
@@ -147,6 +147,8 @@ export async function readRecipe(ctx: Pick<ToolContext, 'db' | 'appUrl'>, id: st
     id: recipe.id,
     link: recipeLink(ctx, recipe.id),
     added_by: addedBy(recipe.created_by, recipe.source, members),
+    /** Spec 051: how often the family cooked it ("Done" in the app), and when last. */
+    cooking: { times_cooked: cooked?.times ?? 0, last_cooked_at: cooked?.lastAt ?? null },
     /** For the member: as the app shows it, scaled, in their units, variants applied. Quote it. */
     as_shown: {
       name: recipe.name,

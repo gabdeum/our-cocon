@@ -9,13 +9,14 @@
 | OC-Filters | `/recipes/filters` | sheet | 007 |
 | OC-Recipe | `/recipes/[id]` (`?tab=ingredients`) | stack | 008 |
 | OC-RecipeSteps | `/recipes/[id]?tab=steps` | stack (same screen, Steps tab) | 009 |
-| OC-Cook | `/recipes/[id]/cook` | full-screen modal | 012 |
+| OC-Cook | `/recipes/[id]/cook` (`?step=`, `&start=new` or `&start=over`) | full-screen modal | 012, 051 |
+| OC-CookDone | over Recipes or the recipe page, no route of its own | sheet | 051 |
 | OC-ScaleIng | `/recipes/[id]/scale` | sheet | 013 |
 | OC-Units | `/recipes/[id]/convert` | sheet | 013 |
-| OC-RecipeSettings | `/recipes/[id]/settings` | stack | 027 |
+| (retired) OC-RecipeSettings | `/recipes/[id]/settings` redirects to `/recipes/[id]/edit?section=details&focus=this-recipe` | — | 027, 051 |
 | OC-Share | `/recipes/[id]/share` | sheet | 019 |
 | OC-SharedView | `/r/[token]` (public, no tab bar) | page | 019 |
-| OC-EditBasics | `/recipes/new` · `/recipes/[id]/edit?section=details` | full-screen modal | 014 |
+| OC-EditBasics | `/recipes/new` · `/recipes/[id]/edit?section=details` (`&focus=this-recipe` scrolls to This recipe, for the retired settings route) | full-screen modal | 014, 051 |
 | OC-EditIngredients | `…/edit?section=ingredients` | same modal | 015 |
 | OC-EditSteps | `…/edit?section=steps` | same modal | 016 |
 | OC-EditVariants | `…/edit?section=variants` | same modal | 017 |
@@ -36,12 +37,13 @@
 
 ## Main flows
 
-1. **Find and cook.** Home or Recipes → tap a recipe → Recipe (adjust Servings, Version) → Steps tab or "Start cooking" → Cook → Next … "Finish" → back to Recipe.
-2. **Shop for a recipe.** Recipe → "Add to groceries…" → AddGroceries (untick what you have) → "Add N items" → success → "See the list" → Groceries.
+1. **Find and cook.** Home or Recipes → tap a recipe → Recipe (adjust Servings, Version) → a step in the Steps tab, or "Start recipe" → Cook → Next … "Done cooking" → back to Recipe with the Done sheet (OC-CookDone). ✕ leaves cooking mode with the cook still in progress: Recipes lists it under "In progress", and the recipe page's main button reads "Resume · step {k}".
+   - **Pick up or finish a cook.** Recipes › In progress card, or the recipe page's in-progress card: Resume → Cook at its step; Done → the Done sheet; Cancel → toast "Cancelled" with "Undo". "Start recipe" while someone's cooking it → sheet "Resume {member}'s" or "Start over".
+2. **Shop for a recipe.** Recipe → cart button ("Add to groceries") → AddGroceries (untick what you have) → "Add N items" → success → "See the list" → Groceries.
 3. **Timers.** Any timed step → "Start timer" → pill appears on every screen → tap the pill → Timers. With nothing running: Menu › Timers tile.
 4. **Scale or convert.** Recipe → "…" next to Servings → panel → "Scale by an ingredient" (ScaleIng → "Apply to recipe" → Recipe) or "Unit converter" (Units → close → Recipe).
 5. **Create.** Recipes → "New" → EditBasics → "Next: Ingredients" → EditIngredients → "Next: Steps" → EditSteps → "Next: Variants" → EditVariants → "Save recipe" → Recipe.
-6. **Edit and delete.** Recipe → (edit entry: "Edit" in recipe settings) → Edit modal at Details → … → EditVariants → "Delete this recipe" → Delete dialog → "Delete recipe" → Recipes, with a StatusBanner "Recipe deleted · Undo".
+6. **Edit and delete.** Recipe → "Edit recipe" (pencil in the top bar) → Edit modal at Details → … → Save. To delete: Details › This recipe → "Delete recipe" → Delete dialog → "Delete recipe" → Recipes, with a StatusBanner "Recipe deleted · Undo". The recipe's own settings (screen, scale, thermometer) are in This recipe too; units are each member's (Menu › Recipes).
 7. **Share.** Recipe → share icon → Share → "Copy link" → friend opens `/r/[token]` → SharedView.
 8. **Connect AI.** Menu → "AI assistants" → Connect → "Connect" on an assistant → guided sheet (spec 025). In the assistant, adding Our Cocon opens Approve access (`/oauth/consent`; signed out, sign in first and come back) → "Allow" → back to the assistant.
 9. **Start and invite.** Sign in → (first time) Set up your family → Home. Menu → "Family" → "Invite someone" → share sheet → the invitee opens `/join/[token]` → signs in → "Join {family}" → Home.
@@ -49,7 +51,6 @@
 
 ## Entry points not drawn on the canvas
 
-- **Edit a recipe:** add an "Edit recipe" row at the top of OC-RecipeSettings (ListRow with a chevron), opening the edit modal at Details.
 - **Recently deleted:** a pushed list screen built from the TopBar ("Back to Menu", title "Recently deleted", spec 050) and ListRow (title, sub-line "Deleted by Gabriel · 3 days ago · 27 days left", trailing "Restore" olive link). Tapping a row opens a sheet with "Restore" and "Delete now" (copy: OC-Menu.md › Recently deleted).
 
 # Calendar — routes and flows

@@ -4,11 +4,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { parsePastedList } from '@cocon/quantity';
 import { Button, Callout, Dialog, FormBar, FormProgress, FormScreen, PhotoCrop, type CropRect } from '@cocon/ui';
-import { MAX_VARIANTS, type IngredientFacts, type RecipeFormSection, type Tracker } from '@cocon/schemas';
+import { DEFAULT_FAMILY_SETTINGS, MAX_VARIANTS, type CookingSetting, type FamilySettings, type IngredientFacts, type RecipeFormSection, type Tracker } from '@cocon/schemas';
 import { strings } from '../../../strings/en';
 import { useOnline } from '../../../lib/online';
 import type { ChoiceStorage } from '../../../lib/recipe-choices';
 import {
+  changedSettings,
   DEFAULT_SERVES,
   FORM_SECTIONS,
   formFromRecipe,
@@ -62,6 +63,7 @@ import { useToast } from '../../../lib/toast';
 import { DeleteRecipe } from '../DeleteRecipe';
 import { CuisineSheet } from './CuisineSheet';
 import { DetailsSection } from './DetailsSection';
+import { ThisRecipeSection } from './ThisRecipeSection';
 import { AisleSheet, PasteSheet, UnitSheet } from './IngredientSheets';
 import { IngredientsSection } from './IngredientsSection';
 import { StepsSection } from './StepsSection';
@@ -89,7 +91,7 @@ export interface RecipeFormProps {
   onClose: () => void;
   /** Saved: a new recipe opens; an edit goes back to it. */
   onSaved: () => void;
-  /** Spec 018: the recipe was deleted ("Delete this recipe", edit mode only). */
+  /** Spec 018: the recipe was deleted ("Delete recipe" in This recipe, edit mode only). */
   onDeleted?: () => void;
   /** Ids for added ingredients, steps and variants; tests pass their own. */
   newId?: () => string;
@@ -97,6 +99,10 @@ export interface RecipeFormProps {
   openVariant?: string;
   /** The saved step to open, and scroll to, in Steps (cooking mode's "Edit step {n}"). */
   openStep?: string;
+  /** Spec 051: open Details scrolled to "This recipe" (the recipe page's "Units: Metric"). */
+  focus?: 'this-recipe';
+  /** The family's cooking defaults, which "This recipe" changes (spec 027). */
+  defaults?: FamilySettings;
 }
 
 /** What the photo is doing between picking and Save. */
@@ -149,6 +155,8 @@ export function RecipeForm({
   newId = randomUUID,
   openVariant,
   openStep: openStepId,
+  focus,
+  defaults = DEFAULT_FAMILY_SETTINGS,
 }: RecipeFormProps) {
   const isNew = recipe === null;
   const online = useOnline();
@@ -170,6 +178,8 @@ export function RecipeForm({
   const uploaded = useRef<string[]>([]);
   const scroll = useRef<ScrollViewInstance>(null);
   const fieldY = useRef<Partial<Record<DetailsField, number>>>({});
+  // Opened from "Units: Metric", "This recipe" comes into view once laid out (spec 051).
+  const pendingThisRecipe = useRef(focus === 'this-recipe');
   const [scrollTo, setScrollTo] = useState<DetailsField | null>(null);
   // Spec 015: the ingredient rows and what's open over them.
   const [startIngredients] = useState(() => draftsFromRows(recipe?.ingredients ?? [], recipe?.facts ?? {}));
@@ -584,7 +594,9 @@ export function RecipeForm({
     }
     setSaving(true);
     setSaveFailed(false);
-    const result = await saveRecipe(client, { id: recipeId, familyId, isNew: isNew && !created.current }, read.input, ingredients, stepRows, variantRows);
+    // Spec 051 FR-013: "This recipe" saves with the form, like every other field.
+    const settings = isNew ? {} : changedSettings(start.overrides, form.overrides);
+    const result = await saveRecipe(client, { id: recipeId, familyId, isNew: isNew && !created.current }, read.input, ingredients, stepRows, variantRows, settings);
     if (result.created) created.current = true;
     if (result.detailsSaved) savedHeader.current = read.input.photo_path ?? null;
     const ok = result.ok;
@@ -596,6 +608,7 @@ export function RecipeForm({
     }
     if (isNew) tracker.track('recipe_created', { source: 'app', has_photo: read.input.photo_path != null, advanced_mode: advanced });
     else tracker.track('recipe_edited', { section });
+    for (const setting of Object.keys(settings) as CookingSetting[]) tracker.track('recipe_setting_changed', { setting });
     if (stepRows) for (const props of addedStepEvents(stepRows, new Set(startSteps.map((d) => d.id)))) tracker.track('recipe_step_added', props);
     if (variantRows) for (const props of createdVariantEvents(variantRows, new Set(startVariants.map((d) => d.id)))) tracker.track('variant_created', props);
     // Steps that weren't saved this time keep the photos they had.
@@ -682,6 +695,22 @@ export function RecipeForm({
             onFieldLayout={(field, y) => {
               fieldY.current[field] = y;
             }}
+          />
+        ) : null}
+        {section === 'details' && !isNew ? (
+          <ThisRecipeSection
+            overrides={form.overrides}
+            defaults={defaults}
+            onChange={(update) => change({ overrides: { ...form.overrides, ...update } })}
+            readOnly={!online}
+            onLayout={(e) => {
+              if (!pendingThisRecipe.current) return;
+              pendingThisRecipe.current = false;
+              scroll.current?.scrollTo({ y: Math.max(0, e.nativeEvent.layout.y - 12), animated: false });
+            }}
+            deleteButton={
+              onDeleted ? <DeleteRecipe name={recipe?.name ?? ''} variants={recipe?.variants?.length ?? 0} disabled={saving} onDelete={removeRecipe} /> : null
+            }
           />
         ) : null}
         {section === 'ingredients' ? (
@@ -779,9 +808,6 @@ export function RecipeForm({
           busy={!next && saving}
           busyLabel={f.saving}
         />
-        {!isNew && section === 'variants' && onDeleted ? (
-          <DeleteRecipe name={recipe?.name ?? ''} variants={recipe?.variants?.length ?? 0} disabled={saving} onDelete={removeRecipe} />
-        ) : null}
       </FormScreen>
       <CuisineSheet
         visible={cuisineOpen}

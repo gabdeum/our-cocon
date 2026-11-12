@@ -19,6 +19,7 @@ Check whether an existing component plus a variant covers it. Recurring tasks, a
 | --- | --- | --- |
 | `ink` | surface-page, surface-card, surface-soft, honey, sage, peach, warn-soft | 10.5–14.5 |
 | `ink-muted` | surface-page, surface-card, surface-soft, sage | 5.9–7.9 |
+| `ink-soft` | surface-page, surface-card (an ingredient's detail, a grocery row's source) | 4.7–5.0 |
 | `olive` | surface-page, surface-card (links, selected text) | 5.8–6.1 |
 | `olive-deep` | sage, surface-card, surface-page (the Grocery settings example) | 6.7–9.1 |
 | `warn` | warn-soft, surface-soft, surface-card, sage (a warning inside a result card) | 5.0–6.8 |

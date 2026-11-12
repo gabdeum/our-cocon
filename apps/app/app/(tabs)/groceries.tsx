@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { router, type Href } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { GroceryList } from '../../components/groceries/GroceryList';
-import { useFamilySettings } from '../../lib/family-settings';
+import { useFamilySettings, useMyRecipeSettings } from '../../lib/family-settings';
 import {
   addItem,
   clearItems,
@@ -38,6 +39,9 @@ export default function GroceriesTab() {
   const servingsKey = groceryServingsKey(familyId ?? '');
   const servings = useQuery({ queryKey: servingsKey, queryFn: () => loadGroceryServings(client), enabled: familyId !== null });
   const familySettings = useFamilySettings();
+  // Spec 051: amounts in the member's own units (the family's until they pick).
+  const myUnits = useMyRecipeSettings().settings.units ?? familySettings.settings.units;
+  const settings = useMemo(() => ({ ...familySettings.settings, units: myUnits }), [familySettings.settings, myUnits]);
   const keys = packKeys(items ?? []);
   const packsKey = groceryPacksKey(familyId ?? '', keys);
   // Kept from the last list while a new item's packs load, so rows don't flicker back to "Need".
@@ -73,7 +77,7 @@ export default function GroceriesTab() {
       }
       onClear={(ids) => after(clearItems(client, ids))}
       onRestore={(ids) => after(restoreItems(client, ids))}
-      onEdit={(item, text) => after(editItem(client, item, text, familySettings.settings.units))}
+      onEdit={(item, text) => after(editItem(client, item, text, myUnits))}
       onMove={(item, aisle) => after(moveToAisle(client, familyId ?? '', item, items ?? [], aisle))}
       onOpenRecipe={(id) => router.push(recipePage(id))}
       servings={servings.data}
@@ -85,7 +89,7 @@ export default function GroceriesTab() {
           void queryClient.invalidateQueries({ queryKey: servingsKey });
         }
       }}
-      settings={familySettings.settings}
+      settings={settings}
       packs={packs.data}
       onChangeSettings={familySettings.change}
       onSavePacks={async (item, text) => {

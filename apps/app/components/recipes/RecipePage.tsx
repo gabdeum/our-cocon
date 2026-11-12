@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import {
   Button,
   Card,
   Choice,
+  CookSessionCard,
   IconButton,
   IngredientRow,
   Link,
@@ -20,9 +21,11 @@ import {
   Stepper,
   Text,
 } from '@cocon/ui';
-import type { Tracker } from '@cocon/schemas';
+import type { CookedSummary, Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
+import { cookedLine, pageCard, stepTotal, type CookSession } from '../../lib/cook-sessions';
+import { forgetVisitUnits, useVisitUnits } from '../../lib/visit-units';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
 import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type CookingSettings, type StepLine } from '../../lib/recipe-view';
 import type { PhotoUrls } from '../../lib/recipe-photo';
@@ -30,6 +33,7 @@ import type { Member } from '../../lib/session';
 import { AppTimerPill } from '../timers/AppTimerPill';
 import { MoreOptions } from './MoreOptions';
 import { OfflineBanner } from '../sync/OfflineBanner';
+import { useOnline } from '../../lib/online';
 
 const p = strings.recipePage;
 const more = strings.recipePage.more;
@@ -52,9 +56,23 @@ export interface RecipePageProps {
   storage: ChoiceStorage;
   onBack: () => void;
   onShare: () => void;
-  onSettings: () => void;
+  /** The pencil (spec 051 FR-012): the recipe form's Details. */
+  onEdit: () => void;
   onAddToGroceries: () => void;
-  onStartCooking: () => void;
+  /** "Start recipe" (FR-002). */
+  onStart: () => void;
+  /** The family's cook of this recipe in progress, if any (FR-004). */
+  cook?: CookSession | null;
+  /** How often it was cooked (FR-005). */
+  cooked?: CookedSummary | null;
+  /** The card's and the main button's Resume. */
+  onCookResume: () => void;
+  /** The card's Done, and the main button on the cook's last step. */
+  onCookDone: () => void;
+  onCookCancel: () => void;
+  /** The member's clock (spec 029): "18:40" or "6:40 PM". */
+  use24h?: boolean;
+  now?: () => Date;
   /** A step in the Steps tab opens cooking mode at that step. */
   onOpenStep: (stepId: string) => void;
   /** The TimerPill opens the Timers screen (spec 011). */
@@ -112,18 +130,29 @@ function LoadedRecipe({
   storage,
   onBack,
   onShare,
-  onSettings,
+  onEdit,
   onAddToGroceries,
-  onStartCooking,
+  onStart,
+  cook = null,
+  cooked = null,
+  onCookResume,
+  onCookDone,
+  onCookCancel,
+  use24h = true,
+  now = () => new Date(),
   onOpenStep,
   onOpenTimers,
-  cooking = defaultCooking,
+  cooking: settingsInForce = defaultCooking,
   onScaleByIngredient,
   onConvert,
   visit = 0,
   photoUrls = {},
 }: RecipePageProps & { recipe: RecipeDetail }) {
   const max = servingsMax(recipe.serves);
+  // Spec 051: Metric · Imperial in "…" holds for this visit only; closing the page forgets it.
+  const [visitUnits, setVisitUnits] = useVisitUnits(recipe.id);
+  useEffect(() => () => forgetVisitUnits(recipe.id), [recipe.id]);
+  const cooking = useMemo(() => (visitUnits ? { ...settingsInForce, system: visitUnits } : settingsInForce), [settingsInForce, visitUnits]);
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -187,6 +216,17 @@ function LoadedRecipe({
   const deletedBy = recipe.deleted_at ? (members.find((m) => m.user_id === recipe.deleted_by)?.display_name ?? strings.recipe.formerMember) : null;
 
   const headerPhoto = recipe.photo_path ? photoUrls[recipe.photo_path] : undefined;
+  const online = useOnline();
+  // Spec 051: the cook in progress, how often it was cooked, and what the main button does.
+  const at = now();
+  const total = cook ? stepTotal(view?.stepCount ?? 0, cook) : 0;
+  const card = cook ? pageCard(cook, recipe, total, members, at, use24h) : null;
+  const cookedText = cookedLine(cooked, members, at);
+  const main = !cook
+    ? { label: p.startRecipe, onPress: onStart }
+    : cook.current_step >= total - 1
+      ? { label: p.doneCooking, onPress: onCookDone }
+      : { label: p.resumeAt(cook.current_step + 1), onPress: onCookResume };
   return (
     <PhotoScreen
       photo={
@@ -202,11 +242,11 @@ function LoadedRecipe({
         titleMode: 'onScroll',
         actions: [
           <IconButton key="share" variant="round" icon="share" label={p.share} onPress={onShare} />,
-          <IconButton key="settings" variant="round" icon="settings" label={p.settings} onPress={onSettings} />,
+          <IconButton key="edit" variant="round" icon="edit" label={p.edit} onPress={onEdit} />,
         ],
       }}
       floating={<AppTimerPill onOpen={onOpenTimers} tracker={tracker} />}
-      footer={<RecipeActions onAddToGroceries={onAddToGroceries} onStartCooking={onStartCooking} />}
+      footer={<ActionBar onAddToGroceries={onAddToGroceries} main={main} />}
       banner={
         <>
           <OfflineBanner screen="recipe" tracker={tracker} />
@@ -229,8 +269,27 @@ function LoadedRecipe({
           {chips.facts.map((chip) => (
             <Meta key={chip} label={chip} />
           ))}
-          <Meta label={chips.author} tone="sage" />
+          <Meta label={chips.source} icon="book" accessibilityLabel={p.sourceA11y(chips.source)} tone="sage" />
         </PillRow>
+        {cookedText ? (
+          <Text size={13} weight="700" color="ink-muted" className="mt-10">
+            {cookedText}
+          </Text>
+        ) : null}
+        {cook && card ? (
+          <View className="mt-14">
+            <CookSessionCard
+              variant="page"
+              title={card.title}
+              line={card.line}
+              labels={{ cancel: p.cancel, done: p.done, resume: p.resume }}
+              disabled={!online}
+              onCancel={onCookCancel}
+              onDone={onCookDone}
+              onResume={onCookResume}
+            />
+          </View>
+        ) : null}
       </View>
 
       {recipe.variants.length > 0 && current ? (
@@ -293,7 +352,7 @@ function LoadedRecipe({
           </View>
         ) : null}
         {moreOpen && current ? (
-          <MoreOptions choices={current} settings={cooking} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} />
+          <MoreOptions choices={current} settings={cooking} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} onUnits={setVisitUnits} />
         ) : null}
       </Card>
 
@@ -317,6 +376,7 @@ function LoadedRecipe({
                     key={ing.id}
                     amount={ing.amount}
                     name={ing.name}
+                    detail={ing.detail}
                     sub={ing.sub ?? undefined}
                     tag={ing.variant ? { label: p.variantTag, tone: 'sage' } : undefined}
                     last={i === view.ingredients.length - 1}
@@ -345,37 +405,23 @@ function LoadedRecipe({
   );
 }
 
+/** From this width the cart shows its label (FR-014, OC-RecipeWide). */
+export const WIDE_ACTIONS = 430;
+
 /**
- * The fixed footer (OC-Recipe): "Add groceries" (outline) and "Start cooking" (ink), no icons, side by
- * side, half each. When either label doesn't fit on one line, both read short: "Groceries", "Cook".
+ * The action bar (spec 051 FR-014, OC-Recipe): the 60 cart, icon only below 430 wide, then the
+ * main ink button with a play icon filling the rest. On both tabs.
  */
-function RecipeActions({ onAddToGroceries, onStartCooking }: { onAddToGroceries: () => void; onStartCooking: () => void }) {
-  const [fits, setFits] = useState({ groceries: true, cook: true });
-  const short = !fits.groceries || !fits.cook;
+function ActionBar({ onAddToGroceries, main }: { onAddToGroceries: () => void; main: { label: string; onPress: () => void } }) {
+  const wide = useWindowDimensions().width >= WIDE_ACTIONS;
   return (
     <View className="flex-row gap-10">
-      <Button
-        label={p.addToGroceries}
-        shortLabel={p.addToGroceriesShort}
-        short={short}
-        onLabelFits={(groceries) => setFits((f) => (f.groceries === groceries ? f : { ...f, groceries }))}
-        variant="outline"
-        size="lg"
-        block
-        className="flex-1"
-        onPress={onAddToGroceries}
-      />
-      <Button
-        label={p.startCooking}
-        shortLabel={p.startCookingShort}
-        short={short}
-        onLabelFits={(cook) => setFits((f) => (f.cook === cook ? f : { ...f, cook }))}
-        variant="ink"
-        size="lg"
-        block
-        className="flex-1"
-        onPress={onStartCooking}
-      />
+      {wide ? (
+        <Button label={p.addToGroceries} icon="groceries" variant="outline" size="lg" onPress={onAddToGroceries} />
+      ) : (
+        <IconButton icon="groceries" variant="outline" label={p.addToGroceries} onPress={onAddToGroceries} />
+      )}
+      <Button label={main.label} icon="play" variant="ink" size="lg" block className="flex-1" onPress={main.onPress} />
     </View>
   );
 }

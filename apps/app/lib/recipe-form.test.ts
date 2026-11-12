@@ -1,5 +1,6 @@
 // Spec 014: the Details form's rules (FR-002, FR-003, US2) and its edge cases, without the screen.
 import { describe, expect, it, vi } from 'vitest';
+import { NO_RECIPE_OVERRIDES } from '@cocon/schemas';
 import {
   DEFAULT_SERVES,
   formFromRecipe,
@@ -44,7 +45,7 @@ describe('sections (FR-001)', () => {
 
 describe('the form from a recipe', () => {
   it('starts a new recipe empty, serving 4', () => {
-    expect(empty).toEqual({ name: '', description: '', serves: '4', totalTime: '', prepTime: '', cuisine: null, source: '', bestMonths: [], photoPath: null });
+    expect(empty).toEqual({ name: '', description: '', serves: '4', totalTime: '', prepTime: '', cuisine: null, source: '', bestMonths: [], photoPath: null, overrides: NO_RECIPE_OVERRIDES });
   });
 
   it('shows a saved recipe as it reads, times included', () => {
@@ -58,6 +59,7 @@ describe('the form from a recipe', () => {
       source: 'Grandma',
       bestMonths: [1, 2, 12],
       photoPath: '5f3e2d1c-0b9a-4876-9543-210fedcba987/0b1c2d3e-4f50-4617-8899-aabbccddeeff/9a8b7c6d-5e4f-4321-8fed-cba987654321.jpg',
+      overrides: NO_RECIPE_OVERRIDES,
     });
   });
 
