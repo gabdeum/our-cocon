@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { catalogEntries, facts, packsOf } from './catalog.fixture';
-import { parsePackSize, pickPacks, sumNeeds, type StorePack } from './packs';
+import { parsePackSize, pickPacks, storeAmount, sumNeeds, type StorePack } from './packs';
+import { GRAMS_PER, ML_PER } from './units';
 
 const labels = (plan: ReturnType<typeof pickPacks>) => plan?.picks.map((p) => [p.count, p.pack.label]);
 
@@ -111,5 +112,58 @@ describe('parsePackSize (FR-004)', () => {
     expect(parsePackSize('2 tbsp')).toBeNull();
     expect(parsePackSize('250 g of cheese')).toBeNull();
     expect(parsePackSize('0 g')).toBeNull();
+  });
+});
+
+describe('storeAmount (spec 052 FR-004, FR-005)', () => {
+  it.each([
+    // US2: Za'atar 50 g, Guanciale 400 g, Gochujang 3 tbsp, Banana leaves 4.
+    [50, 'g', 'us', '2 oz'],
+    [400, 'g', 'us', '1 lb'],
+    [400, 'g', 'eu', '400 g'],
+    [3, 'tbsp', 'us', '2 fl oz'],
+    [3, 'tbsp', 'eu', '50 ml'],
+    [4, null, 'us', null],
+    [1, 'pinch', 'eu', null],
+    // The boundaries.
+    [1, 'g', 'us', '1 oz'],
+    [3.9, 'oz', 'us', '¼ lb'],
+    [4, 'oz', 'us', '¼ lb'],
+    [600, 'g', 'us', '1½ lb'],
+    [99, 'g', 'eu', '100 g'],
+    [100, 'g', 'eu', '100 g'],
+    [101, 'g', 'eu', '150 g'],
+    [1, 'kg', 'eu', '1 kg'],
+    [1250, 'g', 'eu', '1.3 kg'],
+    [31 * 29.5735295625, 'ml', 'us', '31 fl oz'],
+    [32 * 29.5735295625, 'ml', 'us', '1 qt'],
+    [1.1, 'l', 'us', '1½ qt'],
+    [999, 'ml', 'eu', '1 L'],
+    [1.1, 'l', 'eu', '1.25 L'],
+  ] as const)('%s %s in a %s store → %s', (quantity, unit, profile, text) => {
+    expect(storeAmount({ quantity, unit }, profile)).toBe(text);
+  });
+
+  it('converts without steps when round-up is off', () => {
+    expect(storeAmount({ quantity: 50, unit: 'g' }, 'us', false)).toBe('1.8 oz');
+    expect(storeAmount({ quantity: 3, unit: 'tbsp' }, 'eu', false)).toBe('44.4 ml');
+  });
+
+  it('SC-002: never less than the need', () => {
+    const per: Record<string, number> = { oz: GRAMS_PER.oz, lb: GRAMS_PER.lb, g: 1, kg: 1000, 'fl oz': 29.5735295625, qt: 946.352946, ml: 1, L: 1000 };
+    const value = (text: string) => {
+      const [, n, unit] = /^([\d.¼½¾]+) (.+)$/.exec(text) ?? [];
+      const number = (n ?? '').replace('¼', '.25').replace('½', '.5').replace('¾', '.75').replace(/^\./, '0.');
+      return Number(number) * (per[unit ?? ''] ?? NaN);
+    };
+    for (const unit of ['g', 'kg', 'oz', 'lb', 'ml', 'l', 'tsp', 'tbsp', 'cup'] as const) {
+      const base = unit in GRAMS_PER ? GRAMS_PER[unit as keyof typeof GRAMS_PER] : ML_PER[unit as keyof typeof ML_PER];
+      for (const quantity of [0.3, 1, 2.5, 3.9, 4, 7, 13, 31, 32, 99, 99.5, 100, 250, 333, 999, 1000, 1001, 4800]) {
+        for (const profile of ['us', 'eu'] as const) {
+          const text = storeAmount({ quantity, unit }, profile) as string;
+          expect(value(text), `${quantity} ${unit} ${profile}: ${text}`).toBeGreaterThanOrEqual(quantity * base - 1e-6);
+        }
+      }
+    }
   });
 });

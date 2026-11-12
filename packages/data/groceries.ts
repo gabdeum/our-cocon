@@ -10,6 +10,7 @@ import {
   planGroceryAdd,
   planGroceryAdds,
   rescaleGroceryAmount,
+  storeAmount,
   sumIngredients,
   sumNeeds,
   type FormatOptions,
@@ -239,9 +240,24 @@ export function combinedText(
 }
 
 /**
+ * Spec 052 FR-004: what to buy for something no store pack is known for, in the store's units
+ * ("Za'atar: 2 oz"). Each amount on its own when they don't add up ("11 pieces + 1¼ lb"); pieces and
+ * pinches as they are.
+ */
+function storeText(items: readonly GroceryAmount[], facts: IngredientFactsInput | null, settings: FamilySettings, words: GroceryWords): string | null {
+  const { parts } = combineAmounts(items, facts);
+  const texts = parts.flatMap((p) => {
+    const store = p.quantity == null ? null : storeAmount({ quantity: p.quantity, unit: p.unit === 'piece' ? null : p.unit }, settings.store_profile, settings.round_to_packs);
+    return store ?? rowText({ id: '', name: '', quantity: p.quantity, unit: p.unit }, words, settings.units) ?? [];
+  });
+  return texts.length > 0 ? texts.join(words.packsJoin) : null;
+}
+
+/**
  * Each row's amounts, beside the name, in the family's units (027): "Heavy cream: 1 pint carton (need 300 ml)", or just
- * "Heavy cream: 300 ml" when there's no pack, round-up is off (spec 021 US3), or the amounts don't
- * add up to one. Nothing for a row with no quantity ("Salt").
+ * "Heavy cream: 300 ml" when round-up is off (spec 021 US3) or the amounts don't add up to one.
+ * With no pack known, the store's units (spec 052: "Za'atar: 2 oz (need 50 g)"). Nothing for a
+ * row with no quantity ("Salt").
  */
 export function rowAmounts(rows: readonly GroceryRow[], packs: Record<string, PackData> | undefined, settings: FamilySettings, words: GroceryWords): Map<string, RowAmounts> {
   const out = new Map<string, RowAmounts>();
@@ -254,7 +270,14 @@ export function rowAmounts(rows: readonly GroceryRow[], packs: Record<string, Pa
     const need = combinedText(first.name, row.items, data?.facts ?? null, words, settings.units);
     const shown: RowAmounts = { ...(name ? { name } : {}), ...(need ? { detail: need } : {}) };
     out.set(row.id, shown);
-    if (!settings.round_to_packs || !need || !data) continue;
+    if (!need) continue;
+    // Not in the catalog, or no pack for this store (a catalog item whose packs haven't loaded waits).
+    if (!first.catalog_key || (data && data.packs[settings.store_profile].length === 0)) {
+      const detail = storeText(row.items, data?.facts ?? null, settings, words);
+      if (detail && detail !== need) out.set(row.id, { ...shown, detail, note: words.needNote(need) });
+      continue;
+    }
+    if (!settings.round_to_packs || !data) continue;
     const { total } = combineAmounts(row.items, data.facts);
     const sum = total?.quantity == null ? null : sumNeeds([{ quantity: total.quantity, unit: total.unit === 'piece' ? null : total.unit }], data.facts);
     const plan = sum ? pickPacks(sum, data.packs[settings.store_profile], data.facts, settings.store_profile) : null;

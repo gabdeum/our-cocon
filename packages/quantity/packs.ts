@@ -1,8 +1,9 @@
 import type { StoreProfile } from '@cocon/schemas/catalog';
 import type { Unit } from '@cocon/schemas/recipes';
 import { readAmount } from './parse-amount';
+import { decimalText, fractionText } from './round';
 import type { IngredientFactsInput } from './types';
-import { kindOf, toBase, type UnitKind } from './units';
+import { GRAMS_PER, kindOf, toBase, type UnitKind } from './units';
 import { en, type ParserWords } from './words.en';
 
 /**
@@ -261,4 +262,44 @@ export function parsePackSize(text: string, words: ParserWords = en): { size: nu
   const unit = words.units[word];
   if (!unit || unit === 'pinch' || unit === 'tsp' || unit === 'tbsp') return null;
   return { size: amount.value, unit };
+}
+
+const FL_OZ_ML = 29.5735295625;
+const QUART_ML = 946.352946;
+
+/** Up to the next multiple of `step` (a hair of float error doesn't step up). */
+function upTo(value: number, step: number): number {
+  return Math.ceil(value / step - SAME) * step;
+}
+
+/**
+ * Spec 052 FR-004: an amount with no pack to buy it in, in the units the store sells by weight or
+ * volume, rounded up ("50 g" → "2 oz" in the US, "400 g" → "1 lb"). With `roundUp` off, the same
+ * units to one decimal, without steps ("1.8 oz"). Null for pieces and pinches, which stay as they are.
+ * US: oz under 4 oz, then ¼ lb; fl oz under 32 fl oz, then ½ qt. Europe: 10 g under 100 g, 50 g up
+ * to 1 kg, then 0.1 kg; 50 ml under 1 L, then 0.25 L. Weight stays weight and volume stays volume.
+ */
+export function storeAmount(need: PackNeed, profile: StoreProfile, roundUp = true): string | null {
+  if (need.unit == null || !(need.quantity > 0)) return null;
+  const kind = kindOf(need.unit);
+  if (kind !== 'weight' && kind !== 'volume') return null;
+  const base = toBase(need.quantity, need.unit);
+  const up = (value: number, step: number, min = step) => (roundUp ? Math.max(min, upTo(value, step)) : value);
+  if (profile === 'us') {
+    const small = kind === 'weight' ? base / GRAMS_PER.oz : base / FL_OZ_ML;
+    const [limit, large, step, unit] = kind === 'weight' ? [4, base / GRAMS_PER.lb, 0.25, 'lb'] : [32, base / QUART_ML, 0.5, 'qt'];
+    const smallUnit = kind === 'weight' ? 'oz' : 'fl oz';
+    const inSmall = up(small, 1);
+    if (inSmall < limit - SAME) return `${roundUp ? String(inSmall) : decimalText(inSmall)} ${smallUnit}`;
+    const inLarge = up(large, step);
+    return `${roundUp ? fractionText(inLarge) : decimalText(inLarge)} ${unit}`;
+  }
+  const [smallUnit, largeUnit] = kind === 'weight' ? ['g', 'kg'] : ['ml', 'L'];
+  if (kind === 'weight' ? base <= 1000 + SAME : base < 1000 - SAME) {
+    const amount = kind === 'weight' ? up(base, base < 100 - SAME ? 10 : 50) : up(base, 50);
+    if (amount < 1000 - SAME) return `${roundUp ? String(Math.round(amount)) : decimalText(amount)} ${smallUnit}`;
+    return `1 ${largeUnit}`;
+  }
+  const amount = up(base / 1000, kind === 'weight' ? 0.1 : 0.25);
+  return `${roundUp ? String(Math.round(amount * 100) / 100) : decimalText(amount)} ${largeUnit}`;
 }

@@ -257,6 +257,16 @@ describe('FR-006: choices are remembered on this device', () => {
     expect(screen.getByRole('button', { name: 'Classic' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('switch', { name: 'Make my own dough' }).getAttribute('aria-checked')).toBe('true');
   });
+
+  it('spec 052: opened from a grocery card, starts at its servings, keeping the variants, without saving them', async () => {
+    const key = `cocon.recipe.${gabriel.user_id}.${detail.id}`;
+    const saved = JSON.stringify({ servings: 4, version: quicheIds.vegetarian, options: [] });
+    const storage = memoryStorage({ [key]: saved });
+    await setup({ storage, openAtServings: 8 });
+    expect(screen.getByText('8')).toBeTruthy();
+    expect(row('Mushrooms')).toBeTruthy();
+    expect(storage.data.get(key)).toBe(saved);
+  });
 });
 
 describe('states', () => {

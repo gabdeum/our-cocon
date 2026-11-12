@@ -172,6 +172,8 @@ export const events = {
   // Spec 022: "Add to groceries…" on a recipe, with how many ingredients were added and how many
   // were left unticked. Never which ones.
   groceries_added_from_recipe: z.strictObject({ ingredient_count: z.int().min(1).max(500), unticked_count: z.int().min(0).max(500) }),
+  // Spec 052: the recipe opened from its card on the grocery list.
+  grocery_recipe_opened: z.strictObject({ from: z.enum(['card']) }),
   // Spec 022: a recipe card's menu on the grocery list. Its items removed, and
   // its servings changed on the list. Never which recipe.
   // `item_count` counts the recipe's items removed (the banner's "Removed {n} items").

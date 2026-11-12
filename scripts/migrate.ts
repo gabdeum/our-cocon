@@ -1,12 +1,22 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import pg from 'pg';
+import { backfillCatalogMatches, countsText } from './backfill-catalog-matches';
 
 /**
  * Applies pending migrations from supabase/migrations in ONE transaction: if any fails, none
  * are applied and the deploy stops (spec 001 edge case). Records them in the same table the
  * Supabase CLI uses, so `supabase db push` and Supabase Cloud see the same history.
  */
+
+/**
+ * Steps in TypeScript that run right after the migration of the same name, in the same
+ * transaction (data backfills that need code the database doesn't have). They print what they did.
+ */
+const AFTER: Record<string, (client: pg.Client) => Promise<string>> = {
+  backfill_catalog_matches: async (client) => countsText(await backfillCatalogMatches(client)),
+};
+
 export async function migrate(databaseUrl: string, dir: string): Promise<string[]> {
   const files = (await readdir(dir)).filter((f) => /^\d+_.+\.sql$/.test(f)).sort();
   const client = new pg.Client({ connectionString: databaseUrl });
@@ -30,6 +40,8 @@ export async function migrate(databaseUrl: string, dir: string): Promise<string[
       const sql = await readFile(join(dir, file), 'utf8');
       try {
         await client.query(sql);
+        const after = AFTER[rest.join('_')];
+        if (after) console.log(await after(client));
       } catch (error) {
         throw new Error(`Migration ${file} failed: ${error instanceof Error ? error.message : String(error)}`, {
           cause: error,

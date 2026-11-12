@@ -1,6 +1,6 @@
 // Spec 020: what the grocery list shows (aisles, source lines, Need, recipe cards, who's shopping).
 // Spec 021: what to buy beside the name (summed per catalog entry) and the family's own pack size.
-import { DEFAULT_FAMILY_SETTINGS } from '@cocon/schemas';
+import { DEFAULT_FAMILY_SETTINGS, type FamilySettings } from '@cocon/schemas';
 import { describe, expect, it, vi } from 'vitest';
 import { amountText, buyText, byName, combineRows, editItem, editText, groupByAisle, recipeCards, rowAmounts, rowItem, rowSource, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
 import { alex, gabriel, groceryItem, mia, packData } from '../test/fakes';
@@ -104,7 +104,7 @@ describe('amounts', () => {
 });
 
 describe('recipeCards (FR-004)', () => {
-  it('counts each recipe’s items, in the order they came, skipping deleted recipes', () => {
+  it('counts each recipe’s items, in the order they came; a deleted recipe is marked (spec 052)', () => {
     const soup = { ...quiche, id: 'r-soup', name: 'Pumpkin soup', serves: 4 };
     const items = [
       groceryItem({ id: 'a', recipes: quiche }),
@@ -114,8 +114,9 @@ describe('recipeCards (FR-004)', () => {
       groceryItem({ id: 'e', recipes: { ...quiche, id: 'r-gone', deleted_at: '2026-10-20T00:00:00Z' } }),
     ];
     expect(recipeCards(items)).toEqual([
-      { id: 'r-quiche', name: 'Leek & bacon quiche', serves: 6, photo_path: null, count: 2 },
-      { id: 'r-soup', name: 'Pumpkin soup', serves: 4, photo_path: null, count: 1 },
+      { id: 'r-quiche', name: 'Leek & bacon quiche', serves: 6, photo_path: null, count: 2, deleted: false },
+      { id: 'r-soup', name: 'Pumpkin soup', serves: 4, photo_path: null, count: 1, deleted: false },
+      { id: 'r-gone', name: 'Leek & bacon quiche', serves: 6, photo_path: null, count: 1, deleted: true },
     ]);
   });
 
@@ -226,6 +227,38 @@ describe('rowAmounts (spec 021)', () => {
     // Exactly what's needed: said once.
     expect(out.get('p')).toEqual({ name: 'Pumpkin', detail: '1 kg loose' });
     expect(rowAmounts(combineRows(rows), packs, us).get('p')).toEqual({ name: 'Pumpkin', detail: '1 piece', note: '(need 1 kg)' });
+  });
+});
+
+describe('rowAmounts with no pack known (spec 052 US2)', () => {
+  const us = { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'us', round_to_packs: true } as const;
+  const eu = { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'eu', round_to_packs: true } as const;
+  // Guanciale and gochujang are catalog synonyms (pancetta, hot sauce); these stand in for anything unknown.
+  const other = (name: string, quantity: number | null, unit: 'g' | 'tbsp' | 'piece' | 'pinch' | null) => groceryItem({ id: name, name, catalog_key: null, quantity, unit });
+  const amounts = (items: ReturnType<typeof other>[], settings: FamilySettings) => rowAmounts(combineRows(items), undefined, settings).get(items[0]?.id ?? '');
+
+  it('US2: in store units, rounded up, as if bought by weight', () => {
+    expect(amounts([other("Za'atar", 50, 'g')], us)).toEqual({ detail: '2 oz', note: '(need 50 g)' });
+    expect(amounts([other('Smoked jowl', 400, 'g')], us)).toEqual({ detail: '1 lb', note: '(need 400 g)' });
+    expect(amounts([other('Smoked jowl', 400, 'g')], eu)).toEqual({ detail: '400 g' });
+    expect(amounts([other('Doenjang', 3, 'tbsp')], us)).toEqual({ detail: '2 fl oz', note: '(need 3 tbsp)' });
+    expect(amounts([other('Doenjang', 3, 'tbsp')], eu)).toEqual({ detail: '50 ml', note: '(need 3 tbsp)' });
+    expect(amounts([other('Banana leaves', 4, 'piece')], us)).toEqual({ detail: '4 pieces' });
+  });
+
+  it('edge cases: no quantity, pinches, amounts that don\'t add up, round-up off', () => {
+    expect(amounts([other('Salt', null, null)], us)).toEqual({});
+    expect(amounts([other('Sumac', 1, 'pinch')], us)).toEqual({ detail: '1 pinch' });
+    expect(amounts([other('Kumquat', 11, 'piece'), groceryItem({ id: 'k2', name: 'Kumquat', catalog_key: null, quantity: 600, unit: 'g', created_by: 'someone-else' })], us)).toEqual({
+      detail: '11 pieces + 1½ lb',
+      note: '(need 11 pieces + 600 g)',
+    });
+    expect(amounts([other("Za'atar", 50, 'g')], { ...us, round_to_packs: false })).toEqual({ detail: '1.8 oz', note: '(need 50 g)' });
+  });
+
+  it('a catalog item whose packs have not loaded yet shows only what is needed', () => {
+    const cream = groceryItem({ id: 'cream', name: 'Heavy cream', catalog_key: 'heavy_cream', quantity: 300, unit: 'ml' });
+    expect(rowAmounts(combineRows([cream]), undefined, us).get('cream')).toEqual({ detail: '300 ml' });
   });
 });
 

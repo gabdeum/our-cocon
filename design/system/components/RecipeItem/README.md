@@ -24,7 +24,18 @@ A recipe in a list: thumbnail, name, one meta line and who added it.
 
 The recipe named at the top of a sheet (OC-Share, spec 019): not tappable, surface-card, radius 20, padding 10, gap 12; thumbnail 64, radius 14 (peach with the initial when there's no photo); name 17/900, then one 14/600 ink-muted line ("From the Our Cocon family").
 
-## Rules
+## Grocery card (`GroceryRecipeCard`)
+
+A recipe on the grocery list (OC-Groceries, spec 052 FR-006). Two hit areas side by side on one surface-soft card, radius 18:
+
+| Part | Spec |
+| --- | --- |
+| Body | a link: padding 10 · 0 · 10 · 12, gap 10; thumbnail 40, radius 12 (peach placeholder); name 15/800; meta 13/600 ink-muted ("3 items on the list · serves 6"); no chevron (Gabriel, 052). Screen reader: "Open {recipe}" |
+| "…" | 48 × 60, `more-vertical` 22 ink, at the card's right. Screen reader: "More for {recipe}" |
+| Pressed | each part fills `surface-soft-pressed` on its own |
+| Deleted recipe | the body isn't a link; the meta reads "From a deleted recipe" |
+
+
 
 - Items stack with a 14 gap. The meta line shows only facts that help someone choose, in this order: time, servings, cuisine, variants. A fact with no value is left out with its separator.
 - Show the source, never "{name} · via {assistant}" (spec 051 FR-015).

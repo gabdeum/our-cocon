@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import {
   BottomSheet,
   Button,
-  Card,
   Dialog,
+  GroceryRecipeCard,
   IconButton,
   ListGroup,
   ListRow,
@@ -14,7 +14,6 @@ import {
   TabScreen,
   Text,
   TextField,
-  Thumb,
 } from '@cocon/ui';
 import type { Aisle, FamilySettings, FamilySettingsUpdate, Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
@@ -65,7 +64,8 @@ export interface GroceryListProps {
   onRestore: (ids: string[]) => Promise<boolean>;
   onEdit: (item: GroceryItem, text: string) => Promise<'saved' | 'empty' | 'failed'>;
   onMove: (item: GroceryItem, aisle: Aisle) => Promise<boolean>;
-  onOpenRecipe: (id: string) => void;
+  /** Opens the recipe at the servings it's on the list for (spec 052 FR-006). */
+  onOpenRecipe: (id: string, servings: number) => void;
   /** The servings each recipe is on the list for (spec 022); the recipe's own until loaded. */
   servings?: GroceryServings;
   /** A recipe card's menu: rescale its items still to buy from `from` to `to` servings. */
@@ -220,7 +220,11 @@ export function GroceryList(props: GroceryListProps) {
 
   const remove = (row: GroceryRow) => void clear(rowIds([row]), 1, g.removed(titleOf(row)), 'removed');
 
-  // A recipe card's menu (spec 022).
+  // A recipe card (spec 052 FR-006): its body opens the recipe, its "…" the menu (spec 022).
+  const openRecipe = (card: RecipeCard) => {
+    tracker.track('grocery_recipe_opened', { from: 'card' });
+    props.onOpenRecipe(card.id, card.serves);
+  };
   const removeRecipe = (card: RecipeCard) => {
     setCardMenu(null);
     const ids = recipeItems(list, card.id).map((i) => i.id);
@@ -233,8 +237,7 @@ export function GroceryList(props: GroceryListProps) {
       setCardMenu(null);
       return true;
     }
-    setCardMenu(null);
-    toast.show({ text: g.syncFailed, tone: 'warn' });
+    // FR-008: the sheet stays open and says so.
     return false;
   };
 
@@ -279,19 +282,16 @@ export function GroceryList(props: GroceryListProps) {
       <OfflineBanner screen="groceries" tracker={tracker} />
 
       {cards.map((card) => (
-        <Card key={card.id} tone="soft" className="flex-row items-center gap-8 py-10 pl-12 pr-4">
-          {/* "For {recipe}" is right beside it: the photo isn't read again (spec 030). */}
-          <Thumb uri={card.photo_path ? photoUrls[card.photo_path] : undefined} />
-          <View className="min-w-0 flex-1">
-            <Text size={15} weight="800">
-              {g.forRecipe(card.name)}
-            </Text>
-            <Text variant="caption" color="ink-muted">
-              {g.recipeMeta(card.count, card.serves)}
-            </Text>
-          </View>
-          <IconButton icon="more-vertical" label={g.recipeOptions(card.name)} variant="soft" onPress={() => setCardMenu(card.id)} />
-        </Card>
+        <GroceryRecipeCard
+          key={card.id}
+          name={card.name}
+          meta={card.deleted ? g.fromDeletedRecipe : g.recipeMeta(card.count, card.serves)}
+          photoUri={card.photo_path ? photoUrls[card.photo_path] : undefined}
+          openLabel={g.openRecipe(card.name)}
+          moreLabel={g.moreForRecipe(card.name)}
+          onOpen={card.deleted ? null : () => openRecipe(card)}
+          onMore={() => setCardMenu(card.id)}
+        />
       ))}
 
       {list.length === 0 ? (
@@ -334,20 +334,31 @@ export function GroceryList(props: GroceryListProps) {
         </View>
       ))}
 
-      {list.length > 0 ? (
-        <View className="flex-row flex-wrap gap-8">
-          {done.length > 0 ? (
-            <Button
-              label={g.clearDone}
-              variant="soft"
-              disabled={!online}
-              className="flex-1"
-              onPress={() => void clear(rowIds(done), done.length, g.cleared(done.length), 'done')}
-            />
-          ) : null}
-          <Button label={g.clearAll} variant="outline" disabled={!online} className="flex-1" onPress={() => setConfirmClearAll(true)} />
+      {/* Spec 052 FR-007: two equal buttons, always there; each off when it has nothing to clear. */}
+      <View className="mt-4 flex-row gap-10">
+        <View className="min-w-0 flex-1">
+          <Button
+            label={g.clearDoneButton}
+            accessibilityLabel={g.clearDone}
+            variant="soft"
+            size="pair"
+            block
+            disabled={!online || done.length === 0}
+            onPress={() => void clear(rowIds(done), done.length, g.cleared(done.length), 'done')}
+          />
         </View>
-      ) : null}
+        <View className="min-w-0 flex-1">
+          <Button
+            label={g.clearAllButton}
+            accessibilityLabel={g.clearAll}
+            variant="danger-outline"
+            size="pair"
+            block
+            disabled={!online || rows.length === 0}
+            onPress={() => setConfirmClearAll(true)}
+          />
+        </View>
+      </View>
 
       <GroceryActions
         item={menuItem}
@@ -366,11 +377,8 @@ export function GroceryList(props: GroceryListProps) {
         <RecipeCardSheet
           key={menuCard.id}
           card={menuCard}
+          photoUri={menuCard.photo_path ? photoUrls[menuCard.photo_path] : undefined}
           online={online}
-          onOpen={() => {
-            setCardMenu(null);
-            props.onOpenRecipe(menuCard.id);
-          }}
           onSaveServings={(to) => saveServings(menuCard, to)}
           onRemove={() => removeRecipe(menuCard)}
           onClose={() => setCardMenu(null)}

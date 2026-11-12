@@ -140,6 +140,8 @@ export interface RecipeCard {
   serves: number;
   photo_path: string | null;
   count: number;
+  /** In Recently deleted (spec 052 FR-006): the card doesn't open it, and its menu only removes. */
+  deleted: boolean;
 }
 
 /**
@@ -150,10 +152,10 @@ export function recipeCards(items: readonly GroceryItem[], servings: GroceryServ
   const cards = new Map<string, RecipeCard>();
   for (const item of items) {
     const r = item.recipes;
-    if (!r || r.deleted_at) continue;
+    if (!r) continue;
     const card = cards.get(r.id);
     if (card) card.count += 1;
-    else cards.set(r.id, { id: r.id, name: r.name, serves: servings[r.id] ?? r.serves, photo_path: r.photo_path, count: 1 });
+    else cards.set(r.id, { id: r.id, name: r.name, serves: servings[r.id] ?? r.serves, photo_path: r.photo_path, count: 1, deleted: r.deleted_at != null });
   }
   return [...cards.values()];
 }

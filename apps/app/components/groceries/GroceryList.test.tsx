@@ -205,9 +205,14 @@ describe('Groceries', () => {
     expect(tracker.track).toHaveBeenCalledWith('clear_done_undone', { count: 1 });
   });
 
-  it('has no Clear button when nothing is ticked', () => {
+  it('spec 052 US4: "Clear done" and "Clear all" side by side; Clear done is off when nothing is ticked', () => {
     setup({ items: sample.filter((i) => !i.checked) });
-    expect(screen.queryByRole('button', { name: 'Clear done items' })).toBeNull();
+    const done = screen.getByRole('button', { name: 'Clear done items' });
+    const all = screen.getByRole('button', { name: 'Clear all items' });
+    expect(done.textContent).toBe('Clear done');
+    expect(all.textContent).toBe('Clear all');
+    expect(done.getAttribute('aria-disabled')).toBe('true');
+    expect(all.getAttribute('aria-disabled')).toBeNull();
   });
 
   it('FR-006: a row’s menu moves it to another aisle, for the family', async () => {
@@ -247,25 +252,48 @@ describe('Groceries', () => {
     expect(screen.getByText('Removed Croissants.')).toBeTruthy();
   });
 
-  it('FR-004: a card per linked recipe; its menu opens the recipe', async () => {
-    const { props } = setup();
-    expect(screen.getByText('2 items · serves 6')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+  it('spec 052 US3: tapping a recipe card opens the recipe at its servings; its "…" opens the menu', async () => {
+    const { props, tracker } = setup({ servings: { 'r-quiche': 8 } });
+    expect(screen.getByText('2 items on the list · serves 8')).toBeTruthy();
+    fireEvent.click(screen.getByRole('link', { name: 'Open Leek & bacon quiche' }));
+    expect(props.onOpenRecipe).toHaveBeenCalledWith('r-quiche', 8);
+    expect(tracker.track).toHaveBeenCalledWith('grocery_recipe_opened', { from: 'card' });
+    fireEvent.click(screen.getByRole('button', { name: 'More for Leek & bacon quiche' }));
     await flush();
-    fireEvent.click(screen.getByRole('link', { name: 'Open recipe' }));
-    expect(props.onOpenRecipe).toHaveBeenCalledWith('r-quiche');
+    expect(screen.getByRole('dialog', { name: 'Leek & bacon quiche' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Open recipe' })).toBeNull();
   });
 
-  it('spec 022: the card reads the servings the list is for', () => {
-    setup({ servings: { 'r-quiche': 8 } });
-    expect(screen.getByText('2 items · serves 8')).toBeTruthy();
+  it('spec 052 FR-006: a recipe in Recently deleted does not open, and its menu only removes', async () => {
+    const gone = { ...quiche, id: 'r-gone', name: 'Old soup', deleted_at: '2026-11-01T00:00:00Z' as string | null };
+    const { props } = setup({ items: [...sample, groceryItem({ id: 'stock', name: 'Stock', recipe_id: 'r-gone', recipes: gone })] });
+    expect(screen.queryByRole('link', { name: 'Open Old soup' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More for Old soup' }));
+    await flush();
+    expect(screen.queryByRole('button', { name: 'More servings' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove its items' }));
+    await flush();
+    expect(props.onClear).toHaveBeenCalledWith(['stock']);
+  });
+
+  it('spec 052 US5: the menu shows Cancel and a disabled Save from the start; + reads "Was 6" and "Save for 7"', async () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'More for Leek & bacon quiche' }));
+    await flush();
+    expect(screen.getByText('2 items on the list')).toBeTruthy();
+    expect(screen.getByText('On the list for 6')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save' }).getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'More servings' }));
+    expect(screen.getByText('Was 6')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save for 7' }).getAttribute('aria-disabled')).toBeNull();
   });
 
   it('spec 022: the card menu changes the servings: Save rescales from 6 to 8', async () => {
     const { props, tracker } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More for Leek & bacon quiche' }));
     await flush();
-    expect(screen.queryByRole('button', { name: /^Save for/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'More servings' }));
     fireEvent.click(screen.getByRole('button', { name: 'More servings' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save for 8' }));
@@ -275,19 +303,22 @@ describe('Groceries', () => {
     expect(screen.queryByRole('button', { name: 'Save for 8' })).toBeNull();
   });
 
-  it('spec 022: a failed servings change says so', async () => {
+  it('spec 052: a failed servings change says so in a toast, and the sheet stays open', async () => {
     setup({ onSetServings: vi.fn(async () => false) });
-    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More for Leek & bacon quiche' }));
     await flush();
     fireEvent.click(screen.getByRole('button', { name: 'Fewer servings' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save for 5' }));
     await flush();
-    expect(screen.getByText("Couldn't update. Try again.")).toBeTruthy();
+    // Spec 053 FR-015: a warn toast over the sheet.
+    expect(screen.getAllByRole('status').some((s) => s.textContent === "Couldn't update. Try again.")).toBe(true);
+    const sheet = screen.getByRole('dialog', { name: 'Leek & bacon quiche' });
+    expect(within(sheet).getByRole('button', { name: 'Save for 5' })).toBeTruthy();
   });
 
   it('spec 022: the card menu removes the recipe\'s items, with Undo', async () => {
     const { props, tracker } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More for Leek & bacon quiche' }));
     await flush();
     fireEvent.click(screen.getByRole('button', { name: 'Remove its items' }));
     await flush();
@@ -312,11 +343,11 @@ describe('Groceries', () => {
     expect(props.onToggle).not.toHaveBeenCalled();
     expect(screen.queryByRole('link', { name: /Move to…/ })).toBeNull();
     // A recipe card still opens its recipe; changing it waits for the connection.
-    fireEvent.click(screen.getByRole('button', { name: 'Options for Leek & bacon quiche' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Open Leek & bacon quiche' }));
+    expect(props.onOpenRecipe).toHaveBeenCalledWith('r-quiche', 6);
+    fireEvent.click(screen.getByRole('button', { name: 'More for Leek & bacon quiche' }));
     await flush();
     expect(screen.getByRole('button', { name: 'Remove its items' }).getAttribute('aria-disabled')).toBe('true');
-    fireEvent.click(screen.getByRole('link', { name: 'Open recipe' }));
-    expect(props.onOpenRecipe).toHaveBeenCalledWith('r-quiche');
   });
 
   it('shows the empty list', () => {
@@ -506,9 +537,10 @@ describe('Groceries › what to buy (spec 021)', () => {
     expect(screen.getByText("Couldn't update. Try again.")).toBeTruthy();
   });
 
-  it('has no Clear all on an empty list', () => {
+  it('spec 052: on an empty list, both Clear buttons are off', () => {
     setup({ items: [] });
-    expect(screen.queryByRole('button', { name: 'Clear all items' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Clear all items' }).getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Clear done items' }).getAttribute('aria-disabled')).toBe('true');
   });
 
   it('FR-004: Edit › Store size saves the family’s own pack size', async () => {

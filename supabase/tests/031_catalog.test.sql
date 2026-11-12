@@ -3,7 +3,7 @@
 -- family's own corrections only to that family. The matching itself (normalising, US1–US3,
 -- SC-001) is tested from TypeScript in scripts/catalog.test.ts.
 begin;
-select plan(38);
+select plan(41);
 
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
@@ -67,6 +67,10 @@ reset role;
 select ok(has_function_privilege('authenticated', 'public.match_ingredients(jsonb)', 'execute'), 'members can match');
 select ok(has_function_privilege('authenticated', 'public.suggest_ingredients(text, integer)', 'execute'), 'members get suggestions');
 select ok(not has_function_privilege('authenticated', 'public._load_catalog(jsonb)', 'execute'), 'only migrations load the catalog');
+-- Spec 052: the matcher for any family is for the backfill only.
+select ok(not has_function_privilege('authenticated', 'public._match_ingredients(uuid, jsonb)', 'execute'), 'members cannot match for any family');
+select ok(not has_function_privilege('anon', 'public._match_ingredients(uuid, jsonb)', 'execute'), 'signed out cannot match for any family');
+select ok(not has_function_privilege('cocon_assistant', 'public._match_ingredients(uuid, jsonb)', 'execute'), 'assistants cannot match for any family');
 select ok(not has_function_privilege('anon', 'public.suggest_ingredients(text, integer)', 'execute'), 'signed out gets no suggestions');
 
 -- Keys are permanent: data without an existing key stops the load.

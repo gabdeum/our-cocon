@@ -47,6 +47,7 @@ import {
   PushedScreen,
   RadioCard,
   ResultTile,
+  GroceryRecipeCard,
   RecipeItem,
   RecipeItemSkeleton,
   ReorderList,
@@ -243,6 +244,14 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <Button label="Start cooking" size="lg" />
           <Button label="Save recipe" busy busyLabel="Saving…" />
         </PillRow>
+        <View className="flex-row gap-10">
+          <View className="min-w-0 flex-1">
+            <Button label="Clear done" variant="soft" size="pair" block />
+          </View>
+          <View className="min-w-0 flex-1">
+            <Button label="Clear all" variant="danger-outline" size="pair" block />
+          </View>
+        </View>
       </Section>
 
       <Section group="Actions" title="IconButton">
@@ -825,6 +834,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <RecipeItem name="Leek & bacon quiche" meta="1 h 10 · Serves 6 · 2 variants" author="La Cuisine de Mamie · p. 48" onPress={noop} />
         <RecipeItem name="Grandma's apple tart" meta="1 h 30 · Serves 8" author="Mia" placeholderTone="sage" onPress={noop} />
         <RecipeItemSkeleton />
+        <GroceryRecipeCard name="Leek & bacon quiche" meta="3 items on the list · serves 6" openLabel="Open Leek & bacon quiche" moreLabel="More for Leek & bacon quiche" onOpen={noop} onMore={noop} />
+        <GroceryRecipeCard name="Old soup" meta="From a deleted recipe" openLabel="Open Old soup" moreLabel="More for Old soup" onOpen={null} onMore={noop} />
       </Section>
 
       <Section group="Cooking" title="StepCard">

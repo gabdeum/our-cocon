@@ -76,8 +76,9 @@ export function Photo({ uri, label, className }: { uri: string; label?: string; 
 }
 
 /** 40 × 40, radius 12: a recipe's photo on a grocery recipe card (OC-Groceries), peach when it has none. */
-export function Thumb({ uri, label }: { uri?: string; label?: string }) {
-  return <View className="h-[40px] w-[40px] overflow-hidden rounded-[12px]">{uri ? <Photo uri={uri} label={label} /> : <PhotoPlaceholder className="h-full w-full" />}</View>;
+/** 40, radius 12; `lg` 48, radius 14 (a sheet's header: OC-GroceryRecipeMenu, spec 052). */
+export function Thumb({ uri, label, size = 'md' }: { uri?: string; label?: string; size?: 'md' | 'lg' }) {
+  return <View className={size === 'lg' ? 'h-[48px] w-[48px] overflow-hidden rounded-md' : 'h-[40px] w-[40px] overflow-hidden rounded-[12px]'}>{uri ? <Photo uri={uri} label={label} /> : <PhotoPlaceholder className="h-full w-full" />}</View>;
 }
 
 export interface HeroAction {
