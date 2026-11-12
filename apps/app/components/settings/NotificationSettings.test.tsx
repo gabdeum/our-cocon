@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { DEFAULT_NOTIFICATION_PREFS } from '@cocon/schemas';
 import { fakeTracker } from '../../test/fakes';
 import { NotificationSettings, type NotificationSettingsProps } from './NotificationSettings';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -29,7 +30,7 @@ function setup(over: Partial<NotificationSettingsProps> = {}) {
 const flush = () => act(async () => undefined);
 
 describe('Notifications (OC-SettingsNotif)', () => {
-  it('US2: back to the Menu, then Timers and Event reminders, as drawn', () => {
+  it('US2: back to the Menu, then Timers and Event reminders, as drawn', async () => {
     const { onBack } = setup();
     expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual(['Notifications', 'Timers', 'Event reminders']);
     expect(screen.getByText('Just for you, on this iPhone.')).toBeTruthy();
@@ -41,6 +42,8 @@ describe('Notifications (OC-SettingsNotif)', () => {
     expect(screen.getByText('Events for James remind the person who takes them, or everyone with the app if nobody’s chosen yet.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Back to Menu' }));
     expect(onBack).toHaveBeenCalledOnce();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2: every switch and choice saves at once', () => {

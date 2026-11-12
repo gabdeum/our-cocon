@@ -9,6 +9,7 @@ import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { monthRange, weekIndexOf } from '../../lib/calendar-month';
 import { CalendarScreen, type CalendarScreenProps } from './CalendarScreen';
 import { fakeTracker, gabriel, mia } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 // "Now" follows the real clock: pin it before every slot so labels don't depend on when tests run.
 vi.mock('../../lib/use-now', () => ({ useNow: () => '03:00' }));
@@ -171,6 +172,8 @@ describe('Month view (spec 037)', () => {
     expect(screen.getByText('Baby swim')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'October 28: Baby swim (Eva)' })).toBeTruthy();
     expect(onEventWindow).toHaveBeenCalledWith({ from: '2026-04-01', to: '2027-06-30' });
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2: scrolling into November changes the title once November fills the grid', async () => {
@@ -251,11 +254,11 @@ describe('Month view (spec 037)', () => {
     const sheet = screen.getByRole('dialog');
     expect(within(sheet).getByRole('heading').textContent).toBe('Wednesday, October 28');
     expect(sheet.textContent).toContain('2 events');
-    expect(within(sheet).getAllByRole('link').map((r) => r.getAttribute('aria-label'))).toEqual(['Grandma visits, All day · day 2 of 4', 'Baby swim, 14:30']);
+    expect(within(sheet).getAllByRole('link').map((r) => r.getAttribute('aria-label'))).toEqual(['Grandma visits, Everyone, All day · day 2 of 4', 'Baby swim, Gabriel, 14:30']);
     expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 2 });
     expect(onNavigate).not.toHaveBeenCalled();
 
-    fireEvent.click(within(sheet).getByRole('link', { name: 'Baby swim, 14:30' }));
+    fireEvent.click(within(sheet).getByRole('link', { name: 'Baby swim, Gabriel, 14:30' }));
     expect(onOpenEvent).toHaveBeenCalledWith(monthEvents[0]?.id, '2026-10-28');
     expect(screen.queryByRole('dialog')).toBeNull();
 
@@ -263,6 +266,8 @@ describe('Month view (spec 037)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add event on Wednesday, October 28' }));
     expect(onAddEvent).toHaveBeenCalledWith('2026-10-28');
     expect(screen.queryByRole('dialog')).toBeNull();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('FR-009: an empty day says so, and the sheet closes', async () => {
@@ -351,10 +356,12 @@ describe('Week view (spec 038)', () => {
   it('US1: overlapping events show side by side, each at its time', async () => {
     const onEventWindow = vi.fn();
     await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-25', events, onEventWindow });
-    const swim = screen.getByRole('link', { name: 'Baby swim, Sunday, 14:30 to 16:30' }).parentElement;
-    const coffee = screen.getByRole('link', { name: 'Coffee, Sunday, 16:00 to 17:00' }).parentElement;
+    const swim = screen.getByRole('link', { name: 'Baby swim, Eva, Sunday October 25, 14:30 to 16:30' }).parentElement;
+    const coffee = screen.getByRole('link', { name: 'Coffee, Gabriel, Sunday October 25, 16:00 to 17:00' }).parentElement;
     expect([swim?.style.top, swim?.style.width, coffee?.style.top, coffee?.style.left]).toEqual(['307px', '50%', '361px', '50%']);
     expect(onEventWindow).toHaveBeenCalledWith({ from: '2026-04-01', to: '2027-06-30' });
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2: swiping left moves to November 1 – 7; right goes back; a short drag stays', async () => {
@@ -389,7 +396,7 @@ describe('Week view (spec 038)', () => {
     expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
     expect(tracker.track).toHaveBeenCalledWith('calendar_day_opened', { from_view: 'week' });
 
-    fireEvent.click(screen.getByRole('link', { name: 'Coffee, Sunday, 16:00 to 17:00' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Coffee, Gabriel, Sunday October 25, 16:00 to 17:00' }));
     expect(onOpenEvent).toHaveBeenCalledWith(events[1]?.id, '2026-10-25');
 
     fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
@@ -446,9 +453,11 @@ describe('Day view (spec 039)', () => {
       'Afternoon14:00–18:00',
       'Evening18:00–22:00',
     ]);
-    expect(screen.getByRole('link', { name: /^Brunch, Lunch · Grandma’s house/ })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /^Brunch, Everyone, Lunch · Grandma’s house/ })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Add event in the lunch slot, Sunday October 25' })).toBeNull();
     expect(screen.getByText('+ Add in the early morning')).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2: swiping left shows Mon, October 26; right goes back; the arrows don’t count as swipes', async () => {
@@ -481,7 +490,7 @@ describe('Day view (spec 039)', () => {
     expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-25', { slot: 'morning' });
     expect(tracker.track).toHaveBeenCalledWith('calendar_slot_add_tapped', { slot: 'morning' });
     expect(screen.getByText('+ Add in the morning')).toBeTruthy();
-    fireEvent.click(screen.getByRole('link', { name: 'Coffee, 16:00' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Coffee, Gabriel, 16:00' }));
     expect(onOpenEvent).toHaveBeenCalledWith(events[1]?.id, '2026-10-25');
     fireEvent.click(screen.getByRole('button', { name: 'Add event' }));
     expect(onAddEvent).toHaveBeenLastCalledWith('2026-10-25');
@@ -533,9 +542,11 @@ describe('Agenda view (spec 040)', () => {
     await agenda({ onEventWindow });
     expect(screen.getAllByRole('heading')[0]?.textContent).toBe('Coming up');
     expect(dayHeadings()).toEqual(['Today · Sun, Oct 25', 'Tomorrow · Mon, Oct 26', 'Tue, Oct 27', 'Thu, Oct 29']);
-    expect(screen.getByRole('link', { name: 'Brunch, Lunch · Grandma’s house' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Eva’s birthday, All day, Birthday' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Brunch, Everyone, Lunch · Grandma’s house' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Eva’s birthday, Eva, All day, Birthday' })).toBeTruthy();
     expect(onEventWindow).toHaveBeenLastCalledWith({ from: '2026-10-25', to: '2026-11-21' });
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('nothing ahead: “Nothing planned yet. Tap + to add something.”', async () => {
@@ -631,7 +642,7 @@ describe('Private and surprise events (spec 043)', () => {
   it('US1: tapping Eva’s Busy event opens “Eva is busy” instead of the event', async () => {
     const onOpenEvent = vi.fn();
     await agenda({ onOpenEvent });
-    fireEvent.click(screen.getByRole('link', { name: /^Busy, Afternoon/ }));
+    fireEvent.click(screen.getByRole('link', { name: /^Busy, Eva, Afternoon/ }));
     expect(onOpenEvent).not.toHaveBeenCalled();
     const sheet = screen.getByRole('dialog');
     expect(within(sheet).getByRole('heading', { name: 'Eva is busy' })).toBeTruthy();
@@ -644,7 +655,7 @@ describe('Private and surprise events (spec 043)', () => {
   it('US2: those in on a surprise see it tagged, and who it’s hidden from', async () => {
     const onOpenEvent = vi.fn();
     await agenda({ userId: 'u-alex', members: [gabriel, eva, alex], onOpenEvent });
-    const row = screen.getByRole('link', { name: 'Eva’s surprise dinner, Evening · Café Lalo · hidden from Eva, Surprise' });
+    const row = screen.getByRole('link', { name: 'Eva’s surprise dinner, Eva, Evening · Café Lalo · hidden from Eva, Surprise' });
     fireEvent.click(row);
     expect(onOpenEvent).toHaveBeenCalledWith(dinner.id, '2026-10-22');
   });

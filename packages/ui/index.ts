@@ -3,6 +3,8 @@
 export { theme, themeColors, defaultTheme, type ThemeId, type ColorName } from './theme';
 export { ThemeProvider, useThemeColors } from './ThemeProvider';
 export { cn } from './cn';
+export { announce, pressedState, useLargeText, useReturnFocus, LARGE_TEXT_SCALE } from './a11y';
+export { useReduceMotion } from './reduceMotion';
 
 export { Text, type TextProps, type TextVariant, type TextColor, type Weight } from './components/Text';
 export { BrandMark, Icon, Logo, type BrandName, type IconName, type IconProps } from './components/Icon';

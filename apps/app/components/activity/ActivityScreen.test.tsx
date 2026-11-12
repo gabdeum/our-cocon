@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ActivityEntry } from '@cocon/schemas';
 import { alex, fakeTracker, gabriel, mia } from '../../test/fakes';
 import { ActivityScreen } from './ActivityScreen';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -52,7 +53,7 @@ function setup(over: Partial<Parameters<typeof ActivityScreen>[0]> = {}) {
 }
 
 describe('Activity', () => {
-  it('lists entries, with pills for the people who have some; assistants only under AI only', () => {
+  it('lists entries, with pills for the people who have some; assistants only under AI only', async () => {
     const { onFilter } = setup();
     expect(screen.getByRole('heading', { name: 'Activity' })).toBeTruthy();
     expect(screen.getByText('Alex ticked 2 items')).toBeTruthy();
@@ -62,6 +63,8 @@ describe('Activity', () => {
     expect(onFilter).toHaveBeenCalledWith({ actor: mia.user_id });
     fireEvent.click(screen.getByRole('button', { name: 'AI only' }));
     expect(onFilter).toHaveBeenLastCalledWith({ ai: true });
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('AI only: the assistant pills; tapping a selected one clears it; All drops it', () => {

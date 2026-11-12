@@ -9,6 +9,7 @@ import { fakeTracker } from '../../test/fakes';
 import { TimersScreen, type TimersScreenProps } from './TimersScreen';
 import { quiche as quicheRecipe } from '@cocon/schemas/quiche.fixture';
 import type { RecipeDetail } from '../../lib/recipe';
+import { expectAccessible } from '../../test/axe';
 
 const T0 = 1_760_000_000_000;
 const noStorage: ChoiceStorage = { getItem: async () => null, setItem: async () => undefined };
@@ -56,7 +57,7 @@ const card = (name: string) => {
 const clockOf = (name: string) => within(card(name)).getByRole('timer').textContent;
 
 describe('Timers screen (spec 011 US2)', () => {
-  it('FR-002: header, then every timer newest first with its recipe and state', () => {
+  it('FR-002: header, then every timer newest first with its recipe and state', async () => {
     act(() => void designTimers());
     setup();
     expect(screen.getByRole('heading', { level: 1, name: 'Timers' })).toBeTruthy();
@@ -67,6 +68,8 @@ describe('Timers screen (spec 011 US2)', () => {
     expect(within(card('Soften leeks')).getByText('Leek & bacon quiche · Paused')).toBeTruthy();
     expect(within(card('Simmer')).getByText('Pumpkin soup · Done!')).toBeTruthy();
     expect(screen.getByText("Timers keep running when you leave the recipe. You'll hear a chime when one ends.")).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('sends timers_screen_opened once, with the count only', () => {
@@ -83,17 +86,17 @@ describe('Timers screen (spec 011 US2)', () => {
     expect(clockOf('Blind bake')).toBe('07:30');
     expect(within(card('Blind bake')).getByRole('progressbar').getAttribute('aria-valuenow')).toBe('25');
 
-    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'One minute more' }));
+    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'One minute more: Blind bake' }));
     expect(clockOf('Blind bake')).toBe('08:30');
-    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'One minute less' }));
+    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'One minute less: Blind bake' }));
     expect(clockOf('Blind bake')).toBe('07:30');
 
-    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'Pause' }));
+    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'Pause: Blind bake' }));
     act(() => vi.advanceTimersByTime(5000));
     expect(clockOf('Blind bake')).toBe('07:30');
     expect(screen.getByText('0 running · 1 total')).toBeTruthy();
     expect(within(card('Blind bake')).getByText('Leek & bacon quiche · Paused')).toBeTruthy();
-    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'Resume' }));
+    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'Resume: Blind bake' }));
     act(() => vi.advanceTimersByTime(1000));
     expect(clockOf('Blind bake')).toBe('07:29');
   });
@@ -108,7 +111,7 @@ describe('Timers screen (spec 011 US2)', () => {
   it('Stop takes a timer away', () => {
     act(() => void store.start('Blind bake', 12 * 60, 'step', quiche));
     setup();
-    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'Stop' }));
+    fireEvent.click(within(card('Blind bake')).getByRole('button', { name: 'Stop: Blind bake' }));
     expect(screen.queryByText('Blind bake')).toBeNull();
   });
 
@@ -118,13 +121,13 @@ describe('Timers screen (spec 011 US2)', () => {
     act(() => vi.advanceTimersByTime(60 * 1000));
     const c = () => within(card('Simmer'));
     expect(c().getByText('No recipe · Done!')).toBeTruthy();
-    expect(c().queryByRole('button', { name: 'Pause' })).toBeNull();
+    expect(c().queryByRole('button', { name: 'Pause: Simmer' })).toBeNull();
 
-    fireEvent.click(c().getByRole('button', { name: 'Add 1 more minute' }));
+    fireEvent.click(c().getByRole('button', { name: 'Add 1 more minute: Simmer' }));
     expect(clockOf('Simmer')).toBe('01:00');
     expect(c().getByText('No recipe · Running')).toBeTruthy();
     act(() => vi.advanceTimersByTime(60 * 1000));
-    fireEvent.click(c().getByRole('button', { name: 'Dismiss' }));
+    fireEvent.click(c().getByRole('button', { name: 'Dismiss: Simmer' }));
     expect(screen.queryByText('Simmer')).toBeNull();
   });
 

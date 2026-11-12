@@ -208,9 +208,8 @@ export const strings = {
     /** The week row after the title: "06:30 · Gabriel". */
     detail: (who: string, when: string) => (who ? `${when} · ${who}` : when),
     rowLabel: (parts: string[]) => parts.filter(Boolean).join(', '),
-    /** A strip day for screen readers: "Today, October 25, 2 people busy". */
-    dayLabel: (today: boolean, date: string, people: number) =>
-      `${today ? 'Today, ' : ''}${date}, ${people === 0 ? 'nothing planned' : people === 1 ? '1 person busy' : `${people} people busy`}`,
+    /** A strip day for screen readers, like a month day (spec 030 FR-006): "Today, October 25: Brunch, Baby swim". */
+    dayLabel: (today: boolean, date: string, titles: string[]) => `${today ? 'Today, ' : ''}${date}: ${titles.length ? titles.join(', ') : 'nothing planned'}`,
   },
   // design/ui/OC-Home.md › Latest activity and design/ui/OC-Activity.md (specs 026, 028): what the
   // family and their AI assistants changed, and Undo for an AI change.
@@ -538,6 +537,8 @@ export const strings = {
     emptyAiLabel: 'AI',
     emptyAiHint: "Try: “Save my mum's ratatouille to Our Cocon”",
     noMatchTitle: (query: string) => `No recipes match “${query}”.`,
+    /** Said after a search settles (spec 030): "3 recipes", "1 recipe". */
+    resultCount: (n: number) => (n === 1 ? '1 recipe' : `${n} recipes`),
     noMatchBody: 'Try another word, or add it as a new recipe.',
     clearSearch: 'Clear search',
     noFilterMatchTitle: 'No recipes match these filters.',
@@ -585,6 +586,8 @@ export const strings = {
     servings: 'Servings',
     fewerServings: 'Fewer servings',
     moreServings: 'More servings',
+    /** Said after −/+ (spec 030 FR-002): "5 servings", "7½ servings", "1 serving". */
+    servingsAnnouncement: (n: string) => `${n} ${n === '1' ? 'serving' : 'servings'}`,
     moreOptions: 'More options',
     tabsLabel: 'Recipe view',
     ingredientsTab: (n: number) => `Ingredients · ${n}`,
@@ -598,7 +601,8 @@ export const strings = {
     startCookingShort: 'Cook',
     stepsLabel: 'Steps',
     /** A row in the Steps tab opens cooking mode there. */
-    openStep: (n: number) => `Open step ${n} in cooking mode`,
+    /** A step row's screen-reader name (spec 030): "Step 3: Bake, 35:00 timer. Opens in cooking mode". */
+    openStep: (n: number, title: string, clock?: string) => `Step ${n}: ${title}${clock ? `, ${clock} timer` : ''}. Opens in cooking mode`,
     // The Steps tab (spec 009, OC-RecipeSteps).
     steps: {
       tempLabel: 'Temperature check:',
@@ -611,8 +615,6 @@ export const strings = {
       plus: '+1',
       minusA11y: 'One minute less',
       plusA11y: 'One minute more',
-      /** Announced once, politely, at 1 minute left (OC-RecipeSteps › Accessibility labels). */
-      oneMinuteLeft: '1 minute left',
       footnote: '−1 / +1 changes a timer by a minute, even while it runs.',
       /** A token whose ingredient is gone and whose name isn't known either. */
       missingIngredient: 'an ingredient',
@@ -643,7 +645,8 @@ export const strings = {
       reset: 'Reset',
       resetA11y: (ingredient: string) => `Reset the scale by ${ingredient}`,
     },
-    photo: 'Recipe photo',
+    /** The header photo, for screen readers (spec 030). */
+    photo: (recipe: string) => `Photo of ${recipe}`,
     stepPhoto: (n: number) => `Photo for step ${n}`,
     deleted: (name: string) => `This recipe was deleted by ${name}.`,
     loading: 'Loading recipe',
@@ -687,7 +690,7 @@ export const strings = {
   sharedView: {
     brand: 'Our Cocon',
     viewOnly: 'View only',
-    photo: 'Recipe photo',
+    photo: (recipe: string) => `Photo of ${recipe}`,
     sharedBy: (name: string) => `Shared by ${name}`,
     /** When whoever made the link has left the family. */
     sharedByNobody: 'Shared from Our Cocon',
@@ -1236,6 +1239,8 @@ export const strings = {
     kitchenTimer: 'Kitchen timer',
     /** The StatusBanner when a timer ends, on any screen (OC-Timers › States). */
     done: (name: string) => `${name} is done`,
+    /** Announced once, politely, when any timer gets to 1 minute (spec 030 FR-002, OC-RecipeSteps › Accessibility labels). */
+    oneMinuteLeft: (name: string) => `1 minute left on ${name}`,
     openTimers: 'Open timers',
   },
   // design/ui/TabBar.md › Timers running, TimerPill README (spec 011)
@@ -1272,6 +1277,8 @@ export const strings = {
     goToStep: 'Go to step',
     /** Screen reader, so several cards' links tell apart: "Go to step: Blind bake". */
     goToStepA11y: (timer: string) => `Go to step: ${timer}`,
+    /** Screen reader, so several cards' buttons tell apart: "Pause: Blind bake" (spec 030). */
+    forTimer: (action: string, timer: string) => `${action}: ${timer}`,
   },
   // design/ui/OC-Cook.md (spec 012)
   cook: {
@@ -1290,6 +1297,8 @@ export const strings = {
     /** The options sheet's row to the recipe form at the current step. */
     editStep: (n: number) => `Edit step ${n}`,
     stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
+    /** Said after Next, Back or a segment (spec 030): "Step 3 of 7: Bake". */
+    stepAnnouncement: (n: number, total: number, name: string | null) => (name ? `Step ${n} of ${total}: ${name}` : `Step ${n} of ${total}`),
     hint: (serves: string) => `Serves ${serves} · swipe up for next`,
     timerLabel: (label: string) => `${label} timer`,
     segment: (n: number, name: string | null) => (name ? `Go to step ${n}: ${name}` : `Go to step ${n}`),
@@ -1399,6 +1408,8 @@ export const strings = {
   },
   // design/ui/CalHeader.md (spec 036): the header shared by the four calendar views.
   calendar: {
+    /** Who an event is for, in its screen-reader label (spec 030 FR-006): "Gabriel", "Gabriel and Eva", "Gabriel, Eva and James". */
+    who: (names: string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : (names[0] ?? '')),
     header: {
       today: 'Today',
       viewsLabel: 'Calendar view',
@@ -1432,7 +1443,8 @@ export const strings = {
       dayLabel: (date: string, titles: string[]) => `${date}: ${titles.length ? titles.join(', ') : 'nothing planned'}`,
       /** An event in a day's label, with its people: "Baby swim (James)". */
       withPeople: (title: string, names: string[]) => (names.length ? `${title} (${names.join(', ')})` : title),
-      barLabel: (title: string, from: string, to: string) => `${title}, ${from} to ${to}`,
+      /** "Lyon trip, Everyone, October 30 to November 1". */
+      barLabel: (title: string, who: string, from: string, to: string) => [title, who, `${from} to ${to}`].filter(Boolean).join(', '),
       // OC-CalMonth.md › Day sheet (spec 037 FR-009).
       sheet: {
         title: (weekday: string, date: string) => `${weekday}, ${date}`,
@@ -1446,8 +1458,8 @@ export const strings = {
       allDay: 'All day',
       /** A day's letter and date, as OC-CalWeek reads it: "Sunday October 25". */
       dayLabel: (weekday: string, date: string) => `${weekday} ${date}`,
-      /** "Baby swim, Sunday, 14:30 to 16:30" or "Brunch, Sunday, Lunch". */
-      blockLabel: (title: string, weekday: string, when: string) => `${title}, ${weekday}, ${when}`,
+      /** "Poker night, Gabriel, Sunday October 25, Evening" or "Baby swim, James, Sunday October 25, 14:30 to 16:30" (spec 030 FR-006). */
+      blockLabel: (title: string, who: string, day: string, when: string) => [title, who, day, when].filter(Boolean).join(', '),
       timeRange: (start: string, end: string) => `${start} to ${end}`,
       /** An empty day column, for screen readers: "Add event, Sunday October 25". */
       addAt: (day: string) => `Add event, ${day}`,
@@ -1470,9 +1482,9 @@ export const strings = {
       /** For screen readers: "Add event in the morning, Sunday October 25". */
       addInLabel: (band: string, day: string) => `Add event in the ${band}, ${day}`,
       /** "Baby swim class, 14:30 · Aquatic Center, Gabriel takes James, happening now". */
-      rowLabel: (parts: string[], now: boolean) => [...parts, ...(now ? ['happening now'] : [])].join(', '),
-      /** "Lyon trip, all day, Day 2 of 3". */
-      allDayLabel: (title: string, tag: string | null) => [title, 'all day', ...(tag ? [tag] : [])].join(', '),
+      rowLabel: (parts: string[], now: boolean) => [...parts.filter(Boolean), ...(now ? ['happening now'] : [])].join(', '),
+      /** "Lyon trip, Everyone, all day, Day 2 of 3". */
+      allDayLabel: (title: string, who: string, tag: string | null) => [title, who, 'all day', ...(tag ? [tag] : [])].filter(Boolean).join(', '),
     },
     /** OC-CalAgenda (spec 040). Rows reuse `day`'s time line, "Now", "Birthday" and "Day N of M". */
     agenda: {
@@ -1482,7 +1494,8 @@ export const strings = {
       surprise: 'Surprise',
       empty: 'Nothing planned yet. Tap + to add something.',
       /** "Baby swim class, 14:30 · Gabriel takes James, Now". */
-      rowLabel: (title: string, sub: string, tag: string | null) => [title, sub, ...(tag ? [tag] : [])].join(', '),
+      /** "Poker night, Gabriel, Evening · Café Lou, Now" (spec 030 FR-006). */
+      rowLabel: (title: string, who: string, sub: string, tag: string | null) => [title, who, sub, ...(tag ? [tag] : [])].filter(Boolean).join(', '),
     },
     /** design/ui/OC-CalAdd.md (spec 041): the add and edit sheet. */
     add: {

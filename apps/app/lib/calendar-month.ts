@@ -120,11 +120,18 @@ export function memberLook(members: readonly Member[]): MemberLook {
   };
 }
 
-/** FR-008: an event in a day's label, with its people: "Baby swim (James)". A member who left isn't named. */
-function withPeople(o: MonthOccurrence, look: MemberLook): string {
+/** Who an event is for, by name: "Gabriel", "Everyone", "Others". A member who left isn't named. */
+export function peopleNames(members: readonly string[], look: MemberLook): string[] {
   const header = strings.calendar.header;
-  const names = o.members.map((id) => (id === 'everyone' ? header.everyone : id === 'others' ? header.others : look.names.get(id))).filter((n): n is string => Boolean(n));
-  return m.withPeople(o.title, names);
+  return members.map((id) => (id === 'everyone' ? header.everyone : id === 'others' ? header.others : look.names.get(id))).filter((n): n is string => Boolean(n));
+}
+
+/** The "who" part of an event's screen-reader label (spec 030 FR-006): "Gabriel and Eva". */
+export const whoText = (members: readonly string[], look: MemberLook) => strings.calendar.who(peopleNames(members, look));
+
+/** FR-008: an event in a day's label, with its people: "Baby swim (James)". */
+function withPeople(o: MonthOccurrence, look: MemberLook): string {
+  return m.withPeople(o.title, peopleNames(o.members, look));
 }
 
 /**
@@ -228,7 +235,7 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
         key: `${occurrenceKey(s.o)}|${from}`,
         text,
         colors,
-        label: m.barLabel(s.o.title, longDate(s.o.starts_on), longDate(s.o.ends_on)),
+        label: m.barLabel(s.o.title, whoText(s.o.members, ctx.look), longDate(s.o.starts_on), longDate(s.o.ends_on)),
         column: daysBetween(start, from),
         days: daysBetween(from, to) + 1,
         lane,

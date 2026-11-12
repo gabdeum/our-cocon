@@ -809,8 +809,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <StepFootnote text="−1 / +1 changes a timer by a minute, even while it runs." />
       </Section>
       <Section group="Cooking" title="StepRow">
-        <StepRow number={2} title="Blind bake" clock="12:00" accessibilityLabel="Open step 2 in cooking mode" onPress={noop} />
-        <StepRow number={3} title="Cook the filling" accessibilityLabel="Open step 3 in cooking mode" onPress={noop} />
+        <StepRow number={2} title="Blind bake" clock="12:00" accessibilityLabel="Step 2: Blind bake, 12:00 timer. Opens in cooking mode" onPress={noop} />
+        <StepRow number={3} title="Cook the filling" accessibilityLabel="Step 3: Cook the filling. Opens in cooking mode" onPress={noop} />
       </Section>
 
       <Section group="Cooking" title="TimerCard">

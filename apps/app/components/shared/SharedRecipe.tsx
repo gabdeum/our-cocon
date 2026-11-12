@@ -105,7 +105,7 @@ function Loaded({
     <PublicScreen
       brand={v.brand}
       tag={v.viewOnly}
-      photo={headerPhoto ? <Photo uri={headerPhoto} label={v.photo} /> : <PhotoPlaceholder initial={recipe.name.charAt(0).toUpperCase()} className="h-full" />}
+      photo={headerPhoto ? <Photo uri={headerPhoto} label={v.photo(recipe.name)} /> : <PhotoPlaceholder initial={recipe.name.charAt(0).toUpperCase()} className="h-full" />}
     >
       <View>
         <Text size={14} weight="700" color="olive">

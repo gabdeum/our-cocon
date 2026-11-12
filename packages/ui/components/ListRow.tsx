@@ -1,5 +1,6 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 import { Animated, PanResponder, Platform, Pressable, View, type AccessibilityActionEvent } from 'react-native';
+import { useReduceMotion } from '../reduceMotion';
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarColor } from './Avatar';
 import { Icon, type IconName } from './Icon';
@@ -16,6 +17,9 @@ export function Overline({ children, className }: { children: string; className?
     </Text>
   );
 }
+
+/** A ListGroup's rows are its list's items (spec 030: a list holds only list items). */
+const InList = createContext(false);
 
 /**
  * A white list group, optionally under an overline (6 gap) with a 12/700 note on its right ("All
@@ -35,7 +39,7 @@ export function ListGroup({ title, note, inset, children, className }: { title?:
         <Overline>{title}</Overline>
       ) : null}
       <View role={inset ? undefined : 'list'} className={cn('overflow-hidden rounded-xl bg-surface-card', inset && 'px-16 py-4')}>
-        {children}
+        <InList.Provider value={!inset}>{children}</InList.Provider>
       </View>
     </View>
   );
@@ -116,8 +120,9 @@ const SWIPE = 48;
 /** Follows a horizontal drag to the left (springs back on release) and calls `onSwipeLeft` past 48 px. */
 function useSwipeLeft(onSwipeLeft: (() => void) | undefined) {
   const [x] = useState(() => new Animated.Value(0));
+  const reduceMotion = useReduceMotion();
   const responder = useMemo(() => {
-    const back = () => Animated.spring(x, { toValue: 0, useNativeDriver: Platform.OS !== 'web' }).start();
+    const back = () => (reduceMotion ? x.setValue(0) : Animated.spring(x, { toValue: 0, useNativeDriver: Platform.OS !== 'web' }).start());
     return PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => onSwipeLeft !== undefined && g.dx < -12 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
       onPanResponderMove: (_, g) => x.setValue(Math.max(-80, Math.min(0, g.dx))),
@@ -127,7 +132,7 @@ function useSwipeLeft(onSwipeLeft: (() => void) | undefined) {
       },
       onPanResponderTerminate: back,
     });
-  }, [x, onSwipeLeft]);
+  }, [x, onSwipeLeft, reduceMotion]);
   return { x, handlers: responder.panHandlers };
 }
 
@@ -152,7 +157,12 @@ export function ListRow({
   action,
 }: ListRowProps) {
   const swipe = useSwipeLeft(onSwipeLeft);
+  const inList = useContext(InList);
   const isCheck = leading?.kind === 'checkbox' || leading?.kind === 'radio';
+  // A control at the end of a pressable row (a Restore link) sits beside it, not inside: a button
+  // can't hold another (spec 030, axe "nested-interactive").
+  // A row with an `action` button keeps its trailing node inside (no caller has both).
+  const beside = onPress && !action && trailing?.kind === 'node' ? trailing.node : null;
   const content = (
     <>
       {leading?.kind === 'avatar' ? <Avatar initial={leading.initial} color={leading.color} size="lg" /> : null}
@@ -175,12 +185,12 @@ export function ListRow({
           </Text>
         ) : null}
       </View>
-      {trailing ? <Trailing trailing={trailing} /> : null}
+      {trailing && !beside ? <Trailing trailing={trailing} /> : null}
     </>
   );
   const divider = !last && 'border-b-[1.5px] border-line';
   // With an action, the divider goes on the wrapper so it runs under the button too.
-  const box = cn('flex-row items-center gap-12 py-10', flush ? 'min-h-[52px]' : leading?.kind === 'icon' ? 'min-h-[64px] px-14' : 'min-h-[60px] px-14', action ? 'flex-1' : divider);
+  const box = cn('flex-row items-center gap-12 py-10', flush ? 'min-h-[52px]' : leading?.kind === 'icon' ? 'min-h-[64px] px-14' : 'min-h-[60px] px-14', action || beside ? 'flex-1' : divider);
   if (!onPress) {
     return (
       <View role="listitem" className={box}>
@@ -219,6 +229,8 @@ export function ListRow({
       <Pressable
         role="button"
         aria-label={action.accessibilityLabel}
+        // It opens the row's sheet: the way in for web screen readers, which can't use the row's actions (L49).
+        aria-haspopup="dialog"
         onPress={action.onPress}
         disabled={action.disabled}
         aria-disabled={action.disabled || undefined}
@@ -227,15 +239,23 @@ export function ListRow({
         <Icon name={action.icon} size={22} color="inkMuted" />
       </Pressable>
     </View>
+  ) : beside ? (
+    // The row's padding and gap continue round the control, as if it were inside.
+    <View className={cn('flex-row items-center', !flush && 'pr-14', divider)}>
+      {pressable}
+      {beside}
+    </View>
   ) : (
     pressable
   );
-  if (!onSwipeLeft) return row;
-  return (
+  const moving = onSwipeLeft ? (
     <Animated.View style={{ transform: [{ translateX: swipe.x }] }} {...swipe.handlers}>
       {row}
     </Animated.View>
+  ) : (
+    row
   );
+  return inList ? <View role="listitem">{moving}</View> : moving;
 }
 
 function Trailing({ trailing }: { trailing: ListRowTrailing }) {

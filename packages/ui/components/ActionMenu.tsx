@@ -21,6 +21,8 @@ export interface ActionMenuProps {
   disabled?: boolean;
   /** Read by a screen reader as the menu's name; defaults to `label`. */
   menuLabel?: string;
+  /** The backdrop's name for screen readers, "Close": a way out besides Escape and Back (spec 030). */
+  closeLabel?: string;
 }
 
 const WIDTH = 236;
@@ -31,7 +33,7 @@ const GAP = 8;
  * the event page's top bar, spec 050). Closes on a pick, an outside tap or Escape; focus goes back to
  * the button.
  */
-export function ActionMenu({ label, items, icon = 'more', disabled, menuLabel }: ActionMenuProps) {
+export function ActionMenu({ label, items, icon = 'more', disabled, menuLabel, closeLabel }: ActionMenuProps) {
   const [open, setOpen] = useState(false);
   const [at, setAt] = useState({ top: 120, right: 16 });
   const button = useRef<HostInstance>(null);
@@ -61,7 +63,11 @@ export function ActionMenu({ label, items, icon = 'more', disabled, menuLabel }:
       />
       {/* The Modal gives Escape (web) and Back (Android); the clear backdrop closes on an outside tap. */}
       <Modal transparent visible={open} animationType="none" onRequestClose={close}>
-        <Pressable aria-hidden onPress={close} className="absolute inset-0" />
+        {closeLabel ? (
+          <Pressable role="button" aria-label={closeLabel} onPress={close} className="absolute inset-0" />
+        ) : (
+          <Pressable aria-hidden onPress={close} className="absolute inset-0" />
+        )}
         <View
           role="menu"
           aria-label={menuLabel ?? label}

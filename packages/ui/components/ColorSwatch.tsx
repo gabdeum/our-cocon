@@ -1,7 +1,7 @@
 import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { useThemeColors } from '../ThemeProvider';
-import { avatarFills, type MemberColor } from './Avatar';
+import { avatarFills, memberEdges, type MemberColor } from './Avatar';
 import { Text } from './Text';
 
 export interface SwatchOption {
@@ -42,7 +42,7 @@ export function ColorSwatch({ label, options, onSelect, disabled = false }: Colo
                 aria-label={o.accessibilityLabel}
                 disabled={locked}
                 onPress={() => onSelect(o.color)}
-                className={cn('h-[60px] flex-1 items-center justify-center rounded-[18px]', avatarFills[o.color], focusRing)}
+                className={cn('h-[60px] flex-1 items-center justify-center rounded-[18px] border', avatarFills[o.color], memberEdges[o.color], focusRing)}
                 style={selected ? { boxShadow: `0 0 0 3px ${colors.surfaceCard}, 0 0 0 6px ${colors.ink}` } : undefined}
               >
                 {o.state !== 'free' && o.initial ? (

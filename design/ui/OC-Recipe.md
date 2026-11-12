@@ -53,3 +53,7 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab) · Route `/recipe
 | Tabs | switch Ingredients / Steps in place, keeping scroll |
 | Add groceries | → add-to-groceries sheet |
 | Start cooking | → `/recipes/[id]/cook` |
+
+## Screen readers (spec 030)
+- The header photo: "Photo of {recipe}".
+- Servings −/+ say the new count: "5 servings", "7½ servings", "1 serving".

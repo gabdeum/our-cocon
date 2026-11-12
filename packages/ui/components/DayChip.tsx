@@ -1,4 +1,5 @@
 import { Pressable } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Text } from './Text';
 
@@ -16,7 +17,7 @@ export function DayChip({ label, sub, selected, onPress }: DayChipProps) {
   return (
     <Pressable
       role="button"
-      aria-pressed={selected}
+      {...pressedState(selected)}
       aria-label={`${label}, ${sub}`}
       onPress={onPress}
       className={cn(

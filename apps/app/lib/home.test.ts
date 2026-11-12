@@ -100,8 +100,8 @@ describe('layoutCalendarCard', () => {
     expect(card.week[1]?.events[1]?.label).toBe('Tue, Yoga, Evening · Eva');
     expect(card.more).toBe(2);
     expect(card.strip.map((d) => d.letter).join('')).toBe('SMTWTFS');
-    expect(card.strip[0]).toMatchObject({ today: true, dots: [], label: 'Today, October 25, nothing planned' });
-    expect(card.strip[3]).toMatchObject({ dots: ['rose', 'mint'], label: 'October 28, 2 people busy' });
+    expect(card.strip[0]).toMatchObject({ today: true, dots: [], label: 'Today, October 25: nothing planned' });
+    expect(card.strip[3]).toMatchObject({ dots: ['rose', 'mint'], label: 'October 28: Lyon trip, Pediatrician' });
     // FR-002: "+" opens the next free day: today has nothing.
     expect(card.addDate.week).toBe(TODAY);
   });

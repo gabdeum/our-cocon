@@ -1,4 +1,5 @@
 import { Image, Pressable, View } from 'react-native';
+import { useLargeText } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Text } from './Text';
 
@@ -36,6 +37,7 @@ export function RecipeItemSkeleton() {
 
 /** A recipe in a list (RecipeItem README): 84 thumbnail, name (2 lines), meta, author. */
 export function RecipeItem({ name, meta, author, photoUri, placeholderTone = 'peach', onPress }: RecipeItemProps) {
+  const largeText = useLargeText();
   return (
     <Pressable role="link" onPress={onPress} className={cn('flex-row items-center gap-14 rounded-xl bg-surface-card p-10 active:bg-surface-card-pressed', focusRing)}>
       {photoUri ? (
@@ -44,7 +46,7 @@ export function RecipeItem({ name, meta, author, photoUri, placeholderTone = 'pe
         <View aria-hidden className={cn('h-[84px] w-[84px] rounded-lg', thumbs[placeholderTone])} />
       )}
       <View className="min-w-0 flex-1">
-        <Text size={17} weight="900" numberOfLines={2}>
+        <Text size={17} weight="900" numberOfLines={largeText ? undefined : 2}>
           {name}
         </Text>
         <Text size={14} weight="600" color="ink-muted" className="mt-[2px]">
@@ -72,6 +74,7 @@ export interface RecipeSummaryProps {
  * name and one line under it, on a white card. Not tappable.
  */
 export function RecipeSummary({ name, sub, photoUri, photoLabel }: RecipeSummaryProps) {
+  const largeText = useLargeText();
   return (
     <View className="flex-row items-center gap-12 rounded-[20px] bg-surface-card p-10">
       {photoUri ? (
@@ -84,7 +87,7 @@ export function RecipeSummary({ name, sub, photoUri, photoLabel }: RecipeSummary
         </View>
       )}
       <View className="min-w-0 flex-1">
-        <Text size={17} weight="900" numberOfLines={2}>
+        <Text size={17} weight="900" numberOfLines={largeText ? undefined : 2}>
           {name}
         </Text>
         <Text size={14} weight="600" color="ink-muted">

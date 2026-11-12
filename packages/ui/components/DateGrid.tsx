@@ -1,4 +1,5 @@
 import { Pressable, View } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { IconButton } from './IconButton';
 import { Text } from './Text';
@@ -68,7 +69,7 @@ function Day({ day, selected, onPress }: { day: DateGridDay; selected: boolean; 
   return (
     <Pressable
       role="button"
-      aria-pressed={selected}
+      {...pressedState(selected)}
       aria-label={day.label}
       aria-current={day.today ? 'date' : undefined}
       disabled={day.disabled}

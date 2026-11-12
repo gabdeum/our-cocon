@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ToastProvider } from '../../lib/toast';
 import { EventShareSheet, type EventShareSheetApi } from './EventShareSheet';
 import { fakeTracker, last } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-linking', () => ({ createURL: (p: string) => `ourcocon://${p}` }));
 vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn() }));
@@ -38,6 +39,8 @@ describe('Event share sheet', () => {
     expect(screen.getByText(url)).toBeTruthy();
     for (const name of ['Copy link', 'Message', 'Email', 'More', 'Stop sharing this link']) expect(screen.getByRole('button', { name })).toBeTruthy();
     expect(tracker.track).toHaveBeenCalledWith('event_shared', {});
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('reopening the same link sends nothing', async () => {

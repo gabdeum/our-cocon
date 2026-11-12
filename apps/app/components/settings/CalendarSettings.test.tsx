@@ -6,6 +6,7 @@ import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import { calendarPrefs } from '../../lib/calendar-prefs';
 import { fakeTracker } from '../../test/fakes';
 import { CalendarSettings, type CalendarSettingsProps } from './CalendarSettings';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -32,12 +33,14 @@ function setup(over: Partial<CalendarSettingsProps> = {}) {
 const flush = () => act(async () => undefined);
 
 describe('Calendar settings (OC-CalSettings)', () => {
-  it('reads like the screen: back to the Menu, For you, Times of day, Family', () => {
+  it('reads like the screen: back to the Menu, For you, Times of day, Family', async () => {
     const { onBack } = setup();
     expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual(['Calendar', 'For you', 'Times of day', 'Family']);
     expect(screen.getByText("How the family calendar looks for you, and the family's times of day.")).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Back to Menu' }));
     expect(onBack).toHaveBeenCalledOnce();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US4: every option says what it does', () => {

@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useMemo, useState, type ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Callout, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
+import { announce, Button, Callout, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
 import { activeFilterKeys, emptyFilters, type RecipeFilters, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { PhotoUrls } from '../../lib/recipe-photo';
@@ -76,10 +76,14 @@ export function RecipeList({
 
   // Once per settled search, never its text. A live change to the list is not a new search, so the
   // count is read when the search settles rather than tracked as a dependency.
-  const searched = useEffectEvent((length: number) => tracker.track('recipes_searched', { query_length: length, result_count: results.length }));
+  // The list changes silently: a screen reader hears how many it found (spec 030).
+  const searched = useEffectEvent((search: string) => {
+    tracker.track('recipes_searched', { query_length: search.length, result_count: results.length });
+    announce(results.length ? r.resultCount(results.length) : r.noMatchTitle(search));
+  });
   const loaded = recipes !== undefined;
   useEffect(() => {
-    if (settled && loaded) searched(settled.length);
+    if (settled && loaded) searched(settled);
   }, [settled, loaded]);
 
   // FR-003: a quick pill applies its filter at once, like "Show N recipes" in the sheet.

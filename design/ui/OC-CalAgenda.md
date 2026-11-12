@@ -11,3 +11,6 @@ Source `screens/OC-CalAgenda.dc.html` · Route `/calendar?view=agenda` · Specs 
 | State | Copy |
 | --- | --- |
 | Nothing ahead | "Nothing planned yet. Tap + to add something." |
+
+## Screen readers (spec 030)
+Rows name who after the title: "Poker night, Gabriel, Evening · Café Lou, Now". The date is the day heading above. With Reduce Motion, Today jumps instead of scrolling.

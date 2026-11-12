@@ -45,7 +45,8 @@ export function RecipesSettings({ settings, onChange, onBack, tracker, readOnly 
             disabled={readOnly}
           />
           <View className="gap-10 py-14">
-            <Text size={16} weight="800">
+            {/* The control is named "Units" too: said once (spec 030). */}
+            <Text size={16} weight="800" aria-hidden>
               {s.units}
             </Text>
             <SegmentedControl<UnitSystem>

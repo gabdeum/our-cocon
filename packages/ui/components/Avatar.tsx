@@ -17,10 +17,33 @@ export const avatarFills: Record<AvatarColor, string> = {
   pistachio: 'bg-member-pistachio',
   clay: 'bg-member-clay',
   everyone: 'bg-member-everyone',
-  // Light sand: a line-handle outline so it shows on white (tokens.json).
-  others: 'bg-member-others border border-line-handle',
+  // Light sand: its outline is EdgeRing, like every member color.
+  others: 'bg-member-others',
   removed: 'bg-member-removed',
 };
+
+/** Each fill's outline (`member-*-edge`): 3:1 against white, for marks shown by color (spec 030 FR-007). */
+export const memberEdges: Record<AvatarColor, string> = {
+  honey: 'border-member-honey-edge',
+  rose: 'border-member-rose-edge',
+  sky: 'border-member-sky-edge',
+  mint: 'border-member-mint-edge',
+  lilac: 'border-member-lilac-edge',
+  peach: 'border-member-peach-edge',
+  pistachio: 'border-member-pistachio-edge',
+  clay: 'border-member-clay-edge',
+  everyone: 'border-member-everyone-edge',
+  others: 'border-member-others-edge',
+  removed: 'border-member-removed-edge',
+};
+
+/**
+ * The 1 px outline inside a member-colored circle (spec 030 FR-007), drawn over the fill so a ring
+ * around it (Avatar md's surface-page ring, a stack's shadow) stays as it is.
+ */
+export function EdgeRing({ color }: { color: AvatarColor }) {
+  return <View aria-hidden pointerEvents="none" className={cn('absolute inset-0 rounded-full border', memberEdges[color])} />;
+}
 
 // bundle.css › Avatar: 36 with a 2 px surface-page ring · lg 40 · xl 48 · sm 32, no ring.
 const sizes: Record<AvatarSize, { box: string; px: number; font: number }> = {
@@ -48,9 +71,12 @@ export function Avatar({ initial, color, size = 'md', photoUri, className }: Ava
       {photoUri ? (
         <Image source={{ uri: photoUri }} style={{ width: s.px, height: s.px }} />
       ) : (
-        <Text size={s.font} weight="900">
-          {initial}
-        </Text>
+        <>
+          <Text size={s.font} weight="900">
+            {initial}
+          </Text>
+          <EdgeRing color={color} />
+        </>
       )}
     </View>
   );

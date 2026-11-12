@@ -64,7 +64,7 @@ describe('week grid (spec 038)', () => {
     const g = grid([custom('Baby swim', '14:30', '16:30', [james.id]), custom('Coffee', '16:00', '17:00', [gabriel.id])]);
     expect(pick(block(g, 0, 'Baby swim'))).toEqual({ top: 'J', y: 307, height: 70, lane: 0, lanes: 2, kind: 'custom' });
     expect(pick(block(g, 0, 'Coffee'))).toEqual({ top: 'G', y: 361, height: 34, lane: 1, lanes: 2, kind: 'custom' });
-    expect(block(g, 0, 'Baby swim')?.label).toBe('Baby swim, Sunday, 14:30 to 16:30');
+    expect(block(g, 0, 'Baby swim')?.label).toBe('Baby swim, James, Sunday October 25, 14:30 to 16:30');
   });
 
   it('FR-002: slot events cover their slot and show its name; custom ones show their start', () => {
@@ -76,10 +76,10 @@ describe('week grid (spec 038)', () => {
       custom('Dinner out', '19:00', '21:00', ['others'], '2026-10-28'),
     ]);
     expect(pick(block(g, 0, 'Brunch'))).toEqual({ top: 'All Lunch', y: 217, height: 70, lane: 0, lanes: 1, kind: 'slot' });
-    expect(block(g, 0, 'Brunch')?.label).toBe('Brunch, Sunday, Lunch');
+    expect(block(g, 0, 'Brunch')?.label).toBe('Brunch, Everyone, Sunday October 25, Lunch');
     expect(pick(block(g, 2, 'Movie night'))).toEqual({ top: 'G·E Afternoon', y: 289, height: 286, lane: 0, lanes: 1, kind: 'slot' });
     expect(block(g, 2, 'Movie night')?.colors).toEqual(['honey', 'rose']);
-    expect(block(g, 2, 'Movie night')?.label).toBe('Movie night, Tuesday, Afternoon, Evening');
+    expect(block(g, 2, 'Movie night')?.label).toBe('Movie night, Gabriel and Eva, Tuesday October 27, Afternoon, Evening');
     expect(pick(block(g, 1, 'Run'))).toEqual({ top: 'G 06:30', y: 19, height: 34, lane: 0, lanes: 1, kind: 'custom' });
     // FR-002: a custom time keeps its start, even at a slot's start.
     expect(block(g, 3, 'Lunch w/ Ana')?.top).toBe('E 12:00');
@@ -115,8 +115,8 @@ describe('week grid (spec 038)', () => {
       ['E Lyon trip', 4, 3, 1, true, false],
       ['G Conference', 3, 3, 0, true, true],
     ]);
-    expect(g.bars[0]?.label).toBe('Birthday, Wednesday October 28, All day');
-    expect(g.bars[1]?.label).toBe('Lyon trip, October 29 to November 2');
+    expect(g.bars[0]?.label).toBe('Birthday, Eva, Wednesday October 28, All day');
+    expect(g.bars[1]?.label).toBe('Lyon trip, Eva, October 29 to November 2');
     // A multi-day event never also sits in the hour grid.
     expect(g.columns.flatMap((c) => c.blocks)).toEqual([]);
 
@@ -151,7 +151,7 @@ describe('week grid (spec 038)', () => {
 
   it('privacy and the filter: Eva’s private event reads Busy; hiding Eva removes her events', () => {
     const events = [ev({ ...custom('Therapy', '10:00', '11:00', [eva.id]), visibility: 'private', creator_member_id: eva.id })];
-    expect(block(grid(events), 0, 'Busy')?.label).toBe('Busy, Sunday, 10:00 to 11:00');
+    expect(block(grid(events), 0, 'Busy')?.label).toBe('Busy, Eva, Sunday October 25, 10:00 to 11:00');
     expect(grid(events, TODAY, {}, new Set([eva.id])).columns[0]?.blocks).toEqual([]);
   });
 });

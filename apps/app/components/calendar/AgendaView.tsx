@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
 import type { SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { EventListGroup, EventListRow, FloatingAdd, Text } from '@cocon/ui';
+import { EventListGroup, EventListRow, FloatingAdd, Text, useReduceMotion } from '@cocon/ui';
 import { AGENDA_EMPTY_PAGES, AGENDA_MAX_PAGES, agendaWindow, layoutAgenda } from '../../lib/calendar-agenda';
 import { memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { getAgendaPlace, setAgendaPlace } from '../../lib/agenda-session';
@@ -69,13 +69,19 @@ export function AgendaView({ userId, members, myMemberId, events, slotTimes, hid
     if (empty && pages < AGENDA_EMPTY_PAGES) setPages(pages + 1);
   }
 
+  // Reduce Motion: "Today" jumps (spec 030 FR-004).
+  const reduce = useReduceMotion();
+  const reduceMotion = useRef(reduce);
+  useEffect(() => {
+    reduceMotion.current = reduce;
+  }, [reduce]);
   const lastTop = useRef(top);
   useEffect(() => {
     if (top === lastTop.current) return;
     lastTop.current = top;
     offset.current = 0;
     setAgendaPlace(userId, anchor, { pages, offset: 0 });
-    list.current?.scrollTo({ y: 0, animated: true });
+    list.current?.scrollTo({ y: 0, animated: !reduceMotion.current });
   }, [top, userId, anchor, pages]);
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {

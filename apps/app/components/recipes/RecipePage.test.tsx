@@ -13,6 +13,7 @@ import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { defaultCooking, defaultFormat } from '../../lib/recipe-view';
 import { alex, fakeTracker, gabriel } from '../../test/fakes';
 import { TimersProvider } from '../../lib/timer-store';
+import { expectAccessible } from '../../test/axe';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -107,6 +108,8 @@ describe('header (FR-001)', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Leek & bacon quiche' })).toBeTruthy();
     for (const chip of ['1 h 10', 'French', 'Best Oct – Mar', 'Gabriel · via Claude']) expect(screen.getByText(chip)).toBeTruthy();
     for (const label of ['Back to recipes', 'Share recipe', 'Recipe settings']) expect(screen.getByRole('button', { name: label })).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('hides an empty time, cuisine Other and all-year months; no photo shows the first letter', async () => {
@@ -410,7 +413,7 @@ describe('FR-005: actions', () => {
 // Spec 009: the Steps tab, a quick look that opens cooking mode at a step.
 describe('Steps tab (spec 009)', () => {
   const steps = () => within(screen.getByRole('list', { name: 'Steps' })).getAllByRole('listitem');
-  const step = (n: number) => screen.getByRole('link', { name: `Open step ${n} in cooking mode` });
+  const step = (n: number) => screen.getByRole('link', { name: new RegExp(`^Step ${n}: .*Opens in cooking mode$`) });
 
   it('FR-001: one row per step, in order, with its number, name and the timer length', async () => {
     await setup({ tab: 'steps' });

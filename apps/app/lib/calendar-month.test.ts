@@ -176,7 +176,7 @@ describe('US1: read the month at a glance', () => {
     const visit = ev({ title: 'Grandma visits', starts_on: '2026-10-16', ends_on: '2026-10-19', members: ['everyone'], time_type: 'all_day', slots: [] });
     const brunch = ev({ title: 'Brunch', starts_on: '2026-10-18', ends_on: '2026-10-18', members: ['everyone'], slots: ['lunch'] });
     const first = week('2026-10-16', [visit, brunch]);
-    expect(first.bars).toEqual([expect.objectContaining({ text: 'All Grandma visits', column: 5, days: 2, lane: 0, startsHere: true, endsHere: false, label: 'Grandma visits, October 16 to October 19' })]);
+    expect(first.bars).toEqual([expect.objectContaining({ text: 'All Grandma visits', column: 5, days: 2, lane: 0, startsHere: true, endsHere: false, label: 'Grandma visits, Everyone, October 16 to October 19' })]);
     expect(texts(cell(first, '2026-10-16').items)).toEqual(['·']);
 
     const next = week('2026-10-18', [visit, brunch]);

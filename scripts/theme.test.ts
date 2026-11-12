@@ -70,11 +70,14 @@ describe('pnpm theme (spec 002, acceptance 1.1)', () => {
     expect(out.children).toBe('<Circle cx="5" cy="12" r="2" />');
   });
 
-  it('gives the Live Activity every colour token in Swift, and the icons as vector images (spec 048)', () => {
+  it('gives the Live Activity every colour token but the member outlines in Swift, and the icons as vector images (spec 048, 030)', () => {
     expect(swiftColor('#FFCF5C')).toBe('Color(red: 1, green: 0.8118, blue: 0.3608, opacity: 1)');
     expect(swiftColor('rgba(42, 36, 20, 0.55)')).toBe('Color(red: 0.1647, green: 0.1412, blue: 0.0784, opacity: 0.55)');
     const swift = themeSwift(tokens);
-    for (const t of tokens.color.tokens) expect(swift).toContain(`static let ${camel(t.name)} = `);
+    for (const t of tokens.color.tokens) {
+      if (t.name.endsWith('-edge')) expect(swift).not.toContain(`static let ${camel(t.name)} = `);
+      else expect(swift).toContain(`static let ${camel(t.name)} = `);
+    }
     const assets = widgetAssets({ timer: '<svg/>', bell: '<svg/>' }, '<svg mark/>', 'x');
     expect(JSON.parse(assets['x/timer.imageset/Contents.json']).properties).toEqual({ 'preserves-vector-representation': true, 'template-rendering-intent': 'template' });
     expect(assets['x/mark.imageset/mark.svg']).toBe('<svg mark/>');
@@ -83,6 +86,37 @@ describe('pnpm theme (spec 002, acceptance 1.1)', () => {
   it('has committed files equal to a fresh generation (CI runs `pnpm theme --check`)', () => {
     for (const [file, content] of Object.entries(generate() as Record<string, string>)) {
       expect(readFileSync(join(root, file), 'utf8'), file).toBe(content);
+    }
+  });
+});
+
+// WCAG 2.2 relative luminance and contrast ratio, for #RRGGBB.
+function luminance(hex: string) {
+  const channel = (i: number) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+}
+
+function contrast(a: string, b: string) {
+  const [la, lb] = [luminance(a), luminance(b)];
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+describe('member colors (spec 030 FR-007)', () => {
+  const value = (name: string): string => tokens.color.tokens.find((t: { name: string }) => t.name === name).value;
+  const fills = (tokens.color.tokens as { name: string }[]).map((t) => t.name).filter((n) => /^member-[a-z]+$/.test(n));
+
+  it('covers the 8 member colors, Everyone, Others and a member who left', () => {
+    expect(fills).toHaveLength(11);
+  });
+
+  it('has ink text at 4.5:1 on every fill, and every fill an outline at 3:1 against white and the page', () => {
+    for (const fill of fills) {
+      expect(contrast(value('ink'), value(fill)), fill).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(value(`${fill}-edge`), value('surface-card')), `${fill}-edge`).toBeGreaterThanOrEqual(3);
+      expect(contrast(value(`${fill}-edge`), value('surface-page')), `${fill}-edge`).toBeGreaterThanOrEqual(3);
     }
   });
 });

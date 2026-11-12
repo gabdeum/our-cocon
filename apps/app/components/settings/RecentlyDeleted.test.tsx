@@ -6,6 +6,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ToastProvider } from '../../lib/toast';
 import { fakeTracker, flush, gabriel, mia } from '../../test/fakes';
 import type { DeletedItem } from '../../lib/recently-deleted';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-image-picker', () => ({}));
 vi.mock('expo-image-manipulator', () => ({ ImageManipulator: {}, SaveFormat: { JPEG: 'jpeg' } }));
@@ -44,13 +45,15 @@ function setup(over: Partial<Props> = {}) {
 }
 
 describe('Recently deleted', () => {
-  it('lists each recipe with who deleted it, when, and the days left, newest first', () => {
+  it('lists each recipe with who deleted it, when, and the days left, newest first', async () => {
     setup();
     expect(screen.getByRole('heading', { name: 'Recently deleted' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Back to Menu' })).toBeTruthy();
     const first = screen.getByText('Deleted by Gabriel · 3 days ago · 27 days left');
     const second = screen.getByText('Deleted by Former member · 10 days ago · 20 days left');
     expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('Restore brings it back and says so', async () => {

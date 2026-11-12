@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Pressable, View, type PressableProps } from 'react-native';
+import { useLargeText } from '../a11y';
 import { cn, focusRing } from '../cn';
 import type { ColorName } from '../theme';
 import { BrandMark, Icon, type BrandName, type IconName } from './Icon';
@@ -59,6 +60,9 @@ const looks: Record<ButtonVariant, Look> = {
   // The second destructive choice in a Dialog: "This and all future ones" (OC-CalEventDelete, spec 042).
   'danger-outline': { fill: 'bg-surface-card border-2 border-danger active:bg-surface-card-pressed', text: 'danger', icon: 'danger', weight: '900' },
 };
+
+/** A fixed height becomes a minimum, with room above and below a wrapped label. */
+const grow = (height: string, largeText: boolean) => (largeText ? `min-${height} py-8` : height);
 
 const sizes: Record<ButtonSize, { height: string; padding: string; paddingPx: number; fontSize: number }> = {
   sm: { height: 'h-control-md', padding: 'px-18', paddingPx: 18, fontSize: 15 },
@@ -128,6 +132,8 @@ export function Button({
 }: ButtonProps) {
   const look = looks[variant];
   const s = sizes[size];
+  // Largest text sizes: the label wraps to two lines and the button grows (spec 030 User Story 3).
+  const largeText = useLargeText();
   const off = disabled === true || inactive === true;
   const fontSize = look.fontSize ?? s.fontSize;
   // With a short label: the button's width and the full label's own width, measured. Refs, as both
@@ -159,7 +165,7 @@ export function Button({
         'flex-row items-center justify-center gap-10',
         shortLabel && 'overflow-hidden',
         look.radius ?? 'rounded-pill',
-        (size === 'lg' && variant === 'outline' ? undefined : look.fixedHeight) ?? s.height,
+        grow((size === 'lg' && variant === 'outline' ? undefined : look.fixedHeight) ?? s.height, largeText),
         s.padding,
         off ? 'bg-on-ink' : look.fill,
         block ? 'self-stretch' : 'self-start',
@@ -169,7 +175,7 @@ export function Button({
       {...props}
     >
       {brand ? <BrandMark name={brand} /> : icon ? <Icon name={icon} color={off ? 'inkMuted' : look.icon} /> : null}
-      <Text size={fontSize} weight={look.weight} color={off ? 'ink-muted' : brand === 'apple' ? 'ink' : look.text} numberOfLines={1}>
+      <Text size={fontSize} weight={look.weight} color={off ? 'ink-muted' : brand === 'apple' ? 'ink' : look.text} numberOfLines={largeText ? 2 : 1} align={largeText ? 'center' : undefined}>
         {shown}
       </Text>
       {shortLabel ? (

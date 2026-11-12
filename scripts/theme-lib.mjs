@@ -258,7 +258,9 @@ export function swiftColor(value) {
 /** The Live Activity's colours (spec 048): every colour token, for the SwiftUI widget that can't use NativeWind. */
 export function themeSwift(tokens) {
   const first = colorThemes(tokens)[tokens.color.themes[0].id];
-  const lines = tokens.color.tokens.map((t) => `  static let ${camel(t.name)} = ${swiftColor(first[t.name])}`);
+  // The widget draws no member outlines (spec 030): leaving them out keeps the native project, and so
+  // the app's fingerprint, unchanged when only they change.
+  const lines = tokens.color.tokens.filter((t) => !t.name.endsWith('-edge')).map((t) => `  static let ${camel(t.name)} = ${swiftColor(first[t.name])}`);
   return `// ${HEADER}
 import SwiftUI
 

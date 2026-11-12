@@ -2,11 +2,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { SharedEvent } from './SharedEvent';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
 describe('Shared event page', () => {
-  it('shows the title, who, day, time and place, view only', () => {
+  it('shows the title, who, day, time and place, view only', async () => {
     render(
       <SharedEvent
         load={{ kind: 'shared', event: { title: 'Baby music class', when: { title: 'Saturday, Oct 31', sub: 'Morning · about 09:00–12:00' }, place: 'Little Notes studio', with: 'With James' } }}
@@ -17,6 +18,8 @@ describe('Shared event page', () => {
     expect(screen.getByRole('heading', { name: 'Baby music class' })).toBeTruthy();
     for (const text of ['With James', 'Saturday, Oct 31', 'Morning · about 09:00–12:00', 'Little Notes studio']) expect(screen.getByText(text)).toBeTruthy();
     expect(screen.queryByRole('button')).toBeNull();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('says when the link no longer works', () => {

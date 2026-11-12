@@ -8,6 +8,7 @@ import { recipeView } from '../../lib/recipe-view';
 import { TimersProvider } from '../../lib/timer-store';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { fakeTracker, gabriel } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -39,11 +40,13 @@ function setup(name: string, thermometer = true) {
 const button = () => screen.getAllByRole('button')[0] as HTMLElement;
 
 describe('RecipeStep', () => {
-  it('FR-001: number, name, highlighted amounts and the tip', () => {
+  it('FR-001: number, name, highlighted amounts and the tip', async () => {
     setup('Cook the filling');
     expect(screen.getByRole('heading', { name: 'Cook the filling' })).toBeTruthy();
     expect(screen.getByText('3')).toBeTruthy();
     for (const amount of ['20 g butter', '2 leeks (300 g)', '200 g bacon lardons']) expect(screen.getByText(amount)).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US2: the thermometer setting shows or hides the temperature check', () => {
@@ -83,14 +86,12 @@ describe('RecipeStep', () => {
     expect(JSON.stringify(tracker.track.mock.calls)).not.toContain('Blind bake');
   });
 
-  it('spec 010: at zero the row reads "Done!" 00:00 and says so; tapping it puts the row back', () => {
+  // "1 minute left" and "is done" are said by the timer store and the toast (timer-store.test.ts).
+  it('spec 010: at zero the row reads "Done!" 00:00; tapping it puts the row back', () => {
     setup('Blind bake');
     fireEvent.click(button());
-    act(() => vi.advanceTimersByTime(11 * 60 * 1000));
-    expect(screen.getByText('1 minute left')).toBeTruthy();
-    act(() => vi.advanceTimersByTime(60 * 1000));
+    act(() => vi.advanceTimersByTime(12 * 60 * 1000));
     expect(button().textContent).toBe('Done!00:00');
-    expect(screen.getByText('Blind bake is done')).toBeTruthy();
     fireEvent.click(button());
     expect(button().textContent).toBe('Start timer12:00');
   });

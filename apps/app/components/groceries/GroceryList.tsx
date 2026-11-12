@@ -286,7 +286,8 @@ export function GroceryList(props: GroceryListProps) {
 
       {cards.map((card) => (
         <Card key={card.id} tone="soft" className="flex-row items-center gap-8 py-10 pl-12 pr-4">
-          <Thumb uri={card.photo_path ? photoUrls[card.photo_path] : undefined} label={card.name} />
+          {/* "For {recipe}" is right beside it: the photo isn't read again (spec 030). */}
+          <Thumb uri={card.photo_path ? photoUrls[card.photo_path] : undefined} />
           <View className="min-w-0 flex-1">
             <Text size={15} weight="800">
               {g.forRecipe(card.name)}

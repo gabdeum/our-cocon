@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ToastProvider } from '../../lib/toast';
 import { FamilyPage, FamilySettings, type FamilySettingsProps } from './FamilySettings';
 import { alex, fakeApi, fakeTracker, family, flush, gabriel, james, mia, last } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-linking', () => ({ createURL: (p: string) => p }));
 vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn() }));
@@ -59,6 +60,8 @@ describe('Invite someone (US2)', () => {
     expect(api.createInvite).toHaveBeenCalled();
     expect(shareDeps.share).toHaveBeenCalledWith({ message: expect.stringContaining(`Join The Demanges on Our Cocon: `) });
     expect(tracker.track).toHaveBeenCalledWith('invite_sent', {});
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('is there for every member, not just the owner', () => {

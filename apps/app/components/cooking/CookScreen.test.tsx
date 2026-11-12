@@ -11,6 +11,7 @@ import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { defaultCooking } from '../../lib/recipe-view';
 import { TimersProvider } from '../../lib/timer-store';
 import { fakeTracker, gabriel } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 const keepAwake = vi.hoisted(() => ({
   isAvailableAsync: vi.fn(async () => true),
@@ -117,6 +118,8 @@ describe('Cooking mode (spec 012)', () => {
     expect(isCurrent(1)).toBe(false);
     expect(tracker.track).toHaveBeenCalledWith('cooking_started', { step_count: STEPS });
     expect(tracker.track).toHaveBeenCalledTimes(1);
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('US1 › 1: "Next step" moves to step 2 and dims the others', async () => {

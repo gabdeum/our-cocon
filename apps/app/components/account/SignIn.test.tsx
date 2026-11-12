@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { SignIn } from './SignIn';
 import type { NativeSignIn } from '../../lib/auth';
 import { fakeTracker, flush } from '../../test/fakes';
+import { expectAccessible } from '../../test/axe';
 
 vi.mock('expo-linking', () => ({ createURL: (p: string) => p }));
 vi.mock('expo-crypto', () => ({ CryptoDigestAlgorithm: { SHA256: 'SHA-256' }, randomUUID: () => 'n', digestStringAsync: async () => 'hashed' }));
@@ -92,11 +93,13 @@ describe('on the iPhone', () => {
     return { sheet, native };
   }
 
-  it('offers Apple, then Google, then the email form', () => {
+  it('offers Apple, then Google, then the email form', async () => {
     iphone();
     const buttons = screen.getAllByRole('button').map((b) => b.textContent);
     expect(buttons).toEqual(['Continue with Apple', 'Continue with Google', 'Send me a link']);
     expect(screen.getByText('or')).toBeTruthy();
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('signs in with Apple, tracks it and goes on', async () => {

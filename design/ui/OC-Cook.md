@@ -40,7 +40,7 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Spec 012
 | Opened at a step while the page is still laying out (fonts loading, steps above growing) | Keeps landing on that step for 2 s, until the person scrolls |
 
 ## Accessibility labels
-Segments: "Go to step {n}: {name}" ("Go to step {n}" for a step with no name). Settings button: "Cooking options"; the options sheet's close label: "Close cooking options". Timer buttons: "Start timer", "Pause", "Resume", "Done", "One minute less", "One minute more".
+Segments: "Go to step {n}: {name}" ("Go to step {n}" for a step with no name). Settings button: "Cooking options"; the options sheet's close label: "Close cooking options". Timer buttons: "Start timer", "Pause", "Resume", "Done", "One minute less", "One minute more". After Next, Back or a segment: "Step {n} of {total}: {name}" ("Step {n} of {total}" without a name; spec 030). With Reduce Motion the steps jump instead of scrolling, and the others dim at once.
 
 ## Changelog
 - 2026-11-05 (050): "Cooking options" is a round IconButton; the header lines up with the loading state's TopBar.

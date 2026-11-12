@@ -10,6 +10,7 @@ import { ToastProvider } from '../../lib/toast';
 import { NOW, babyMusic, members } from '../../test/baby-music';
 import { fakeTracker, flush, gabriel, last } from '../../test/fakes';
 import { EventDetail, type EventDetailProps } from './EventDetail';
+import { expectAccessible } from '../../test/axe';
 
 afterEach(cleanup);
 
@@ -53,7 +54,7 @@ const menu = (item: string) => {
 };
 
 describe('Event detail', () => {
-  it('US1: shows everything about Baby music class, in order', () => {
+  it('US1: shows everything about Baby music class, in order', async () => {
     setup();
     const text = document.body.textContent ?? '';
     const order = [
@@ -90,6 +91,8 @@ describe('Event detail', () => {
     }
     expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Baby music class']);
     expect(screen.getByRole('checkbox', { name: 'Diaper bag' }).getAttribute('aria-checked')).toBe('true');
+    // Spec 030 SC-001.
+    await expectAccessible();
   });
 
   it('hides rows without a value, and says an assistant added it (FR-006)', () => {

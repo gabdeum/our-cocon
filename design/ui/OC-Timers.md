@@ -21,6 +21,6 @@ Source `screens/OC-Timers.dc.html` · Route `/timers` · Specs 010, 011
 | Paused or done for 3 hours | The timer is cleared from the list without a message (any change to a paused timer starts the 3 hours over) |
 | Timer ends anywhere in the app | StatusBanner at the top of any screen: "{name} is done" with "Open timers" |
 
-Screen reader: "Go to step: {timer name}" on a step timer's link.
+Screen reader: "Go to step: {timer name}" on a step timer's link. Each card's buttons and progress bar name their timer, so several cards tell apart: "Pause: Blind bake", "Stop: Blind bake", "One minute more: Blind bake" (spec 030). Any timer says "1 minute left on {timer}" once at 1 minute.
 
 Timers are personal and live on this device only. The chime is a soft kitchen bell; when the app is closed the phone alerts instead (spec 047), and running timers show on the Lock Screen (spec 048).

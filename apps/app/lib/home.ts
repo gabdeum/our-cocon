@@ -225,14 +225,15 @@ export function layoutCalendarCard(events: readonly StoredEvent[], ctx: CardCont
   });
 
   const strip = days.map((date): WeekStripDay => {
-    const dots = [...new Set(occurrences.filter((o) => covers(o, date)).flatMap((o) => eventColors(o, ctx.look)))].slice(0, 3);
+    const onDay = occurrences.filter((o) => covers(o, date));
+    const dots = [...new Set(onDay.flatMap((o) => eventColors(o, ctx.look)))].slice(0, 3);
     return {
       date,
       letter: strings.calendar.month.weekdays[weekday(date)] ?? '',
       num: String(parts(date).day),
       dots,
       today: date === today,
-      label: c.dayLabel(date === today, longDate(date), dots.length),
+      label: c.dayLabel(date === today, longDate(date), onDay.map((o) => o.title)),
     };
   });
 

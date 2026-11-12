@@ -31,5 +31,8 @@ Source `screens/OC-Recipes.dc.html` · Route `/recipes` · Specs 006, 007
 | Quick pill | toggles that filter (honey when on) |
 | RecipeItem | → `/recipes/[id]` |
 
+## Screen readers (spec 030)
+A search says what it found once it settles: "3 recipes", "1 recipe", or "No recipes match “{query}”.".
+
 ## Changelog
 - 2026-11-05 (050 FR-007): the search (and the quick filters) pinned under the status bar; the "Try “leek” or “quick”" hint and the "In season in {Month}" group removed.

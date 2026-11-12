@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
 import type { StepLine } from '../../lib/recipe-view';
 import { useStepTimer, useTimerStore } from '../../lib/timer-store';
 import { adjusted, clock, MINUTE, type Timer } from '../../lib/timers';
@@ -23,8 +22,6 @@ export interface StepTimerControl {
   onPress: () => void;
   onMinus: () => void;
   onPlus: () => void;
-  /** Said once, politely: "Blind bake is done", "1 minute left". */
-  announcement?: string;
 }
 
 /**
@@ -53,20 +50,11 @@ export function useStepTimerControl({ recipeId, recipeName, stepId, index, timer
     if (timer) store.add(timer.id, delta);
     else setStartWith(adjusted(startWith, delta));
   };
-  const announcement = !timer
-    ? undefined
-    : timer.state === 'done'
-      ? strings.timers.done(timer.label)
-      : timer.state === 'running' && left === MINUTE
-        ? strings.recipePage.steps.oneMinuteLeft
-        : undefined;
-
   return {
     state: timer ? timer.state : 'idle',
     clock: clock(timer ? left : startWith),
     onPress,
     onMinus: adjust(-MINUTE),
     onPlus: adjust(MINUTE),
-    announcement,
   };
 }

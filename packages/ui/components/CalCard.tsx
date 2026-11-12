@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
+import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Fill, type EventColor } from './EventChip';
 import { Icon, type IconName } from './Icon';
@@ -97,7 +98,7 @@ export function WeekStrip({ days, picked, onDay }: { days: readonly WeekStripDay
             key={d.date}
             role="button"
             aria-label={d.label}
-            aria-pressed={on}
+            {...pressedState(on)}
             onPress={() => onDay(d.date)}
             className={cn(
               'min-h-[62px] min-w-0 flex-1 items-center justify-center gap-[2px] rounded-[14px]',
@@ -115,7 +116,6 @@ export function WeekStrip({ days, picked, onDay }: { days: readonly WeekStripDay
               {d.dots.slice(0, 3).map((c, i) => (
                 <View key={i} className="h-[7px] w-[7px]">
                   <Fill colors={[c]} rounded="rounded-full" />
-                  <View className="absolute inset-0 rounded-full border border-event-outline" />
                 </View>
               ))}
             </View>

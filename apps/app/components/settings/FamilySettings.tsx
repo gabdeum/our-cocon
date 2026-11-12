@@ -295,7 +295,7 @@ export function FamilySettings({ me, family, members, api, tracker, onChanged, o
                   }
             }
           />
-          <View className="justify-center px-14 py-6">
+          <View role="listitem" className="justify-center px-14 py-6">
             <Link
               label={a.signOut}
               onPress={() => {
