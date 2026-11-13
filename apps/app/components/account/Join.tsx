@@ -6,7 +6,7 @@ import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import type { FamilyApi } from '../../lib/family';
 import type { Client } from '../../lib/supabase';
-import { SignIn } from './SignIn';
+import { SignIn, type SignInProps } from './SignIn';
 import { WelcomeHeader } from './WelcomeHeader';
 
 const t = strings.join;
@@ -25,10 +25,12 @@ export interface JoinProps {
   /** Joined (or already in this family): reload the session and go Home. */
   onJoined: () => void | Promise<void>;
   onOpenApp: () => void;
+  /** The iPhone's Apple and Google sheets, as on Welcome (spec 054 FR-003: invites open in the app). */
+  native?: SignInProps['native'];
 }
 
 /** /join/[token] (spec 003 User Story 2; OC-Welcome.md › Join). */
-export function Join({ token, viewer, api, auth, tracker, onJoined, onOpenApp }: JoinProps) {
+export function Join({ token, viewer, api, auth, tracker, onJoined, onOpenApp, native }: JoinProps) {
   const malformed = !InviteToken.safeParse(token).success;
   const [fetched, setInvite] = useState<InviteStatus | null>(null);
   // A token that isn't the right shape reads like any other old link.
@@ -70,7 +72,7 @@ export function Join({ token, viewer, api, auth, tracker, onJoined, onOpenApp }:
 
   const family = invite.family_name;
   if (viewer.kind === 'signedOut') {
-    return <SignIn auth={auth} next={`/join/${token}`} title={t.title(family)} lead={t.lead(invite.inviter_name)} />;
+    return <SignIn auth={auth} next={`/join/${token}`} title={t.title(family)} lead={t.lead(invite.inviter_name)} native={native} />;
   }
 
   const own = viewer.ownFamily;

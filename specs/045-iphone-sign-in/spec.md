@@ -81,3 +81,4 @@ New copy goes in OC-Welcome.md's States table and `strings/en.ts` first:
   - **Join and Approve access** show only the email form inside the iPhone app (on the iPhone they open in the browser, where Google shows as before).
   - **The email link** falls back to `<site>/auth/confirm?next=%2F` when Supabase refuses the redirect, so the token never lands in a malformed address (security review). `/auth/callback` also takes the token, for a web tab still running an older version.
   - `infra/provision.sh` asks for the Google iOS client ID and the Sign in with Apple key, and on every run resets the allowed redirects to the web app only (SC-003). Team ID and bundle ID are written by provision.sh, not `infra/config.env`.
+- 2026-11-12 (054): the link file now opens every page in the app (not only `/auth/confirm`), except `/oauth/*`, `/auth/callback` and files; Join shows Apple and Google in the app.

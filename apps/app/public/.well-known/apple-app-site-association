@@ -3,7 +3,16 @@
     "details": [
       {
         "appIDs": ["59TR87TBX2.com.ourcocon.app"],
-        "components": [{ "/": "/auth/confirm", "comment": "Spec 045 FR-002: only the sign-in email's link opens the app." }]
+        "components": [
+          { "/": "/oauth/*", "exclude": true, "comment": "Spec 054: an AI assistant's connection finishes in the browser that started it." },
+          { "/": "/auth/callback", "exclude": true, "comment": "Spec 054: Google's web sign-in comes back to the tab that started it." },
+          { "/": "/dev/*", "exclude": true },
+          { "/": "/email/*", "exclude": true },
+          { "/": "/_expo/*", "exclude": true },
+          { "/": "/assets/*", "exclude": true },
+          { "/": "/*.*", "exclude": true, "comment": "Files: icons, config.js, manifest.json, this file." },
+          { "/": "/*", "comment": "Spec 054: every other page opens in the app when it's installed, the sign-in email's /auth/confirm (spec 045) included." }
+        ]
       }
     ]
   }

@@ -1,8 +1,8 @@
 import '../global.css';
-import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Stack, router, useSegments, type Href } from 'expo-router';
+import { Stack, router, useGlobalSearchParams, usePathname, useSegments, type Href } from 'expo-router';
 import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -20,7 +20,7 @@ import { tracker } from '../lib/tracker';
 import { trackAppOpened } from '../lib/app-opened';
 import { presentation } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
-import { gateRedirect, SessionProvider, useSession } from '../lib/session';
+import { gateRedirect, openedPath, SessionProvider, useSession } from '../lib/session';
 import { createQueryClient, persistMaxAge, queryPersister, shouldPersistQuery } from '../lib/query';
 import { watchConnection } from '../lib/online';
 import { SyncProvider } from '../lib/sync';
@@ -41,13 +41,20 @@ import { strings } from '../strings/en';
 import { playChime, vibrateDone } from '../lib/chime';
 import { TimerAlerts } from '../components/timers/TimerAlerts';
 
-/** Sends people where their sign-in state allows (spec 003): sign in, set up a family, or the app. */
+/**
+ * Sends people where their sign-in state allows (spec 003): sign in, set up a family, or the app.
+ * A link opened signed out comes back after signing in (spec 054 FR-002); signing out goes to Welcome.
+ */
 function SessionGate() {
   const { state } = useSession();
   const segments = useSegments();
-  const target = gateRedirect(state.status, segments);
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+  const [wasSignedIn, setWasSignedIn] = useState(false);
+  if (!wasSignedIn && (state.status === 'ready' || state.status === 'noFamily')) setWasSignedIn(true);
+  const target = gateRedirect(state.status, segments, wasSignedIn ? undefined : openedPath(pathname, segments, params));
   useEffect(() => {
-    if (target) router.replace(target);
+    if (target) router.replace(target as Href);
   }, [target]);
   return null;
 }
