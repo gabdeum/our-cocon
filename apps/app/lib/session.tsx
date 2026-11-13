@@ -5,6 +5,7 @@ import type { Database, Tracker } from '@cocon/schemas';
 import type { Client } from './supabase';
 import { familyApi, type FamilyApi } from './family';
 import { suggestedName } from './auth';
+import { safeNext } from './links';
 
 export type Member = Database['public']['Tables']['members']['Row'];
 /** A member who signs in (spec 033 FR-001): the signed-in person always is one. */
@@ -155,20 +156,39 @@ const PUBLIC = new Set(['welcome', 'auth', 'join', 'r', 'e', 'oauth']);
 
 /**
  * Where the gate sends someone, or null to stay. `segments` are Expo Router's route segments
- * ("welcome", "family" for /welcome/family; "(tabs)" for the tabs).
+ * ("welcome", "family" for /welcome/family; "(tabs)" for the tabs). `opened` is the page a link
+ * opened, kept through sign-in (spec 054 FR-002); left out after signing out.
  */
-export function gateRedirect(status: SessionState['status'], segments: readonly string[]): '/' | '/welcome' | '/welcome/family' | null {
+export function gateRedirect(status: SessionState['status'], segments: readonly string[], opened?: string): string | null {
   const [first = '', second] = segments;
   const isPublic = PUBLIC.has(first);
   switch (status) {
     case 'loading':
       return null;
-    case 'signedOut':
-      return isPublic && !(first === 'welcome' && second === 'family') ? null : '/welcome';
+    case 'signedOut': {
+      if (isPublic && !(first === 'welcome' && second === 'family')) return null;
+      const next = first === 'welcome' ? '/' : safeNext(opened);
+      return next === '/' ? '/welcome' : `/welcome?next=${encodeURIComponent(next)}`;
+    }
     case 'noFamily':
       if (first === 'join' || first === 'auth' || first === 'r' || first === 'e' || first === 'oauth') return null;
       return first === 'welcome' && second === 'family' ? null : '/welcome/family';
     case 'ready':
       return first === 'welcome' ? '/' : null;
   }
+}
+
+/**
+ * The page on screen as a path with its query ("/calendar/<id>?date=2026-11-12"): `params` are
+ * Expo Router's global search params, which also hold the route's own segments ([id]), left out here.
+ */
+export function openedPath(pathname: string, segments: readonly string[], params: Record<string, string | string[] | undefined>): string {
+  const own = new Set(segments.map((s) => /^\[(?:\.\.\.)?(.+)\]$/.exec(s)?.[1]).filter((name) => name !== undefined));
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (own.has(key) || value === undefined) continue;
+    for (const v of Array.isArray(value) ? value : [value]) query.append(key, v);
+  }
+  const qs = query.toString();
+  return qs ? `${pathname}?${qs}` : pathname;
 }

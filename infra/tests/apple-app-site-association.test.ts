@@ -2,13 +2,31 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 
-// Spec 045 FR-002: the file iOS reads to open the sign-in email's link in the app. It must stay
-// valid JSON (a broken file silently opens Safari instead) and name only /auth/confirm.
+// Spec 045 FR-002, spec 054 FR-001: the file iOS reads to open links to the app's pages in the app.
+// It must stay valid JSON (a broken file silently opens Safari instead).
 const root = join(__dirname, '../..');
 
-it('opens only /auth/confirm, in Our Cocon', () => {
+type Component = { '/': string; exclude?: boolean };
+
+/** What iOS does with a path: the first component that matches decides (`*` matches anything, `/` included). */
+function opensInApp(components: Component[], path: string): boolean {
+  const matches = (pattern: string) => new RegExp(`^${pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`).test(path);
+  const first = components.find((c) => matches(c['/']));
+  return first !== undefined && !first.exclude;
+}
+
+it("opens every page in Our Cocon, but not an assistant's connection, Google's web sign-in or files", () => {
   const aasa = JSON.parse(readFileSync(join(root, 'apps/app/public/.well-known/apple-app-site-association'), 'utf8'));
-  expect(aasa.applinks.details).toEqual([{ appIDs: ['59TR87TBX2.com.ourcocon.app'], components: [expect.objectContaining({ '/': '/auth/confirm' })] }]);
+  const [details] = aasa.applinks.details;
+  expect(aasa.applinks.details).toHaveLength(1);
+  expect(details.appIDs).toEqual(['59TR87TBX2.com.ourcocon.app']);
+  const inApp = (path: string) => opensInApp(details.components, path);
+  for (const path of ['/', '/auth/confirm', '/recipes', '/recipes/3f6c1d1e-7f0a-4c55-9a52-1b2d3c4e5f60', '/calendar/3f6c1d1e-7f0a-4c55-9a52-1b2d3c4e5f60', '/settings/notifications', '/groceries', '/r/abc', '/e/abc', '/join/abc', '/welcome']) {
+    expect(inApp(path), path).toBe(true);
+  }
+  for (const path of ['/oauth/consent', '/auth/callback', '/dev/gallery', '/email/sign-in.html', '/_expo/static/js/web/index.js', '/assets/icon.png', '/config.js', '/favicon.ico', '/.well-known/apple-app-site-association']) {
+    expect(inApp(path), path).toBe(false);
+  }
 });
 
 it('is served as JSON, never as the app', () => {

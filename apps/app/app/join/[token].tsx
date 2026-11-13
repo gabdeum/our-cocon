@@ -27,6 +27,7 @@ export default function JoinRoute() {
           router.replace('/');
         }}
         onOpenApp={() => router.replace('/')}
+        native={{ client, tracker, onSignedIn: (to) => router.replace(to as never) }}
       />
     </PushedScreen>
   );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gateRedirect } from './session';
+import { gateRedirect, openedPath } from './session';
 
 describe('gateRedirect', () => {
   it('sends signed-out people to sign in, except on public pages', () => {
@@ -33,5 +33,22 @@ describe('gateRedirect', () => {
 
   it('waits while loading', () => {
     expect(gateRedirect('loading', ['(tabs)'])).toBeNull();
+  });
+
+  it('brings a link opened signed out back after signing in (spec 054 FR-002)', () => {
+    expect(gateRedirect('signedOut', ['calendar', '[id]'], '/calendar/abc?date=2026-11-12')).toBe(`/welcome?next=${encodeURIComponent('/calendar/abc?date=2026-11-12')}`);
+    expect(gateRedirect('signedOut', ['settings', 'notifications'], '/settings/notifications')).toBe('/welcome?next=%2Fsettings%2Fnotifications');
+    expect(gateRedirect('signedOut', ['(tabs)'], '/')).toBe('/welcome');
+    expect(gateRedirect('signedOut', ['welcome', 'family'], '/welcome/family')).toBe('/welcome');
+    // Only the app's own paths.
+    expect(gateRedirect('signedOut', ['(tabs)'], '//evil.example')).toBe('/welcome');
+  });
+});
+
+describe('openedPath', () => {
+  it("keeps the query but not the route's own segments", () => {
+    expect(openedPath('/calendar/abc', ['calendar', '[id]'], { id: 'abc', date: '2026-11-12' })).toBe('/calendar/abc?date=2026-11-12');
+    expect(openedPath('/recipes/abc/cook', ['recipes', '[id]', 'cook'], { id: 'abc', step: 's 1' })).toBe('/recipes/abc/cook?step=s+1');
+    expect(openedPath('/recipes', ['(tabs)', 'recipes'], {})).toBe('/recipes');
   });
 });
