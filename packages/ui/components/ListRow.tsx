@@ -304,6 +304,8 @@ export interface IconRowProps {
   leading?: ReactNode;
   /** 16/800: "Saturday, Oct 31"; 15/800 when compact. */
   title: string;
+  /** Wraps up to this many lines, then ends with "…": 3 for a place (an address over a few lines). */
+  titleLines?: number;
   /** 14/700 muted: "Morning · about 09:00–12:00"; compact: on the title's line after " · ". */
   sub?: string;
   /** Links at the end ("Copy", "Open in Maps"), 16 apart; compact: soft 36 pills ("Copy", "Maps"), 8 apart. */
@@ -320,14 +322,14 @@ export interface IconRowProps {
  * `ListGroup inset` card. Min 56 tall, 60 with a sub-line or links. Not pressable; its links are.
  * Compact (spec 050 FR-006): 52 tall, the sub-line on the title's line, the links soft pills.
  */
-export function IconRow({ icon, leading, title, sub, actions = [], trailingIcon, compact, last }: IconRowProps) {
+export function IconRow({ icon, leading, title, titleLines, sub, actions = [], trailingIcon, compact, last }: IconRowProps) {
   const start = leading ?? (icon ? <Icon name={icon} size={22} color="olive" /> : null);
   const end = trailingIcon ? <Icon name={trailingIcon} size={22} color="olive" /> : null;
   if (compact) {
     return (
       <View className={cn('min-h-[52px] flex-row items-center gap-12 py-6', !last && 'border-b-[1.5px] border-line')}>
         {start}
-        <Text size={15} weight="800" numberOfLines={actions.length ? 1 : undefined} className="min-w-0 flex-1">
+        <Text size={15} weight="800" numberOfLines={titleLines ?? (actions.length ? 1 : undefined)} className="min-w-0 flex-1">
           {title}
           {sub ? (
             <Text size={15} weight="700" color="ink-muted">
@@ -360,7 +362,7 @@ export function IconRow({ icon, leading, title, sub, actions = [], trailingIcon,
     <View className={cn('flex-row items-center gap-12 py-8', sub || actions.length ? 'min-h-[60px]' : 'min-h-[56px]', !last && 'border-b-[1.5px] border-line')}>
       {start}
       <View className="min-w-0 flex-1">
-        <Text size={16} weight="800">
+        <Text size={16} weight="800" numberOfLines={titleLines}>
           {title}
         </Text>
         {sub ? (

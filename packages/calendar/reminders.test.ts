@@ -109,6 +109,7 @@ describe('reminderText (FR-004, OC-Notifications)', () => {
   const text = (o: ReminderEvent, use24h = true, recipient = GABRIEL) => reminderText(o, o.reminder, recipient, { use24h, members });
   it('15 minutes and 1 hour before', () => {
     expect(text(swim('hour_before'))).toEqual({ title: 'Baby swim class in 1 hour', body: '14:30 · Aquatic Center · Gabriel takes James' });
+    expect(text(swim('hour_before', { location: 'Aquatic Center\n12 Rue des Bains' })).body).toBe('14:30 · Aquatic Center, 12 Rue des Bains · Gabriel takes James');
     expect(text(swim('minutes_15', { title: 'Pediatrician', location: 'Dr. Lee', start_time: '10:00', end_time: '11:00' }))).toEqual({
       title: 'Pediatrician in 15 minutes',
       body: '10:00 · Dr. Lee · Gabriel takes James',

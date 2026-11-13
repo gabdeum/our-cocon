@@ -342,7 +342,7 @@ export function EventSheet(p: EventSheetProps) {
             </PillRow>
           </Section>
 
-          <TextField label={a.where} value={d.location} onChangeText={(location) => set({ location })} maxLength={200} placeholder={a.wherePlaceholder} />
+          <TextField label={a.where} value={d.location} onChangeText={(location) => set({ location })} maxLength={200} placeholder={a.wherePlaceholder} multiline />
 
           {managed.length ? (
             <Section title={a.whoTakes(managed.map((m) => m.display_name))} hint={a.whoTakesHint(managed.map((m) => m.display_name))}>

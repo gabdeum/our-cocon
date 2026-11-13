@@ -85,7 +85,7 @@ export function EventDetail(p: EventDetailProps) {
   const rows = [
     responsible ? { key: 'who', icon: 'car' as const, title: responsible } : null,
     o.location
-      ? { key: 'place', icon: 'pin' as const, title: o.location, actions: placeActions(o.location, true, { openUrl: p.onOpenUrl, copy: p.onCopy, toast: toast.show }) }
+      ? { key: 'place', icon: 'pin' as const, title: o.location, titleLines: 3, actions: placeActions(o.location, true, { openUrl: p.onOpenUrl, copy: p.onCopy, toast: toast.show }) }
       : null,
     reminder ? { key: 'reminder', icon: 'bell' as const, ...reminder } : null,
   ].filter((r) => r !== null);

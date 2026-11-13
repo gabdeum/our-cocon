@@ -37,12 +37,18 @@ export const fields = {
     })
     .optional()
     .describe('How it repeats. Leave out for a one-off event.'),
-  location: z.string().trim().min(1).max(200).optional(),
+  location: z.string().trim().min(1).max(200).optional().describe('The place or full address, as the member would type it. Line breaks are kept.'),
   notes: z.string().trim().min(1).max(2000).optional(),
   type: EventCategory.optional().describe('What kind of event it is. A birthday is all day and repeats every year.'),
   reminder: Reminder.optional().describe(
     'When to remind on their phones: none, minutes_15, hour_before, morning_of (07:30, or an hour before an early start) or day_before (18:00 the evening before). Leave out to use the member’s default.',
   ),
+  checklist: z
+    .array(z.string().trim().min(1).max(80))
+    .min(1)
+    .max(50)
+    .optional()
+    .describe('What to bring or do, one short item each: ["Water bottle", "Shin pads"]. Anyone in the family can tick them in the app.'),
   visibility: Visibility.optional().describe('family (default: everyone sees it), private (others see "Busy"), or surprise (kept from some members, who see a cover instead).'),
   surprise: z
     .strictObject({
@@ -68,8 +74,24 @@ export const patchFields = {
   location: fields.location.unwrap().nullable().optional(),
   notes: fields.notes.unwrap().nullable().optional(),
   type: fields.type.unwrap().nullable().optional(),
+  checklist: z
+    .array(z.string().trim().min(1).max(80))
+    .max(50)
+    .nullable()
+    .optional()
+    .describe('The whole checklist as it should be, in order: items already on it stay ticked (a repeating event changed from a date on starts unticked, as in the app). null or [] clears it.'),
 };
 export type Patch = { [K in keyof typeof patchFields]?: z.output<(typeof patchFields)[K]> };
+
+/** The labels as checklist items: one that was already on the list keeps its id, so it stays ticked. */
+function checklistOf(labels: string[], before: EventInput['checklist'] = []): NonNullable<EventInput['checklist']> {
+  const left = [...before];
+  return labels.map((label) => {
+    const i = left.findIndex((c) => c.id && c.label.toLowerCase() === label.toLowerCase());
+    const [kept] = i === -1 ? [] : left.splice(i, 1);
+    return kept ? { id: kept.id, label } : { label };
+  });
+}
 
 /** The time fields from slots, custom times or all day: exactly one of them. */
 function timeOf(f: Pick<Fields, 'slots' | 'start_time' | 'end_time' | 'all_day'>): Pick<EventInput, 'time_type' | 'slots' | 'start_time' | 'end_time'> | null {
@@ -131,6 +153,7 @@ export function newEventInput(cal: Calendar, f: Fields & Pick<Required<Fields>, 
     responsible_member_id: responsibleOf(cal, members, f.responsible ?? cal.me),
     visibility: f.visibility ?? 'family',
     surprise: f.surprise ? surpriseOf(cal, f.surprise) : null,
+    ...(f.checklist ? { checklist: checklistOf(f.checklist) } : {}),
   };
 }
 
@@ -164,5 +187,6 @@ export function patchedInput(cal: Calendar, before: EventInput, p: Patch): Event
     responsible_member_id: responsibleOf(cal, members, p.responsible !== undefined ? p.responsible : (keptTaker?.id ?? (p.members ? cal.me : undefined))),
     visibility,
     surprise: visibility === 'surprise' ? (p.surprise ? surpriseOf(cal, p.surprise) : (before.surprise ?? null)) : null,
+    ...(p.checklist !== undefined ? { checklist: checklistOf(p.checklist ?? [], before.checklist) } : {}),
   };
 }

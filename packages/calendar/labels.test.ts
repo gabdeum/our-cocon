@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SLOT_TIMES } from './slots';
-import { dateLabel, dayTitles, fitTitle, formatTime, monthTitles, rangeLabel, timeLabel, titleWidth, uses24h, weekTitles, whenWord } from './labels';
+import { dateLabel, dayTitles, fitTitle, formatTime, monthTitles, placeLine, rangeLabel, timeLabel, titleWidth, uses24h, weekTitles, whenWord } from './labels';
 
 const custom = (start_time: string, end_time: string) => ({ time_type: 'custom' as const, slots: [], start_time, end_time });
 
@@ -136,5 +136,12 @@ describe('whenWord (spec 041 FR-009)', () => {
     ['a past day', '2026-10-27', '09:00', null],
   ])('%s', (_, date, start, expected) => {
     expect(whenWord(date, '2026-10-28', start)).toBe(expected);
+  });
+});
+
+describe('placeLine', () => {
+  it('puts a place typed over several lines on one', () => {
+    expect(placeLine('Little Notes studio\n  4 Elm St \n\n75011 Paris')).toBe('Little Notes studio, 4 Elm St, 75011 Paris');
+    expect(placeLine('Café Lalo')).toBe('Café Lalo');
   });
 });
