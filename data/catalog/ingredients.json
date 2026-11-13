@@ -11481,12 +11481,6 @@
             "loose": true
           },
           {
-            "size": 2,
-            "unit": "piece",
-            "label": "pack of 2 steaks (about 12 oz)",
-            "loose": false
-          },
-          {
             "size": 1,
             "unit": "lb",
             "label": "1 lb frozen bag",

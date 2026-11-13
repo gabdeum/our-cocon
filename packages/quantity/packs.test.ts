@@ -56,6 +56,13 @@ describe('pickPacks (spec 021 FR-003)', () => {
     expect(plan?.approximate).toBe(true);
   });
 
+  it('spec 052: tuna steaks are bought by weight, loose, in pounds in the US', () => {
+    // 2 steaks of 170 g: 340 g loose, not a pack counted in steaks.
+    const plan = pickPacks({ quantity: 2, unit: null }, packsOf('tuna_steak', 'us'), facts('tuna_steak'), 'us');
+    expect(plan?.loose).toMatchObject({ amount: 340, kind: 'weight' });
+    expect(plan?.picks).toEqual([]);
+  });
+
   it('gives nothing without an amount, without packs, or when no pack converts', () => {
     expect(pickPacks({ quantity: 1, unit: 'pinch' }, packsOf('salt', 'eu'), facts('salt'), 'eu')).toBeNull();
     expect(pickPacks({ quantity: 300, unit: 'ml' }, [], null, 'eu')).toBeNull();
