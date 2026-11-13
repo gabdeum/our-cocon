@@ -32,8 +32,8 @@ const details = {
   name: z.string().max(80).describe('The recipe’s name.'),
   description: z.string().max(140).nullable().optional().describe('One short line about it. Never numbers that scale with the servings ("500 g of pasta"): they won’t update when the cook changes the servings.'),
   serves: z.int().min(1).max(50).describe('How many it serves. If the member didn’t say, ask them; never guess.'),
-  total_minutes: z.int().min(1).max(10080).nullable().optional().describe('Total time in minutes, start to finish.'),
-  prep_minutes: z.int().min(1).max(10080).nullable().optional().describe('Hands-on time in minutes.'),
+  total_minutes: z.int().min(1).max(10080).nullable().optional().describe('Total time in minutes, start to finish (resting and proving included). Always send it: estimate it from the steps if the source doesn’t say.'),
+  prep_minutes: z.int().min(1).max(10080).nullable().optional().describe('Hands-on time in minutes. Always send it: estimate it from the steps if the source doesn’t say.'),
   cuisine: z.string().max(40).nullable().optional().describe('A cuisine key: american, british, caribbean, chinese, french, german, greek, indian, italian, japanese, korean, latin_american, mexican, middle_eastern, moroccan, portuguese, scandinavian, spanish, thai, turkish, vietnamese, west_african. Leave empty if none fits.'),
   // Spec 051 FR-016, word for word.
   source_text: z
@@ -44,7 +44,13 @@ const details = {
     .describe(
       "Where the recipe comes from, shown to the family as its Source. Use the most specific real source you know: a book's title and page ('La Cuisine de Mamie · p. 48'), a website's name or URL, a person ('Grandma Jeanne'), a show. If the user gives you a photo or text from a book, magazine or site, put that here. Only if there's no other source, leave it empty and we use your name.",
     ),
-  best_months: z.array(z.int().min(1).max(12)).max(12).optional().describe('Months it’s best in, 1–12. Leave empty for all year.'),
+  best_months: z
+    .array(z.int().min(1).max(12))
+    .max(12)
+    .optional()
+    .describe(
+      'Months it’s at its best where the family lives, 1–12: send them for a dish built on seasonal produce (ratatouille: 6–9 in the Northern Hemisphere) or made for a season or occasion (mulled wine, Christmas pudding). Leave empty only for an all-year dish (lasagne).',
+    ),
 };
 
 /** RecipeInput from what was sent, on top of what's there, or the sentence to fix it. */
@@ -94,10 +100,11 @@ export const createRecipe = defineTool({
     [
       'Save a new recipe. It shows in the app as added by the member, through you. Returns it with its link: share the link.',
       'You can’t see the app, so work in this order (update_recipe follows the same rules):',
-      '1. Know how many it serves and each amount and unit as the member gave them. Ask rather than guess.',
+      '1. Know how many it serves and each amount and unit as the member gave them. Ask rather than guess (servings and amounts only).',
       '2. Ingredients, most important first.',
       '3. Steps, then step by step: where a timer, a temperature check or a tip applies and helps.',
-      '4. Variants: save the ones given; after saving, suggest others.',
+      '4. Total and hands-on time, always (estimated from the steps if not given), and best months for a seasonal dish.',
+      '5. Variants: save the ones given; after saving, suggest others.',
     ].join('\n'),
     INGREDIENT_WRITING,
     STEP_WRITING,
@@ -156,6 +163,7 @@ export const updateRecipe = defineTool({
     '- scale_to makes it serve more or fewer by default, rescaling every amount. serves alone corrects the number only.',
     '- Start from get_recipe’s for_editing. Whole lists replace what’s there: items with an id are kept, items without one are new, items left out are removed (a removed ingredient leaves the steps too). Send kept ingredients complete. A kept step keeps its title, timer, tip and temperature check unless you send a new one, or null to remove it. Variants are matched by name; [] removes them all.',
     '- Keep source_text as it is once set; change it only if the member asks.',
+    '- A recipe without total_minutes, prep_minutes or (for a seasonal dish) best_months: add them with your change.',
     '- Every change shows in the app’s activity, where the member can undo it. Returns the updated recipe.',
   ].join('\n'),
   input: z.strictObject({

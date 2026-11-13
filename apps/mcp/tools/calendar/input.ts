@@ -21,14 +21,14 @@ export const fields = {
     .optional()
     .describe('Preferred: when in the day, as one or more slots next to each other (early_morning, morning, lunch, afternoon, evening). Use these unless the member gave a time.'),
   start_time: ClockTime.optional().describe('Only when the member gave a time: "16:30" (24-hour). Send end_time too.'),
-  end_time: ClockTime.optional().describe('When it ends, "17:30". With start_time.'),
+  end_time: ClockTime.optional().describe('When it ends, "17:30". With start_time. Not given? Estimate it: an appointment 30–60 min, a class or a match 1–2 h, a meal out 2 h.'),
   all_day: z.literal(true).optional().describe('true for an all-day event (a birthday, a holiday).'),
   members: z
     .array(Who)
     .min(1)
     .max(20)
     .describe('Who it’s for: names or ids from list_members, "everyone" (the whole family) or "others" (people outside the family).'),
-  responsible: Who.optional().describe('Who takes the members without the app (has_app false): someone with the app. Ask the member if they didn’t say.'),
+  responsible: Who.optional().describe('Who takes the members without the app (has_app false): someone with the app. Left out, it’s the member you’re talking to.'),
   repeat: z
     .strictObject({
       freq: z.enum(['daily', 'weekly', 'biweekly', 'monthly', 'yearly']).describe('biweekly: every 2 weeks.'),
@@ -59,7 +59,11 @@ type Fields = { [K in keyof typeof fields]?: z.output<(typeof fields)[K]> };
 /** Patches can clear a field: `null` removes the place, the notes, the repeat or who takes them. */
 export const patchFields = {
   ...fields,
-  responsible: fields.responsible.unwrap().nullable().optional(),
+  responsible: fields.responsible
+    .unwrap()
+    .nullable()
+    .optional()
+    .describe('Who takes the members without the app: someone with the app, or null to clear. Left out, the current one stays; people without the app added with nobody taking them get the member you’re talking to.'),
   repeat: fields.repeat.unwrap().nullable().optional(),
   location: fields.location.unwrap().nullable().optional(),
   notes: fields.notes.unwrap().nullable().optional(),
@@ -84,7 +88,10 @@ const recurrenceOf = (r: NonNullable<Fields['repeat']>): NonNullable<EventInput[
   ends: r.ends ?? { type: 'never' },
 });
 
-/** Who takes the members without the app: only while one is on it (as the app's sheet keeps it). */
+/**
+ * Who takes the members without the app: only while one is on it (as the app's sheet keeps it).
+ * Not sent (`undefined`): the member talking to the assistant (spec 055 FR-007); `null` clears it.
+ */
 function responsibleOf(cal: Calendar, members: EventInput['members'], value: string | null | undefined): string | null {
   if (!value) return null;
   const taker = member(cal, value);
@@ -121,7 +128,7 @@ export function newEventInput(cal: Calendar, f: Fields & Pick<Required<Fields>, 
     recurrence,
     reminder: f.reminder ?? cal.defaultReminder,
     members,
-    responsible_member_id: responsibleOf(cal, members, f.responsible),
+    responsible_member_id: responsibleOf(cal, members, f.responsible ?? cal.me),
     visibility: f.visibility ?? 'family',
     surprise: f.surprise ? surpriseOf(cal, f.surprise) : null,
   };
@@ -153,7 +160,8 @@ export function patchedInput(cal: Calendar, before: EventInput, p: Patch): Event
     recurrence: p.repeat !== undefined ? (p.repeat ? recurrenceOf(p.repeat) : null) : (before.recurrence ?? null),
     reminder: p.reminder ?? before.reminder ?? 'none',
     members,
-    responsible_member_id: responsibleOf(cal, members, p.responsible !== undefined ? p.responsible : keptTaker?.id),
+    // A new list of people without a taker yet gets the member talking to the assistant, as a new event does.
+    responsible_member_id: responsibleOf(cal, members, p.responsible !== undefined ? p.responsible : (keptTaker?.id ?? (p.members ? cal.me : undefined))),
     visibility,
     surprise: visibility === 'surprise' ? (p.surprise ? surpriseOf(cal, p.surprise) : (before.surprise ?? null)) : null,
   };

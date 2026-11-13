@@ -29,11 +29,11 @@ const UNITS = Unit.options.join(', ');
 
 /** An ingredient row's fields; a variant's new ingredients have no id to keep. */
 const ingredientRow = {
-  name: z.string().max(80).describe('The canonical ingredient, as a shop sells it, no amount: "All-purpose flour". Used in several parts: one row per part, the part in brackets ("All-purpose flour (dough)"). The detail after a comma ("Onion, sliced"), saved as prep_note.'),
+  name: z.string().max(80).describe('The canonical ingredient, as a shop sells it, no amount: "All-purpose flour". Used in several parts: one row per part, the part in brackets ("All-purpose flour (dough)"). The detail after a comma ("Butter, softened"), saved as prep_note.'),
   quantity: z.number().positive().lt(100000).optional().describe('A number (1.5). Leave out for "to taste".'),
   unit: z.string().max(20).optional().describe(`One of: ${UNITS}. "piece" for counted things.`),
   size: SizeWord.optional().describe('small, medium or large, for counted things.'),
-  prep_note: z.string().max(80).optional().describe('The detail: how it’s cut, prepared or bought ("sliced"). Same as text after a comma in the name.'),
+  prep_note: z.string().max(80).optional().describe('A detail of the ingredient itself: its state, cut or how it’s bought ("softened", "skin on"). Never preparation a step does. Same as text after a comma in the name.'),
 };
 const IngredientLine = z.string().min(1).max(200).describe('A line as in a recipe: "2 leeks, sliced".');
 const Id = (what: string) => z.uuid().optional().describe(`Its id from get_recipe, to keep the ${what}. Leave out for a new one.`);
@@ -74,7 +74,8 @@ export const INGREDIENT_WRITING = [
   '- Parts of the recipe never go in a name: "Tangzhong flour", "Dough water" and "Sauce onion" aren’t ingredients, and Our Cocon can’t match them.',
   '- One ingredient in several parts (a tangzhong and a dough, a sauce and a topping): one row per part, each with that part’s amount, the canonical name and the part in brackets: "All-purpose flour (tangzhong)", "All-purpose flour (dough)", "Water (tangzhong)", "Water (dough)". The app matches, scales and adds them up as one ingredient: one line in the ingredient list, one on the grocery list. Used in one part only: no bracket.',
   '- What the recipe makes (a tangzhong, a roux, a dough, a sauce, a marinade) isn’t an ingredient: list what goes into it, and name it in the steps as plain text ("Add the tangzhong to the dough"). List one only when it’s bought ready-made ("Puff pastry", "Chicken stock").',
-  '- After a comma: any other detail, how it’s cut, prepared or bought ("Onion, finely chopped", "Butter, softened", "Chicken thighs, skin on"). It shows under the name in the ingredient list, on the grocery list and after the amount in the steps.',
+  '- After a comma: a detail of the ingredient itself, its state, cut or how it’s bought ("Butter, softened", "Chicken thighs, skin on", "Chickpeas, drained"). It shows under the name in the ingredient list, on the grocery list and after the amount in the steps.',
+  '- Preparation goes in one place only. When a step does it ("Slice the onions"), the row is "Onion", not "Onion, sliced". Only preparation done before the recipe starts, that no step mentions, goes after the comma ("Onion, finely chopped" when the first step cooks it).',
   '- No amount in a name or after the comma: use quantity and unit, so it scales.',
   '- The reply’s warnings name each ingredient Our Cocon doesn’t know. Check it isn’t a part or something the recipe makes; a real ingredient it doesn’t know yet can stay.',
 ].join('\n');

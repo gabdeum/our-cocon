@@ -16,6 +16,7 @@
     "./ingredient-text": "./ingredient-text.ts",
     "./notifications": "./notifications.ts",
     "./recipes": "./recipes.ts",
+    "./seasons": "./seasons.ts",
     "./share": "./share.ts",
     "./sources": "./sources.ts",
     "./quiche.fixture": "./quiche.fixture.ts",

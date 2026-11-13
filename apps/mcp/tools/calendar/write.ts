@@ -52,9 +52,10 @@ export const createEvent = defineTool({
   needs: 'events',
   description: [
     'Add an event to the family calendar, as the member would in the app: "Football every Saturday morning for James".',
-    'Use slots (morning, afternoon…) unless the member gave a time. Call list_members first for names, ids and today’s date.',
-    'When a member without the app (has_app false) is on it, ask who takes them unless the member said, and send responsible.',
-    'It shows straight away in the app as added via you, and the family can undo it.',
+    'Use slots (morning, afternoon…) unless the member gave a time: pick them from the kind of event if the member didn’t say. Call list_members first for names, ids and today’s date.',
+    'Don’t ask for what you can estimate: save it with your best guess and say what you guessed. A start time without an end gets an estimated end_time; add type, and location when you know it.',
+    'When a member without the app (has_app false) is on it, the member you’re talking to takes them unless they named someone else (responsible).',
+    'It shows straight away in the app as added via you, and the family can correct or undo it. Reply with the event’s link.',
   ].join('\n'),
   input: z.strictObject({ ...fields, title: fields.title, date: fields.date, members: fields.members }),
   async run(args, ctx) {

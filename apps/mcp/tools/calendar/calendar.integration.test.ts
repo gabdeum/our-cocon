@@ -288,6 +288,18 @@ describe.skipIf(!local)('calendar tools and permission against local Supabase', 
     expect(oneDate.error).toContain('its reminder');
   });
 
+  it('spec 055 FR-007: the member talking to the assistant takes someone without the app, unless another is named', async () => {
+    const { data } = await call('create_event', { title: 'Dentist', date: '2026-11-12', start_time: '16:00', end_time: '16:30', members: ['James'] });
+    expect((await loadEvent(gabriel, data?.id as string))?.responsible_member_id).toBe(gabrielMember);
+    // Nobody without the app on it: no taker.
+    const own = await call('create_event', { title: 'Haircut', date: '2026-11-12', slots: ['morning'], members: ['Gabriel'] });
+    expect((await loadEvent(gabriel, own.data?.id as string))?.responsible_member_id).toBeNull();
+    // James joins later: Gabriel takes him.
+    const changed = await call('update_event', { id: own.data?.id, patch: { members: ['Gabriel', 'James'] } });
+    expect(changed.error).toBeNull();
+    expect((await loadEvent(gabriel, own.data?.id as string))?.responsible_member_id).toBe(gabrielMember);
+  });
+
   it('says what to fix', async () => {
     captured.length = 0;
     expect((await call('create_event', { title: 'Swim', date: '2026-11-08', members: ['James'] })).error).toBe('Say when: slots (preferred), start_time and end_time, or all_day.');
