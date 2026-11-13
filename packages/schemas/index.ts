@@ -10,6 +10,7 @@ export * from './notifications';
 export * from './recipe-filters';
 export * from './recipes';
 export * from './search';
+export * from './seasons';
 export * from './share';
 export * from './sources';
 export * from './sync';

@@ -2,26 +2,29 @@ import { createServer, type IncomingMessage, type Server as HttpServer } from 'n
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import type { Hemisphere } from '@cocon/schemas';
 import { modules } from '../tools/index.js';
 import { createMcpAnalytics, type McpAnalytics } from './analytics.js';
 import { authenticate, RESOURCE_METADATA_PATH, resourceMetadata, unauthorized, type Caller } from './auth.js';
 import type { McpConfig } from './config.js';
-import { toolContext, touchAssistant } from './context.js';
+import { familyHemisphere, toolContext, touchAssistant } from './context.js';
 import { rateLimit } from './rate-limit.js';
 import { callTool, errorSentence, listing, type Module, type ToolContext } from './tools.js';
 
 /** What the server tells every assistant on connecting: Our Cocon first, then each module. */
-export function instructions(list: readonly Module[]): string {
+export function instructions(list: readonly Module[], hemisphere: Hemisphere = 'northern'): string {
   return [
     'Our Cocon is a family household app. You act as the member who connected you: you see and change only their family’s things, and every change shows in the app as made through you.',
-    'Ask the member when something you need is missing (an amount, a unit, how many it serves) rather than guessing. When a tool returns an error, it says what to fix: fix it and call again.',
+    'Ask the member only for what changes amounts: how many a recipe serves, or an amount or unit that isn’t clear. Details that are missing (an end time, a time of day, an event’s type, a recipe’s times or seasons), fill in with a sensible estimate and save: correcting it in the app is as quick as answering you. Then say what you estimated and give the link. Never guess who something is for, whether it’s private or a surprise, whether a change is for every date of a repeating event, or what to delete: ask. When a tool returns an error, it says what to fix: fix it and call again.',
     ...list.map((m) => m.instructions),
+    // Spec 055 FR-005: a recipe's best months are the family's own seasons.
+    ...(hemisphere === 'southern' ? ['This family lives in the Southern Hemisphere: a recipe’s best_months are its seasons there (summer is December to February).'] : []),
   ].join('\n\n');
 }
 
 /** The MCP server for one caller (stateless: one per request). Tools come from the modules. */
-export function createMcp(config: McpConfig, list: readonly Module[], context: (tool: string) => Promise<ToolContext>): Server {
-  const server = new Server({ name: 'our-cocon', title: 'Our Cocon', version: config.commit }, { capabilities: { tools: {} }, instructions: instructions(list) });
+export function createMcp(config: McpConfig, list: readonly Module[], context: (tool: string) => Promise<ToolContext>, hemisphere: Hemisphere = 'northern'): Server {
+  const server = new Server({ name: 'our-cocon', title: 'Our Cocon', version: config.commit }, { capabilities: { tools: {} }, instructions: instructions(list, hemisphere) });
   const tools = list.flatMap((m) => m.tools);
   const byName = new Map(tools.map((t) => [t.name, t]));
   server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: listing(tools) }));
@@ -53,6 +56,8 @@ export interface ServerDeps {
   fetch?: typeof fetch;
   /** Records the assistant's use (spec 025; tests pass a fake). */
   touch?: (caller: Caller) => Promise<void>;
+  /** Where the caller's family has its seasons (spec 055; tests pass a fake). */
+  hemisphere?: (caller: Caller) => Promise<Hemisphere>;
 }
 
 /**
@@ -63,6 +68,7 @@ export function createHttpServer(config: McpConfig, deps: ServerDeps = {}): Http
   const list = deps.modules ?? modules;
   const analytics = deps.analytics ?? createMcpAnalytics(config);
   const touch = deps.touch ?? ((caller: Caller) => touchAssistant(config, caller));
+  const seasonsOf = deps.hemisphere ?? ((caller: Caller) => familyHemisphere(config, caller));
   // Per member: generous for a conversation, low enough to stop a runaway loop.
   const perMember = rateLimit(120, 60_000);
   // Per address, before a token is checked: stops anyone hammering Supabase through us.
@@ -90,15 +96,22 @@ export function createHttpServer(config: McpConfig, deps: ServerDeps = {}): Http
         // Never holds up or fails the request: the time shown in Settings can wait.
         touch(caller).catch((error: unknown) => console.error('touch_assistant failed:', error instanceof Error ? error.message : error));
 
-        const mcp = createMcp(config, list, (tool) => toolContext(config, caller, analytics, tool));
+        let mcp: Server | null = null;
+        let closed = false;
         const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
         res.on('close', () => {
+          closed = true;
           void transport.close();
-          void mcp.close();
+          void mcp?.close();
         });
-        mcp
-          .connect(transport)
-          .then(() => transport.handleRequest(req, res))
+        void seasonsOf(caller)
+          .then((hemisphere) => {
+            // Gone while the family's seasons were read: nothing to answer.
+            if (closed) return;
+            mcp = createMcp(config, list, (tool) => toolContext(config, caller, analytics, tool), hemisphere);
+            return mcp.connect(transport);
+          })
+          .then(() => (closed ? undefined : transport.handleRequest(req, res)))
           .catch(() => {
             if (!res.headersSent) json(500, { error: 'Internal error' });
             else res.end();

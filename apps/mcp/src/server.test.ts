@@ -26,7 +26,8 @@ const supabase = vi.fn(async (_url: string | URL | Request, init?: RequestInit) 
     : new Response('{}', { status: 401 });
 });
 const touch = vi.fn(async () => {});
-const server = createHttpServer(config, { fetch: supabase as typeof fetch, modules: [], touch });
+const hemisphere = vi.fn(async (): Promise<'northern' | 'southern'> => 'northern');
+const server = createHttpServer(config, { fetch: supabase as typeof fetch, modules: [], touch, hemisphere });
 let base = '';
 
 beforeAll(async () => {
@@ -89,6 +90,12 @@ describe('connecting (spec 023 FR-001)', () => {
     const text = await res.text();
     expect(text).toContain('"name":"our-cocon"');
     expect(text).toContain('Our Cocon is a family household app');
+  });
+
+  it('tells a family in the Southern Hemisphere that best months are its own seasons (spec 055 FR-005)', async () => {
+    expect(await (await initialize(assistantToken)).text()).not.toContain('Southern Hemisphere');
+    hemisphere.mockResolvedValueOnce('southern');
+    expect(await (await initialize(assistantToken)).text()).toContain('This family lives in the Southern Hemisphere');
   });
 
   it('records the assistant’s use, for "Connected · used just now" (spec 025)', async () => {
