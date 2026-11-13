@@ -1,6 +1,6 @@
 import type { EventMember, ReminderKind } from '@cocon/schemas/calendar';
 import { addDays, todayIn, weekday, zonedInstant } from './dates';
-import { formatTime, timeLabel } from './labels';
+import { formatTime, placeLine, timeLabel } from './labels';
 import { expand } from './recurrence';
 import { DEFAULT_SLOT_TIMES, fromMinutes, slotStartingAt, timeRange, toMinutes } from './slots';
 import type { CalendarEvent, EventException, Occurrence, SlotTimes } from './types';
@@ -108,15 +108,16 @@ export function reminderText(o: Told, kind: ReminderKind, recipientId: string, {
   const when = timeLabel(o, { use24h, slotTimes });
   const responsible = responsibleLine(o.responsible_member_id, o.members, members);
   const body = (...parts: (string | null | undefined)[]) => parts.filter(Boolean).join(' · ');
-  if (kind === 'day_before') return { title: w.tomorrow(o.title), body: body(when, en.weekdays[weekday(o.starts_on)], o.location, responsible) };
-  if (start && kind !== 'morning_of') return { title: w[kind](o.title), body: body(when, o.location, responsible) };
+  const place = o.location ? placeLine(o.location) : null;
+  if (kind === 'day_before') return { title: w.tomorrow(o.title), body: body(when, en.weekdays[weekday(o.starts_on)], place, responsible) };
+  if (start && kind !== 'morning_of') return { title: w[kind](o.title), body: body(when, place, responsible) };
   const slot = start ? slotStartingAt(start, slotTimes) : null;
   const title = !start ? w.today(o.title) : slot ? w.inSlot[slot](o.title) : w.at(o.title, formatTime(start, use24h));
   const onlyMe = o.members.length === 1 && o.members[0] === recipientId;
   const names = onlyMe
     ? null
     : en.list(o.members.flatMap((who) => (who === 'everyone' ? [en.everyone] : who === 'others' ? [] : (members.find((m) => m.id === who)?.display_name ?? []))));
-  return { title, body: body(names, o.location, responsible) };
+  return { title, body: body(names, place, responsible) };
 }
 
 /** An event the notifier may remind about, as `reminder_candidates` gives it. */

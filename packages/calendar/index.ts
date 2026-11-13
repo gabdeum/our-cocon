@@ -4,7 +4,7 @@
 export { CalendarError, type CalendarErrorCode } from './errors';
 export { addDays, daysBetween, daysInMonth, makeDate, parts, timeIn, todayIn, weekRange, weekStartFor, weekday, zonedInstant, type WeekStartsOn } from './dates';
 export { DEFAULT_SLOT_TIMES, checkSlotTimes, fromMinutes, moveSlotEdge, slotAt, slotNeighbour, slotStartingAt, slotsToRange, sortSlots, timeRange, toMinutes, type SlotTimesProblem } from './slots';
-export { TITLE_SIDE, dateLabel, dayTitles, fitTitle, formatTime, monthTitles, rangeLabel, timeLabel, titleWidth, uses24h, weekTitles, whenWord, type LabelOptions } from './labels';
+export { TITLE_SIDE, dateLabel, dayTitles, fitTitle, formatTime, monthTitles, placeLine, rangeLabel, timeLabel, titleWidth, uses24h, weekTitles, whenWord, type LabelOptions } from './labels';
 export { assertValidEvent, expand, occurrenceOn, splitSeries } from './recurrence';
 export { layoutDay, layoutSpans, type LaneSlot, type LayoutItem, type SpanItem } from './layout';
 export { conflictWho, findConflict, type ConflictDraft, type ConflictWho } from './conflicts';

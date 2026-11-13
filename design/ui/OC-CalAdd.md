@@ -14,7 +14,7 @@ Sources `screens/OC-CalAdd.dc.html` (quick, interactive) and `screens/OC-CalAddM
 7. "More options" (soft button; sub-label "Place, repeat, reminder…" / "Hide").
 8. More options:
    - "Type": Sport · School · Work · Health · Social · Travel · Home · Birthday · Other (pills, one choice).
-   - "Where": input, placeholder "Add a place".
+   - "Where": textarea (an address over 2 or 3 lines, line breaks kept), placeholder "Add a place", max 200.
    - "Who takes James?" (only when a member without the app is in Who) + hint "James was added by the family, so someone with the app handles this." — "Not decided yet" · "Gabriel" · "Eva".
    - "Repeat": Never · Daily · Weekly · Every 2 weeks · Monthly · Yearly. Weekly shows "On" weekday letters (S M T W T F S) and "Ends": Never · On a date · After a number of times.
    - "Reminder": None · 15 minutes before · 1 hour before · Morning of · 1 day before (pre-filled with the member's default, Menu › Notifications) + hint "Reminds {names} on their phones." ("Reminds you on your phone." when it's only you, as for a private event; hidden for None). The names follow spec 049 FR-003: whoever the phones will remind.
@@ -54,3 +54,4 @@ Adjacent slots combine (Afternoon + Evening = 14:00–22:00); a non-adjacent tap
 - 2026-11-12 (spec 053): title suggestions under "What's happening?" that fill the event like last time; an "Ends" row for events over several days; Save failed is a toast, not a callout.
 - 2026-11-12 (spec 053, follow-up): suggestions are a sideways row of up to 8 pills, "{title} · {start}", one per title and start time.
 - 2026-11-12 (spec 053, after Gabriel's test): one suggestion per title and part of the day, not per exact start time.
+- 2026-11-13 (Gabriel's ask): "Where" is a textarea, for an address over 2 or 3 lines.

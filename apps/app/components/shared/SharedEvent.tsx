@@ -65,7 +65,7 @@ export function SharedEvent({ load, onRetry }: SharedEventProps) {
       </View>
       <ListGroup inset>
         <IconRow icon="clock" title={ev.when.title} sub={ev.when.sub} last={!ev.place} />
-        {ev.place ? <IconRow icon="pin" title={ev.place} last /> : null}
+        {ev.place ? <IconRow icon="pin" title={ev.place} titleLines={3} last /> : null}
       </ListGroup>
     </PublicScreen>
   );

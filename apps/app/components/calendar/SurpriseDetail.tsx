@@ -35,7 +35,7 @@ export function SurpriseDetail({ occurrence: o, members, slotTimes, now, onBack,
   const creator = members.find((m) => m.id === o.creator_member_id)?.display_name ?? strings.recipe.formerMember;
   const rows = [
     { icon: 'clock' as const, title: when.title, sub: when.sub },
-    o.location ? { icon: 'pin' as const, title: o.location, actions: placeActions(o.location, false, { openUrl: onOpenUrl, copy: onCopy, toast: toast.show }) } : null,
+    o.location ? { icon: 'pin' as const, title: o.location, titleLines: 3, actions: placeActions(o.location, false, { openUrl: onOpenUrl, copy: onCopy, toast: toast.show }) } : null,
   ].filter((r) => r !== null);
 
   return (

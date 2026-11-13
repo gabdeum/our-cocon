@@ -130,3 +130,11 @@ export function whenWord(date: string, today: string, start: string | null): 'to
   if (date !== today) return null;
   return start !== null && toMinutes(start) >= toMinutes(TONIGHT_FROM) ? 'tonight' : 'today';
 }
+
+/** A place typed over several lines, on one: "4 Elm St, 75011 Paris" (day and agenda rows, reminders). */
+export function placeLine(place: string): string {
+  return place
+    .split(/\s*\n\s*/)
+    .filter(Boolean)
+    .join(', ');
+}

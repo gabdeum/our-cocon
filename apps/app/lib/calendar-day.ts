@@ -1,5 +1,5 @@
 import { SLOT_KEYS, type SlotKey } from '@cocon/schemas/calendar';
-import { calendarWordsEn, daysBetween, slotAt, sortSlots, timeLabel, timeRange, toMinutes, weekday, type SlotTimes } from '@cocon/calendar';
+import { calendarWordsEn, daysBetween, placeLine, slotAt, sortSlots, timeLabel, timeRange, toMinutes, weekday, type SlotTimes } from '@cocon/calendar';
 import type { DayAllDayItem, DayBand, DayEventItem, MemberChipColor } from '@cocon/ui';
 import { eventLook, longDate, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import type { Member } from './session';
@@ -125,7 +125,7 @@ export function layoutDaySheet(date: string, occurrences: readonly MonthOccurren
 function eventRow(o: MonthOccurrence, range: { start: string; end: string }, date: string, ctx: DayViewContext): DayEventItem {
   const { initials, colors } = eventLook(o.members, ctx.look);
   const when = timeLabel(o, { use24h: ctx.use24h ?? true, slotTimes: ctx.slotTimes });
-  const placed = o.location ? d.at(when, o.location) : when;
+  const placed = o.location ? d.at(when, placeLine(o.location)) : when;
   const hidden = hiddenFromLine(o, ctx.members);
   const time = hidden ? d.at(placed, hidden) : placed;
   const driver = o.view === 'full' ? driverLine(o.responsible_member_id, o.members, ctx.members) : null;

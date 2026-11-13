@@ -1,4 +1,4 @@
-import { addDays, dateLabel, timeLabel, timeRange, toMinutes, type SlotTimes } from '@cocon/calendar';
+import { addDays, dateLabel, placeLine, timeLabel, timeRange, toMinutes, type SlotTimes } from '@cocon/calendar';
 import type { EventListItem } from '@cocon/ui';
 import { dayOf, driverLine, hiddenFromLine, inAllDay, isBirthday, isNow } from './calendar-day';
 import { eventLook, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
@@ -78,7 +78,7 @@ export function agendaRow(o: MonthOccurrence, date: string, ctx: AgendaContext):
   const range = allDay ? null : timeRange(o, ctx.slotTimes);
   const when = allDay || !range ? d.allDay : timeLabel(o, { use24h: ctx.use24h ?? true, slotTimes: ctx.slotTimes });
   const driver = o.view === 'full' ? driverLine(o.responsible_member_id, o.members, ctx.members) : null;
-  const place = o.location ?? driver;
+  const place = o.location ? placeLine(o.location) : driver;
   const placed = place ? d.at(when, place) : when;
   const hidden = hiddenFromLine(o, ctx.members);
   const sub = hidden ? d.at(placed, hidden) : placed;
