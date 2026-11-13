@@ -9,7 +9,7 @@ Not drawn (described in words; spec 003). Built from existing components: Logo, 
 4. TextField "Your email", hint "We'll send you a link to sign in. No password needed."
 5. Ink button "Send me a link" (busy: "Sending…").
 
-On the iPhone (spec 045), the buttons above "or" are two: outline button with Apple's mark "Continue with Apple" (label and mark in ink, as Apple's rules ask), then "Continue with Google". Each opens Apple's or Google's own sheet and signs in without leaving the app; closing the sheet shows nothing. The web shows only Google. Expo Go (development) shows neither, and no "or". Join and Approve access open in the browser on the iPhone (only the sign-in link opens the app), so inside the app they show only the email form.
+On the iPhone (spec 045), the buttons above "or" are two: outline button with Apple's mark "Continue with Apple" (label and mark in ink, as Apple's rules ask), then "Continue with Google". Each opens Apple's or Google's own sheet and signs in without leaving the app; closing the sheet shows nothing. The web shows only Google. Expo Go (development) shows neither, and no "or". Join opens in the app on the iPhone (spec 054), so it shows Apple and Google there too. Approve access always opens in the browser (an assistant's connection finishes where it started), so inside the app it shows only the email form.
 
 After sending, the same page shows:
 1. Title "Check your email", lead "We sent a link to {email}. Open it on this device to sign in. It works for 1 hour."

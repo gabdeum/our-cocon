@@ -91,6 +91,7 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 50 | 051 Recipes review: cooking in progress, ingredient detail, source, actions | 004, 006, 008, 012, 014, 015, 020, 022, 023, 027, 031 | OC-Recipes, OC-Recipe, OC-RecipeWide, OC-Cook, OC-CookDone, OC-EditBasics, OC-EditIngredients, OC-AddGroceries, OC-Groceries |
 | 51 | 053 Calendar and notifications review: title suggestions, event page, Today, multi-day events, one notification, activity paging | 002, 004, 026, 028, 035, 036, 037, 041, 042, 050 | OC-CalAdd, OC-CalEvent, OC-CalMonth, CalHeader, OC-Activity, Toast |
 | 53 | 055 Assistants fill in what they can (estimates, times, seasons, ingredient details) | 023, 044 | — |
+| 52 | 054 Links open the iPhone app (any page, the web app without it) | 003, 019, 042, 045 | OC-Welcome |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
 Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order, then the top bar (050) across every pushed screen.
@@ -171,3 +172,4 @@ These have no drawn screen; their UI spec is the source of truth: sign-in, set u
 - 2026-11-04: Build order row 49: spec 050, one top bar for every pushed screen (and the compact event page).
 - 2026-11-12: Build order row 51: spec 053, Gabriel's calendar and notifications review (052 is the grocery review, on its own branch).
 - 2026-11-12: Build order row 53: spec 055, assistants estimate instead of asking (054, links into the iPhone app, is row 52 on its own branch).
+- 2026-11-12: Build order row 52: spec 054, links to any page open the iPhone app (Universal Links), the web app without it.
