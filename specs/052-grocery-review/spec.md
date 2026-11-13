@@ -126,4 +126,4 @@ Existing events are unchanged. `grocery_recipe_servings_changed` still fires on 
   - **Not changed:** the board draws Grocery settings beside "Add item"; it stays at the title's right (spec 050 FR-007), as the spec doesn't ask to move it.
 - 2026-11-12 (after Gabriel's test): the recipe card has no chevron (FR-006 and the board draw one); tapping its body still opens the recipe.
 - 2026-11-12 (merged with spec 053): the recipe menu's failed Save is a warn toast over the sheet, not an inline callout, as 053 made every failure a toast.
-- 2026-11-12 (after Gabriel's test): tuna steaks are bought by weight: the US "pack of 2 steaks" is gone, so the list shows pounds (per lb loose, or the 1 lb frozen bag when about a pound is needed). The unreleased catalog version 5 migration was regenerated in place.
+- 2026-11-12 (after Gabriel's test): tuna steaks are bought by weight: the US "pack of 2 steaks" is gone, so the list shows pounds (per lb loose; the 1 lb frozen bag was dropped too, so no tuna comes as frozen). The unreleased catalog version 5 migration was regenerated in place.

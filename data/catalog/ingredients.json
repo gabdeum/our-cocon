@@ -11479,13 +11479,8 @@
             "unit": "lb",
             "label": "per lb",
             "loose": true
-          },
-          {
-            "size": 1,
-            "unit": "lb",
-            "label": "1 lb frozen bag",
-            "loose": false
           }
+
         ],
         "eu": [
           {
