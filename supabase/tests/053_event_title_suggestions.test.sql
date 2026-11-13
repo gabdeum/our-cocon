@@ -1,5 +1,5 @@
 -- Spec 053 FR-002, FR-004: suggested event titles. Starts-with before a word match, used often and
--- lately first, one row per title and start time whatever its case; never someone else's private event, a surprise
+-- lately first, one row per title and part of the day whatever its case; never someone else's private event, a surprise
 -- (kept from the reader or not, nor its cover), a deleted event, another family's, or anything for an assistant.
 begin;
 select plan(14);
@@ -50,6 +50,9 @@ select pg_temp.ev('100% fun', current_date - 3);
 select public.save_event(jsonb_build_object('title', 'Gym', 'starts_on', current_date - 4, 'ends_on', current_date - 4, 'time_type', 'slot', 'slots', '{morning}'::text[]), '["everyone"]');
 select public.save_event(jsonb_build_object('title', 'Gym', 'starts_on', current_date - 5, 'ends_on', current_date - 5, 'time_type', 'slot', 'slots', '{lunch,morning}'::text[]), '["everyone"]');
 select public.save_event(jsonb_build_object('title', 'Gym', 'starts_on', current_date - 30, 'ends_on', current_date - 30, 'time_type', 'custom', 'start_time', '17:30', 'end_time', '18:30'), '["everyone"]');
+-- Custom times count as the slot they start in: 17:45 joins 17:30 (afternoon), 09:30 joins the mornings.
+select public.save_event(jsonb_build_object('title', 'Gym', 'starts_on', current_date - 40, 'ends_on', current_date - 40, 'time_type', 'custom', 'start_time', '17:45', 'end_time', '18:30'), '["everyone"]');
+select public.save_event(jsonb_build_object('title', 'gym', 'starts_on', current_date - 60, 'ends_on', current_date - 60, 'time_type', 'custom', 'start_time', '09:30', 'end_time', '10:30'), '["everyone"]');
 -- Gabriel's own surprise, kept from Eva: he's in on it, but it's never suggested.
 select public.save_event('{"title":"Swim cake for Eva","starts_on":"2026-11-01","ends_on":"2026-11-01","time_type":"all_day","visibility":"surprise"}', '["everyone"]', null,
   jsonb_build_object('hidden_from', jsonb_build_array((select id from public.members where user_id = '00000000-0000-0000-0000-00000000053c')), 'cover_title', 'Errands'));
@@ -67,7 +70,7 @@ select is(pg_temp.titles('sw'), array['Swim', 'Swimming party', 'Pool swim'],
   'starts-with first, the often and lately used one on top, one row whatever its case; then a word match');
 select is((select title from public.suggest_event_titles('SW') limit 1), 'Swim', 'the latest spelling of a title comes back');
 select is((select array_agg(coalesce(start_time, slots[1]) order by score desc) from public.suggest_event_titles('gym')), array['morning', '17:30'],
-  'one option per start time, the latest of each, used often first');
+  'one option per part of the day, from the latest of each, used often first');
 select is(pg_temp.titles('swim l'), '{}'::text[], 'never someone else''s private event');
 select is(pg_temp.titles('swim s'), '{}'::text[], 'never a surprise kept from the reader');
 select is(pg_temp.titles('swim g'), '{}'::text[], 'never a deleted event');
