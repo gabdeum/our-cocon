@@ -11,6 +11,7 @@ import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import { loadEvents, saveEvent } from '@cocon/data';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
 import { agendaWindow, layoutAgenda } from './calendar-agenda';
+import { isDayEvent } from './calendar-day';
 import { memberLook, monthOccurrences } from './calendar-month';
 import { familyApi } from './family';
 import type { Member } from './session';
@@ -64,7 +65,7 @@ describe.skipIf(!local)('agenda view against local Supabase', () => {
     const occurrences = monthOccurrences(await loadEvents(gabriel, from, to), from, to, g, new Set());
     const groups = layoutAgenda(from, to, occurrences, { today, now: '12:30', look: memberLook(members), slotTimes: DEFAULT_SLOT_TIMES, members });
 
-    expect(groups.map((d) => [d.heading, d.events.map((r) => [r.title, r.sub, r.tag?.label ?? null])])).toEqual([
+    expect(groups.map((d) => [d.heading, d.events.filter(isDayEvent).map((r) => [r.title, r.sub, r.tag?.label ?? null])])).toEqual([
       ['Today · Sun, Oct 25', [['Brunch', 'Lunch · Grandma’s house', 'Now']]],
       [
         'Tomorrow · Mon, Oct 26',

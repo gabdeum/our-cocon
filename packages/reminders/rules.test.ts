@@ -1,7 +1,7 @@
 import type { Recurrence } from '@cocon/schemas';
 import { ReminderDraft } from '@cocon/schemas';
 import { describe, expect, it } from 'vitest';
-import { ReminderError, catchUp, complete, draftToFields, invert, nextDueAfter, rolloverFor, snoozeOptions, snoozeUntil, toDraft, type ReminderTiming } from './rules';
+import { ReminderError, catchUp, complete, draftToFields, invert, nextDueAfter, repeatDatesBetween, rolloverFor, snoozeOptions, snoozeUntil, toDraft, type ReminderTiming } from './rules';
 
 // Paris: UTC+1 in winter, UTC+2 in summer (clocks change on 2026-10-25 and 2027-03-28).
 const tz = 'Europe/Paris';
@@ -167,6 +167,26 @@ describe('nextDueAfter', () => {
     const r: ReminderTiming = { due_at: '2028-02-29T09:00:00.000Z', has_time: true, repeat_rule: { freq: 'yearly', ends: { type: 'never' } }, repeat_from: '2028-02-29', snoozed_until: null };
     expect(nextDueAfter(r, r.due_at, 'UTC')).toBe('2032-02-29T09:00:00.000Z');
     expect(nextDueAfter({ ...r, repeat_rule: null, repeat_from: null }, r.due_at, 'UTC')).toBeNull();
+  });
+});
+
+describe('repeatDatesBetween (spec 058 FR-003)', () => {
+  it('draws the Mondays after the open one, across the clock change', () => {
+    // Open on Monday 2026-10-19; the clocks go back on Sunday 2026-10-25.
+    expect(repeatDatesBetween(mondays('2026-10-19T06:00:00Z'), '2026-10-15', '2026-11-10', tz)).toEqual(['2026-10-26', '2026-11-02', '2026-11-09']);
+  });
+
+  it('starts after a snooze ends, stops when the repeat does, and draws nothing for a one-off', () => {
+    const snoozed = mondays('2026-10-19T06:00:00Z', { snoozed_until: '2026-10-27T06:00:00Z' });
+    expect(repeatDatesBetween(snoozed, '2026-10-19', '2026-11-10', tz)).toEqual(['2026-11-02', '2026-11-09']);
+    const three = mondays('2026-10-05T06:00:00Z', { repeat_rule: { freq: 'weekly', ends: { type: 'after', count: 3 } } });
+    expect(repeatDatesBetween(three, '2026-10-01', '2026-12-31', tz)).toEqual(['2026-10-12', '2026-10-19']);
+    expect(repeatDatesBetween(mondays('2026-10-19T06:00:00Z', { repeat_rule: null, repeat_from: null }), '2026-10-01', '2026-12-31', tz)).toEqual([]);
+  });
+
+  it('works over more than a year at once', () => {
+    const monthly = mondays('2026-01-05T07:00:00Z', { repeat_rule: { freq: 'monthly', ends: { type: 'never' } }, repeat_from: '2026-01-05' });
+    expect(repeatDatesBetween(monthly, '2026-01-01', '2027-12-31', tz)).toHaveLength(23);
   });
 });
 

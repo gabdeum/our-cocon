@@ -95,6 +95,9 @@ import {
   TabHeader,
   Tag,
   EventListGroup,
+  DayReminderRow,
+  ReminderListRow,
+  TogglePill,
   EventListRow,
   WeekEventGroup,
   CalCard,
@@ -436,6 +439,36 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           </Text>
           <TimeField label="Time" value="15:00" onChange={noop} />
         </View>
+      </Section>
+
+      <Section group="Reminders" title="TogglePill, ReminderListRow, DayReminderRow (spec 058)">
+        <View className="flex-row gap-8">
+          <TogglePill label="Reminders" icon="check-square" selected onPress={noop} />
+          <TogglePill label="Reminders" icon="check-square" onPress={noop} />
+        </View>
+        <EventListGroup heading="Today · Wed, Nov 11">
+          <ReminderListRow
+            item={{ key: 'a', title: 'Water the plants', sub: 'Gabriel · was due Mon', late: '2d late', done: false, future: false, toggleLabel: 'Mark done: Water the plants', label: 'Water the plants' }}
+            onToggle={noop}
+            onOpen={noop}
+          />
+          <ReminderListRow
+            item={{ key: 'b', title: 'Book James’s check-up', sub: 'Done just now', late: null, done: true, future: false, toggleLabel: 'Mark not done: Book James’s check-up', label: 'Book James’s check-up' }}
+            onToggle={noop}
+            onOpen={noop}
+          />
+          <ReminderListRow
+            item={{ key: 'c', title: 'Take the bins out', sub: '20:00 · Gabriel', late: null, done: false, future: true, toggleLabel: 'Mark done: Take the bins out', label: 'Take the bins out' }}
+            onToggle={noop}
+            onOpen={noop}
+            last
+          />
+        </EventListGroup>
+        <DayReminderRow
+          item={{ key: 'd', title: 'Pay the daycare', sub: 'Any time · Eva', late: null, done: false, future: false, toggleLabel: 'Mark done: Pay the daycare', label: 'Pay the daycare' }}
+          onToggle={noop}
+          onOpen={noop}
+        />
       </Section>
 
       <Section group="Actions" title="Pill">

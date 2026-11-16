@@ -30,6 +30,9 @@ export const iconShapes = {
   "check": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><Path d="m5 12 5 5 9-10" /></Svg>
   ),
+  "check-square": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Rect x="4" y="4" width="16" height="16" rx="4" /><Path d="M8.5 12.5l2.5 2.5 4.5-5" /></Svg>
+  ),
   "chevron-down": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="m6 9 6 6 6-6" /></Svg>
   ),

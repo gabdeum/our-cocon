@@ -8,7 +8,8 @@ import { MONTH_ROW_HEIGHT } from '@cocon/ui';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { monthRange, weekIndexOf } from '../../lib/calendar-month';
 import { CalendarScreen, type CalendarScreenProps } from './CalendarScreen';
-import { fakeTracker, gabriel, mia } from '../../test/fakes';
+import { fakeTracker, gabriel, mia, placedReminder } from '../../test/fakes';
+import type { CalendarReminders } from '../../lib/calendar-reminders';
 import { expectAccessible } from '../../test/axe';
 
 // "Now" follows the real clock: pin it before every slot so labels don't depend on when tests run.
@@ -672,5 +673,72 @@ describe('Private and surprise events (spec 043)', () => {
     const row = screen.getByRole('link', { name: 'Eva’s surprise dinner, Eva, Evening · Café Lalo · hidden from Eva, Surprise' });
     fireEvent.click(row);
     expect(onOpenEvent).toHaveBeenCalledWith(dinner.id, '2026-10-22');
+  });
+});
+
+describe('Reminders in Agenda and Day (spec 058)', () => {
+  const today = '2026-10-25';
+  const weekly = placedReminder({
+    title: 'Take the bins out',
+    due_on: today,
+    due_at: '2026-10-25T19:00:00.000Z',
+    repeat_rule: { freq: 'weekly', ends: { type: 'never' } },
+    repeat_from: '2026-10-18',
+  });
+  const plants = placedReminder({ title: 'Water the plants', due_on: '2026-10-23', due_at: '2026-10-23T00:00:00.000Z', has_time: false, rollover: 'day', section: 'overdue', late_days: 2, late_hours: 48 });
+  const handlers = (): CalendarReminders => ({
+    rows: [weekly, plants],
+    ticked: new Map(),
+    gone: new Set(),
+    readOnly: false,
+    onTick: vi.fn(),
+    onUntick: vi.fn(),
+    onNotYet: vi.fn(),
+    onOpen: vi.fn(),
+  });
+  const box = (name: string) => screen.getAllByRole('checkbox', { name: `Mark done: ${name}` });
+
+  it('FR-001–FR-003: Agenda mixes them in, late ones first on Today; a later repeat says "Not yet"; a title opens the drawer', async () => {
+    const reminders = handlers();
+    await setup({ view: 'agenda', anchor: today, today, events: [], reminders });
+    const todayCard = screen.getByText('Today · Sun, Oct 25').nextElementSibling as HTMLElement;
+    expect(within(todayCard).getAllByRole('button', { name: /reminder/ }).map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Water the plants, reminder, Gabriel · was due Fri, 2d late',
+      'Take the bins out, reminder, 19:00 · Gabriel',
+    ]);
+    const [open] = box('Take the bins out');
+    fireEvent.click(open as HTMLElement);
+    expect(reminders.onTick).toHaveBeenCalledWith(weekly);
+    const [later] = screen.getAllByRole('checkbox', { name: 'Not yet: Take the bins out' });
+    fireEvent.click(later as HTMLElement);
+    expect(reminders.onNotYet).toHaveBeenCalledWith('2026-11-01');
+    expect(reminders.onTick).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: /^Water the plants, reminder/ }));
+    expect(reminders.onOpen).toHaveBeenCalledWith(plants);
+    await expectAccessible(document.body);
+  });
+
+  it('FR-004: the "Reminders" pill hides them, sends the event, and stays off for this person on this device', async () => {
+    const storage = memoryStorage();
+    const first = await setup({ view: 'agenda', anchor: today, today, events: [], reminders: handlers(), storage });
+    const pill = screen.getByRole('button', { name: 'Reminders' });
+    expect(pill.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(pill);
+    expect(screen.queryAllByRole('checkbox')).toEqual([]);
+    expect(first.tracker.track).toHaveBeenCalledWith('calendar_reminders_toggled', { on: false });
+    first.unmount();
+    await setup({ view: 'agenda', anchor: today, today, events: [], reminders: handlers(), storage });
+    expect(screen.getByRole('button', { name: 'Reminders' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.queryAllByRole('checkbox')).toEqual([]);
+  });
+
+  it('Day shows them even with the pill off: late ones under All day, timed ones in their band', async () => {
+    const storage = memoryStorage();
+    storage.data.set('cocon.calendar.reminders.u-gabriel', 'off');
+    await setup({ view: 'day', anchor: today, today, events: [], reminders: handlers(), storage });
+    expect(screen.queryByRole('button', { name: 'Reminders' })).toBeNull();
+    expect(box('Water the plants')).toHaveLength(1);
+    expect(box('Take the bins out')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: /Add in the evening/ })).toBeNull();
   });
 });

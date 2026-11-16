@@ -3,7 +3,7 @@ import { Pressable, View, type PressableProps } from 'react-native';
 import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarColor } from './Avatar';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
 interface ToggleProps extends Omit<PressableProps, 'children' | 'style'> {
@@ -28,6 +28,31 @@ export function Pill({ label, selected = false, className, ...props }: TogglePro
       {...props}
     >
       <Text size={14} weight={selected ? '800' : '700'} numberOfLines={1}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Toggle (Pill README › toggle): 44 tall, an icon and a word; olive when on, surface-soft when off.
+ * Shows or hides something on the screen, remembered (the calendar's "Reminders", spec 058).
+ */
+export function TogglePill({ label, selected = false, icon, className, ...props }: ToggleProps & { icon: IconName }) {
+  return (
+    <Pressable
+      role="button"
+      {...pressedState(selected)}
+      className={cn(
+        'h-control-md flex-row items-center gap-6 self-start rounded-pill px-14',
+        selected ? 'bg-olive active:bg-olive-pressed' : 'bg-surface-soft active:bg-surface-soft-pressed',
+        focusRing,
+        className,
+      )}
+      {...props}
+    >
+      <Icon name={icon} size={18} color={selected ? 'onOlive' : 'ink'} />
+      <Text size={15} weight={selected ? '900' : '700'} color={selected ? 'on-olive' : 'ink'} numberOfLines={1}>
         {label}
       </Text>
     </Pressable>

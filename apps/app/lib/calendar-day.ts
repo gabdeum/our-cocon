@@ -1,6 +1,7 @@
 import { SLOT_KEYS, type SlotKey } from '@cocon/schemas/calendar';
 import { calendarWordsEn, daysBetween, placeLine, slotAt, sortSlots, timeLabel, timeRange, toMinutes, weekday, type SlotTimes } from '@cocon/calendar';
-import type { DayAllDayItem, DayBand, DayEventItem, MemberChipColor } from '@cocon/ui';
+import type { DayAllDayItem, DayBand, DayBandItem, DayEventItem, DayReminderItem, MemberChipColor } from '@cocon/ui';
+import { compareDayRows, reminderOrder, type CalendarReminder } from './calendar-reminders';
 import { eventLook, longDate, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import type { Member } from './session';
 import { strings } from '../strings/en';
@@ -29,9 +30,13 @@ export interface DayBusyChip {
   color: MemberChipColor;
 }
 
+/** An event or a reminder in a band (spec 058). */
+export const isDayEvent = <T extends { kind?: 'event' | 'reminder' }>(x: T): x is Exclude<T, { kind: 'reminder' }> => x.kind !== 'reminder';
+
 export interface DayLayout {
   busy: DayBusyChip[];
-  allDay: DayAllDayItem[];
+  /** All-day events, and the reminders that are late or have no time (spec 058). */
+  allDay: ((DayAllDayItem & { kind?: 'event' }) | DayReminderItem)[];
   bands: (DayBand & { slot: SlotKey })[];
 }
 
@@ -46,17 +51,26 @@ export const dayName = (date: string) => strings.calendar.week.dayLabel(words.we
  * filter). FR-001 who's busy and how often; FR-002 the All day rows ("Day 2 of 3", "Birthday");
  * FR-003 the five bands with their events, each in the slot it starts in (`slotAt`), with the
  * time line, who takes whom and "Now"; FR-004 an add row in each empty band. An event the engine
- * can't read is left out.
+ * can't read is left out. Spec 058: the day's reminders (`placeReminders`), late and any-time ones
+ * after the all-day events, timed ones in their band among the events by time.
  */
-export function layoutDayView(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext): DayLayout {
+export function layoutDayView(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext, reminders: readonly CalendarReminder[] = []): DayLayout {
   const onDay = occurrences.filter((o) => o.starts_on <= date && o.ends_on >= date);
 
-  const allDay: DayAllDayItem[] = onDay.filter(inAllDay).map((o) => {
+  const allDayEvents: DayAllDayItem[] = onDay.filter(inAllDay).map((o) => {
     const tag = dayOf(o, date) ?? (isBirthday(o) ? d.birthday : null);
     return { key: occurrenceKey(o), title: o.title, tag, colors: eventLook(o.members, ctx.look).colors, label: d.allDayLabel(o.title, whoText(o.members, ctx.look), tag) };
   });
+  const onDayReminders = reminders.filter((x) => x.date === date);
+  const untimed = onDayReminders.filter((x) => x.overdue || !x.time);
+  const allDay = [
+    ...untimed.filter((x) => x.overdue).sort((a, b) => compareDayRows({ order: -2, reminder: a, title: a.row.title }, { order: -2, reminder: b, title: b.row.title })).map((x) => x.item),
+    ...allDayEvents,
+    ...untimed.filter((x) => !x.overdue).sort((a, b) => a.row.title.localeCompare(b.row.title)).map((x) => x.item),
+  ];
 
   const timed = timedRows(onDay, date, ctx);
+  const timedReminders = onDayReminders.filter((x) => !x.overdue && x.time);
 
   const bands = SLOT_KEYS.map((slot) => {
     const { start, end } = ctx.slotTimes[slot];
@@ -65,7 +79,12 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
       slot,
       title: words.slots[slot],
       hours: d.hours(clock(start, ctx.use24h ?? true), clock(end, ctx.use24h ?? true)),
-      events: timed.filter((t) => t.slot === slot).map((t) => t.item),
+      events: [
+        ...timed.filter((t) => t.slot === slot).map((t) => ({ order: toMinutes(t.range.start), title: t.o.title, item: t.item as DayBandItem })),
+        ...timedReminders.filter((x) => x.time && slotAt(x.time, ctx.slotTimes) === slot).map((x) => ({ order: reminderOrder(x), reminder: x, title: x.row.title, item: x.item as DayBandItem })),
+      ]
+        .sort(compareDayRows)
+        .map((x) => x.item),
       addText: d.addIn(d.bands[slot]),
       addLabel: d.addInLabel(d.bands[slot], dayName(date)),
     };

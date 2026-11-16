@@ -1,7 +1,8 @@
 import { addDays, dateLabel, placeLine, timeLabel, timeRange, toMinutes, type SlotTimes } from '@cocon/calendar';
-import type { EventListItem } from '@cocon/ui';
+import type { DayReminderItem, EventListItem } from '@cocon/ui';
 import { dayOf, driverLine, hiddenFromLine, inAllDay, isBirthday, isNow } from './calendar-day';
 import { eventLook, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
+import { compareDayRows, reminderOrder, type CalendarReminder } from './calendar-reminders';
 import type { Member } from './session';
 import { strings } from '../strings/en';
 
@@ -35,7 +36,8 @@ export interface AgendaGroup {
   date: string;
   /** "Today · Sun, Oct 25", "Tomorrow · Mon, Oct 26", "Tue, Oct 27". */
   heading: string;
-  events: EventListItem[];
+  /** Its events, and its reminders among them (spec 058). */
+  events: ((EventListItem & { kind?: 'event' }) | DayReminderItem)[];
 }
 
 /** "Today · Sun, Oct 25", "Tomorrow · Mon, Oct 26", then "Tue, Oct 27" (OC-CalAgenda). */
@@ -51,21 +53,25 @@ export function agendaHeading(date: string, today: string): string {
  * skipped, FR-001), the visible events (already through `viewFor` and the header's filter) as
  * rows: all-day and multi-day first, then by start. FR-002's sub-line is "{time} · {place or
  * driver}", and a row has at most one tag: "Now", "Surprise", "Day N of M" or "Birthday". An
- * event the engine can't read is left out.
+ * event the engine can't read is left out. Spec 058: the day's reminders among them
+ * (`placeReminders`): late ones first, then by time, any time with the all-day events.
  */
-export function layoutAgenda(from: string, to: string, occurrences: readonly MonthOccurrence[], ctx: AgendaContext): AgendaGroup[] {
+export function layoutAgenda(from: string, to: string, occurrences: readonly MonthOccurrence[], ctx: AgendaContext, reminders: readonly CalendarReminder[] = []): AgendaGroup[] {
   const groups: AgendaGroup[] = [];
   for (let date = from; date <= to; date = addDays(date, 1)) {
-    const rows = occurrences
-      .filter((o) => o.starts_on <= date && o.ends_on >= date)
-      .flatMap((o) => {
-        try {
-          return [agendaRow(o, date, ctx)];
-        } catch {
-          return [];
-        }
-      })
-      .sort((x, y) => x.order - y.order || x.item.title.localeCompare(y.item.title));
+    const rows = [
+      ...occurrences
+        .filter((o) => o.starts_on <= date && o.ends_on >= date)
+        .flatMap((o) => {
+          try {
+            const row = agendaRow(o, date, ctx);
+            return [{ order: row.order, title: row.item.title, item: row.item as AgendaGroup['events'][number] }];
+          } catch {
+            return [];
+          }
+        }),
+      ...reminders.filter((x) => x.date === date).map((x) => ({ order: reminderOrder(x), reminder: x, title: x.row.title, item: x.item })),
+    ].sort(compareDayRows);
     if (rows.length) groups.push({ date, heading: agendaHeading(date, ctx.today), events: rows.map((r) => r.item) });
   }
   return groups;

@@ -72,5 +72,12 @@ Written for the build (spec 057, not drawn):
 ## Agenda rows
 Reminder row = tick box (26 px, radius 8) in place of stripe + avatar; title 17/800; detail "{time or Any time} · {name}"; late badge on the right. Header pill "Reminders" with check-square icon: on = olive/white, off = cream.
 
+Written for the build (spec 058, not drawn):
+- The "Reminders" pill sits in its own row at the top of the agenda list (beside "Coming up" it doesn't fit the header at 390 px). Day always shows reminders.
+- A late reminder brought to today reads "{name} · was due {Mon}" ("was due yesterday", "was due Mon, Nov 2" from a week back), as on the screen.
+- Day view: late and any-time reminders are under "All day", after the all-day events (late ones first); timed ones in the band of their time among the events. A band with only reminders has no "+ Add in the …" row.
+- A later repeat's box, pressed before its day: the toast "Not yet: it's due Sat, Nov 14." Its screen-reader name is "Not yet: {title}".
+- Screen readers read a row as "{title}, reminder, {detail}, {late badge}".
+
 ## Lock Screen
 Order newest first. Titles: "In 1 hour: {title}", "Now: {title}", "Still to do: {title}". Long-press actions: "Done" · "In 1 hour" · "Tomorrow".

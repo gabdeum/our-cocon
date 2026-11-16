@@ -3,8 +3,9 @@ import { ScrollView, View } from 'react-native';
 import type { SlotKey } from '@cocon/schemas/calendar';
 import type { SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { AllDayRow, FloatingAdd, MemberCount, SlotBand, Swipeable, Text } from '@cocon/ui';
+import { AllDayRow, DayReminderRow, FloatingAdd, MemberCount, SlotBand, Swipeable, Text } from '@cocon/ui';
 import { layoutDayView } from '../../lib/calendar-day';
+import { placeForScreen, pressReminderBox, type CalendarReminders } from '../../lib/calendar-reminders';
 import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { useNow } from '../../lib/use-now';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
@@ -35,16 +36,30 @@ export interface DayViewProps {
   /** An empty band's "+ Add in the …". */
   onAddInSlot: (date: string, slot: SlotKey) => void;
   onOpenEvent: (id: string, date: string) => void;
+  /** Spec 058: the day's reminders, always shown (Agenda's pill doesn't hide them here). */
+  reminders?: CalendarReminders;
 }
 
-/** Spec 039 (OC-CalDay): who's busy, All day, and the five bands of one day, swiped left and right. */
-export function DayView({ members, myMemberId, events, slotTimes, hidden, date, today, timeZone, onSwipe, onAddEvent, onAddInSlot, onOpenEvent }: DayViewProps) {
+/** Spec 039 (OC-CalDay): who's busy, All day, and the five bands of one day, swiped left and right; 058 its reminders. */
+export function DayView({ members, myMemberId, events, slotTimes, hidden, date, today, timeZone, onSwipe, onAddEvent, onAddInSlot, onOpenEvent, reminders }: DayViewProps) {
   const now = useNow(timeZone);
   const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
   const { from, to } = eventWindow(firstOfMonth(date));
   const occurrences = useMemo(() => monthOccurrences(events ?? [], from, to, myMemberId, hidden), [events, from, to, myMemberId, hidden]);
-  const day = useMemo(() => layoutDayView(date, occurrences, { today, now, look, slotTimes, members, use24h }), [date, occurrences, today, now, look, slotTimes, members, use24h]);
+  const placed = useMemo(() => placeForScreen(reminders, { from: date, to: date, today, tz: timeZone, members, use24h, hidden }), [reminders, date, today, timeZone, members, use24h, hidden]);
+  const day = useMemo(
+    () => layoutDayView(date, occurrences, { today, now, look, slotTimes, members, use24h }, [...placed.values()]),
+    [date, occurrences, today, now, look, slotTimes, members, use24h, placed],
+  );
+  const toggleReminder = (key: string) => {
+    const x = placed.get(key);
+    if (x && reminders) pressReminderBox(x, reminders);
+  };
+  const openReminder = (key: string) => {
+    const x = placed.get(key);
+    if (x) reminders?.onOpen(x.row);
+  };
   const openEvent = (key: string) => {
     const { id, date: series } = parseOccurrenceKey(key);
     onOpenEvent(id, series);
@@ -66,13 +81,25 @@ export function DayView({ members, myMemberId, events, slotTimes, hidden, date, 
               <Text role="heading" size={18} weight="900">
                 {d.allDay}
               </Text>
-              {day.allDay.map((a) => (
-                <AllDayRow key={a.key} item={a} onPress={() => openEvent(a.key)} />
-              ))}
+              {day.allDay.map((a) =>
+                a.kind === 'reminder' ? (
+                  <DayReminderRow key={a.key} item={a} onToggle={() => toggleReminder(a.key)} onOpen={() => openReminder(a.key)} disabled={reminders?.readOnly} />
+                ) : (
+                  <AllDayRow key={a.key} item={a} onPress={() => openEvent(a.key)} />
+                ),
+              )}
             </View>
           ) : null}
           {day.bands.map((b) => (
-            <SlotBand key={b.key} band={b} onEventPress={openEvent} onAdd={() => onAddInSlot(date, b.slot)} />
+            <SlotBand
+              key={b.key}
+              band={b}
+              onEventPress={openEvent}
+              onAdd={() => onAddInSlot(date, b.slot)}
+              onReminderToggle={toggleReminder}
+              onReminderOpen={openReminder}
+              readOnly={reminders?.readOnly}
+            />
           ))}
         </ScrollView>
       </Swipeable>

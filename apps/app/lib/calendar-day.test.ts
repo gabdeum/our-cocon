@@ -5,7 +5,7 @@ import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { gabriel, james, mia } from '../test/fakes';
 import { memberLook, monthOccurrences } from './calendar-month';
-import { layoutDaySheet, layoutDayView, type DayViewContext } from './calendar-day';
+import { isDayEvent, layoutDaySheet, layoutDayView, type DayViewContext } from './calendar-day';
 
 const eva = { ...mia, id: 'm-eva', display_name: 'Eva', color: 'rose' as const };
 const members = [gabriel, eva, james];
@@ -47,8 +47,10 @@ function ev(fields: Partial<StoredEvent>): StoredEvent {
   };
 }
 
-const layout = (events: StoredEvent[], date = TODAY, viewer = gabriel.id, hidden: ReadonlySet<string> = new Set()) =>
-  layoutDayView(date, monthOccurrences(events, '2026-10-01', '2026-11-30', viewer, hidden), ctx);
+const layout = (events: StoredEvent[], date = TODAY, viewer = gabriel.id, hidden: ReadonlySet<string> = new Set()) => {
+  const day = layoutDayView(date, monthOccurrences(events, '2026-10-01', '2026-11-30', viewer, hidden), ctx);
+  return { ...day, allDay: day.allDay.filter(isDayEvent), bands: day.bands.map((b) => ({ ...b, events: b.events.filter(isDayEvent) })) };
+};
 
 // OC-CalDay's Sunday.
 const sunday = () => [

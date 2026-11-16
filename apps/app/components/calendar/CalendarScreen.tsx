@@ -10,6 +10,7 @@ import { useCalendarFilter } from '../../lib/calendar-filter';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { eventWindow, firstOfMonth } from '../../lib/calendar-month';
 import { eventOccurrence } from '../../lib/event-detail';
+import { useAgendaReminders, type CalendarReminders } from '../../lib/calendar-reminders';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
@@ -54,6 +55,8 @@ export interface CalendarScreenProps {
   onOpenEvent?: (id: string, date: string) => void;
   /** OC-CalMonth's first-visit hint (spec 037), kept in the member's settings (spec 029, L94). */
   monthHint?: { show: boolean; onDismiss: () => void };
+  /** Spec 058: reminders in Agenda and Day (the route loads them for the days `onEventWindow` asks for). */
+  reminders?: CalendarReminders;
 }
 
 const noop = () => undefined;
@@ -77,7 +80,10 @@ export function CalendarScreen({
   onOpenEvent: openEventPage = noop,
   monthHint = { show: false, onDismiss: noop },
   events: allEvents,
+  reminders,
 }: CalendarScreenProps) {
+  // FR-004: Agenda's "Reminders" pill, remembered per person on this device.
+  const [showReminders, setShowReminders] = useAgendaReminders(userId, storage);
   const { hidden, toggle, showAll } = useCalendarFilter(userId, storage);
   // "Show birthdays" off (spec 029): birthdays leave every view.
   const showBirthdays = useCalendarDisplay().prefs.show_birthdays;
@@ -254,6 +260,7 @@ export function CalendarScreen({
             tracker.track('calendar_slot_add_tapped', { slot });
           }}
           onOpenEvent={onOpenEvent}
+          reminders={reminders}
         />
       ) : null}
       {agenda ? (
@@ -272,6 +279,16 @@ export function CalendarScreen({
           onEventWindow={onEventWindow}
           onAddEvent={(date) => onAddEvent(date)}
           onOpenEvent={onOpenEvent}
+          reminders={reminders}
+          showReminders={showReminders}
+          onShowReminders={
+            reminders
+              ? (on) => {
+                  setShowReminders(on);
+                  tracker.track('calendar_reminders_toggled', { on });
+                }
+              : undefined
+          }
         />
       ) : null}
       {busy ? <BusySheet occurrence={busy} members={members} slotTimes={slotTimes} onClose={() => setBusy(null)} /> : null}

@@ -1582,6 +1582,21 @@ export const strings = {
       /** "Poker night, Gabriel, Evening · Café Lou, Now" (spec 030 FR-006). */
       rowLabel: (title: string, who: string, sub: string, tag: string | null) => [title, who, sub, ...(tag ? [tag] : [])].filter(Boolean).join(', '),
     },
+    /** design/ui/OC-Reminders.md › Agenda rows (spec 058): reminders among the events in Agenda and Day. */
+    reminders: {
+      toggle: 'Reminders',
+      /** "15:00 · Gabriel", "Any time · Eva". */
+      sub: (when: string, name: string) => `${when} · ${name}`,
+      /** A late one, on today: "Gabriel · was due Mon". */
+      lateSub: (name: string, wasDue: string) => `${name} · ${wasDue}`,
+      wasDueYesterday: 'was due yesterday',
+      /** A later repeat's box, pressed before its day. */
+      notYet: (date: string) => `Not yet: it's due ${date}.`,
+      /** A later repeat's box, for screen readers (it can't be ticked before its day). */
+      notYetLabel: (title: string) => `Not yet: ${title}`,
+      /** "Water the plants, reminder, Gabriel · was due Mon, 2d late". */
+      rowLabel: (title: string, sub: string, late: string | null) => [title, 'reminder', sub, ...(late ? [late] : [])].join(', '),
+    },
     /** design/ui/OC-CalAdd.md (spec 041): the add and edit sheet. */
     add: {
       titleNew: 'New event',

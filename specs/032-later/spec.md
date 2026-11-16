@@ -98,6 +98,8 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L149 | P2 | **The sheet's notification line uses everyone's defaults.** "Notifies {name} at …" (057 FR-006) says the viewer's clock (12/24 h) and quiet hours 22:00–07:00; 059 adds each person's quiet hours, and the line should use the recipient's. Its four sentences also simplify 059's nudges ("Next day" and "Next week" with a time say no follow-up; "Next week" without one says "each morning"). | 057 | 059 |
 | L150 | P3 | **"{n} more" on a section's "Show more", and "missed last week too" on rows.** OC-Reminders shows "Show more · 3 more" and a row detail "Was due Mon · missed last week too"; `reminders_section` returns pages without a total and rows without their missed count, so 057 shows "Show more" alone and no missed note on rows (the drawer has it). Return both from `_reminder_state`. | 057 | none |
 | L151 | P3 | **Repeats every N months.** OC-Reminders' samples say "Every 3 months" and "Every month on the 12th"; `Recurrence` (spec 034) has no interval, so Custom offers the event repeats (day, week, 2 weeks, month, year) and a monthly one reads "Every month". | 057 | none |
+| L152 | P3 | **Reminders in Month and Week.** 058 FR-005 leaves them out; say if you want a small count per day there (058's Needs your attention). | 058 | none |
+| L153 | P3 | **Reminders past a year ahead in Agenda.** `reminders_in_range` takes at most 366 days, so Agenda pages loaded more than a year past the day it starts on show events only. Load reminders per page when someone scrolls that far. | 058 | none |
 
 ## Changelog
 - 2026-10-19: Created. Seeded with the open items from the Needs your attention sections of 003, 004 and 006.
@@ -164,3 +166,4 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 - 2026-11-12 (054): did L46 (share and invite links open in the iPhone app). Added L143 (Smart App Banner).
 - 2026-11-16 (056): no tasks named 056. Added L144 (reminders in the activity feed, 060), L145 (time the lists on staging, 057), L146 (the notifier's catch-up and `reminder_missed`, 059) and L147 (reminders in Recently deleted, 057).
 - 2026-11-16 (057): did L147 (reminders in Recently deleted); L145 can't be checked locally, now Do with none. Added L148 (open a reminder not on the first pages, 059), L149 (the sheet's notification line, 059), L150 (section counts and missed notes on rows) and L151 (repeats every N months).
+- 2026-11-16 (058): no tasks named 058. Added L152 (reminders in Month and Week) and L153 (Agenda's reminders past a year).

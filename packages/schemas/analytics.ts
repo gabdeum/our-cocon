@@ -200,6 +200,8 @@ export const events = {
   calendar_viewed: z.strictObject({ view: CalendarView, entry: z.enum(['nav', 'homepage']) }),
   calendar_view_changed: z.strictObject({ from: CalendarView, to: CalendarView }),
   calendar_member_filter_changed: z.strictObject({ members_visible: z.int().min(0) }),
+  // Spec 058: Agenda's "Reminders" pill turned on or off.
+  calendar_reminders_toggled: z.strictObject({ on: z.boolean() }),
   // Spec 037: a day opened from a view (Week since 038; Month until its day sheet, 2026-11-02),
   // a month day's sheet opened (how many events it lists, never which), and the month's
   // first-visit hint dismissed.

@@ -10,7 +10,7 @@ import type { Database } from '@cocon/schemas';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import { loadEvents, saveEvent } from '@cocon/data';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
-import { layoutDayView } from './calendar-day';
+import { isDayEvent, layoutDayView } from './calendar-day';
 import { eventWindow, memberLook, monthOccurrences } from './calendar-month';
 import { familyApi } from './family';
 import type { Member } from './session';
@@ -64,8 +64,8 @@ describe.skipIf(!local)('day view against local Supabase', () => {
     const view = layoutDayView(day, occurrences, { today: day, now: '15:00', look: memberLook(members), slotTimes: DEFAULT_SLOT_TIMES, members });
 
     expect(view.busy.map((c) => c.text)).toEqual(['Eva 2', 'James 1', 'Everyone 1']);
-    expect(view.allDay.map((a) => [a.title, a.tag])).toEqual([['Lyon trip', 'Day 2 of 3']]);
-    expect(view.bands.map((b) => b.events.map((r) => [r.title, r.time, r.driver, r.nowText]))).toEqual([
+    expect(view.allDay.filter(isDayEvent).map((a) => [a.title, a.tag])).toEqual([['Lyon trip', 'Day 2 of 3']]);
+    expect(view.bands.map((b) => b.events.filter(isDayEvent).map((r) => [r.title, r.time, r.driver, r.nowText]))).toEqual([
       [],
       [['Busy', '10:00', null, null]],
       [['Brunch', 'Lunch · Grandma’s house', null, null]],

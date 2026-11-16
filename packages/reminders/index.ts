@@ -5,6 +5,7 @@ export {
   draftToFields,
   invert,
   nextDueAfter,
+  repeatDatesBetween,
   rolloverFor,
   snoozeOptions,
   snoozeUntil,
