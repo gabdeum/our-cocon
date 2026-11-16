@@ -33,7 +33,7 @@ export interface WeekDayHead {
   /** "Sunday October 25". */
   label: string;
   today: boolean;
-  /** Reminders are due that day: a check-square the number's size beside it (spec 058). */
+  /** Reminders are due that day: an alarm clock the number's size beside it (spec 058). */
   reminders?: boolean;
 }
 
@@ -129,7 +129,7 @@ function DayHead({ day, onPress }: { day: WeekDayHead; onPress: () => void }) {
             {day.num}
           </Text>
         )}
-        {day.reminders ? <Icon name="check-square" size={15} color="olive" /> : null}
+        {day.reminders ? <Icon name="alarm" size={15} color="olive" /> : null}
       </View>
     </Pressable>
   );

@@ -45,7 +45,7 @@ export function DaySheet({ date, occurrences, ctx, timeZone, hidden, reminders, 
       closeLabel={s.close}
       headerAction={
         <View className="flex-row gap-8">
-          {reminders ? <TogglePill label={strings.calendar.reminders.toggle} icon="check-square" selected={showReminders} onPress={() => onShowReminders(!showReminders)} /> : null}
+          {reminders ? <TogglePill label={strings.calendar.reminders.toggle} icon="alarm" selected={showReminders} onPress={() => onShowReminders(!showReminders)} /> : null}
           <IconButton variant="soft" icon="close" label={s.close} onPress={onClose} />
         </View>
       }

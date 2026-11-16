@@ -443,8 +443,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
 
       <Section group="Reminders" title="TogglePill, ReminderListRow, DayReminderRow (spec 058)">
         <View className="flex-row gap-8">
-          <TogglePill label="Reminders" icon="check-square" selected onPress={noop} />
-          <TogglePill label="Reminders" icon="check-square" onPress={noop} />
+          <TogglePill label="Reminders" icon="alarm" selected onPress={noop} />
+          <TogglePill label="Reminders" icon="alarm" onPress={noop} />
         </View>
         <EventListGroup heading="Today · Wed, Nov 11">
           <ReminderListRow

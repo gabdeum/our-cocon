@@ -30,7 +30,7 @@ export interface MonthCell {
   items: MonthCellItem[];
   /** "+2", or null. */
   more: string | null;
-  /** Reminders are due that day: a check-square the date's size beside it (spec 058). */
+  /** Reminders are due that day: an alarm clock the date's size beside it (spec 058). */
   reminders?: boolean;
 }
 
@@ -79,9 +79,9 @@ export interface MonthGridProps {
 const clipOnWeb = (Platform.OS === 'web' ? { textOverflow: 'clip' } : {}) as TextStyle;
 
 function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
-  const mark = cell.reminders ? <Icon name="check-square" size={11} color={muted ? 'inkMuted' : 'olive'} /> : null;
+  const mark = cell.reminders ? <Icon name="alarm" size={11} color={muted ? 'inkMuted' : 'olive'} /> : null;
   // MonthGrid README › Date: an 18 px row. Today is an olive circle; the 1st an ink pill "Nov 1"
-  // (olive when the 1st is today), clipped with no "…". A day with reminders adds an 11 px check-square.
+  // (olive when the 1st is today), clipped with no "…". A day with reminders adds an 11 px alarm clock.
   if (cell.first || cell.today) {
     return (
       <View className="h-[18px] max-w-full flex-row items-center gap-[2px] self-start">

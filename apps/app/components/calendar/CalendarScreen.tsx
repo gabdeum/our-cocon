@@ -195,7 +195,7 @@ export function CalendarScreen({
         filterLabel={h.filterLabel}
         showAllLabel={h.showAll}
         closeLabel={h.close}
-        toggle={reminders && listView ? { label: strings.calendar.reminders.toggle, icon: 'check-square', pressed: showReminders, onPress: () => onShowReminders(!showReminders) } : undefined}
+        toggle={reminders && listView ? { label: strings.calendar.reminders.toggle, icon: 'alarm', pressed: showReminders, onPress: () => onShowReminders(!showReminders) } : undefined}
         arrows={!(reminders && listView)}
       />
       <View className="px-20">

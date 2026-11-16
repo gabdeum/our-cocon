@@ -6,6 +6,9 @@ import { Svg, Circle, Path, Rect } from 'react-native-svg';
 type Draw = (props: { size: number; color: string }) => ReactElement;
 
 export const iconShapes = {
+  "alarm": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Circle cx="12" cy="13" r="7.5" /><Path d="M12 9.5V13l2.5 1.5M4 6.5 6.5 4M20 6.5 17.5 4M7 19.5 5.5 21M17 19.5l1.5 1.5" /></Svg>
+  ),
   "back": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="m15 18-6-6 6-6" /></Svg>
   ),
@@ -29,9 +32,6 @@ export const iconShapes = {
   ),
   "check": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><Path d="m5 12 5 5 9-10" /></Svg>
-  ),
-  "check-square": ({ size, color }) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Rect x="4" y="4" width="16" height="16" rx="4" /><Path d="M8.5 12.5l2.5 2.5 4.5-5" /></Svg>
   ),
   "chevron-down": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="m6 9 6 6 6-6" /></Svg>
