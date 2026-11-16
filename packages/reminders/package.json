@@ -1,0 +1,19 @@
+{
+  "name": "@cocon/reminders",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false",
+    "coverage": "vitest run --coverage.enabled --coverage.provider=v8 --coverage.include=\"*.ts\" --coverage.exclude=\"*.test.ts\" --coverage.exclude=vitest.config.ts --coverage.exclude=index.ts --coverage.thresholds.lines=100 --coverage.reporter=text-summary"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "5.0.4"
+  },
+  "dependencies": {
+    "@cocon/calendar": "workspace:*",
+    "@cocon/schemas": "workspace:*"
+  }
+}

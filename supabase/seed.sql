@@ -319,3 +319,34 @@ values
   ('c0c0f000-0000-4000-8000-000000000001', 'c0c0d000-0000-4000-8000-000000000001', 0, 'Water bottle', 'c0c0a000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a'),
   ('c0c0f000-0000-4000-8000-000000000001', 'c0c0d000-0000-4000-8000-000000000001', 1, 'Shin pads', 'c0c0a000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a'),
   ('c0c0f000-0000-4000-8000-000000000001', 'c0c0d000-0000-4000-8000-000000000003', 0, 'Cake', 'c0c0a000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a');
+
+-- Spec 056: reminders, placed from today in Paris. Bins every week, last one missed and this
+-- one 2 days late; the daycare today at 15:00; the plants today, any time; the dentist tomorrow;
+-- James's passport snoozed until tomorrow; the rent monthly, in 10 days.
+insert into public.reminders (id, family_id, title, notes, assignee_id, due_at, has_time, repeat_rule, repeat_from, next_due_at, rollover, snoozed_until,
+  created_by, updated_by, source)
+select r.id::uuid, 'c0c0f000-0000-4000-8000-000000000001', r.title, r.notes, r.assignee::uuid,
+  (d.today + r.due_day + r.at)::timestamp at time zone 'Europe/Paris', r.has_time, r.rule::jsonb, d.today + r.from_day,
+  case when r.next_day is not null then (d.today + r.next_day + r.at)::timestamp at time zone 'Europe/Paris' end,
+  r.rollover, case when r.snooze_day is not null then (d.today + r.snooze_day)::timestamp at time zone 'Europe/Paris' end,
+  r.author::uuid, r.author::uuid, r.source::public.write_source
+from (select (now() at time zone 'Europe/Paris')::date as today) d, (values
+  ('c0c0e000-0000-4000-8000-000000000001', 'Put the bins out', null, 'c0c0b000-0000-4000-8000-00000000000a', -2, time '00:00', false,
+    '{"freq":"weekly","ends":{"type":"never"}}', -9, 5, 'day', null, 'c0c0a000-0000-4000-8000-00000000000a', 'app'),
+  ('c0c0e000-0000-4000-8000-000000000002', 'Pay the daycare', E'Transfer before 18:00.\nReference: November', null, 0, time '15:00', true,
+    null, null, null, 'hour', null, 'c0c0a000-0000-4000-8000-00000000000a', 'app'),
+  ('c0c0e000-0000-4000-8000-000000000003', 'Water the plants', null, 'c0c0b000-0000-4000-8000-00000000000c', 0, time '00:00', false,
+    null, null, null, 'day', null, 'c0c0a000-0000-4000-8000-00000000000c', 'app'),
+  ('c0c0e000-0000-4000-8000-000000000004', 'Call the dentist', 'Ask about the retainer', 'c0c0b000-0000-4000-8000-00000000000b', 1, time '09:00', true,
+    null, null, null, 'hour', null, 'c0c0a000-0000-4000-8000-00000000000b', 'claude'),
+  ('c0c0e000-0000-4000-8000-000000000005', 'Renew James''s passport', null, 'c0c0b000-0000-4000-8000-00000000000a', -1, time '00:00', false,
+    null, null, null, 'week', 1, 'c0c0a000-0000-4000-8000-00000000000a', 'app'),
+  ('c0c0e000-0000-4000-8000-000000000006', 'Pay the rent', null, null, 10, time '00:00', false,
+    '{"freq":"monthly","ends":{"type":"never"}}', 10, null, 'day', null, 'c0c0a000-0000-4000-8000-00000000000a', 'app')
+) as r (id, title, notes, assignee, due_day, at, has_time, rule, from_day, next_day, rollover, snooze_day, author, source);
+-- The rent's next date is a month on (an `@cocon/reminders` write sets it from then on).
+update public.reminders set next_due_at = (due_at at time zone 'Europe/Paris' + interval '1 month') at time zone 'Europe/Paris'
+  where id = 'c0c0e000-0000-4000-8000-000000000006';
+insert into public.reminder_occurrences (family_id, reminder_id, due_at, status, created_by, updated_by)
+select family_id, id, (repeat_from::timestamp) at time zone 'Europe/Paris', 'missed', created_by, created_by
+from public.reminders where id = 'c0c0e000-0000-4000-8000-000000000001';

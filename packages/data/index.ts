@@ -10,4 +10,5 @@ export { loadAiPermissions, setAiPermission } from './ai-permissions';
 export { disconnectAssistant, groupAssistants, loadAssistants, type AssistantConnection, type AssistantConnections } from './ai-connections';
 export * from './events';
 export * from './event-changes';
+export * from './reminders';
 export { loadMemberCalendarSettings, saveMemberCalendarSettings, setHomeTimeZone, setSlotTimes } from './calendar-settings';

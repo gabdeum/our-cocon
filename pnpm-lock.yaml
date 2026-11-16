@@ -442,6 +442,9 @@ importers:
       '@cocon/quantity':
         specifier: workspace:*
         version: link:../quantity
+      '@cocon/reminders':
+        specifier: workspace:*
+        version: link:../reminders
       '@cocon/schemas':
         specifier: workspace:*
         version: link:../schemas
@@ -465,6 +468,19 @@ importers:
 
   packages/quantity:
     dependencies:
+      '@cocon/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: 5.0.4
+        version: 5.0.4(vitest@5.0.4)
+
+  packages/reminders:
+    dependencies:
+      '@cocon/calendar':
+        specifier: workspace:*
+        version: link:../calendar
       '@cocon/schemas':
         specifier: workspace:*
         version: link:../schemas

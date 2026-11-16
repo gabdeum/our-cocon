@@ -4,6 +4,7 @@ import { CalendarView, DefaultReminder, Reminder, SlotKey, TimeType, Visibility 
 import { AiPermission, CookingSetting, MemberColor, SignInMethod } from './family';
 import { NotificationKind } from './notifications';
 import { FilterKey } from './recipe-filters';
+import { ReminderActionSource, ReminderSnoozeOption } from './reminders';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
 
 // The converter's units (spec 013, `@cocon/quantity` CONVERTER_UNITS), and its result tiles' units.
@@ -271,6 +272,11 @@ export const events = {
   timer_live_activity_action: z.strictObject({ action: z.enum(['add_minute', 'remove_minute', 'pause', 'resume', 'stop', 'dismiss']) }),
   // Spec 049 (server, the notifier): one event's reminder went out for one date, to this many members.
   event_reminder_sent: z.strictObject({ kind: Reminder.exclude(['none']), recipients: z.int().min(1).max(1000) }),
+  // Spec 056: a reminder ticked off (how many whole days late), or snoozed, and from where; and,
+  // from the server, an occurrence nobody ticked before the next one came round.
+  reminder_completed: z.strictObject({ repeating: z.boolean(), late_days: z.int().min(0).max(3660), source: ReminderActionSource }),
+  reminder_snoozed: z.strictObject({ option: ReminderSnoozeOption, source: ReminderActionSource }),
+  reminder_missed: z.strictObject({}),
 } as const;
 
 export type EventName = keyof typeof events;

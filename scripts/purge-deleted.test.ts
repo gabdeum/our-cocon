@@ -77,6 +77,14 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
       [familyId],
     );
     await db.query("insert into public.event_exceptions (family_id, event_id, occurrence_date, cancelled) select family_id, id, starts_on, true from public.events where family_id = $1", [familyId]);
+    // Spec 056: a reminder deleted 31 days ago, with its history, and one deleted yesterday.
+    await db.query(
+      `insert into public.reminders (family_id, title, due_at, has_time, rollover, deleted_at) values
+         ($1, 'Old bins', now(), true, 'day', now() - interval '31 days'),
+         ($1, 'Recent bins', now(), true, 'day', now() - interval '1 day')`,
+      [familyId],
+    );
+    await db.query("insert into public.reminder_occurrences (family_id, reminder_id, due_at, status) select family_id, id, due_at - interval '7 days', 'done' from public.reminders where family_id = $1", [familyId]);
     // Spec 049 (L118): sends and reminder deliveries 91 days and 1 day old.
     const member = await db.query<{ id: string }>("insert into public.members (family_id, role, display_name, color) values ($1, 'editor', 'James', 'sky') returning id", [familyId]);
     await db.query(
@@ -138,6 +146,13 @@ describe.skipIf(!local)('the nightly purge against local Supabase', () => {
     expect(rows).toEqual([{ title: 'Recent swim' }]);
     const exceptions = await db.query('select 1 from public.event_exceptions where family_id = $1', [familyId]);
     expect(exceptions.rowCount).toBe(1);
+  });
+
+  it('removes reminders deleted more than 30 days ago, with their history (spec 056)', async () => {
+    const { rows } = await db.query<{ title: string }>('select title from public.reminders where family_id = $1', [familyId]);
+    expect(rows).toEqual([{ title: 'Recent bins' }]);
+    const history = await db.query('select 1 from public.reminder_occurrences where family_id = $1', [familyId]);
+    expect(history.rowCount).toBe(1);
   });
 
   it('removes notification records over 90 days old (spec 049, 032-later L118)', async () => {
