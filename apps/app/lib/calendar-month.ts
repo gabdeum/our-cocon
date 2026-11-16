@@ -187,6 +187,8 @@ export interface WeekContext {
   slotTimes: SlotTimes;
   /** FR-003: initials on the chips (window 430 px wide or more). */
   initials: boolean;
+  /** Spec 058: how many reminders show on each day (none while they're hidden). */
+  reminders?: ReadonlyMap<string, number>;
 }
 
 /**
@@ -262,7 +264,11 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
     const total = singles.length + covering.length;
     return {
       date,
-      label: m.dayLabel(longDate(date), [...covering.map((s) => withPeople(s.o, ctx.look)), ...singles.map((o) => withPeople(o, ctx.look))]),
+      label: strings.calendar.reminders.withCount(
+        m.dayLabel(longDate(date), [...covering.map((s) => withPeople(s.o, ctx.look)), ...singles.map((o) => withPeople(o, ctx.look))]),
+        ctx.reminders?.get(date) ?? 0,
+      ),
+      reminders: (ctx.reminders?.get(date) ?? 0) > 0,
       dateText: day === 1 ? m.firstOfMonth(words.monthsShort[month - 1] ?? '') : String(day),
       first: day === 1,
       today: date === ctx.today,

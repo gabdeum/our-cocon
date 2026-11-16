@@ -20,8 +20,7 @@ Screen: `design/screens/OC-CalAgendaReminders.dc.html`. Only the reminder rows a
 | `calendar_reminders_toggled` | on |
 
 ## Needs your attention
-- Month/Week don't show reminders yet. Say if you want a small count per day there (032-later L152).
-- The "Reminders" pill is in its own row at the top of the agenda list, and Day always shows reminders (Gabriel, 2026-11-16).
+- None. Gabriel chose the toggle's place, the marks in Month and Week, and Week's day sheet (2026-11-16).
 
 ## Changelog
 - 2026-11-15: Ready.
@@ -31,3 +30,11 @@ Screen: `design/screens/OC-CalAgendaReminders.dc.html`. Only the reminder rows a
   - On the web a pressable box can't be marked `aria-disabled`, so a later repeat's box is named "Not yet: {title}" (half opacity) instead.
   - Reminders load for at most 366 days from where Agenda starts (L153).
   - Any-time reminders come before the day's timed rows, as FR-001 says; the screen's Tomorrow sample draws "Pay the daycare" after a 06:30 run.
+- 2026-11-16: Changed after Gabriel's review (FR-004 and FR-005 differ from the text above):
+  - The toggle is a round icon button (`check-square`, still named "Reminders"), olive when on. In Agenda and Day it's in the header's second row after the people button, where ‹ › were (the row can't hold both at 390 px; Day swipes, Agenda scrolls and has Today). Day now follows it too.
+  - Month and Week (was FR-005, not in this version): days with reminders get a `check-square` the size of the date number (11 px in Month, 15 in Week), and the day's label says "2 reminders". No toggle in their header.
+  - The day sheet lists the day's reminders among its events (Agenda's order; "2 events · 1 reminder"), with the toggle left of ✕. Week now opens the same sheet on a tap (it opened Day view, spec 038), so it sends `calendar_day_sheet_opened` instead of `calendar_day_opened`.
+  - The icon stays `check-square`: reminders are ticked off, and the bell already means an event's reminder (Home's calendar card, the event page).
+  - Reminders load from at most half a year back (only "Leave it" ones show before today).
+  - Without ‹ ›, Day and Agenda page with ← → on the web and with "Previous day" / "Next day" ("… week" in Agenda) as VoiceOver actions on the header title (Gabriel chose this over keeping ‹ › in Day). Web screen readers in browse mode don't pass ← → through, so for them Day changes only through Today or Month and Week's day sheets.
+  - `calendar_day_sheet_opened` still counts events only. `calendar_reminders_toggled` is sent from the header and from the day sheet alike (`on` only).

@@ -205,6 +205,7 @@ export const events = {
   // Spec 037: a day opened from a view (Week since 038; Month until its day sheet, 2026-11-02),
   // a month day's sheet opened (how many events it lists, never which), and the month's
   // first-visit hint dismissed.
+  // Not sent since 058 (Week's tap opens the day sheet); kept so past data still reads.
   calendar_day_opened: z.strictObject({ from_view: CalendarView }),
   calendar_day_sheet_opened: z.strictObject({ events: z.int().min(0) }),
   calendar_first_hint_dismissed: z.strictObject({}),

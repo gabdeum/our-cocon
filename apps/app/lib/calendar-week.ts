@@ -29,6 +29,8 @@ export interface WeekGridContext {
   now: string;
   /** The member's Time format (spec 029); 24-hour when not given. */
   use24h?: boolean;
+  /** Spec 058: how many reminders show on each day (none while they're hidden). */
+  reminders?: ReadonlyMap<string, number>;
 }
 
 export type WeekGrid = Pick<HourGridProps, 'days' | 'bars' | 'columns' | 'hourLabels' | 'nowY'>;
@@ -56,8 +58,9 @@ export function layoutWeekGrid(anchor: string, occurrences: readonly MonthOccurr
     date,
     letter: letters[i] ?? '',
     num: String(parts(date).day),
-    label: w.dayLabel(dayName(date), longDate(date)),
+    label: strings.calendar.reminders.withCount(w.dayLabel(dayName(date), longDate(date)), ctx.reminders?.get(date) ?? 0),
     today: date === ctx.today,
+    reminders: (ctx.reminders?.get(date) ?? 0) > 0,
   }));
 
   const spans = inWeek.filter(inAllDayRow).map((o) => ({ o, from: o.starts_on < start ? start : o.starts_on, to: o.ends_on > end ? end : o.ends_on }));

@@ -15,6 +15,7 @@ import {
   type EventBarProps,
   type EventColor,
 } from "./EventChip";
+import { Icon } from "./Icon";
 import { Text } from "./Text";
 
 /** HourGrid README › Grid: 06:00–24:00, 36 px per hour. */
@@ -32,6 +33,8 @@ export interface WeekDayHead {
   /** "Sunday October 25". */
   label: string;
   today: boolean;
+  /** Reminders are due that day: a check-square the number's size beside it (spec 058). */
+  reminders?: boolean;
 }
 
 export type WeekAllDayBar = Omit<EventBarProps, "onPress" | "size"> & {
@@ -114,19 +117,20 @@ function DayHead({ day, onPress }: { day: WeekDayHead; onPress: () => void }) {
       <Text size={12} weight="900" color="ink-muted">
         {day.letter}
       </Text>
-      {day.today ? (
-        <View className="h-[28px] w-[28px] items-center justify-center rounded-full bg-olive">
-          <Text size={15} weight="900" color="on-olive">
-            {day.num}
-          </Text>
-        </View>
-      ) : (
-        <View className="h-[28px] justify-center">
+      <View className="h-[28px] flex-row items-center gap-[1px]">
+        {day.today ? (
+          <View className="h-[28px] w-[28px] items-center justify-center rounded-full bg-olive">
+            <Text size={15} weight="900" color="on-olive">
+              {day.num}
+            </Text>
+          </View>
+        ) : (
           <Text size={15} weight="800">
             {day.num}
           </Text>
-        </View>
-      )}
+        )}
+        {day.reminders ? <Icon name="check-square" size={15} color="olive" /> : null}
+      </View>
     </Pressable>
   );
 }

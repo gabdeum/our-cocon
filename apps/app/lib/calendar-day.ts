@@ -113,18 +113,20 @@ function timedRows(onDay: readonly MonthOccurrence[], date: string, ctx: DayView
 export interface DaySheet {
   /** "Sunday, October 25". */
   title: string;
-  /** "3 events", "1 event", "Nothing planned". */
+  /** "3 events", "1 event", "Nothing planned"; with reminders "2 events · 1 reminder", "1 reminder". */
   count: string;
-  rows: DayEventItem[];
+  /** Its events, and its reminders among them (spec 058). */
+  rows: DayBandItem[];
   /** "Add event on Sunday, October 25". */
   addLabel: string;
 }
 
 /**
  * Spec 037 FR-009: the month's day sheet. The day view's event rows, all-day and multi-day events
- * first ("All day", "All day · day 2 of 4"), then the rest by time.
+ * first ("All day", "All day · day 2 of 4"), then the rest by time. Spec 058: the day's reminders
+ * among them, in Agenda's order (late first, any time with the all-day events, then by time).
  */
-export function layoutDaySheet(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext): DaySheet {
+export function layoutDaySheet(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext, reminders: readonly CalendarReminder[] = []): DaySheet {
   const s = strings.calendar.month.sheet;
   const onDay = occurrences.filter((o) => o.starts_on <= date && o.ends_on >= date);
   const allDay = onDay
@@ -136,9 +138,17 @@ export function layoutDaySheet(date: string, occurrences: readonly MonthOccurren
       const time = span ? d.at(words.allDay, span.toLowerCase()) : words.allDay;
       return { key: occurrenceKey(o), title: o.title, time, driver: null, nowText: null, initials, colors, label: d.rowLabel([o.title, whoText(o.members, ctx.look), time], false) };
     });
-  const rows = [...allDay, ...timedRows(onDay, date, ctx).map((t) => t.item)];
+  const events = [...allDay.map((item) => ({ order: -1, title: item.title, item: item as DayBandItem })), ...timedRows(onDay, date, ctx).map((t) => ({ order: toMinutes(t.range.start), title: t.o.title, item: t.item as DayBandItem }))];
+  const onDayReminders = reminders.filter((x) => x.date === date);
+  // Stable: events keep their own order (all day by start date) where the times tie.
+  const rows = [...events, ...onDayReminders.map((x) => ({ order: reminderOrder(x), reminder: x, title: x.row.title, item: x.item as DayBandItem }))].sort((a, b) =>
+    'reminder' in a || 'reminder' in b ? compareDayRows(a, b) : a.order - b.order,
+  );
   const title = s.title(words.weekdays[weekday(date)] ?? '', longDate(date));
-  return { title, count: s.count(rows.length), rows, addLabel: s.addLabel(title) };
+  const count = onDayReminders.length
+    ? strings.calendar.reminders.sheetCount(events.length ? s.count(events.length) : null, strings.calendar.reminders.count(onDayReminders.length))
+    : s.count(events.length);
+  return { title, count, rows: rows.map((r) => r.item), addLabel: s.addLabel(title) };
 }
 
 function eventRow(o: MonthOccurrence, range: { start: string; end: string }, date: string, ctx: DayViewContext): DayEventItem {

@@ -35,26 +35,25 @@ export function Pill({ label, selected = false, className, ...props }: TogglePro
 }
 
 /**
- * Toggle (Pill README › toggle): 44 tall, an icon and a word; olive when on, surface-soft when off.
- * Shows or hides something on the screen, remembered (the calendar's "Reminders", spec 058).
+ * Toggle (Pill README › toggle): a round 44 icon button that shows or hides something, remembered;
+ * olive when on, white when off. `label` names it for screen readers (the calendar's "Reminders",
+ * spec 058).
  */
 export function TogglePill({ label, selected = false, icon, className, ...props }: ToggleProps & { icon: IconName }) {
   return (
     <Pressable
       role="button"
+      aria-label={label}
       {...pressedState(selected)}
       className={cn(
-        'h-control-md flex-row items-center gap-6 self-start rounded-pill px-14',
-        selected ? 'bg-olive active:bg-olive-pressed' : 'bg-surface-soft active:bg-surface-soft-pressed',
+        'h-control-md w-[44px] flex-none items-center justify-center rounded-pill',
+        selected ? 'bg-olive active:bg-olive-pressed' : 'bg-surface-card active:bg-surface-card-pressed',
         focusRing,
         className,
       )}
       {...props}
     >
-      <Icon name={icon} size={18} color={selected ? 'onOlive' : 'ink'} />
-      <Text size={15} weight={selected ? '900' : '700'} color={selected ? 'on-olive' : 'ink'} numberOfLines={1}>
-        {label}
-      </Text>
+      <Icon name={icon} size={20} color={selected ? 'onOlive' : 'ink'} />
     </Pressable>
   );
 }

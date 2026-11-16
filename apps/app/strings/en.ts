@@ -1596,6 +1596,12 @@ export const strings = {
       notYetLabel: (title: string) => `Not yet: ${title}`,
       /** "Water the plants, reminder, Gabriel · was due Mon, 2d late". */
       rowLabel: (title: string, sub: string, late: string | null) => [title, 'reminder', sub, ...(late ? [late] : [])].join(', '),
+      /** "1 reminder", "3 reminders": Month and Week's day labels, and the day sheet's count. */
+      count: (n: number) => (n === 1 ? '1 reminder' : `${n} reminders`),
+      /** A day's screen-reader label, then its reminders: "Sunday October 25, 2 reminders". */
+      withCount: (label: string, n: number) => (n ? `${label}, ${n === 1 ? '1 reminder' : `${n} reminders`}` : label),
+      /** The day sheet's lead: "2 events · 1 reminder", "1 reminder". */
+      sheetCount: (events: string | null, reminders: string) => (events ? `${events} · ${reminders}` : reminders),
     },
     /** design/ui/OC-CalAdd.md (spec 041): the add and edit sheet. */
     add: {

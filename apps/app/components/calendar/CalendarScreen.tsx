@@ -82,8 +82,14 @@ export function CalendarScreen({
   events: allEvents,
   reminders,
 }: CalendarScreenProps) {
-  // FR-004: Agenda's "Reminders" pill, remembered per person on this device.
+  // Spec 058 FR-004: the "Reminders" toggle (Agenda's and Day's header, the day sheet), remembered per person on this device.
   const [showReminders, setShowReminders] = useAgendaReminders(userId, storage);
+  const onShowReminders = (on: boolean) => {
+    setShowReminders(on);
+    tracker.track('calendar_reminders_toggled', { on });
+  };
+  const shownReminders = showReminders ? reminders : undefined;
+  const listView = view === 'agenda' || view === 'day';
   const { hidden, toggle, showAll } = useCalendarFilter(userId, storage);
   // "Show birthdays" off (spec 029): birthdays leave every view.
   const showBirthdays = useCalendarDisplay().prefs.show_birthdays;
@@ -189,6 +195,8 @@ export function CalendarScreen({
         filterLabel={h.filterLabel}
         showAllLabel={h.showAll}
         closeLabel={h.close}
+        toggle={reminders && listView ? { label: strings.calendar.reminders.toggle, icon: 'check-square', pressed: showReminders, onPress: () => onShowReminders(!showReminders) } : undefined}
+        arrows={!(reminders && listView)}
       />
       <View className="px-20">
         <OfflineBanner screen="calendar" tracker={tracker} />
@@ -210,6 +218,9 @@ export function CalendarScreen({
           onDaySheetOpened={(count) => tracker.track('calendar_day_sheet_opened', { events: count })}
           onAddEvent={onAddEvent}
           onOpenEvent={onOpenEvent}
+          reminders={reminders}
+          showReminders={showReminders}
+          onShowReminders={onShowReminders}
           showHint={monthHint.show}
           onDismissHint={() => {
             monthHint.onDismiss();
@@ -232,12 +243,12 @@ export function CalendarScreen({
             onNavigate({ date: shiftAnchor('week', anchor, direction) });
             tracker.track('calendar_week_swiped', { direction: direction === 1 ? 'next' : 'previous' });
           }}
-          onOpenDay={(date) => {
-            onNavigate({ view: 'day', date });
-            tracker.track('calendar_day_opened', { from_view: 'week' });
-          }}
+          onDaySheetOpened={(count) => tracker.track('calendar_day_sheet_opened', { events: count })}
           onAddEvent={onAddEvent}
           onOpenEvent={onOpenEvent}
+          reminders={reminders}
+          showReminders={showReminders}
+          onShowReminders={onShowReminders}
         />
       ) : null}
       {view === 'day' ? (
@@ -260,7 +271,7 @@ export function CalendarScreen({
             tracker.track('calendar_slot_add_tapped', { slot });
           }}
           onOpenEvent={onOpenEvent}
-          reminders={reminders}
+          reminders={shownReminders}
         />
       ) : null}
       {agenda ? (
@@ -279,16 +290,7 @@ export function CalendarScreen({
           onEventWindow={onEventWindow}
           onAddEvent={(date) => onAddEvent(date)}
           onOpenEvent={onOpenEvent}
-          reminders={reminders}
-          showReminders={showReminders}
-          onShowReminders={
-            reminders
-              ? (on) => {
-                  setShowReminders(on);
-                  tracker.track('calendar_reminders_toggled', { on });
-                }
-              : undefined
-          }
+          reminders={shownReminders}
         />
       ) : null}
       {busy ? <BusySheet occurrence={busy} members={members} slotTimes={slotTimes} onClose={() => setBusy(null)} /> : null}

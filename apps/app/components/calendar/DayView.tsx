@@ -36,7 +36,7 @@ export interface DayViewProps {
   /** An empty band's "+ Add in the …". */
   onAddInSlot: (date: string, slot: SlotKey) => void;
   onOpenEvent: (id: string, date: string) => void;
-  /** Spec 058: the day's reminders, always shown (Agenda's pill doesn't hide them here). */
+  /** Spec 058: the day's reminders; none while the header's toggle hides them. */
   reminders?: CalendarReminders;
 }
 

@@ -184,6 +184,13 @@ export function useAgendaReminders(userId: string, storage: ChoiceStorage = devi
   return [on, set] as const;
 }
 
+/** How many reminders show on each day (Month and Week draw a mark, spec 058). */
+export function reminderCounts(placed: Iterable<CalendarReminder>): ReadonlyMap<string, number> {
+  const counts = new Map<string, number>();
+  for (const x of placed) counts.set(x.date, (counts.get(x.date) ?? 0) + 1);
+  return counts;
+}
+
 /** What Agenda and Day need for their reminders; the Calendar tab loads and saves them. */
 export interface CalendarReminders {
   /** Open reminders around the days shown (`loadRemindersInRange`); undefined while loading. */

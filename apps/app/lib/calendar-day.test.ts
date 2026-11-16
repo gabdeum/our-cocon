@@ -187,7 +187,7 @@ describe('layoutDaySheet', () => {
       ev({ title: 'Pumpkins', time_type: 'all_day', slots: [] }),
       ev({ title: 'Elsewhere', starts_on: '2026-10-26', ends_on: '2026-10-26' }),
     ]);
-    expect(rows.map((r) => [r.title, r.time, r.initials])).toEqual([
+    expect(rows.filter(isDayEvent).map((r) => [r.title, r.time, r.initials])).toEqual([
       ['Grandma visits', 'All day · day 2 of 4', 'All'],
       ['Pumpkins', 'All day', 'G'],
       ['Brunch', 'Lunch', 'G'],
@@ -197,6 +197,6 @@ describe('layoutDaySheet', () => {
 
   it('Eva’s private event reads Busy for Gabriel', () => {
     const { rows } = sheet([ev({ title: 'Therapist', time_type: 'custom', slots: [], start_time: '10:00', end_time: '11:00', location: 'Dr. Kay', members: [eva.id], visibility: 'private', creator_member_id: eva.id })]);
-    expect(rows.map((r) => [r.title, r.time])).toEqual([['Busy', '10:00']]);
+    expect(rows.filter(isDayEvent).map((r) => [r.title, r.time])).toEqual([['Busy', '10:00']]);
   });
 });

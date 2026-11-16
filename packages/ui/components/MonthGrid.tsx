@@ -5,6 +5,7 @@ import { useReduceMotion } from '../reduceMotion';
 import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
 import { EventBar, EventChip, Fill, MoreCount, type EventColor } from './EventChip';
+import { Icon } from './Icon';
 import { Text } from './Text';
 
 /** MonthGrid README › Cell: every day is 120 tall, so a row's offset is its index × 120. */
@@ -29,6 +30,8 @@ export interface MonthCell {
   items: MonthCellItem[];
   /** "+2", or null. */
   more: string | null;
+  /** Reminders are due that day: a check-square the date's size beside it (spec 058). */
+  reminders?: boolean;
 }
 
 export interface MonthBar {
@@ -76,22 +79,27 @@ export interface MonthGridProps {
 const clipOnWeb = (Platform.OS === 'web' ? { textOverflow: 'clip' } : {}) as TextStyle;
 
 function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
+  const mark = cell.reminders ? <Icon name="check-square" size={11} color={muted ? 'inkMuted' : 'olive'} /> : null;
   // MonthGrid README › Date: an 18 px row. Today is an olive circle; the 1st an ink pill "Nov 1"
-  // (olive when the 1st is today), clipped with no "…".
+  // (olive when the 1st is today), clipped with no "…". A day with reminders adds an 11 px check-square.
   if (cell.first || cell.today) {
     return (
-      <View className={cn('h-[18px] min-w-[18px] items-center justify-center self-start rounded-[9px]', cell.first && 'max-w-full px-[5px]', cell.today ? 'bg-olive' : 'bg-ink')}>
-        <Text size={11} weight="900" color={cell.today ? 'on-olive' : 'on-ink'} numberOfLines={1} ellipsizeMode="clip" maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={[{ lineHeight: 18 }, clipOnWeb]}>
-          {cell.dateText}
-        </Text>
+      <View className="h-[18px] max-w-full flex-row items-center gap-[2px] self-start">
+        <View className={cn('h-[18px] min-w-[18px] flex-shrink items-center justify-center rounded-[9px]', cell.first && 'px-[5px]', cell.today ? 'bg-olive' : 'bg-ink')}>
+          <Text size={11} weight="900" color={cell.today ? 'on-olive' : 'on-ink'} numberOfLines={1} ellipsizeMode="clip" maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={[{ lineHeight: 18 }, clipOnWeb]}>
+            {cell.dateText}
+          </Text>
+        </View>
+        {mark}
       </View>
     );
   }
   return (
-    <View className="h-[18px] justify-center pl-[3px]">
+    <View className="h-[18px] flex-row items-center gap-[2px] pl-[3px]">
       <Text size={11} weight="800" color={muted ? 'ink-muted' : 'ink'} maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={{ lineHeight: 18 }}>
         {cell.dateText}
       </Text>
+      {mark}
     </View>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
 import type { SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { EventListGroup, EventListRow, FloatingAdd, ReminderListRow, Text, TogglePill, useReduceMotion } from '@cocon/ui';
+import { EventListGroup, EventListRow, FloatingAdd, ReminderListRow, Text, useReduceMotion } from '@cocon/ui';
 import { AGENDA_EMPTY_PAGES, AGENDA_MAX_PAGES, agendaWindow, layoutAgenda } from '../../lib/calendar-agenda';
 import { memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { getAgendaPlace, setAgendaPlace } from '../../lib/agenda-session';
@@ -35,10 +35,8 @@ export interface AgendaViewProps {
   onEventWindow: (window: { from: string; to: string }) => void;
   onAddEvent: (date: string) => void;
   onOpenEvent: (id: string, date: string) => void;
-  /** Spec 058: the reminders among the events, and the "Reminders" pill (FR-004). */
+  /** Spec 058: the reminders among the events; none while the header's toggle hides them. */
   reminders?: CalendarReminders;
-  showReminders?: boolean;
-  onShowReminders?: (on: boolean) => void;
 }
 
 /**
@@ -61,8 +59,6 @@ export function AgendaView({
   onAddEvent,
   onOpenEvent,
   reminders,
-  showReminders = true,
-  onShowReminders,
 }: AgendaViewProps) {
   const now = useNow(timeZone);
   const { use24h } = useCalendarDisplay().prefs;
@@ -79,8 +75,8 @@ export function AgendaView({
 
   const occurrences = useMemo(() => monthOccurrences(events ?? [], from, to, myMemberId, hidden), [events, from, to, myMemberId, hidden]);
   const placed = useMemo(
-    () => placeForScreen(showReminders ? reminders : undefined, { from, to, today, tz: timeZone, members, use24h, hidden }),
-    [showReminders, reminders, from, to, today, timeZone, members, use24h, hidden],
+    () => placeForScreen(reminders, { from, to, today, tz: timeZone, members, use24h, hidden }),
+    [reminders, from, to, today, timeZone, members, use24h, hidden],
   );
   const groups = useMemo(
     () => layoutAgenda(from, to, occurrences, { today, now, look, slotTimes, members, use24h }, [...placed.values()]),
@@ -146,14 +142,6 @@ export function AgendaView({
         contentContainerClassName="gap-18 px-20 pt-4"
         contentContainerStyle={{ paddingBottom: BOTTOM_PAD }}
       >
-        {onShowReminders ? (
-          <TogglePill
-            label={strings.calendar.reminders.toggle}
-            icon="check-square"
-            selected={showReminders}
-            onPress={() => onShowReminders(!showReminders)}
-          />
-        ) : null}
         {groups.map((g) => (
           <EventListGroup key={g.date} heading={g.heading}>
             {g.events.map((e, i) => {

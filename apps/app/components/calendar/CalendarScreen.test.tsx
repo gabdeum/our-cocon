@@ -399,17 +399,19 @@ describe('Week view (spec 038)', () => {
     expect(screen.getAllByRole('link', { name: 'Sunday November 1' })).toHaveLength(2);
   });
 
-  it('FR-001: tapping a day (its head or an empty part) opens Day view; a block opens the event; + adds one', async () => {
+  it('FR-001: tapping a day (its head or an empty part) opens its sheet (spec 058); a block opens the event; + adds one', async () => {
     const onOpenEvent = vi.fn();
     const onAddEvent = vi.fn();
     const { onNavigate, tracker } = await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-27', events, onOpenEvent, onAddEvent });
     const [head, column] = screen.getAllByRole('link', { name: 'Thursday October 29' });
     fireEvent.click(head as HTMLElement);
-    expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
-    vi.mocked(onNavigate).mockClear();
+    expect(within(screen.getByRole('dialog')).getByRole('heading').textContent).toBe('Thursday, October 29');
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 0 });
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
     fireEvent.click(column as HTMLElement);
-    expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
-    expect(tracker.track).toHaveBeenCalledWith('calendar_day_opened', { from_view: 'week' });
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
+    expect(onNavigate).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('link', { name: 'Coffee, Gabriel, Sunday October 25, 16:00 to 17:00' }));
     expect(onOpenEvent).toHaveBeenCalledWith(events[1]?.id, '2026-10-25');
@@ -676,7 +678,7 @@ describe('Private and surprise events (spec 043)', () => {
   });
 });
 
-describe('Reminders in Agenda and Day (spec 058)', () => {
+describe('Reminders in the calendar (spec 058)', () => {
   const today = '2026-10-25';
   const weekly = placedReminder({
     title: 'Take the bins out',
@@ -697,6 +699,7 @@ describe('Reminders in Agenda and Day (spec 058)', () => {
     onOpen: vi.fn(),
   });
   const box = (name: string) => screen.getAllByRole('checkbox', { name: `Mark done: ${name}` });
+  const toggle = () => screen.getByRole('button', { name: 'Reminders' });
 
   it('FR-001–FR-003: Agenda mixes them in, late ones first on Today; a later repeat says "Not yet"; a title opens the drawer', async () => {
     const reminders = handlers();
@@ -718,27 +721,49 @@ describe('Reminders in Agenda and Day (spec 058)', () => {
     await expectAccessible(document.body);
   });
 
-  it('FR-004: the "Reminders" pill hides them, sends the event, and stays off for this person on this device', async () => {
+  it('FR-004: the header toggle takes ‹ ›’s place in Agenda and Day, hides reminders in both, and stays off on this device', async () => {
     const storage = memoryStorage();
     const first = await setup({ view: 'agenda', anchor: today, today, events: [], reminders: handlers(), storage });
-    const pill = screen.getByRole('button', { name: 'Reminders' });
-    expect(pill.getAttribute('aria-pressed')).toBe('true');
-    fireEvent.click(pill);
+    expect(toggle().getAttribute('aria-pressed')).toBe('true');
+    expect(screen.queryByRole('button', { name: 'Previous week' })).toBeNull();
+    fireEvent.click(toggle());
     expect(screen.queryAllByRole('checkbox')).toEqual([]);
     expect(first.tracker.track).toHaveBeenCalledWith('calendar_reminders_toggled', { on: false });
     first.unmount();
-    await setup({ view: 'agenda', anchor: today, today, events: [], reminders: handlers(), storage });
-    expect(screen.getByRole('button', { name: 'Reminders' }).getAttribute('aria-pressed')).toBe('false');
+    const day = await setup({ view: 'day', anchor: today, today, events: [], reminders: handlers(), storage });
+    expect(toggle().getAttribute('aria-pressed')).toBe('false');
+    // No ‹ ›: ← → page on the web instead (and the title has them as screen-reader actions).
+    expect(screen.queryByRole('button', { name: 'Next day' })).toBeNull();
+    fireEvent.keyDown(document, { key: 'ArrowRight' });
+    expect(day.onNavigate).toHaveBeenCalledWith({ date: '2026-10-26' });
+    fireEvent.keyDown(document, { key: 'ArrowLeft' });
+    expect(day.onNavigate).toHaveBeenLastCalledWith({ date: '2026-10-24' });
     expect(screen.queryAllByRole('checkbox')).toEqual([]);
-  });
-
-  it('Day shows them even with the pill off: late ones under All day, timed ones in their band', async () => {
-    const storage = memoryStorage();
-    storage.data.set('cocon.calendar.reminders.u-gabriel', 'off');
-    await setup({ view: 'day', anchor: today, today, events: [], reminders: handlers(), storage });
-    expect(screen.queryByRole('button', { name: 'Reminders' })).toBeNull();
+    fireEvent.click(toggle());
+    // Day: late ones under All day, timed ones in their band (which then has no add row).
     expect(box('Water the plants')).toHaveLength(1);
     expect(box('Take the bins out')).toHaveLength(1);
     expect(screen.queryByRole('button', { name: /Add in the evening/ })).toBeNull();
+  });
+
+  it('Month and Week: no toggle up top, a mark on days with reminders, and the day sheet lists them with its own toggle', async () => {
+    const reminders = handlers();
+    const { tracker } = await setup({ view: 'month', anchor: today, today, events: [], reminders });
+    expect(screen.queryByRole('button', { name: 'Reminders' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^October 25: nothing planned, 2 reminders$/ }));
+    const sheet = screen.getByRole('dialog');
+    expect(sheet.textContent).toContain('2 reminders');
+    expect(within(sheet).getAllByRole('checkbox').map((b) => b.getAttribute('aria-label'))).toEqual(['Mark done: Water the plants', 'Mark done: Take the bins out']);
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Reminders' }));
+    expect(within(screen.getByRole('dialog')).queryAllByRole('checkbox')).toEqual([]);
+    expect(tracker.track).toHaveBeenCalledWith('calendar_reminders_toggled', { on: false });
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
+    expect(screen.getByRole('button', { name: 'October 25: nothing planned' })).toBeTruthy();
+    cleanup();
+
+    await setup({ view: 'week', anchor: today, today, events: [], reminders: handlers() });
+    expect(screen.queryByRole('button', { name: 'Reminders' })).toBeNull();
+    expect(screen.getAllByRole('link', { name: 'Sunday October 25, 2 reminders' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Saturday October 31' }).length).toBeGreaterThan(0);
   });
 });

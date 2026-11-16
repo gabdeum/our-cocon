@@ -4,9 +4,9 @@ import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { alex, gabriel, placedReminder } from '../test/fakes';
 import { layoutAgenda } from './calendar-agenda';
-import { isDayEvent, layoutDayView } from './calendar-day';
+import { isDayEvent, layoutDaySheet, layoutDayView } from './calendar-day';
 import { memberLook, monthOccurrences } from './calendar-month';
-import { placeReminders, pressReminderBox, readAgendaReminders, reminderDay, writeAgendaReminders, type PlaceContext } from './calendar-reminders';
+import { placeReminders, pressReminderBox, readAgendaReminders, reminderCounts, reminderDay, writeAgendaReminders, type PlaceContext } from './calendar-reminders';
 
 // Wednesday, Nov 11, 2026 in Paris (UTC+1), as on OC-CalAgendaReminders.
 const tz = 'Europe/Paris';
@@ -184,5 +184,22 @@ describe('Agenda and Day with reminders (FR-001)', () => {
     ]);
     // A band with only a reminder in it has no add row: `events` isn't empty.
     expect(day.bands[3]?.events.filter(isDayEvent)).toEqual([]);
+  });
+});
+
+describe('Month, Week and the day sheet (spec 058)', () => {
+  it('counts reminders per day, and the day sheet says how many there are with its events', () => {
+    const weekly = placedReminder({ title: 'Take the bins out', repeat_rule: { freq: 'weekly', ends: { type: 'never' } }, repeat_from: '2026-11-04' });
+    const placed = placeReminders([weekly, late('2026-11-09')], ctx);
+    expect([...reminderCounts(placed)]).toEqual([
+      [today, 2],
+      ['2026-11-18', 1],
+    ]);
+    const dayCtx = { today, now: '09:00', look: memberLook(members), slotTimes: DEFAULT_SLOT_TIMES, members };
+    expect(layoutDaySheet(today, [], dayCtx, placed).count).toBe('2 reminders');
+    const dinner = ev('00000000-0000-4000-8000-000000000009', 'Dinner', { start_time: '19:30', end_time: '21:00' });
+    const sheet = layoutDaySheet(today, monthOccurrences([dinner], today, today, gabriel.id, new Set()), dayCtx, placed);
+    expect(sheet.count).toBe('1 event · 2 reminders');
+    expect(sheet.rows.map((r) => r.title)).toEqual(['Reminder', 'Take the bins out', 'Dinner']);
   });
 });

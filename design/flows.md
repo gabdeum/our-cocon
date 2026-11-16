@@ -91,7 +91,7 @@ The tab bar's last tab is "Menu" (spec 036). Menu has two sections: **Apps** (ti
 ## Flows
 
 1. **Check today.** Home → calendar card (Today, or This week, or empty) → tap a row → OC-CalEvent; "+" → OC-CalAdd; "Open calendar" → Calendar tab.
-2. **Scan and drill in.** Calendar tab → Month (scroll through months) → tap a day → day sheet → tap an event → OC-CalEvent, or "+" → OC-CalAdd for that day.
+2. **Scan and drill in.** Calendar tab → Month (scroll through months) → tap a day (Month, or Week since 058) → day sheet → tap an event → OC-CalEvent, or "+" → OC-CalAdd for that day.
 3. **Quick add.** "+" anywhere → type title → Today → Evening → Save → toast with Undo.
 4. **Add with details.** OC-CalAdd → More options → Who, Repeat, Where, "Who takes James?" → Save.
 5. **Edit, move, delete.** OC-CalEvent → Edit (repeating: "This event only" / "All future events") → Save; Delete → dialog → toast "Event deleted · Undo".

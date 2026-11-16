@@ -18,6 +18,8 @@ import type { AddPrefill } from '../../components/calendar/CalendarScreen';
 
 /** `reminders_in_range` takes at most 366 days: Agenda's later pages past a year show events only. */
 const REMINDER_DAYS = 366;
+/** Before today only "Leave it" reminders show, on their day: half a year back is plenty. */
+const REMINDER_PAST_DAYS = 183;
 
 /** Add event's extra query (design/flows.md): `&slot=` from Day's bands, `&time=` from Week's grid. */
 const addParams = (prefill?: AddPrefill) => (!prefill ? '' : 'slot' in prefill ? `&slot=${prefill.slot}` : `&time=${prefill.time}`);
@@ -48,19 +50,19 @@ export default function CalendarTab() {
   });
   const onEventWindow = useCallback((w: { from: string; to: string }) => setEventDays((prev) => (prev?.from === w.from && prev.to === w.to ? prev : w)), []);
 
-  // Spec 058: reminders in Agenda and Day, over the same days (live: 057's ticks and spec 056's sync refetch them).
+  // Spec 058: reminders in every view, over the same days (live: 057's ticks and spec 056's sync refetch them).
   const ctx = useReminderContext();
   const actions = useReminderActions(ctx);
   const online = useOnline();
   const toast = useToast();
   const [drawer, setDrawer] = useState<OpenDrawer | null>(null);
-  const withReminders = view === 'agenda' || view === 'day';
-  const remindersFrom = eventDays?.from ?? '';
-  const remindersTo = eventDays ? (eventDays.to < addDays(eventDays.from, REMINDER_DAYS) ? eventDays.to : addDays(eventDays.from, REMINDER_DAYS)) : '';
+  const earliest = addDays(today, -REMINDER_PAST_DAYS);
+  const remindersFrom = eventDays ? (eventDays.from > earliest ? eventDays.from : earliest) : '';
+  const remindersTo = eventDays ? (eventDays.to < addDays(remindersFrom, REMINDER_DAYS) ? eventDays.to : addDays(remindersFrom, REMINDER_DAYS)) : '';
   const reminderRows = useQuery({
     queryKey: calendarRemindersKey(familyId ?? '', remindersFrom, remindersTo, timeZone),
     queryFn: () => loadRemindersInRange(client, remindersFrom, remindersTo, timeZone),
-    enabled: familyId !== null && eventDays !== null && withReminders,
+    enabled: familyId !== null && eventDays !== null && remindersFrom <= remindersTo,
     placeholderData: (previous) => previous,
   });
   // The actions change every render; the views only need to redraw when the reminders do.
