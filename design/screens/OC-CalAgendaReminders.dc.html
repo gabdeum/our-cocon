@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Calendar agenda with reminders</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<div style="width: 390px; height: 980px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div style="padding: 54px 20px 160px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px">Coming up</h1>
+      <button aria-pressed="{{remOnStr}}" onClick="{{toggleRem}}" style="{{remStyle}}">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"></rect><path d="M8.5 12.5l2.5 2.5 4.5-5"></path></svg>
+        Reminders
+      </button>
+    </div>
+    <div role="group" aria-label="View" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; background: #FFF0C9; border-radius: 14px; padding: 3px">
+      <button style="height: 40px; border-radius: 11px; border: none; background: transparent; font-family: inherit; font-size: 15px; font-weight: 700; color: #5A503A">Month</button>
+      <button style="height: 40px; border-radius: 11px; border: none; background: transparent; font-family: inherit; font-size: 15px; font-weight: 700; color: #5A503A">Week</button>
+      <button style="height: 40px; border-radius: 11px; border: none; background: transparent; font-family: inherit; font-size: 15px; font-weight: 700; color: #5A503A">Day</button>
+      <button aria-pressed="true" style="height: 40px; border-radius: 11px; border: none; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 900; color: #2A2414; box-shadow: 0 1px 3px rgba(42,36,20,0.15)">Agenda</button>
+    </div>
+
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+      <section style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 900">{{g.label}}</h2>
+        <div style="background: #FFFFFF; border-radius: 22px; padding: 4px 14px 4px 10px">
+          <sc-for list="{{g.items}}" as="e" hint-placeholder-count="3">
+            <div style="{{e.row}}">
+              <sc-if value="{{e.isRem}}" hint-placeholder-val="{{false}}">
+                <button aria-label="{{e.checkLabel}}" aria-pressed="{{e.doneStr}}" onClick="{{e.toggle}}" style="width: 44px; height: 44px; flex: none; border: none; background: transparent; padding: 0; margin: 0 -8px 0 -8px; cursor: pointer; display: flex; align-items: center; justify-content: center">
+                  <span aria-hidden="true" style="{{e.inner}}">
+                    <sc-if value="{{e.done}}" hint-placeholder-val="{{false}}">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+                    </sc-if>
+                  </span>
+                </button>
+              </sc-if>
+              <sc-if value="{{e.isEvent}}" hint-placeholder-val="{{true}}">
+                <span aria-hidden="true" style="{{e.stripe}}"></span>
+                <span style="{{e.avatar}}">{{e.who}}</span>
+              </sc-if>
+              <a href="{{e.href}}" style="flex: 1; min-width: 0; text-decoration: none; color: #2A2414; padding: 2px 0">
+                <span style="{{e.titleStyle}}">{{e.title}}</span>
+                <span style="display: block; font-size: 14px; font-weight: 700; color: #5A503A">{{e.sub}}</span>
+              </a>
+              <sc-if value="{{e.hasTag}}" hint-placeholder-val="{{false}}">
+                <span style="{{e.tagStyle}}">{{e.tag}}</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+  </div>
+
+  <a href="OC-ReminderEdit.dc.html" aria-label="Add" style="position: absolute; right: 20px; bottom: 112px; width: 60px; height: 60px; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(42,36,20,0.25)">
+    <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+  </a>
+
+  <nav aria-label="Main" style="position: absolute; left: 16px; right: 16px; bottom: 26px; height: 68px; border-radius: 999px; background: #2A2414; box-shadow: 0 8px 24px rgba(42, 36, 20, 0.25); display: flex; align-items: center; justify-content: space-between; padding: 0 12px">
+    <a href="OC-Home.dc.html" aria-label="Home" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #E6DFC9"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v8a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"></path></svg></a>
+    <a href="#" aria-label="Recipes" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #E6DFC9"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"></path><path d="M8 7h7"></path></svg></a>
+    <a href="#" aria-label="Lists" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #E6DFC9"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l1.5 1.5L8 5"></path><path d="M4 12l1.5 1.5L8 11"></path><path d="M4 18l1.5 1.5L8 17"></path><path d="M12 6h8M12 12h8M12 18h8"></path></svg></a>
+    <a href="#" aria-current="page" style="height: 48px; padding: 0 18px; border-radius: 999px; background: #FFCF5C; color: #2A2414; display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 15px; font-weight: 900">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+      Calendar
+    </a>
+    <a href="#" aria-label="Menu" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #E6DFC9"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":980}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { done: {}, rem: true }; }
+  renderVals() {
+    var self = this, s = this.state;
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478' };
+    var ev = function (who, title, sub) { return { kind: 'e', who: who, title: title, sub: sub }; };
+    var rm = function (id, who, title, sub, tag) { return { kind: 'r', id: id, who: who, title: title, sub: sub, tag: tag }; };
+    var GROUPS = [
+      { label: 'Today · Wed, Nov 11', items: [
+        rm('plants', 'G', 'Water the plants', 'Gabriel · was due Mon', '2 days late'),
+        rm('ins', 'E', 'Call the car insurance', 'Eva · was due Tue', '1 day late'),
+        rm('ped', 'G', 'Book James’s check-up', '15:00 · Gabriel'),
+        ev('E', 'Yoga', 'Evening · every Wednesday'),
+        ev('All', 'Dinner at the Macias’', '19:30 · Everyone'),
+        rm('bins', 'G', 'Take the bins out', '20:00 · Gabriel')
+      ] },
+      { label: 'Tomorrow · Thu, Nov 12', items: [
+        ev('G', 'Morning run', '06:30–07:30 · Riverside Park'),
+        rm('daycare', 'E', 'Pay the daycare', 'Any time · Eva'),
+        ev('J', 'Baby swim class', '14:30 · Gabriel takes James')
+      ] },
+      { label: 'Sat, Nov 14', items: [
+        rm('filter', 'G', 'Change the water filter', 'Any time · Gabriel'),
+        ev('All', 'Farmers market', 'Morning')
+      ] }
+    ];
+    var groups = GROUPS.map(function (g) {
+      var items = g.items.filter(function (x) { return s.rem || x.kind === 'e'; });
+      return {
+        label: g.label,
+        items: items.map(function (x, i) {
+          var isRem = x.kind === 'r', d = isRem && !!s.done[x.id];
+          return {
+            isRem: isRem, isEvent: !isRem, title: x.title, sub: d ? 'Done just now' : x.sub, who: x.who,
+            href: isRem ? 'OC-Reminders.dc.html' : '#', done: d, doneStr: d ? 'true' : 'false',
+            checkLabel: (d ? 'Mark not done: ' : 'Mark done: ') + x.title,
+            toggle: isRem ? function () { var n = Object.assign({}, self.state.done); n[x.id] = !n[x.id]; self.setState({ done: n }); } : null,
+            hasTag: !!x.tag && !d, tag: x.tag || '',
+            tagStyle: 'flex: none; font-size: 13px; font-weight: 900; padding: 5px 10px; border-radius: 999px; background: #FFE3C2; color: #8A4B00',
+            row: 'display: flex; gap: 12px; align-items: center; min-height: 64px; padding: 6px 0' + (i < items.length - 1 ? '; border-bottom: 1.5px solid #F2E6C4' : ''),
+            stripe: 'width: 6px; align-self: stretch; border-radius: 3px; flex: none; background: ' + C[x.who],
+            avatar: 'width: 36px; height: 36px; flex: none; border-radius: 50%; background: ' + C[x.who] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (x.who.length > 1 ? '12px' : '15px') + '; font-weight: 900',
+            inner: 'width: 26px; height: 26px; box-sizing: border-box; border-radius: 8px; display: flex; align-items: center; justify-content: center; ' + (d ? 'background: #5A6820' : 'border: 2.5px solid #CDBF95; background: #FFFFFF'),
+            titleStyle: 'display: block; font-size: 17px; font-weight: 800' + (d ? '; text-decoration: line-through; color: #5A503A' : '')
+          };
+        })
+      };
+    });
+    return {
+      groups: groups,
+      remOnStr: s.rem ? 'true' : 'false',
+      toggleRem: function () { self.setState({ rem: !self.state.rem }); },
+      remStyle: 'height: 44px; padding: 0 14px; border-radius: 999px; border: none; font-family: inherit; font-size: 15px; display: flex; align-items: center; gap: 6px; cursor: pointer; ' + (s.rem ? 'background: #5A6820; color: #FFFFFF; font-weight: 900' : 'background: #FFF0C9; color: #2A2414; font-weight: 700')
+    };
+  }
+}
+</script>
+</body>
+</html>

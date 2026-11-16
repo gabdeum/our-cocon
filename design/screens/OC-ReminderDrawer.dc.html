@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reminder drawer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<div role="dialog" aria-label="{{r.title}}" style="width: 390px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; border-radius: 30px 30px 0 0; padding: 10px 20px 30px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 -8px 30px rgba(42,36,20,0.2)">
+  <div style="width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4; align-self: center"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px">
+      <h2 style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 900">{{r.title}}</h2>
+      <a href="OC-ReminderEdit.dc.html" style="font-size: 16px; font-weight: 800; padding: 4px 0; flex: none">Edit</a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+      <span style="{{whoPill}}">{{r.whoName}}</span>
+      <span style="font-size: 15px; font-weight: 700; color: #5A503A">{{r.when}}</span>
+    </div>
+  </div>
+
+  <sc-if value="{{open}}" hint-placeholder-val="{{true}}">
+    <sc-if value="{{isLate}}" hint-placeholder-val="{{true}}">
+      <div role="status" style="display: flex; gap: 10px; align-items: flex-start; background: #FFE3C2; border-radius: 16px; padding: 12px 14px; color: #8A4B00">
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+        <span style="font-size: 15px; font-weight: 800; line-height: 1.4">{{r.lateText}}</span>
+      </div>
+    </sc-if>
+
+    <section aria-label="Notes" style="background: #FFFFFF; border-radius: 18px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 900">Notes</h3>
+      </div>
+      <sc-if value="{{hasNotes}}" hint-placeholder-val="{{true}}">
+        <p style="margin: 0; font-size: 15px; line-height: 1.45; font-weight: 600; white-space: pre-line">{{r.notes}}</p>
+      </sc-if>
+      <sc-if value="{{noNotes}}" hint-placeholder-val="{{false}}">
+        <a href="OC-ReminderEdit.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 800; color: #424D17; text-decoration: none">+ Add a note</a>
+      </sc-if>
+    </section>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 900">Snooze until</h3>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{opts}}" as="o" hint-placeholder-count="4">
+          <button aria-pressed="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}"><span style="font-size: 16px; font-weight: 900">{{o.label}}</span><span style="{{o.subStyle}}">{{o.sub}}</span></button>
+        </sc-for>
+      </div>
+    </div>
+
+    <button onClick="{{markDone}}" style="height: 56px; border-radius: 18px; border: none; background: #5A6820; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+      Mark as done
+    </button>
+    <button style="height: 44px; border-radius: 16px; border: none; background: transparent; color: #9A3412; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer">Delete reminder</button>
+  </sc-if>
+
+  <sc-if value="{{closed}}" hint-placeholder-val="{{false}}">
+    <div role="status" style="background: #D9E3A8; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 17px; font-weight: 900">{{doneTitle}}</span>
+      <span style="font-size: 15px; font-weight: 700">{{doneSub}}</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <button onClick="{{undo}}" style="height: 52px; border-radius: 16px; border: none; background: #FFF0C9; color: #2A2414; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer">Undo</button>
+      <button onClick="{{close}}" style="height: 52px; border-radius: 16px; border: none; background: #5A6820; color: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer">Close</button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"reminder":{"editor":null},"onClose":{"editor":null},"$preview":{"width":390,"height":700}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { picked: null, done: false }; }
+  renderVals() {
+    var self = this, s = this.state;
+    // Standalone preview uses this reminder; the Reminders screen passes its own.
+    var r = this.props.reminder || {
+      title: 'Water the plants', whoName: 'Gabriel', color: '#FFCF5C',
+      when: 'Every Monday · was due Mon, Nov 9', hasTime: false,
+      lateText: '2 days late. Last week’s (Mon, Nov 2) was missed too.',
+      notes: 'Big fern by the window: 1 jug.\nBasil in the kitchen: a splash, not more.'
+    };
+    var OPTS = (r.hasTime ? [['hour', 'In 1 hour', '16:00']] : []).concat([
+      ['tom', 'Tomorrow', 'Thu, Nov 12'], ['week', 'Next week', 'Wed, Nov 18'],
+      ['month', 'Next month', 'Fri, Dec 11'], ['pick', 'Pick a date', 'Calendar']
+    ]);
+    var chosen = OPTS.filter(function (o) { return o[0] === s.picked; })[0];
+    var closed = s.done || (chosen && chosen[0] !== 'pick');
+    var close = this.props.onClose || function () { self.setState({ done: false, picked: null }); };
+    return {
+      r: r,
+      whoPill: 'height: 24px; padding: 0 9px; border-radius: 999px; background: ' + (r.color || '#FFCF5C') + '; display: inline-flex; align-items: center; font-size: 13px; font-weight: 900',
+      isLate: !!r.lateText, hasNotes: !!r.notes, noNotes: !r.notes,
+      open: !closed, closed: !!closed,
+      doneTitle: s.done ? 'Done. Nice one.' : chosen ? 'Snoozed until ' + chosen[2] : '',
+      doneSub: s.done ? (r.nextText || 'The next one stays on schedule.') : 'It’s hidden until then and comes back without a late badge.',
+      markDone: function () { self.setState({ done: true }); },
+      undo: function () { self.setState({ done: false, picked: null }); },
+      close: close,
+      opts: OPTS.map(function (o) {
+        var on = s.picked === o[0];
+        return {
+          label: o[1], sub: o[2], on: on ? 'true' : 'false',
+          pick: function () { self.setState({ picked: o[0] }); },
+          style: 'min-height: 60px; padding: 8px 12px; border-radius: 18px; border: none; font-family: inherit; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; cursor: pointer; ' + (on ? 'background: #5A6820; color: #FFFFFF' : 'background: #FFFFFF; color: #2A2414'),
+          subStyle: 'font-size: 13px; font-weight: 700; ' + (on ? 'color: #FFFFFF' : 'color: #5A503A')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

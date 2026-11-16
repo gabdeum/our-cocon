@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · New reminder</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+input::placeholder,textarea::placeholder{color:#5A503A;opacity:1}
+</style>
+</helmet>
+<div style="width: 390px; height: 1110px; box-sizing: border-box; background: #3A3226; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div role="dialog" aria-label="New reminder" style="position: absolute; left: 0; right: 0; top: 46px; bottom: 0; background: #FFF8E3; border-radius: 30px 30px 0 0; padding: 10px 20px 28px; display: flex; flex-direction: column; gap: 18px">
+    <div style="width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4; align-self: center; flex: none"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 900">New reminder</h2>
+      <a href="OC-Reminders.dc.html" style="font-size: 16px; font-weight: 800; color: #5A503A; padding: 10px 0">Cancel</a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="rm-title" style="font-size: 16px; font-weight: 900">Remind us to…</label>
+      <input id="rm-title" value="Book James’s check-up" maxlength="80" placeholder="e.g. Pay the daycare" style="height: 56px; box-sizing: border-box; padding: 0 16px; border-radius: 16px; border: 2px solid #EEDFB5; background: #FFFFFF; color: #2A2414; font-family: inherit; font-size: 18px; font-weight: 800">
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 900">Due</h3>
+      <div style="display: flex; gap: 8px">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+          <button aria-pressed="{{d.on}}" onClick="{{d.pick}}" style="{{d.style}}">{{d.label}}<span style="{{d.subStyle}}">{{d.sub}}</span></button>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; background: #FFFFFF; border-radius: 16px; padding: 6px 8px 6px 16px; min-height: 56px; box-sizing: border-box">
+        <label for="rm-time-on" style="flex: 1; font-size: 16px; font-weight: 800">Set a time</label>
+        <sc-if value="{{hasTime}}" hint-placeholder-val="{{true}}">
+          <input aria-label="Time" value="15:00" style="width: 84px; height: 44px; box-sizing: border-box; padding: 0 10px; border-radius: 12px; border: 2px solid #EEDFB5; background: #FFF8E3; font-family: inherit; font-size: 17px; font-weight: 900; color: #2A2414; text-align: center">
+        </sc-if>
+        <button id="rm-time-on" role="switch" aria-checked="{{hasTimeStr}}" onClick="{{toggleTime}}" style="{{switchStyle}}"><span aria-hidden="true" style="{{knobStyle}}"></span></button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 900">If it’s not done</h3>
+      <div role="group" aria-label="If it’s not done" style="display: flex; gap: 8px; flex-wrap: wrap">
+        <sc-for list="{{rolls}}" as="r" hint-placeholder-count="3">
+          <button aria-pressed="{{r.on}}" onClick="{{r.pick}}" style="{{r.style}}">{{r.label}}</button>
+        </sc-for>
+      </div>
+      <p style="margin: 0; font-size: 14px; font-weight: 600; color: #5A503A">{{rollHint}}</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 900">Repeat</h3>
+      <div role="group" aria-label="Repeat" style="display: flex; gap: 8px; flex-wrap: wrap">
+        <sc-for list="{{repeats}}" as="r" hint-placeholder-count="5">
+          <button aria-pressed="{{r.on}}" onClick="{{r.pick}}" style="{{r.style}}">{{r.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 900">For</h3>
+      <div role="group" aria-label="For" style="display: flex; gap: 8px; flex-wrap: wrap">
+        <sc-for list="{{people}}" as="p" hint-placeholder-count="4">
+          <button aria-pressed="{{p.on}}" onClick="{{p.pick}}" style="{{p.style}}"><span style="{{p.dot}}">{{p.initial}}</span><span>{{p.name}}</span></button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="rm-notes" style="font-size: 16px; font-weight: 900">Notes <span style="font-weight: 700; color: #5A503A">· optional</span></label>
+      <textarea id="rm-notes" rows="3" maxlength="1000" placeholder="Details, a phone number, what to ask…" style="box-sizing: border-box; padding: 12px 16px; border-radius: 16px; border: 2px solid #EEDFB5; background: #FFFFFF; color: #2A2414; font-family: inherit; font-size: 16px; line-height: 1.4; font-weight: 700; resize: none">Dr. Lee’s office: ask for a Thursday morning slot.</textarea>
+    </div>
+
+    <div style="display: flex; gap: 12px; align-items: flex-start; background: #FFF0C9; border-radius: 16px; padding: 12px 14px">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 1px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg>
+      <span style="font-size: 15px; font-weight: 700; line-height: 1.4">{{notif}}</span>
+    </div>
+
+    <div style="flex: 1"></div>
+    <a href="OC-Reminders.dc.html" style="height: 56px; border-radius: 18px; background: #5A6820; color: #FFFFFF; font-size: 17px; font-weight: 900; display: flex; align-items: center; justify-content: center; text-decoration: none; flex: none">Save</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1110}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { day: 'today', time: true, roll: null, repeat: 'Never', who: 'G' }; }
+  renderVals() {
+    var self = this, s = this.state;
+    var set = function (p) { return function () { self.setState(p); }; };
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478' };
+    var NAMES = { G: 'Gabriel', E: 'Eva', J: 'James', All: 'Everyone' };
+    var pill = function (on) {
+      return 'min-height: 44px; padding: 0 16px; border-radius: 999px; border: none; font-family: inherit; font-size: 15px; cursor: pointer; ' +
+        (on ? 'background: #5A6820; color: #FFFFFF; font-weight: 900' : 'background: #FFFFFF; color: #2A2414; font-weight: 700');
+    };
+    // "Every hour" only makes sense with a set time. Default: hourly with a time, next day without.
+    var ROLLS = s.time ? [['hour', 'Every hour'], ['day', 'Next day'], ['week', 'Next week'], ['none', 'Leave it']] : [['day', 'Next day'], ['week', 'Next week'], ['none', 'Leave it']];
+    var roll = s.roll && ROLLS.some(function (r) { return r[0] === s.roll; }) ? s.roll : (s.time ? 'hour' : 'day');
+    var HINT = {
+      hour: 'Stays on Home and nudges every hour until someone ticks it.',
+      day: 'Moves to the next day and shows how late it is. The due date doesn’t change.',
+      week: 'Moves to the same day next week, with a late badge.',
+      none: 'Stays on its due day in the calendar. No more nudges.'
+    };
+    var whoName = s.who === 'All' ? 'everyone' : NAMES[s.who];
+    var notif = s.time
+      ? (roll === 'hour'
+        ? 'Notifies ' + whoName + ' at 14:00 and 15:00, then every hour until done. Quiet from 22:00 to 07:00.'
+        : 'Notifies ' + whoName + ' at 14:00 and 15:00.')
+      : 'Notifies ' + whoName + ' at 09:00 on the day' + (roll === 'none' ? '.' : ', then each morning while it’s late.');
+    var dayDefs = [['today', 'Today', 'Wed 11'], ['tomorrow', 'Tomorrow', 'Thu 12'], ['other', 'Other day', 'Pick a date']];
+    return {
+      days: dayDefs.map(function (d) {
+        var on = s.day === d[0];
+        return {
+          label: d[1], sub: d[2], on: on ? 'true' : 'false', pick: set({ day: d[0] }),
+          style: 'flex: 1; min-height: 60px; padding: 6px 8px; border-radius: 16px; border: none; font-family: inherit; font-size: 15px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; ' + (on ? 'background: #5A6820; color: #FFFFFF' : 'background: #FFFFFF; color: #2A2414'),
+          subStyle: 'font-size: 12px; font-weight: 700; ' + (on ? 'color: #FFFFFF' : 'color: #5A503A')
+        };
+      }),
+      hasTime: s.time, hasTimeStr: s.time ? 'true' : 'false',
+      toggleTime: function () { self.setState({ time: !self.state.time }); },
+      switchStyle: 'width: 56px; height: 34px; flex: none; border-radius: 999px; border: none; padding: 3px; cursor: pointer; display: flex; ' + (s.time ? 'background: #5A6820; justify-content: flex-end' : 'background: #D8CBA4; justify-content: flex-start'),
+      knobStyle: 'width: 28px; height: 28px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(42,36,20,0.25)',
+      rolls: ROLLS.map(function (r) { return { label: r[1], on: roll === r[0] ? 'true' : 'false', pick: set({ roll: r[0] }), style: pill(roll === r[0]) }; }),
+      rollHint: HINT[roll],
+      repeats: ['Never', 'Every day', 'Every week', 'Every month', 'Custom'].map(function (r) { return { label: r, on: s.repeat === r ? 'true' : 'false', pick: set({ repeat: r }), style: pill(s.repeat === r) }; }),
+      people: ['G', 'E', 'J', 'All'].map(function (k) {
+        var on = s.who === k;
+        return {
+          initial: k === 'All' ? 'All' : k, name: NAMES[k], on: on ? 'true' : 'false', pick: set({ who: k }),
+          style: 'height: 48px; padding: 0 16px 0 6px; border-radius: 999px; font-family: inherit; font-size: 15px; font-weight: 800; color: #2A2414; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #FFFFFF; border: 2.5px solid ' + (on ? '#2A2414' : 'transparent'),
+          dot: 'width: 34px; height: 34px; border-radius: 50%; background: ' + C[k] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (k === 'All' ? '11px' : '14px') + '; font-weight: 900'
+        };
+      }),
+      notif: notif
+    };
+  }
+}
+</script>
+</body>
+</html>

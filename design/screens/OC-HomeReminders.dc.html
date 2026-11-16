@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home · Reminders card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<section aria-label="Reminders" style="box-sizing: border-box; width: 350px; font-family: 'Nunito', sans-serif; color: #2A2414; background: #FFFFFF; border-radius: 26px; padding: 14px 16px 2px; display: flex; flex-direction: column; gap: 0">
+  <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 6px">
+    <h2 style="margin: 0; flex: 1; font-size: 20px; font-weight: 900">Reminders</h2>
+    <a href="OC-ReminderEdit.dc.html" aria-label="New reminder" style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+    </a>
+  </div>
+  <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+    <div style="{{r.row}}">
+      <button aria-label="{{r.checkLabel}}" aria-pressed="{{r.doneStr}}" onClick="{{r.toggle}}" style="width: 40px; height: 44px; flex: none; margin-left: -8px; border: none; background: transparent; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center">
+        <span aria-hidden="true" style="{{r.inner}}">
+          <sc-if value="{{r.done}}" hint-placeholder-val="{{false}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+          </sc-if>
+        </span>
+      </button>
+      <span role="img" aria-label="{{r.whoName}}" style="{{r.dot}}">{{r.who}}</span>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; margin-left: 10px">
+        <span style="{{r.titleStyle}}">{{r.title}}</span>
+        <span style="font-size: 13px; line-height: 1.3; font-weight: 700; color: #5A503A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.sub}}</span>
+      </span>
+      <sc-if value="{{r.hasBadge}}" hint-placeholder-val="{{false}}">
+        <span style="flex: none; margin-left: 8px; font-size: 12px; font-weight: 900; padding: 3px 8px; border-radius: 999px; background: #FFE3C2; color: #8A4B00">{{r.late}}</span>
+      </sc-if>
+      <button aria-label="{{r.laterLabel}}" aria-haspopup="menu" aria-expanded="{{r.menuOpenStr}}" onClick="{{r.toggleMenu}}" style="{{r.dotsStyle}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+      </button>
+      <sc-if value="{{r.menuOpen}}" hint-placeholder-val="{{false}}">
+        <div role="menu" aria-label="{{r.laterLabel}}" style="position: absolute; right: -10px; top: 50px; z-index: 10; width: 236px; border-radius: 22px; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; background: rgba(255,251,240,0.92); -webkit-backdrop-filter: blur(18px) saturate(180%); backdrop-filter: blur(18px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), inset 0 0 0 1px rgba(255,255,255,0.45), 0 10px 28px rgba(42,36,20,0.22)">
+          <span style="padding: 8px 14px 4px; font-size: 13px; font-weight: 900; letter-spacing: 0.6px; text-transform: uppercase; color: #5A503A">Snooze until</span>
+          <sc-for list="{{r.snoozes}}" as="o" hint-placeholder-count="3">
+            <button role="menuitem" onClick="{{o.pick}}" style="min-height: 48px; padding: 0 14px; border: none; background: none; font-family: inherit; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; color: #2A2414"><span style="font-size: 16px; font-weight: 800">{{o.label}}</span><span style="font-size: 14px; font-weight: 700; color: #5A503A">{{o.sub}}</span></button>
+          </sc-for>
+          <a role="menuitem" href="OC-Reminders.dc.html" style="min-height: 48px; padding: 0 14px; display: flex; align-items: center; font-size: 16px; font-weight: 800; color: #2A2414; text-decoration: none">Pick a date…</a>
+          <span aria-hidden="true" style="height: 1px; margin: 2px 10px; background: rgba(42,36,20,0.12)"></span>
+          <a role="menuitem" href="OC-ReminderEdit.dc.html" style="min-height: 48px; padding: 0 14px; display: flex; align-items: center; font-size: 16px; font-weight: 800; color: #2A2414; text-decoration: none">Edit</a>
+          <button role="menuitem" style="min-height: 48px; padding: 0 14px; border: none; background: none; font-family: inherit; text-align: left; font-size: 16px; font-weight: 900; color: #9A3412; cursor: pointer">Delete reminder</button>
+        </div>
+      </sc-if>
+    </div>
+  </sc-for>
+  <a href="OC-Reminders.dc.html" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; border-top: 1.5px solid #F2E6C4; text-decoration: none; margin-top: 2px">
+    <span style="font-size: 15px; font-weight: 800">See all reminders</span>
+    <span style="display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; color: #5A503A">{{moreHint}}<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span>
+  </a>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":350,"height":300}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { done: {}, menu: null, snoozed: {} }; }
+  renderVals() {
+    var self = this, done = this.state.done;
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478' };
+    // Overdue first (oldest due date first), then today by time. Done rows sink to the bottom.
+    var ALL = [
+      { id: 'plants', who: 'G', title: 'Water the plants', sub: 'Was due Mon · missed last week too', late: '2d late' },
+      { id: 'ins', who: 'E', title: 'Call the car insurance', sub: 'Was due yesterday', late: '1d late' },
+      { id: 'ped', who: 'G', title: 'Book James’s check-up', sub: '15:00 · nudges hourly', hasTime: true },
+      { id: 'rsvp', who: 'All', title: 'Reply to Léa’s party invite', sub: 'Today' },
+      { id: 'bins', who: 'G', title: 'Take the bins out', sub: '20:00', hasTime: true }
+    ];
+    // Home shows the top 3 open reminders (overdue first). Ticking one pulls the next one up;
+    // done rows stay visible until the screen is left. The rest live behind "See all reminders".
+    var TOP = 3;
+    var snoozed = this.state.snoozed, menu = this.state.menu;
+    var snoozeCount = 1 + Object.keys(snoozed).length;
+    // Options with a set time get "In 1 hour" first; the others start at Tomorrow.
+    var snoozeOpts = function (r) {
+      var o = r.hasTime ? [['In 1 hour', '16:00']] : [];
+      return o.concat([['Tomorrow', 'Thu 12'], ['Next week', 'Wed 18'], ['Next month', 'Fri, Dec 11']]).map(function (x) {
+        return { label: x[0], sub: x[1], pick: function () { var n = Object.assign({}, self.state.snoozed); n[r.id] = true; self.setState({ snoozed: n, menu: null }); } };
+      });
+    };
+    ALL = ALL.filter(function (r) { return !snoozed[r.id]; });
+    var open = ALL.filter(function (r) { return !done[r.id]; });
+    var closed = ALL.filter(function (r) { return done[r.id]; });
+    var list = open.slice(0, TOP).concat(closed);
+    var more = Math.max(0, open.length - TOP);
+    var lateLeft = open.filter(function (r) { return r.late; }).length;
+    return {
+      hasLate: lateLeft > 0,
+      lateCount: lateLeft + ' overdue',
+      moreHint: (more ? more + ' more today · ' : '') + snoozeCount + ' snoozed',
+      rows: list.map(function (r, i) {
+        var d = !!done[r.id];
+        return {
+          title: r.title, sub: d ? 'Done just now' : r.sub, who: r.who === 'All' ? 'All' : r.who,
+          done: d, doneStr: d ? 'true' : 'false',
+          checkLabel: (d ? 'Mark not done: ' : 'Mark done: ') + r.title,
+          laterLabel: 'More options for ' + r.title,
+          menuOpen: menu === r.id, menuOpenStr: menu === r.id ? 'true' : 'false',
+          toggleMenu: function () { self.setState({ menu: self.state.menu === r.id ? null : r.id }); },
+          snoozes: snoozeOpts(r),
+          dotsStyle: 'width: 36px; height: 44px; flex: none; margin-right: -8px; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #2A2414; ' + (menu === r.id ? 'background: #FFF0C9' : 'background: transparent'),
+          hasBadge: !d && !!r.late, late: r.late || '', showMissed: !d && !!r.missed, missed: r.missed || '',
+          toggle: function () { var n = Object.assign({}, self.state.done); n[r.id] = !n[r.id]; self.setState({ done: n }); },
+          row: 'position: relative; display: flex; align-items: center; min-height: 58px; padding: 4px 0' + (menu === r.id ? '; z-index: 5' : '') + (i < list.length - 1 ? '; border-bottom: 1.5px solid #F2E6C4' : ''),
+          box: 'width: 44px; height: 44px; flex: none; border: none; background: transparent; padding: 0; margin-left: -8px; cursor: pointer; display: flex; align-items: center; justify-content: center',
+          inner: 'width: 24px; height: 24px; box-sizing: border-box; border-radius: 8px; display: flex; align-items: center; justify-content: center; ' + (d ? 'background: #5A6820' : 'border: 2.5px solid #CDBF95; background: #FFFFFF'),
+          titleStyle: 'font-size: 16px; line-height: 1.25; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis' + (d ? '; text-decoration: line-through; color: #5A503A' : ''),
+          whoName: { G: 'Gabriel', E: 'Eva', J: 'James', All: 'Everyone' }[r.who],
+          dot: 'width: 28px; height: 28px; flex: none; margin-left: 2px; border-radius: 50%; background: ' + C[r.who] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (r.who === 'All' ? '10px' : '13px') + '; font-weight: 900; color: #2A2414' + (d ? '; opacity: 0.5' : '')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
