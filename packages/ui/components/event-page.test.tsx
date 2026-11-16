@@ -31,6 +31,28 @@ describe('IconRow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open Little Notes studio in Google Maps' }));
     expect(onPress).toHaveBeenCalledOnce();
   });
+
+  it('shows icon actions as round buttons, read by their label', () => {
+    const onPress = vi.fn();
+    render(
+      <ListGroup inset>
+        <IconRow
+          compact
+          icon="pin"
+          title="Little Notes studio"
+          titleLines={3}
+          actions={[
+            { label: 'copy', icon: 'copy', accessibilityLabel: 'Copy Little Notes studio', onPress: vi.fn() },
+            { label: 'directions', icon: 'directions', accessibilityLabel: 'Open Little Notes studio in Google Maps', onPress },
+          ]}
+          last
+        />
+      </ListGroup>,
+    );
+    expect(screen.queryByText('copy')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Open Little Notes studio in Google Maps' }));
+    expect(onPress).toHaveBeenCalledOnce();
+  });
 });
 
 describe('MemberBadge', () => {

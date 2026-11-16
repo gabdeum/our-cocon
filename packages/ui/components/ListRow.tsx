@@ -4,6 +4,7 @@ import { useReduceMotion } from '../reduceMotion';
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarColor } from './Avatar';
 import { Icon, type IconName } from './Icon';
+import { IconButton } from './IconButton';
 import { IconTile, type IconTileTone } from './IconTile';
 import { Tag, type TagTone } from './Tag';
 import { Link } from './Button';
@@ -308,8 +309,11 @@ export interface IconRowProps {
   titleLines?: number;
   /** 14/700 muted: "Morning · about 09:00–12:00"; compact: on the title's line after " · ". */
   sub?: string;
-  /** Links at the end ("Copy", "Open in Maps"), 16 apart; compact: soft 36 pills ("Copy", "Maps"), 8 apart. */
-  actions?: { label: string; accessibilityLabel?: string; onPress: () => void }[];
+  /**
+   * At the end: links 16 apart; compact, soft 36 pills 8 apart. With an `icon`, a soft round 44
+   * IconButton instead, 8 apart (the place's copy and directions), read as its `accessibilityLabel`.
+   */
+  actions?: { label: string; accessibilityLabel?: string; icon?: IconName; onPress: () => void }[];
   /** Olive, 22, at the end: the car on the who row (spec 050). */
   trailingIcon?: IconName;
   /** Spec 050 FR-006: 52 tall, one line. */
@@ -339,7 +343,10 @@ export function IconRow({ icon, leading, title, titleLines, sub, actions = [], t
         </Text>
         {actions.length ? (
           <View className="flex-none flex-row gap-8">
-            {actions.map((action) => (
+            {actions.map((action) =>
+              action.icon ? (
+                <IconButton key={action.label} icon={action.icon} variant="soft" label={action.accessibilityLabel ?? action.label} onPress={action.onPress} />
+              ) : (
               <Pressable
                 key={action.label}
                 role="link"
@@ -351,7 +358,8 @@ export function IconRow({ icon, leading, title, titleLines, sub, actions = [], t
                   {action.label}
                 </Text>
               </Pressable>
-            ))}
+              ),
+            )}
           </View>
         ) : null}
         {end}
@@ -372,10 +380,14 @@ export function IconRow({ icon, leading, title, titleLines, sub, actions = [], t
         ) : null}
       </View>
       {actions.length ? (
-        <View className="flex-row gap-16">
-          {actions.map((action) => (
-            <Link key={action.label} label={action.label} accessibilityLabel={action.accessibilityLabel} onPress={action.onPress} />
-          ))}
+        <View className={cn('flex-row', actions.some((a) => a.icon) ? 'gap-8' : 'gap-16')}>
+          {actions.map((action) =>
+            action.icon ? (
+              <IconButton key={action.label} icon={action.icon} variant="soft" label={action.accessibilityLabel ?? action.label} onPress={action.onPress} />
+            ) : (
+              <Link key={action.label} label={action.label} accessibilityLabel={action.accessibilityLabel} onPress={action.onPress} />
+            ),
+          )}
         </View>
       ) : null}
       {end}

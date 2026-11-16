@@ -45,6 +45,12 @@ export const iconShapes = {
   "close": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="M18 6 6 18M6 6l12 12" /></Svg>
   ),
+  "copy": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Rect x="9" y="9" width="12" height="12" rx="2.5" /><Path d="M15 5.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h.5" /></Svg>
+  ),
+  "directions": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M10.6 2.6a2 2 0 0 1 2.8 0l8 8a2 2 0 0 1 0 2.8l-8 8a2 2 0 0 1-2.8 0l-8-8a2 2 0 0 1 0-2.8Z" /><Path d="M9 15v-2.5a2 2 0 0 1 2-2h4.5" /><Path d="M13.5 8l2.5 2.5-2.5 2.5" /></Svg>
+  ),
   "edit": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M4 20h4L19 9l-4-4L4 16Z" /><Path d="m13.5 6.5 4 4" /></Svg>
   ),

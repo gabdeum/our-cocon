@@ -365,7 +365,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <ListGroup inset>
           <IconRow icon="clock" title="Saturday, Oct 31" sub="Morning · about 09:00–12:00" />
           <IconRow icon="repeat" title="Every Saturday" />
-          <IconRow icon="pin" title="Little Notes studio, 4 Elm St" actions={[{ label: 'Copy', onPress: noop }, { label: 'Open in Maps', onPress: noop }]} />
+          <IconRow icon="pin" title="Little Notes studio, 4 Elm St" actions={[{ label: 'copy', icon: 'copy', accessibilityLabel: 'Copy Little Notes studio, 4 Elm St', onPress: noop }, { label: 'directions', icon: 'directions', accessibilityLabel: 'Open Little Notes studio, 4 Elm St in Google Maps', onPress: noop }]} />
           <IconRow icon="car" title="Gabriel takes James" />
           <IconRow icon="bell" title="1 hour before" sub="Shows on Home for Gabriel" last />
         </ListGroup>

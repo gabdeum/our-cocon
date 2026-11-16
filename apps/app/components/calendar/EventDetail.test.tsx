@@ -67,8 +67,6 @@ describe('Event detail', () => {
       ' · Morning, about 09:00–12:00',
       'Gabriel takes James',
       'Little Notes studio, 4 Elm St',
-      'Copy',
-      'Maps',
       '1 hour before',
       ' · reminds Gabriel · 08:00',
       'Bring',
@@ -111,22 +109,23 @@ describe('Event detail', () => {
 
   it('hides rows without a value, and says an assistant added it (FR-006)', () => {
     setup(babyMusic({ category: null, recurrence: null, starts_on: '2026-10-31', ends_on: '2026-10-31', location: null, responsible_member_id: null, reminder: 'none', checklist: [], source: 'claude' }));
-    for (const gone of ['Social', 'Every Saturday', 'Maps', 'takes', 'hour before', 'Bring', 'anyone can tick']) expect(document.body.textContent).not.toContain(gone);
+    expect(screen.queryByRole('button', { name: /in Google Maps$/ })).toBeNull();
+    for (const gone of ['Social', 'Every Saturday', 'takes', 'hour before', 'Bring', 'anyone can tick']) expect(document.body.textContent).not.toContain(gone);
     expect(screen.getByText('Added via Claude · 2 days ago')).toBeTruthy();
   });
 
   it('opens the place in Google Maps, or copies it', async () => {
     const { onOpenUrl, onCopy } = setup();
-    fireEvent.click(screen.getByRole('link', { name: 'Open Little Notes studio, 4 Elm St in Google Maps' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open Little Notes studio, 4 Elm St in Google Maps' }));
     expect(onOpenUrl).toHaveBeenCalledWith('https://www.google.com/maps/search/?api=1&query=Little%20Notes%20studio%2C%204%20Elm%20St');
-    fireEvent.click(screen.getByRole('link', { name: 'Copy Little Notes studio, 4 Elm St' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy Little Notes studio, 4 Elm St' }));
     expect(onCopy).toHaveBeenCalledWith('Little Notes studio, 4 Elm St');
     expect(await screen.findByText('Address copied')).toBeTruthy();
   });
 
   it('says so when the place can’t be copied', async () => {
     setup(undefined, { onCopy: vi.fn(async () => Promise.reject(new Error('no clipboard'))) });
-    fireEvent.click(screen.getByRole('link', { name: 'Copy Little Notes studio, 4 Elm St' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy Little Notes studio, 4 Elm St' }));
     expect(await screen.findByText("Couldn't copy the address.")).toBeTruthy();
   });
 

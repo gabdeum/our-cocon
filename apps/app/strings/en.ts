@@ -1736,14 +1736,10 @@ export const strings = {
         monthly: () => 'Every month',
         yearly: () => 'Every year',
       },
-      openInMaps: 'Open in Maps',
-      /** The compact page's pill (spec 050); read as openInMapsA11y. */
-      maps: 'Maps',
       /** The who row: "James", "James and Mia", then " · Gabriel takes James". */
       who: (names: string[]) => andList(names),
+      /** The place row's directions and copy buttons (icons only), read as these. */
       openInMapsA11y: (place: string) => `Open ${place} in Google Maps`,
-      /** Beside "Maps" on the place row: copies the place as typed. */
-      copyPlace: 'Copy',
       copyPlaceA11y: (place: string) => `Copy ${place}`,
       placeCopied: 'Address copied',
       copyPlaceFailed: "Couldn't copy the address.",
