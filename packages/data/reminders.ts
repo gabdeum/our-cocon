@@ -143,11 +143,12 @@ export async function loadRemindersHome(client: Pick<Db, 'from' | 'rpc'>, tz: st
  */
 export async function loadReminderSection(
   client: Pick<Db, 'from' | 'rpc'>,
-  options: { section: ReminderSection; mine: boolean; tz: string; cursor?: string | null },
+  options: { section: ReminderSection; mine: boolean; tz: string; cursor?: string | null; caughtUp?: boolean },
 ): Promise<ReminderPage> {
   const section = ReminderSection.parse(options.section);
   const after = options.cursor ? readCursor(options.cursor) : null;
-  if (!after) await catchUpReminders(client, options.tz);
+  // A screen loading several sections at once catches up once first and passes `caughtUp`.
+  if (!after && !options.caughtUp) await catchUpReminders(client, options.tz);
   const limit = !after && (section === 'overdue' || section === 'today') ? FIRST_PAGE : PAGE;
   const { data, error } = await client.rpc('reminders_section', {
     p_section: section,
@@ -162,6 +163,13 @@ export async function loadReminderSection(
   const page = rows.slice(0, limit);
   const last = page.at(-1);
   return { rows: page, nextCursor: rows.length > limit && last ? cursorOf(last) : null };
+}
+
+/** Whether the family has any open reminder, snoozed or not (Home hides its card otherwise, spec 057). */
+export async function hasOpenReminders(client: Pick<Db, 'from'>): Promise<boolean> {
+  const { data, error } = await client.from('reminders').select('id').is('deleted_at', null).is('completed_at', null).limit(1);
+  if (error) throw error;
+  return data.length > 0;
 }
 
 /** FR-012 for the calendar: open reminders that touch `from`–`to` (repeats are expanded by the caller). */
@@ -184,7 +192,8 @@ export async function loadReminderHistory(client: Pick<Db, 'from'>, id: string, 
   return z.array(Occurrence).parse(data ?? []);
 }
 
-async function loadStored(client: Pick<Db, 'from'>, id: string): Promise<StoredReminder & { completed: boolean }> {
+/** One reminder as stored (the edit sheet, spec 057). Throws when it was deleted. */
+export async function loadReminder(client: Pick<Db, 'from'>, id: string): Promise<StoredReminder & { completed: boolean }> {
   const { data, error } = await client.from('reminders').select(`${STORED}, completed_at`).eq('id', z.uuid().parse(id)).is('deleted_at', null).maybeSingle();
   if (error) throw error;
   if (!data) throw new Error('This reminder was deleted.');
@@ -221,7 +230,7 @@ export interface CompletedReminder {
 export async function completeReminder(client: Pick<Db, 'from' | 'rpc'>, id: string, tz: string, now: Date = new Date()): Promise<CompletedReminder | null> {
   const zone = TimeZone.parse(tz);
   for (let attempt = 0; attempt < 2; attempt++) {
-    let row: ReminderTiming & { next_due_at: string | null; completed: boolean } = await loadStored(client, id);
+    let row: ReminderTiming & { next_due_at: string | null; completed: boolean } = await loadReminder(client, id);
     if (row.completed) return null;
     const missed = catchUp(row, now, zone);
     if (missed) {
@@ -264,7 +273,7 @@ export async function snoozeReminder(
   tz: string,
   options: { now?: Date; picked?: string } = {},
 ): Promise<{ until: string; previous: string | null }> {
-  const row = await loadStored(client, id);
+  const row = await loadReminder(client, id);
   const until = snoozeUntil(ReminderSnoozeOption.parse(option), row, options.now ?? new Date(), TimeZone.parse(tz), options.picked);
   await setReminderSnooze(client, id, until);
   return { until, previous: row.snoozed_until };
@@ -283,4 +292,27 @@ export async function deleteReminder(client: Pick<Db, 'from'>, id: string, delet
     .update({ deleted_at: deleted ? new Date().toISOString() : null })
     .eq('id', z.uuid().parse(id));
   if (error) throw error;
+}
+
+const Deleted = z.object({ id: z.uuid(), title: z.string(), deleted_at: Instant, deleted_by: z.uuid().nullable() });
+export type DeletedReminder = z.infer<typeof Deleted>;
+
+/** Reminders deleted since `since`, newest first (Recently deleted, spec 057). */
+export async function loadDeletedReminders(client: Pick<Db, 'from'>, since: string): Promise<DeletedReminder[]> {
+  const { data, error } = await client
+    .from('reminders')
+    .select('id, title, deleted_at, deleted_by')
+    .not('deleted_at', 'is', null)
+    .gt('deleted_at', Instant.parse(since))
+    .order('deleted_at', { ascending: false })
+    .order('id');
+  if (error) throw error;
+  return z.array(Deleted).parse(data);
+}
+
+/** Removes a deleted reminder for good, with its history (the database only removes deleted ones). */
+export async function deleteReminderNow(client: Pick<Db, 'from'>, id: string): Promise<void> {
+  const { data, error } = await client.from('reminders').delete().eq('id', z.uuid().parse(id)).not('deleted_at', 'is', null).select('id');
+  if (error) throw error;
+  if (data.length === 0) throw new Error('reminder_not_found');
 }

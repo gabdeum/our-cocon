@@ -7,6 +7,7 @@ import { useCookActions } from '../../components/cooking/use-cook-actions';
 import { DebugFooter } from '../../components/DebugFooter';
 import type { ActivityShow } from '../../components/activity/ActivitySection';
 import { HomeScreen, type HomeCook } from '../../components/home/HomeScreen';
+import { HomeReminders } from '../../components/reminders/HomeReminders';
 import { activityKey, HOME_ENTRIES, loadActivity, undoActivity } from '../../lib/activity';
 import { calendarSettingsKey, eventsKey } from '../../lib/calendar-header';
 import { useOpenCooks } from '../../lib/cook-sessions';
@@ -71,6 +72,7 @@ export default function HomeTab() {
   return (
     <>
     <HomeScreen
+      reminders={<HomeReminders />}
       me={state.me}
       members={state.members}
       today={today}

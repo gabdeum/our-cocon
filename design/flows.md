@@ -28,6 +28,7 @@
 | OC-Timers | `/timers` | stack (reachable from anywhere) | 011 |
 | AI activity | `/activity` (Home › "See all") | stack, not designed: OC-Activity.md | 026 |
 | OC-Reminders | `/reminders` (Home › Reminders card, the calendar; `?open={id}` opens that reminder's drawer, OC-ReminderDrawer) | stack | 057, 059 |
+| OC-ReminderEdit | `/reminders/new` (Home › Reminders card "+", the Reminders screen's "+" and empty state) · `/reminders/{id}/edit` (the drawer's "Edit", Home's ⋮ › Edit; `?focus=notes` from "+ Add a note") | sheet | 057 |
 | Recently deleted | `/settings/deleted` | stack, not designed: list per spec 018 | 018 |
 | Sign in | `/welcome` (public, no tab bar) | page, not designed: OC-Welcome.md | 003 |
 | Sign-in link | `/auth/callback` (public) | page, not designed: OC-Welcome.md | 003 |

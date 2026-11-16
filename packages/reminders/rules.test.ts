@@ -1,7 +1,7 @@
 import type { Recurrence } from '@cocon/schemas';
 import { ReminderDraft } from '@cocon/schemas';
 import { describe, expect, it } from 'vitest';
-import { ReminderError, catchUp, complete, draftToFields, invert, nextDueAfter, rolloverFor, snoozeOptions, snoozeUntil, type ReminderTiming } from './rules';
+import { ReminderError, catchUp, complete, draftToFields, invert, nextDueAfter, rolloverFor, snoozeOptions, snoozeUntil, toDraft, type ReminderTiming } from './rules';
 
 // Paris: UTC+1 in winter, UTC+2 in summer (clocks change on 2026-10-25 and 2027-03-28).
 const tz = 'Europe/Paris';
@@ -23,6 +23,20 @@ describe('rolloverFor (FR-008)', () => {
     [false, 'none', 'none'],
   ] as const)('with a time %s and %s → %s', (hasTime, chosen, expected) => {
     expect(rolloverFor(hasTime, chosen)).toBe(expected);
+  });
+});
+
+describe('toDraft (spec 057, the edit sheet)', () => {
+  const member = '6f1c9a3e-1b2c-4d5e-8f90-123456789abc';
+
+  it.each([
+    { title: 'Pay the daycare', due_date: '2026-11-16', time: '08:00', rollover: 'week', assignee: member, notes: 'Cash\nonly', repeat: null },
+    { title: 'Bins', due_date: '2026-11-16', time: null, rollover: 'none', assignee: 'everyone', notes: null, repeat: weekly },
+    // Across the clock change: 08:00 stays 08:00.
+    { title: 'Swim bag', due_date: '2027-03-29', time: '08:00', rollover: 'hour', assignee: 'everyone', notes: null, repeat: null },
+  ] as const)('saves back the same reminder: $title', (d) => {
+    const fields = draftToFields(ReminderDraft.parse(d), tz);
+    expect(toDraft({ ...fields, snoozed_until: null }, tz)).toEqual(ReminderDraft.parse(d));
   });
 });
 

@@ -16,11 +16,11 @@ export interface CalCardProps {
   onAdd: () => void;
   addDisabled?: boolean;
   children: ReactNode;
-  /** "Open calendar ›" under a divider; none in the empty state. */
-  footer?: { label: string; onPress: () => void };
+  /** "Open calendar ›" under a divider; none in the empty state. `hint`: quieter, before the chevron ("2 more today · 1 snoozed", spec 057). */
+  footer?: { label: string; onPress: () => void; hint?: string };
 }
 
-/** Home's calendar card (CalCard README): white, radius 26, padding 14 16 12, gap 12. */
+/** Home's calendar card (CalCard README): white, radius 26, padding 14 16 12, gap 12. Also Home's Reminders card (spec 057). */
 export function CalCard({ label, header, addLabel, onAdd, addDisabled, children, footer }: CalCardProps) {
   return (
     <View role="region" aria-label={label} className="gap-12 rounded-[26px] bg-surface-card px-16 pb-12 pt-14">
@@ -47,7 +47,16 @@ export function CalCard({ label, header, addLabel, onAdd, addDisabled, children,
           <Text size={15} weight="800" color="olive">
             {footer.label}
           </Text>
-          <Icon name="chevron-right" size={18} color="olive" />
+          {footer.hint ? (
+            <View className="min-w-0 flex-row items-center gap-4">
+              <Text size={14} weight="700" color="ink-muted">
+                {footer.hint}
+              </Text>
+              <Icon name="chevron-right" size={18} color="inkMuted" />
+            </View>
+          ) : (
+            <Icon name="chevron-right" size={18} color="olive" />
+          )}
         </Pressable>
       ) : null}
     </View>

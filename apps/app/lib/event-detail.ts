@@ -1,6 +1,6 @@
 import { calendarWordsEn, dateLabel, formatTime, rangeLabel, reminderAt, reminderRecipients, timeLabel, viewFor, weekday, type CalendarEvent, type SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { memberInitials } from '@cocon/schemas';
+import { memberInitials, type Recurrence } from '@cocon/schemas';
 import type { MemberChipColor } from '@cocon/ui';
 import { strings } from '../strings/en';
 import { minutesSince } from './assistants';
@@ -37,11 +37,14 @@ export function whenLine(o: Pick<CalendarEvent, 'starts_on' | 'ends_on' | 'time_
 
 /** The Repeat row: "Every Saturday", "Every Tuesday and Thursday", "Every day"; null for a one-off event. */
 export function repeatLine(event: StoredEvent): string | null {
-  const r = event.recurrence;
-  if (!r) return null;
+  return event.recurrence ? repeatWords(event.recurrence, event.starts_on) : null;
+}
+
+/** A repeat in words, from its first date (an event's, or a reminder's, spec 057). */
+export function repeatWords(r: Recurrence, starts: string): string {
   if (r.freq !== 'weekly' && r.freq !== 'biweekly') return e.every[r.freq]();
   // A weekly repeat on no particular days falls on the series' first day's weekday.
-  const days = (r.weekdays?.length ? [...r.weekdays].sort((x, y) => x - y) : [weekday(event.starts_on)]).map((d) => calendarWordsEn.weekdays[d] ?? '');
+  const days = (r.weekdays?.length ? [...r.weekdays].sort((x, y) => x - y) : [weekday(starts)]).map((d) => calendarWordsEn.weekdays[d] ?? '');
   return e.every[r.freq](days);
 }
 

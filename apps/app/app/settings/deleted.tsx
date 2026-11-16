@@ -1,13 +1,13 @@
 import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { deleteEventNow, restoreEvent } from '@cocon/data';
+import { deleteEventNow, deleteReminder, deleteReminderNow, restoreEvent } from '@cocon/data';
 import { RecentlyDeleted } from '../../components/settings/RecentlyDeleted';
 import { deleteNow, restoreRecipe } from '../../lib/recipe-delete';
 import { useDeletedItems } from '../../lib/recently-deleted';
 import { useOnline } from '../../lib/online';
 import { useSession } from '../../lib/session';
 
-/** /settings/deleted (spec 018; events since 042): Recently deleted, pushed from the Menu. */
+/** /settings/deleted (spec 018; events since 042, reminders since 057): Recently deleted, pushed from the Menu. */
 export default function RecentlyDeletedRoute() {
   const { state, client, tracker } = useSession();
   const online = useOnline();
@@ -15,8 +15,8 @@ export default function RecentlyDeletedRoute() {
   const familyId = state.status === 'ready' ? state.family.id : null;
   const myMemberId = state.status === 'ready' ? (state.members.find((m) => m.user_id === state.userId)?.id ?? state.me.id) : null;
   const list = useDeletedItems(client, familyId, myMemberId);
-  // Every recipe and event query starts with [table, family], so the lists, the calendar and Settings' count refetch.
-  const refresh = (kind: 'recipe' | 'event') => queryClient.invalidateQueries({ queryKey: [kind === 'recipe' ? 'recipes' : 'events', familyId] });
+  // Every recipe, event and reminder query starts with [table, family], so the lists, the calendar and Settings' count refetch.
+  const refresh = (kind: 'recipe' | 'event' | 'reminder') => queryClient.invalidateQueries({ queryKey: [kind === 'recipe' ? 'recipes' : kind === 'event' ? 'events' : 'reminders', familyId] });
   if (state.status !== 'ready') return null;
   return (
     <RecentlyDeleted
@@ -27,11 +27,11 @@ export default function RecentlyDeletedRoute() {
       onRetry={() => void list.refetch()}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/menu'))}
       onRestore={async (item) => {
-        await (item.kind === 'recipe' ? restoreRecipe(client, item.id) : restoreEvent(client, item.id));
+        await (item.kind === 'recipe' ? restoreRecipe(client, item.id) : item.kind === 'event' ? restoreEvent(client, item.id) : deleteReminder(client, item.id, false));
         await refresh(item.kind);
       }}
       onDeleteNow={async (item) => {
-        await (item.kind === 'recipe' ? deleteNow(client, state.family.id, item.id) : deleteEventNow(client, item.id));
+        await (item.kind === 'recipe' ? deleteNow(client, state.family.id, item.id) : item.kind === 'event' ? deleteEventNow(client, item.id) : deleteReminderNow(client, item.id));
         await refresh(item.kind);
       }}
       readOnly={!online}

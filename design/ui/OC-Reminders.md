@@ -58,6 +58,17 @@ Notification summary: "Notifies {name} at {time − 1 h} and {time}, then every 
 
 Errors: empty title → "Give your reminder a name." (`#8A4B00`, under the field). "Every hour" chosen then time switched off → rollover silently becomes "Next day".
 
+Written for the build (spec 057, not drawn):
+- A time typed on the web that isn't one → "Use a time like 15:00." under the "Set a time" row.
+- "Custom" in Repeat shows the event sheet's repeats (Daily, Weekly, Every 2 weeks, Monthly, Yearly) and its On / Ends card (OC-CalAddMore).
+- Deleting a repeating reminder (drawer, Home's ⋮, the edit sheet): Dialog "Delete all future reminders?" · "Every date of “{title}” goes. You can bring it back from Recently deleted for 30 days." · "Delete reminder" / "Keep it". A one-off is deleted at once, with the toast "Reminder deleted" and Undo.
+- Late under a day, in the drawer: "{n} hours late." A repeat that isn't weekly, missed once: " The one on {date} was missed too."
+- After "Mark as done" on a one-off reminder the green card has its title only; a repeat with no next date says "The next one stays on schedule."
+- A reminder that was deleted or finished while its edit sheet opened: the toast "This reminder was deleted." and the sheet closes.
+- The Snoozed row counts the first page: "20+ hidden until later" when there are more.
+- Loading: "Loading reminders". A failed save: the toast "Couldn't save. Try again." (056).
+- Recently deleted lists reminders too: restored → "“{title}” is back in your reminders."; its empty line reads "Recipes, events and reminders you delete stay here for 30 days." (OC-Menu.md).
+
 ## Agenda rows
 Reminder row = tick box (26 px, radius 8) in place of stripe + avatar; title 17/800; detail "{time or Any time} · {name}"; late badge on the right. Header pill "Reminders" with check-square icon: on = olive/white, off = cream.
 

@@ -160,6 +160,25 @@ export function draftToFields(draft: ParsedReminderDraft, tz: string): ReminderF
 }
 
 /**
+ * A stored reminder as the draft that would save it (the edit sheet, spec 057): due on the day of
+ * its open occurrence, so a repeating one keeps its schedule from there.
+ */
+export function toDraft(
+  r: ReminderTiming & { title: string; notes: string | null; assignee_id: string | null; rollover: ReminderRollover },
+  tz: string,
+): ParsedReminderDraft {
+  return {
+    title: r.title,
+    notes: r.notes,
+    due_date: local(r.due_at, tz).date,
+    time: wallTime(r, tz),
+    repeat: r.repeat_rule,
+    rollover: r.rollover,
+    assignee: r.assignee_id ?? 'everyone',
+  };
+}
+
+/**
  * FR-004 Done. A one-off is completed. A repeating one closes its occurrence as done and moves to
  * the next scheduled date after it (from the schedule, not from today), with its snooze cleared;
  * on the last date of its repeat, it's closed as done and completed. Run `catchUp` first, so `due_at` is current.

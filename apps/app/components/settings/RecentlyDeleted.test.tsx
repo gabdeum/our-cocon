@@ -107,7 +107,7 @@ describe('Recently deleted', () => {
   it('says when there is nothing to bring back', () => {
     setup({ items: [] });
     expect(screen.getByText('Nothing here.')).toBeTruthy();
-    expect(screen.getByText('Recipes and events you delete stay here for 30 days.')).toBeTruthy();
+    expect(screen.getByText('Recipes, events and reminders you delete stay here for 30 days.')).toBeTruthy();
   });
 
   it('offers Try again when the list could not load', () => {

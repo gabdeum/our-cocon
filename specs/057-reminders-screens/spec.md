@@ -32,6 +32,14 @@ Copy in `design/ui/OC-Reminders.md`.
 
 ## Needs your attention
 - The card goes above the calendar card on Home. Move it if you'd rather have it below.
+- The sheet's notification line follows the screen's four sentences, which simplify 059's nudges: "Next day" or "Next week" with a time says nothing after the due time, and "Next week" without one says "each morning" (032-later L149, with 059).
+- The Reminders screen has no tab bar: like every pushed screen (spec 002), so its "+" sits 28 from the bottom instead of above the tab bar.
+- Reminders aren't in Home › Latest activity yet (032-later L144, with 060).
 
 ## Changelog
 - 2026-11-15: Ready.
+- 2026-11-16: Built. Home's Reminders card under the greeting (top 3, ⋮ menu: snooze times, Pick a date…, Edit, Delete reminder; hidden when the family has no open reminder), `/reminders` (Mine · Everyone's remembered per device, Overdue, Today, Tomorrow, Later with "Show more", Snoozed, the "+", the empty state; `?open={id}` opens a drawer), the drawer, and the new/edit sheet (`/reminders/new`, `/reminders/{id}/edit`, `?focus=notes` from "+ Add a note"). Ticks, snoozes and deletes are optimistic; ticked rows stay struck through until the screen is left. The four Tracking events; the app also sends 056's `reminder_completed` and `reminder_snoozed` (source home, list, drawer). New in the design system: ReminderRow (with MemberPill and ReminderMore), TimeField and the `note` icon; ActionMenu gained a heading, item details, separators and a ⋮ trigger, CalCard's footer a hint, DayChip a start-aligned look. Also 032-later L147: reminders in Recently deleted. Fixed a 056 gap: `reminders` wasn't in the app's live tables, so ticks didn't reach other phones. Deviations:
+  - "Show more" has no "{n} more", and rows don't say "missed last week too" (the lists are pages without totals or missed counts; the drawer says it) (L150). "Every 3 months" can't be made (no repeat interval); Custom offers the event repeats, and a monthly repeat reads "Every month" (L151).
+  - The summary line uses the viewer's clock and quiet hours 22:00–07:00 until 059 (L149). `?open={id}` finds only reminders on the loaded pages (L148).
+  - Home's rows open nothing when tapped (the screen draws no button there); the drawer opens from ⋮ › Pick a date…. The calendar's way in, and `reminder_drawer_opened` with `calendar`, come with 058.
+  - The drawer's 18 px cards use the 16 px radius token; a one-off's "Done" card has no second line (the screen's "The next one stays on schedule." is for repeats). Dates read "Back tomorrow, Thu, Nov 12", as dates do everywhere else. Copy written for the build is in OC-Reminders.md › "Written for the build".
