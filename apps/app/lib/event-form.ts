@@ -76,6 +76,9 @@ export interface EventDraft {
   coverNote: string;
 }
 
+/** A repeat as the sheets hold it: the event sheet's, and the reminder sheet's "Custom" (spec 057). */
+export type RepeatDraft = Pick<EventDraft, 'date' | 'repeat' | 'weekdays' | 'ends'>;
+
 /** The route's prefill (FR-007, 032-later L91): a day, and a slot (Day view) or an hour (Week view). */
 export interface Prefill {
   date?: string;
@@ -146,9 +149,7 @@ export function draftFromEvent(event: StoredEvent, date: string = event.starts_o
     category: event.category,
     location: event.location ?? '',
     responsible: event.responsible_member_id ?? null,
-    repeat: r ? r.freq : 'never',
-    weekdays: r?.weekdays ? [...r.weekdays] : [],
-    ends: !r || r.ends.type === 'never' ? { type: 'never' } : r.ends.type === 'on' ? { type: 'on', date: r.ends.date } : { type: 'after', count: String(r.ends.count) },
+    ...repeatDraftOf(r),
     reminder: event.reminder ?? 'none',
     notes: event.notes ?? '',
     checklist: (event.checklist ?? []).map((c) => ({ id: c.id, label: c.label })),
@@ -335,12 +336,22 @@ const countOf = (count: string) => {
   return Number.isInteger(n) && n >= 1 && n <= 1000 ? n : null;
 };
 
-export const endsProblem = (draft: EventDraft) => draft.repeat !== 'never' && draft.ends.type === 'after' && countOf(draft.ends.count) === null;
+export const endsProblem = (draft: RepeatDraft) => draft.repeat !== 'never' && draft.ends.type === 'after' && countOf(draft.ends.count) === null;
 
 /** Weekly's days: the picked ones, or the start day's when none are. */
-const weekdaysOf = (draft: EventDraft) => (draft.weekdays.length ? [...draft.weekdays].sort((x, y) => x - y) : [weekday(draft.date)]);
+const weekdaysOf = (draft: RepeatDraft) => (draft.weekdays.length ? [...draft.weekdays].sort((x, y) => x - y) : [weekday(draft.date)]);
 
-function recurrenceOf(draft: EventDraft): Recurrence | null {
+/** A stored repeat as the sheets hold it (the inverse of `recurrenceOf`). */
+export function repeatDraftOf(r: Recurrence | null | undefined): Omit<RepeatDraft, 'date'> {
+  return {
+    repeat: r ? r.freq : 'never',
+    weekdays: r?.weekdays ? [...r.weekdays] : [],
+    ends: !r || r.ends.type === 'never' ? { type: 'never' } : r.ends.type === 'on' ? { type: 'on', date: r.ends.date } : { type: 'after', count: String(r.ends.count) },
+  };
+}
+
+/** The draft's repeat as stored, or null for Never. */
+export function recurrenceOf(draft: RepeatDraft): Recurrence | null {
   if (draft.repeat === 'never') return null;
   const e = draft.ends;
   const ends = e.type === 'after' ? { type: 'after' as const, count: countOf(e.count) ?? 1 } : e;

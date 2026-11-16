@@ -32,6 +32,8 @@ export interface HomeCook {
 }
 
 export interface HomeScreenProps {
+  /** Spec 057: the Reminders card, under the greeting and above the calendar card (nothing when there are none). */
+  reminders?: ReactNode;
   me: AccountMember;
   /** Every member, with the app and without, in member order. */
   members: Member[];
@@ -77,8 +79,9 @@ export interface HomeScreenProps {
   };
 }
 
-/** Spec 028 (OC-Home): brand row (pinned, spec 050 FR-007), greeting, calendar card, the two tiles, latest recipe, Latest activity. */
+/** Spec 028 (OC-Home): brand row (pinned, spec 050 FR-007), greeting, reminders (spec 057), calendar card, the two tiles, latest recipe, Latest activity. */
 export function HomeScreen({
+  reminders,
   me,
   members,
   today,
@@ -141,6 +144,7 @@ export function HomeScreen({
     >
       <BrandHeader date={homeDate(today)} greeting={greeting(now, firstName(me.display_name))} />
       <OfflineBanner screen="home" tracker={tracker} />
+      {reminders}
       <CalendarCard
         layout={layout}
         readOnly={readOnly}

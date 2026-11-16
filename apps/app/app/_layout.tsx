@@ -233,6 +233,9 @@ export default function RootLayout() {
                   <Stack.Screen name="calendar/[id]/index" options={presentation.stack} />
                   <Stack.Screen name="calendar/[id]/edit" options={presentation.sheet} />
                   <Stack.Screen name="calendar/[id]/share" options={presentation.sheet} />
+                  <Stack.Screen name="reminders/index" options={presentation.stack} />
+                  <Stack.Screen name="reminders/new" options={presentation.sheet} />
+                  <Stack.Screen name="reminders/[id]/edit" options={presentation.sheet} />
                   <Stack.Screen name="timers" options={presentation.stack} />
                   <Stack.Screen name="activity" options={presentation.stack} />
                   <Stack.Screen name="settings/index" />

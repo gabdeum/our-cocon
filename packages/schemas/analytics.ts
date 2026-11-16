@@ -4,7 +4,7 @@ import { CalendarView, DefaultReminder, Reminder, SlotKey, TimeType, Visibility 
 import { AiPermission, CookingSetting, MemberColor, SignInMethod } from './family';
 import { NotificationKind } from './notifications';
 import { FilterKey } from './recipe-filters';
-import { ReminderActionSource, ReminderSnoozeOption } from './reminders';
+import { ReminderActionSource, ReminderRollover, ReminderSection, ReminderSnoozeOption } from './reminders';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
 
 // The converter's units (spec 013, `@cocon/quantity` CONVERTER_UNITS), and its result tiles' units.
@@ -277,6 +277,12 @@ export const events = {
   reminder_completed: z.strictObject({ repeating: z.boolean(), late_days: z.int().min(0).max(3660), source: ReminderActionSource }),
   reminder_snoozed: z.strictObject({ option: ReminderSnoozeOption, source: ReminderActionSource }),
   reminder_missed: z.strictObject({}),
+  // Spec 057: a reminder saved from the new-reminder sheet; the Reminders screen opened (its filter)
+  // and a section's next page; the drawer opened, and from where.
+  reminder_created: z.strictObject({ has_time: z.boolean(), repeating: z.boolean(), rollover: ReminderRollover, has_notes: z.boolean(), assignee_is_self: z.boolean() }),
+  reminders_list_viewed: z.strictObject({ filter: z.enum(['mine', 'everyone']) }),
+  reminders_show_more: z.strictObject({ section: ReminderSection }),
+  reminder_drawer_opened: z.strictObject({ source: z.enum(['home', 'list', 'calendar']) }),
 } as const;
 
 export type EventName = keyof typeof events;

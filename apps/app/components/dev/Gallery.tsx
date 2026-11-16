@@ -87,6 +87,8 @@ import {
   DayChip,
   ChecklistAdd,
   ChecklistRow,
+  ReminderRow,
+  TimeField,
   DateGrid,
   DisclosureButton,
   WeekdayPicker,
@@ -373,6 +375,67 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <ChecklistRow label="Diaper bag" done onToggle={noop} />
           <ChecklistRow label="Bottle (offline)" done={false} onToggle={noop} disabled last />
         </ListGroup>
+      </Section>
+
+      <Section group="Reminders" title="CalCard, ReminderRow, ActionMenu (dots), DayChip (start), TimeField (spec 057)">
+        <CalCard
+          label="Reminders"
+          header={
+            <Text size={20} weight="900">
+              Reminders
+            </Text>
+          }
+          addLabel="New reminder"
+          onAdd={noop}
+          footer={{ label: 'See all reminders', hint: '2 more today · 1 snoozed', onPress: noop }}
+        >
+          <View>
+            <ReminderRow
+              title="Water the plants"
+              detail="Was due Mon"
+              member={{ initial: 'G', color: 'honey', name: 'Gabriel' }}
+              late="2d late"
+              onToggle={noop}
+              toggleLabel="Mark done: Water the plants"
+              trailing={
+                <ActionMenu
+                  trigger="dots"
+                  label="More options for Water the plants"
+                  heading="Snooze until"
+                  items={[
+                    { label: 'Tomorrow', detail: 'Thu 12', onPress: noop },
+                    { label: 'Next week', detail: 'Wed 18', onPress: noop },
+                    { label: 'Edit', onPress: noop, separatorBefore: true },
+                    { label: 'Delete reminder', tone: 'danger', onPress: noop },
+                  ]}
+                />
+              }
+            />
+            <ReminderRow title="Book James’s check-up" detail="Done just now" member={{ initial: 'G', color: 'honey', name: 'Gabriel' }} done onToggle={noop} toggleLabel="Mark not done" />
+            <ReminderRow
+              title="Take the bins out"
+              detail="20:00"
+              member={{ initial: 'All', color: 'everyone', name: 'Everyone' }}
+              repeats="Repeats"
+              notes="Has notes"
+              onToggle={noop}
+              toggleLabel="Mark done: Take the bins out"
+              onOpen={noop}
+              openLabel="Open Take the bins out"
+              last
+            />
+          </View>
+        </CalCard>
+        <View className="flex-row gap-8">
+          <DayChip align="start" label="Tomorrow" sub="Thu, Nov 12" selected={false} onPress={noop} />
+          <DayChip align="start" label="Next week" sub="Wed, Nov 18" selected onPress={noop} />
+        </View>
+        <View className="flex-row items-center gap-10 rounded-lg bg-surface-card px-16 py-6">
+          <Text size={16} weight="800" className="flex-1">
+            Set a time
+          </Text>
+          <TimeField label="Time" value="15:00" onChange={noop} />
+        </View>
       </Section>
 
       <Section group="Actions" title="Pill">

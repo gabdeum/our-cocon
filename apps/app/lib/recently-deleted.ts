@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { viewFor } from '@cocon/calendar';
-import { loadDeletedEvents } from '@cocon/data';
+import { loadDeletedEvents, loadDeletedReminders } from '@cocon/data';
 import { KEEP_DAYS, deletedRecipesKey, loadDeleted } from './recipe-delete';
 import type { Client } from './supabase';
 
 const DAY = 24 * 60 * 60 * 1000;
 
-/** One row of Recently deleted (spec 018; events since 042): a recipe or an event. */
+/** One row of Recently deleted (spec 018; events since 042, reminders since 057). */
 export interface DeletedItem {
-  kind: 'recipe' | 'event';
+  kind: 'recipe' | 'event' | 'reminder';
   id: string;
-  /** The recipe's name or the event's title. */
+  /** The recipe's name, or the event's or reminder's title. */
   name: string;
   deleted_at: string;
   deleted_by: string | null;
@@ -27,9 +27,18 @@ export async function loadDeletedEventItems(client: Pick<Client, 'from'>, myMemb
   );
 }
 
-/** Recipes and events, newest first. */
-export function mergeDeleted(recipes: readonly Omit<DeletedItem, 'kind'>[], events: readonly DeletedItem[]): DeletedItem[] {
-  return [...recipes.map((r) => ({ ...r, kind: 'recipe' as const })), ...events].sort((a, b) => Date.parse(b.deleted_at) - Date.parse(a.deleted_at));
+/** Starts with `reminders`, so a live change to any reminder refetches it (lib/sync.tsx). */
+export const deletedRemindersKey = (familyId: string) => ['reminders', familyId, 'deleted'] as const;
+
+/** The reminders deleted in the last 30 days (spec 057, 032-later L147). */
+export async function loadDeletedReminderItems(client: Pick<Client, 'from'>, now: Date = new Date()): Promise<DeletedItem[]> {
+  const reminders = await loadDeletedReminders(client, new Date(now.getTime() - KEEP_DAYS * DAY).toISOString());
+  return reminders.map((x) => ({ kind: 'reminder' as const, id: x.id, name: x.title, deleted_at: x.deleted_at, deleted_by: x.deleted_by }));
+}
+
+/** Recipes, events and reminders, newest first. */
+export function mergeDeleted(recipes: readonly Omit<DeletedItem, 'kind'>[], ...others: readonly (readonly DeletedItem[])[]): DeletedItem[] {
+  return [...recipes.map((r) => ({ ...r, kind: 'recipe' as const })), ...others.flat()].sort((a, b) => Date.parse(b.deleted_at) - Date.parse(a.deleted_at));
 }
 
 /** Recently deleted's list, shared by the screen and Settings' count so they agree. */
@@ -40,10 +49,11 @@ export function useDeletedItems(client: Pick<Client, 'from'>, familyId: string |
     queryFn: () => loadDeletedEventItems(client, myMemberId ?? ''),
     enabled: familyId !== null && myMemberId !== null,
   });
-  const items = recipes.data && events.data ? mergeDeleted(recipes.data, events.data) : undefined;
+  const reminders = useQuery({ queryKey: deletedRemindersKey(familyId ?? ''), queryFn: () => loadDeletedReminderItems(client), enabled: familyId !== null });
+  const items = recipes.data && events.data && reminders.data ? mergeDeleted(recipes.data, events.data, reminders.data) : undefined;
   return {
     items,
-    failed: recipes.isError || events.isError,
-    refetch: () => Promise.all([recipes.refetch(), events.refetch()]),
+    failed: recipes.isError || events.isError || reminders.isError,
+    refetch: () => Promise.all([recipes.refetch(), events.refetch(), reminders.refetch()]),
   };
 }

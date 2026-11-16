@@ -81,6 +81,9 @@ export const iconShapes = {
   "more-vertical": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}><Circle cx="12" cy="5" r="2" /><Circle cx="12" cy="12" r="2" /><Circle cx="12" cy="19" r="2" /></Svg>
   ),
+  "note": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M5 4h14v11l-5 5H5z" /><Path d="M14 20v-5h5M9 9h6M9 13h3" /></Svg>
+  ),
   "people": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Circle cx="9" cy="8" r="3.5" /><Path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><Path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.5a6.5 6.5 0 0 1 3 5.5" /></Svg>
   ),

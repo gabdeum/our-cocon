@@ -15,7 +15,8 @@ Reference: `design/screens/CalCard.dc.html`, `OC-CalCardWeek.dc.html`, `OC-CalCa
 | This week | `WeekStrip`, then up to 5 rows in `WeekEventGroup`s (one per day) and a "See all (N more)" link |
 | A day picked | Header row min 36: date 15/900 ("Wednesday, Oct. 28") and the Link "Whole week"; that day's `EventListRow size="sm"`s, or 15/700 ink-muted "Nothing planned on Thursday."; "+" reads "Add event on Wednesday" |
 | Empty | 16/700 ink-muted line, then an ink Button 56 tall "+ Add event" |
-| Footer | "Open calendar" 15/800 olive with a chevron-right, 44 tall (34 drawn, raised to the touch minimum), 1.5 px `line` divider above, padding-top 10. None in the empty state |
+| Footer | "Open calendar" 15/800 olive with a chevron-right, 44 tall (34 drawn, raised to the touch minimum), 1.5 px `line` divider above, padding-top 10. None in the empty state. With a `hint`: 14/700 ink-muted at the right, then an ink-muted chevron ("See all reminders · 2 more today · 1 snoozed") |
+| Reminders card (spec 057) | The same card: title "Reminders" 20/900, the "+" is "New reminder", ReminderRows, footer "See all reminders" with its hint (`OC-HomeReminders.dc.html`) |
 
 ## States
 

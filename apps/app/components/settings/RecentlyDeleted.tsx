@@ -46,7 +46,7 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
     try {
       await onRestore(item);
       if (item.kind === 'recipe') tracker.track('recipe_restored', { days_since_delete: daysSinceDelete(item.deleted_at) });
-      toast.show({ text: item.kind === 'recipe' ? d.restored(item.name) : d.eventRestored(item.name) });
+      toast.show({ text: item.kind === 'recipe' ? d.restored(item.name) : item.kind === 'event' ? d.eventRestored(item.name) : d.reminderRestored(item.name) });
     } catch {
       toast.show({ text: d.restoreFailed, tone: 'warn' });
     } finally {
@@ -122,7 +122,7 @@ export function RecentlyDeleted({ items, members, tracker, failed, onRetry, onBa
       <Dialog
         visible={confirm !== null}
         title={d.deleteNowTitle(confirm?.name ?? '')}
-        body={confirm?.kind === 'event' ? d.eventDeleteNowBody : d.deleteNowBody}
+        body={confirm?.kind === 'recipe' ? d.deleteNowBody : d.eventDeleteNowBody}
         confirmLabel={d.deleteNow}
         onConfirm={() => {
           if (confirm) void deleteNow(confirm);

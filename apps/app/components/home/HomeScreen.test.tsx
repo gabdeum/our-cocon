@@ -1,5 +1,6 @@
 // Spec 028 (OC-Home, CalCard): what's on today (US1), this week or nothing (US2), the latest
 // recipe (US3), the tiles (US4), and the edge cases: no recipes, a new family, Busy.
+import { View } from 'react-native';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { HomeHero, StoredEvent } from '@cocon/data';
@@ -70,6 +71,15 @@ describe('Home', () => {
     expect(screen.getByRole('heading', { name: 'Hi Gabriel' })).toBeTruthy();
     fireEvent.click(screen.getByRole('link', { name: 'Family: Gabriel, Eva, James' }));
     expect(navigate.family).toHaveBeenCalled();
+  });
+
+  it('Spec 057 FR-001: the Reminders card goes under the greeting, above the calendar card', () => {
+    setup({ reminders: <View role="region" aria-label="Reminders" /> });
+    const greeting = screen.getByRole('heading', { name: 'Hi Gabriel' });
+    const reminders = screen.getByRole('region', { name: 'Reminders' });
+    const calendar = screen.getByRole('region', { name: 'Family calendar' });
+    expect(greeting.compareDocumentPosition(reminders) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(reminders.compareDocumentPosition(calendar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('US1: today’s events under a Today · This week toggle, the birthday banner, "Now" and Open calendar', async () => {

@@ -4,7 +4,7 @@ import type { Tracker } from '@cocon/schemas';
 import type { FamilyApi } from '../lib/family';
 import type { AccountMember, Family, Member } from '../lib/session';
 import type { GroceryItem, PackData } from '../lib/groceries';
-import type { StoredEvent } from '@cocon/data';
+import type { PlacedReminder, StoredEvent } from '@cocon/data';
 
 export const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
 
@@ -139,6 +139,39 @@ export function storedEvent(fields: Partial<StoredEvent>): StoredEvent {
     created_at: '2026-10-01T00:00:00Z',
     updated_at: '2026-10-01T00:00:00Z',
     deleted_at: null,
+    ...fields,
+  };
+}
+
+let reminderCount = 0;
+
+/** Spec 057: an open reminder as 056's lists return it; due today at 15:00 in Paris (14:00Z), not late. */
+export function placedReminder(fields: Partial<PlacedReminder>): PlacedReminder {
+  reminderCount += 1;
+  const due_at = fields.due_at ?? '2026-11-11T14:00:00.000Z';
+  return {
+    id: `00000000-0000-4000-9000-${String(reminderCount).padStart(12, '0')}`,
+    title: 'Reminder',
+    notes: null,
+    assignee_id: gabriel.id,
+    due_at,
+    has_time: true,
+    repeat_rule: null,
+    repeat_from: null,
+    next_due_at: null,
+    rollover: 'hour',
+    snoozed_until: null,
+    source: 'app',
+    created_by: 'u-gabriel',
+    created_at: '2026-11-01T00:00:00Z',
+    updated_at: '2026-11-01T00:00:00Z',
+    due_on: '2026-11-11',
+    late_from: due_at,
+    late_hours: 0,
+    late_days: 0,
+    section: 'today',
+    on_home: true,
+    sort_at: due_at,
     ...fields,
   };
 }

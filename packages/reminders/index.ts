@@ -8,6 +8,7 @@ export {
   rolloverFor,
   snoozeOptions,
   snoozeUntil,
+  toDraft,
   type ReminderChange,
   type ReminderErrorCode,
   type ReminderFields,
