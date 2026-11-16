@@ -79,9 +79,9 @@ export interface MonthGridProps {
 const clipOnWeb = (Platform.OS === 'web' ? { textOverflow: 'clip' } : {}) as TextStyle;
 
 function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
-  const mark = cell.reminders ? <Icon name="alarm" size={11} color={muted ? 'inkMuted' : 'olive'} /> : null;
+  const mark = cell.reminders ? <Icon name="alarm" size={13} color={muted ? 'inkMuted' : 'olive'} /> : null;
   // MonthGrid README › Date: an 18 px row. Today is an olive circle; the 1st an ink pill "Nov 1"
-  // (olive when the 1st is today), clipped with no "…". A day with reminders adds an 11 px alarm clock.
+  // (olive when the 1st is today), clipped with no "…". A day with reminders adds a 13 px alarm clock.
   if (cell.first || cell.today) {
     return (
       <View className="h-[18px] max-w-full flex-row items-center gap-[2px] self-start">

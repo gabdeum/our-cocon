@@ -129,7 +129,7 @@ function DayHead({ day, onPress }: { day: WeekDayHead; onPress: () => void }) {
             {day.num}
           </Text>
         )}
-        {day.reminders ? <Icon name="alarm" size={15} color="olive" /> : null}
+        {day.reminders ? <Icon name="alarm" size={17} color="olive" /> : null}
       </View>
     </Pressable>
   );

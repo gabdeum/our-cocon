@@ -39,3 +39,4 @@ Screen: `design/screens/OC-CalAgendaReminders.dc.html`. Only the reminder rows a
   - Without ‹ ›, Day and Agenda page with ← → on the web and with "Previous day" / "Next day" ("… week" in Agenda) as VoiceOver actions on the header title (Gabriel chose this over keeping ‹ › in Day). Web screen readers in browse mode don't pass ← → through, so for them Day changes only through Today or Month and Week's day sheets.
   - `calendar_day_sheet_opened` still counts events only. `calendar_reminders_toggled` is sent from the header and from the day sheet alike (`on` only).
 - 2026-11-16: The reminders icon is now `alarm` (an alarm clock), as Gabriel asked: the toggle, the day sheet's toggle and the marks in Month and Week. `check-square` is gone; `clock` stays an event's time and `bell` an event's reminder.
+- 2026-11-16: The alarm marks are a little larger than the date, as Gabriel asked: 13 px in Month (date 11), 17 in Week (date 15).
