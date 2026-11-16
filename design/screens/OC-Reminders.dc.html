@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Reminders</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<div style="width: 390px; height: 1180px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden">
+  <div style="padding: 54px 20px 170px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; align-items: center; gap: 4px">
+      <a href="OC-Home.dc.html" aria-label="Back to Home" style="width: 44px; height: 44px; margin-left: -12px; display: flex; align-items: center; justify-content: center; color: #2A2414">
+        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+      </a>
+      <h1 style="margin: 0; flex: 1; font-size: 32px; font-weight: 900; letter-spacing: -0.6px">Reminders</h1>
+    </div>
+
+    <div role="group" aria-label="Show" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; background: #FFF0C9; border-radius: 14px; padding: 3px">
+      <button aria-pressed="{{mineOn}}" onClick="{{showMine}}" style="{{mineStyle}}">Mine</button>
+      <button aria-pressed="{{allOn}}" onClick="{{showAll}}" style="{{allStyle}}">Everyone’s</button>
+    </div>
+
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+      <section style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="{{g.hStyle}}">{{g.label}}</h2>
+        <div style="background: #FFFFFF; border-radius: 22px; padding: 2px 14px">
+          <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="2">
+            <div style="{{r.row}}">
+              <button aria-label="{{r.checkLabel}}" aria-pressed="{{r.doneStr}}" onClick="{{r.toggle}}" style="width: 40px; height: 44px; flex: none; margin-left: -8px; border: none; background: transparent; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center">
+                <span aria-hidden="true" style="{{r.inner}}">
+                  <sc-if value="{{r.done}}" hint-placeholder-val="{{false}}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+                  </sc-if>
+                </span>
+              </button>
+              <span role="img" aria-label="{{r.whoName}}" style="{{r.dot}}">{{r.who}}</span>
+              <button onClick="{{r.openSheet}}" style="flex: 1; min-width: 0; margin-left: 10px; padding: 2px 0; border: none; background: none; font-family: inherit; color: #2A2414; text-align: left; display: flex; flex-direction: column; gap: 1px; cursor: pointer">
+                <span style="{{r.titleStyle}}">{{r.title}}</span>
+                <span style="display: flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%">
+                  <sc-if value="{{r.repeats}}" hint-placeholder-val="{{false}}">
+                    <svg role="img" aria-label="Repeats" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A503A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="flex: none"><path d="M17 2l3 3-3 3"></path><path d="M4 11V9a4 4 0 0 1 4-4h16"></path><path d="M7 22l-3-3 3-3"></path><path d="M20 13v2a4 4 0 0 1-4 4H4"></path></svg>
+                  </sc-if>
+                  <sc-if value="{{r.hasNotes}}" hint-placeholder-val="{{false}}">
+                    <svg role="img" aria-label="Has notes" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A503A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="flex: none"><path d="M5 4h14v11l-5 5H5z"></path><path d="M14 20v-5h5M9 9h6M9 13h3"></path></svg>
+                  </sc-if>
+                  <span style="font-size: 13px; line-height: 1.3; font-weight: 700; color: #5A503A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.sub}}</span>
+                </span>
+              </button>
+              <sc-if value="{{r.hasBadge}}" hint-placeholder-val="{{false}}">
+                <span style="flex: none; margin-left: 8px; font-size: 12px; font-weight: 900; padding: 3px 8px; border-radius: 999px; background: #FFE3C2; color: #8A4B00">{{r.late}}</span>
+              </sc-if>
+              <button aria-label="{{r.moreLabel}}" aria-haspopup="dialog" onClick="{{r.openSheet}}" style="width: 36px; height: 44px; flex: none; margin-right: -8px; border-radius: 12px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #2A2414">
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+              </button>
+            </div>
+          </sc-for>
+          <sc-if value="{{g.canMore}}" hint-placeholder-val="{{false}}">
+            <button onClick="{{g.more}}" style="width: 100%; min-height: 48px; border: none; border-top: 1.5px solid #F2E6C4; background: none; font-family: inherit; font-size: 15px; font-weight: 800; color: #424D17; display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 0">{{g.moreLabel}}<span style="font-size: 14px; font-weight: 700; color: #5A503A">{{g.moreHint}}</span></button>
+          </sc-if>
+        </div>
+      </section>
+    </sc-for>
+
+    <button aria-expanded="{{snoozeOpen}}" onClick="{{toggleSnoozed}}" style="height: 52px; padding: 0 16px; border-radius: 16px; border: none; background: #FFF0C9; color: #2A2414; display: flex; align-items: center; justify-content: space-between; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer">Snoozed<span style="font-size: 14px; font-weight: 700; color: #5A503A">{{snoozeHint}}</span></button>
+    <sc-if value="{{showSnoozed}}" hint-placeholder-val="{{false}}">
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 6px 14px; display: flex; align-items: center; gap: 10px; min-height: 56px">
+        <span style="width: 28px; height: 28px; flex: none; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900">G</span>
+        <span style="flex: 1; min-width: 0"><span style="display: block; font-size: 16px; font-weight: 800">Renew the parking permit</span><span style="display: block; font-size: 13px; font-weight: 700; color: #5A503A">Back tomorrow, Thu Nov 12</span></span>
+      </div>
+    </sc-if>
+  </div>
+
+  <a href="OC-ReminderEdit.dc.html" aria-label="New reminder" style="position: absolute; right: 20px; bottom: 112px; width: 60px; height: 60px; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(42,36,20,0.25)">
+    <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+  </a>
+
+  <nav aria-label="Main" style="position: absolute; left: 16px; right: 16px; bottom: 26px; height: 68px; border-radius: 999px; background: #2A2414; box-shadow: 0 8px 24px rgba(42, 36, 20, 0.25); display: flex; align-items: center; justify-content: space-between; padding: 0 12px">
+    <a href="OC-Home.dc.html" aria-current="page" style="height: 48px; padding: 0 18px; border-radius: 999px; background: #FFCF5C; color: #2A2414; display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 15px; font-weight: 900">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v8a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"></path></svg>
+      Home
+    </a>
+    <a href="#" aria-label="Recipes" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #E6DFC9"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"></path><path d="M8 7h7"></path></svg></a>
+    <a href="#" aria-label="Lists" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #E6DFC9"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l1.5 1.5L8 5"></path><path d="M4 12l1.5 1.5L8 11"></path><path d="M4 18l1.5 1.5L8 17"></path><path d="M12 6h8M12 12h8M12 18h8"></path></svg></a>
+    <a href="OC-CalAgendaReminders.dc.html" aria-label="Calendar" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #E6DFC9"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></a>
+    <a href="#" aria-label="Menu" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #E6DFC9"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></a>
+  </nav>
+
+  <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+    <button aria-label="Close" onClick="{{closeSheet}}" style="position: absolute; inset: 0; z-index: 20; border: none; padding: 0; background: rgba(42,36,20,0.45); cursor: pointer"></button>
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 21">
+      <sc-for list="{{sheet}}" as="s" hint-placeholder-count="1">
+        <dc-import name="OC-ReminderDrawer" reminder="{{s.reminder}}" on-close="{{closeSheet}}" hint-size="390px,700px"></dc-import>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"sheet":{"editor":"enum","options":["none","plants","ped"],"default":"none"},"$preview":{"width":390,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { done: {}, all: true, snoozed: false, sheet: null, pages: {} }; }
+  renderVals() {
+    var self = this, s = this.state;
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478' };
+    var NAMES = { G: 'Gabriel', E: 'Eva', J: 'James', All: 'Everyone' };
+    var R = function (id, who, title, sub, o) { o = o || {}; o.id = id; o.who = who; o.title = title; o.sub = sub; return o; };
+    // Each repeating reminder shows only its next open occurrence, so the list never grows per repeat.
+    // Overdue and Today show everything; Tomorrow onwards loads PAGE rows at a time ("Show more").
+    var PAGE = 3;
+    var GROUPS = [
+      { key: 'late', label: 'Overdue', late: true, rows: [
+        R('plants', 'G', 'Water the plants', 'Was due Mon · missed last week too', { rep: true, late: '2d late',
+          when: 'Every Monday · was due Mon, Nov 9', lateText: '2 days late. Last week’s (Mon, Nov 2) was missed too.',
+          notes: 'Big fern by the window: 1 jug.\nBasil in the kitchen: a splash, not more.', nextText: 'Next one: Mon, Nov 16. The missed weeks stay in its history.' }),
+        R('ins', 'E', 'Call the car insurance', 'Was due yesterday', { late: '1d late', when: 'Was due Tue, Nov 10', lateText: '1 day late.',
+          notes: 'Policy number is in the glovebox folder. Ask about the windshield claim.' })
+      ] },
+      { key: 'today', label: 'Today · Wed, Nov 11', rows: [
+        R('ped', 'G', 'Book James’s check-up', '15:00 · nudges hourly', { hasTime: true, when: 'Today at 15:00 · nudges every hour until done',
+          notes: 'Dr. Lee’s office: ask for a Thursday morning slot.' }),
+        R('rsvp', 'All', 'Reply to Léa’s party invite', 'Any time', { when: 'Today, any time' }),
+        R('bins', 'G', 'Take the bins out', '20:00', { rep: true, hasTime: true, when: 'Every Wednesday at 20:00' })
+      ] },
+      { key: 'tom', label: 'Tomorrow · Thu, Nov 12', rows: [
+        R('daycare', 'E', 'Pay the daycare', 'Any time', { rep: true, when: 'Every month on the 12th' })
+      ] },
+      { key: 'later', label: 'Later', rows: [
+        R('filter', 'G', 'Change the water filter', 'Sat, Nov 14', { rep: true, when: 'Every 3 months · Sat, Nov 14' }),
+        R('gift', 'E', 'Order Corentin’s birthday gift', 'Mon, Nov 16', { when: 'Mon, Nov 16' }),
+        R('car', 'G', 'Book the car service', 'Thu, Nov 19', { when: 'Thu, Nov 19' }),
+        R('tax', 'All', 'Property tax payment', 'Tue, Dec 1', { rep: true, when: 'Every 6 months · Tue, Dec 1' }),
+        R('smoke', 'G', 'Test the smoke alarms', 'Thu, Dec 3', { rep: true, when: 'Every month · Thu, Dec 3' }),
+        R('passport', 'E', 'Renew Eva’s passport', 'Mon, Jan 4', { when: 'Mon, Jan 4' }),
+        R('boiler', 'G', 'Boiler check', 'Fri, Jan 15', { rep: true, when: 'Every year · Fri, Jan 15' })
+      ] }
+    ];
+    var pick = function (r) { return s.all || r.who === 'G' || r.who === 'All'; };
+    var seg = function (on) {
+      return 'height: 40px; border-radius: 11px; border: none; font-family: inherit; font-size: 15px; cursor: pointer; color: #2A2414; ' +
+        (on ? 'background: #FFFFFF; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)' : 'background: transparent; font-weight: 700; color: #5A503A');
+    };
+    var byId = {};
+    var groups = GROUPS.map(function (g) {
+      var rows = g.rows.filter(pick);
+      rows.forEach(function (r) { byId[r.id] = r; });
+      var paged = g.key === 'later';
+      var shown = paged ? PAGE * ((s.pages[g.key] || 0) + 1) : rows.length;
+      var visible = rows.slice(0, shown);
+      var rest = rows.length - visible.length;
+      return {
+        label: g.label,
+        hStyle: 'margin: 0; font-size: 18px; font-weight: 900' + (g.late ? '; color: #8A4B00' : ''),
+        canMore: rest > 0, moreLabel: 'Show more', moreHint: rest + ' more',
+        more: function () { var p = Object.assign({}, self.state.pages); p[g.key] = (p[g.key] || 0) + 1; self.setState({ pages: p }); },
+        rows: visible.map(function (r, i) {
+          var d = !!s.done[r.id];
+          return {
+            title: r.title, sub: d ? 'Done just now' : r.sub, who: r.who, whoName: NAMES[r.who],
+            done: d, doneStr: d ? 'true' : 'false', repeats: !!r.rep && !d, hasNotes: !!r.notes && !d,
+            checkLabel: (d ? 'Mark not done: ' : 'Mark done: ') + r.title, moreLabel: 'Open ' + r.title,
+            hasBadge: !d && !!r.late, late: r.late || '',
+            openSheet: function () { self.setState({ sheet: r.id }); },
+            toggle: function () { var n = Object.assign({}, self.state.done); n[r.id] = !n[r.id]; self.setState({ done: n }); },
+            row: 'display: flex; align-items: center; min-height: 58px; padding: 4px 0' + (i < visible.length - 1 ? '; border-bottom: 1.5px solid #F2E6C4' : ''),
+            inner: 'width: 24px; height: 24px; box-sizing: border-box; border-radius: 8px; display: flex; align-items: center; justify-content: center; ' + (d ? 'background: #5A6820' : 'border: 2.5px solid #CDBF95; background: #FFFFFF'),
+            dot: 'width: 28px; height: 28px; flex: none; margin-left: 2px; border-radius: 50%; background: ' + C[r.who] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (r.who === 'All' ? '10px' : '13px') + '; font-weight: 900' + (d ? '; opacity: 0.5' : ''),
+            titleStyle: 'display: block; max-width: 100%; font-size: 16px; line-height: 1.25; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis' + (d ? '; text-decoration: line-through; color: #5A503A' : '')
+          };
+        })
+      };
+    }).filter(function (g) { return g.rows.length; });
+    GROUPS.forEach(function (g) { g.rows.forEach(function (r) { byId[r.id] = byId[r.id] || r; }); });
+    var sheetId = s.sheet === null ? (this.props.sheet && this.props.sheet !== 'none' ? this.props.sheet : null) : (s.sheet || null);
+    var sr = sheetId && byId[sheetId];
+    return {
+      groups: groups,
+      mineOn: s.all ? 'false' : 'true', allOn: s.all ? 'true' : 'false',
+      mineStyle: seg(!s.all), allStyle: seg(s.all),
+      showMine: function () { self.setState({ all: false }); }, showAll: function () { self.setState({ all: true }); },
+      snoozeOpen: s.snoozed ? 'true' : 'false', showSnoozed: s.snoozed, snoozeHint: s.snoozed ? 'Hide' : '1 hidden until later',
+      toggleSnoozed: function () { self.setState({ snoozed: !self.state.snoozed }); },
+      sheetOpen: !!sr,
+      sheet: sr ? [{ reminder: { title: sr.title, whoName: NAMES[sr.who], color: C[sr.who], when: sr.when || sr.sub, hasTime: !!sr.hasTime, lateText: sr.lateText || '', notes: sr.notes || '', nextText: sr.nextText || '' } }] : [],
+      closeSheet: function () { self.setState({ sheet: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

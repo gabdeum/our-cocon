@@ -803,6 +803,64 @@ isOneToOne: false
       referencedColumns: ["id","family_id"]
     }
                   ]
+                },"reminder_occurrences": {
+                  Row: {
+                    "closed_at": string,"closed_by": string | null,"created_at": string,"created_by": string | null,"due_at": string,"family_id": string,"id": string,"reminder_id": string,"source": string,"status": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "closed_at"?: string,"closed_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"due_at": string,"family_id": string,"id"?: string,"reminder_id": string,"source"?: string,"status": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "closed_at"?: string,"closed_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"due_at"?: string,"family_id"?: string,"id"?: string,"reminder_id"?: string,"source"?: string,"status"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reminder_occurrences_closed_by_family_id_fkey"
+      columns: ["closed_by","family_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "reminder_occurrences_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reminder_occurrences_reminder_id_family_id_fkey"
+      columns: ["reminder_id","family_id"]
+isOneToOne: false
+      referencedRelation: "reminders"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
+                },"reminders": {
+                  Row: {
+                    "assignee_id": string | null,"completed_at": string | null,"created_at": string,"created_by": string | null,"deleted_at": string | null,"deleted_by": string | null,"due_at": string,"family_id": string,"has_time": boolean,"id": string,"next_due_at": string | null,"notes": string | null,"repeat_from": string | null,"repeat_rule": Json | null,"rollover": string,"snoozed_until": string | null,"source": string,"title": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "assignee_id"?: string | null,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"due_at": string,"family_id": string,"has_time": boolean,"id"?: string,"next_due_at"?: string | null,"notes"?: string | null,"repeat_from"?: string | null,"repeat_rule"?: Json | null,"rollover": string,"snoozed_until"?: string | null,"source"?: string,"title": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "assignee_id"?: string | null,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"due_at"?: string,"family_id"?: string,"has_time"?: boolean,"id"?: string,"next_due_at"?: string | null,"notes"?: string | null,"repeat_from"?: string | null,"repeat_rule"?: Json | null,"rollover"?: string,"snoozed_until"?: string | null,"source"?: string,"title"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reminders_assignee_id_family_id_fkey"
+      columns: ["assignee_id","family_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "reminders_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"share_links": {
                   Row: {
                     "created_at": string,"created_by": string | null,"family_id": string,"id": string,"include_tips": boolean,"include_variants": boolean,"recipe_id": string,"source": string,"stopped_at": string | null,"stopped_by": string | null,"stopped_source": string | null,"token": string,"updated_at": string,"updated_by": string | null
@@ -927,6 +985,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"_match_ingredients":
+{ Args: { "fam": string,"queries": Json }; Returns: {
+              "aisle": Database["public"]['Enums']["aisle"],"catalog_key": string,"default_size": Database["public"]['Enums']["size_word"],"density_g_per_ml": number,"diet": (string)[],"family_ingredient_id": string,"how": string,"idx": number,"name": string,"noun_plural": string,"noun_singular": string,"plural": string,"size_large_g": number,"size_medium_g": number,"size_small_g": number,"whole_only": boolean
+            }[]
+                           },
 "_me_locked":
 { Args: Record<PropertyKey, never>; Returns: {
               "color": Database["public"]['Enums']["member_color"],
@@ -982,6 +1045,14 @@ isOneToOne: false
                            },
 "_recipe_folder_deleted":
 { Args: { "path": string }; Returns: boolean
+                           },
+"_reminder_state":
+{ Args: { "p_family": string,"p_now": string,"p_tz": string }; Returns: {
+              "assignee_id": string,"created_at": string,"created_by": string,"due_at": string,"due_on": string,"has_time": boolean,"id": string,"late_days": number,"late_from": string,"late_hours": number,"next_due_at": string,"notes": string,"on_home": boolean,"repeat_from": string,"repeat_rule": Json,"rollover": string,"section": string,"snoozed_until": string,"sort_at": string,"source": string,"title": string,"updated_at": string
+            }[]
+                           },
+"_reminder_time_zone":
+{ Args: { "p_family": string,"p_tz": string }; Returns: string
                            },
 "_request_source":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -1121,6 +1192,9 @@ isOneToOne: false
 "purge_deleted_recipes":
 { Args: { "ids": (string)[] }; Returns: number
                            },
+"purge_deleted_reminders":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "purge_notification_history":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -1132,10 +1206,25 @@ isOneToOne: false
 "register_push_device":
 { Args: { "p_app_version": string,"p_device_id": string,"p_platform": string,"p_prefs": Json,"p_token": string }; Returns: undefined
                            },
+"reminder_apply":
+{ Args: { "p_closed": Json,"p_complete": boolean,"p_due_at": string,"p_from_due_at": string,"p_id": string,"p_next_due_at"?: string,"p_snoozed_until"?: string }; Returns: boolean
+                           },
 "reminder_candidates":
 { Args: { "p_from": string,"p_to": string }; Returns: {
               "created_at": string,"creator_member_id": string,"end_time": string,"ends_on": string,"exceptions": Json,"family_id": string,"hidden_from": (string)[],"id": string,"location": string,"members": Json,"recurrence": Json,"reminder": string,"responsible_member_id": string,"slots": (string)[],"start_time": string,"starts_on": string,"time_type": string,"title": string,"visibility": string
             }[]
+                           },
+"reminder_revert":
+{ Args: { "p_due_at": string,"p_from_due_at": string,"p_id": string,"p_next_due_at"?: string,"p_reopen": (string)[],"p_snoozed_until"?: string }; Returns: boolean
+                           },
+"reminders_home":
+{ Args: { "p_tz"?: string }; Returns: Json
+                           },
+"reminders_in_range":
+{ Args: { "p_from": string,"p_to": string,"p_tz"?: string }; Returns: Json[]
+                           },
+"reminders_section":
+{ Args: { "p_after_id"?: string,"p_after_sort"?: string,"p_limit": number,"p_mine": boolean,"p_section": string,"p_tz"?: string }; Returns: Json[]
                            },
 "remove_managed_member":
 { Args: { "member_id": string }; Returns: undefined
