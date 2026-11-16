@@ -48,8 +48,7 @@ Reminders are things to *do* (tick off), separate from calendar events. A remind
 Copy in `design/ui/OC-Reminders.md`. A failed tick/snooze rolls back the optimistic change and shows the standard "Couldn't save. Try again." toast.
 
 ## Needs your attention
-- "Leave it" (`rollover = none`) was added in design; drop it if you don't want it.
-- Reminders can't be private yet. Say if you want "only for me" reminders.
+- None. "Leave it" stays; private reminders can wait (Gabriel, 2026-11-16).
 
 ## Changelog
 - 2026-11-15: Ready. From the reminders design canvas.
@@ -61,3 +60,4 @@ Copy in `design/ui/OC-Reminders.md`. A failed tick/snooze rolls back the optimis
   - The last date of a repeat is closed as done, then the reminder is completed. "Every hour" without a time silently becomes "Next day" (OC-Reminders.md).
   - Deletes are soft, as for events: a member can remove a reminder for good only once it's deleted.
   - `reminder_missed` is typed but sent by the notifier (059, 032-later L146). SC-002 is about 5 ms locally; staging is L145.
+- 2026-11-16: Gabriel keeps "Leave it", is fine without private reminders for now, and accepts the open choices above ("any time" after timed ones, "Next week" on Home only on its weekday, the badge from 1 hour).
