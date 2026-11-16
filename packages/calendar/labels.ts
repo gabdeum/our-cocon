@@ -55,14 +55,24 @@ function monthName(month: number, wide: boolean): string {
   return (wide ? en.months : en.monthsShort)[month - 1] as string;
 }
 
-/** FR-007: a title's width in px, from the font's advances and kerning (`title-font.ts`). */
-export function titleWidth(text: string): number {
+/** Text in Nunito 900, in the font's units (1000 per px of size), with its kerning (`title-font.ts`). */
+function fontUnits(text: string): number {
   let units = 0;
   for (let i = 0; i < text.length; i++) {
     units += ADVANCE[text[i] as string] ?? UNKNOWN_ADVANCE;
     units += KERN[text.slice(i, i + 2)] ?? 0;
   }
-  return (units * TITLE_SIZE) / 1000 + TITLE_TRACKING * text.length;
+  return units;
+}
+
+/** FR-007: a title's width in px, from the font's advances and kerning (`title-font.ts`). */
+export function titleWidth(text: string): number {
+  return (fontUnits(text) * TITLE_SIZE) / 1000 + TITLE_TRACKING * text.length;
+}
+
+/** Any short Nunito text's width in px at `size`, without tracking (900; lighter weights are a little narrower). */
+export function textWidth(text: string, size: number): number {
+  return (fontUnits(text) * size) / 1000;
 }
 
 /** FR-007: the first format (longest first) that fits beside "Today" on this screen; the last one if none does. */

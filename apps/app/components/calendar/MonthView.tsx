@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import type { SlotTimes, WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { FloatingAdd, MonthGrid } from '@cocon/ui';
@@ -87,14 +87,18 @@ export function MonthView({
   const occurrences = useMemo(() => monthOccurrences(events ?? [], from, to, myMemberId, hidden), [events, from, to, myMemberId, hidden]);
   // FR-003: narrow phones show the title alone on chips and bars.
   const initials = width >= INITIALS_MIN_WIDTH;
+  // Spec 058: whether a day's alarm clock fits beside its date depends on the cell's real width and the text size.
+  const [gridWidth, setGridWidth] = useState<number | undefined>(undefined);
+  const { fontScale } = useWindowDimensions();
+  const cellWidth = gridWidth === undefined ? undefined : gridWidth / 7;
   const { use24h, fade_past: fadePast } = useCalendarDisplay().prefs;
   const counts = useMemo(
     () => reminderCounts(placeForScreen(showReminders ? reminders : undefined, { from, to, today, tz: timeZone, members, use24h, hidden }).values()),
     [showReminders, reminders, from, to, today, timeZone, members, use24h, hidden],
   );
   const weekAt = useCallback(
-    (index: number) => layoutWeek(index, occurrences, { range, today, look, slotTimes, initials, reminders: counts }),
-    [occurrences, range, today, look, slotTimes, initials, counts],
+    (index: number) => layoutWeek(index, occurrences, { range, today, look, slotTimes, initials, reminders: counts, cellWidth, textScale: fontScale }),
+    [occurrences, range, today, look, slotTimes, initials, counts, cellWidth, fontScale],
   );
   // Opens with the month's first week at the top, and today on screen when it's this month.
   const [initialIndex] = useState(() => firstWeekOfMonth(range, month));
@@ -121,7 +125,7 @@ export function MonthView({
   );
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
       <MonthGrid
         mutePast={fadePast}
         weekdays={weekdayLetters(weekStartsOn)}

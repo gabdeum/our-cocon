@@ -15,7 +15,10 @@ const BOTTOM_PAD = 180;
 /** The title row counts a row as visible once all but its top 24 px have scrolled away (OC-CalMonth). */
 const ROW_SLACK = 24;
 
-export type MonthCellItem = { kind: 'chip'; key: string; text: string; colors: readonly EventColor[] } | { kind: 'space'; key: string };
+export type MonthCellItem =
+  | { kind: 'chip'; key: string; text: string; colors: readonly EventColor[] }
+  /** An empty row: under a bar, or the week's alarm-clock row (spec 058), with the clock when `mark`. */
+  | { kind: 'space'; key: string; mark?: boolean };
 
 export interface MonthCell {
   date: string;
@@ -30,7 +33,7 @@ export interface MonthCell {
   items: MonthCellItem[];
   /** "+2", or null. */
   more: string | null;
-  /** Reminders are due that day: an alarm clock the date's size beside it (spec 058). */
+  /** Reminders are due that day: the alarm clock beside the date (spec 058); when it doesn't fit there, it's on the first row (a `space` item with `mark`). */
   reminders?: boolean;
 }
 
@@ -104,18 +107,23 @@ function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
   );
 }
 
+/** An empty 15 px row; the week's alarm-clock row holds the clock of a day whose date left no room for it (spec 058). */
+function SpaceRow({ mark, muted }: { mark?: boolean; muted?: boolean }) {
+  return <View className="h-[15px] justify-center pl-[3px]">{mark ? <Icon name="alarm" size={13} color={muted ? 'inkMuted' : 'olive'} /> : null}</View>;
+}
+
 /**
  * Largest text sizes (spec 030 User Story 3): the first chip, then a dot per further event, so nothing
  * is cut mid-word in a 120 px cell. The cell's label still names every event; the day sheet shows them.
  */
-function LargeTextItems({ cell }: { cell: MonthCell }) {
+function LargeTextItems({ cell, muted }: { cell: MonthCell; muted: boolean }) {
   const chips = cell.items.filter((i): i is Extract<MonthCellItem, { kind: 'chip' }> => i.kind === 'chip');
   const [first, ...rest] = chips;
-  const spaces = cell.items.length - chips.length;
+  const spaces = cell.items.filter((i): i is Extract<MonthCellItem, { kind: 'space' }> => i.kind === 'space');
   return (
     <>
-      {Array.from({ length: spaces }, (_, i) => (
-        <View key={`space-${i}`} className="h-[15px]" />
+      {spaces.map((item) => (
+        <SpaceRow key={item.key} mark={item.mark} muted={muted} />
       ))}
       {first ? <EventChip text={first.text} colors={first.colors} /> : null}
       {rest.length || cell.more ? (
@@ -148,10 +156,10 @@ function Cell({ cell, mutePast, addLabel, onPress, onLongPress }: { cell: MonthC
     >
       <DateMark cell={cell} muted={muted} />
       {largeText ? (
-        <LargeTextItems cell={cell} />
+        <LargeTextItems cell={cell} muted={muted} />
       ) : (
         <>
-          {cell.items.map((item) => (item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} /> : <View key={item.key} className="h-[15px]" />))}
+          {cell.items.map((item) => (item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} /> : <SpaceRow key={item.key} mark={item.mark} muted={muted} />))}
           {cell.more ? <MoreCount text={cell.more} /> : null}
         </>
       )}

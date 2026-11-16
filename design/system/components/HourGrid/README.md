@@ -13,7 +13,7 @@ Reference: `design/screens/OC-CalWeek.dc.html` (inline styles are the exact valu
 | Block (custom) | same, with 3 px ink inset left edge; top line "{initials} {start}" |
 | Overlaps | lanes from `@cocon/calendar` layoutDay; width = column / lanes; in lanes the top line is initials only |
 | Today | column tint `calendar-today-tint`; 2 px olive now-line |
-| Day head reminders | a day with reminders: a 17 px olive `alarm` 1 after the date number (outside today's circle); the head's label ends ", 2 reminders" (spec 058) |
+| Day head reminders | a day with reminders: a 17 px olive `alarm` 1 after the date number (outside today's circle), or under it when the column is too narrow for both (today's circle at 390 px); the head row grows to fit; the head's label ends ", 2 reminders" (spec 058) |
 
 ## Rules
 

@@ -10,6 +10,7 @@ import {
   eventWindow,
   firstWeekOfMonth,
   layoutWeek,
+  markFitsBeside,
   memberLook,
   monthOccurrences,
   monthRange,
@@ -218,5 +219,51 @@ describe('US2: scroll through months', () => {
   it('loads 6 months either side of the visible quarter', () => {
     expect(eventWindow('2026-11-01')).toEqual({ from: '2026-04-01', to: '2027-06-30' });
     expect(eventWindow('2026-12-01')).toEqual(eventWindow('2026-10-01'));
+  });
+});
+
+describe('the alarm clock beside the date (spec 058)', () => {
+  // Week of Sun Nov 1, 2026: the 1st is an ink pill "Nov 1".
+  const nov = (events: StoredEvent[], reminders: [string, number][], cellWidth?: number) => {
+    const window = eventWindow('2026-11-01');
+    return layoutWeek(weekIndexOf(range, '2026-11-01'), monthOccurrences(events, window.from, window.to, gabriel.id, new Set()), {
+      ...ctx,
+      reminders: new Map(reminders),
+      cellWidth,
+    });
+  };
+
+  it('fits beside a plain date in a narrow cell, not beside the "Nov 1" pill, and always when the width is unknown', () => {
+    expect(markFitsBeside('2026-11-03', { today: TODAY, cellWidth: 46 })).toBe(true);
+    expect(markFitsBeside('2026-11-01', { today: TODAY, cellWidth: 46 })).toBe(false);
+    expect(markFitsBeside('2026-11-01', { today: TODAY, cellWidth: 80 })).toBe(true);
+    expect(markFitsBeside('2026-11-01', { today: TODAY })).toBe(true);
+    // Larger text needs more room.
+    expect(markFitsBeside('2026-11-03', { today: TODAY, cellWidth: 33, textScale: 1 })).toBe(true);
+    expect(markFitsBeside('2026-11-03', { today: TODAY, cellWidth: 33, textScale: 2 })).toBe(false);
+  });
+
+  it('wraps to the first row, and the whole week starts one row lower so bars stay lined up', () => {
+    const trip = ev({ title: 'Lyon trip', time_type: 'all_day', slots: [], starts_on: '2026-11-02', ends_on: '2026-11-04' });
+    const swim = ev({ title: 'Swim', starts_on: '2026-11-05', ends_on: '2026-11-05' });
+    const fits = nov([trip, swim], [['2026-11-01', 1], ['2026-11-03', 2]], 80);
+    expect(fits.cells.map((c) => c.reminders)).toEqual([true, false, true, false, false, false, false]);
+    expect(fits.bars.map((b) => b.lane)).toEqual([0]);
+    expect(fits.cells[4]?.items.map((i) => i.kind)).toEqual(['chip']);
+
+    const wraps = nov([trip, swim], [['2026-11-01', 1], ['2026-11-03', 2]], 46);
+    expect(wraps.cells.map((c) => c.reminders)).toEqual([false, false, true, false, false, false, false]);
+    expect(wraps.cells[0]?.items).toEqual([{ kind: 'space', key: 'space-0', mark: true }]);
+    expect(wraps.bars.map((b) => b.lane)).toEqual([1]);
+    expect(wraps.cells[4]?.items.map((i) => (i.kind === 'space' ? ['space', i.mark] : ['chip']))).toEqual([['space', false], ['chip']]);
+    expect(wraps.cells[4]?.more).toBeNull();
+  });
+
+  it('a full day keeps one row fewer and counts the rest in "+N"', () => {
+    const five = Array.from({ length: 5 }, (_, i) => ev({ title: `E${i}`, starts_on: '2026-11-05', ends_on: '2026-11-05' }));
+    expect(nov(five, [], 46).cells[4]?.more).toBeNull();
+    const wrapped = nov(five, [['2026-11-01', 1]], 46).cells[4];
+    expect(wrapped?.items.filter((i) => i.kind === 'chip')).toHaveLength(3);
+    expect(wrapped?.more).toBe('+2');
   });
 });

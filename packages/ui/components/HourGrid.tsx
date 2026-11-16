@@ -117,7 +117,8 @@ function DayHead({ day, onPress }: { day: WeekDayHead; onPress: () => void }) {
       <Text size={12} weight="900" color="ink-muted">
         {day.letter}
       </Text>
-      <View className="h-[28px] flex-row items-center gap-[1px]">
+      {/* Spec 058: the alarm clock wraps under the number when the column is too narrow for both. */}
+      <View className="min-h-[28px] max-w-full flex-row flex-wrap items-center justify-center gap-[1px]">
         {day.today ? (
           <View className="h-[28px] w-[28px] items-center justify-center rounded-full bg-olive">
             <Text size={15} weight="900" color="on-olive">
@@ -125,9 +126,11 @@ function DayHead({ day, onPress }: { day: WeekDayHead; onPress: () => void }) {
             </Text>
           </View>
         ) : (
-          <Text size={15} weight="800">
-            {day.num}
-          </Text>
+          <View className="h-[28px] justify-center">
+            <Text size={15} weight="800">
+              {day.num}
+            </Text>
+          </View>
         )}
         {day.reminders ? <Icon name="alarm" size={17} color="olive" /> : null}
       </View>
