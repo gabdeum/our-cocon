@@ -91,18 +91,17 @@ export function memberBadges(event: StoredEvent, members: readonly Member[]): { 
   });
 }
 
-/** "Open in Maps": Google Maps, searching for the place as typed. On the iPhone it opens the Google Maps app when installed. */
+/** The directions button: Google Maps, searching for the place as typed. On the iPhone it opens the Google Maps app when installed. */
 export function mapsUrl(place: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
 }
 
 /**
- * The place row's links: "Copy" (the place as typed, to the clipboard, then a toast) and "Open in
- * Maps" ("Maps" on the compact event page).
+ * The place row's round icon buttons: copy (the place as typed, to the clipboard, then a toast) and
+ * directions (Google Maps, searching for the place).
  */
 export function placeActions(
   place: string,
-  compact: boolean,
   on: { openUrl: (url: string) => void; copy: (text: string) => Promise<unknown>; toast: (t: { text: string; tone?: 'warn' }) => void },
 ) {
   const e = strings.calendar.event;
@@ -112,8 +111,8 @@ export function placeActions(
       () => on.toast({ text: e.copyPlaceFailed, tone: 'warn' }),
     );
   return [
-    { label: e.copyPlace, accessibilityLabel: e.copyPlaceA11y(place), onPress: copy },
-    { label: compact ? e.maps : e.openInMaps, accessibilityLabel: e.openInMapsA11y(place), onPress: () => on.openUrl(mapsUrl(place)) },
+    { label: 'copy', icon: 'copy' as const, accessibilityLabel: e.copyPlaceA11y(place), onPress: copy },
+    { label: 'directions', icon: 'directions' as const, accessibilityLabel: e.openInMapsA11y(place), onPress: () => on.openUrl(mapsUrl(place)) },
   ];
 }
 
