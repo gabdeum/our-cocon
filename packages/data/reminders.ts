@@ -45,7 +45,11 @@ const Placed = Stored.extend({
   on_home: z.boolean(),
   sort_at: Instant,
 });
-/** An open reminder as it stands now (FR-006, FR-008, FR-012). */
+/**
+ * An open reminder as it stands now (FR-006, FR-008, FR-012). Its `snoozed_until` is when it's back
+ * in the lists: a late "Next week" one reports its next weekday there without being snoozed (spec
+ * 058), so never write it back as a snooze; writes take it from the stored row (`loadReminder`).
+ */
 export type PlacedReminder = z.infer<typeof Placed>;
 
 const Home = z.object({ rows: z.array(Placed), more_today: z.int().min(0), snoozed: z.int().min(0) });

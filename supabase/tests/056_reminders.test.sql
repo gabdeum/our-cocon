@@ -2,7 +2,7 @@
 -- now: late, sections, Home and their order (FR-006, FR-008, FR-012), across a clock change; the
 -- pages; the safe Done and its Undo (FR-004); the purge.
 begin;
-select plan(70);
+select plan(72);
 
 create function pg_temp.login(uid uuid, r text default 'authenticated') returns void language plpgsql as $$
 begin
@@ -113,7 +113,10 @@ select is((select array_agg(pg_temp.name(r.id) order by pg_temp.name(r.id)) from
   array['back', 'back_any', 'half_hour', 'late_day', 'late_week', 'today_15', 'today_any'], 'on Home on Monday');
 select is(pg_temp.state('late_week', '2026-11-17 09:00Z') ->> 'on_home', 'false', '"Next week" isn''t on Home on Tuesday');
 select is(pg_temp.state('late_week', '2026-11-23 09:00Z') ->> 'on_home', 'true', 'and is again the Monday after');
-select is(pg_temp.state('late_week', '2026-11-17 09:00Z') ->> 'section', 'overdue', 'though it stays overdue');
+-- Spec 058: between its weekdays it rests in Snoozed, back the next Monday (any time: its start).
+select is(pg_temp.state('late_week', '2026-11-17 09:00Z') ->> 'section', 'snoozed', 'on Tuesday it rests in Snoozed');
+select is((pg_temp.state('late_week', '2026-11-17 09:00Z') ->> 'snoozed_until')::timestamptz, '2026-11-22 23:00Z'::timestamptz, 'back on Monday');
+select is(pg_temp.state('late_week', '2026-11-23 09:00Z') ->> 'section', 'overdue', 'and overdue again that Monday');
 
 -- Across the clock change (Paris goes from UTC+2 to UTC+1 on 2026-10-25).
 select pg_temp.add('dst_any', '2026-10-23 22:00Z', false, 'day');           -- Saturday 24, any time
@@ -157,11 +160,14 @@ insert into public.reminder_occurrences (reminder_id, due_at, status) values (pg
 select isnt((select completed_at from public.reminders where id = pg_temp.id('late_day')), null, 'with the database''s time');
 
 -- FR-012 "Mine" (Gabriel's and Everyone's) and the calendar's range; deleted ones are in neither.
-select ok(not exists (select 1 from public.reminders_section('tomorrow', true, 20) r where (r ->> 'id')::uuid = pg_temp.id('tomorrow'))
-  and exists (select 1 from public.reminders_section('tomorrow', false, 20) r where (r ->> 'id')::uuid = pg_temp.id('tomorrow')),
+-- The lists use the real clock: look in every section, so the test doesn't depend on today's date.
+create function pg_temp.listed(p_id uuid, p_mine boolean) returns boolean language sql as $$
+  select exists (select 1 from unnest(array['overdue', 'today', 'tomorrow', 'later', 'snoozed']) k, public.reminders_section(k, p_mine, 51) r where (r ->> 'id')::uuid = p_id)
+$$;
+select ok(not pg_temp.listed(pg_temp.id('tomorrow'), true) and pg_temp.listed(pg_temp.id('tomorrow'), false),
   '"Mine" leaves out Eva''s reminder; Everyone''s has it');
 select pg_temp.login('00000000-0000-0000-0000-00000000056b');
-select ok(exists (select 1 from public.reminders_section('tomorrow', true, 20) r where (r ->> 'id')::uuid = pg_temp.id('tomorrow')), 'and Eva''s "Mine" has it');
+select ok(pg_temp.listed(pg_temp.id('tomorrow'), true), 'and Eva''s "Mine" has it');
 select pg_temp.login('00000000-0000-0000-0000-00000000056a');
 select ok(exists (select 1 from public.reminders_in_range(current_date + 300, current_date + 301) r where (r ->> 'id')::uuid = pg_temp.id('bins'))
   and not exists (select 1 from public.reminders_in_range(current_date + 300, current_date + 301) r where (r ->> 'id')::uuid = pg_temp.id('later')),
