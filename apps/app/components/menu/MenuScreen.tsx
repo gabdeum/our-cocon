@@ -18,7 +18,7 @@ export interface MenuScreenProps {
   /** Notifications are off for the app in iPhone Settings: the row's detail reads "Off" (spec 046). */
   notificationsOff?: boolean;
   tracker: Tracker;
-  /** A tile switches tabs (or opens Timers); a row pushes its settings page. */
+  /** A tile switches tabs (or opens Timers or Reminders); a row pushes its settings page. */
   onNavigate: (href: string) => void;
   footer?: ReactNode;
 }

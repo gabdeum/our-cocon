@@ -54,6 +54,7 @@ export default function EditReminderRoute() {
         today={ctx.today}
         use24h={ctx.use24h}
         weekStartsOn={ctx.weekStartsOn}
+        quietHours={ctx.quietHours}
         focusNotes={params.focus === 'notes'}
         onClose={closeReminderSheet}
         onSave={async (draft) => {

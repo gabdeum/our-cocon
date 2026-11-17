@@ -28,7 +28,7 @@
 ## Requirements
 
 - **FR-001 Build**: `expo-notifications` (and, for 048, `expo-widgets`) need a development build; Expo Go is no longer enough for the iPhone app (constitution I and II updated). Capabilities: Push Notifications, Time Sensitive Notifications. APNs key and Expo access token are EAS/CI secrets (`EXPO_ACCESS_TOKEN` on the server, never in the app).
-- **FR-002 Ask** (OC-NotifAsk): triggers = first timer start, first time an event with a reminder is saved, or the page's "Turn on". Copy in `OC-Notifications.md`. Stored per device: `asked_at`, `asked_count` (max 2), last result.
+- **FR-002 Ask** (OC-NotifAsk): triggers = first timer start, first time an event with a reminder is saved, first reminder added (059), or the page's "Turn on". Copy in `OC-Notifications.md`. Stored per device: `asked_at`, `asked_count` (max 2), last result.
 - **FR-003 Page** `/settings/notifications` (Menu › Settings, first card, after AI assistants: "Notifications" / "Timers, event reminders" ›): per-device preferences `timers_live` (default on), `timers_alert` (on), `reminders_on` (on), `reminders_scope` mine|all (mine); per-member `default_reminder` (none|minutes_15|hour_before|morning_of|day_before, default none) used to pre-fill the Reminder in Add event (spec 041).
 - **FR-004 Devices**: table `push_devices` (id, member_id, device_id, platform ios|android, expo_push_token, live_activity_start_token?, prefs jsonb, app_version, last_seen_at, disabled_at) — RLS: a member reads and writes only their own rows. Registered after permission is granted and on every app start (token refresh, `last_seen_at`); deleted on sign-out; disabled when Expo reports `DeviceNotRegistered`.
 - **FR-005 Sender**: one server module `packages/notify` (Expo Push API: batches of 100, tickets, receipts checked after 15 minutes), run by a small worker `apps/notifier` on Hetzner beside the MCP server (one per environment, `-staging` host suffix as usual). Uses the service role; logs every send in `notification_log` (kind, member_id, device_id, ref, sent_at, status).
@@ -42,7 +42,7 @@
 ## Tracking (PostHog)
 | Event | Properties |
 | --- | --- |
-| `notifications_ask_shown` | trigger (timer, reminder, settings) |
+| `notifications_ask_shown` | trigger (timer, reminder, todo, settings) |
 | `notifications_permission_result` | granted (bool), trigger |
 | `notification_opened` | kind (timer_done, reminder), cold_start (bool) |
 | `notification_settings_changed` | setting, value |

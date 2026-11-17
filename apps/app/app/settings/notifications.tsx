@@ -20,6 +20,9 @@ export default function NotificationSettingsRoute() {
       onPref={notifications.setPref}
       defaultReminder={prefs.default_reminder}
       onDefaultReminder={(default_reminder) => change({ default_reminder })}
+      quietHours={{ from: prefs.quiet_from, to: prefs.quiet_to }}
+      onQuietHours={({ from, to }) => change({ quiet_from: from, quiet_to: to })}
+      use24h={prefs.use24h}
       managedNames={state.members.filter((m) => m.user_id === null).map((m) => m.display_name)}
       onTurnOn={() => void notifications.turnOn('settings')}
       onOpenSettings={notifications.openSettings}

@@ -1,6 +1,6 @@
 import { todayIn, zonedInstant } from '@cocon/calendar';
 import { catchUp, complete, draftToFields, nextDueAfter, snoozeUntil, type ReminderRevert, type ReminderTiming } from '@cocon/reminders';
-import { Recurrence, ReminderDraft, ReminderOccurrenceStatus, ReminderRollover, ReminderSection, ReminderSnoozeOption, TimeZone } from '@cocon/schemas';
+import { DEFAULT_QUIET_HOURS, QuietHours, Recurrence, ReminderDraft, ReminderOccurrenceStatus, ReminderRollover, ReminderSection, ReminderSnoozeOption, TimeFormatSetting, TimeZone } from '@cocon/schemas';
 import { z } from 'zod';
 import type { Db } from './client';
 
@@ -105,17 +105,19 @@ async function apply(client: Pick<Db, 'rpc'>, id: string, change: ReturnType<typ
 /**
  * FR-005: closes what was missed (or skipped while snoozed) on every repeating reminder whose next
  * date has come, and moves it on. Another phone doing the same at once changes nothing twice.
- * Returns how many occurrences were missed (spec 059 counts them).
+ * Returns how many occurrences were missed (spec 059 counts them). The notifier (service role, which
+ * sees every family) passes the family whose home time zone `tz` is.
  */
-export async function catchUpReminders(client: Pick<Db, 'from' | 'rpc'>, tz: string, now: Date = new Date()): Promise<number> {
+export async function catchUpReminders(client: Pick<Db, 'from' | 'rpc'>, tz: string, now: Date = new Date(), familyId?: string): Promise<number> {
   const zone = TimeZone.parse(tz);
-  const { data, error } = await client
+  let query = client
     .from('reminders')
     .select(STORED)
     .lte('next_due_at', now.toISOString())
     .is('deleted_at', null)
-    .is('completed_at', null)
-    .limit(200);
+    .is('completed_at', null);
+  if (familyId) query = query.eq('family_id', familyId);
+  const { data, error } = await query.limit(200);
   if (error) throw error;
   const changes = z
     .array(Stored)
@@ -198,6 +200,27 @@ export async function loadReminderHistory(client: Pick<Db, 'from'>, id: string, 
     .limit(limit);
   if (error) throw error;
   return z.array(Occurrence).parse(data ?? []);
+}
+
+/**
+ * One open reminder, placed (spec 059, 032-later L148): `/reminders?open={id}` from a notification,
+ * when it isn't on the loaded pages. Null when it's done, deleted or not this family's.
+ */
+export async function loadPlacedReminder(client: Pick<Db, 'rpc'>, id: string, tz: string): Promise<PlacedReminder | null> {
+  const { data, error } = await client.rpc('reminder_placed', { p_id: z.uuid().parse(id), p_tz: TimeZone.parse(tz) });
+  if (error) throw error;
+  return data ? Placed.parse(data) : null;
+}
+
+const MemberQuiet = z.object({ member_id: z.uuid(), quiet_from: z.string(), quiet_to: z.string(), time_format: TimeFormatSetting.catch('automatic') });
+
+/** Spec 059 (L149): each account member's quiet hours and time format, for "Notifies {name} at …". */
+export async function loadFamilyQuietHours(client: Pick<Db, 'rpc'>): Promise<Map<string, { quiet: QuietHours; timeFormat: TimeFormatSetting }>> {
+  const { data, error } = await client.rpc('family_quiet_hours');
+  if (error) throw error;
+  return new Map(
+    z.array(MemberQuiet).parse(data ?? []).map((m) => [m.member_id, { quiet: QuietHours.catch(DEFAULT_QUIET_HOURS).parse({ from: m.quiet_from, to: m.quiet_to }), timeFormat: m.time_format }]),
+  );
 }
 
 /** One reminder as stored (the edit sheet, spec 057). Throws when it was deleted. */

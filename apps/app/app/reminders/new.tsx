@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createReminder } from '@cocon/data';
 import { ReminderDraft } from '@cocon/schemas';
 import { ReminderSheet } from '../../components/reminders/ReminderSheet';
+import { useNotifications } from '../../lib/notifications-context';
 import { closeReminderSheet, useReminderContext } from '../../lib/reminder-actions';
 import { createdProps, newReminderForm } from '../../lib/reminders';
 
@@ -10,6 +11,7 @@ import { createdProps, newReminderForm } from '../../lib/reminders';
 export default function NewReminderRoute() {
   const ctx = useReminderContext();
   const queryClient = useQueryClient();
+  const { maybeAsk } = useNotifications();
   const { client, familyId, myMemberId, tz } = ctx;
   // Starts once, on the day it opened; later renders keep what's been typed.
   const [initial] = useState(() => (myMemberId ? newReminderForm(myMemberId, ctx.today) : null));
@@ -22,12 +24,15 @@ export default function NewReminderRoute() {
       today={ctx.today}
       use24h={ctx.use24h}
       weekStartsOn={ctx.weekStartsOn}
+      quietHours={ctx.quietHours}
       onClose={closeReminderSheet}
       onSave={async (draft) => {
         await createReminder(client, familyId, draft, tz);
         ctx.tracker.track('reminder_created', createdProps(ReminderDraft.parse(draft), myMemberId));
         void queryClient.invalidateQueries({ queryKey: ['reminders', familyId] });
         closeReminderSheet();
+        // Spec 059: every reminder notifies, so the first one asks (spec 046 FR-002), once the sheet is gone.
+        maybeAsk('todo');
       }}
     />
   );

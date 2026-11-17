@@ -6,7 +6,7 @@ import { BottomSheet, Button, Choice, DateGrid, DayChip, FieldWarning, Icon, Lin
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import { dateGridMonth, dayTiles, endsProblem, shiftMonth, type RepeatChoice } from '../../lib/event-form';
 import { useOnline } from '../../lib/online';
-import { forChips, formRollover, formToDraft, isClockTime, notifySummary, REPEAT_CHOICES, rolloverChoices, type ReminderForm } from '../../lib/reminders';
+import { forChips, formRollover, formToDraft, isClockTime, notifySummary, REPEAT_CHOICES, rolloverChoices, type FamilyQuietHours, type ReminderForm } from '../../lib/reminders';
 import type { Member } from '../../lib/session';
 import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
@@ -24,6 +24,8 @@ export interface ReminderSheetProps {
   today: string;
   use24h: boolean;
   weekStartsOn: WeekStartsOn;
+  /** Each person's quiet hours and clock (spec 059): the notification line uses the recipient's. */
+  quietHours?: FamilyQuietHours;
   /** "+ Add a note" from the drawer: the notes field takes focus. */
   focusNotes?: boolean;
   /** Throws when it couldn't save: the sheet stays open, as typed. */
@@ -178,7 +180,7 @@ export function ReminderSheet(p: ReminderSheetProps) {
       <View className="flex-row items-start gap-12 rounded-lg bg-surface-soft px-14 py-12">
         <Icon name="bell" size={22} color="ink" />
         <Text size={15} weight="700" className="flex-1">
-          {notifySummary(f, p.members, p.use24h)}
+          {notifySummary(f, p.members, p.use24h, p.quietHours)}
         </Text>
       </View>
 

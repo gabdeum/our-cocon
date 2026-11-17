@@ -33,6 +33,8 @@ import { NotificationsProvider, useNotifications } from '../lib/notifications-co
 import { nativeNotifications } from '../lib/notifications-native';
 import { clearPrefs, unregisterDevice } from '../lib/notifications';
 import { timerNotifications } from '../lib/timer-notifications';
+// Spec 059: a reminder's Lock Screen actions are listened for as soon as the app's code loads.
+import '../lib/todo-notifications';
 import { clearFollowUps, createTimerAlerts, liveAlert } from '../lib/timer-alerts';
 import { createLiveActivity, endLiveActivity } from '../lib/live-activity';
 import { liveTimerNative } from '../lib/live-timer-native';

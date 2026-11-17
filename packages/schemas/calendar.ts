@@ -9,6 +9,8 @@ import { z } from 'zod';
 /** A calendar day in the family's home time zone (FR-008). */
 export const CalendarDate = z.iso.date();
 /** A wall-clock time; "24:00" only ends a day. */
+/** A time of day without "24:00" (quiet hours, spec 059). */
+export const QuietTime = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
 export const ClockTime = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$|^24:00$/);
 
 /** FR-002: the five family slots, in day order. There is no Night slot. */
@@ -210,6 +212,9 @@ export const MemberCalendarSettings = z.strictObject({
   month_hint_seen: z.boolean(),
   /** Menu › Notifications › Default for new events (spec 046 FR-003). */
   default_reminder: DefaultReminder,
+  /** Menu › Notifications › Quiet hours (spec 059 FR-002), in the home time zone. */
+  quiet_from: QuietTime,
+  quiet_to: QuietTime,
 });
 export type MemberCalendarSettings = z.infer<typeof MemberCalendarSettings>;
 export const MemberCalendarSettingsUpdate = MemberCalendarSettings.partial();
@@ -222,4 +227,6 @@ export const DEFAULT_MEMBER_CALENDAR_SETTINGS: MemberCalendarSettings = {
   fade_past: true,
   month_hint_seen: false,
   default_reminder: 'none',
+  quiet_from: '22:00',
+  quiet_to: '07:00',
 };

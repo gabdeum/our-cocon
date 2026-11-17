@@ -5,7 +5,8 @@ import { getReceipts, sendPushes, type ExpoOptions, type PushMessage, type PushT
 /** A Supabase client with the service role key: the notifier works for every family (FR-005). */
 export type ServiceDb = SupabaseClient<Database>;
 
-export type LogKind = 'timer_done' | 'reminder' | 'test';
+/** `reminder`: an event's (spec 049); `todo`: a reminder to do (spec 059). */
+export type LogKind = 'timer_done' | 'reminder' | 'todo' | 'test';
 
 /** A phone a notification goes to, for wording it the way that phone shows times (spec 049). */
 export type Device = { member_id: string; prefs: NotificationPrefs & { clock_24h?: boolean } };
@@ -22,6 +23,8 @@ export type Notification = {
   /** What it's about, for the log (an event id and date for reminders). Never user text. */
   ref?: string;
   interruptionLevel?: PushMessage['interruptionLevel'];
+  /** The actions the phone shows with it (spec 059: Done, In 1 hour, Tomorrow). */
+  categoryId?: string;
 } & ({ title: string; body: string } | { text: (device: Device) => { title: string; body: string } });
 
 /** Expo's answer for a token Apple no longer accepts (app deleted, notifications reset). */
@@ -43,7 +46,8 @@ export function createNotifier(db: ServiceDb, expo: ExpoOptions, now: () => Date
   }
 
   /**
-   * Sends to every enabled phone of these members; reminders skip phones that turned them off.
+   * Sends to every enabled phone of these members; event reminders and reminders to do (spec 059)
+   * skip phones that turned them off.
    * Failed sends are tried once more (spec 049), then logged.
    */
   async function send(n: Notification): Promise<SendResult> {
@@ -58,7 +62,8 @@ export function createNotifier(db: ServiceDb, expo: ExpoOptions, now: () => Date
     const allOnly = new Set(n.allFamilyOnly ?? []);
     const devices = (data ?? [])
       .map((d) => ({ ...d, prefs: prefsOf(d.prefs) }))
-      .filter((d) => n.kind !== 'reminder' || (d.prefs.reminders_on && (!allOnly.has(d.member_id) || d.prefs.reminders_scope === 'all')));
+      .filter((d) => n.kind !== 'reminder' || (d.prefs.reminders_on && (!allOnly.has(d.member_id) || d.prefs.reminders_scope === 'all')))
+      .filter((d) => n.kind !== 'todo' || d.prefs.todo_on);
     if (devices.length === 0) return { sent: 0, failed: 0 };
 
     const messages: PushMessage[] = devices.map((d) => ({
@@ -67,6 +72,7 @@ export function createNotifier(db: ServiceDb, expo: ExpoOptions, now: () => Date
       data: n.payload,
       sound: 'default',
       ...(n.interruptionLevel ? { interruptionLevel: n.interruptionLevel } : {}),
+      ...(n.categoryId ? { categoryId: n.categoryId } : {}),
     }));
     const tickets = await sendPushes(messages, expo);
     const retry = tickets.flatMap((t, i) => (t.ok || t.error === GONE ? [] : [i]));

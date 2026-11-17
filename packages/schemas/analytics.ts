@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { UndoKind } from './activity';
 import { CalendarView, DefaultReminder, Reminder, SlotKey, TimeType, Visibility } from './calendar';
 import { AiPermission, CookingSetting, MemberColor, SignInMethod } from './family';
-import { NotificationKind } from './notifications';
+import { NotificationKind, TodoAction } from './notifications';
 import { FilterKey } from './recipe-filters';
-import { ReminderActionSource, ReminderRollover, ReminderSection, ReminderSnoozeOption } from './reminders';
+import { ReminderActionSource, ReminderNotificationKind, ReminderRollover, ReminderSection, ReminderSnoozeOption } from './reminders';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
 
 // The converter's units (spec 013, `@cocon/quantity` CONVERTER_UNITS), and its result tiles' units.
@@ -23,7 +23,7 @@ const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 
  * Senders cap what they send at this, so a longer recipe never makes `track` throw.
  */
 /** Spec 046: what led to the notifications ask (the first timer, the first reminder, or the page). */
-export const NotificationAskTrigger = z.enum(['timer', 'reminder', 'settings']);
+export const NotificationAskTrigger = z.enum(['timer', 'reminder', 'todo', 'settings']);
 export type NotificationAskTrigger = z.infer<typeof NotificationAskTrigger>;
 
 /** Spec 028: the state Home's calendar card is in. */
@@ -62,7 +62,7 @@ export const events = {
   member_color_changed: z.strictObject({ color: MemberColor }),
   managed_member_linked: z.strictObject({ days_since_added: z.int().min(0) }),
   // Spec 029: the Menu tab. A tile in Apps, a row in Settings, and signing out from Family.
-  menu_app_opened: z.strictObject({ app: z.enum(['calendar', 'recipes', 'groceries', 'timers']) }),
+  menu_app_opened: z.strictObject({ app: z.enum(['calendar', 'recipes', 'groceries', 'timers', 'reminders']) }),
   settings_row_opened: z.strictObject({ row: z.enum(['family', 'ai', 'notifications', 'calendar', 'recipes', 'groceries', 'deleted']) }),
   signed_out: z.strictObject({}),
   // Spec 029: a calendar setting changed. Its new value (on/off for switches), the slot changed for
@@ -264,8 +264,9 @@ export const events = {
   notifications_permission_result: z.strictObject({ granted: z.boolean(), trigger: NotificationAskTrigger }),
   notification_opened: z.strictObject({ kind: NotificationKind, cold_start: z.boolean() }),
   notification_settings_changed: z.strictObject({
-    setting: z.enum(['timers_live', 'timers_alert', 'reminders_on', 'reminders_scope', 'default_reminder']),
-    value: z.enum(['on', 'off', 'mine', 'all', ...DefaultReminder.options]),
+    setting: z.enum(['timers_live', 'timers_alert', 'reminders_on', 'reminders_scope', 'default_reminder', 'todo_on', 'quiet_hours']),
+    // 'changed': quiet hours (spec 059), never the times themselves.
+    value: z.enum(['on', 'off', 'mine', 'all', 'changed', ...DefaultReminder.options]),
   }),
   // Spec 047: a timer-done alert on the phone: its "+1 min" or "Stop", or tapped open; and the one follow-up that arrived.
   timer_alert_action: z.strictObject({ action: z.enum(['add_minute', 'stop', 'open']) }),
@@ -285,7 +286,11 @@ export const events = {
   reminder_created: z.strictObject({ has_time: z.boolean(), repeating: z.boolean(), rollover: ReminderRollover, has_notes: z.boolean(), assignee_is_self: z.boolean() }),
   reminders_list_viewed: z.strictObject({ filter: z.enum(['mine', 'everyone']) }),
   reminders_show_more: z.strictObject({ section: ReminderSection }),
-  reminder_drawer_opened: z.strictObject({ source: z.enum(['home', 'list', 'calendar']) }),
+  reminder_drawer_opened: z.strictObject({ source: z.enum(['home', 'list', 'calendar', 'notification']) }),
+  // Spec 059 (server, the notifier): one reminder notification went out (1 hour before, at its time,
+  // or a nudge while it's late), and the reminder's rollover; and its Lock Screen actions.
+  reminder_notification_sent: z.strictObject({ kind: ReminderNotificationKind, rollover: ReminderRollover }),
+  reminder_notification_action: z.strictObject({ action: TodoAction }),
 } as const;
 
 export type EventName = keyof typeof events;

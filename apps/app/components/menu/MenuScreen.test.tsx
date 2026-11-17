@@ -10,7 +10,7 @@ afterEach(cleanup);
 
 function setup(over: Partial<MenuScreenProps> = {}) {
   const props: MenuScreenProps = {
-    details: { calendar: '3 today', recipes: '48 recipes', groceries: '7 to buy', timers: 'None running' },
+    details: { calendar: '3 today', recipes: '48 recipes', groceries: '7 to buy', timers: 'None running', reminders: '2 to do' },
     memberNames: ['Gabriel', 'Eva', 'James'],
     connected: 2,
     deleted: 1,
@@ -32,6 +32,7 @@ describe('Menu (OC-Menu)', () => {
       'Recipes, 48 recipes',
       'Groceries, 7 to buy',
       'Timers, None running',
+      'Reminders, 2 to do',
     ]);
     const rows = screen.getAllByRole('link').filter((l) => !apps.contains(l)).map((l) => l.textContent);
     expect(rows).toEqual([
@@ -59,6 +60,8 @@ describe('Menu (OC-Menu)', () => {
     expect(go(/^Groceries, 7/)).toBe('/groceries');
     expect(go(/^Timers/)).toBe('/timers');
     expect(tracker.track).toHaveBeenLastCalledWith('menu_app_opened', { app: 'timers' });
+    expect(go(/^Reminders, 2 to do/)).toBe('/reminders');
+    expect(tracker.track).toHaveBeenLastCalledWith('menu_app_opened', { app: 'reminders' });
     expect(go(/^Family/)).toBe('/settings/family');
     expect(tracker.track).toHaveBeenLastCalledWith('settings_row_opened', { row: 'family' });
     expect(go(/^AI assistants/)).toBe('/settings/ai');

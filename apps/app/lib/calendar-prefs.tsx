@@ -31,8 +31,8 @@ export function calendarPrefs(settings: MemberCalendarSettings, region: string |
   return { ...settings, weekStartsOn: weekStartFor(settings.week_start, region), use24h: uses24h(settings.time_format, device) };
 }
 
-// The default reminder is Menu › Notifications' (spec 046): it sends `notification_settings_changed`.
-type Tracked = Exclude<keyof MemberCalendarSettings, 'month_hint_seen' | 'default_reminder'>;
+// The default reminder and quiet hours are Menu › Notifications' (specs 046, 059): they send `notification_settings_changed`.
+type Tracked = Exclude<keyof MemberCalendarSettings, 'month_hint_seen' | 'default_reminder' | 'quiet_from' | 'quiet_to'>;
 
 /** Shown at once and saved; reverts on failure. Each "For you" change is tracked with its new value. */
 export async function changeCalendarPrefs(
@@ -46,15 +46,17 @@ export async function changeCalendarPrefs(
     (s) => ({ ...(s ?? DEFAULT_MEMBER_CALENDAR_SETTINGS), ...change }),
     () => saveMemberCalendarSettings(client, familyId, change),
   );
-  if (result === 'saved')
-    for (const [setting, value] of Object.entries(change) as [keyof MemberCalendarSettings, MemberCalendarSettings[keyof MemberCalendarSettings]][]) {
-      if (setting === 'month_hint_seen') continue;
-      if (setting === 'default_reminder') {
-        tracker.track('notification_settings_changed', { setting, value: value as MemberCalendarSettings['default_reminder'] });
-        continue;
-      }
-      tracker.track('calendar_settings_changed', { setting: setting satisfies Tracked, value: typeof value === 'boolean' ? (value ? 'on' : 'off') : (value as MemberCalendarSettings['opens_on' | 'week_start' | 'time_format']) });
+  if (result !== 'saved') return result;
+  // Quiet hours change as a pair: one event, never the times themselves.
+  if ('quiet_from' in change || 'quiet_to' in change) tracker.track('notification_settings_changed', { setting: 'quiet_hours', value: 'changed' });
+  for (const [setting, value] of Object.entries(change) as [keyof MemberCalendarSettings, MemberCalendarSettings[keyof MemberCalendarSettings]][]) {
+    if (setting === 'month_hint_seen' || setting === 'quiet_from' || setting === 'quiet_to') continue;
+    if (setting === 'default_reminder') {
+      tracker.track('notification_settings_changed', { setting, value: value as MemberCalendarSettings['default_reminder'] });
+      continue;
     }
+    tracker.track('calendar_settings_changed', { setting: setting satisfies Tracked, value: typeof value === 'boolean' ? (value ? 'on' : 'off') : (value as MemberCalendarSettings['opens_on' | 'week_start' | 'time_format']) });
+  }
   return result;
 }
 

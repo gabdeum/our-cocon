@@ -5,8 +5,8 @@ import { strings } from '../../strings/en';
 const n = strings.notifications;
 
 export interface AskSheetProps {
-  /** What led to it (spec 046 FR-002): the first timer, or the first event saved with a reminder. Null: closed. */
-  trigger: 'timer' | 'reminder' | null;
+  /** What led to it (spec 046 FR-002): the first timer, the first event saved with a reminder, or (059) the first reminder. Null: closed. */
+  trigger: 'timer' | 'reminder' | 'todo' | null;
   busy?: boolean;
   onTurnOn: () => void;
   onNotNow: () => void;

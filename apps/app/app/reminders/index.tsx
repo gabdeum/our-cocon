@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useInfiniteQuery, useQuery, type InfiniteData } from '@tanstack/react-query';
 import { addDays, dateLabel, formatTime, timeIn } from '@cocon/calendar';
-import { catchUpReminders, loadReminderSection, loadRemindersDoneToday, type DoneReminder, type PlacedReminder, type ReminderPage } from '@cocon/data';
+import { catchUpReminders, loadPlacedReminder, loadReminderSection, loadRemindersDoneToday, type DoneReminder, type PlacedReminder, type ReminderPage } from '@cocon/data';
 import type { ReminderSection } from '@cocon/schemas';
 import { ReminderDrawerHost, type OpenDrawer } from '../../components/reminders/ReminderDrawerHost';
 import { RemindersScreen, type ScreenSection } from '../../components/reminders/RemindersScreen';
 import { useOnline } from '../../lib/online';
 import { useFailureToast } from '../../lib/toast';
 import { useReminderActions, useReminderContext, useReminderMine } from '../../lib/reminder-actions';
-import { LIST_SECTIONS, doneKey, freshReminders, reminderSectionKey, remindersDoneKey } from '../../lib/reminders';
+import { FETCH_ON_OPEN, LIST_SECTIONS, doneKey, freshReminders, reminderSectionKey, remindersDoneKey } from '../../lib/reminders';
 import { strings } from '../../strings/en';
 
 const r = strings.reminders;
@@ -39,9 +39,10 @@ export default function RemindersRoute() {
       initialPageParam: null as string | null,
       getNextPageParam: (last: ReminderPage) => last.nextCursor,
       enabled: ready,
+      ...FETCH_ON_OPEN,
     });
   // Spec 058: what was done today stays at the bottom of Today, struck through, until midnight.
-  const doneToday = useQuery({ queryKey: remindersDoneKey(familyId ?? '', ctx.today, tz), queryFn: () => loadRemindersDoneToday(client, tz), enabled: familyId !== null });
+  const doneToday = useQuery({ queryKey: remindersDoneKey(familyId ?? '', ctx.today, tz), queryFn: () => loadRemindersDoneToday(client, tz), enabled: familyId !== null, ...FETCH_ON_OPEN });
   const lists = { overdue: section('overdue'), today: section('today'), tomorrow: section('tomorrow'), later: section('later') };
   const rowsOf = (data: InfiniteData<ReminderPage> | undefined): PlacedReminder[] => data?.pages.flatMap((p) => p.rows) ?? [];
 
@@ -84,13 +85,24 @@ export default function RemindersRoute() {
       }).filter((s) => s.rows.length > 0)
     : undefined;
 
-  // `?open={id}`: that reminder's drawer, once the lists are in (059's notifications open it). Set
-  // while rendering, once, so the drawer keeps the reminder even after a tick moves it.
+  // `?open={id}`: that reminder's drawer, once the lists are in (059's notifications open it, also
+  // while this screen is already open). Set while rendering, once, so the drawer keeps the reminder
+  // even after a tick moves it. One not on the loaded pages is loaded on its own (032-later L148).
   const [toOpen, setToOpen] = useState(params.open ?? null);
+  const [asked, setAsked] = useState(params.open);
+  if (params.open !== asked) {
+    setAsked(params.open);
+    setToOpen(params.open ?? null);
+  }
   if (toOpen && loaded) {
-    const row = LIST_SECTIONS.flatMap((k) => rowsOf(fresh(lists[k]))).find((x) => x.id === toOpen);
+    const id = toOpen;
+    const row = LIST_SECTIONS.flatMap((k) => rowsOf(fresh(lists[k]))).find((x) => x.id === id);
     setToOpen(null);
-    if (row) setDrawer({ row, source: 'list' });
+    if (row) setDrawer({ row, source: 'notification' });
+    else
+      void loadPlacedReminder(client, id, tz)
+        .then((placed) => placed && setDrawer({ row: placed, source: 'notification' }))
+        .catch(() => undefined);
   }
 
   if (ctx.state.status !== 'ready') return null;

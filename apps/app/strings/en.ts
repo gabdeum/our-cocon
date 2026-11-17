@@ -303,10 +303,13 @@ export const strings = {
     recipes: 'Recipes',
     groceries: 'Groceries',
     timers: 'Timers',
+    reminders: 'Reminders',
     today: (n: number) => (n === 0 ? 'Nothing today' : `${n} today`),
     recipeCount: (n: number) => (n === 0 ? 'No recipes yet' : `${n} ${n === 1 ? 'recipe' : 'recipes'}`),
     toBuy: (n: number) => (n === 0 ? 'All done' : `${n} to buy`),
     timersDetail: (running: number, paused: number) => (running > 0 ? `${running} running` : paused > 0 ? `${paused} paused` : 'None running'),
+    /** What Home lists: late and due today. */
+    toDo: (n: number) => (n === 0 ? 'Nothing to do' : `${n} to do`),
     family: 'Family',
     familyDetail: (names: readonly string[]) => `${names.join(', ')} · your account`,
     aiAssistants: 'AI assistants',
@@ -352,6 +355,17 @@ export const strings = {
       // The family's members without the app (spec 033). No pronouns are stored, so "them".
       managedHint: (names: readonly string[]) =>
         `Events for ${names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : (names[0] ?? '')} remind the person who takes them, or everyone with the app if nobody’s chosen yet.`,
+      // Spec 059 FR-007: reminders (things to do) and each person's quiet hours.
+      todo: 'Reminders',
+      todoOn: 'Reminders',
+      todoOnHint: 'Things to do, and nudges until they’re done',
+      quietHours: 'Quiet hours',
+      quietValue: (from: string, to: string) => `${from}–${to}`,
+      quietTitle: 'Quiet hours',
+      quietHint: 'No nudges in these hours. What’s due then comes when they end.',
+      quietFrom: 'From',
+      quietTo: 'To',
+      quietSave: 'Save',
       close: 'Close',
       saveFailed: "Couldn't save. Try again.",
     },
@@ -1447,10 +1461,11 @@ export const strings = {
   // design/system/components/Toast: the one toast, on every screen.
   // Spec 046: the ask sheet (design/ui/OC-Notifications.md › Ask sheet) and reminders shown in the app.
   notifications: {
-    askTitle: { timer: 'Know when it’s done', reminder: 'Get a heads-up before events' },
+    askTitle: { timer: 'Know when it’s done', reminder: 'Get a heads-up before events', todo: 'Get reminded on time' },
     askBody: {
       timer: 'Turn on notifications to hear the chime and see your timer on the Lock Screen, even with your phone locked. You’ll also get reminders before family events.',
       reminder: 'Turn on notifications so reminders reach your phone, even when Our Cocon is closed.',
+      todo: 'Turn on notifications so your reminders reach your phone at their time, even when Our Cocon is closed.',
     },
     turnOn: 'Turn on notifications',
     notNow: 'Not now',
@@ -1468,6 +1483,12 @@ export const strings = {
       followUpBody: (minutes: number) => `Done ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago.`,
       addMinute: '+1 min',
       stop: 'Stop',
+    },
+    // Spec 059 FR-004: a reminder's actions on the Lock Screen (OC-NotifLockTodo).
+    todo: {
+      done: 'Done',
+      hour: 'In 1 hour',
+      tomorrow: 'Tomorrow',
     },
   },
   // Spec 048: the Live Activity. On the Lock Screen it's the Timers screen's card (OC-Timers, its
@@ -1942,11 +1963,14 @@ export const strings = {
     notesLabel: 'Notes',
     optional: '· optional',
     notesPlaceholder: 'Details, a phone number, what to ask…',
-    /** The notification summary (spec 059's times; quiet hours are 22:00–07:00 until 059 lets each person set theirs). */
+    /** The notification summary (spec 059's times, in the recipient's quiet hours and clock). */
     notifyTimedHourly: (who: string, before: string, at: string, quietFrom: string, quietTo: string) =>
       `Notifies ${who} at ${before} and ${at}, then every hour until done. Quiet from ${quietFrom} to ${quietTo}.`,
+    notifyTimedDaily: (who: string, before: string, at: string) => `Notifies ${who} at ${before} and ${at}, then each morning while it’s late.`,
+    notifyTimedWeekly: (who: string, before: string, at: string) => `Notifies ${who} at ${before} and ${at}, then once a week while it’s late.`,
     notifyTimed: (who: string, before: string, at: string) => `Notifies ${who} at ${before} and ${at}.`,
     notifyDay: (who: string, at: string) => `Notifies ${who} at ${at} on the day, then each morning while it’s late.`,
+    notifyDayWeekly: (who: string, at: string) => `Notifies ${who} at ${at} on the day, then once a week while it’s late.`,
     notifyDayOnly: (who: string, at: string) => `Notifies ${who} at ${at} on the day.`,
     everyoneLower: 'everyone',
     save: 'Save',

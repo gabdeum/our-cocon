@@ -1,10 +1,14 @@
+import { createElement, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
 import { ReminderDraft } from '@cocon/schemas';
 import type { ReminderOccurrence } from '@cocon/data';
 import { draftToFields } from '@cocon/reminders';
 import { alex, gabriel, placedReminder } from '../test/fakes';
 import {
   createdProps,
+  FETCH_ON_OPEN,
   detailLine,
   formFromReminder,
   formRollover,
@@ -177,12 +181,24 @@ describe('the sheet', () => {
 
   it.each([
     ['timed, hourly', { hasTime: true, time: '15:00' }, true, 'Notifies Gabriel at 14:00 and 15:00, then every hour until done. Quiet from 22:00 to 07:00.'],
-    ['timed, next day', { hasTime: true, time: '15:00', rollover: 'day' }, true, 'Notifies Gabriel at 14:00 and 15:00.'],
+    ['timed, next day', { hasTime: true, time: '15:00', rollover: 'day' }, true, 'Notifies Gabriel at 14:00 and 15:00, then each morning while it’s late.'],
+    ['timed, leave it', { hasTime: true, time: '15:00', rollover: 'none' }, true, 'Notifies Gabriel at 14:00 and 15:00.'],
     ['any time, for everyone', { assignee: 'everyone' }, true, 'Notifies everyone at 09:00 on the day, then each morning while it’s late.'],
+    ['any time, next week', { rollover: 'week' }, true, 'Notifies Gabriel at 09:00 on the day, then once a week while it’s late.'],
     ['any time, leave it', { rollover: 'none', assignee: alex.id }, true, 'Notifies Alex at 09:00 on the day.'],
-    ['12-hour clock', { hasTime: true, time: '00:30', rollover: 'week' }, false, 'Notifies Gabriel at 11:30 PM and 12:30 AM.'],
+    ['12-hour clock', { hasTime: true, time: '00:30', rollover: 'week' }, false, 'Notifies Gabriel at 11:30 PM and 12:30 AM, then once a week while it’s late.'],
   ] as const)('summarises notifications: %s', (_, f, use24h, expected) => {
     expect(notifySummary(form(f as Partial<ReminderForm>), [gabriel, alex], use24h)).toBe(expected);
+  });
+
+  it('uses the recipient\'s quiet hours and clock (L149)', () => {
+    const people = new Map([[alex.id, { quiet: { from: '23:30', to: '06:00' }, timeFormat: '12h' as const }]]);
+    expect(notifySummary(form({ hasTime: true, time: '15:00', assignee: alex.id }), [gabriel, alex], true, people)).toBe(
+      'Notifies Alex at 2:00 PM and 3:00 PM, then every hour until done. Quiet from 11:30 PM to 6:00 AM.',
+    );
+    expect(notifySummary(form({ hasTime: true, time: '15:00', assignee: 'everyone' }), [gabriel, alex], true, people)).toBe(
+      'Notifies everyone at 14:00 and 15:00, then every hour until done. Quiet from 22:00 to 07:00.',
+    );
   });
 });
 
@@ -200,5 +216,27 @@ describe('freshReminders (spec 058)', () => {
     expect(freshReminders(saved, true)).toBeUndefined();
     expect(freshReminders(saved, false)).toEqual(['Pay the daycare']);
     expect(freshReminders({ data: [], isFetchedAfterMount: true }, true)).toEqual([]);
+  });
+
+  it('a screen opened again while its list is still fresh in the cache shows it, never loads forever', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: false } } });
+    client.setQueryData(['reminders', 'f1'], ['Pay the daycare']);
+    const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+    const { result } = renderHook(() => freshReminders(useQuery({ queryKey: ['reminders', 'f1'], queryFn: async () => ['Call the plumber'], ...FETCH_ON_OPEN }), true), { wrapper });
+    expect(result.current).toBeUndefined();
+    await waitFor(() => expect(result.current).toEqual(['Call the plumber']));
+  });
+
+  it('nor when switching back to a list still fresh in the cache (Mine ↔ Everyone’s)', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: false } } });
+    client.setQueryData(['reminders', 'f1', 'mine'], ['Pay the daycare']);
+    const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+    const { result, rerender } = renderHook(
+      ({ list }: { list: string }) => freshReminders(useQuery({ queryKey: ['reminders', 'f1', list], queryFn: async () => [`Fetched ${list}`], ...FETCH_ON_OPEN }), true),
+      { wrapper, initialProps: { list: 'everyone' } },
+    );
+    await waitFor(() => expect(result.current).toEqual(['Fetched everyone']));
+    rerender({ list: 'mine' });
+    await waitFor(() => expect(result.current).toEqual(['Fetched mine']));
   });
 });

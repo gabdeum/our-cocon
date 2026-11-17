@@ -6,6 +6,7 @@ import {
   completeReminder,
   deleteReminder,
   loadCalendarSettings,
+  loadFamilyQuietHours,
   setReminderSnooze,
   snoozeReminder,
   undoCompleteReminder,
@@ -31,6 +32,8 @@ export function useReminderContext() {
   // The family's home time zone, or the device's until one is set (as the event sheet does).
   const tz = settings.data?.homeTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { prefs } = useCalendarDisplay();
+  // Spec 059 (L149): each person's quiet hours and clock, for the sheet's "Notifies {name} at …".
+  const quiet = useQuery({ queryKey: ['member_calendar_settings', 'family', familyId ?? ''], queryFn: () => loadFamilyQuietHours(client), enabled: familyId !== null });
   const myMemberId = state.status === 'ready' ? (state.members.find((m) => m.user_id === state.userId)?.id ?? state.me.id) : null;
   return {
     state,
@@ -44,6 +47,7 @@ export function useReminderContext() {
     today: todayIn(tz),
     use24h: prefs.use24h,
     weekStartsOn: prefs.weekStartsOn,
+    quietHours: quiet.data,
   };
 }
 

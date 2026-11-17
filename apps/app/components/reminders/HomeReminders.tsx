@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { hasOpenReminders, loadRemindersHome } from '@cocon/data';
 import { useOnline } from '../../lib/online';
 import { useReminderActions, useReminderContext } from '../../lib/reminder-actions';
-import { freshReminders, remindersExistKey, remindersHomeKey } from '../../lib/reminders';
+import { FETCH_ON_OPEN, freshReminders, remindersExistKey, remindersHomeKey } from '../../lib/reminders';
 import { ReminderDrawerHost, type OpenDrawer } from './ReminderDrawerHost';
 import { RemindersCard } from './RemindersCard';
 
@@ -19,8 +19,8 @@ export function HomeReminders() {
   const online = useOnline();
   const { client, familyId } = ctx;
   const enabled = familyId !== null;
-  const exists = useQuery({ queryKey: remindersExistKey(familyId ?? ''), queryFn: () => hasOpenReminders(client), enabled });
-  const home = useQuery({ queryKey: remindersHomeKey(familyId ?? '', ctx.tz), queryFn: () => loadRemindersHome(client, ctx.tz), enabled: enabled && exists.data === true });
+  const exists = useQuery({ queryKey: remindersExistKey(familyId ?? ''), queryFn: () => hasOpenReminders(client), enabled, ...FETCH_ON_OPEN });
+  const home = useQuery({ queryKey: remindersHomeKey(familyId ?? '', ctx.tz), queryFn: () => loadRemindersHome(client, ctx.tz), enabled: enabled && exists.data === true, ...FETCH_ON_OPEN });
   const actions = useReminderActions(ctx);
   const [drawer, setDrawer] = useState<OpenDrawer | null>(null);
   // Not the copy saved on the device while online: a reload would show what has since been done.

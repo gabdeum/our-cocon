@@ -50,6 +50,7 @@ function SaveReminder() {
   return (
     <>
       <button type="button" onClick={() => maybeAsk('reminder')}>Save event</button>
+      <button type="button" onClick={() => maybeAsk('todo')}>Add reminder</button>
       <button type="button" onClick={() => setPref('timers_live', false)}>Lock Screen off</button>
       <button type="button" onClick={() => void turnOn('settings')}>Page turn on</button>
     </>
@@ -143,6 +144,16 @@ describe('the ask (US1, FR-002)', () => {
     expect(screen.getByRole('heading', { name: 'Get a heads-up before events' })).toBeTruthy();
     expect(screen.getByText('Turn on notifications so reminders reach your phone, even when Our Cocon is closed.')).toBeTruthy();
     expect(tracker.track).toHaveBeenCalledWith('notifications_ask_shown', { trigger: 'reminder' });
+  });
+
+  it('spec 059: a reminder to do asks with its own words', async () => {
+    const { tracker } = setup();
+    await flush();
+    fireEvent.click(screen.getByText('Add reminder'));
+    await flush();
+    expect(screen.getByRole('heading', { name: 'Get reminded on time' })).toBeTruthy();
+    expect(screen.getByText('Turn on notifications so your reminders reach your phone at their time, even when Our Cocon is closed.')).toBeTruthy();
+    expect(tracker.track).toHaveBeenCalledWith('notifications_ask_shown', { trigger: 'todo' });
   });
 
   it('waits for the sheet it follows to be gone (iOS would leave it invisible, taking every tap)', async () => {

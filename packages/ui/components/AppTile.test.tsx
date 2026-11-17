@@ -14,7 +14,11 @@ describe('AppGrid', () => {
     expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('aria-label'))).toEqual(['Calendar, 3 today', 'Recipes, 48 recipes', 'Timers, None running']);
     fireEvent.click(screen.getByRole('link', { name: 'Timers, None running' }));
     expect(onPress).toHaveBeenCalledWith('timers');
-    // A third app starts a new row; it keeps half the width.
+    // A third app starts a new row; it keeps half the width: its slot and the empty one are alike.
     expect(nav.children).toHaveLength(2);
+    const [full, last] = [...nav.children].map((r) => [...r.children]);
+    expect(last).toHaveLength(2);
+    expect(last?.[1]?.children).toHaveLength(0);
+    expect(new Set([...(full ?? []), ...(last ?? [])].map((s) => s.className)).size).toBe(1);
   });
 });

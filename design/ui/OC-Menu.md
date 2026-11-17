@@ -4,7 +4,7 @@ Source `screens/OC-Menu.dc.html` · Route `/menu` (`/settings` redirects here) �
 
 ## Layout
 1. Title "Menu" (32/900), pinned under the status bar while the page scrolls (spec 050 FR-007).
-2. **Apps** (18/900): `<nav aria-label="Apps">`, 2-column grid (2 × 2), gap 10, of AppTile links: Calendar "{n} today" · Recipes "{n} recipes" · Groceries "{n} to buy" · Timers "None running" (timer icon). The first three open their tab; Timers opens `/timers`. Future apps without a tab are added here as more tiles.
+2. **Apps** (18/900): `<nav aria-label="Apps">`, 2-column grid (rows of 2), gap 10, of AppTile links: Calendar "{n} today" · Recipes "{n} recipes" · Groceries "{n} to buy" · Timers "None running" (timer icon) · Reminders "{n} to do" (check icon; late and due today, as Home lists them). The first three open their tab; Timers opens `/timers`, Reminders `/reminders`. Future apps without a tab are added here as more tiles.
 3. **Settings** (18/900), three white cards (radius 22, padding 4 16, gap 10):
    - Family "{names} · your account" › · AI assistants "{n} connected" (olive-deep) ›
    - Calendar "Your view, times of day" › · Recipes "Cooking defaults, units" › · Groceries "Where you shop, store sizes" ›
@@ -19,6 +19,7 @@ Source `screens/OC-Menu.dc.html` · Route `/menu` (`/settings` redirects here) �
 | Recipes tile, none yet | "No recipes yet" |
 | Groceries tile, list empty or all ticked | "All done" |
 | Timers tile | "{n} running" (any running) · "{n} paused" · "None running" |
+| Reminders tile, nothing late or due today | "Nothing to do" |
 | AI assistants, none | "Not connected" (ink-muted) |
 | Recently deleted, empty | "Empty" |
 
