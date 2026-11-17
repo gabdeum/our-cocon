@@ -60,7 +60,7 @@ export interface NotificationsProviderProps {
   userId: string;
   /** Opens a tapped notification's screen (FR-006). */
   navigate: (route: string) => void;
-  /** A reminder that arrived while the app is open: a StatusBanner with the same text, "Open" goes to the event. */
+  /** A reminder that arrived while the app is open: a StatusBanner with the same text, "Open" goes to the event (or the reminder's drawer). */
   showBanner: (text: string, onOpen: () => void) => void;
   now?: () => number;
   /**
@@ -140,7 +140,8 @@ export function NotificationsProvider({ native, storage, client, tracker, userId
     if (!native) return;
     return native.onForeground((n) => {
       const opened = openedRoute(n.data);
-      if (!opened || opened.kind !== 'reminder' || !userRef.current) return;
+      // Event reminders (049) and reminders to do (059); a timer has its own alert in the app.
+      if (!opened || opened.kind === 'timer_done' || !userRef.current) return;
       showBanner(strings.notifications.inApp(n.title, n.body), () => navigate(opened.route));
     });
   }, [native, showBanner, navigate]);

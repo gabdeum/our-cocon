@@ -1,7 +1,7 @@
-import { addDays, calendarWordsEn, dateLabel, daysBetween, formatTime, parts, timeIn, todayIn, weekday } from '@cocon/calendar';
+import { addDays, calendarWordsEn, dateLabel, daysBetween, formatTime, parts, timeIn, todayIn, uses24h, weekday } from '@cocon/calendar';
 import type { PlacedReminder, ReminderOccurrence, StoredReminder } from '@cocon/data';
-import { rolloverFor, snoozeOptions, toDraft } from '@cocon/reminders';
-import { memberInitials, type ParsedReminderDraft, type Recurrence, type ReminderDraft, type ReminderRollover, type ReminderSection, type ReminderSnoozeOption } from '@cocon/schemas';
+import { MORNING, rolloverFor, snoozeOptions, toDraft } from '@cocon/reminders';
+import { DEFAULT_QUIET_HOURS, memberInitials, type ParsedReminderDraft, type QuietHours, type Recurrence, type ReminderDraft, type ReminderRollover, type ReminderSection, type ReminderSnoozeOption, type TimeFormatSetting } from '@cocon/schemas';
 import type { AvatarColor, MemberChipColor } from '@cocon/ui';
 import { strings } from '../strings/en';
 import { repeatWords } from './event-detail';
@@ -260,8 +260,10 @@ export function createdProps(d: ParsedReminderDraft, myMemberId: string) {
   };
 }
 
-const QUIET = { from: '22:00', to: '07:00' };
-const UNTIMED_AT = '09:00';
+const UNTIMED_AT = MORNING;
+
+/** Each account member's quiet hours and clock (spec 059, `loadFamilyQuietHours`). */
+export type FamilyQuietHours = ReadonlyMap<string, { quiet: QuietHours; timeFormat: TimeFormatSetting }>;
 
 /** The hour before "HH:MM". */
 const hourBefore = (t: string) => {
@@ -270,16 +272,24 @@ const hourBefore = (t: string) => {
 };
 
 /**
- * The sheet's notification line (OC-Reminders.md › Create / edit sheet). Quiet hours are spec 059's
- * default until it lets each person set theirs (032-later).
+ * The sheet's notification line (OC-Reminders.md › Create / edit sheet), following spec 059's nudges.
+ * In the recipient's quiet hours and clock when it's for one member with the app (032-later L149);
+ * otherwise the defaults and this phone's clock.
  */
-export function notifySummary(f: ReminderForm, members: readonly Member[], use24h: boolean): string {
+export function notifySummary(f: ReminderForm, members: readonly Member[], use24h: boolean, people: FamilyQuietHours = new Map()): string {
   const who = f.assignee === 'everyone' ? r.everyoneLower : (members.find((m) => m.id === f.assignee)?.display_name ?? r.everyoneLower);
-  const t = (x: string) => formatTime(x, use24h);
+  const recipient = f.assignee === 'everyone' ? undefined : people.get(f.assignee);
+  const quiet = recipient?.quiet ?? DEFAULT_QUIET_HOURS;
+  const t = (x: string) => formatTime(x, recipient ? uses24h(recipient.timeFormat, use24h) : use24h);
   const roll = formRollover(f);
   if (f.hasTime && isClockTime(f.time)) {
-    return roll === 'hour' ? r.notifyTimedHourly(who, t(hourBefore(f.time)), t(f.time), t(QUIET.from), t(QUIET.to)) : r.notifyTimed(who, t(hourBefore(f.time)), t(f.time));
+    const [before, at] = [t(hourBefore(f.time)), t(f.time)];
+    if (roll === 'hour') return r.notifyTimedHourly(who, before, at, t(quiet.from), t(quiet.to));
+    if (roll === 'day') return r.notifyTimedDaily(who, before, at);
+    if (roll === 'week') return r.notifyTimedWeekly(who, before, at);
+    return r.notifyTimed(who, before, at);
   }
+  if (roll === 'week') return r.notifyDayWeekly(who, t(UNTIMED_AT));
   return roll === 'none' ? r.notifyDayOnly(who, t(UNTIMED_AT)) : r.notifyDay(who, t(UNTIMED_AT));
 }
 

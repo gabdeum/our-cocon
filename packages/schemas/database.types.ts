@@ -531,14 +531,14 @@ isOneToOne: false
                   ]
                 },"member_calendar_settings": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"default_reminder": string,"fade_past": boolean,"family_id": string,"id": string,"month_hint_seen": boolean,"opens_on": string,"show_birthdays": boolean,"source": string,"time_format": string,"updated_at": string,"updated_by": string | null,"user_id": string,"week_start": string
+                    "created_at": string,"created_by": string | null,"default_reminder": string,"fade_past": boolean,"family_id": string,"id": string,"month_hint_seen": boolean,"opens_on": string,"quiet_from": string,"quiet_to": string,"show_birthdays": boolean,"source": string,"time_format": string,"updated_at": string,"updated_by": string | null,"user_id": string,"week_start": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id": string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
+                    "created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id": string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"quiet_from"?: string,"quiet_to"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id"?: string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
+                    "created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id"?: string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"quiet_from"?: string,"quiet_to"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
                   }
                   Relationships: [
                     {
@@ -800,6 +800,38 @@ isOneToOne: false
       columns: ["member_id","family_id"]
 isOneToOne: false
       referencedRelation: "members"
+      referencedColumns: ["id","family_id"]
+    }
+                  ]
+                },"reminder_nudges": {
+                  Row: {
+                    "family_id": string,"id": string,"kind": string,"late_from": string,"member_id": string,"reminder_id": string,"sent_at": string,"slot_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "family_id": string,"id"?: string,"kind": string,"late_from": string,"member_id": string,"reminder_id": string,"sent_at"?: string,"slot_at": string
+                  }
+                  Update: {
+                    "family_id"?: string,"id"?: string,"kind"?: string,"late_from"?: string,"member_id"?: string,"reminder_id"?: string,"sent_at"?: string,"slot_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reminder_nudges_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reminder_nudges_member_id_family_id_fkey"
+      columns: ["member_id","family_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "reminder_nudges_reminder_id_family_id_fkey"
+      columns: ["reminder_id","family_id"]
+isOneToOne: false
+      referencedRelation: "reminders"
       referencedColumns: ["id","family_id"]
     }
                   ]
@@ -1158,6 +1190,11 @@ isOneToOne: false
 "delete_my_account":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"family_quiet_hours":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "member_id": string,"quiet_from": string,"quiet_to": string,"time_format": string
+            }[]
+                           },
 "invite_status":
 { Args: { "token": string }; Returns: Json
                            },
@@ -1213,6 +1250,9 @@ isOneToOne: false
 { Args: { "p_from": string,"p_to": string }; Returns: {
               "created_at": string,"creator_member_id": string,"end_time": string,"ends_on": string,"exceptions": Json,"family_id": string,"hidden_from": (string)[],"id": string,"location": string,"members": Json,"recurrence": Json,"reminder": string,"responsible_member_id": string,"slots": (string)[],"start_time": string,"starts_on": string,"time_type": string,"title": string,"visibility": string
             }[]
+                           },
+"reminder_placed":
+{ Args: { "p_id": string,"p_tz"?: string }; Returns: Json
                            },
 "reminder_revert":
 { Args: { "p_due_at": string,"p_from_due_at": string,"p_id": string,"p_next_due_at"?: string,"p_reopen": (string)[],"p_snoozed_until"?: string }; Returns: boolean
@@ -1312,6 +1352,16 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"todo_candidates":
+{ Args: { "p_now": string }; Returns: {
+              "family_id": string,"reminder": Json,"time_zone": string
+            }[]
+                           },
+"todo_catch_up_families":
+{ Args: { "p_now": string }; Returns: {
+              "family_id": string,"time_zone": string
+            }[]
+                           },
 "touch_assistant":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },

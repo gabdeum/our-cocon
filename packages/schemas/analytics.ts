@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { UndoKind } from './activity';
 import { CalendarView, DefaultReminder, Reminder, SlotKey, TimeType, Visibility } from './calendar';
 import { AiPermission, CookingSetting, MemberColor, SignInMethod } from './family';
-import { NotificationKind } from './notifications';
+import { NotificationKind, TodoAction } from './notifications';
 import { FilterKey } from './recipe-filters';
-import { ReminderActionSource, ReminderRollover, ReminderSection, ReminderSnoozeOption } from './reminders';
+import { ReminderActionSource, ReminderNotificationKind, ReminderRollover, ReminderSection, ReminderSnoozeOption } from './reminders';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
 
 // The converter's units (spec 013, `@cocon/quantity` CONVERTER_UNITS), and its result tiles' units.
@@ -264,8 +264,9 @@ export const events = {
   notifications_permission_result: z.strictObject({ granted: z.boolean(), trigger: NotificationAskTrigger }),
   notification_opened: z.strictObject({ kind: NotificationKind, cold_start: z.boolean() }),
   notification_settings_changed: z.strictObject({
-    setting: z.enum(['timers_live', 'timers_alert', 'reminders_on', 'reminders_scope', 'default_reminder']),
-    value: z.enum(['on', 'off', 'mine', 'all', ...DefaultReminder.options]),
+    setting: z.enum(['timers_live', 'timers_alert', 'reminders_on', 'reminders_scope', 'default_reminder', 'todo_on', 'quiet_hours']),
+    // 'changed': quiet hours (spec 059), never the times themselves.
+    value: z.enum(['on', 'off', 'mine', 'all', 'changed', ...DefaultReminder.options]),
   }),
   // Spec 047: a timer-done alert on the phone: its "+1 min" or "Stop", or tapped open; and the one follow-up that arrived.
   timer_alert_action: z.strictObject({ action: z.enum(['add_minute', 'stop', 'open']) }),
@@ -285,7 +286,11 @@ export const events = {
   reminder_created: z.strictObject({ has_time: z.boolean(), repeating: z.boolean(), rollover: ReminderRollover, has_notes: z.boolean(), assignee_is_self: z.boolean() }),
   reminders_list_viewed: z.strictObject({ filter: z.enum(['mine', 'everyone']) }),
   reminders_show_more: z.strictObject({ section: ReminderSection }),
-  reminder_drawer_opened: z.strictObject({ source: z.enum(['home', 'list', 'calendar']) }),
+  reminder_drawer_opened: z.strictObject({ source: z.enum(['home', 'list', 'calendar', 'notification']) }),
+  // Spec 059 (server, the notifier): one reminder notification went out (1 hour before, at its time,
+  // or a nudge while it's late), and the reminder's rollover; and its Lock Screen actions.
+  reminder_notification_sent: z.strictObject({ kind: ReminderNotificationKind, rollover: ReminderRollover }),
+  reminder_notification_action: z.strictObject({ action: TodoAction }),
 } as const;
 
 export type EventName = keyof typeof events;

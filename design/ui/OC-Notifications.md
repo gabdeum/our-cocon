@@ -1,6 +1,6 @@
 # OC-Notifications — what the phone shows
 
-Sources `screens/OC-NotifAsk.dc.html`, `OC-NotifLockTimer.dc.html`, `OC-NotifIsland.dc.html`, `OC-NotifLockDone.dc.html`, `OC-NotifLockReminders.dc.html` · Specs 046–049
+Sources `screens/OC-NotifAsk.dc.html`, `OC-NotifLockTimer.dc.html`, `OC-NotifIsland.dc.html`, `OC-NotifLockDone.dc.html`, `OC-NotifLockReminders.dc.html`, `OC-NotifLockTodo.dc.html` · Specs 046–049, 059
 
 Lock Screen mock-ups show content and order only; iOS draws the notification chrome. Notification titles and bodies are plain text (no emoji).
 
@@ -28,3 +28,12 @@ Follow-up after 2 min: "Still waiting: {label}" · "Done {n} minutes ago."
 | 1 day before | "Tomorrow: Eva’s birthday" | "All day · Tuesday" |
 Body rules (spec 049 FR-004): "15 minutes" and "1 hour": "{time or slot} · {place} · {who takes}". "Morning of" has the time in its title, so the body is "{who it's for} · {place} · {who takes}" (no names when it's only the recipient). "1 day before": "{time, slot or All day} · {weekday} · {place} · {who takes}". Empty parts are left out. Titles for a slot: "{title} this morning / this afternoon / this evening", "{title} early this morning", "{title} at lunch". An all-day event's "15 minutes" and "1 hour" remind at 07:30 as "Today: {title}". Times follow the recipient's clock (12- or 24-hour). The words are in `packages/calendar/words.en.ts` › `reminders` (the notifier has no app strings).
 In-app (app open): StatusBanner with the same title and body, tap → event. Built as the app's Toast: "{title} · {body}" with the button "Open" (spec 046).
+
+## Reminders to do (059)
+| Kind | Title | Body |
+| --- | --- | --- |
+| 1 hour before | "In 1 hour: {title}" | "Due at {time}" |
+| At its time | "Now: {title}" | "Nudges every hour until it’s done." (every hour) or "Due now" |
+| Without a time, 09:00 | "Today: {title}" | "Due today" |
+| Nudge | "Still to do: {title}" | "Was due at {time} · {n} hours late" (with a time, under a day late) or "Was due yesterday" / "Was due {Wed, Nov 11}" |
+" · for {name}" ends the body when the recipient isn't the only one it's for ("for everyone", "for James"); never after "Nudges every hour until it’s done.". Times follow the recipient's clock. Long-press actions: "Done" · "In 1 hour" (only with a time) · "Tomorrow"; they open the app and run at once (as 047's, 032-later L120). A tap opens Reminders with its drawer (`/reminders?open={id}`). The words are in `packages/reminders/words.en.ts` (the notifier has no app strings); the buttons in `strings/en.ts` › `notifications.todo`. In-app: the same StatusBanner as event reminders.

@@ -22,6 +22,7 @@ export default function NewReminderRoute() {
       today={ctx.today}
       use24h={ctx.use24h}
       weekStartsOn={ctx.weekStartsOn}
+      quietHours={ctx.quietHours}
       onClose={closeReminderSheet}
       onSave={async (draft) => {
         await createReminder(client, familyId, draft, tz);

@@ -18,6 +18,9 @@ function setup(over: Partial<NotificationSettingsProps> = {}) {
     defaultReminder: 'hour_before',
     onDefaultReminder: vi.fn().mockResolvedValue('saved'),
     managedNames: ['James'],
+    quietHours: { from: '22:00', to: '07:00' },
+    onQuietHours: vi.fn().mockResolvedValue('saved'),
+    use24h: true,
     onTurnOn: vi.fn(),
     onOpenSettings: vi.fn(),
     onBack: vi.fn(),
@@ -31,12 +34,13 @@ function setup(over: Partial<NotificationSettingsProps> = {}) {
 const flush = () => act(async () => undefined);
 
 describe('Notifications (OC-SettingsNotif)', () => {
-  it('US2: back to the Menu, then Timers and Event reminders, as drawn', async () => {
+  it('US2: back to the Menu, then Timers, Event reminders and Reminders, as drawn', async () => {
     const { onBack } = setup();
-    expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual(['Notifications', 'Timers', 'Event reminders']);
+    expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual(['Notifications', 'Timers', 'Event reminders', 'Reminders']);
     expect(screen.getByText('Just for you, on this iPhone.')).toBeTruthy();
-    expect(screen.getAllByRole('switch').map((s) => s.getAttribute('aria-label'))).toEqual(['Timer on Lock Screen', 'Alert when a timer ends', 'Event reminders']);
-    for (const hint of ['Countdown on the Lock Screen and in the Dynamic Island', 'Chime and notification, even when the app is closed', 'Before events that have a reminder', 'When you add an event'])
+    expect(screen.getAllByRole('switch').map((s) => s.getAttribute('aria-label'))).toEqual(['Timer on Lock Screen', 'Alert when a timer ends', 'Event reminders', 'Reminders']);
+    expect(screen.getByRole('link', { name: /Quiet hours/ }).textContent).toContain('22:00–07:00');
+    for (const hint of ['Countdown on the Lock Screen and in the Dynamic Island', 'Chime and notification, even when the app is closed', 'Before events that have a reminder', 'When you add an event', 'Things to do, and nudges until they’re done'])
       expect(screen.getByText(hint)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Events I’m on' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('link', { name: /Default for new events/ }).textContent).toContain('1 hour before');
@@ -57,6 +61,31 @@ describe('Notifications (OC-SettingsNotif)', () => {
     expect(onPref).toHaveBeenLastCalledWith('reminders_scope', 'all');
     fireEvent.click(screen.getByRole('switch', { name: 'Event reminders' }));
     expect(onPref).toHaveBeenLastCalledWith('reminders_on', false);
+    fireEvent.click(screen.getByRole('switch', { name: 'Reminders' }));
+    expect(onPref).toHaveBeenLastCalledWith('todo_on', false);
+  });
+
+  it('spec 059 FR-007: quiet hours, from two times, saved together', async () => {
+    const { onQuietHours } = setup({ use24h: false });
+    fireEvent.click(screen.getByRole('link', { name: /Quiet hours/ }));
+    expect(screen.getByText('No nudges in these hours. What’s due then comes when they end.')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('From'), { target: { value: '23:30' } });
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: '6:00' } });
+    expect(screen.getByRole('button', { name: 'Save' }).getAttribute('aria-disabled')).toBe('true');
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: '06:00' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await flush();
+    expect(onQuietHours).toHaveBeenCalledWith({ from: '23:30', to: '06:00' });
+  });
+
+  it('quiet hours read in this person\'s clock; a failed save says so', async () => {
+    setup({ use24h: false, onQuietHours: vi.fn().mockResolvedValue('failed') });
+    expect(screen.getByRole('link', { name: /Quiet hours/ }).textContent).toContain('10:00 PM–7:00 AM');
+    fireEvent.click(screen.getByRole('link', { name: /Quiet hours/ }));
+    fireEvent.change(screen.getByLabelText('From'), { target: { value: '21:00' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await flush();
+    expect(screen.getByText("Couldn't save. Try again.")).toBeTruthy();
   });
 
   it('US2: the default for new events, from five choices', async () => {

@@ -6,6 +6,8 @@ export const NotificationPrefs = z.strictObject({
   timers_alert: z.boolean(),
   reminders_on: z.boolean(),
   reminders_scope: z.enum(['mine', 'all']),
+  /** Spec 059 FR-007: reminders (things to do) and their nudges on this phone. */
+  todo_on: z.boolean(),
 });
 export type NotificationPrefs = z.infer<typeof NotificationPrefs>;
 /**
@@ -19,21 +21,34 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   timers_alert: true,
   reminders_on: true,
   reminders_scope: 'mine',
+  todo_on: true,
 };
 
-export const NotificationKind = z.enum(['timer_done', 'reminder']);
+/** `reminder`: an event's (spec 049); `todo`: a reminder to do (spec 059). */
+export const NotificationKind = z.enum(['timer_done', 'reminder', 'todo']);
 export type NotificationKind = z.infer<typeof NotificationKind>;
 
 /**
- * FR-006: where tapping a notification goes. Only Timers and one event's occurrence: a payload is
- * never trusted to open anything else in the app.
+ * Spec 059 FR-004: the actions on a reminder's notification. "In 1 hour" only with a time. The
+ * notifier names the category; the app registers both with their buttons.
  */
-export const NotificationRoute = z
-  .string()
-  .regex(/^(\/timers|\/calendar\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\?date=\d{4}-\d{2}-\d{2})$/);
+export const TODO_CATEGORY = { timed: 'todo_timed', untimed: 'todo' } as const;
+export const TodoAction = z.enum(['done', 'hour', 'tomorrow']);
+export type TodoAction = z.infer<typeof TodoAction>;
 
-/** FR-006: the `data` every Our Cocon notification carries. */
-export const PushPayload = z.object({ kind: NotificationKind, route: NotificationRoute });
+const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+
+/**
+ * FR-006: where tapping a notification goes. Only Timers, one event's occurrence and one reminder's
+ * drawer (spec 059): a payload is never trusted to open anything else in the app.
+ */
+export const NotificationRoute = z.string().regex(new RegExp(`^(/timers|/calendar/${UUID}\\?date=\\d{4}-\\d{2}-\\d{2}|/reminders\\?open=${UUID})$`));
+
+/**
+ * FR-006: the `data` every Our Cocon notification carries. A reminder's (spec 059) also carries the
+ * due time it was about, so a Lock Screen action on an old one never ticks a later date.
+ */
+export const PushPayload = z.object({ kind: NotificationKind, route: NotificationRoute, due_at: z.iso.datetime({ offset: true }).optional() });
 export type PushPayload = z.infer<typeof PushPayload>;
 
 /** FR-004: an Expo push token, as `push_devices` checks it. */

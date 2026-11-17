@@ -47,7 +47,7 @@ describe('shouldAsk (FR-002)', () => {
 
 describe('the switches (FR-003)', () => {
   it('start on, "Events I’m on"', async () => {
-    expect(await readPrefs(memoryStorage(), 'u1')).toEqual({ timers_live: true, timers_alert: true, reminders_on: true, reminders_scope: 'mine' });
+    expect(await readPrefs(memoryStorage(), 'u1')).toEqual({ timers_live: true, timers_alert: true, reminders_on: true, reminders_scope: 'mine', todo_on: true });
   });
 
   it('are kept per person on the phone; unknown values fall back to the defaults', async () => {
@@ -104,10 +104,12 @@ describe('this install (FR-004)', () => {
 });
 
 describe('openedRoute (FR-006)', () => {
-  it('opens Timers, or one event on one day', () => {
+  it('opens Timers, one event on one day, or one reminder\'s drawer (spec 059)', () => {
     expect(openedRoute({ kind: 'timer_done', route: '/timers' })).toEqual({ kind: 'timer_done', route: '/timers' });
     const event = '/calendar/0f8fad5b-d9cb-469f-a165-70867728950e?date=2026-11-03';
     expect(openedRoute({ kind: 'reminder', route: event })).toEqual({ kind: 'reminder', route: event });
+    const todo = '/reminders?open=0f8fad5b-d9cb-469f-a165-70867728950e';
+    expect(openedRoute({ kind: 'todo', route: todo, due_at: '2026-11-11T14:00:00Z' })).toEqual({ kind: 'todo', route: todo });
   });
 
   it.each([
@@ -115,6 +117,8 @@ describe('openedRoute (FR-006)', () => {
     [{ kind: 'reminder', route: 'https://example.com' }],
     [{ kind: 'reminder', route: '/timers/../oauth/consent' }],
     [{ kind: 'reminder', route: '/calendar/x?date=2026-11-03' }],
+    [{ kind: 'todo', route: '/reminders?open=x' }],
+    [{ kind: 'todo', route: '/reminders?open=0f8fad5b-d9cb-469f-a165-70867728950e&next=/oauth' }],
     [{ kind: 'other', route: '/timers' }],
     [null],
     ['/timers'],

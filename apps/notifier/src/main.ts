@@ -4,6 +4,7 @@ import type { Database } from '@cocon/schemas';
 import { createNotifierAnalytics } from './analytics.js';
 import { loadConfig } from './config.js';
 import { createReminderJob } from './reminders.js';
+import { createTodoJob } from './todo.js';
 import { createHealthServer, createWorker, type Job } from './worker.js';
 
 const config = loadConfig();
@@ -11,9 +12,11 @@ const db = createClient<Database>(config.supabaseUrl, config.serviceRoleKey, { a
 const notifier = createNotifier(db, { fetch, ...(config.expoAccessToken ? { accessToken: config.expoAccessToken } : {}) });
 const analytics = createNotifierAnalytics(config);
 const reminders = createReminderJob(db, notifier, analytics.forFamily);
+const todo = createTodoJob(db, notifier, analytics.forFamily);
 
 const jobs: Job[] = [
   { name: 'reminders', run: reminders.run },
+  { name: 'todo', run: todo.run },
   {
     name: 'receipts',
     run: async () => {

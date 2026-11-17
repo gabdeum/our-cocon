@@ -9,7 +9,7 @@ import { ReminderDrawer } from './ReminderDrawer';
 
 export interface OpenDrawer {
   row: PlacedReminder;
-  source: 'home' | 'list' | 'calendar';
+  source: 'home' | 'list' | 'calendar' | 'notification';
 }
 
 /** The drawer for one reminder, with its history and the screen's actions (Home and the Reminders screen). */

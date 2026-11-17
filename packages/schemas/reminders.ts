@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CalendarDate, ClockTime, Recurrence } from './calendar';
+import { CalendarDate, ClockTime, QuietTime, Recurrence } from './calendar';
 
 /**
  * Spec 056: reminders, things to do and tick off (not the event reminders of spec 049, which are
@@ -25,6 +25,15 @@ export type ReminderSnoozeOption = z.infer<typeof ReminderSnoozeOption>;
 /** Where a reminder was ticked or snoozed from (the Tracking table). */
 export const ReminderActionSource = z.enum(['home', 'list', 'drawer', 'calendar', 'notification', 'assistant']);
 export type ReminderActionSource = z.infer<typeof ReminderActionSource>;
+
+/** Spec 059 FR-001: a reminder notification: 1 hour before, at its time (or 09:00), or a nudge while it's late. */
+export const ReminderNotificationKind = z.enum(['before', 'due', 'nudge']);
+export type ReminderNotificationKind = z.infer<typeof ReminderNotificationKind>;
+
+/** Spec 059 FR-002: a person's quiet hours, "HH:MM" in the home time zone; the same two times mean none. */
+export const QuietHours = z.object({ from: QuietTime, to: QuietTime });
+export type QuietHours = z.infer<typeof QuietHours>;
+export const DEFAULT_QUIET_HOURS: QuietHours = { from: '22:00', to: '07:00' };
 
 /** Who a reminder is for: a member, or the whole family. */
 export const ReminderAssignee = z.union([z.uuid(), z.literal('everyone')]);

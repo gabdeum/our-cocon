@@ -54,7 +54,7 @@ Hint lines under "If it's not done":
 - Next week: "Moves to the same day next week, with a late badge."
 - Leave it: "Stays on its due day in the calendar. No more nudges."
 
-Notification summary: "Notifies {name} at {time − 1 h} and {time}, then every hour until done. Quiet from 22:00 to 07:00." / without time: "Notifies {name} at 09:00 on the day, then each morning while it's late." Uses the recipient's quiet hours and time format.
+Notification summary (spec 059's nudges), by rollover: Every hour "Notifies {name} at {time − 1 h} and {time}, then every hour until done. Quiet from 22:00 to 07:00." · Next day "Notifies {name} at {time − 1 h} and {time}, then each morning while it's late." · Next week "Notifies {name} at {time − 1 h} and {time}, then once a week while it's late." · Leave it "Notifies {name} at {time − 1 h} and {time}." Without a time: "Notifies {name} at 09:00 on the day, then each morning while it's late." · "…on the day, then once a week while it's late." (Next week) · "Notifies {name} at 09:00 on the day." (Leave it). Uses the recipient's quiet hours and time format (this phone's clock and the default quiet hours for Everyone).
 
 Errors: empty title → "Give your reminder a name." (`#8A4B00`, under the field). "Every hour" chosen then time switched off → rollover silently becomes "Next day".
 

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Db } from './client';
-import { catchUpReminders, completeReminder, createReminder, loadReminderSection, loadRemindersHome, snoozeReminder, undoCompleteReminder } from './reminders';
+import { catchUpReminders, completeReminder, createReminder, loadFamilyQuietHours, loadPlacedReminder, loadReminderSection, loadRemindersHome, snoozeReminder, undoCompleteReminder } from './reminders';
 
 const FAMILY = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a01';
 const ID = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a02';
@@ -87,6 +87,29 @@ describe('reminders data (spec 056)', () => {
     const now = new Date('2026-11-16T09:00:00Z');
     expect(await catchUpReminders(fakeClient([[bins]], () => true).client, tz, now)).toBe(1);
     expect(await catchUpReminders(fakeClient([[bins]], () => false).client, tz, now)).toBe(0);
+  });
+
+  it('catches up one family when asked (spec 059, the notifier)', async () => {
+    const { client, calls } = fakeClient([[bins]], () => true);
+    await catchUpReminders(client, tz, new Date('2026-11-16T09:00:00Z'), FAMILY);
+    expect(calls).toContainEqual({ table: 'reminders', op: 'eq', args: ['family_id', FAMILY] });
+  });
+
+  it('loads one reminder, placed, or null when it isn\'t open (spec 059, L148)', async () => {
+    const { client, rpc } = fakeClient([], (name) => (name === 'reminder_placed' ? placed(1) : null));
+    expect(await loadPlacedReminder(client, ID, tz)).toMatchObject({ section: 'overdue', late_days: 1 });
+    expect(rpc).toHaveBeenCalledWith('reminder_placed', { p_id: ID, p_tz: tz });
+    expect(await loadPlacedReminder(fakeClient([], () => null).client, ID, tz)).toBeNull();
+  });
+
+  it('reads each person\'s quiet hours and clock, with the defaults for anything unreadable (spec 059, L149)', async () => {
+    const { client } = fakeClient([], () => [
+      { member_id: ID, quiet_from: '23:30', quiet_to: '06:00', time_format: '12h' },
+      { member_id: FAMILY, quiet_from: 'late', quiet_to: '07:00', time_format: 'odd' },
+    ]);
+    const people = await loadFamilyQuietHours(client);
+    expect(people.get(ID)).toEqual({ quiet: { from: '23:30', to: '06:00' }, timeFormat: '12h' });
+    expect(people.get(FAMILY)).toEqual({ quiet: { from: '22:00', to: '07:00' }, timeFormat: 'automatic' });
   });
 
   it('pages a section with a cursor (FR-012)', async () => {

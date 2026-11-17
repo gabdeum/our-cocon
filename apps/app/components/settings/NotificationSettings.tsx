@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { DefaultReminder, type NotificationPrefs, type Tracker } from '@cocon/schemas';
-import { BottomSheet, Button, Card, cn, Lead, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, Text } from '@cocon/ui';
+import { formatTime } from '@cocon/calendar';
+import { DefaultReminder, QuietHours, type NotificationPrefs, type Tracker } from '@cocon/schemas';
+import { BottomSheet, Button, Card, cn, Lead, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, Text, TimeRange } from '@cocon/ui';
 import type { PermissionStatus } from '../../lib/notifications';
 import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
@@ -19,6 +20,10 @@ export interface NotificationSettingsProps {
   /** The member's, on every phone. */
   defaultReminder: DefaultReminder;
   onDefaultReminder: (value: DefaultReminder) => Promise<'saved' | 'failed'>;
+  /** Spec 059 FR-007: the member's quiet hours, on every phone, in their clock. */
+  quietHours: QuietHours;
+  onQuietHours: (value: QuietHours) => Promise<'saved' | 'failed'>;
+  use24h: boolean;
   /** The family's members without the app (spec 033), for the hint under Event reminders. */
   managedNames: readonly string[];
   onTurnOn: () => void;
@@ -40,6 +45,7 @@ function Heading({ children }: { children: string }) {
 export function NotificationSettings(p: NotificationSettingsProps) {
   const { prefs, status } = p;
   const [picking, setPicking] = useState(false);
+  const [quiet, setQuiet] = useState<QuietHours | null>(null);
   const toast = useToast();
   const denied = status === 'denied';
   const notAsked = p.supported && status === 'undetermined';
@@ -57,6 +63,14 @@ export function NotificationSettings(p: NotificationSettingsProps) {
     // A failed save is a warn toast (spec 053 FR-015).
     if (value !== p.defaultReminder && (await p.onDefaultReminder(value)) === 'failed') toast.show({ text: s.saveFailed, tone: 'warn' });
   };
+
+  const saveQuiet = async () => {
+    const value = QuietHours.safeParse(quiet);
+    setQuiet(null);
+    if (!value.success || (value.data.from === p.quietHours.from && value.data.to === p.quietHours.to)) return;
+    if ((await p.onQuietHours(value.data)) === 'failed') toast.show({ text: s.saveFailed, tone: 'warn' });
+  };
+  const time = (t: string) => formatTime(t, p.use24h);
 
   return (
     <PushedScreen className="gap-18" topBar={{ back: { label: s.back, onPress: p.onBack }, title: s.title }}>
@@ -131,9 +145,43 @@ export function NotificationSettings(p: NotificationSettingsProps) {
                 </Text>
               ) : null}
             </View>
+
+            <View role="region" aria-label={s.todo} className="gap-8">
+              <Heading>{s.todo}</Heading>
+              <Card className="gap-0 px-16 py-4">
+                <SettingRow label={s.todoOn} hint={s.todoOnHint} value={prefs.todo_on} onValueChange={(on) => p.onPref('todo_on', on)} disabled={off} />
+                <ListRow
+                  title={s.quietHours}
+                  trailing={{ kind: 'chevron', text: s.quietValue(time(p.quietHours.from), time(p.quietHours.to)) }}
+                  onPress={off ? undefined : () => setQuiet(p.quietHours)}
+                  disabled={off}
+                  flush
+                  last
+                />
+              </Card>
+            </View>
           </View>
         </>
       )}
+
+      <BottomSheet visible={quiet !== null} onClose={() => setQuiet(null)} title={s.quietTitle} closeLabel={s.close}>
+        <View className="gap-14">
+          <Text size={15} weight="600" color="ink-muted">
+            {s.quietHint}
+          </Text>
+          <TimeRange
+            startLabel={s.quietFrom}
+            endLabel={s.quietTo}
+            start={quiet?.from ?? p.quietHours.from}
+            end={quiet?.to ?? p.quietHours.to}
+            onChange={(field, value) => setQuiet((q) => q && (field === 'start' ? { ...q, from: value } : { ...q, to: value }))}
+            use24h={p.use24h}
+            format={time}
+            fallback={{ start: p.quietHours.from, end: p.quietHours.to }}
+          />
+          <Button label={s.quietSave} variant="ink" block disabled={!QuietHours.safeParse(quiet).success} onPress={() => void saveQuiet()} />
+        </View>
+      </BottomSheet>
 
       <BottomSheet visible={picking} onClose={() => setPicking(false)} title={s.defaultReminder} closeLabel={s.close}>
         <View role="radiogroup" aria-label={s.defaultReminder} className="overflow-hidden rounded-xl bg-surface-card">

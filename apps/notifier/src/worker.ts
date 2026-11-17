@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'node:http';
 
-/** One thing the notifier does each minute (046: receipts; 049 adds event reminders). */
+/** One thing the notifier does each minute (046: receipts; 049 adds event reminders, 059 reminders to do). */
 export type Job = { name: string; run: () => Promise<string | null> };
 
 /**

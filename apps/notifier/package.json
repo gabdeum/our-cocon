@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@cocon/calendar": "workspace:*",
+    "@cocon/data": "workspace:*",
     "@cocon/notify": "workspace:*",
+    "@cocon/reminders": "workspace:*",
     "@cocon/schemas": "workspace:*",
     "@supabase/supabase-js": "^2.118.0",
     "posthog-node": "^5.56.1",
