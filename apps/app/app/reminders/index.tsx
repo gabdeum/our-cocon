@@ -9,7 +9,7 @@ import { RemindersScreen, type ScreenSection } from '../../components/reminders/
 import { useOnline } from '../../lib/online';
 import { useFailureToast } from '../../lib/toast';
 import { useReminderActions, useReminderContext, useReminderMine } from '../../lib/reminder-actions';
-import { LIST_SECTIONS, doneKey, reminderSectionKey, remindersDoneKey } from '../../lib/reminders';
+import { LIST_SECTIONS, doneKey, freshReminders, reminderSectionKey, remindersDoneKey } from '../../lib/reminders';
 import { strings } from '../../strings/en';
 
 const r = strings.reminders;
@@ -53,7 +53,9 @@ export default function RemindersRoute() {
     ctx.tracker.track('reminders_list_viewed', { filter: mine ? 'mine' : 'everyone' });
   }, [mine, ctx.tracker]);
 
-  const loaded = LIST_SECTIONS.every((k) => lists[k].data) && lists.snoozed.data;
+  // Not the lists saved on the device while online (a reload would flash what has since changed).
+  const fresh = <T,>(q: { data: T | undefined; isFetchedAfterMount: boolean }) => freshReminders(q, online);
+  const loaded = LIST_SECTIONS.every((k) => fresh(lists[k])) && fresh(lists.snoozed);
   // Spec 053 FR-015: a failed load is a warn toast with Try again, never a spinner that stays.
   const failed = Object.values(lists).some((l) => l.isError && !l.data);
   useFailureToast(failed && r.loadFailed, () => Object.values(lists).forEach((l) => l.isError && void l.refetch()));
@@ -69,12 +71,12 @@ export default function RemindersRoute() {
   const ticked = [...actions.ticked.values()].filter((t) => isMine(t.row));
   const tickedKeys = new Set(ticked.map((t) => doneKey(t)));
   const doneRows = [
-    ...(doneToday.data ?? []).filter((d) => isMine(d.row) && !tickedKeys.has(doneKey(d)) && !actions.hidden.has(doneKey(d))),
+    ...(fresh(doneToday) ?? []).filter((d) => isMine(d.row) && !tickedKeys.has(doneKey(d)) && !actions.hidden.has(doneKey(d))),
   ].map((d: DoneReminder) => ({ row: d.row, done: true, detail: r.doneAt(formatTime(timeIn(tz, new Date(d.closedAt)), ctx.use24h)), locked: d.undo === null }));
-  const doneByKey = new Map((doneToday.data ?? []).map((d) => [doneKey(d), d]));
+  const doneByKey = new Map((fresh(doneToday) ?? []).map((d) => [doneKey(d), d]));
   const sections: ScreenSection[] | undefined = loaded
     ? LIST_SECTIONS.map((key) => {
-        const live = rowsOf(lists[key].data).filter((x) => !actions.hidden.has(x.id) && !actions.ticked.has(x.id));
+        const live = rowsOf(fresh(lists[key])).filter((x) => !actions.hidden.has(x.id) && !actions.ticked.has(x.id));
         const rows = [
           ...live.map((row) => ({ row, done: false })),
           ...(key === 'today' ? [...doneRows, ...ticked.map((t) => ({ row: t.row, done: true }))] : []),
@@ -82,13 +84,13 @@ export default function RemindersRoute() {
         return { key, label: labels[key], rows, canMore: lists[key].hasNextPage, loadingMore: lists[key].isFetchingNextPage };
       }).filter((s) => s.rows.length > 0)
     : undefined;
-  const snoozedRows = rowsOf(lists.snoozed.data).filter((x) => !actions.hidden.has(x.id));
+  const snoozedRows = rowsOf(fresh(lists.snoozed)).filter((x) => !actions.hidden.has(x.id));
 
   // `?open={id}`: that reminder's drawer, once the lists are in (059's notifications open it). Set
   // while rendering, once, so the drawer keeps the reminder even after a tick moves it.
   const [toOpen, setToOpen] = useState(params.open ?? null);
   if (toOpen && loaded) {
-    const row = [...LIST_SECTIONS.flatMap((k) => rowsOf(lists[k].data)), ...rowsOf(lists.snoozed.data)].find((x) => x.id === toOpen);
+    const row = [...LIST_SECTIONS.flatMap((k) => rowsOf(fresh(lists[k]))), ...rowsOf(fresh(lists.snoozed))].find((x) => x.id === toOpen);
     setToOpen(null);
     if (row) setDrawer({ row, source: 'list' });
   }
@@ -99,7 +101,7 @@ export default function RemindersRoute() {
       <RemindersScreen
         sections={sections}
         failed={failed}
-        snoozed={lists.snoozed.data ? { rows: snoozedRows, canMore: lists.snoozed.hasNextPage } : undefined}
+        snoozed={fresh(lists.snoozed) ? { rows: snoozedRows, canMore: lists.snoozed.hasNextPage } : undefined}
         snoozedOpen={snoozedOpen}
         onToggleSnoozed={() => setSnoozedOpen(!snoozedOpen)}
         mine={mine}

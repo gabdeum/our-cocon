@@ -22,6 +22,15 @@ export const reminderKey = (familyId: string, id: string) => ['reminders', famil
 /** Spec 058: what was done today, which Today keeps (struck through) until midnight. */
 export const remindersDoneKey = (familyId: string, today: string, tz: string) => ['reminders', familyId, 'done', today, tz] as const;
 
+/**
+ * Reminders saved on the device (for offline, decision 11) are a past moment: late, Today and
+ * done change with the clock and on other phones. Online, a screen shows them only once they've
+ * been fetched again since it opened, so a reload never flashes yesterday's list.
+ */
+export function freshReminders<T>(query: { data: T | undefined; isFetchedAfterMount: boolean }, online: boolean): T | undefined {
+  return online && !query.isFetchedAfterMount ? undefined : query.data;
+}
+
 /** Spec 058: a done-today row's key in `hidden` while its Undo saves. */
 export const doneKey = (d: { row: { id: string; due_at: string } }) => `${d.row.id}|${d.row.due_at}`;
 

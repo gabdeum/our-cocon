@@ -7,7 +7,7 @@ import { addDays, dateLabel, todayIn } from '@cocon/calendar';
 import { CalendarScreen } from '../../components/calendar/CalendarScreen';
 import { ReminderDrawerHost, type OpenDrawer } from '../../components/reminders/ReminderDrawerHost';
 import { calendarRemindersKey, type CalendarReminders } from '../../lib/calendar-reminders';
-import { remindersDoneKey } from '../../lib/reminders';
+import { freshReminders, remindersDoneKey } from '../../lib/reminders';
 import { useOnline } from '../../lib/online';
 import { useReminderActions, useReminderContext } from '../../lib/reminder-actions';
 import { useToast } from '../../lib/toast';
@@ -76,17 +76,18 @@ export default function CalendarTab() {
   const { ticked, hidden: gone } = actions;
   const reminders = useMemo<CalendarReminders>(
     () => ({
-      rows: reminderRows.data,
+      // Not the copy saved on the device while online: late and done change with the clock.
+      rows: freshReminders(reminderRows, online),
       ticked,
-      done: doneToday.data,
+      done: freshReminders(doneToday, online),
       gone,
       readOnly: !online,
       onTick: (row: PlacedReminder) => void latest.current.tick(row, 'calendar'),
-      onUntick: (id, dueAt) => void latest.current.untick(id, doneToday.data?.find((d) => d.row.id === id && d.row.due_at === dueAt)),
+      onUntick: (id, dueAt) => void latest.current.untick(id, freshReminders(doneToday, online)?.find((d) => d.row.id === id && d.row.due_at === dueAt)),
       onNotYet: (date) => toast.show({ text: strings.calendar.reminders.notYet(dateLabel(date)) }),
       onOpen: (row) => setDrawer({ row, source: 'calendar' }),
     }),
-    [reminderRows.data, doneToday.data, ticked, gone, online, toast, setDrawer],
+    [reminderRows, doneToday, ticked, gone, online, toast, setDrawer],
   );
 
   // Once each time the tab opens, with the view it opens on; switching views sends calendar_view_changed.

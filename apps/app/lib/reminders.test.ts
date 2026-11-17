@@ -8,6 +8,7 @@ import {
   detailLine,
   formFromReminder,
   formRollover,
+  freshReminders,
   formToDraft,
   homeFooterHint,
   lateBadge,
@@ -189,5 +190,14 @@ describe('reminderMember', () => {
     expect(reminderMember(alex.id, [gabriel, alex])).toEqual({ initial: 'A', color: 'rose', name: 'Alex' });
     expect(reminderMember(null, [gabriel])).toEqual({ initial: 'All', color: 'everyone', name: 'Everyone' });
     expect(reminderMember('gone', [gabriel]).name).toBe('Everyone');
+  });
+});
+
+describe('freshReminders (spec 058)', () => {
+  it('shows what was saved on the device only offline; online, only once fetched again', () => {
+    const saved = { data: ['Pay the daycare'], isFetchedAfterMount: false };
+    expect(freshReminders(saved, true)).toBeUndefined();
+    expect(freshReminders(saved, false)).toEqual(['Pay the daycare']);
+    expect(freshReminders({ data: [], isFetchedAfterMount: true }, true)).toEqual([]);
   });
 });

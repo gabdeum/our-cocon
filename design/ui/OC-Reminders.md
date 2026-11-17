@@ -81,6 +81,7 @@ Written for the build (spec 058, not drawn):
 - Screen readers read a row as "{title}, reminder, {detail}, {late badge}".
 - Done today (spec 058): a ticked reminder goes to the bottom of Today, struck through ("Done just now"), and stays there until midnight, after a reload too ("Done at 15:20"), on the Reminders screen and in the calendar (Agenda's Today, Day view's "Done" group after the bands, the day sheet). Wherever it was ticked from (Overdue, Tomorrow…), it's listed under Today. A repeat's next date shows as usual. Ticking it again undoes it. Home drops it once it's left or reloaded. Month and Week marks count only what's still to do.
 - The drawer's who pill and when line sit just under the title (057's −10 px pull made the list clip the pill). Sheet titles and their right button (✕, "Edit") are centred on each other (BottomSheet README).
+- Online, reminders show once fetched since the screen opened (not the copy saved for offline, which can be hours old): Home's card appears when its list is in, the Reminders screen says "Loading reminders" until then. Offline, the saved copy shows, read-only.
 - The Reminders screen's lists are plain white cards (radius 22, padding 0 14): no extra space above, below or between rows.
 
 ## Lock Screen
