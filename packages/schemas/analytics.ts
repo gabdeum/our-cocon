@@ -183,6 +183,11 @@ export const events = {
   // Spec 023: an assistant called an MCP tool (sent from the MCP server): which tool, which
   // assistant ('claude', 'chatgpt', 'gemini' or 'mcp') and whether it worked. Never its input.
   mcp_tool_called: z.strictObject({ tool: z.string().regex(/^[a-z][a-z_]{0,59}$/), assistant: WriteSource, ok: z.boolean() }),
+  // Spec 060: an assistant changed a reminder (sent from the MCP server): which tool and which assistant.
+  assistant_reminder_action: z.strictObject({
+    tool: z.enum(['create_reminder', 'update_reminder', 'complete_reminder', 'snooze_reminder', 'delete_reminder']),
+    assistant: WriteSource,
+  }),
   // Spec 024: a member changed what their AI assistants may do (OC-Connect › What AI can do).
   ai_permission_changed: z.strictObject({ permission: AiPermission, allowed: z.boolean() }),
   // Spec 025: Settings › AI assistants. Connect opened, the check found the assistant (or not:

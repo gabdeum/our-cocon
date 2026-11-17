@@ -36,6 +36,7 @@ const permissionWords: Record<AiPermission, string> = {
   recipes_edit: 'create or edit recipes',
   groceries: 'change the grocery list',
   events: 'change the calendar',
+  reminders: 'change reminders',
   recipes_delete: 'delete recipes',
 };
 

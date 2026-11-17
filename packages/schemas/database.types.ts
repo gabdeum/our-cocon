@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"ai_permissions": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"events": boolean,"family_id": string,"groceries": boolean,"id": string,"recipes_delete": boolean,"recipes_edit": boolean,"source": string,"updated_at": string,"updated_by": string | null,"user_id": string
+                    "created_at": string,"created_by": string | null,"events": boolean,"family_id": string,"groceries": boolean,"id": string,"recipes_delete": boolean,"recipes_edit": boolean,"reminders": boolean,"source": string,"updated_at": string,"updated_by": string | null,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"events"?: boolean,"family_id": string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id": string
+                    "created_at"?: string,"created_by"?: string | null,"events"?: boolean,"family_id": string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"reminders"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"events"?: boolean,"family_id"?: string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string
+                    "created_at"?: string,"created_by"?: string | null,"events"?: boolean,"family_id"?: string,"groceries"?: boolean,"id"?: string,"recipes_delete"?: boolean,"recipes_edit"?: boolean,"reminders"?: boolean,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -1141,7 +1141,7 @@ isOneToOne: false
                            },
 "activity_entries":
 { Args: { "p_actor"?: string,"p_before"?: string,"p_before_key"?: string,"p_limit"?: number,"p_source"?: string }; Returns: {
-              "actor_id": string,"can_restore": boolean,"can_undo": boolean,"count": number,"created_at": string,"event_id": string,"event_name": string,"event_secret": boolean,"event_when": Json,"from_recipe_name": string,"key": string,"kind": string,"names": (string)[],"recipe_id": string,"recipe_name": string,"source": string,"undo_action": string,"undone_at": string,"undone_by": string
+              "actor_id": string,"can_restore": boolean,"can_undo": boolean,"count": number,"created_at": string,"event_id": string,"event_name": string,"event_secret": boolean,"event_when": Json,"from_recipe_name": string,"key": string,"kind": string,"names": (string)[],"recipe_id": string,"recipe_name": string,"reminder_id": string,"reminder_name": string,"source": string,"undo_action": string,"undone_at": string,"undone_by": string
             }[]
                            },
 "activity_filters":
@@ -1264,7 +1264,7 @@ isOneToOne: false
 { Args: { "p_from": string,"p_to": string,"p_tz"?: string }; Returns: Json[]
                            },
 "reminders_section":
-{ Args: { "p_after_id"?: string,"p_after_sort"?: string,"p_limit": number,"p_mine": boolean,"p_section": string,"p_tz"?: string }; Returns: Json[]
+{ Args: { "p_after_id"?: string,"p_after_sort"?: string,"p_assignee"?: string,"p_limit": number,"p_mine": boolean,"p_section": string,"p_tz"?: string }; Returns: Json[]
                            },
 "remove_managed_member":
 { Args: { "member_id": string }; Returns: undefined

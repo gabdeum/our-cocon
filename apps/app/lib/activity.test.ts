@@ -21,6 +21,8 @@ const entry = (over: Partial<ActivityEntry> = {}): ActivityEntry => ({
   event_name: null,
   event_when: null,
   event_secret: false,
+  reminder_id: null,
+  reminder_name: null,
   undone_by: null,
   undone_at: null,
   undo_action: null,
@@ -47,6 +49,11 @@ describe('describeEntry', () => {
       badge: { kind: 'person', initial: 'G', color: 'honey' },
       action: null,
     });
+  });
+
+  it('spec 060: a reminder an assistant deleted reads under Reminders, with Restore', () => {
+    const removed = entry({ source: 'claude', kind: 'reminder_deleted', count: 1, reminder_id: '00000000-0000-4000-8000-000000000060', reminder_name: 'Water the plants', can_undo: false, can_restore: true });
+    expect(describeEntry(removed, members, now)).toMatchObject({ title: 'Alex deleted Water the plants', sub: 'Reminders · via Claude · 4 h ago', action: 'restore' });
   });
 
   it('items added from a recipe, and an event with when it is', () => {
@@ -99,6 +106,13 @@ describe('entryTitle', () => {
     [{ kind: 'event_deleted', count: 1 }, 'Eva deleted an event'],
     [{ kind: 'event_edited', count: 1, event_name: 'Baby music class' }, 'Eva edited Baby music class'],
     [{ kind: 'event_date_deleted', count: 1, event_name: 'Swim' }, 'Eva deleted one date of Swim'],
+    [{ kind: 'reminder_created', count: 1, reminder_name: 'Water the plants' }, 'Eva added Water the plants'],
+    [{ kind: 'reminder_edited', count: 1, reminder_name: 'Water the plants' }, 'Eva edited Water the plants'],
+    [{ kind: 'reminder_completed', count: 2, reminder_name: 'Water the plants' }, 'Eva ticked off Water the plants'],
+    [{ kind: 'reminder_snoozed', count: 1, reminder_name: 'Water the plants' }, 'Eva snoozed Water the plants'],
+    [{ kind: 'reminder_deleted', count: 1 }, 'Eva deleted a reminder'],
+    [{ kind: 'reminder_restored', count: 1, reminder_name: 'Water the plants' }, 'Eva restored Water the plants'],
+    [{ kind: 'reminder_reopened', count: 1, reminder_name: 'Water the plants' }, 'Eva reopened Water the plants'],
     [{ kind: 'other', count: 3 }, 'Eva made 3 changes'],
   ] as [Partial<ActivityEntry>, string][])('%o reads "%s"', (over, title) => {
     expect(entryTitle(entry(over), 'Eva')).toBe(title);

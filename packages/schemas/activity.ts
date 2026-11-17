@@ -15,7 +15,10 @@ export const ActivityInput = z.strictObject({
 });
 export type ActivityInput = z.infer<typeof ActivityInput>;
 
-/** What an entry did (`_activity_kind` in the database), for its title and the undo event. `recipe_restored` is the app's only (spec 028 FR-009). */
+/**
+ * What an entry did (`_activity_kind` in the database), for its title and the undo event. `recipe_restored`,
+ * `reminder_restored` and `reminder_reopened` are the app's only (spec 028 FR-009, 032-later L144).
+ */
 export const ActivityKind = z.enum([
   'recipe_created',
   'recipe_edited',
@@ -30,17 +33,24 @@ export const ActivityKind = z.enum([
   'event_edited',
   'event_deleted',
   'event_date_deleted',
+  'reminder_created',
+  'reminder_edited',
+  'reminder_completed',
+  'reminder_snoozed',
+  'reminder_deleted',
+  'reminder_restored',
+  'reminder_reopened',
   'other',
 ]);
 export type ActivityKind = z.infer<typeof ActivityKind>;
 /**
- * An AI delete that sent a recipe, or an event (spec 044), to Recently deleted: Restored for 30
- * days, not undone (FR-004).
+ * An AI delete that sent a recipe, an event (spec 044) or a reminder (spec 060) to Recently deleted:
+ * Restored for 30 days, not undone (FR-004).
  */
-export const RestoreKind = ActivityKind.extract(['recipe_deleted', 'event_deleted']);
+export const RestoreKind = ActivityKind.extract(['recipe_deleted', 'event_deleted', 'reminder_deleted']);
 export type RestoreKind = z.infer<typeof RestoreKind>;
 /** The kinds Undo applies to, for 7 days. */
-export const UndoKind = ActivityKind.exclude([...RestoreKind.options, 'recipe_restored']);
+export const UndoKind = ActivityKind.exclude([...RestoreKind.options, 'recipe_restored', 'reminder_restored', 'reminder_reopened']);
 export type UndoKind = z.infer<typeof UndoKind>;
 
 /**
@@ -68,6 +78,9 @@ export const ActivityEntry = z.object({
     .nullable(),
   /** Private or a surprise when logged: with no title, it reads "a private event". */
   event_secret: z.boolean(),
+  /** The reminder an entry changed (spec 060), and its title: as it is now, else as logged. */
+  reminder_id: z.uuid().nullable(),
+  reminder_name: z.string().nullable(),
   undone_by: z.uuid().nullable(),
   undone_at: z.string().nullable(),
   undo_action: z.enum(['undo', 'restore']).nullable(),

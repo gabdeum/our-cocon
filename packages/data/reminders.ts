@@ -1,6 +1,6 @@
 import { todayIn, zonedInstant } from '@cocon/calendar';
 import { catchUp, complete, draftToFields, nextDueAfter, snoozeUntil, type ReminderRevert, type ReminderTiming } from '@cocon/reminders';
-import { DEFAULT_QUIET_HOURS, QuietHours, Recurrence, ReminderDraft, ReminderOccurrenceStatus, ReminderRollover, ReminderSection, ReminderSnoozeOption, TimeFormatSetting, TimeZone } from '@cocon/schemas';
+import { DEFAULT_QUIET_HOURS, QuietHours, Recurrence, ReminderAssignee, ReminderDraft, ReminderOccurrenceStatus, ReminderRollover, ReminderSection, ReminderSnoozeOption, TimeFormatSetting, TimeZone } from '@cocon/schemas';
 import { z } from 'zod';
 import type { Db } from './client';
 
@@ -153,13 +153,23 @@ export async function loadRemindersHome(client: Pick<Db, 'from' | 'rpc'>, tz: st
  */
 export async function loadReminderSection(
   client: Pick<Db, 'from' | 'rpc'>,
-  options: { section: ReminderSection; mine: boolean; tz: string; cursor?: string | null; caughtUp?: boolean },
+  options: {
+    section: ReminderSection;
+    mine: boolean;
+    tz: string;
+    cursor?: string | null;
+    caughtUp?: boolean;
+    /** Spec 060: one person's (a member id) or Everyone's ('everyone') only. */
+    assignee?: ReminderAssignee | null;
+    /** Rows a page, 1–50 (assistants choose); else the screen's. */
+    limit?: number;
+  },
 ): Promise<ReminderPage> {
   const section = ReminderSection.parse(options.section);
   const after = options.cursor ? readCursor(options.cursor) : null;
   // A screen loading several sections at once catches up once first and passes `caughtUp`.
   if (!after && !options.caughtUp) await catchUpReminders(client, options.tz);
-  const limit = !after && (section === 'overdue' || section === 'today') ? FIRST_PAGE : PAGE;
+  const limit = options.limit !== undefined ? z.int().min(1).max(FIRST_PAGE).parse(options.limit) : !after && (section === 'overdue' || section === 'today') ? FIRST_PAGE : PAGE;
   const { data, error } = await client.rpc('reminders_section', {
     p_section: section,
     p_mine: options.mine,
@@ -167,6 +177,7 @@ export async function loadReminderSection(
     p_after_sort: after?.[0],
     p_after_id: after?.[1],
     p_tz: TimeZone.parse(options.tz),
+    p_assignee: options.assignee ? ReminderAssignee.parse(options.assignee) : undefined,
   });
   if (error) throw error;
   const rows = z.array(Placed).parse(data ?? []);

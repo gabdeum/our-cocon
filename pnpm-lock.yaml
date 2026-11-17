@@ -358,6 +358,9 @@ importers:
       '@cocon/quantity':
         specifier: workspace:*
         version: link:../../packages/quantity
+      '@cocon/reminders':
+        specifier: workspace:*
+        version: link:../../packages/reminders
       '@cocon/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
