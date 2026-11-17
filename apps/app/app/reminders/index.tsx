@@ -9,7 +9,7 @@ import { RemindersScreen, type ScreenSection } from '../../components/reminders/
 import { useOnline } from '../../lib/online';
 import { useFailureToast } from '../../lib/toast';
 import { useReminderActions, useReminderContext, useReminderMine } from '../../lib/reminder-actions';
-import { LIST_SECTIONS, doneKey, freshReminders, reminderSectionKey, remindersDoneKey } from '../../lib/reminders';
+import { FETCH_ON_OPEN, LIST_SECTIONS, doneKey, freshReminders, reminderSectionKey, remindersDoneKey } from '../../lib/reminders';
 import { strings } from '../../strings/en';
 
 const r = strings.reminders;
@@ -39,9 +39,10 @@ export default function RemindersRoute() {
       initialPageParam: null as string | null,
       getNextPageParam: (last: ReminderPage) => last.nextCursor,
       enabled: ready,
+      ...FETCH_ON_OPEN,
     });
   // Spec 058: what was done today stays at the bottom of Today, struck through, until midnight.
-  const doneToday = useQuery({ queryKey: remindersDoneKey(familyId ?? '', ctx.today, tz), queryFn: () => loadRemindersDoneToday(client, tz), enabled: familyId !== null });
+  const doneToday = useQuery({ queryKey: remindersDoneKey(familyId ?? '', ctx.today, tz), queryFn: () => loadRemindersDoneToday(client, tz), enabled: familyId !== null, ...FETCH_ON_OPEN });
   const lists = { overdue: section('overdue'), today: section('today'), tomorrow: section('tomorrow'), later: section('later') };
   const rowsOf = (data: InfiniteData<ReminderPage> | undefined): PlacedReminder[] => data?.pages.flatMap((p) => p.rows) ?? [];
 

@@ -3,7 +3,7 @@ import { strings } from '../strings/en';
 
 /**
  * Spec 029 FR-002: every part of the app, in the Menu's Apps. The first three open their tab;
- * the rest have no tab (Timers, 032-later L20). A new app is one more entry here, and its detail
+ * the rest have no tab (Timers, 032-later L20; Reminders, spec 057). A new app is one more entry here, and its detail
  * in the Menu tab.
  */
 export const APPS = [
@@ -11,6 +11,7 @@ export const APPS = [
   { key: 'recipes', icon: 'recipes', name: strings.menu.recipes, href: '/recipes' },
   { key: 'groceries', icon: 'groceries', name: strings.menu.groceries, href: '/groceries' },
   { key: 'timers', icon: 'timer', name: strings.menu.timers, href: '/timers' },
+  { key: 'reminders', icon: 'check', name: strings.menu.reminders, href: '/reminders' },
 ] as const satisfies readonly { key: string; icon: IconName; name: string; href: string }[];
 
 export type AppKey = (typeof APPS)[number]['key'];

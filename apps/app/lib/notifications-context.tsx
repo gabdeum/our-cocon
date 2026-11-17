@@ -29,8 +29,8 @@ export interface NotificationsContextValue {
   status: PermissionStatus | null;
   prefs: NotificationPrefs;
   setPref: <K extends keyof NotificationPrefs>(key: K, value: NotificationPrefs[K]) => void;
-  /** FR-002: shows the ask sheet when it may (the first timer, the first reminder), never at launch. */
-  maybeAsk: (trigger: 'timer' | 'reminder') => void;
+  /** FR-002: shows the ask sheet when it may (the first timer, event reminder or reminder), never at launch. */
+  maybeAsk: (trigger: 'timer' | 'reminder' | 'todo') => void;
   /** The iPhone's own prompt, from the sheet or the page's "Turn on notifications". */
   turnOn: (trigger: NotificationAskTrigger) => Promise<void>;
   openSettings: () => void;
@@ -75,7 +75,7 @@ export interface NotificationsProviderProps {
 export function NotificationsProvider({ native, storage, client, tracker, userId, navigate, showBanner, now = Date.now, afterSheets = sheetsGone, children }: NotificationsProviderProps) {
   const [status, setStatus] = useState<PermissionStatus | null>(null);
   const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIFICATION_PREFS);
-  const [asking, setAsking] = useState<'timer' | 'reminder' | null>(null);
+  const [asking, setAsking] = useState<'timer' | 'reminder' | 'todo' | null>(null);
   const [busy, setBusy] = useState(false);
   const ask = useRef<AskState>(NO_ASK);
   const prefsRef = useRef(prefs);
@@ -147,7 +147,7 @@ export function NotificationsProvider({ native, storage, client, tracker, userId
   }, [native, showBanner, navigate]);
 
   const maybeAsk = useCallback(
-    (trigger: 'timer' | 'reminder') => {
+    (trigger: 'timer' | 'reminder' | 'todo') => {
       if (!native || !userRef.current) return;
       void (async () => {
         const current = status ?? (await native.permission().catch(() => 'undetermined' as const));

@@ -7,6 +7,7 @@ Lock Screen mock-ups show content and order only; iOS draws the notification chr
 ## Ask sheet (046)
 BottomSheet over the screen that triggered it. Honey circle 72 with bell icon; title "Know when it’s done" (26/900); body "Turn on notifications to hear the chime and see your timer on the Lock Screen, even with your phone locked. You’ll also get reminders before family events." (16/600 muted); ink button 56 "Turn on notifications"; link "Not now"; note "You can change this anytime in Menu › Notifications." (13/600 muted).
 From a reminder (first event with a reminder): title "Get a heads-up before events", body "Turn on notifications so reminders reach your phone, even when Our Cocon is closed."
+From a reminder to do (first one added, spec 059): title "Get reminded on time", body "Turn on notifications so your reminders reach your phone at their time, even when Our Cocon is closed."
 
 ## Live timer (048)
 Lock Screen card: the Timers screen's card (OC-Timers, TimerCard README › Timers screen), same parts, order, colours and words: name 17/900 + "{recipe or No recipe} · {Running | Paused | Done!}" 13/700 · "−1" · clock 40/900 · "+1" (40 circles, white 70%) · progress 6 px (ink on 12% ink) · ink pill "Pause" | "Resume" | "Add 1 more minute" (done) + soft "Stop" | "Dismiss" (done). Fill sage while running, surface-soft while paused, honey + 2 px ink border when done.

@@ -1,10 +1,14 @@
+import { createElement, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
 import { ReminderDraft } from '@cocon/schemas';
 import type { ReminderOccurrence } from '@cocon/data';
 import { draftToFields } from '@cocon/reminders';
 import { alex, gabriel, placedReminder } from '../test/fakes';
 import {
   createdProps,
+  FETCH_ON_OPEN,
   detailLine,
   formFromReminder,
   formRollover,
@@ -212,5 +216,27 @@ describe('freshReminders (spec 058)', () => {
     expect(freshReminders(saved, true)).toBeUndefined();
     expect(freshReminders(saved, false)).toEqual(['Pay the daycare']);
     expect(freshReminders({ data: [], isFetchedAfterMount: true }, true)).toEqual([]);
+  });
+
+  it('a screen opened again while its list is still fresh in the cache shows it, never loads forever', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: false } } });
+    client.setQueryData(['reminders', 'f1'], ['Pay the daycare']);
+    const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+    const { result } = renderHook(() => freshReminders(useQuery({ queryKey: ['reminders', 'f1'], queryFn: async () => ['Call the plumber'], ...FETCH_ON_OPEN }), true), { wrapper });
+    expect(result.current).toBeUndefined();
+    await waitFor(() => expect(result.current).toEqual(['Call the plumber']));
+  });
+
+  it('nor when switching back to a list still fresh in the cache (Mine ↔ Everyone’s)', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: false } } });
+    client.setQueryData(['reminders', 'f1', 'mine'], ['Pay the daycare']);
+    const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+    const { result, rerender } = renderHook(
+      ({ list }: { list: string }) => freshReminders(useQuery({ queryKey: ['reminders', 'f1', list], queryFn: async () => [`Fetched ${list}`], ...FETCH_ON_OPEN }), true),
+      { wrapper, initialProps: { list: 'everyone' } },
+    );
+    await waitFor(() => expect(result.current).toEqual(['Fetched everyone']));
+    rerender({ list: 'mine' });
+    await waitFor(() => expect(result.current).toEqual(['Fetched mine']));
   });
 });

@@ -31,6 +31,13 @@ export function freshReminders<T>(query: { data: T | undefined; isFetchedAfterMo
   return online && !query.isFetchedAfterMount ? undefined : query.data;
 }
 
+/**
+ * For every query shown through `freshReminders`: fetched each time a screen opens or its key
+ * changes (Mine ↔ Everyone's), even when the cache is under a few seconds old. Without it, coming
+ * back within the default `staleTime` fetched nothing, and the screen kept loading.
+ */
+export const FETCH_ON_OPEN = { staleTime: 0 } as const;
+
 /** Spec 058: a done-today row's key in `hidden` while its Undo saves. */
 export const doneKey = (d: { row: { id: string; due_at: string } }) => `${d.row.id}|${d.row.due_at}`;
 

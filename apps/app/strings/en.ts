@@ -303,10 +303,13 @@ export const strings = {
     recipes: 'Recipes',
     groceries: 'Groceries',
     timers: 'Timers',
+    reminders: 'Reminders',
     today: (n: number) => (n === 0 ? 'Nothing today' : `${n} today`),
     recipeCount: (n: number) => (n === 0 ? 'No recipes yet' : `${n} ${n === 1 ? 'recipe' : 'recipes'}`),
     toBuy: (n: number) => (n === 0 ? 'All done' : `${n} to buy`),
     timersDetail: (running: number, paused: number) => (running > 0 ? `${running} running` : paused > 0 ? `${paused} paused` : 'None running'),
+    /** What Home lists: late and due today. */
+    toDo: (n: number) => (n === 0 ? 'Nothing to do' : `${n} to do`),
     family: 'Family',
     familyDetail: (names: readonly string[]) => `${names.join(', ')} · your account`,
     aiAssistants: 'AI assistants',
@@ -1458,10 +1461,11 @@ export const strings = {
   // design/system/components/Toast: the one toast, on every screen.
   // Spec 046: the ask sheet (design/ui/OC-Notifications.md › Ask sheet) and reminders shown in the app.
   notifications: {
-    askTitle: { timer: 'Know when it’s done', reminder: 'Get a heads-up before events' },
+    askTitle: { timer: 'Know when it’s done', reminder: 'Get a heads-up before events', todo: 'Get reminded on time' },
     askBody: {
       timer: 'Turn on notifications to hear the chime and see your timer on the Lock Screen, even with your phone locked. You’ll also get reminders before family events.',
       reminder: 'Turn on notifications so reminders reach your phone, even when Our Cocon is closed.',
+      todo: 'Turn on notifications so your reminders reach your phone at their time, even when Our Cocon is closed.',
     },
     turnOn: 'Turn on notifications',
     notNow: 'Not now',

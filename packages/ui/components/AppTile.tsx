@@ -37,17 +37,25 @@ export function AppTile({ icon, name, detail, onPress }: AppTileProps) {
   );
 }
 
-/** Apps in 2 columns, gap 10, wrapping to new rows of two (an odd last tile keeps its half). */
+/**
+ * Apps in 2 columns, gap 10, wrapping to new rows of two (an odd last tile keeps its half). Each
+ * half is the same plain slot, with or without a tile: a Pressable beside an empty View took their
+ * flex differently on the web, so a lone tile came out wider than the others.
+ */
 export function AppGrid({ label, apps }: { label: string; apps: readonly (AppTileProps & { key: string })[] }) {
   const rows = Array.from({ length: Math.ceil(apps.length / 2) }, (_, i) => apps.slice(i * 2, i * 2 + 2));
   return (
     <View role="navigation" aria-label={label} className="gap-10">
       {rows.map((row) => (
         <View key={row.map((a) => a.key).join()} className="flex-row gap-10">
-          {row.map(({ key, ...app }) => (
-            <AppTile key={key} {...app} />
-          ))}
-          {row.length === 1 ? <View className="flex-1" /> : null}
+          {[0, 1].map((i) => {
+            const app = row[i];
+            return (
+              <View key={app?.key ?? 'empty'} className="flex-1 basis-0">
+                {app ? <AppTile icon={app.icon} name={app.name} detail={app.detail} onPress={app.onPress} /> : null}
+              </View>
+            );
+          })}
         </View>
       ))}
     </View>

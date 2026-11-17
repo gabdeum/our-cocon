@@ -23,7 +23,7 @@ const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 
  * Senders cap what they send at this, so a longer recipe never makes `track` throw.
  */
 /** Spec 046: what led to the notifications ask (the first timer, the first reminder, or the page). */
-export const NotificationAskTrigger = z.enum(['timer', 'reminder', 'settings']);
+export const NotificationAskTrigger = z.enum(['timer', 'reminder', 'todo', 'settings']);
 export type NotificationAskTrigger = z.infer<typeof NotificationAskTrigger>;
 
 /** Spec 028: the state Home's calendar card is in. */
@@ -62,7 +62,7 @@ export const events = {
   member_color_changed: z.strictObject({ color: MemberColor }),
   managed_member_linked: z.strictObject({ days_since_added: z.int().min(0) }),
   // Spec 029: the Menu tab. A tile in Apps, a row in Settings, and signing out from Family.
-  menu_app_opened: z.strictObject({ app: z.enum(['calendar', 'recipes', 'groceries', 'timers']) }),
+  menu_app_opened: z.strictObject({ app: z.enum(['calendar', 'recipes', 'groceries', 'timers', 'reminders']) }),
   settings_row_opened: z.strictObject({ row: z.enum(['family', 'ai', 'notifications', 'calendar', 'recipes', 'groceries', 'deleted']) }),
   signed_out: z.strictObject({}),
   // Spec 029: a calendar setting changed. Its new value (on/off for switches), the slot changed for
