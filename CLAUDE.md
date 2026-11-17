@@ -60,4 +60,5 @@ The web app ships through the server (`docs/operations.md`). The iPhone app ship
 - Use subagents (Explore, `reviewer`) for broad searches and reviews to keep this session small.
 - Product questions are decided (specs/README.md). Ask only if something truly isn't covered.
 - Infra (servers, DNS, CI, secrets): Gabriel is new to it. When explaining, say clearly what each tool, service or term is.
+- A "Dependency watch" issue (opened Mondays by `scripts/dependency-watch.mjs`): on a new branch, change `pnpm-workspace.yaml` as it says, run `pnpm install`, `pnpm audit --audit-level high` and `pnpm test:all`, then open a PR that says "Closes #N".
 - Keep instructions current: when you repeat a workflow or I correct the same thing twice, propose a CLAUDE.md line or a skill in `.claude/skills/` and tell me.
