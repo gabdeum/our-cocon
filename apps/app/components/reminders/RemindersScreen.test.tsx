@@ -21,18 +21,16 @@ const plants = placedReminder({
 });
 const bins = placedReminder({ title: 'Take the bins out', assignee_id: null, due_at: '2026-11-11T19:00:00.000Z', rollover: 'day' });
 const filter = placedReminder({ title: 'Change the water filter', has_time: false, due_at: '2026-11-13T23:00:00.000Z', due_on: '2026-11-14', section: 'later' });
-const permit = placedReminder({ title: 'Renew the parking permit', section: 'snoozed', snoozed_until: '2026-11-11T23:00:00.000Z' });
+const permit = placedReminder({ title: 'Renew the parking permit', section: 'tomorrow', snoozed: true, on_home: false, snoozed_until: '2026-11-11T23:00:00.000Z' });
 
 function setup(over: Partial<RemindersScreenProps> = {}) {
   const props: RemindersScreenProps = {
     sections: [
       { key: 'overdue', label: 'Overdue', rows: [{ row: plants, done: false }], canMore: false },
       { key: 'today', label: 'Today · Wed, Nov 11', rows: [{ row: bins, done: false }], canMore: false },
+      { key: 'tomorrow', label: 'Tomorrow · Thu, Nov 12', rows: [{ row: permit, done: false }], canMore: false },
       { key: 'later', label: 'Later', rows: [{ row: filter, done: false }], canMore: true },
     ],
-    snoozed: { rows: [permit], canMore: false },
-    snoozedOpen: false,
-    onToggleSnoozed: vi.fn(),
     mine: false,
     onMine: vi.fn(),
     members: [gabriel],
@@ -62,7 +60,7 @@ describe('RemindersScreen', () => {
     const today = screen.getByRole('region', { name: 'Today · Wed, Nov 11' });
     expect(within(today).getByText('20:00')).toBeTruthy();
     expect(within(today).getByRole('img', { name: 'Everyone' })).toBeTruthy();
-    expect(screen.queryByRole('region', { name: /Tomorrow/ })).toBeNull();
+    expect(screen.getAllByRole('region').map((x) => x.getAttribute('aria-label'))).toEqual(['Overdue', 'Today · Wed, Nov 11', 'Tomorrow · Thu, Nov 12', 'Later']);
     await expectAccessible(view.container);
   });
 
@@ -93,24 +91,18 @@ describe('RemindersScreen', () => {
     expect(props.onMine).toHaveBeenCalledWith(true);
   });
 
-  it('folds snoozed reminders away, and shows when they come back', () => {
-    const { props } = setup();
-    const row = screen.getByRole('button', { name: 'Snoozed' });
-    expect(row.getAttribute('aria-expanded')).toBe('false');
-    expect(screen.getByText('1 hidden until later')).toBeTruthy();
-    expect(screen.queryByText('Renew the parking permit')).toBeNull();
-    fireEvent.click(row);
-    expect(props.onToggleSnoozed).toHaveBeenCalled();
-    cleanup();
-    setup({ snoozedOpen: true });
-    expect(screen.getByText('Hide')).toBeTruthy();
-    expect(screen.getByText('Renew the parking permit')).toBeTruthy();
-    expect(screen.getByText('Back tomorrow, Thu, Nov 12')).toBeTruthy();
-    expect(screen.queryByRole('checkbox', { name: /Renew/ })).toBeNull();
+  it('lists a snoozed one on the day it’s back, with a "Snoozed" pill and a tick box (spec 058)', () => {
+    setup();
+    expect(screen.queryByRole('button', { name: 'Snoozed' })).toBeNull();
+    const tomorrow = screen.getByRole('region', { name: 'Tomorrow · Thu, Nov 12' });
+    expect(within(tomorrow).getByText('Renew the parking permit')).toBeTruthy();
+    expect(within(tomorrow).getByText('Back tomorrow, Thu, Nov 12')).toBeTruthy();
+    expect(within(tomorrow).getByText('Snoozed')).toBeTruthy();
+    expect(within(tomorrow).getByRole('checkbox', { name: 'Mark done: Renew the parking permit' })).toBeTruthy();
   });
 
   it('says there is nothing to remember, with New reminder', () => {
-    const { props } = setup({ sections: [], snoozed: { rows: [], canMore: false } });
+    const { props } = setup({ sections: [] });
     expect(screen.getByText('Nothing to remember. Nice.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Snoozed' })).toBeNull();
     const add = screen.getAllByRole('button', { name: 'New reminder' });

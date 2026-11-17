@@ -16,6 +16,8 @@ export interface ReminderRowProps {
   toggleLabel?: string;
   /** "2d late", "3h late": the late badge. */
   late?: string;
+  /** "Snoozed": a soft pill in the late badge's place (spec 058: snoozed ones are listed on the day they're back). */
+  snoozed?: string;
   /** The Reminders screen's detail icons, with their names ("Repeats", "Has notes"). */
   repeats?: string;
   notes?: string;
@@ -44,7 +46,7 @@ function MemberDot({ initial, color, name, done }: ReminderRowProps['member'] & 
  * ReminderRow README (OC-HomeReminders, OC-Reminders): tick box · member dot · title and detail ·
  * late badge · ⋮. Min 58 tall, a 1.5 px divider between rows.
  */
-export function ReminderRow({ title, detail, member, done = false, onToggle, toggleLabel, late, repeats, notes, onOpen, openLabel, disabled, last = false }: ReminderRowProps) {
+export function ReminderRow({ title, detail, member, done = false, onToggle, toggleLabel, late, snoozed, repeats, notes, onOpen, openLabel, disabled, last = false }: ReminderRowProps) {
   const text = (
     <>
       <Text size={16} weight="800" numberOfLines={1} strike={done} color={done ? 'ink-muted' : 'ink'}>
@@ -72,6 +74,12 @@ export function ReminderRow({ title, detail, member, done = false, onToggle, tog
       <View className="ml-8 flex-none rounded-full bg-warn-soft px-8 py-[3px]">
         <Text size={12} weight="900" color="warn">
           {late}
+        </Text>
+      </View>
+    ) : snoozed && !done ? (
+      <View className="ml-8 flex-none rounded-full bg-surface-soft px-8 py-[3px]">
+        <Text size={12} weight="900" color="ink-muted">
+          {snoozed}
         </Text>
       </View>
     ) : null;

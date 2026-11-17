@@ -27,7 +27,7 @@ Reference: `design/screens/OC-HomeReminders.dc.html` and `OC-Reminders.dc.html` 
 | Done | box olive ✓, title struck, dot 50 %, no icons or badge; the detail reads "Done just now" until the screen is left |
 | Openable (`onOpen`) | everything right of the dot (title, detail and late badge) is one button to the row's end ("Open {title}", `aria-haspopup="dialog"`), pressed surface-soft: it opens the drawer, on Home and the Reminders screen alike. No ⋮ (spec 058; snooze, edit and delete are in the drawer) |
 | Done today | struck through at the bottom of Today until midnight (Reminders screen and calendar), detail "Done just now" or "Done at 15:20"; not openable; a repeat's earlier date, when a later one was done after it, keeps its ticked box but can't be unticked (spec 058) |
-| Snoozed | no tick box (the Reminders screen's Snoozed rows) |
+| Snoozed (`snoozed`) | spec 058: a soft pill "Snoozed" (surface-soft, 12/900 ink-muted, padding 3 8) where the late badge goes; the detail says when it's back; the tick box stays (057 had no box on its Snoozed rows) |
 | Offline | tick box keeps its look, `aria-disabled`, not pressable |
 
 ## Rules

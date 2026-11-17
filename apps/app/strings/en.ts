@@ -1856,6 +1856,10 @@ export const strings = {
     dayAt: (day: string, time: string) => `${day} · ${time}`,
     backTomorrow: (date: string) => `Back tomorrow, ${date}`,
     backOn: (date: string) => `Back ${date}`,
+    /** Spec 058: a snoozed one back later today. */
+    backAt: (time: string) => `Back at ${time}`,
+    /** Spec 058: the pill where "2d late" goes, on a snoozed one listed on the day it's back. */
+    snoozedPill: 'Snoozed',
     // The drawer's snooze and actions
     snoozeUntil: 'Snooze until',
     snooze: { hour: 'In 1 hour', tomorrow: 'Tomorrow', week: 'Next week', month: 'Next month', date: 'Pick a date' },

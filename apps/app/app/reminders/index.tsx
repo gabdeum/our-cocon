@@ -26,14 +26,13 @@ export default function RemindersRoute() {
   const { client, familyId, tz } = ctx;
   const [mine, setMine] = useReminderMine(ctx.userId);
   const actions = useReminderActions(ctx);
-  const [snoozedOpen, setSnoozedOpen] = useState(false);
   const [drawer, setDrawer] = useState<OpenDrawer | null>(null);
 
   // FR-005 of 056 once for the screen, not once per section; not live, so a tick doesn't rerun it.
   const caughtUp = useQuery({ queryKey: ['reminders-catch-up', familyId ?? '', tz], queryFn: () => catchUpReminders(client, tz), enabled: familyId !== null, staleTime: 60_000 });
   const ready = familyId !== null && mine !== null && caughtUp.isFetched;
   const section = (key: ReminderSection) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- one per section, always the same five, in order
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- one per section, always the same four, in order
     useInfiniteQuery({
       queryKey: reminderSectionKey(familyId ?? '', key, mine ?? false, tz),
       queryFn: ({ pageParam }) => loadReminderSection(client, { section: key, mine: mine ?? false, tz, cursor: pageParam, caughtUp: true }),
@@ -43,7 +42,7 @@ export default function RemindersRoute() {
     });
   // Spec 058: what was done today stays at the bottom of Today, struck through, until midnight.
   const doneToday = useQuery({ queryKey: remindersDoneKey(familyId ?? '', ctx.today, tz), queryFn: () => loadRemindersDoneToday(client, tz), enabled: familyId !== null });
-  const lists = { overdue: section('overdue'), today: section('today'), tomorrow: section('tomorrow'), later: section('later'), snoozed: section('snoozed') };
+  const lists = { overdue: section('overdue'), today: section('today'), tomorrow: section('tomorrow'), later: section('later') };
   const rowsOf = (data: InfiniteData<ReminderPage> | undefined): PlacedReminder[] => data?.pages.flatMap((p) => p.rows) ?? [];
 
   const viewed = useRef<boolean | null>(null);
@@ -55,7 +54,7 @@ export default function RemindersRoute() {
 
   // Not the lists saved on the device while online (a reload would flash what has since changed).
   const fresh = <T,>(q: { data: T | undefined; isFetchedAfterMount: boolean }) => freshReminders(q, online);
-  const loaded = LIST_SECTIONS.every((k) => fresh(lists[k])) && fresh(lists.snoozed);
+  const loaded = LIST_SECTIONS.every((k) => fresh(lists[k]));
   // Spec 053 FR-015: a failed load is a warn toast with Try again, never a spinner that stays.
   const failed = Object.values(lists).some((l) => l.isError && !l.data);
   useFailureToast(failed && r.loadFailed, () => Object.values(lists).forEach((l) => l.isError && void l.refetch()));
@@ -84,13 +83,12 @@ export default function RemindersRoute() {
         return { key, label: labels[key], rows, canMore: lists[key].hasNextPage, loadingMore: lists[key].isFetchingNextPage };
       }).filter((s) => s.rows.length > 0)
     : undefined;
-  const snoozedRows = rowsOf(fresh(lists.snoozed)).filter((x) => !actions.hidden.has(x.id));
 
   // `?open={id}`: that reminder's drawer, once the lists are in (059's notifications open it). Set
   // while rendering, once, so the drawer keeps the reminder even after a tick moves it.
   const [toOpen, setToOpen] = useState(params.open ?? null);
   if (toOpen && loaded) {
-    const row = [...LIST_SECTIONS.flatMap((k) => rowsOf(fresh(lists[k]))), ...rowsOf(fresh(lists.snoozed))].find((x) => x.id === toOpen);
+    const row = LIST_SECTIONS.flatMap((k) => rowsOf(fresh(lists[k]))).find((x) => x.id === toOpen);
     setToOpen(null);
     if (row) setDrawer({ row, source: 'list' });
   }
@@ -101,9 +99,6 @@ export default function RemindersRoute() {
       <RemindersScreen
         sections={sections}
         failed={failed}
-        snoozed={fresh(lists.snoozed) ? { rows: snoozedRows, canMore: lists.snoozed.hasNextPage } : undefined}
-        snoozedOpen={snoozedOpen}
-        onToggleSnoozed={() => setSnoozedOpen(!snoozedOpen)}
         mine={mine}
         onMine={setMine}
         members={ctx.members}

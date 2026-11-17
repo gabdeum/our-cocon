@@ -26,7 +26,7 @@ describe('reminderDay (FR-002)', () => {
     expect(reminderDay(late('2026-11-09', { rollover: 'none' }), today, tz)).toBe('2026-11-09');
     expect(reminderDay(late('2026-11-09', { rollover: 'week' }), today, tz)).toBe('2026-11-16');
     expect(reminderDay(late('2026-11-04', { rollover: 'week' }), today, tz)).toBe(today);
-    expect(reminderDay(placedReminder({ section: 'snoozed', snoozed_until: '2026-11-13T08:00:00Z' }), today, tz)).toBe('2026-11-13');
+    expect(reminderDay(placedReminder({ section: 'later', snoozed: true, snoozed_until: '2026-11-13T08:00:00Z' }), today, tz)).toBe('2026-11-13');
   });
 });
 
@@ -55,7 +55,7 @@ describe('placeReminders (FR-001–FR-003)', () => {
   });
 
   it('puts a snoozed one on the day and at the time it comes back, not as late', () => {
-    const snoozed = placedReminder({ title: 'Book James’s check-up', due_on: '2026-11-10', due_at: '2026-11-10T14:00:00Z', section: 'snoozed', snoozed_until: '2026-11-13T09:00:00Z' });
+    const snoozed = placedReminder({ title: 'Book James’s check-up', due_on: '2026-11-10', due_at: '2026-11-10T14:00:00Z', section: 'later', snoozed: true, snoozed_until: '2026-11-13T09:00:00Z' });
     const [x] = placeReminders([snoozed], ctx);
     expect(x && [x.date, x.time, x.overdue, x.item.sub, x.item.late]).toEqual(['2026-11-13', '10:00', false, '10:00 · Gabriel', null]);
   });

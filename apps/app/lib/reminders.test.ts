@@ -44,8 +44,9 @@ describe('detailLine (Reminder row)', () => {
     ['tomorrow at 20:00', { due_on: '2026-11-12', due_at: '2026-11-12T19:00:00.000Z', section: 'tomorrow' }, 'list', '20:00'],
     ['later, any time', { due_on: '2026-11-14', due_at: anyTime('2026-11-14'), has_time: false, section: 'later' }, 'list', 'Sat, Nov 14'],
     ['later, at a time', { due_on: '2026-11-14', due_at: '2026-11-14T14:00:00.000Z', section: 'later' }, 'list', 'Sat, Nov 14 · 15:00'],
-    ['snoozed to tomorrow', { section: 'snoozed', snoozed_until: anyTime('2026-11-12') }, 'list', 'Back tomorrow, Thu, Nov 12'],
-    ['snoozed to next week', { section: 'snoozed', snoozed_until: anyTime('2026-11-18') }, 'list', 'Back Wed, Nov 18'],
+    ['snoozed to tomorrow', { section: 'later', snoozed: true, snoozed_until: anyTime('2026-11-12') }, 'list', 'Back tomorrow, Thu, Nov 12'],
+    ['snoozed to next week', { section: 'later', snoozed: true, snoozed_until: anyTime('2026-11-18') }, 'list', 'Back Wed, Nov 18'],
+    ['snoozed until later today', { section: 'today', snoozed: true, snoozed_until: '2026-11-11T15:00:00.000Z' }, 'list', 'Back at 16:00'],
   ] as const)('%s', (_, fields, where, expected) => {
     expect(detailLine(placedReminder(fields), { ...o, where })).toBe(expected);
   });

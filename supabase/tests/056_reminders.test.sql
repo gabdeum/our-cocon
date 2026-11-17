@@ -2,7 +2,7 @@
 -- now: late, sections, Home and their order (FR-006, FR-008, FR-012), across a clock change; the
 -- pages; the safe Done and its Undo (FR-004); the purge.
 begin;
-select plan(72);
+select plan(73);
 
 create function pg_temp.login(uid uuid, r text default 'authenticated') returns void language plpgsql as $$
 begin
@@ -35,10 +35,10 @@ returns void language sql as $$
   insert into ids select n, id from r;
 $$;
 grant execute on function pg_temp.add(text, timestamptz, boolean, text, timestamptz, uuid) to public;
--- The caller's reminders in a section at a given time, by name, in order.
+-- The caller's reminders in a section at a given time, by name, in order ('snoozed': every snoozed one).
 create function pg_temp.section(s text, at timestamptz) returns text[] language sql as $$
   select array_agg(pg_temp.name(r.id) order by r.sort_at, r.id)
-  from public._reminder_state(public.my_family_id(), null, at) r where r.section = s;
+  from public._reminder_state(public.my_family_id(), null, at) r where (case when s = 'snoozed' then r.snoozed else r.section = s end);
 $$;
 grant execute on function pg_temp.section(text, timestamptz) to public;
 create function pg_temp.state(n text, at timestamptz) returns jsonb language sql as $$
@@ -90,7 +90,8 @@ select is((pg_temp.section('today', '2026-11-16 09:00Z'))[1], 'today_15', 'today
 select is((select array_agg(x order by x) from unnest((pg_temp.section('today', '2026-11-16 09:00Z'))[2:]) x), array['back_any', 'today_any'],
   'then "any time", including one back from a snooze today');
 select is(pg_temp.section('tomorrow', '2026-11-16 09:00Z'), array['tomorrow'], 'tomorrow');
-select is(pg_temp.section('later', '2026-11-16 09:00Z'), array['later'], 'later');
+-- Spec 058: a snoozed one is listed on the day it's back (here Later), flagged, by when it's back.
+select is(pg_temp.section('later', '2026-11-16 09:00Z'), array['snoozed', 'later'], 'later, with the one snoozed until Friday');
 select is(pg_temp.section('snoozed', '2026-11-16 09:00Z'), array['snoozed'], 'snoozed until it comes back');
 
 -- FR-006 late.
@@ -114,7 +115,8 @@ select is((select array_agg(pg_temp.name(r.id) order by pg_temp.name(r.id)) from
 select is(pg_temp.state('late_week', '2026-11-17 09:00Z') ->> 'on_home', 'false', '"Next week" isn''t on Home on Tuesday');
 select is(pg_temp.state('late_week', '2026-11-23 09:00Z') ->> 'on_home', 'true', 'and is again the Monday after');
 -- Spec 058: between its weekdays it rests in Snoozed, back the next Monday (any time: its start).
-select is(pg_temp.state('late_week', '2026-11-17 09:00Z') ->> 'section', 'snoozed', 'on Tuesday it rests in Snoozed');
+select is(pg_temp.state('late_week', '2026-11-17 09:00Z') ->> 'snoozed', 'true', 'on Tuesday it rests, snoozed');
+select is(pg_temp.state('late_week', '2026-11-17 09:00Z') ->> 'section', 'later', 'listed on the day it''s back (Later)');
 select is((pg_temp.state('late_week', '2026-11-17 09:00Z') ->> 'snoozed_until')::timestamptz, '2026-11-22 23:00Z'::timestamptz, 'back on Monday');
 select is(pg_temp.state('late_week', '2026-11-23 09:00Z') ->> 'section', 'overdue', 'and overdue again that Monday');
 

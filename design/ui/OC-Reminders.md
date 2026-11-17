@@ -31,7 +31,7 @@ Height ≥ 58, padding 4 px 0, divider `#F2E6C4` 1.5 px between rows. Left to ri
 - Title "Reminders" with back; SegmentedControl "Mine" · "Everyone's".
 - Section titles 18/900: "Overdue" (`#8A4B00`), "Today · Wed, Nov 11", "Tomorrow · Thu, Nov 12", "Later". Each section is a white card, radius 22.
 - Pagination row inside the card, after the last row: "Show more" 15/800 `#424D17` · right "{n} more" 14/700.
-- "Snoozed" collapsed row (`#FFF0C9`, radius 16): right "1 hidden until later" / "Hide". Expanded rows show "Back {day}".
+- Spec 058: no "Snoozed" row. A snoozed reminder is listed in the section of the day it's back (Today, Tomorrow, Later), by when it's back, with a "Snoozed" pill (12/900 ink-muted on surface-soft) where "2d late" goes and the detail "Back tomorrow, Thu, Nov 12" / "Back Sun, Nov 22" / "Back at 16:00"; it has a tick box like the others. (057 folded them into a collapsed "Snoozed" row.)
 - Olive floating "+" 60 px, bottom right above the tab bar.
 - Empty: "Nothing to remember. Nice." 17/900 + ink pill "New reminder".
 
@@ -65,7 +65,7 @@ Written for the build (spec 057, not drawn):
 - Late under a day, in the drawer: "{n} hours late." A repeat that isn't weekly, missed once: " The one on {date} was missed too."
 - After "Mark as done" on a one-off reminder the green card has its title only; a repeat with no next date says "The next one stays on schedule."
 - A reminder that was deleted or finished while its edit sheet opened: the toast "This reminder was deleted." and the sheet closes.
-- The Snoozed row counts the first page: "20+ hidden until later" when there are more.
+- (057) The Snoozed row counted the first page; gone with spec 058.
 - Loading: "Loading reminders". A failed save: the toast "Couldn't save. Try again." (056).
 - Recently deleted lists reminders too: restored → "“{title}” is back in your reminders."; its empty line reads "Recipes, events and reminders you delete stay here for 30 days." (OC-Menu.md).
 
@@ -81,7 +81,7 @@ Written for the build (spec 058, not drawn):
 - Screen readers read a row as "{title}, reminder, {detail}, {late badge}".
 - Done today (spec 058): a ticked reminder goes to the bottom of Today, struck through ("Done just now"), and stays there until midnight, after a reload too ("Done at 15:20"), on the Reminders screen and in the calendar (Agenda's Today, Day view's "Done" group after the bands, the day sheet). Wherever it was ticked from (Overdue, Tomorrow…), it's listed under Today. A repeat's next date shows as usual. Ticking it again undoes it. Home drops it once it's left or reloaded. Month and Week marks count only what's still to do.
 - The drawer's who pill and when line sit just under the title (057's −10 px pull made the list clip the pill). Sheet titles and their right button (✕, "Edit") are centred on each other (BottomSheet README).
-- A late "Next week" reminder rests in Snoozed between its weekdays ("Back Sun, Nov 22", at its time), then is Overdue again that day, on Home with its late badge (Gabriel, 2026-11-16: under Overdue all week but missing from Home looked like a bug). Nothing is written; a real snooze still wins.
+- A late "Next week" reminder rests, snoozed, between its weekdays: listed on its next weekday (usually under Later) with the "Snoozed" pill and "Back Sun, Nov 22" (at its time), then Overdue again that day, on Home with its late badge (Gabriel, 2026-11-16: under Overdue all week but missing from Home looked like a bug). Nothing is written; a real snooze still wins. Home's footer counts it in "{n} snoozed".
 - Online, reminders show once fetched since the screen opened (not the copy saved for offline, which can be hours old): Home's card appears when its list is in, the Reminders screen says "Loading reminders" until then. Offline, the saved copy shows, read-only.
 - The Reminders screen's lists are plain white cards (radius 22, padding 0 14): no extra space above, below or between rows.
 

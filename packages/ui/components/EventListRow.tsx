@@ -146,6 +146,8 @@ export interface ReminderListItem {
   sub: string;
   /** "2d late", "3h late"; null when it isn't. */
   late: string | null;
+  /** "Snoozed": the pill in the late badge's place, on a snoozed one listed on the day it's back (spec 058). */
+  snoozed?: string;
   done: boolean;
   /** A later repeat: its box can't be ticked before its day (pressing it says why). */
   future: boolean;
@@ -219,6 +221,12 @@ export function ReminderListText({ item, onOpen }: Pick<ReminderListRowProps, 'i
         <View className="flex-none self-center rounded-full bg-warn-soft px-10 py-[5px]">
           <Text size={13} weight="900" color="warn">
             {item.late}
+          </Text>
+        </View>
+      ) : item.snoozed && !item.done ? (
+        <View className="flex-none self-center rounded-full bg-surface-soft px-10 py-[5px]">
+          <Text size={13} weight="900" color="ink-muted">
+            {item.snoozed}
           </Text>
         </View>
       ) : null}

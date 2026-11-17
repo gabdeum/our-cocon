@@ -44,6 +44,9 @@ const Placed = Stored.extend({
   section: ReminderSection,
   on_home: z.boolean(),
   sort_at: Instant,
+  /** Snoozed (by hand, or a late "Next week" one until its weekday): listed on the day it's back, with a "Snoozed" pill (spec 058). */
+  // Absent from a database without spec 058's migration: not snoozed there (it had its own section).
+  snoozed: z.boolean().default(false),
 });
 /**
  * An open reminder as it stands now (FR-006, FR-008, FR-012). Its `snoozed_until` is when it's back
@@ -303,6 +306,7 @@ export async function loadRemindersDoneToday(client: Pick<Db, 'from'>, tz: strin
     section: 'today',
     on_home: false,
     sort_at: closedAt,
+    snoozed: false,
   });
   const fromRepeats = done.flatMap((o): DoneReminder[] => {
     const r = byId.get(o.reminder_id);

@@ -62,8 +62,10 @@ export function lateBadge(x: Pick<PlacedReminder, 'late_days' | 'late_hours'>): 
 export function detailLine(x: PlacedReminder, o: { today: string; tz: string; use24h: boolean; where: 'home' | 'list' }): string {
   const time = dueTime(x, o.tz);
   const shown = time ? formatTime(time, o.use24h) : null;
-  if (x.section === 'snoozed' && x.snoozed_until) {
+  if (x.snoozed && x.snoozed_until) {
     const back = dayOf(x.snoozed_until, o.tz);
+    // Back later today: at its time (any time ones are back from the start of the day).
+    if (back <= o.today) return r.backAt(formatTime(timeIn(o.tz, new Date(x.snoozed_until)), o.use24h));
     return back === addDays(o.today, 1) ? r.backTomorrow(dateLabel(back)) : r.backOn(dateLabel(back));
   }
   if (x.due_on < o.today) {

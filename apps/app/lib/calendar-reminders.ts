@@ -61,7 +61,7 @@ function nextWeekday(dueOn: string, today: string): string {
  * their weekday, "Leave it" ones on their due day; a snoozed one on the day it comes back.
  */
 export function reminderDay(x: PlacedReminder, today: string, tz: string): string {
-  if (x.section === 'snoozed' && x.snoozed_until) return todayIn(tz, new Date(x.snoozed_until));
+  if (x.snoozed && x.snoozed_until) return todayIn(tz, new Date(x.snoozed_until));
   if (x.section !== 'overdue' || x.rollover === 'none') return x.due_on;
   return x.rollover === 'week' ? nextWeekday(x.due_on, today) : today;
 }
@@ -87,7 +87,7 @@ export function placeReminders(rows: readonly PlacedReminder[], ctx: PlaceContex
     const key = o.done ? `${x.id}|done|${x.due_at}` : `${x.id}|${date}`;
     if (out.has(key)) return;
     // A snoozed one comes back at the snooze's time, and isn't late then (056 FR-007).
-    const back = x.section === 'snoozed' && x.snoozed_until ? x.snoozed_until : null;
+    const back = x.snoozed && x.snoozed_until ? x.snoozed_until : null;
     const time = x.has_time ? timeIn(ctx.tz, new Date(back ?? x.due_at)) : null;
     const name = reminderMember(x.assignee_id, ctx.members).name;
     const overdue = !o.future && x.section === 'overdue' && date > x.due_on;
@@ -106,6 +106,7 @@ export function placeReminders(rows: readonly PlacedReminder[], ctx: PlaceContex
         title: x.title,
         sub,
         late,
+        snoozed: x.snoozed && !o.future && !o.done ? r.snoozedPill : undefined,
         done: o.done,
         future: o.future,
         locked: o.locked,
