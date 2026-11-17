@@ -5,7 +5,7 @@ import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { gabriel, james, mia } from '../test/fakes';
 import { memberLook, monthOccurrences } from './calendar-month';
-import { layoutDaySheet, layoutDayView, type DayViewContext } from './calendar-day';
+import { isDayEvent, layoutDaySheet, layoutDayView, type DayViewContext } from './calendar-day';
 
 const eva = { ...mia, id: 'm-eva', display_name: 'Eva', color: 'rose' as const };
 const members = [gabriel, eva, james];
@@ -47,8 +47,10 @@ function ev(fields: Partial<StoredEvent>): StoredEvent {
   };
 }
 
-const layout = (events: StoredEvent[], date = TODAY, viewer = gabriel.id, hidden: ReadonlySet<string> = new Set()) =>
-  layoutDayView(date, monthOccurrences(events, '2026-10-01', '2026-11-30', viewer, hidden), ctx);
+const layout = (events: StoredEvent[], date = TODAY, viewer = gabriel.id, hidden: ReadonlySet<string> = new Set()) => {
+  const day = layoutDayView(date, monthOccurrences(events, '2026-10-01', '2026-11-30', viewer, hidden), ctx);
+  return { ...day, allDay: day.allDay.filter(isDayEvent), bands: day.bands.map((b) => ({ ...b, events: b.events.filter(isDayEvent) })) };
+};
 
 // OC-CalDay's Sunday.
 const sunday = () => [
@@ -185,7 +187,7 @@ describe('layoutDaySheet', () => {
       ev({ title: 'Pumpkins', time_type: 'all_day', slots: [] }),
       ev({ title: 'Elsewhere', starts_on: '2026-10-26', ends_on: '2026-10-26' }),
     ]);
-    expect(rows.map((r) => [r.title, r.time, r.initials])).toEqual([
+    expect(rows.filter(isDayEvent).map((r) => [r.title, r.time, r.initials])).toEqual([
       ['Grandma visits', 'All day · day 2 of 4', 'All'],
       ['Pumpkins', 'All day', 'G'],
       ['Brunch', 'Lunch', 'G'],
@@ -195,6 +197,6 @@ describe('layoutDaySheet', () => {
 
   it('Eva’s private event reads Busy for Gabriel', () => {
     const { rows } = sheet([ev({ title: 'Therapist', time_type: 'custom', slots: [], start_time: '10:00', end_time: '11:00', location: 'Dr. Kay', members: [eva.id], visibility: 'private', creator_member_id: eva.id })]);
-    expect(rows.map((r) => [r.title, r.time])).toEqual([['Busy', '10:00']]);
+    expect(rows.filter(isDayEvent).map((r) => [r.title, r.time])).toEqual([['Busy', '10:00']]);
   });
 });

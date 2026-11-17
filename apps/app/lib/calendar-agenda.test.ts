@@ -6,6 +6,7 @@ import type { StoredEvent } from '@cocon/data';
 import { gabriel, james, mia } from '../test/fakes';
 import { memberLook, monthOccurrences } from './calendar-month';
 import { agendaHeading, agendaWindow, layoutAgenda, type AgendaContext } from './calendar-agenda';
+import { isDayEvent } from './calendar-day';
 
 const eva = { ...mia, id: 'm-eva', display_name: 'Eva', color: 'rose' as const };
 const members = [gabriel, eva, james];
@@ -50,7 +51,7 @@ function ev(fields: Partial<StoredEvent>): StoredEvent {
 const { from, to } = agendaWindow(TODAY, 1);
 const layout = (events: StoredEvent[], viewer = gabriel.id, hidden: ReadonlySet<string> = new Set()) =>
   layoutAgenda(from, to, monthOccurrences(events, from, to, viewer, hidden), ctx);
-const rows = (events: StoredEvent[], viewer?: string) => layout(events, viewer).flatMap((g) => g.events.map((e) => [e.title, e.sub, e.tag?.label ?? null, e.tag?.tone ?? null]));
+const rows = (events: StoredEvent[], viewer?: string) => layout(events, viewer).flatMap((g) => g.events.filter(isDayEvent).map((e) => [e.title, e.sub, e.tag?.label ?? null, e.tag?.tone ?? null]));
 
 describe('agendaWindow', () => {
   it('loads 4 weeks at a time from the day the list starts on', () => {

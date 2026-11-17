@@ -6,6 +6,7 @@ import {
   layoutSpans,
   makeDate,
   parts,
+  textWidth,
   shownByFilter,
   timeRange,
   toMinutes,
@@ -187,13 +188,38 @@ export interface WeekContext {
   slotTimes: SlotTimes;
   /** FR-003: initials on the chips (window 430 px wide or more). */
   initials: boolean;
+  /** Spec 058: how many reminders show on each day (none while they're hidden). */
+  reminders?: ReadonlyMap<string, number>;
+  /** A day cell's width in px, and the text size multiplier (up to 135%): whether the alarm clock fits beside the date. */
+  cellWidth?: number;
+  textScale?: number;
+}
+
+/** MonthGrid README › Date: the 13 px alarm clock 2 after the date; a cell's 3 px sides and 1 px border. */
+const MARK = 13 + 2;
+const CELL_SIDES = 3 + 3 + 1;
+/** The date text's size, and the most it grows (MonthGrid's `LARGE_TEXT_SCALE`). */
+const DATE_SIZE = 11;
+const DATE_MAX_SCALE = 1.35;
+
+/** Spec 058: whether a day's alarm clock fits beside its date (else it goes on the line below). */
+export function markFitsBeside(date: string, ctx: Pick<WeekContext, 'today' | 'cellWidth' | 'textScale'>): boolean {
+  if (ctx.cellWidth === undefined) return true;
+  const { month, day } = parts(date);
+  const text = day === 1 ? m.firstOfMonth(words.monthsShort[month - 1] ?? '') : String(day);
+  const w = textWidth(text, DATE_SIZE) * Math.min(ctx.textScale ?? 1, DATE_MAX_SCALE);
+  // The 1st is a pill (padding 5 each side), today a circle at least 18 wide, other days 3 from the edge.
+  const date_ = day === 1 ? Math.max(18, w + 10) : date === ctx.today ? Math.max(18, w) : 3 + w;
+  return date_ + MARK <= ctx.cellWidth - CELL_SIDES;
 }
 
 /**
  * One week row (FR-002–FR-004): each day's chips in order, and every multi-day event as a bar from
  * its first to its last day in the row, stacked in rows. Days under a bar keep that row empty. A day
  * shows five rows when everything fits, else four and "+N" for the rest of the visible events; a
- * bar is drawn only over the days whose rows reach its lane.
+ * bar is drawn only over the days whose rows reach its lane. Spec 058: when a day's alarm clock
+ * doesn't fit beside its date, it takes that day's first row: its chips start one row lower, and a
+ * bar in the top lane leaves that day out (it's split around it) so it never covers the clock.
  */
 export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[], ctx: WeekContext): MonthWeek {
   const start = weekStartAt(ctx.range, index);
@@ -201,6 +227,9 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
   const inWeek = occurrences.filter((o) => o.starts_on <= end && o.ends_on >= start);
 
   const spans = inWeek.filter(isMultiDay).map((o) => ({ o, from: o.starts_on < start ? start : o.starts_on, to: o.ends_on > end ? end : o.ends_on }));
+  const below = new Set(
+    Array.from({ length: 7 }, (_, d) => addDays(start, d)).filter((date) => (ctx.reminders?.get(date) ?? 0) > 0 && !markFitsBeside(date, ctx)),
+  );
   const lanes = new Map(layoutSpans(spans.map((s) => ({ id: occurrenceKey(s.o), from: s.from, to: s.to }))).map((l) => [l.id, l.lane]));
   const laneOf = (s: (typeof spans)[number]) => lanes.get(occurrenceKey(s.o)) ?? 0;
 
@@ -212,9 +241,11 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
       .map((o) => ({ o, at: startMinutes(o, ctx.slotTimes) }))
       .sort((a, b) => a.at - b.at || a.o.title.localeCompare(b.o.title))
       .map((x) => x.o);
+    // The alarm clock's row, when it's below the date: no bar or chip in it.
+    const reserved = below.has(date) ? 1 : 0;
     // Five rows if every bar's lane and every chip fit in them, else four and "+N".
-    const fits = covering.every((s) => laneOf(s) < ROWS_PER_CELL) && singles.length <= ROWS_PER_CELL - covering.length;
-    return { date, covering, singles, rows: fits ? ROWS_PER_CELL : ROWS_PER_CELL - 1 };
+    const fits = covering.every((s) => laneOf(s) >= reserved && laneOf(s) < ROWS_PER_CELL) && singles.length <= ROWS_PER_CELL - covering.length - reserved;
+    return { date, covering, singles, reserved, rows: fits ? ROWS_PER_CELL : ROWS_PER_CELL - 1 };
   });
 
   // A bar runs over the days whose rows reach its lane, in one piece per run of such days.
@@ -224,7 +255,7 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
     let from: string | null = null;
     for (let d = daysBetween(start, s.from); d <= daysBetween(start, s.to) + 1; d++) {
       const day = days[d];
-      if (day && day.date <= s.to && lane < day.rows) {
+      if (day && day.date <= s.to && lane >= day.reserved && lane < day.rows) {
         from ??= day.date;
         continue;
       }
@@ -246,9 +277,9 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
     }
   }
 
-  const cells: MonthCell[] = days.map(({ date, covering, singles, rows }) => {
+  const cells: MonthCell[] = days.map(({ date, covering, singles, reserved, rows }) => {
     const { month, day } = parts(date);
-    const busyRows = new Set(covering.map(laneOf).filter((lane) => lane < rows));
+    const busyRows = new Set([...(reserved ? [0] : []), ...covering.map(laneOf).filter((lane) => lane >= reserved && lane < rows)]);
     const items: MonthCellItem[] = [];
     let next = 0;
     for (let row = 0; row < rows; row++) {
@@ -256,13 +287,18 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
       if (o) {
         next++;
         items.push({ kind: 'chip', key: occurrenceKey(o), ...chipLook(o.members, o.title, ctx.look, ctx.initials) });
-      } else if ([...busyRows].some((r) => r >= row)) items.push({ kind: 'space', key: `space-${row}` });
+      } else if (row < reserved) items.push({ kind: 'space', key: `space-${row}`, mark: true });
+      else if ([...busyRows].some((r) => r >= row)) items.push({ kind: 'space', key: `space-${row}` });
     }
-    const shown = next + busyRows.size;
+    const shown = next + busyRows.size - reserved;
     const total = singles.length + covering.length;
     return {
       date,
-      label: m.dayLabel(longDate(date), [...covering.map((s) => withPeople(s.o, ctx.look)), ...singles.map((o) => withPeople(o, ctx.look))]),
+      label: strings.calendar.reminders.withCount(
+        m.dayLabel(longDate(date), [...covering.map((s) => withPeople(s.o, ctx.look)), ...singles.map((o) => withPeople(o, ctx.look))]),
+        ctx.reminders?.get(date) ?? 0,
+      ),
+      reminders: (ctx.reminders?.get(date) ?? 0) > 0 && !below.has(date),
       dateText: day === 1 ? m.firstOfMonth(words.monthsShort[month - 1] ?? '') : String(day),
       first: day === 1,
       today: date === ctx.today,

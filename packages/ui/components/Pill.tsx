@@ -3,7 +3,7 @@ import { Pressable, View, type PressableProps } from 'react-native';
 import { pressedState } from '../a11y';
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarColor } from './Avatar';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
 interface ToggleProps extends Omit<PressableProps, 'children' | 'style'> {
@@ -30,6 +30,30 @@ export function Pill({ label, selected = false, className, ...props }: TogglePro
       <Text size={14} weight={selected ? '800' : '700'} numberOfLines={1}>
         {label}
       </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Toggle (Pill README › toggle): a round 44 icon button that shows or hides something, remembered;
+ * olive when on, white when off. `label` names it for screen readers (the calendar's "Reminders",
+ * spec 058).
+ */
+export function TogglePill({ label, selected = false, icon, className, ...props }: ToggleProps & { icon: IconName }) {
+  return (
+    <Pressable
+      role="button"
+      aria-label={label}
+      {...pressedState(selected)}
+      className={cn(
+        'h-control-md w-[44px] flex-none items-center justify-center rounded-pill',
+        selected ? 'bg-olive active:bg-olive-pressed' : 'bg-surface-card active:bg-surface-card-pressed',
+        focusRing,
+        className,
+      )}
+      {...props}
+    >
+      <Icon name={icon} size={20} color={selected ? 'onOlive' : 'ink'} />
     </Pressable>
   );
 }

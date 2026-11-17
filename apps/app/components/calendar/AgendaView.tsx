@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
 import type { SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { EventListGroup, EventListRow, FloatingAdd, Text, useReduceMotion } from '@cocon/ui';
+import { EventListGroup, EventListRow, FloatingAdd, ReminderListRow, Text, useReduceMotion } from '@cocon/ui';
 import { AGENDA_EMPTY_PAGES, AGENDA_MAX_PAGES, agendaWindow, layoutAgenda } from '../../lib/calendar-agenda';
 import { memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { getAgendaPlace, setAgendaPlace } from '../../lib/agenda-session';
+import { placeForScreen, pressReminderBox, type CalendarReminders } from '../../lib/calendar-reminders';
 import { useNow } from '../../lib/use-now';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
@@ -34,6 +35,8 @@ export interface AgendaViewProps {
   onEventWindow: (window: { from: string; to: string }) => void;
   onAddEvent: (date: string) => void;
   onOpenEvent: (id: string, date: string) => void;
+  /** Spec 058: the reminders among the events; none while the header's toggle hides them. */
+  reminders?: CalendarReminders;
 }
 
 /**
@@ -41,7 +44,22 @@ export interface AgendaViewProps {
  * 4 weeks at a time as the list nears its end (FR-001). The list keeps its place for the
  * session when you switch views (FR-003).
  */
-export function AgendaView({ userId, members, myMemberId, events, slotTimes, hidden, anchor, today, timeZone, top, onEventWindow, onAddEvent, onOpenEvent }: AgendaViewProps) {
+export function AgendaView({
+  userId,
+  members,
+  myMemberId,
+  events,
+  slotTimes,
+  hidden,
+  anchor,
+  today,
+  timeZone,
+  top,
+  onEventWindow,
+  onAddEvent,
+  onOpenEvent,
+  reminders,
+}: AgendaViewProps) {
   const now = useNow(timeZone);
   const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
@@ -56,7 +74,14 @@ export function AgendaView({ userId, members, myMemberId, events, slotTimes, hid
   useEffect(() => setAgendaPlace(userId, anchor, { pages, offset: offset.current }), [userId, anchor, pages]);
 
   const occurrences = useMemo(() => monthOccurrences(events ?? [], from, to, myMemberId, hidden), [events, from, to, myMemberId, hidden]);
-  const groups = useMemo(() => layoutAgenda(from, to, occurrences, { today, now, look, slotTimes, members, use24h }), [from, to, occurrences, today, now, look, slotTimes, members, use24h]);
+  const placed = useMemo(
+    () => placeForScreen(reminders, { from, to, today, tz: timeZone, members, use24h, hidden }),
+    [reminders, from, to, today, timeZone, members, use24h, hidden],
+  );
+  const groups = useMemo(
+    () => layoutAgenda(from, to, occurrences, { today, now, look, slotTimes, members, use24h }, [...placed.values()]),
+    [from, to, occurrences, today, now, look, slotTimes, members, use24h, placed],
+  );
 
   // Nothing in the weeks loaded: look further, up to a year ahead, each time new events arrive.
   const empty = events !== undefined && groups.length === 0;
@@ -119,9 +144,21 @@ export function AgendaView({ userId, members, myMemberId, events, slotTimes, hid
       >
         {groups.map((g) => (
           <EventListGroup key={g.date} heading={g.heading}>
-            {g.events.map((e, i) => (
-              <EventListRow key={e.key} event={e} onPress={() => openEvent(e.key)} last={i === g.events.length - 1} />
-            ))}
+            {g.events.map((e, i) => {
+              const last = i === g.events.length - 1;
+              if (e.kind !== 'reminder') return <EventListRow key={e.key} event={e} onPress={() => openEvent(e.key)} last={last} />;
+              const x = placed.get(e.key);
+              return (
+                <ReminderListRow
+                  key={e.key}
+                  item={e}
+                  last={last}
+                  disabled={reminders?.readOnly}
+                  onToggle={() => x && reminders && pressReminderBox(x, reminders)}
+                  onOpen={() => x && reminders?.onOpen(x.row)}
+                />
+              );
+            })}
           </EventListGroup>
         ))}
         {empty ? (

@@ -139,6 +139,19 @@ export function nextDueAfter(r: ReminderTiming, dueAt: string, tz: string): stri
 }
 
 /**
+ * Spec 058 FR-003: the repeat's dates from `from` to `to` that come after the open one (and after
+ * the day a snooze ends: those are skipped when it's over), for the calendar to draw. Never stored.
+ */
+export function repeatDatesBetween(r: ReminderTiming, from: string, to: string, tz: string): string[] {
+  if (!r.repeat_rule || !r.repeat_from || to < from) return [];
+  const due = local(r.due_at, tz).date;
+  const back = r.snoozed_until ? local(r.snoozed_until, tz).date : due;
+  const after = back > due ? back : due;
+  const start = addDays(after, 1) > from ? addDays(after, 1) : from;
+  return start > to ? [] : datesBetween(r.repeat_rule, r.repeat_from, start, to);
+}
+
+/**
  * A new or edited reminder's columns (FR-001). A repeating reminder is due on the repeat's first
  * date on or after the chosen day (a weekly Mon/Wed repeat chosen on a Tuesday starts Wednesday).
  * Throws `NoDate` when the repeat ends before then.

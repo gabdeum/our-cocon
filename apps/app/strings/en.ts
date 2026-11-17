@@ -1582,6 +1582,29 @@ export const strings = {
       /** "Poker night, Gabriel, Evening · Café Lou, Now" (spec 030 FR-006). */
       rowLabel: (title: string, who: string, sub: string, tag: string | null) => [title, who, sub, ...(tag ? [tag] : [])].filter(Boolean).join(', '),
     },
+    /** design/ui/OC-Reminders.md › Agenda rows (spec 058): reminders among the events in Agenda and Day. */
+    reminders: {
+      toggle: 'Reminders',
+      /** "15:00 · Gabriel", "Any time · Eva". */
+      sub: (when: string, name: string) => `${when} · ${name}`,
+      /** A late one, on today: "Gabriel · was due Mon". */
+      lateSub: (name: string, wasDue: string) => `${name} · ${wasDue}`,
+      wasDueYesterday: 'was due yesterday',
+      /** A later repeat's box, pressed before its day. */
+      notYet: (date: string) => `Not yet: it's due ${date}.`,
+      /** Day view: today's done reminders, after the bands. */
+      doneHeading: 'Done',
+      /** A later repeat's box, for screen readers (it can't be ticked before its day). */
+      notYetLabel: (title: string) => `Not yet: ${title}`,
+      /** "Water the plants, reminder, Gabriel · was due Mon, 2d late". */
+      rowLabel: (title: string, sub: string, late: string | null) => [title, 'reminder', sub, ...(late ? [late] : [])].join(', '),
+      /** "1 reminder", "3 reminders": Month and Week's day labels, and the day sheet's count. */
+      count: (n: number) => (n === 1 ? '1 reminder' : `${n} reminders`),
+      /** A day's screen-reader label, then its reminders: "Sunday October 25, 2 reminders". */
+      withCount: (label: string, n: number) => (n ? `${label}, ${n === 1 ? '1 reminder' : `${n} reminders`}` : label),
+      /** The day sheet's lead: "2 events · 1 reminder", "1 reminder". */
+      sheetCount: (events: string | null, reminders: string) => (events ? `${events} · ${reminders}` : reminders),
+    },
     /** design/ui/OC-CalAdd.md (spec 041): the add and edit sheet. */
     add: {
       titleNew: 'New event',
@@ -1810,7 +1833,6 @@ export const strings = {
     // Rows
     markDone: (title: string) => `Mark done: ${title}`,
     markNotDone: (title: string) => `Mark not done: ${title}`,
-    moreOptions: (title: string) => `More options for ${title}`,
     open: (title: string) => `Open ${title}`,
     repeats: 'Repeats',
     hasNotes: 'Has notes',
@@ -1820,6 +1842,8 @@ export const strings = {
     lateDays: (n: number) => `${n}d late`,
     lateHours: (n: number) => `${n}h late`,
     doneJustNow: 'Done just now',
+    /** Spec 058: one done earlier today, at the bottom of Today until midnight. */
+    doneAt: (time: string) => `Done at ${time}`,
     // A row's detail line.
     wasDueYesterday: 'Was due yesterday',
     /** "Was due Mon" (this past week), "Was due Mon, Nov 2" (before). */
@@ -1832,10 +1856,13 @@ export const strings = {
     dayAt: (day: string, time: string) => `${day} · ${time}`,
     backTomorrow: (date: string) => `Back tomorrow, ${date}`,
     backOn: (date: string) => `Back ${date}`,
-    // The ⋮ menu (Home)
+    /** Spec 058: a snoozed one back later today. */
+    backAt: (time: string) => `Back at ${time}`,
+    /** Spec 058: the pill where "2d late" goes, on a snoozed one listed on the day it's back. */
+    snoozedPill: 'Snoozed',
+    // The drawer's snooze and actions
     snoozeUntil: 'Snooze until',
     snooze: { hour: 'In 1 hour', tomorrow: 'Tomorrow', week: 'Next week', month: 'Next month', date: 'Pick a date' },
-    pickADate: 'Pick a date…',
     edit: 'Edit',
     delete: 'Delete reminder',
     close: 'Close',

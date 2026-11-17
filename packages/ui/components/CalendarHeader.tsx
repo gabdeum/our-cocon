@@ -1,10 +1,12 @@
-import { useRef, useState } from 'react';
-import { Modal, Pressable, View, type HostInstance } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Modal, Platform, Pressable, View, type HostInstance } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
 import { Button } from './Button';
 import { Icon } from './Icon';
 import { IconButton } from './IconButton';
+import { TogglePill } from './Pill';
+import type { IconName } from './Icon';
 import { MemberChip, MemberStack, type MemberChipColor } from './MemberChip';
 import type { Segment } from './SegmentedControl';
 import { Text } from './Text';
@@ -52,6 +54,34 @@ export interface CalendarHeaderProps<V extends string> {
   showAllLabel: string;
   /** Screen-reader name of the area around an open popover: "Close". */
   closeLabel: string;
+  /** A round on/off toggle after the people button: Agenda's and Day's "Reminders" (spec 058). */
+  toggle?: { label: string; icon: IconName; pressed: boolean; onPress: () => void };
+  /**
+   * ‹ ›; off where the toggle takes their place (Agenda, Day: they swipe and scroll). Default on.
+   * Off, ← → do the same on the web (outside text fields), and the title carries them as
+   * screen-reader actions (VoiceOver's Actions rotor), so paging never needs a swipe.
+   */
+  arrows?: boolean;
+}
+
+/** Off ‹ ›: the web's ← → page, unless someone is typing or a menu is open. */
+function useArrowKeys(on: boolean, onPrev: () => void, onNext: () => void) {
+  const latest = useRef({ onPrev, onNext });
+  useEffect(() => {
+    latest.current = { onPrev, onNext };
+  });
+  useEffect(() => {
+    if (!on || Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented) return;
+      const el = document.activeElement;
+      if (el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.closest('[role="dialog"]'))) return;
+      if (e.key === 'ArrowLeft') latest.current.onPrev();
+      else if (e.key === 'ArrowRight') latest.current.onNext();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [on]);
 }
 
 type Menu = 'view' | 'people';
@@ -73,6 +103,8 @@ export function CalendarHeader<V extends string>(p: CalendarHeaderProps<V>) {
   const shown = p.chips.filter((c) => c.pressed);
   const filtered = shown.length < p.chips.length;
   const current = p.views.find((v) => v.key === p.view);
+  const arrows = p.arrows !== false;
+  useArrowKeys(!arrows && open === null, p.onPrev, p.onNext);
 
   const toggleMenu = (menu: Menu) => {
     if (open === menu) return close();
@@ -89,7 +121,15 @@ export function CalendarHeader<V extends string>(p: CalendarHeaderProps<V>) {
   return (
     <View className="gap-10 bg-surface-page px-20 pb-10 pt-[54px]">
       <View className="flex-row items-center gap-8">
-        <Text variant="displayLg" role="heading" aria-level={1} numberOfLines={1} className="min-w-0 flex-1">
+        <Text
+          variant="displayLg"
+          role="heading"
+          aria-level={1}
+          numberOfLines={1}
+          className="min-w-0 flex-1"
+          accessibilityActions={arrows ? undefined : [{ name: 'previous', label: p.prevLabel }, { name: 'next', label: p.nextLabel }]}
+          onAccessibilityAction={arrows ? undefined : (e) => (e.nativeEvent.actionName === 'next' ? p.onNext() : p.onPrev())}
+        >
           {p.title}
         </Text>
         <Button variant="soft" size="sm" label={p.todayLabel} onPress={p.onToday} />
@@ -128,9 +168,14 @@ export function CalendarHeader<V extends string>(p: CalendarHeaderProps<V>) {
           </Text>
           <Icon name="chevron-down" size={16} />
         </Pressable>
+        {p.toggle ? <TogglePill label={p.toggle.label} icon={p.toggle.icon} selected={p.toggle.pressed} onPress={p.toggle.onPress} /> : null}
         <View className="flex-1" />
-        <IconButton variant="card" icon="back" label={p.prevLabel} onPress={p.onPrev} />
-        <IconButton variant="card" icon="chevron-right" label={p.nextLabel} onPress={p.onNext} />
+        {!arrows ? null : (
+          <>
+            <IconButton variant="card" icon="back" label={p.prevLabel} onPress={p.onPrev} />
+            <IconButton variant="card" icon="chevron-right" label={p.nextLabel} onPress={p.onNext} />
+          </>
+        )}
       </View>
 
       {/* The Modal gives Escape (web) and Back (Android); the clear backdrop closes on an outside tap. */}

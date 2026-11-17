@@ -28,7 +28,7 @@
 | OC-Timers | `/timers` | stack (reachable from anywhere) | 011 |
 | AI activity | `/activity` (Home › "See all") | stack, not designed: OC-Activity.md | 026 |
 | OC-Reminders | `/reminders` (Home › Reminders card, the calendar; `?open={id}` opens that reminder's drawer, OC-ReminderDrawer) | stack | 057, 059 |
-| OC-ReminderEdit | `/reminders/new` (Home › Reminders card "+", the Reminders screen's "+" and empty state) · `/reminders/{id}/edit` (the drawer's "Edit", Home's ⋮ › Edit; `?focus=notes` from "+ Add a note") | sheet | 057 |
+| OC-ReminderEdit | `/reminders/new` (Home › Reminders card "+", the Reminders screen's "+" and empty state) · `/reminders/{id}/edit` (the drawer's "Edit"; `?focus=notes` from "+ Add a note") | sheet | 057 |
 | Recently deleted | `/settings/deleted` | stack, not designed: list per spec 018 | 018 |
 | Sign in | `/welcome` (public, no tab bar) | page, not designed: OC-Welcome.md | 003 |
 | Sign-in link | `/auth/callback` (public) | page, not designed: OC-Welcome.md | 003 |
@@ -91,7 +91,7 @@ The tab bar's last tab is "Menu" (spec 036). Menu has two sections: **Apps** (ti
 ## Flows
 
 1. **Check today.** Home → calendar card (Today, or This week, or empty) → tap a row → OC-CalEvent; "+" → OC-CalAdd; "Open calendar" → Calendar tab.
-2. **Scan and drill in.** Calendar tab → Month (scroll through months) → tap a day → day sheet → tap an event → OC-CalEvent, or "+" → OC-CalAdd for that day.
+2. **Scan and drill in.** Calendar tab → Month (scroll through months) → tap a day (Month, or Week since 058) → day sheet → tap an event → OC-CalEvent, or "+" → OC-CalAdd for that day.
 3. **Quick add.** "+" anywhere → type title → Today → Evening → Save → toast with Undo.
 4. **Add with details.** OC-CalAdd → More options → Who, Repeat, Where, "Who takes James?" → Save.
 5. **Edit, move, delete.** OC-CalEvent → Edit (repeating: "This event only" / "All future events") → Save; Delete → dialog → toast "Event deleted · Undo".

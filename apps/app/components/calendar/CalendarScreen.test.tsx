@@ -8,7 +8,8 @@ import { MONTH_ROW_HEIGHT } from '@cocon/ui';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { monthRange, weekIndexOf } from '../../lib/calendar-month';
 import { CalendarScreen, type CalendarScreenProps } from './CalendarScreen';
-import { fakeTracker, gabriel, mia } from '../../test/fakes';
+import { fakeTracker, gabriel, mia, placedReminder } from '../../test/fakes';
+import type { CalendarReminders } from '../../lib/calendar-reminders';
 import { expectAccessible } from '../../test/axe';
 
 // "Now" follows the real clock: pin it before every slot so labels don't depend on when tests run.
@@ -398,17 +399,19 @@ describe('Week view (spec 038)', () => {
     expect(screen.getAllByRole('link', { name: 'Sunday November 1' })).toHaveLength(2);
   });
 
-  it('FR-001: tapping a day (its head or an empty part) opens Day view; a block opens the event; + adds one', async () => {
+  it('FR-001: tapping a day (its head or an empty part) opens its sheet (spec 058); a block opens the event; + adds one', async () => {
     const onOpenEvent = vi.fn();
     const onAddEvent = vi.fn();
     const { onNavigate, tracker } = await setup({ view: 'week', anchor: '2026-10-25', today: '2026-10-27', events, onOpenEvent, onAddEvent });
     const [head, column] = screen.getAllByRole('link', { name: 'Thursday October 29' });
     fireEvent.click(head as HTMLElement);
-    expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
-    vi.mocked(onNavigate).mockClear();
+    expect(within(screen.getByRole('dialog')).getByRole('heading').textContent).toBe('Thursday, October 29');
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 0 });
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
     fireEvent.click(column as HTMLElement);
-    expect(onNavigate).toHaveBeenCalledWith({ view: 'day', date: '2026-10-29' });
-    expect(tracker.track).toHaveBeenCalledWith('calendar_day_opened', { from_view: 'week' });
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
+    expect(onNavigate).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('link', { name: 'Coffee, Gabriel, Sunday October 25, 16:00 to 17:00' }));
     expect(onOpenEvent).toHaveBeenCalledWith(events[1]?.id, '2026-10-25');
@@ -672,5 +675,95 @@ describe('Private and surprise events (spec 043)', () => {
     const row = screen.getByRole('link', { name: 'Eva’s surprise dinner, Eva, Evening · Café Lalo · hidden from Eva, Surprise' });
     fireEvent.click(row);
     expect(onOpenEvent).toHaveBeenCalledWith(dinner.id, '2026-10-22');
+  });
+});
+
+describe('Reminders in the calendar (spec 058)', () => {
+  const today = '2026-10-25';
+  const weekly = placedReminder({
+    title: 'Take the bins out',
+    due_on: today,
+    due_at: '2026-10-25T19:00:00.000Z',
+    repeat_rule: { freq: 'weekly', ends: { type: 'never' } },
+    repeat_from: '2026-10-18',
+  });
+  const plants = placedReminder({ title: 'Water the plants', due_on: '2026-10-23', due_at: '2026-10-23T00:00:00.000Z', has_time: false, rollover: 'day', section: 'overdue', late_days: 2, late_hours: 48 });
+  const handlers = (): CalendarReminders => ({
+    rows: [weekly, plants],
+    ticked: new Map(),
+    gone: new Set(),
+    readOnly: false,
+    onTick: vi.fn(),
+    onUntick: vi.fn(),
+    onNotYet: vi.fn(),
+    onOpen: vi.fn(),
+  });
+  const box = (name: string) => screen.getAllByRole('checkbox', { name: `Mark done: ${name}` });
+  const toggle = () => screen.getByRole('button', { name: 'Reminders' });
+
+  it('FR-001–FR-003: Agenda mixes them in, late ones first on Today; a later repeat says "Not yet"; a title opens the drawer', async () => {
+    const reminders = handlers();
+    await setup({ view: 'agenda', anchor: today, today, events: [], reminders });
+    const todayCard = screen.getByText('Today · Sun, Oct 25').nextElementSibling as HTMLElement;
+    expect(within(todayCard).getAllByRole('button', { name: /reminder/ }).map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Water the plants, reminder, Gabriel · was due Fri, 2d late',
+      'Take the bins out, reminder, 19:00 · Gabriel',
+    ]);
+    const [open] = box('Take the bins out');
+    fireEvent.click(open as HTMLElement);
+    expect(reminders.onTick).toHaveBeenCalledWith(weekly);
+    const [later] = screen.getAllByRole('checkbox', { name: 'Not yet: Take the bins out' });
+    fireEvent.click(later as HTMLElement);
+    expect(reminders.onNotYet).toHaveBeenCalledWith('2026-11-01');
+    expect(reminders.onTick).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: /^Water the plants, reminder/ }));
+    expect(reminders.onOpen).toHaveBeenCalledWith(plants);
+    await expectAccessible(document.body);
+  });
+
+  it('FR-004: the header toggle takes ‹ ›’s place in Agenda and Day, hides reminders in both, and stays off on this device', async () => {
+    const storage = memoryStorage();
+    const first = await setup({ view: 'agenda', anchor: today, today, events: [], reminders: handlers(), storage });
+    expect(toggle().getAttribute('aria-pressed')).toBe('true');
+    expect(screen.queryByRole('button', { name: 'Previous week' })).toBeNull();
+    fireEvent.click(toggle());
+    expect(screen.queryAllByRole('checkbox')).toEqual([]);
+    expect(first.tracker.track).toHaveBeenCalledWith('calendar_reminders_toggled', { on: false });
+    first.unmount();
+    const day = await setup({ view: 'day', anchor: today, today, events: [], reminders: handlers(), storage });
+    expect(toggle().getAttribute('aria-pressed')).toBe('false');
+    // No ‹ ›: ← → page on the web instead (and the title has them as screen-reader actions).
+    expect(screen.queryByRole('button', { name: 'Next day' })).toBeNull();
+    fireEvent.keyDown(document, { key: 'ArrowRight' });
+    expect(day.onNavigate).toHaveBeenCalledWith({ date: '2026-10-26' });
+    fireEvent.keyDown(document, { key: 'ArrowLeft' });
+    expect(day.onNavigate).toHaveBeenLastCalledWith({ date: '2026-10-24' });
+    expect(screen.queryAllByRole('checkbox')).toEqual([]);
+    fireEvent.click(toggle());
+    // Day: late ones under All day, timed ones in their band (which then has no add row).
+    expect(box('Water the plants')).toHaveLength(1);
+    expect(box('Take the bins out')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: /Add in the evening/ })).toBeNull();
+  });
+
+  it('Month and Week: no toggle up top, a mark on days with reminders, and the day sheet lists them with its own toggle', async () => {
+    const reminders = handlers();
+    const { tracker } = await setup({ view: 'month', anchor: today, today, events: [], reminders });
+    expect(screen.queryByRole('button', { name: 'Reminders' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^October 25: nothing planned, 2 reminders$/ }));
+    const sheet = screen.getByRole('dialog');
+    expect(sheet.textContent).toContain('2 reminders');
+    expect(within(sheet).getAllByRole('checkbox').map((b) => b.getAttribute('aria-label'))).toEqual(['Mark done: Water the plants', 'Mark done: Take the bins out']);
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Reminders' }));
+    expect(within(screen.getByRole('dialog')).queryAllByRole('checkbox')).toEqual([]);
+    expect(tracker.track).toHaveBeenCalledWith('calendar_reminders_toggled', { on: false });
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
+    expect(screen.getByRole('button', { name: 'October 25: nothing planned' })).toBeTruthy();
+    cleanup();
+
+    await setup({ view: 'week', anchor: today, today, events: [], reminders: handlers() });
+    expect(screen.queryByRole('button', { name: 'Reminders' })).toBeNull();
+    expect(screen.getAllByRole('link', { name: 'Sunday October 25, 2 reminders' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Saturday October 31' }).length).toBeGreaterThan(0);
   });
 });

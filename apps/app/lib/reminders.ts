@@ -19,6 +19,20 @@ export const remindersExistKey = (familyId: string) => ['reminders', familyId, '
 export const reminderSectionKey = (familyId: string, section: ReminderSection, mine: boolean, tz: string) => ['reminders', familyId, 'section', section, mine, tz] as const;
 export const reminderHistoryKey = (familyId: string, id: string) => ['reminders', familyId, 'history', id] as const;
 export const reminderKey = (familyId: string, id: string) => ['reminders', familyId, 'one', id] as const;
+/** Spec 058: what was done today, which Today keeps (struck through) until midnight. */
+export const remindersDoneKey = (familyId: string, today: string, tz: string) => ['reminders', familyId, 'done', today, tz] as const;
+
+/**
+ * Reminders saved on the device (for offline, decision 11) are a past moment: late, Today and
+ * done change with the clock and on other phones. Online, a screen shows them only once they've
+ * been fetched again since it opened, so a reload never flashes yesterday's list.
+ */
+export function freshReminders<T>(query: { data: T | undefined; isFetchedAfterMount: boolean }, online: boolean): T | undefined {
+  return online && !query.isFetchedAfterMount ? undefined : query.data;
+}
+
+/** Spec 058: a done-today row's key in `hidden` while its Undo saves. */
+export const doneKey = (d: { row: { id: string; due_at: string } }) => `${d.row.id}|${d.row.due_at}`;
 
 /** The screen's sections, in order ("Snoozed" is the collapsed row after them). */
 export const LIST_SECTIONS = ['overdue', 'today', 'tomorrow', 'later'] as const satisfies readonly ReminderSection[];
@@ -48,8 +62,10 @@ export function lateBadge(x: Pick<PlacedReminder, 'late_days' | 'late_hours'>): 
 export function detailLine(x: PlacedReminder, o: { today: string; tz: string; use24h: boolean; where: 'home' | 'list' }): string {
   const time = dueTime(x, o.tz);
   const shown = time ? formatTime(time, o.use24h) : null;
-  if (x.section === 'snoozed' && x.snoozed_until) {
+  if (x.snoozed && x.snoozed_until) {
     const back = dayOf(x.snoozed_until, o.tz);
+    // Back later today: at its time (any time ones are back from the start of the day).
+    if (back <= o.today) return r.backAt(formatTime(timeIn(o.tz, new Date(x.snoozed_until)), o.use24h));
     return back === addDays(o.today, 1) ? r.backTomorrow(dateLabel(back)) : r.backOn(dateLabel(back));
   }
   if (x.due_on < o.today) {

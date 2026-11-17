@@ -1,6 +1,7 @@
 import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { Fill, type EventColor } from './EventChip';
+import { ReminderListText, ReminderTick, type ReminderListItem, type ReminderListRowProps } from './EventListRow';
 import { Icon } from './Icon';
 import { Tag } from './Tag';
 import { Text } from './Text';
@@ -22,13 +23,19 @@ export interface DayEventItem {
   label: string;
 }
 
+/** A reminder in a band or in All day (spec 058). */
+export type DayReminderItem = ReminderListItem & { kind: 'reminder' };
+
+/** What a band holds: its events and reminders, by time. */
+export type DayBandItem = (DayEventItem & { kind?: 'event' }) | DayReminderItem;
+
 /** A time-of-day band (SlotBand README): "Morning 09:00–12:00", its events or the add row. */
 export interface DayBand {
   key: string;
   title: string;
   hours: string;
-  events: DayEventItem[];
-  /** "+ Add in the morning", shown when the band has no events. */
+  events: DayBandItem[];
+  /** "+ Add in the morning", shown when the band has nothing in it. */
   addText: string;
   addLabel: string;
 }
@@ -46,13 +53,18 @@ export interface SlotBandProps {
   band: DayBand;
   onEventPress: (key: string) => void;
   onAdd: () => void;
+  /** A reminder's tick box and its title (spec 058). */
+  onReminderToggle?: (key: string) => void;
+  onReminderOpen?: (key: string) => void;
+  /** Offline: reminders' boxes can't be ticked. */
+  readOnly?: boolean;
 }
 
 /**
  * SlotBand README: a band's title and hours, then its event rows, or a dashed "+ Add in the …"
  * row when it has none (spec 039 FR-003, FR-004).
  */
-export function SlotBand({ band, onEventPress, onAdd }: SlotBandProps) {
+export function SlotBand({ band, onEventPress, onAdd, onReminderToggle, onReminderOpen, readOnly }: SlotBandProps) {
   return (
     <View className="gap-8">
       <View role="heading" className="flex-row items-baseline gap-8">
@@ -63,9 +75,13 @@ export function SlotBand({ band, onEventPress, onAdd }: SlotBandProps) {
           {band.hours}
         </Text>
       </View>
-      {band.events.map((e) => (
-        <DayEventRow key={e.key} event={e} onPress={() => onEventPress(e.key)} />
-      ))}
+      {band.events.map((e) =>
+        e.kind === 'reminder' ? (
+          <DayReminderRow key={e.key} item={e} onToggle={() => onReminderToggle?.(e.key)} onOpen={() => onReminderOpen?.(e.key)} disabled={readOnly} />
+        ) : (
+          <DayEventRow key={e.key} event={e} onPress={() => onEventPress(e.key)} />
+        ),
+      )}
       {band.events.length === 0 ? (
         <Pressable
           role="button"
@@ -123,6 +139,16 @@ export function DayEventRow({ event, onPress }: { event: DayEventItem; onPress: 
       </View>
       {event.nowText ? <Tag label={event.nowText} tone="honey" className="flex-none self-center" /> : null}
     </Pressable>
+  );
+}
+
+/** SlotBand README › Reminder row (spec 058): the agenda's reminder row in the day's white card, radius 20. */
+export function DayReminderRow({ item, onToggle, onOpen, disabled }: ReminderListRowProps) {
+  return (
+    <View className="min-h-[64px] flex-row items-center gap-12 rounded-[20px] bg-surface-card py-6 pl-12 pr-14">
+      <ReminderTick item={item} onToggle={onToggle} disabled={disabled} />
+      <ReminderListText item={item} onOpen={onOpen} />
+    </View>
   );
 }
 

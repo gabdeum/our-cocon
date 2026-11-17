@@ -10,7 +10,7 @@ Source `screens/OC-CalWeek.dc.html` (interactive: swipe it) · Route `/calendar?
 5. Floating add button; TabBar.
 
 ## Interactions
-Swipe left/right (or ‹ ›): next/previous week; content follows the finger and slides in (220 ms); < 60 px snaps back. "Today" → this week. Tap a day letter → OC-CalDay. Tap a block → OC-CalEvent. Tap an empty part of a day → OC-CalDay (decided 2026-10-28). Long-press an empty hour → OC-CalAdd for that day and time.
+Swipe left/right (or ‹ ›): next/previous week; content follows the finger and slides in (220 ms); < 60 px snaps back. "Today" → this week. Tap a day letter → its day sheet (as Month's, OC-CalMonth.md › Day sheet; spec 058, was OC-CalDay). Tap a block → OC-CalEvent. Tap an empty part of a day → its day sheet (spec 058). Long-press an empty hour → OC-CalAdd for that day and time.
 
 ## Screen readers (spec 030)
 A block: "{title}, {who}, {Sunday October 25}, {slot names or 14:30 to 16:30}" ("Poker night, Gabriel, Sunday October 25, Evening"); a private one "Busy, Eva, …". All-day bars: "{title}, {who}, {October 30} to {November 1}". Who is the members' names ("Gabriel and Eva"), "Everyone" or "Others". Blocks have a 1 px outline in their member colour's edge tone.

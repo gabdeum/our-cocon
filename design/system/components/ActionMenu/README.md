@@ -15,7 +15,7 @@ Reference: `design/screens/OC-CalEvent.dc.html` (`dialog: menu`): Duplicate · S
 | Heading (optional) | 13/900 ink-muted, uppercase, padding 8 12 4: "Snooze until" (spec 057) |
 | Item detail (optional) | 14/700 ink-muted at the right ("Thu 12"); the item reads "Tomorrow, Thu 12" |
 | Separator (optional) | 1 px `line`, margin 2 10, above an item, between groups |
-| Dots trigger | `trigger="dots"`: a plain vertical ⋮ (`more-vertical`, 20), 36 × 44, radius 12, surface-soft while open; at the end of a ReminderRow on Home |
+| Dots trigger | `trigger="dots"`: a plain vertical ⋮ (`more-vertical`, 20), 36 × 44, radius 12, surface-soft while open; (not used since spec 058 took the ⋮ off Home's reminder rows) at the end of a ReminderRow on Home |
 
 ## Rules
 

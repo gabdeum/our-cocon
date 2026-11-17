@@ -1,6 +1,7 @@
 import { SLOT_KEYS, type SlotKey } from '@cocon/schemas/calendar';
 import { calendarWordsEn, daysBetween, placeLine, slotAt, sortSlots, timeLabel, timeRange, toMinutes, weekday, type SlotTimes } from '@cocon/calendar';
-import type { DayAllDayItem, DayBand, DayEventItem, MemberChipColor } from '@cocon/ui';
+import type { DayAllDayItem, DayBand, DayBandItem, DayEventItem, DayReminderItem, MemberChipColor } from '@cocon/ui';
+import { compareDayRows, reminderOrder, type CalendarReminder } from './calendar-reminders';
 import { eventLook, longDate, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import type { Member } from './session';
 import { strings } from '../strings/en';
@@ -29,10 +30,16 @@ export interface DayBusyChip {
   color: MemberChipColor;
 }
 
+/** An event or a reminder in a band (spec 058). */
+export const isDayEvent = <T extends { kind?: 'event' | 'reminder' }>(x: T): x is Exclude<T, { kind: 'reminder' }> => x.kind !== 'reminder';
+
 export interface DayLayout {
   busy: DayBusyChip[];
-  allDay: DayAllDayItem[];
+  /** All-day events, and the reminders that are late or have no time (spec 058). */
+  allDay: ((DayAllDayItem & { kind?: 'event' }) | DayReminderItem)[];
   bands: (DayBand & { slot: SlotKey })[];
+  /** Spec 058: today's done reminders, after the bands, in the order they were ticked. */
+  done: DayReminderItem[];
 }
 
 /** Like the week's All day row: all-day events and anything spanning more than one day. */
@@ -46,17 +53,31 @@ export const dayName = (date: string) => strings.calendar.week.dayLabel(words.we
  * filter). FR-001 who's busy and how often; FR-002 the All day rows ("Day 2 of 3", "Birthday");
  * FR-003 the five bands with their events, each in the slot it starts in (`slotAt`), with the
  * time line, who takes whom and "Now"; FR-004 an add row in each empty band. An event the engine
- * can't read is left out.
+ * can't read is left out. Spec 058: the day's reminders (`placeReminders`), late and any-time ones
+ * after the all-day events, timed ones in their band among the events by time.
  */
-export function layoutDayView(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext): DayLayout {
+export function layoutDayView(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext, reminders: readonly CalendarReminder[] = []): DayLayout {
   const onDay = occurrences.filter((o) => o.starts_on <= date && o.ends_on >= date);
 
-  const allDay: DayAllDayItem[] = onDay.filter(inAllDay).map((o) => {
+  const allDayEvents: DayAllDayItem[] = onDay.filter(inAllDay).map((o) => {
     const tag = dayOf(o, date) ?? (isBirthday(o) ? d.birthday : null);
     return { key: occurrenceKey(o), title: o.title, tag, colors: eventLook(o.members, ctx.look).colors, label: d.allDayLabel(o.title, whoText(o.members, ctx.look), tag) };
   });
+  const onDayAll = reminders.filter((x) => x.date === date);
+  const onDayReminders = onDayAll.filter((x) => !x.doneAt);
+  const done = onDayAll
+    .filter((x) => x.doneAt)
+    .sort((a, b) => (a.doneAt ?? '').localeCompare(b.doneAt ?? ''))
+    .map((x) => x.item);
+  const untimed = onDayReminders.filter((x) => x.overdue || !x.time);
+  const allDay = [
+    ...untimed.filter((x) => x.overdue).sort((a, b) => compareDayRows({ order: -2, reminder: a, title: a.row.title }, { order: -2, reminder: b, title: b.row.title })).map((x) => x.item),
+    ...allDayEvents,
+    ...untimed.filter((x) => !x.overdue).sort((a, b) => a.row.title.localeCompare(b.row.title)).map((x) => x.item),
+  ];
 
   const timed = timedRows(onDay, date, ctx);
+  const timedReminders = onDayReminders.filter((x) => !x.overdue && x.time);
 
   const bands = SLOT_KEYS.map((slot) => {
     const { start, end } = ctx.slotTimes[slot];
@@ -65,13 +86,18 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
       slot,
       title: words.slots[slot],
       hours: d.hours(clock(start, ctx.use24h ?? true), clock(end, ctx.use24h ?? true)),
-      events: timed.filter((t) => t.slot === slot).map((t) => t.item),
+      events: [
+        ...timed.filter((t) => t.slot === slot).map((t) => ({ order: toMinutes(t.range.start), title: t.o.title, item: t.item as DayBandItem })),
+        ...timedReminders.filter((x) => x.time && slotAt(x.time, ctx.slotTimes) === slot).map((x) => ({ order: reminderOrder(x), reminder: x, title: x.row.title, item: x.item as DayBandItem })),
+      ]
+        .sort(compareDayRows)
+        .map((x) => x.item),
       addText: d.addIn(d.bands[slot]),
       addLabel: d.addInLabel(d.bands[slot], dayName(date)),
     };
   });
 
-  return { busy: busyChips([...onDay.filter(inAllDay), ...timed.map((t) => t.o)], ctx), allDay, bands };
+  return { busy: busyChips([...onDay.filter(inAllDay), ...timed.map((t) => t.o)], ctx), allDay, bands, done };
 }
 
 /** The day's timed events by start (then title), each with its slot and row. An event the engine can't read is left out. */
@@ -94,18 +120,20 @@ function timedRows(onDay: readonly MonthOccurrence[], date: string, ctx: DayView
 export interface DaySheet {
   /** "Sunday, October 25". */
   title: string;
-  /** "3 events", "1 event", "Nothing planned". */
+  /** "3 events", "1 event", "Nothing planned"; with reminders "2 events · 1 reminder", "1 reminder". */
   count: string;
-  rows: DayEventItem[];
+  /** Its events, and its reminders among them (spec 058). */
+  rows: DayBandItem[];
   /** "Add event on Sunday, October 25". */
   addLabel: string;
 }
 
 /**
  * Spec 037 FR-009: the month's day sheet. The day view's event rows, all-day and multi-day events
- * first ("All day", "All day · day 2 of 4"), then the rest by time.
+ * first ("All day", "All day · day 2 of 4"), then the rest by time. Spec 058: the day's reminders
+ * among them, in Agenda's order (late first, any time with the all-day events, then by time).
  */
-export function layoutDaySheet(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext): DaySheet {
+export function layoutDaySheet(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext, reminders: readonly CalendarReminder[] = []): DaySheet {
   const s = strings.calendar.month.sheet;
   const onDay = occurrences.filter((o) => o.starts_on <= date && o.ends_on >= date);
   const allDay = onDay
@@ -117,9 +145,19 @@ export function layoutDaySheet(date: string, occurrences: readonly MonthOccurren
       const time = span ? d.at(words.allDay, span.toLowerCase()) : words.allDay;
       return { key: occurrenceKey(o), title: o.title, time, driver: null, nowText: null, initials, colors, label: d.rowLabel([o.title, whoText(o.members, ctx.look), time], false) };
     });
-  const rows = [...allDay, ...timedRows(onDay, date, ctx).map((t) => t.item)];
+  const events = [...allDay.map((item) => ({ order: -1, title: item.title, item: item as DayBandItem })), ...timedRows(onDay, date, ctx).map((t) => ({ order: toMinutes(t.range.start), title: t.o.title, item: t.item as DayBandItem }))];
+  const onDayReminders = reminders.filter((x) => x.date === date);
+  // Stable: events keep their own order (all day by start date) where the times tie.
+  const rows = [...events, ...onDayReminders.map((x) => ({ order: reminderOrder(x), reminder: x, title: x.row.title, item: x.item as DayBandItem }))].sort((a, b) =>
+    'reminder' in a || 'reminder' in b ? compareDayRows(a, b) : a.order - b.order,
+  );
   const title = s.title(words.weekdays[weekday(date)] ?? '', longDate(date));
-  return { title, count: s.count(rows.length), rows, addLabel: s.addLabel(title) };
+  // The count is what's still to do; done ones are listed at the bottom.
+  const toDo = onDayReminders.filter((x) => !x.doneAt).length;
+  const count = toDo
+    ? strings.calendar.reminders.sheetCount(events.length ? s.count(events.length) : null, strings.calendar.reminders.count(toDo))
+    : s.count(events.length);
+  return { title, count, rows: rows.map((r) => r.item), addLabel: s.addLabel(title) };
 }
 
 function eventRow(o: MonthOccurrence, range: { start: string; end: string }, date: string, ctx: DayViewContext): DayEventItem {

@@ -1,4 +1,5 @@
-import { catchUp, complete, draftToFields, snoozeUntil, type ReminderRevert, type ReminderTiming } from '@cocon/reminders';
+import { todayIn, zonedInstant } from '@cocon/calendar';
+import { catchUp, complete, draftToFields, nextDueAfter, snoozeUntil, type ReminderRevert, type ReminderTiming } from '@cocon/reminders';
 import { Recurrence, ReminderDraft, ReminderOccurrenceStatus, ReminderRollover, ReminderSection, ReminderSnoozeOption, TimeZone } from '@cocon/schemas';
 import { z } from 'zod';
 import type { Db } from './client';
@@ -43,8 +44,15 @@ const Placed = Stored.extend({
   section: ReminderSection,
   on_home: z.boolean(),
   sort_at: Instant,
+  /** Snoozed (by hand, or a late "Next week" one until its weekday): listed on the day it's back, with a "Snoozed" pill (spec 058). */
+  // Absent from a database without spec 058's migration: not snoozed there (it had its own section).
+  snoozed: z.boolean().default(false),
 });
-/** An open reminder as it stands now (FR-006, FR-008, FR-012). */
+/**
+ * An open reminder as it stands now (FR-006, FR-008, FR-012). Its `snoozed_until` is when it's back
+ * in the lists: a late "Next week" one reports its next weekday there without being snoozed (spec
+ * 058), so never write it back as a snooze; writes take it from the stored row (`loadReminder`).
+ */
 export type PlacedReminder = z.infer<typeof Placed>;
 
 const Home = z.object({ rows: z.array(Placed), more_today: z.int().min(0), snoozed: z.int().min(0) });
@@ -246,6 +254,80 @@ export async function completeReminder(client: Pick<Db, 'from' | 'rpc'>, id: str
     };
   }
   throw new Error("Couldn't save. Try again.");
+}
+
+/** A reminder done today (spec 058): Today keeps it, struck through, until midnight. */
+export interface DoneReminder {
+  /** As it was when ticked: the occurrence's due time, placed in Today, not late. */
+  row: PlacedReminder;
+  closedAt: string;
+  /**
+   * Unticking it: back to the occurrence that was done (false from `undoCompleteReminder` if it
+   * moved on since). Null for a repeat's earlier date when a later one was done after it.
+   */
+  undo: CompletedReminder['undo'] | null;
+}
+
+const DoneOccurrence = z.object({ reminder_id: z.uuid(), due_at: Instant, closed_at: Instant });
+const DONE_AT_ONCE = 100;
+/** A tick writes the reminder and its occurrence together; anything later than this changed it since. */
+const SAME_WRITE_MS = 2000;
+const unchangedSince = (r: Pick<StoredReminder, 'updated_at' | 'snoozed_until'>, closedAt: string) =>
+  r.snoozed_until === null && Date.parse(r.updated_at) - Date.parse(closedAt) <= SAME_WRITE_MS;
+
+/**
+ * Spec 058: what was ticked today (in `tz`), latest last: each repeat's done occurrence, and one-offs
+ * completed today (at most 100 of each, the latest). Deleted ones are left out. Undo is offered only
+ * while nobody changed the reminder since the tick (a snooze, an edit, a later date done or missed),
+ * so reopening never overwrites someone else's change.
+ */
+export async function loadRemindersDoneToday(client: Pick<Db, 'from'>, tz: string, now: Date = new Date()): Promise<DoneReminder[]> {
+  const zone = TimeZone.parse(tz);
+  const since = zonedInstant(todayIn(zone, now), '00:00', zone).toISOString();
+  const [occurrences, oneOffs] = await Promise.all([
+    client.from('reminder_occurrences').select('reminder_id, due_at, closed_at').eq('status', 'done').gte('closed_at', since).order('closed_at', { ascending: false }).limit(DONE_AT_ONCE),
+    client.from('reminders').select(`${STORED}, completed_at`).gte('completed_at', since).is('repeat_rule', null).is('deleted_at', null).order('completed_at', { ascending: false }).limit(DONE_AT_ONCE),
+  ]);
+  if (occurrences.error) throw occurrences.error;
+  if (oneOffs.error) throw oneOffs.error;
+  const done = z.array(DoneOccurrence).parse(occurrences.data ?? []);
+  const ids = [...new Set(done.map((o) => o.reminder_id))];
+  const repeats = ids.length ? await client.from('reminders').select(STORED).in('id', ids).is('deleted_at', null) : { data: [], error: null };
+  if (repeats.error) throw repeats.error;
+  const byId = new Map(z.array(Stored).parse(repeats.data ?? []).map((r) => [r.id, r]));
+
+  const placed = (r: StoredReminder, dueAt: string, closedAt: string): PlacedReminder => ({
+    ...r,
+    due_at: dueAt,
+    due_on: todayIn(zone, new Date(dueAt)),
+    late_from: dueAt,
+    late_hours: 0,
+    late_days: 0,
+    section: 'today',
+    on_home: false,
+    sort_at: closedAt,
+    snoozed: false,
+  });
+  const fromRepeats = done.flatMap((o): DoneReminder[] => {
+    const r = byId.get(o.reminder_id);
+    if (!r) return [];
+    // Reopenable while the reminder still sits on the date right after this one (or on it, the last
+    // date, completed) and nothing changed it since.
+    const next = nextDueAfter(r, o.due_at, zone);
+    // Instants compared as times: the rules write "…Z", the database answers "…+00:00".
+    const inPlace = Date.parse(r.due_at) === Date.parse(o.due_at) || (next !== null && Date.parse(next) === Date.parse(r.due_at));
+    const undo = inPlace && unchangedSince(r, o.closed_at) ? { id: r.id, from_due_at: r.due_at, reopen: [o.due_at], due_at: o.due_at, next_due_at: Date.parse(r.due_at) === Date.parse(o.due_at) ? null : r.due_at, snoozed_until: null } : null;
+    return [{ row: placed(r, o.due_at, o.closed_at), closedAt: o.closed_at, undo }];
+  });
+  const fromOneOffs = z
+    .array(Stored.extend({ completed_at: Instant }))
+    .parse(oneOffs.data ?? [])
+    .map(({ completed_at, ...r }): DoneReminder => ({
+      row: placed(r, r.due_at, completed_at),
+      closedAt: completed_at,
+      undo: unchangedSince(r, completed_at) ? { id: r.id, from_due_at: r.due_at, reopen: [], due_at: r.due_at, next_due_at: null, snoozed_until: null } : null,
+    }));
+  return [...fromRepeats, ...fromOneOffs].sort((a, b) => a.closedAt.localeCompare(b.closedAt));
 }
 
 /** Undo of a Done (FR-004). False when the reminder changed since (it's then left alone). */

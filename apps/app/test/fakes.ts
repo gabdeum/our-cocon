@@ -172,6 +172,7 @@ export function placedReminder(fields: Partial<PlacedReminder>): PlacedReminder 
     section: 'today',
     on_home: true,
     sort_at: due_at,
+    snoozed: false,
     ...fields,
   };
 }

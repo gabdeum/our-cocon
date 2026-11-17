@@ -10,6 +10,7 @@ import {
   snoozeReminder,
   undoCompleteReminder,
   type CompletedReminder,
+  type DoneReminder,
   type PlacedReminder,
 } from '@cocon/data';
 import type { ReminderActionSource, ReminderSnoozeOption } from '@cocon/schemas';
@@ -160,10 +161,26 @@ export function useReminderActions(ctx: Pick<ReminderContext, 'client' | 'tracke
     }
   };
 
-  /** Undo of a tick. */
-  const untick = async (id: string): Promise<boolean> => {
+  /**
+   * Undo of a tick: one from this screen, or one done earlier today (spec 058: `done`, from
+   * `loadRemindersDoneToday`), which is reopened if nobody moved the reminder since.
+   */
+  const untick = async (id: string, done?: DoneReminder): Promise<boolean> => {
     const entry = ticked.get(id);
-    if (!entry?.done) return false;
+    if (!entry?.done) {
+      if (!done?.undo) return false;
+      withHidden(`${id}|${done.row.due_at}`, true);
+      try {
+        // False: someone changed it since; it stays done.
+        if (!(await undoCompleteReminder(client, done.undo))) throw new Error('moved on');
+        refresh();
+        return true;
+      } catch {
+        withHidden(`${id}|${done.row.due_at}`, false);
+        failed();
+        return false;
+      }
+    }
     withTick(id, null);
     try {
       await undoCompleteReminder(client, entry.done.undo);

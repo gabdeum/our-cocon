@@ -1,14 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { loadCalendarSettings, loadEvents } from '@cocon/data';
-import { todayIn } from '@cocon/calendar';
+import { loadCalendarSettings, loadEvents, loadRemindersDoneToday, loadRemindersInRange, type PlacedReminder } from '@cocon/data';
+import { addDays, dateLabel, todayIn } from '@cocon/calendar';
 import { CalendarScreen } from '../../components/calendar/CalendarScreen';
+import { ReminderDrawerHost, type OpenDrawer } from '../../components/reminders/ReminderDrawerHost';
+import { calendarRemindersKey, type CalendarReminders } from '../../lib/calendar-reminders';
+import { freshReminders, remindersDoneKey } from '../../lib/reminders';
+import { useOnline } from '../../lib/online';
+import { useReminderActions, useReminderContext } from '../../lib/reminder-actions';
+import { useToast } from '../../lib/toast';
+import { strings } from '../../strings/en';
 import { anchorFrom, calendarSettingsKey, entryFrom, eventsKey, viewFrom } from '../../lib/calendar-header';
 import { useCalendarPrefs } from '../../lib/calendar-prefs';
 import { useSession } from '../../lib/session';
 import type { AddPrefill } from '../../components/calendar/CalendarScreen';
+
+/** `reminders_in_range` takes at most 366 days: Agenda's later pages past a year show events only. */
+const REMINDER_DAYS = 366;
+/** Before today only "Leave it" reminders show, on their day: half a year back is plenty. */
+const REMINDER_PAST_DAYS = 183;
 
 /** Add event's extra query (design/flows.md): `&slot=` from Day's bands, `&time=` from Week's grid. */
 const addParams = (prefill?: AddPrefill) => (!prefill ? '' : 'slot' in prefill ? `&slot=${prefill.slot}` : `&time=${prefill.time}`);
@@ -39,6 +51,45 @@ export default function CalendarTab() {
   });
   const onEventWindow = useCallback((w: { from: string; to: string }) => setEventDays((prev) => (prev?.from === w.from && prev.to === w.to ? prev : w)), []);
 
+  // Spec 058: reminders in every view, over the same days (live: 057's ticks and spec 056's sync refetch them).
+  const ctx = useReminderContext();
+  const actions = useReminderActions(ctx);
+  const online = useOnline();
+  const toast = useToast();
+  const [drawer, setDrawer] = useState<OpenDrawer | null>(null);
+  const earliest = addDays(today, -REMINDER_PAST_DAYS);
+  const remindersFrom = eventDays ? (eventDays.from > earliest ? eventDays.from : earliest) : '';
+  const remindersTo = eventDays ? (eventDays.to < addDays(remindersFrom, REMINDER_DAYS) ? eventDays.to : addDays(remindersFrom, REMINDER_DAYS)) : '';
+  const reminderRows = useQuery({
+    queryKey: calendarRemindersKey(familyId ?? '', remindersFrom, remindersTo, timeZone),
+    queryFn: () => loadRemindersInRange(client, remindersFrom, remindersTo, timeZone),
+    enabled: familyId !== null && eventDays !== null && remindersFrom <= remindersTo,
+    placeholderData: (previous) => previous,
+  });
+  // Done today: at the bottom of today until midnight (spec 058).
+  const doneToday = useQuery({ queryKey: remindersDoneKey(familyId ?? '', today, timeZone), queryFn: () => loadRemindersDoneToday(client, timeZone), enabled: familyId !== null });
+  // The actions change every render; the views only need to redraw when the reminders do.
+  const latest = useRef(actions);
+  useEffect(() => {
+    latest.current = actions;
+  });
+  const { ticked, hidden: gone } = actions;
+  const reminders = useMemo<CalendarReminders>(
+    () => ({
+      // Not the copy saved on the device while online: late and done change with the clock.
+      rows: freshReminders(reminderRows, online),
+      ticked,
+      done: freshReminders(doneToday, online),
+      gone,
+      readOnly: !online,
+      onTick: (row: PlacedReminder) => void latest.current.tick(row, 'calendar'),
+      onUntick: (id, dueAt) => void latest.current.untick(id, freshReminders(doneToday, online)?.find((d) => d.row.id === id && d.row.due_at === dueAt)),
+      onNotYet: (date) => toast.show({ text: strings.calendar.reminders.notYet(dateLabel(date)) }),
+      onOpen: (row) => setDrawer({ row, source: 'calendar' }),
+    }),
+    [reminderRows, doneToday, ticked, gone, online, toast, setDrawer],
+  );
+
   // Once each time the tab opens, with the view it opens on; switching views sends calendar_view_changed.
   const opened = useRef({ view, entry });
   useEffect(() => {
@@ -48,6 +99,7 @@ export default function CalendarTab() {
 
   if (state.status !== 'ready') return null;
   return (
+    <>
     <CalendarScreen
       userId={state.userId}
       members={state.members}
@@ -66,6 +118,9 @@ export default function CalendarTab() {
       onAddEvent={(date, prefill) => router.push(`/calendar/new?date=${date}${addParams(prefill)}` as Href)}
       onOpenEvent={(id, date) => router.push(`/calendar/${id}?date=${date}` as Href)}
       monthHint={{ show: loaded && !prefs.month_hint_seen, onDismiss: () => void change({ month_hint_seen: true }) }}
+      reminders={reminders}
     />
+    {drawer ? <ReminderDrawerHost open={drawer} ctx={ctx} actions={actions} onClose={() => setDrawer(null)} /> : null}
+    </>
   );
 }

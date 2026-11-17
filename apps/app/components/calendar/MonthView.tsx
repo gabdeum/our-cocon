@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import type { SlotTimes, WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { FloatingAdd, MonthGrid } from '@cocon/ui';
-import { layoutDaySheet } from '../../lib/calendar-day';
+import { isDayEvent, layoutDaySheet } from '../../lib/calendar-day';
+import { placeForScreen, reminderCounts, type CalendarReminders } from '../../lib/calendar-reminders';
 import {
   INITIALS_MIN_WIDTH,
   eventWindow,
@@ -51,34 +52,67 @@ export interface MonthViewProps {
   onOpenEvent: (id: string, date: string) => void;
   showHint: boolean;
   onDismissHint: () => void;
+  /** Spec 058: a mark on days with reminders, and the reminders in the day sheet with its toggle. */
+  reminders?: CalendarReminders;
+  showReminders?: boolean;
+  onShowReminders?: (on: boolean) => void;
 }
 
 /** Spec 037 (OC-CalMonth): the continuous month grid, the first-visit hint and the add button. */
-export function MonthView({ width, members, myMemberId, events, slotTimes, hidden, month, today, timeZone, weekStartsOn, jump, onMonthShown, onDaySheetOpened, onAddEvent, onOpenEvent, showHint, onDismissHint }: MonthViewProps) {
+export function MonthView({
+  width,
+  members,
+  myMemberId,
+  events,
+  slotTimes,
+  hidden,
+  month,
+  today,
+  timeZone,
+  weekStartsOn,
+  jump,
+  onMonthShown,
+  onDaySheetOpened,
+  onAddEvent,
+  onOpenEvent,
+  showHint,
+  onDismissHint,
+  reminders,
+  showReminders = true,
+  onShowReminders = () => undefined,
+}: MonthViewProps) {
   const range = useMemo(() => monthRange(today, weekStartsOn), [today, weekStartsOn]);
   const look = useMemo(() => memberLook(members), [members]);
   const { from, to } = eventWindow(month);
   const occurrences = useMemo(() => monthOccurrences(events ?? [], from, to, myMemberId, hidden), [events, from, to, myMemberId, hidden]);
   // FR-003: narrow phones show the title alone on chips and bars.
   const initials = width >= INITIALS_MIN_WIDTH;
-  const weekAt = useCallback((index: number) => layoutWeek(index, occurrences, { range, today, look, slotTimes, initials }), [occurrences, range, today, look, slotTimes, initials]);
+  // Spec 058: whether a day's alarm clock fits beside its date depends on the cell's real width and the text size.
+  const [gridWidth, setGridWidth] = useState<number | undefined>(undefined);
+  const { fontScale } = useWindowDimensions();
+  const cellWidth = gridWidth === undefined ? undefined : gridWidth / 7;
+  const { use24h, fade_past: fadePast } = useCalendarDisplay().prefs;
+  const counts = useMemo(
+    () => reminderCounts(placeForScreen(showReminders ? reminders : undefined, { from, to, today, tz: timeZone, members, use24h, hidden }).values()),
+    [showReminders, reminders, from, to, today, timeZone, members, use24h, hidden],
+  );
+  const weekAt = useCallback(
+    (index: number) => layoutWeek(index, occurrences, { range, today, look, slotTimes, initials, reminders: counts, cellWidth, textScale: fontScale }),
+    [occurrences, range, today, look, slotTimes, initials, counts, cellWidth, fontScale],
+  );
   // Opens with the month's first week at the top, and today on screen when it's this month.
   const [initialIndex] = useState(() => firstWeekOfMonth(range, month));
   const keepVisibleIndex = month === `${today.slice(0, 8)}01` ? weekIndexOf(range, today) : undefined;
   // FR-008/FR-009: a tap on a day opens its sheet; the sheet closes before an event or Add opens.
   const now = useNow(timeZone);
-  const { use24h, fade_past: fadePast } = useCalendarDisplay().prefs;
   const [sheetDate, setSheetDate] = useState<string | null>(null);
-  const sheet = useMemo(
-    () => (sheetDate ? layoutDaySheet(sheetDate, occurrences, { today, now, look, slotTimes, members, use24h }) : null),
-    [sheetDate, occurrences, today, now, look, slotTimes, members, use24h],
-  );
+  const dayCtx = useMemo(() => ({ today, now, look, slotTimes, members, use24h }), [today, now, look, slotTimes, members, use24h]);
   const openDay = useCallback(
     (date: string) => {
       setSheetDate(date);
-      onDaySheetOpened(layoutDaySheet(date, occurrences, { today, now, look, slotTimes, members }).rows.length);
+      onDaySheetOpened(layoutDaySheet(date, occurrences, dayCtx).rows.filter(isDayEvent).length);
     },
-    [occurrences, today, now, look, slotTimes, members, onDaySheetOpened],
+    [occurrences, dayCtx, onDaySheetOpened],
   );
   const openEvent = (key: string) => {
     const { id, date } = parseOccurrenceKey(key);
@@ -91,7 +125,7 @@ export function MonthView({ width, members, myMemberId, events, slotTimes, hidde
   );
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
       <MonthGrid
         mutePast={fadePast}
         weekdays={weekdayLetters(weekStartsOn)}
@@ -106,9 +140,16 @@ export function MonthView({ width, members, myMemberId, events, slotTimes, hidde
         addLabel={m.addEvent}
       />
       <FloatingAdd label={m.addEvent} onPress={() => onAddEvent(today)} hint={showHint ? { text: m.hint, actionLabel: m.gotIt, onAction: onDismissHint } : null} />
-      {sheet && sheetDate ? (
+      {sheetDate ? (
         <DaySheet
-          sheet={sheet}
+          date={sheetDate}
+          occurrences={occurrences}
+          ctx={dayCtx}
+          timeZone={timeZone}
+          hidden={hidden}
+          reminders={reminders}
+          showReminders={showReminders}
+          onShowReminders={onShowReminders}
           onClose={() => setSheetDate(null)}
           onOpenEvent={openEvent}
           onAdd={() => {

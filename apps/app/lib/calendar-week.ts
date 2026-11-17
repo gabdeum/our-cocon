@@ -1,4 +1,4 @@
-import { addDays, calendarWordsEn, daysBetween, fromMinutes, layoutDay, layoutSpans, parts, sortSlots, timeRange, toMinutes, weekRange, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
+import { addDays, calendarWordsEn, daysBetween, fromMinutes, layoutDay, layoutSpans, parts, sortSlots, textWidth, timeRange, toMinutes, weekRange, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import { GRID_FIRST_HOUR, GRID_HOURS, HOUR_HEIGHT, type HourGridProps, type WeekAllDayBar, type WeekBlock, type WeekColumn, type WeekDayHead } from '@cocon/ui';
 import { chipLook, eventLook, longDate, occurrenceKey, weekdayLetters, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import { strings } from '../strings/en';
@@ -29,6 +29,30 @@ export interface WeekGridContext {
   now: string;
   /** The member's Time format (spec 029); 24-hour when not given. */
   use24h?: boolean;
+  /** Spec 058: how many reminders show on each day (none while they're hidden). */
+  reminders?: ReadonlyMap<string, number>;
+  /** The view's width in px and the text size multiplier: whether the alarm clocks fit beside the numbers. */
+  width?: number;
+  textScale?: number;
+}
+
+/** HourGrid README: the card's 8 px sides, the 38 px hour labels, 4 on the right and 2 between the 7 day heads. */
+const HEAD_SIDES = 8 + 8 + 38 + 4 + 6 * 2;
+/** The 17 px alarm clock 1 after the 15 px number; today's number is in a 28 px circle. */
+const MARK = 17 + 1;
+
+/**
+ * Spec 058: whether the week's alarm clocks go under the numbers. If one doesn't fit beside its
+ * number, they all go under, so the week's heads stay even.
+ */
+export function marksBelow(dates: readonly string[], ctx: Pick<WeekGridContext, 'today' | 'reminders' | 'width' | 'textScale'>): boolean {
+  if (ctx.width === undefined) return false;
+  const column = (ctx.width - HEAD_SIDES) / 7;
+  return dates.some((date) => {
+    if (!ctx.reminders?.get(date)) return false;
+    const num = date === ctx.today ? 28 : textWidth(String(parts(date).day), 15) * (ctx.textScale ?? 1);
+    return num + MARK > column;
+  });
 }
 
 export type WeekGrid = Pick<HourGridProps, 'days' | 'bars' | 'columns' | 'hourLabels' | 'nowY'>;
@@ -52,12 +76,15 @@ export function layoutWeekGrid(anchor: string, occurrences: readonly MonthOccurr
   const letters = weekdayLetters(ctx.weekStartsOn);
   const inWeek = occurrences.filter((o) => o.starts_on <= end && o.ends_on >= start);
 
+  const below = marksBelow(dates, ctx);
   const days: WeekDayHead[] = dates.map((date, i) => ({
     date,
     letter: letters[i] ?? '',
     num: String(parts(date).day),
-    label: w.dayLabel(dayName(date), longDate(date)),
+    label: strings.calendar.reminders.withCount(w.dayLabel(dayName(date), longDate(date)), ctx.reminders?.get(date) ?? 0),
     today: date === ctx.today,
+    reminders: (ctx.reminders?.get(date) ?? 0) > 0,
+    markBelow: below,
   }));
 
   const spans = inWeek.filter(inAllDayRow).map((o) => ({ o, from: o.starts_on < start ? start : o.starts_on, to: o.ends_on > end ? end : o.ends_on }));

@@ -35,6 +35,7 @@ function placed(n: number, section = 'overdue') {
     late_days: 1,
     section,
     on_home: true,
+    snoozed: false,
     sort_at: `2026-11-09T07:${String(n % 60).padStart(2, '0')}:00+00:00`,
   };
 }
