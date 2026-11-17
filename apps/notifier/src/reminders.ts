@@ -53,7 +53,8 @@ function toEvent(row: unknown): ReminderEvent | null {
 
 type Analytics = (familyId: string) => Tracker;
 
-export function createReminderJob(db: ServiceDb, notifier: Pick<Notifier, 'send'>, analytics: Analytics, now: () => Date = () => new Date()) {
+/** `onlyFamily`: tests only, so a fake clock never touches the other families in the local database. */
+export function createReminderJob(db: ServiceDb, notifier: Pick<Notifier, 'send'>, analytics: Analytics, now: () => Date = () => new Date(), onlyFamily?: string) {
   /** Every family that has an event with a reminder, with its members and home time zone. */
   async function loadFamilies(familyIds: string[]) {
     const [settings, members, devices] = await Promise.all([
@@ -106,7 +107,7 @@ export function createReminderJob(db: ServiceDb, notifier: Pick<Notifier, 'send'
     const today = at.toISOString().slice(0, 10);
     const { data, error } = await db.rpc('reminder_candidates', { p_from: addDays(today, -2), p_to: addDays(today, 3) });
     if (error) throw error;
-    const events = (data ?? []).flatMap((row) => toEvent(row) ?? []);
+    const events = (data ?? []).flatMap((row) => toEvent(row) ?? []).filter((e) => !onlyFamily || e.family_id === onlyFamily);
     if (events.length === 0) return null;
     const { families, timeFormatOf, reached } = await loadFamilies([...new Set(events.map((e) => e.family_id))]);
     let sent = 0;

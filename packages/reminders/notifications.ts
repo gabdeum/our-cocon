@@ -9,8 +9,6 @@ import { en } from './words.en';
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
-/** FR-006: what's due in the next 2 minutes goes out now. */
-export const EARLY_MS = 2 * MINUTE;
 /** A send up to 10 minutes late still goes (a slow tick, a restart); older ones are left. */
 export const LATE_MS = 10 * MINUTE;
 /** FR-001: untimed reminders, and the daily and weekly nudges, at 09:00. */
@@ -130,10 +128,11 @@ export function reminderSendDue(r: NotifiedReminder, quiet: QuietHours, tz: stri
   const from = new Date(now.getTime() - LATE_MS - 24 * HOUR);
   const created = new Date(r.created_at);
   let best: { kind: ReminderNotificationKind; at: Date } | null = null;
-  for (const s of reminderSlots(r, tz, from, new Date(now.getTime() + EARLY_MS))) {
+  for (const s of reminderSlots(r, tz, from, now)) {
     if (s.at < created) continue;
     const at = quietEnd(s.at, quiet, tz) ?? s.at;
-    if (at.getTime() - now.getTime() > EARLY_MS || now.getTime() - at.getTime() > LATE_MS) continue;
+    // FR-006: at its time, never before.
+    if (at > now || now.getTime() - at.getTime() > LATE_MS) continue;
     if (!best || at > best.at || (at.getTime() === best.at.getTime() && RANK[s.kind] > RANK[best.kind])) best = { kind: s.kind, at };
   }
   return best ? { kind: best.kind, slotAt: best.at.toISOString() } : null;

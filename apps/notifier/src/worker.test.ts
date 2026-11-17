@@ -10,6 +10,24 @@ describe('createWorker', () => {
     expect(log.mock.calls).toEqual([['a: 2 sent']]);
   });
 
+  it('ticks at the start of each minute, whenever it started', async () => {
+    vi.useFakeTimers({ now: new Date('2026-11-16T22:28:37Z') });
+    const run = vi.fn(async () => null);
+    const worker = createWorker([{ name: 'a', run }], 60_000, () => {});
+    worker.start();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(run).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(22_999);
+    expect(run).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(new Date().toISOString()).toBe('2026-11-16T22:29:00.000Z');
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(run).toHaveBeenCalledTimes(3);
+    worker.stop();
+    vi.useRealTimers();
+  });
+
   it('skips a tick while the previous one is still running', async () => {
     let release: () => void = () => {};
     const run = vi.fn(() => (run.mock.calls.length > 1 ? Promise.resolve(null) : new Promise<null>((resolve) => { release = () => resolve(null); })));

@@ -14,7 +14,7 @@ Screen: `design/screens/OC-NotifLockTodo.dc.html` (content and order only; iOS d
 - **FR-003 Recipients.** The assignee only, on every enabled device. `everyone` → every member with the app. A managed member without the app (James) → everyone with the app (same rule as event reminders).
 - **FR-004 Actions** on the notification: "Done", "In 1 hour" (only with a time), "Tomorrow". Run without opening the app (background action calling the same RPCs). Tapping the notification opens the Reminders screen with the drawer open (`/reminders?open={id}`).
 - **FR-005 Stop rules.** Done, snooze, delete, or the assignee changing cancels pending nudges for that reminder. Snoozed reminders get nothing until `snoozed_until` (then FR-001 restarts from there).
-- **FR-006 Sending.** `apps/notifier` minute tick: apply FR-005 of 056 (missed), compute due nudges for the next 2 minutes, skip ones already in `reminder_nudges` (`reminder_id`, `late_from`, `kind`, `slot_at`, `member_id` — unique), send through `packages/notify` with thread `reminders-todo`, interruption level `active`.
+- **FR-006 Sending.** `apps/notifier` minute tick: apply FR-005 of 056 (missed), compute the nudges due now (at their time, never before), skip ones already in `reminder_nudges` (`reminder_id`, `late_from`, `kind`, `slot_at`, `member_id` — unique), send through `packages/notify` with thread `reminders-todo`, interruption level `active`.
 - **FR-007 Settings.** Menu › Notifications gets a "Reminders" card: switch "Reminders" / "Things to do, and nudges until they're done"; row "Quiet hours" → "22:00–07:00" › (two time pickers). Web shows the existing "Notifications work in the iPhone app." line.
 
 ## Success criteria
@@ -43,3 +43,4 @@ Screen: `design/screens/OC-NotifLockTodo.dc.html` (content and order only; iOS d
   - The Reminders card and the Quiet hours sheet aren't drawn: their copy is in `OC-SettingsNotif.md`. Quiet hours apply on every phone (they decide when the server sends); the switch is per phone like the others. Changes are tracked as `notification_settings_changed` (`todo_on`, `quiet_hours` with value `changed`, never the times).
   - Existing events gain a value: `reminder_completed` and `reminder_snoozed` with source `notification` (the actions), `reminder_drawer_opened` with source `notification` (a tap). `reminder_notification_action` is sent only with someone signed in.
   - The sheet's line (L149) gains "then each morning" / "then once a week while it’s late" for "Next day" and "Next week".
+- 2026-11-16: Fix. Notifications go out at their time, never before: they used to go out on the tick up to 2 minutes early ("Now: …" at 22:28 for 22:30). Event reminders (049) work the same way now.

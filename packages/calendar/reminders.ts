@@ -144,8 +144,6 @@ export interface DueReminder {
   recipients: ReminderRecipient[];
 }
 
-/** A reminder goes out at most this long before its time (the notifier runs every minute). */
-const EARLY_MS = 30_000;
 /** Edge case: after the server was down, a reminder this late is skipped. */
 const LATE_MS: Record<ReminderKind, number> = { minutes_15: 30 * 60_000, hour_before: 30 * 60_000, morning_of: 30 * 60_000, day_before: 2 * 3_600_000 };
 
@@ -169,8 +167,8 @@ export function remindersDue(events: readonly ReminderEvent[], families: Readonl
     for (const occurrence of occurrences) {
       const { date, time } = reminderAt(occurrence, event.reminder, family.slotTimes);
       const at = zonedInstant(date, time, family.timeZone);
-      const early = at.getTime() - now.getTime();
-      if (early > EARLY_MS || -early > LATE_MS[event.reminder]) continue;
+      // At its time, never before (the notifier runs every minute).
+      if (at > now || now.getTime() - at.getTime() > LATE_MS[event.reminder]) continue;
       if (new Date(event.created_at).getTime() > at.getTime()) continue;
       const recipients = reminderRecipients(occurrence, family.members);
       if (recipients.length) due.push({ occurrence, familyId: event.family_id, kind: event.reminder, at, recipients });

@@ -34,13 +34,15 @@ type Candidate = z.infer<typeof Candidate>;
 
 type Analytics = (familyId: string) => Tracker;
 
-export function createTodoJob(db: ServiceDb, notifier: Pick<Notifier, 'send'>, analytics: Analytics, now: () => Date = () => new Date()) {
+/** `onlyFamily`: tests only, so a fake clock never touches the other families in the local database. */
+export function createTodoJob(db: ServiceDb, notifier: Pick<Notifier, 'send'>, analytics: Analytics, now: () => Date = () => new Date(), onlyFamily?: string) {
+  const ours = (row: { family_id: string }) => !onlyFamily || row.family_id === onlyFamily;
   /** L146: each family with a repeat whose next date has come, in its home time zone. */
   async function catchUp(at: Date): Promise<number> {
     const { data, error } = await db.rpc('todo_catch_up_families', { p_now: at.toISOString() });
     if (error) throw error;
     let missed = 0;
-    for (const f of data ?? []) {
+    for (const f of (data ?? []).filter(ours)) {
       const n = await catchUpReminders(db, f.time_zone, at, f.family_id);
       for (let i = 0; i < n; i++) analytics(f.family_id).track('reminder_missed', {});
       missed += n;
@@ -90,7 +92,7 @@ export function createTodoJob(db: ServiceDb, notifier: Pick<Notifier, 'send'>, a
     const missed = await catchUp(at);
     const { data, error } = await db.rpc('todo_candidates', { p_now: at.toISOString() });
     if (error) throw error;
-    const candidates = (data ?? []).flatMap((row) => {
+    const candidates = (data ?? []).filter(ours).flatMap((row) => {
       const parsed = Candidate.safeParse(row);
       return parsed.success ? [parsed.data] : [];
     });

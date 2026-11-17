@@ -158,9 +158,9 @@ describe('remindersDue (FR-005, SC-001)', () => {
     expect(remindersDue([birthday], families, at('2026-11-09', '18:00'))).toHaveLength(1);
     expect(remindersDue([birthday], families, at('2026-11-09', '17:58'))).toHaveLength(0);
   });
-  it('goes out from 30 s before its time', () => {
-    expect(who(swim(), new Date(at('2026-11-08', '13:30').getTime() - 30_000))).toHaveLength(1);
-    expect(who(swim(), new Date(at('2026-11-08', '13:30').getTime() - 31_000))).toHaveLength(0);
+  it('goes out at its time, never before', () => {
+    expect(who(swim(), at('2026-11-08', '13:30'))).toHaveLength(1);
+    expect(who(swim(), new Date(at('2026-11-08', '13:30').getTime() - 1_000))).toHaveLength(0);
   });
   it('skips a reminder more than 30 minutes late, 2 hours for the day before', () => {
     expect(who(swim(), at('2026-11-08', '14:00'))).toHaveLength(1);

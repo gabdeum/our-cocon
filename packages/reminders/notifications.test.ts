@@ -30,7 +30,7 @@ describe('reminderSendDue (SC-001)', () => {
     ['timed hour, 1 hour before', reminder('15:00', 'hour'), WED, '14:00', QUIET, { kind: 'before', at: [WED, '14:00'] }],
     ['timed hour, between', reminder('15:00', 'hour'), WED, '14:30', QUIET, null],
     ['timed hour, at its time', reminder('15:00', 'hour'), WED, '15:00', QUIET, { kind: 'due', at: [WED, '15:00'] }],
-    ['timed hour, a tick 2 minutes early', reminder('15:00', 'hour'), WED, '14:58', QUIET, { kind: 'due', at: [WED, '15:00'] }],
+    ['timed hour, never early', reminder('15:00', 'hour'), WED, '14:59', QUIET, null],
     ['timed hour, a tick 5 minutes late', reminder('15:00', 'hour'), WED, '15:05', QUIET, { kind: 'due', at: [WED, '15:00'] }],
     ['timed hour, over 10 minutes late', reminder('15:00', 'hour'), WED, '15:11', QUIET, null],
     ['timed hour, first nudge', reminder('15:00', 'hour'), WED, '16:00', QUIET, { kind: 'nudge', at: [WED, '16:00'] }],

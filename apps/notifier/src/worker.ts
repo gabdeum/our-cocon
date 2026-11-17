@@ -4,12 +4,13 @@ import { createServer, type Server } from 'node:http';
 export type Job = { name: string; run: () => Promise<string | null> };
 
 /**
- * Runs every job once per interval. A tick that's still running when the next is due is skipped,
+ * Runs every job once per interval, on the interval's boundary (the start of each minute), so a
+ * notification due at 22:30 goes out at 22:30, not up to a minute after. A tick that's still running when the next is due is skipped,
  * so a slow Expo or database never piles up sends. A failing job is logged and the others still run.
  */
 export function createWorker(jobs: Job[], intervalMs: number, log: (line: string) => void = console.log, now: () => number = Date.now) {
   let running = false;
-  let timer: ReturnType<typeof setInterval> | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   let lastTickAt: number | null = null;
 
   async function tick() {
@@ -36,10 +37,16 @@ export function createWorker(jobs: Job[], intervalMs: number, log: (line: string
     tick,
     start() {
       void tick();
-      timer = setInterval(() => void tick(), intervalMs);
+      const next = () => {
+        timer = setTimeout(() => {
+          void tick();
+          next();
+        }, intervalMs - (now() % intervalMs));
+      };
+      next();
     },
     stop() {
-      if (timer) clearInterval(timer);
+      if (timer) clearTimeout(timer);
     },
     /** Healthy once a tick has finished within the last three intervals. */
     healthy: () => lastTickAt !== null && now() - lastTickAt < intervalMs * 3,

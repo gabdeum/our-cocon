@@ -17,7 +17,6 @@ export {
   type ReminderTiming,
 } from './rules';
 export {
-  EARLY_MS,
   LATE_MS,
   MORNING,
   quietEnd,

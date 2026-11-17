@@ -47,7 +47,7 @@ describe.skipIf(!local)('event reminders against local Supabase', () => {
     return new Response(JSON.stringify({ data: body.map((m) => ({ status: 'ok', id: `ticket-${m.to}` })) }));
   }) as unknown as typeof globalThis.fetch;
   const analytics = () => createTracker({ capture: (event, props) => tracked.push({ event, props }), identify: () => undefined, group: () => undefined, reset: () => undefined });
-  const job = () => createReminderJob(admin, createNotifier(admin, { fetch }, () => now), analytics, () => now);
+  const job = () => createReminderJob(admin, createNotifier(admin, { fetch }, () => now), analytics, () => now, ids.family);
   const gabrielId = () => ids.gabriel as string;
   const sentTo = (name: string) => sent.filter((m) => m.to === token(name));
 
