@@ -83,12 +83,13 @@ export async function undoActivity(client: Pick<Client, 'rpc'>, key: string, ski
 type Members = readonly Pick<Member, 'id' | 'user_id' | 'display_name' | 'color' | 'joined_at'>[];
 const nameOf = (id: string | null, members: Members) => members.find((m) => m.user_id === id)?.display_name ?? strings.recipe.formerMember;
 
-/** "Eva added Pumpkin soup", "Gabriel ticked 4 items", "Eva added a private event". */
-export function entryTitle(entry: Pick<ActivityEntry, 'kind' | 'count' | 'names' | 'recipe_name' | 'event_name' | 'event_secret'>, who: string): string {
+/** "Eva added Pumpkin soup", "Gabriel ticked 4 items", "Eva added a private event", "Eva ticked off Water the plants". */
+export function entryTitle(entry: Pick<ActivityEntry, 'kind' | 'count' | 'names' | 'recipe_name' | 'event_name' | 'event_secret' | 'reminder_name'>, who: string): string {
   const t = strings.activity.title;
   const a = strings.activity;
   const recipe = entry.recipe_name ?? a.aRecipe;
   const event = entry.event_name ?? (entry.event_secret ? a.privateEvent : a.anEvent);
+  const reminder = entry.reminder_name ?? a.aReminder;
   const first = entry.names[0] ?? '';
   const kind: ActivityKind = entry.kind;
   switch (kind) {
@@ -109,13 +110,21 @@ export function entryTitle(entry: Pick<ActivityEntry, 'kind' | 'count' | 'names'
     case 'event_deleted':
     case 'event_date_deleted':
       return t[kind](who, event);
+    case 'reminder_created':
+    case 'reminder_edited':
+    case 'reminder_completed':
+    case 'reminder_snoozed':
+    case 'reminder_deleted':
+    case 'reminder_restored':
+    case 'reminder_reopened':
+      return t[kind](who, reminder);
     case 'other':
       return t.other(who, entry.count);
   }
 }
 
 const moduleOf = (kind: ActivityKind): keyof typeof strings.activity.module | null =>
-  kind.startsWith('recipe_') ? 'recipes' : kind.startsWith('groceries_') ? 'groceries' : kind.startsWith('event_') ? 'calendar' : null;
+  kind.startsWith('recipe_') ? 'recipes' : kind.startsWith('groceries_') ? 'groceries' : kind.startsWith('event_') ? 'calendar' : kind.startsWith('reminder_') ? 'reminders' : null;
 
 /** "Wed, 10:00": when the entry's event is, as the reader may see it. */
 function eventWhen(when: NonNullable<ActivityEntry['event_when']>, use24h: boolean): string {

@@ -104,7 +104,7 @@ function timeOf(f: Pick<Fields, 'slots' | 'start_time' | 'end_time' | 'all_day'>
   return { time_type: 'custom', slots: [], start_time: f.start_time, end_time: f.end_time };
 }
 
-const recurrenceOf = (r: NonNullable<Fields['repeat']>): NonNullable<EventInput['recurrence']> => ({
+export const recurrenceOf = (r: NonNullable<Fields['repeat']>): NonNullable<EventInput['recurrence']> => ({
   freq: r.freq,
   ...(r.weekdays && (r.freq === 'weekly' || r.freq === 'biweekly') ? { weekdays: [...new Set(r.weekdays)].sort((a, b) => a - b) } : {}),
   ends: r.ends ?? { type: 'never' },

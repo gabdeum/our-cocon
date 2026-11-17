@@ -26,6 +26,8 @@ const groceries: ActivityEntry = {
   event_name: null,
   event_when: null,
   event_secret: false,
+  reminder_id: null,
+  reminder_name: null,
   undone_by: null,
   undone_at: null,
   undo_action: null,

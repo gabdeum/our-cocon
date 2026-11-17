@@ -83,7 +83,7 @@ export function member(cal: Calendar, value: string): CalendarMember {
 const nameOf = (cal: Calendar, who: EventMember) => (who === 'everyone' ? 'Everyone' : who === 'others' ? 'Others' : (cal.members.find((m) => m.id === who)?.name ?? null));
 
 /** "every week on Saturday", "every month", "every year, 10 times", "every 2 weeks on Monday, until Dec 18". */
-function repeatWords(r: NonNullable<StoredEvent['recurrence']>): string {
+export function repeatWords(r: NonNullable<StoredEvent['recurrence']>): string {
   const days = r.weekdays?.map((d) => calendarWordsEn.weekdays[d]).join(' and ');
   const every = { daily: 'every day', weekly: 'every week', biweekly: 'every 2 weeks', monthly: 'every month', yearly: 'every year' }[r.freq];
   const on = days && (r.freq === 'weekly' || r.freq === 'biweekly') ? ` on ${days}` : '';

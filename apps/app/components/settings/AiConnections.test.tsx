@@ -65,11 +65,13 @@ describe('AI assistants', () => {
     expect(screen.getByRole('heading', { name: 'What AI can do' })).toBeTruthy();
     expect(screen.getByRole('switch', { name: 'Create & edit recipes' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('switch', { name: 'Delete recipes' }).getAttribute('aria-checked')).toBe('false');
-    // Spec 044: "Add & change events" sits between the grocery list and deleting recipes.
+    // Spec 044: "Add & change events" sits between the grocery list and deleting recipes; spec 060's
+    // "Add & change reminders" right after it.
     expect(screen.getAllByRole('switch').map((s) => s.getAttribute('aria-label'))).toEqual([
       'Create & edit recipes',
       'Change the grocery list',
       'Add & change events',
+      'Add & change reminders',
       'Delete recipes',
     ]);
     expect(screen.getByText('Try saying')).toBeTruthy();
@@ -166,6 +168,14 @@ describe('AI assistants', () => {
     await flush();
     expect(onSetPermission).toHaveBeenCalledWith('events', false);
     expect(tracker.track).toHaveBeenCalledWith('ai_permission_changed', { permission: 'events', allowed: false });
+  });
+
+  it('spec 060 FR-002: "Add & change reminders" turns off like the others', async () => {
+    const { tracker, onSetPermission } = setup();
+    fireEvent.click(screen.getByRole('switch', { name: 'Add & change reminders' }));
+    await flush();
+    expect(onSetPermission).toHaveBeenCalledWith('reminders', false);
+    expect(tracker.track).toHaveBeenCalledWith('ai_permission_changed', { permission: 'reminders', allowed: false });
   });
 
   it('a switch that couldn’t save goes back and says so', async () => {

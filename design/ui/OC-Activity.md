@@ -23,9 +23,11 @@ One per AI tool call (spec 026 FR-001), or one action in the app (spec 028 FR-00
 | Done items cleared | "… cleared 4 done items" · "… cleared 1 done item" |
 | Event added · changed · deleted | "Gabriel added Pediatrician" · "… edited …" · "… deleted …" (AI: "Restore" while in Recently deleted, 30 days); "a private event" when the reader can't see it, "an event" once it's gone for good |
 | One date of a repeating event deleted (AI) | "… deleted one date of Swim" |
+| Reminder added · changed · ticked off · snoozed · deleted (spec 060, 032-later L144) | "Eva added Water the plants" · "… edited …" · "… ticked off …" · "… snoozed …" · "… deleted …" (AI: "Restore" while in Recently deleted, 30 days); "a reminder" once it's gone for good |
+| Reminder restored · reopened (app only; reopened is a tick's Undo) | "Eva restored Water the plants" · "Eva reopened Water the plants" |
 | Anything else | "… made 3 changes" · "… made 1 change" |
 
-Badge: the person's avatar in their color; an AI change has "AI" in a rounded square in their color with an olive ring. Sub-line: "{module} · {detail} · via {assistant} · {timeAgo}" — module Recipes, Groceries or Calendar; detail the event's day and time ("Wed, 10:00") or "from {recipe}"; "via" only for AI changes ("an AI assistant" for one we can't name); time "just now", "12 min ago", "4 h ago", "2 days ago". "Former member" for someone who left. Undo and its states as on OC-Home (States); the family's own changes have no Undo.
+Badge: the person's avatar in their color; an AI change has "AI" in a rounded square in their color with an olive ring. Sub-line: "{module} · {detail} · via {assistant} · {timeAgo}" — module Recipes, Groceries, Calendar or Reminders; detail the event's day and time ("Wed, 10:00") or "from {recipe}"; "via" only for AI changes ("an AI assistant" for one we can't name); time "just now", "12 min ago", "4 h ago", "2 days ago". "Former member" for someone who left. Undo and its states as on OC-Home (States); the family's own changes have no Undo.
 
 ## States
 | State | Copy and behaviour |
@@ -38,4 +40,5 @@ Badge: the person's avatar in their color; an AI change has "AI" in a rounded sq
 | Filters match nothing | "Nothing matches these filters." |
 
 ## Changelog
+- 2026-11-17 (spec 060): reminder entries (module "Reminders"), from assistants and the app; catching up on missed repeats isn't an entry.
 - 2026-11-12 (spec 053): 20 entries a page (was 50); "Show more" pages by a stable cursor and survives live updates; failures are warn toasts with Try again.

@@ -106,7 +106,7 @@ export const strings = {
     /** An app that connected but isn't one of the three (named by itself, so in quotes). */
     otherName: (name: string | null) => (name ? `“${name}”` : 'Another AI app'),
     permissionsHeading: 'What AI can do',
-    permissions: { recipes_edit: 'Create & edit recipes', groceries: 'Change the grocery list', events: 'Add & change events', recipes_delete: 'Delete recipes' },
+    permissions: { recipes_edit: 'Create & edit recipes', groceries: 'Change the grocery list', events: 'Add & change events', reminders: 'Add & change reminders', recipes_delete: 'Delete recipes' },
     allowed: 'Allowed',
     notAllowed: 'Not allowed',
     permissionLead: 'For the AI assistants you connect. Everyone in your family chooses for their own.',
@@ -234,13 +234,22 @@ export const strings = {
       event_edited: (who: string, event: string) => `${who} edited ${event}`,
       event_deleted: (who: string, event: string) => `${who} deleted ${event}`,
       event_date_deleted: (who: string, event: string) => `${who} deleted one date of ${event}`,
+      // Spec 060 and 032-later L144: reminders.
+      reminder_created: (who: string, reminder: string) => `${who} added ${reminder}`,
+      reminder_edited: (who: string, reminder: string) => `${who} edited ${reminder}`,
+      reminder_completed: (who: string, reminder: string) => `${who} ticked off ${reminder}`,
+      reminder_snoozed: (who: string, reminder: string) => `${who} snoozed ${reminder}`,
+      reminder_deleted: (who: string, reminder: string) => `${who} deleted ${reminder}`,
+      reminder_restored: (who: string, reminder: string) => `${who} restored ${reminder}`,
+      reminder_reopened: (who: string, reminder: string) => `${who} reopened ${reminder}`,
       other: (who: string, n: number) => (n === 1 ? `${who} made 1 change` : `${who} made ${n} changes`),
     },
     /** In a title when the reader may not see the event, or it's gone for good. */
     privateEvent: 'a private event',
     anEvent: 'an event',
     aRecipe: 'a recipe',
-    module: { recipes: 'Recipes', groceries: 'Groceries', calendar: 'Calendar' },
+    aReminder: 'a reminder',
+    module: { recipes: 'Recipes', groceries: 'Groceries', calendar: 'Calendar', reminders: 'Reminders' },
     /** "from Leek & bacon quiche", in the sub-line of grocery items added from a recipe. */
     fromRecipe: (recipe: string) => `from ${recipe}`,
     via: (assistant: string) => `via ${assistant}`,
