@@ -10,7 +10,6 @@ afterEach(cleanup);
 
 const tz = 'Europe/Paris';
 // Wednesday, Nov 11 at 15:00 Paris.
-const now = new Date('2026-11-11T14:00:00.000Z');
 const plants = placedReminder({
   title: 'Water the plants',
   has_time: false,
@@ -33,12 +32,8 @@ function setup(over: Partial<RemindersCardProps> = {}) {
     today: '2026-11-11',
     tz,
     use24h: true,
-    now,
     onToggle: vi.fn(),
-    onSnooze: vi.fn(),
-    onPickDate: vi.fn(),
-    onEdit: vi.fn(),
-    onDelete: vi.fn(),
+    onOpen: vi.fn(),
     onAdd: vi.fn(),
     onSeeAll: vi.fn(),
     ...over,
@@ -90,45 +85,22 @@ describe('RemindersCard', () => {
     expect(p.onToggle).toHaveBeenCalledWith(checkup, true);
   });
 
-  it('snoozes from ⋮, with In 1 hour only for a reminder with a time', () => {
+  it('opens a row’s drawer from anywhere right of its dot, with no ⋮ menu (spec 058)', () => {
     const p = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'More options for Book James’s check-up' }));
-    expect(screen.getByText('Snooze until')).toBeTruthy();
-    expect(screen.getAllByRole('menuitem').map((m) => m.getAttribute('aria-label') ?? m.textContent)).toEqual([
-      'In 1 hour, 16:00',
-      'Tomorrow, Thu 12',
-      'Next week, Wed 18',
-      'Next month, Fri, Dec 11',
-      'Pick a date…',
-      'Edit',
-      'Delete reminder',
-    ]);
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Tomorrow, Thu 12' }));
-    expect(p.onSnooze).toHaveBeenCalledWith(checkup, 'tomorrow');
-
-    fireEvent.click(screen.getByRole('button', { name: 'More options for Water the plants' }));
-    expect(screen.queryByRole('menuitem', { name: /In 1 hour/ })).toBeNull();
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Pick a date…' }));
-    expect(p.onPickDate).toHaveBeenCalledWith(plants);
+    // Spec 058: no ⋮ menu; the whole row right of the dot opens the drawer (snooze, edit, delete live there).
+    expect(screen.queryByRole('button', { name: /^More options/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Open Book James’s check-up' }));
+    expect(p.onOpen).toHaveBeenCalledWith(checkup);
+    fireEvent.click(screen.getByText('2d late'));
+    expect(p.onOpen).toHaveBeenLastCalledWith(plants);
   });
 
-  it('edits, and confirms before deleting a repeating reminder', () => {
-    const p = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'More options for Call the car insurance' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
-    expect(p.onEdit).toHaveBeenCalledWith(insurance);
-
-    fireEvent.click(screen.getByRole('button', { name: 'More options for Call the car insurance' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete reminder' }));
-    expect(p.onDelete).toHaveBeenCalledWith(insurance);
-
-    fireEvent.click(screen.getByRole('button', { name: 'More options for Water the plants' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete reminder' }));
-    expect(p.onDelete).toHaveBeenCalledTimes(1);
-    const dialog = screen.getByRole('alertdialog', { name: 'Delete all future reminders?' });
-    expect(within(dialog).getByText('Every date of “Water the plants” goes. You can bring it back from Recently deleted for 30 days.')).toBeTruthy();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete reminder' }));
-    expect(p.onDelete).toHaveBeenLastCalledWith(plants);
+  it('a ticked row stays, struck through, and opens nothing', () => {
+    const p = setup({ rows: [{ row: checkup, done: true }] });
+    expect(screen.getByText('Done just now')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Open Book James’s check-up' })).toBeNull();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Mark not done: Book James’s check-up' }));
+    expect(p.onToggle).toHaveBeenCalledWith(checkup, true);
   });
 
   it("can't change anything offline", () => {

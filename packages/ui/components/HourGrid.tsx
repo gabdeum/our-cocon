@@ -33,8 +33,10 @@ export interface WeekDayHead {
   /** "Sunday October 25". */
   label: string;
   today: boolean;
-  /** Reminders are due that day: an alarm clock the number's size beside it (spec 058). */
+  /** Reminders are due that day: an alarm clock beside the number (spec 058). */
   reminders?: boolean;
+  /** The week's alarm clocks go under the numbers (one didn't fit beside its number). */
+  markBelow?: boolean;
 }
 
 export type WeekAllDayBar = Omit<EventBarProps, "onPress" | "size"> & {
@@ -117,8 +119,8 @@ function DayHead({ day, onPress }: { day: WeekDayHead; onPress: () => void }) {
       <Text size={12} weight="900" color="ink-muted">
         {day.letter}
       </Text>
-      {/* Spec 058: the alarm clock wraps under the number when the column is too narrow for both. */}
-      <View className="min-h-[28px] max-w-full flex-row flex-wrap items-center justify-center gap-[1px]">
+      {/* Spec 058: the alarm clock beside the number, or under it for the whole week when one doesn't fit. */}
+      <View className={cn('items-center justify-center gap-[1px]', !day.markBelow && 'flex-row')}>
         {day.today ? (
           <View className="h-[28px] w-[28px] items-center justify-center rounded-full bg-olive">
             <Text size={15} weight="900" color="on-olive">

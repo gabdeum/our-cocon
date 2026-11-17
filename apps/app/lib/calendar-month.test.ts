@@ -243,26 +243,26 @@ describe('the alarm clock beside the date (spec 058)', () => {
     expect(markFitsBeside('2026-11-03', { today: TODAY, cellWidth: 33, textScale: 2 })).toBe(false);
   });
 
-  it('wraps to the first row, and the whole week starts one row lower so bars stay lined up', () => {
-    const trip = ev({ title: 'Lyon trip', time_type: 'all_day', slots: [], starts_on: '2026-11-02', ends_on: '2026-11-04' });
+  it('wraps to that day’s first row only: its chips start lower, a bar through it skips it, other days don’t move', () => {
+    const trip = ev({ title: 'Lyon trip', time_type: 'all_day', slots: [], starts_on: '2026-11-01', ends_on: '2026-11-03' });
     const swim = ev({ title: 'Swim', starts_on: '2026-11-05', ends_on: '2026-11-05' });
     const fits = nov([trip, swim], [['2026-11-01', 1], ['2026-11-03', 2]], 80);
     expect(fits.cells.map((c) => c.reminders)).toEqual([true, false, true, false, false, false, false]);
-    expect(fits.bars.map((b) => b.lane)).toEqual([0]);
-    expect(fits.cells[4]?.items.map((i) => i.kind)).toEqual(['chip']);
+    expect(fits.bars.map((b) => [b.column, b.days, b.lane])).toEqual([[0, 3, 0]]);
 
     const wraps = nov([trip, swim], [['2026-11-01', 1], ['2026-11-03', 2]], 46);
     expect(wraps.cells.map((c) => c.reminders)).toEqual([false, false, true, false, false, false, false]);
     expect(wraps.cells[0]?.items).toEqual([{ kind: 'space', key: 'space-0', mark: true }]);
-    expect(wraps.bars.map((b) => b.lane)).toEqual([1]);
-    expect(wraps.cells[4]?.items.map((i) => (i.kind === 'space' ? ['space', i.mark] : ['chip']))).toEqual([['space', false], ['chip']]);
-    expect(wraps.cells[4]?.more).toBeNull();
+    // The trip's bar runs from the 2nd; the 1st counts it in "+1" (its label and day sheet still name it).
+    expect(wraps.bars.map((b) => [b.column, b.days, b.lane])).toEqual([[1, 2, 0]]);
+    expect(wraps.cells[0]?.more).toBe('+1');
+    expect(wraps.cells[4]?.items.map((i) => i.kind)).toEqual(['chip']);
   });
 
   it('a full day keeps one row fewer and counts the rest in "+N"', () => {
-    const five = Array.from({ length: 5 }, (_, i) => ev({ title: `E${i}`, starts_on: '2026-11-05', ends_on: '2026-11-05' }));
-    expect(nov(five, [], 46).cells[4]?.more).toBeNull();
-    const wrapped = nov(five, [['2026-11-01', 1]], 46).cells[4];
+    const five = Array.from({ length: 5 }, (_, i) => ev({ title: `E${i}`, starts_on: '2026-11-01', ends_on: '2026-11-01' }));
+    expect(nov(five, [], 46).cells[0]?.more).toBeNull();
+    const wrapped = nov(five, [['2026-11-01', 1]], 46).cells[0];
     expect(wrapped?.items.filter((i) => i.kind === 'chip')).toHaveLength(3);
     expect(wrapped?.more).toBe('+2');
   });

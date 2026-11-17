@@ -218,8 +218,8 @@ export function markFitsBeside(date: string, ctx: Pick<WeekContext, 'today' | 'c
  * its first to its last day in the row, stacked in rows. Days under a bar keep that row empty. A day
  * shows five rows when everything fits, else four and "+N" for the rest of the visible events; a
  * bar is drawn only over the days whose rows reach its lane. Spec 058: when a day's alarm clock
- * doesn't fit beside its date, it takes the first row, and the whole week's chips and bars start one
- * row lower so the bars stay lined up.
+ * doesn't fit beside its date, it takes that day's first row: its chips start one row lower, and a
+ * bar in the top lane leaves that day out (it's split around it) so it never covers the clock.
  */
 export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[], ctx: WeekContext): MonthWeek {
   const start = weekStartAt(ctx.range, index);
@@ -230,10 +230,8 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
   const below = new Set(
     Array.from({ length: 7 }, (_, d) => addDays(start, d)).filter((date) => (ctx.reminders?.get(date) ?? 0) > 0 && !markFitsBeside(date, ctx)),
   );
-  // The alarm clocks' row, above every bar and chip of the week.
-  const shift = below.size ? 1 : 0;
-  const lanes = new Map(layoutSpans(spans.map((s) => ({ id: occurrenceKey(s.o), from: s.from, to: s.to }))).map((l) => [l.id, l.lane + shift]));
-  const laneOf = (s: (typeof spans)[number]) => lanes.get(occurrenceKey(s.o)) ?? shift;
+  const lanes = new Map(layoutSpans(spans.map((s) => ({ id: occurrenceKey(s.o), from: s.from, to: s.to }))).map((l) => [l.id, l.lane]));
+  const laneOf = (s: (typeof spans)[number]) => lanes.get(occurrenceKey(s.o)) ?? 0;
 
   const days = Array.from({ length: 7 }, (_, d) => {
     const date = addDays(start, d);
@@ -243,9 +241,11 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
       .map((o) => ({ o, at: startMinutes(o, ctx.slotTimes) }))
       .sort((a, b) => a.at - b.at || a.o.title.localeCompare(b.o.title))
       .map((x) => x.o);
+    // The alarm clock's row, when it's below the date: no bar or chip in it.
+    const reserved = below.has(date) ? 1 : 0;
     // Five rows if every bar's lane and every chip fit in them, else four and "+N".
-    const fits = covering.every((s) => laneOf(s) < ROWS_PER_CELL) && singles.length <= ROWS_PER_CELL - covering.length - shift;
-    return { date, covering, singles, rows: fits ? ROWS_PER_CELL : ROWS_PER_CELL - 1 };
+    const fits = covering.every((s) => laneOf(s) >= reserved && laneOf(s) < ROWS_PER_CELL) && singles.length <= ROWS_PER_CELL - covering.length - reserved;
+    return { date, covering, singles, reserved, rows: fits ? ROWS_PER_CELL : ROWS_PER_CELL - 1 };
   });
 
   // A bar runs over the days whose rows reach its lane, in one piece per run of such days.
@@ -255,7 +255,7 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
     let from: string | null = null;
     for (let d = daysBetween(start, s.from); d <= daysBetween(start, s.to) + 1; d++) {
       const day = days[d];
-      if (day && day.date <= s.to && lane < day.rows) {
+      if (day && day.date <= s.to && lane >= day.reserved && lane < day.rows) {
         from ??= day.date;
         continue;
       }
@@ -277,9 +277,9 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
     }
   }
 
-  const cells: MonthCell[] = days.map(({ date, covering, singles, rows }) => {
+  const cells: MonthCell[] = days.map(({ date, covering, singles, reserved, rows }) => {
     const { month, day } = parts(date);
-    const busyRows = new Set([...(shift ? [0] : []), ...covering.map(laneOf).filter((lane) => lane < rows)]);
+    const busyRows = new Set([...(reserved ? [0] : []), ...covering.map(laneOf).filter((lane) => lane >= reserved && lane < rows)]);
     const items: MonthCellItem[] = [];
     let next = 0;
     for (let row = 0; row < rows; row++) {
@@ -287,10 +287,10 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
       if (o) {
         next++;
         items.push({ kind: 'chip', key: occurrenceKey(o), ...chipLook(o.members, o.title, ctx.look, ctx.initials) });
-      } else if (row < shift) items.push({ kind: 'space', key: `space-${row}`, mark: below.has(date) });
+      } else if (row < reserved) items.push({ kind: 'space', key: `space-${row}`, mark: true });
       else if ([...busyRows].some((r) => r >= row)) items.push({ kind: 'space', key: `space-${row}` });
     }
-    const shown = next + busyRows.size - shift;
+    const shown = next + busyRows.size - reserved;
     const total = singles.length + covering.length;
     return {
       date,

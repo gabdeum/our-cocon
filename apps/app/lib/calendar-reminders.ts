@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { addDays, calendarWordsEn, dateLabel, daysBetween, formatTime, timeIn, todayIn, toMinutes, weekday } from '@cocon/calendar';
-import type { PlacedReminder } from '@cocon/data';
+import type { DoneReminder, PlacedReminder } from '@cocon/data';
 import { repeatDatesBetween } from '@cocon/reminders';
 import type { DayReminderItem } from '@cocon/ui';
 import { strings } from '../strings/en';
@@ -27,6 +27,8 @@ export interface CalendarReminder {
   time: string | null;
   /** Late and brought to today (FR-002): before everything else that day, oldest first. */
   overdue: boolean;
+  /** When it was ticked, for a done one: at the bottom of today, in that order. */
+  doneAt?: string;
   /** The reminder as it stands (its open date), for the drawer and the tick. */
   row: PlacedReminder;
   item: DayReminderItem;
@@ -41,8 +43,10 @@ export interface PlaceContext {
   use24h: boolean;
   /** The header's people filter: member ids, "everyone". */
   hidden: ReadonlySet<string>;
-  /** Ticked on this screen: they stay, done, where they were until the screen is left. */
+  /** Ticked on this screen: done, at the bottom of today (spec 058). */
   ticked?: ReadonlyMap<string, { row: PlacedReminder }>;
+  /** Done earlier today (`loadRemindersDoneToday`): at the bottom of today too, until midnight. */
+  done?: readonly DoneReminder[];
   /** Snoozed or deleted on this screen, before the list catches up. */
   gone?: ReadonlySet<string>;
 }
@@ -78,22 +82,23 @@ export function placeReminders(rows: readonly PlacedReminder[], ctx: PlaceContex
   const ids = new Set(ctx.members.map((m) => m.id));
   const shown = (x: PlacedReminder) => !ctx.hidden.has(x.assignee_id && ids.has(x.assignee_id) ? x.assignee_id : 'everyone');
   const out = new Map<string, CalendarReminder>();
-  const add = (x: PlacedReminder, date: string, o: { future: boolean; done: boolean }) => {
+  const add = (x: PlacedReminder, date: string, o: { future: boolean; done: boolean; doneAt?: string; detail?: string; locked?: boolean }) => {
     if (date < ctx.from || date > ctx.to) return;
-    const key = `${x.id}|${date}`;
+    const key = o.done ? `${x.id}|done|${x.due_at}` : `${x.id}|${date}`;
     if (out.has(key)) return;
     // A snoozed one comes back at the snooze's time, and isn't late then (056 FR-007).
     const back = x.section === 'snoozed' && x.snoozed_until ? x.snoozed_until : null;
     const time = x.has_time ? timeIn(ctx.tz, new Date(back ?? x.due_at)) : null;
     const name = reminderMember(x.assignee_id, ctx.members).name;
     const overdue = !o.future && x.section === 'overdue' && date > x.due_on;
-    const sub = o.done ? r.doneJustNow : overdue ? c.lateSub(name, wasDue(x.due_on, ctx.today)) : c.sub(time ? formatTime(time, ctx.use24h) : r.anyTime, name);
+    const sub = o.done ? (o.detail ?? r.doneJustNow) : overdue ? c.lateSub(name, wasDue(x.due_on, ctx.today)) : c.sub(time ? formatTime(time, ctx.use24h) : r.anyTime, name);
     const late = o.future || o.done ? null : lateBadge(x);
     out.set(key, {
       key,
       date,
       time,
       overdue,
+      doneAt: o.doneAt,
       row: x,
       item: {
         kind: 'reminder',
@@ -103,13 +108,19 @@ export function placeReminders(rows: readonly PlacedReminder[], ctx: PlaceContex
         late,
         done: o.done,
         future: o.future,
+        locked: o.locked,
         toggleLabel: o.future ? c.notYetLabel(x.title) : o.done ? r.markNotDone(x.title) : r.markDone(x.title),
         label: c.rowLabel(x.title, sub, late),
       },
     });
   };
 
-  for (const t of ctx.ticked?.values() ?? []) if (shown(t.row)) add(t.row, reminderDay(t.row, ctx.today, ctx.tz), { future: false, done: true });
+  // Done today: at the bottom of today, ticked here first ("Done just now"), then the ones loaded ("Done at 15:20").
+  for (const t of ctx.ticked?.values() ?? []) if (shown(t.row)) add(t.row, ctx.today, { future: false, done: true, doneAt: '9999' });
+  for (const d of ctx.done ?? []) {
+    if (!shown(d.row) || ctx.gone?.has(`${d.row.id}|${d.row.due_at}`)) continue;
+    add(d.row, ctx.today, { future: false, done: true, doneAt: d.closedAt, detail: r.doneAt(formatTime(timeIn(ctx.tz, new Date(d.closedAt)), ctx.use24h)), locked: d.undo === null });
+  }
   for (const x of rows) {
     if (ctx.gone?.has(x.id) || !shown(x)) continue;
     // The list from before the tick: the ticked one is drawn above, and its next date comes with the refetch.
@@ -120,8 +131,12 @@ export function placeReminders(rows: readonly PlacedReminder[], ctx: PlaceContex
   return [...out.values()];
 }
 
-/** Where a reminder sorts among a day's rows: late first, then any time (with all-day events), then its time. */
-export function reminderOrder(x: Pick<CalendarReminder, 'overdue' | 'time'>): number {
+/** After every time of day: done ones go to the bottom (spec 058). */
+const DONE_ORDER = 24 * 60 + 1;
+
+/** Where a reminder sorts among a day's rows: late first, then any time (with all-day events), then its time; done last. */
+export function reminderOrder(x: Pick<CalendarReminder, 'overdue' | 'time' | 'doneAt'>): number {
+  if (x.doneAt) return DONE_ORDER;
   if (x.overdue) return -2;
   return x.time ? toMinutes(x.time) : -1;
 }
@@ -137,6 +152,7 @@ export function compareDayRows(
   return (
     a.order - b.order ||
     Number(Boolean(a.reminder)) - Number(Boolean(b.reminder)) ||
+    (a.reminder?.doneAt && b.reminder?.doneAt ? a.reminder.doneAt.localeCompare(b.reminder.doneAt) : 0) ||
     (a.reminder && b.reminder ? a.reminder.row.due_at.localeCompare(b.reminder.row.due_at) : 0) ||
     a.title.localeCompare(b.title)
   );
@@ -187,7 +203,8 @@ export function useAgendaReminders(userId: string, storage: ChoiceStorage = devi
 /** How many reminders show on each day (Month and Week draw a mark, spec 058). */
 export function reminderCounts(placed: Iterable<CalendarReminder>): ReadonlyMap<string, number> {
   const counts = new Map<string, number>();
-  for (const x of placed) counts.set(x.date, (counts.get(x.date) ?? 0) + 1);
+  // The marks are for what's still to do.
+  for (const x of placed) if (!x.item.done) counts.set(x.date, (counts.get(x.date) ?? 0) + 1);
   return counts;
 }
 
@@ -196,11 +213,14 @@ export interface CalendarReminders {
   /** Open reminders around the days shown (`loadRemindersInRange`); undefined while loading. */
   rows: PlacedReminder[] | undefined;
   ticked: ReadonlyMap<string, { row: PlacedReminder }>;
+  /** Done earlier today (spec 058). */
+  done?: readonly DoneReminder[];
   gone: ReadonlySet<string>;
   /** Offline: the boxes can't be ticked. */
   readOnly: boolean;
   onTick: (row: PlacedReminder) => void;
-  onUntick: (id: string) => void;
+  /** Undo of a tick: `dueAt` names the occurrence, for one done earlier today. */
+  onUntick: (id: string, dueAt: string) => void;
   /** A later repeat's box, pressed before its day (FR-003). */
   onNotYet: (date: string) => void;
   /** The drawer (057 FR-005). */
@@ -210,12 +230,12 @@ export interface CalendarReminders {
 /** A reminder's box: ticks it, unticks it (Undo), or says "Not yet" for a later repeat. */
 export function pressReminderBox(x: CalendarReminder, on: Pick<CalendarReminders, 'onTick' | 'onUntick' | 'onNotYet'>): void {
   if (x.item.future) on.onNotYet(x.date);
-  else if (x.item.done) on.onUntick(x.row.id);
+  else if (x.item.done) on.onUntick(x.row.id, x.row.due_at);
   else on.onTick(x.row);
 }
 
 /** Placed for the days shown, with the screen's ticks (Agenda and Day, with their range); none while hidden or loading. */
 export function placeForScreen(reminders: CalendarReminders | undefined, ctx: Omit<PlaceContext, 'ticked' | 'gone'>): ReadonlyMap<string, CalendarReminder> {
-  const placed = reminders?.rows ? placeReminders(reminders.rows, { ...ctx, ticked: reminders.ticked, gone: reminders.gone }) : [];
+  const placed = reminders?.rows ? placeReminders(reminders.rows, { ...ctx, ticked: reminders.ticked, done: reminders.done, gone: reminders.gone }) : [];
   return new Map(placed.map((x) => [x.key, x]));
 }

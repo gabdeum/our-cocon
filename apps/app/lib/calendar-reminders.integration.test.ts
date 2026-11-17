@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { addDays, todayIn } from '@cocon/calendar';
-import { completeReminder, createReminder, loadReminderSection, loadRemindersHome, loadRemindersInRange } from '@cocon/data';
+import { completeReminder, createReminder, loadReminderSection, loadRemindersDoneToday, loadRemindersHome, loadRemindersInRange, setReminderSnooze, undoCompleteReminder } from '@cocon/data';
 import type { Database } from '@cocon/schemas';
 import { placeReminders } from './calendar-reminders';
 import type { Member } from './session';
@@ -66,5 +66,45 @@ describe.skipIf(!local)('reminders in the calendar against local Supabase', () =
     expect(overdue.rows.map((x) => x.title)).not.toContain('Water the plants');
     const again = placeReminders(await loadRemindersInRange(alex, today, to, tz), ctx);
     expect(again.map((x) => x.item.title)).not.toContain('Water the plants');
+  });
+
+  it('done today comes back after a reload, and its Undo reopens it (one-off and repeat)', async () => {
+    const once = await createReminder(alex, familyId, { title: 'Call the car insurance', due_date: today, rollover: 'day' }, tz);
+    const daily = await createReminder(alex, familyId, { title: 'Feed the cat', due_date: today, repeat: { freq: 'daily', ends: { type: 'never' } } }, tz);
+    await completeReminder(alex, once, tz);
+    await completeReminder(alex, daily, tz);
+
+    const done = await loadRemindersDoneToday(alex, tz);
+    const mine = done.filter((d) => d.row.id === once || d.row.id === daily);
+    expect(mine.map((d) => [d.row.title, d.row.due_on, d.undo !== null])).toEqual([
+      ['Call the car insurance', today, true],
+      ['Feed the cat', today, true],
+    ]);
+    // The repeat's next date is due as usual.
+    const placed = placeReminders(await loadRemindersInRange(alex, today, to, tz), { from: today, to, today, tz, members, use24h: true, hidden: new Set() });
+    expect(placed.find((x) => x.row.id === daily)?.date).toBe(addDays(today, 1));
+
+    for (const d of mine) if (d.undo) expect(await undoCompleteReminder(alex, d.undo)).toBe(true);
+    expect((await loadRemindersDoneToday(alex, tz)).filter((d) => d.row.id === once || d.row.id === daily)).toEqual([]);
+    const today_ = await loadReminderSection(alex, { section: 'today', mine: false, tz });
+    expect(today_.rows.map((x) => x.title)).toEqual(expect.arrayContaining(['Call the car insurance', 'Feed the cat']));
+  });
+
+  it('another family sees none of it and can’t reopen it; a change after the tick takes Undo away', async () => {
+    const water = await createReminder(alex, familyId, { title: 'Water the plants', due_date: today, repeat: { freq: 'daily', ends: { type: 'never' } } }, tz);
+    await completeReminder(alex, water, tz);
+    const [done] = (await loadRemindersDoneToday(alex, tz)).filter((d) => d.row.id === water);
+    expect(done?.undo).not.toBeNull();
+
+    const sam = await signInPerson(admin, url, anonKey, `cal-reminders-sam-${run}@example.com`, userIds);
+    const other = await sam.rpc('create_family', { family_name: 'Other family', display_name: 'Sam' });
+    if (other.error) throw other.error;
+    expect(await loadRemindersDoneToday(sam, tz)).toEqual([]);
+    if (done?.undo) expect(await undoCompleteReminder(sam, done.undo)).toBe(false);
+
+    // Snoozed by someone after the tick: reopening would wipe that out, so it's offered no more.
+    await setReminderSnooze(alex, water, new Date(Date.now() + 86_400_000).toISOString());
+    const [after] = (await loadRemindersDoneToday(alex, tz)).filter((d) => d.row.id === water);
+    expect(after?.undo).toBeNull();
   });
 });

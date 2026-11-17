@@ -99,7 +99,7 @@ export function ReminderDrawer(p: ReminderDrawerProps) {
 
   return (
     <BottomSheet visible onClose={p.onClose} title={x.title} closeLabel={r.close} headerAction={<Link label={r.edit} size={16} disabled={p.readOnly} onPress={() => p.onEdit()} />}>
-      <View className="-mt-10 flex-row flex-wrap items-center gap-8">
+      <View className="flex-row flex-wrap items-center gap-8">
         <MemberPill name={who.name} color={who.color} />
         <Text size={15} weight="700" color="ink-muted">
           {whenLine(x, o)}

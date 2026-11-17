@@ -19,6 +19,11 @@ export const remindersExistKey = (familyId: string) => ['reminders', familyId, '
 export const reminderSectionKey = (familyId: string, section: ReminderSection, mine: boolean, tz: string) => ['reminders', familyId, 'section', section, mine, tz] as const;
 export const reminderHistoryKey = (familyId: string, id: string) => ['reminders', familyId, 'history', id] as const;
 export const reminderKey = (familyId: string, id: string) => ['reminders', familyId, 'one', id] as const;
+/** Spec 058: what was done today, which Today keeps (struck through) until midnight. */
+export const remindersDoneKey = (familyId: string, today: string, tz: string) => ['reminders', familyId, 'done', today, tz] as const;
+
+/** Spec 058: a done-today row's key in `hidden` while its Undo saves. */
+export const doneKey = (d: { row: { id: string; due_at: string } }) => `${d.row.id}|${d.row.due_at}`;
 
 /** The screen's sections, in order ("Snoozed" is the collapsed row after them). */
 export const LIST_SECTIONS = ['overdue', 'today', 'tomorrow', 'later'] as const satisfies readonly ReminderSection[];

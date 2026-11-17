@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { addDays, weekRange, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { FloatingAdd, HourGrid, Swipeable } from '@cocon/ui';
@@ -74,9 +74,12 @@ export function WeekView({
     () => reminderCounts(placeForScreen(showReminders ? reminders : undefined, { from: start, to: addDays(start, 6), today, tz: timeZone, members, use24h, hidden }).values()),
     [showReminders, reminders, start, today, timeZone, members, use24h, hidden],
   );
+  // Spec 058: whether the alarm clocks fit beside the numbers depends on the view's real width and the text size.
+  const [width, setWidth] = useState<number | undefined>(undefined);
+  const { fontScale } = useWindowDimensions();
   const grid = useMemo(
-    () => layoutWeekGrid(anchor, occurrences, { weekStartsOn, today, look, slotTimes, now, use24h, reminders: counts }),
-    [anchor, occurrences, weekStartsOn, today, look, slotTimes, now, use24h, counts],
+    () => layoutWeekGrid(anchor, occurrences, { weekStartsOn, today, look, slotTimes, now, use24h, reminders: counts, width, textScale: fontScale }),
+    [anchor, occurrences, weekStartsOn, today, look, slotTimes, now, use24h, counts, width, fontScale],
   );
   const [sheetDate, setSheetDate] = useState<string | null>(null);
   const dayCtx = useMemo(() => ({ today, now, look, slotTimes, members, use24h }), [today, now, look, slotTimes, members, use24h]);
@@ -96,7 +99,7 @@ export function WeekView({
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       {/* The day and All day rows stay put; the hours scroll inside the card. */}
       <View className="flex-1 px-8 pt-4">
         <Swipeable page={start} onSwipe={onSwipe}>

@@ -107,20 +107,39 @@ export function BottomSheet({ visible, onClose, title, lead, leading, hero, head
             {/* The drag strip starts at the sheet's top edge, so a finger just above the bar counts. */}
             <View {...pan.panHandlers} className="gap-16 pt-12">
               <View aria-hidden className="h-[5px] w-[44px] self-center rounded-[3px] bg-line-handle" />
-              <View className={cn(hero != null ? 'items-center gap-14' : 'flex-row gap-12', !hero && (leading ? 'items-center' : 'items-start'))}>
-                {hero ?? leading}
-                <View ref={titleRef} tabIndex={-1} className={cn('min-w-0 web:outline-none', hero == null && 'flex-1')}>
-                  <Text variant="titleLg" role="heading" nativeID={titleId} align={hero != null ? 'center' : undefined}>
-                    {title}
-                  </Text>
+              {hero != null || leading != null ? (
+                <View className={cn(hero != null ? 'items-center gap-14' : 'flex-row items-center gap-12')}>
+                  {hero ?? leading}
+                  <View ref={titleRef} tabIndex={-1} className={cn('min-w-0 web:outline-none', hero == null && 'flex-1')}>
+                    <Text variant="titleLg" role="heading" nativeID={titleId} align={hero != null ? 'center' : undefined}>
+                      {title}
+                    </Text>
+                    {lead ? (
+                      <Text size={15} weight="600" color="ink-muted" className="mt-4" align={hero != null ? 'center' : undefined} style={{ lineHeight: 15 * 1.45 }}>
+                        {lead}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {headerAction}
+                </View>
+              ) : (
+                // The title and its button (✕, "Edit") centred on each other; the lead runs under both.
+                <View>
+                  <View className="flex-row items-center gap-12">
+                    <View ref={titleRef} tabIndex={-1} className="min-w-0 flex-1 web:outline-none">
+                      <Text variant="titleLg" role="heading" nativeID={titleId}>
+                        {title}
+                      </Text>
+                    </View>
+                    {headerAction}
+                  </View>
                   {lead ? (
-                    <Text size={15} weight="600" color="ink-muted" className="mt-4" align={hero != null ? 'center' : undefined} style={{ lineHeight: 15 * 1.45 }}>
+                    <Text size={15} weight="600" color="ink-muted" className="mt-4" style={{ lineHeight: 15 * 1.45 }}>
                       {lead}
                     </Text>
                   ) : null}
                 </View>
-                {headerAction}
-              </View>
+              )}
             </View>
             {/* The body scrolls clear of the floating button (60 + 12). */}
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" className="shrink" contentContainerClassName={cn('gap-16', floating != null && 'pb-[72px]')}>

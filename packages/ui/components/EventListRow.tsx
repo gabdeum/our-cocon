@@ -149,6 +149,8 @@ export interface ReminderListItem {
   done: boolean;
   /** A later repeat: its box can't be ticked before its day (pressing it says why). */
   future: boolean;
+  /** Done, and can't be unticked any more (a repeat's earlier date, when a later one was done after it). */
+  locked?: boolean;
   /** "Mark done: {title}" / "Mark not done: {title}"; a later repeat's says it can't be yet ("Not yet: {title}"). */
   toggleLabel: string;
   /** For screen readers: the whole row in one sentence. */
@@ -169,14 +171,14 @@ export interface ReminderListRowProps {
  * why); the web keeps `aria-disabled` only on boxes that can't be pressed, so its name says it too.
  */
 export function ReminderTick({ item, onToggle, disabled }: Omit<ReminderListRowProps, 'onOpen'>) {
-  const off = disabled || item.future;
+  const off = disabled || item.future || item.locked;
   return (
     <Pressable
       role="checkbox"
       aria-checked={item.done}
       aria-label={item.toggleLabel}
       aria-disabled={off || undefined}
-      disabled={disabled}
+      disabled={disabled || item.locked}
       onPress={onToggle}
       className={cn('-mx-8 h-control-md w-[44px] flex-none items-center justify-center rounded-[12px]', !off && 'active:bg-surface-soft', focusRing)}
     >
@@ -190,18 +192,29 @@ export function ReminderTick({ item, onToggle, disabled }: Omit<ReminderListRowP
   );
 }
 
-/** The title, sub-line and late badge of a reminder in the calendar: one button that opens the drawer. */
+/** The title, sub-line and late badge of a reminder in the calendar: one button that opens the drawer (not when done). */
 export function ReminderListText({ item, onOpen }: Pick<ReminderListRowProps, 'item' | 'onOpen'>) {
+  const text = (
+    <>
+      <Text size={17} weight="800" strike={item.done} color={item.done ? 'ink-muted' : 'ink'}>
+        {item.title}
+      </Text>
+      <Text size={14} weight="700" color="ink-muted">
+        {item.sub}
+      </Text>
+    </>
+  );
   return (
     <>
-      <Pressable role="button" aria-label={item.label} aria-haspopup="dialog" onPress={onOpen} className={cn('min-w-0 flex-1 rounded-[8px] py-2 active:bg-surface-soft', focusRing)}>
-        <Text size={17} weight="800" strike={item.done} color={item.done ? 'ink-muted' : 'ink'}>
-          {item.title}
-        </Text>
-        <Text size={14} weight="700" color="ink-muted">
-          {item.sub}
-        </Text>
-      </Pressable>
+      {item.done ? (
+        <View className="min-w-0 flex-1 py-2">
+          {text}
+        </View>
+      ) : (
+        <Pressable role="button" aria-label={item.label} aria-haspopup="dialog" onPress={onOpen} className={cn('min-w-0 flex-1 rounded-[8px] py-2 active:bg-surface-soft', focusRing)}>
+          {text}
+        </Pressable>
+      )}
       {item.late && !item.done ? (
         <View className="flex-none self-center rounded-full bg-warn-soft px-10 py-[5px]">
           <Text size={13} weight="900" color="warn">

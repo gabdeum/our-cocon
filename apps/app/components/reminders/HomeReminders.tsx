@@ -42,10 +42,7 @@ export function HomeReminders() {
         use24h={ctx.use24h}
         readOnly={!online}
         onToggle={(row, isDone) => void (isDone ? actions.untick(row.id) : actions.tick(row, 'home'))}
-        onSnooze={(row, option) => void actions.snooze(row, option, 'home')}
-        onPickDate={(row) => setDrawer({ row, source: 'home' })}
-        onEdit={(row) => go(`/reminders/${row.id}/edit`)}
-        onDelete={(row) => void actions.remove(row)}
+        onOpen={(row) => setDrawer({ row, source: 'home' })}
         onAdd={() => go('/reminders/new')}
         onSeeAll={() => go('/reminders')}
       />

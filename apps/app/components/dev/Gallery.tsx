@@ -400,19 +400,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
               late="2d late"
               onToggle={noop}
               toggleLabel="Mark done: Water the plants"
-              trailing={
-                <ActionMenu
-                  trigger="dots"
-                  label="More options for Water the plants"
-                  heading="Snooze until"
-                  items={[
-                    { label: 'Tomorrow', detail: 'Thu 12', onPress: noop },
-                    { label: 'Next week', detail: 'Wed 18', onPress: noop },
-                    { label: 'Edit', onPress: noop, separatorBefore: true },
-                    { label: 'Delete reminder', tone: 'danger', onPress: noop },
-                  ]}
-                />
-              }
+              onOpen={noop}
+              openLabel="Open Water the plants"
             />
             <ReminderRow title="Book James’s check-up" detail="Done just now" member={{ initial: 'G', color: 'honey', name: 'Gabriel' }} done onToggle={noop} toggleLabel="Mark not done" />
             <ReminderRow

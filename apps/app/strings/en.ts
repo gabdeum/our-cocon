@@ -1592,6 +1592,8 @@ export const strings = {
       wasDueYesterday: 'was due yesterday',
       /** A later repeat's box, pressed before its day. */
       notYet: (date: string) => `Not yet: it's due ${date}.`,
+      /** Day view: today's done reminders, after the bands. */
+      doneHeading: 'Done',
       /** A later repeat's box, for screen readers (it can't be ticked before its day). */
       notYetLabel: (title: string) => `Not yet: ${title}`,
       /** "Water the plants, reminder, Gabriel · was due Mon, 2d late". */
@@ -1831,7 +1833,6 @@ export const strings = {
     // Rows
     markDone: (title: string) => `Mark done: ${title}`,
     markNotDone: (title: string) => `Mark not done: ${title}`,
-    moreOptions: (title: string) => `More options for ${title}`,
     open: (title: string) => `Open ${title}`,
     repeats: 'Repeats',
     hasNotes: 'Has notes',
@@ -1841,6 +1842,8 @@ export const strings = {
     lateDays: (n: number) => `${n}d late`,
     lateHours: (n: number) => `${n}h late`,
     doneJustNow: 'Done just now',
+    /** Spec 058: one done earlier today, at the bottom of Today until midnight. */
+    doneAt: (time: string) => `Done at ${time}`,
     // A row's detail line.
     wasDueYesterday: 'Was due yesterday',
     /** "Was due Mon" (this past week), "Was due Mon, Nov 2" (before). */
@@ -1853,10 +1856,9 @@ export const strings = {
     dayAt: (day: string, time: string) => `${day} · ${time}`,
     backTomorrow: (date: string) => `Back tomorrow, ${date}`,
     backOn: (date: string) => `Back ${date}`,
-    // The ⋮ menu (Home)
+    // The drawer's snooze and actions
     snoozeUntil: 'Snooze until',
     snooze: { hour: 'In 1 hour', tomorrow: 'Tomorrow', week: 'Next week', month: 'Next month', date: 'Pick a date' },
-    pickADate: 'Pick a date…',
     edit: 'Edit',
     delete: 'Delete reminder',
     close: 'Close',

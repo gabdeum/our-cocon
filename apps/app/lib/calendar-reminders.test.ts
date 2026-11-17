@@ -6,6 +6,7 @@ import { alex, gabriel, placedReminder } from '../test/fakes';
 import { layoutAgenda } from './calendar-agenda';
 import { isDayEvent, layoutDaySheet, layoutDayView } from './calendar-day';
 import { memberLook, monthOccurrences } from './calendar-month';
+import { marksBelow } from './calendar-week';
 import { placeReminders, pressReminderBox, readAgendaReminders, reminderCounts, reminderDay, writeAgendaReminders, type PlaceContext } from './calendar-reminders';
 
 // Wednesday, Nov 11, 2026 in Paris (UTC+1), as on OC-CalAgendaReminders.
@@ -74,6 +75,35 @@ describe('placeReminders (FR-001–FR-003)', () => {
   });
 });
 
+describe('done today (spec 058)', () => {
+  it('goes to the bottom of today, ticked here last, until midnight; never marks Month or Week', () => {
+    const tomorrow = placedReminder({ title: 'Pay the daycare', due_on: '2026-11-12', due_at: '2026-11-12T10:00:00Z', section: 'tomorrow' });
+    const open = placedReminder({ title: 'Take the bins out', due_at: '2026-11-11T19:00:00Z' });
+    const earlier = placedReminder({ title: 'Water the plants', due_at: '2026-11-11T08:00:00Z' });
+    const undo = { id: earlier.id, from_due_at: earlier.due_at, reopen: [], due_at: earlier.due_at, next_due_at: null, snoozed_until: null };
+    const placed = placeReminders([open], {
+      ...ctx,
+      ticked: new Map([[tomorrow.id, { row: tomorrow }]]),
+      done: [
+        { row: earlier, closedAt: '2026-11-11T09:20:00Z', undo },
+        { row: { ...earlier, id: '00000000-0000-4000-9000-999999999999', title: 'Old date' }, closedAt: '2026-11-11T09:00:00Z', undo: null },
+      ],
+    });
+    const dayCtx = { today, now: '09:00', look: memberLook(members), slotTimes: DEFAULT_SLOT_TIMES, members };
+    const [group] = layoutAgenda(today, today, [], dayCtx, placed);
+    expect(group?.events.map((e) => [e.title, e.sub])).toEqual([
+      ['Take the bins out', '20:00 · Gabriel'],
+      ['Old date', 'Done at 10:00'],
+      ['Water the plants', 'Done at 10:20'],
+      ['Pay the daycare', 'Done just now'],
+    ]);
+    expect(placed.find((x) => x.item.title === 'Old date')?.item.locked).toBe(true);
+    expect([...reminderCounts(placed)]).toEqual([[today, 1]]);
+    expect(layoutDayView(today, [], dayCtx, placed).done.map((x) => x.title)).toEqual(['Old date', 'Water the plants', 'Pay the daycare']);
+    expect(layoutDaySheet(today, [], dayCtx, placed).count).toBe('1 reminder');
+  });
+});
+
 describe('pressReminderBox', () => {
   it('ticks, unticks, or says "Not yet" for a later repeat', () => {
     const weekly = placedReminder({ repeat_rule: { freq: 'weekly', ends: { type: 'never' } }, repeat_from: '2026-11-04' });
@@ -85,7 +115,7 @@ describe('pressReminderBox', () => {
     pressReminderBox({ ...open, item: { ...open.item, done: true } }, on);
     expect(on.onTick).toHaveBeenCalledWith(weekly);
     expect(on.onNotYet).toHaveBeenCalledWith('2026-11-18');
-    expect(on.onUntick).toHaveBeenCalledWith(weekly.id);
+    expect(on.onUntick).toHaveBeenCalledWith(weekly.id, weekly.due_at);
   });
 });
 
@@ -201,5 +231,17 @@ describe('Month, Week and the day sheet (spec 058)', () => {
     const sheet = layoutDaySheet(today, monthOccurrences([dinner], today, today, gabriel.id, new Set()), dayCtx, placed);
     expect(sheet.count).toBe('1 event · 2 reminders');
     expect(sheet.rows.map((r) => r.title)).toEqual(['Reminder', 'Take the bins out', 'Dinner']);
+  });
+});
+
+describe('Week’s alarm clocks (spec 058)', () => {
+  const week = ['2026-11-08', '2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14'];
+  it('stay beside the numbers when they all fit, and all go under when one doesn’t', () => {
+    // 430 px: columns about 51 wide; 390 px: about 46, too narrow for today's 28 px circle and the clock.
+    expect(marksBelow(week, { today, reminders: new Map([['2026-11-11', 1]]), width: 430 })).toBe(false);
+    expect(marksBelow(week, { today, reminders: new Map([['2026-11-11', 1]]), width: 390 })).toBe(true);
+    expect(marksBelow(week, { today, reminders: new Map([['2026-11-12', 1]]), width: 390 })).toBe(false);
+    expect(marksBelow(week, { today, reminders: new Map([['2026-11-12', 1]]), width: 390, textScale: 2 })).toBe(true);
+    expect(marksBelow(week, { today, reminders: new Map([['2026-11-11', 1]]) })).toBe(false);
   });
 });

@@ -66,11 +66,10 @@ describe('RemindersScreen', () => {
     await expectAccessible(view.container);
   });
 
-  it('opens the drawer from a row and from its ⋮', () => {
+  it('opens the drawer from anywhere right of a row’s dot, with no ⋮ (spec 058)', () => {
     const { props } = setup();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Open Water the plants' })[0] as HTMLElement);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Open Water the plants' })[1] as HTMLElement);
-    expect(props.onOpen).toHaveBeenCalledTimes(2);
+    expect(screen.getAllByRole('button', { name: 'Open Water the plants' })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Open Water the plants' }));
     expect(props.onOpen).toHaveBeenCalledWith(plants);
   });
 
@@ -118,5 +117,36 @@ describe('RemindersScreen', () => {
     expect(add).toHaveLength(2);
     add.forEach((b) => fireEvent.click(b));
     expect(props.onAdd).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('done today (spec 058)', () => {
+  it('lists them struck through at the bottom of Today, with when; an older one can’t be unticked', () => {
+    const { props } = setup({
+      sections: [
+        {
+          key: 'today',
+          label: 'Today · Wed, Nov 11',
+          rows: [
+            { row: bins, done: false },
+            { row: plants, done: true, detail: 'Done at 09:20' },
+            { row: { ...plants, id: '00000000-0000-4000-9000-999999999999', title: 'Old date' }, done: true, detail: 'Done at 08:00', locked: true },
+          ],
+          canMore: false,
+        },
+      ],
+    });
+    const today = screen.getByRole('region', { name: 'Today · Wed, Nov 11' });
+    expect(within(today).getAllByRole('checkbox').map((b) => [b.getAttribute('aria-label'), b.getAttribute('aria-checked')])).toEqual([
+      ['Mark done: Take the bins out', 'false'],
+      ['Mark not done: Water the plants', 'true'],
+      ['Mark not done: Old date', 'true'],
+    ]);
+    expect(within(today).getByText('Done at 09:20')).toBeTruthy();
+    expect(within(today).queryByRole('button', { name: 'Open Water the plants' })).toBeNull();
+    fireEvent.click(within(today).getByRole('checkbox', { name: 'Mark not done: Water the plants' }));
+    expect(props.onToggle).toHaveBeenCalledWith(plants, true);
+    fireEvent.click(within(today).getByRole('checkbox', { name: 'Mark not done: Old date' }));
+    expect(props.onToggle).toHaveBeenCalledTimes(1);
   });
 });

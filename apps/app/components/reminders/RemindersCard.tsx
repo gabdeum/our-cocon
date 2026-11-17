@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { View } from 'react-native';
 import type { PlacedReminder } from '@cocon/data';
-import type { ReminderSnoozeOption } from '@cocon/schemas';
-import { ActionMenu, CalCard, Dialog, ReminderRow, Text } from '@cocon/ui';
-import { detailLine, homeFooterHint, lateBadge, reminderMember, snoozeChoices } from '../../lib/reminders';
+import { CalCard, ReminderRow, Text } from '@cocon/ui';
+import { detailLine, homeFooterHint, lateBadge, reminderMember } from '../../lib/reminders';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
 
@@ -18,29 +16,23 @@ export interface RemindersCardProps {
   today: string;
   tz: string;
   use24h: boolean;
-  now?: Date;
   /** Offline: nothing can change (decision 11). */
   readOnly?: boolean;
   onToggle: (row: PlacedReminder, done: boolean) => void;
-  onSnooze: (row: PlacedReminder, option: Exclude<ReminderSnoozeOption, 'date'>) => void;
-  /** "Pick a date…": the drawer. */
-  onPickDate: (row: PlacedReminder) => void;
-  onEdit: (row: PlacedReminder) => void;
-  onDelete: (row: PlacedReminder) => void;
+  /** A row (all of it right of the dot): its drawer, with snooze, edit and delete (spec 058). */
+  onOpen: (row: PlacedReminder) => void;
   onAdd: () => void;
   onSeeAll: () => void;
 }
 
 /**
- * OC-HomeReminders (spec 057 FR-001, FR-002): the top 3 reminders, a ⋮ menu each (snooze, pick a
- * date, edit, delete), and "See all reminders". Under the greeting, above the calendar card.
+ * OC-HomeReminders (spec 057 FR-001): the top 3 reminders, each opening its drawer (spec 058: no ⋮
+ * menu, as the calendar's rows), and "See all reminders". Under the greeting, above the calendar card.
  */
 export function RemindersCard(p: RemindersCardProps) {
-  const [deleting, setDeleting] = useState<PlacedReminder | null>(null);
   const hint = homeFooterHint(p.moreToday, p.snoozed);
   return (
-    <>
-      <CalCard
+    <CalCard
         label={r.title}
         header={
           <Text role="heading" aria-level={2} size={20} weight="900">
@@ -66,40 +58,12 @@ export function RemindersCard(p: RemindersCardProps) {
                 toggleLabel={done ? r.markNotDone(row.title) : r.markDone(row.title)}
                 disabled={p.readOnly}
                 last={i === p.rows.length - 1}
-                trailing={
-                  done ? undefined : (
-                    <ActionMenu
-                      trigger="dots"
-                      label={r.moreOptions(row.title)}
-                      heading={r.snoozeUntil}
-                      disabled={p.readOnly}
-                      closeLabel={r.close}
-                      items={[
-                        ...snoozeChoices(row, { now: p.now ?? new Date(), tz: p.tz, use24h: p.use24h, style: 'menu' }).map((c) => ({ label: c.label, detail: c.detail, onPress: () => p.onSnooze(row, c.option) })),
-                        { label: r.pickADate, onPress: () => p.onPickDate(row) },
-                        { label: r.edit, onPress: () => p.onEdit(row), separatorBefore: true },
-                        { label: r.delete, tone: 'danger' as const, onPress: () => (row.repeat_rule ? setDeleting(row) : p.onDelete(row)) },
-                      ]}
-                    />
-                  )
-                }
+                onOpen={done ? undefined : () => p.onOpen(row)}
+                openLabel={r.open(row.title)}
               />
             ))}
           </View>
         ) : null}
-      </CalCard>
-      <Dialog
-        visible={deleting !== null}
-        title={r.deleteAllTitle}
-        body={r.deleteAllBody(deleting?.title ?? '')}
-        confirmLabel={r.deleteConfirm}
-        onConfirm={() => {
-          if (deleting) p.onDelete(deleting);
-          setDeleting(null);
-        }}
-        cancelLabel={r.keep}
-        onCancel={() => setDeleting(null)}
-      />
-    </>
+    </CalCard>
   );
 }

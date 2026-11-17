@@ -101,6 +101,16 @@ export function DayView({ members, myMemberId, events, slotTimes, hidden, date, 
               readOnly={reminders?.readOnly}
             />
           ))}
+          {day.done.length ? (
+            <View className="gap-8">
+              <Text role="heading" size={18} weight="900">
+                {strings.calendar.reminders.doneHeading}
+              </Text>
+              {day.done.map((x) => (
+                <DayReminderRow key={x.key} item={x} onToggle={() => toggleReminder(x.key)} onOpen={() => undefined} disabled={reminders?.readOnly} />
+              ))}
+            </View>
+          ) : null}
         </ScrollView>
       </Swipeable>
       <FloatingAdd label={strings.calendar.month.addEvent} onPress={() => onAddEvent(date)} hint={null} />

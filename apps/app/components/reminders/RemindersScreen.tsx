@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import type { PlacedReminder } from '@cocon/data';
 import type { ReminderSection } from '@cocon/schemas';
-import { Button, Card, DisclosureButton, IconButton, PushedScreen, ReminderMore, ReminderRow, SegmentedControl, Text } from '@cocon/ui';
+import { Button, DisclosureButton, IconButton, PushedScreen, ReminderMore, ReminderRow, SegmentedControl, Text } from '@cocon/ui';
 import { detailLine, lateBadge, reminderMember } from '../../lib/reminders';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
@@ -12,7 +12,8 @@ export interface ScreenSection {
   key: ReminderSection;
   /** "Overdue", "Today · Wed, Nov 11". */
   label: string;
-  rows: readonly { row: PlacedReminder; done: boolean }[];
+  /** `detail` replaces the row's own ("Done at 15:20"); `locked`: done, and can't be unticked any more. */
+  rows: readonly { row: PlacedReminder; done: boolean; detail?: string; locked?: boolean }[];
   /** A next page exists (056 `next_cursor`). */
   canMore: boolean;
   loadingMore?: boolean;
@@ -49,11 +50,11 @@ export interface RemindersScreenProps {
  */
 export function RemindersScreen(p: RemindersScreenProps) {
   const o = { today: p.today, tz: p.tz, use24h: p.use24h, where: 'list' as const };
-  const row = (x: PlacedReminder, done: boolean, last: boolean, snoozed = false) => (
+  const row = (x: PlacedReminder, done: boolean, last: boolean, snoozed = false, detail?: string, locked = false) => (
     <ReminderRow
-      key={x.id}
+      key={`${x.id}|${x.due_at}|${done}`}
       title={x.title}
-      detail={done ? r.doneJustNow : detailLine(x, o)}
+      detail={detail ?? (done ? r.doneJustNow : detailLine(x, o))}
       member={reminderMember(x.assignee_id, p.members)}
       done={done}
       late={snoozed ? undefined : (lateBadge(x) ?? undefined)}
@@ -61,10 +62,9 @@ export function RemindersScreen(p: RemindersScreenProps) {
       notes={x.notes ? r.hasNotes : undefined}
       onToggle={snoozed ? undefined : () => p.onToggle(x, done)}
       toggleLabel={done ? r.markNotDone(x.title) : r.markDone(x.title)}
-      disabled={p.readOnly}
-      onOpen={() => p.onOpen(x)}
+      disabled={p.readOnly || locked}
+      onOpen={done ? undefined : () => p.onOpen(x)}
       openLabel={r.open(x.title)}
-      more={snoozed ? undefined : { label: r.open(x.title), onPress: () => p.onOpen(x) }}
       last={last}
     />
   );
@@ -97,19 +97,19 @@ export function RemindersScreen(p: RemindersScreenProps) {
             <Text size={18} weight="900" role="heading" aria-level={2} color={s.key === 'overdue' ? 'warn' : 'ink'}>
               {s.label}
             </Text>
-            <Card className="px-14 py-2">
-              {s.rows.map((x, i) => row(x.row, x.done, i === s.rows.length - 1 && !s.canMore))}
+            <View className="rounded-xl bg-surface-card px-14">
+              {s.rows.map((x, i) => row(x.row, x.done, i === s.rows.length - 1 && !s.canMore, false, x.detail, x.locked))}
               {s.canMore ? (
                 <ReminderMore label={r.showMore} busy={s.loadingMore} onPress={() => p.onMore(s.key)} />
               ) : null}
-            </Card>
+            </View>
           </View>
         ))}
 
         {snoozedCount > 0 ? (
           <>
             <DisclosureButton label={r.snoozed} sub={p.snoozedOpen ? r.hide : r.hiddenUntilLater(snoozedCount, p.snoozed?.canMore ?? false)} expanded={p.snoozedOpen} onPress={p.onToggleSnoozed} />
-            {p.snoozedOpen ? <Card className="px-14 py-2">{(p.snoozed?.rows ?? []).map((x, i) => row(x, false, i === snoozedCount - 1, true))}</Card> : null}
+            {p.snoozedOpen ? <View className="rounded-xl bg-surface-card px-14">{(p.snoozed?.rows ?? []).map((x, i) => row(x, false, i === snoozedCount - 1, true))}</View> : null}
           </>
         ) : null}
 

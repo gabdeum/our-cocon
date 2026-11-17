@@ -38,6 +38,8 @@ export interface DayLayout {
   /** All-day events, and the reminders that are late or have no time (spec 058). */
   allDay: ((DayAllDayItem & { kind?: 'event' }) | DayReminderItem)[];
   bands: (DayBand & { slot: SlotKey })[];
+  /** Spec 058: today's done reminders, after the bands, in the order they were ticked. */
+  done: DayReminderItem[];
 }
 
 /** Like the week's All day row: all-day events and anything spanning more than one day. */
@@ -61,7 +63,12 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
     const tag = dayOf(o, date) ?? (isBirthday(o) ? d.birthday : null);
     return { key: occurrenceKey(o), title: o.title, tag, colors: eventLook(o.members, ctx.look).colors, label: d.allDayLabel(o.title, whoText(o.members, ctx.look), tag) };
   });
-  const onDayReminders = reminders.filter((x) => x.date === date);
+  const onDayAll = reminders.filter((x) => x.date === date);
+  const onDayReminders = onDayAll.filter((x) => !x.doneAt);
+  const done = onDayAll
+    .filter((x) => x.doneAt)
+    .sort((a, b) => (a.doneAt ?? '').localeCompare(b.doneAt ?? ''))
+    .map((x) => x.item);
   const untimed = onDayReminders.filter((x) => x.overdue || !x.time);
   const allDay = [
     ...untimed.filter((x) => x.overdue).sort((a, b) => compareDayRows({ order: -2, reminder: a, title: a.row.title }, { order: -2, reminder: b, title: b.row.title })).map((x) => x.item),
@@ -90,7 +97,7 @@ export function layoutDayView(date: string, occurrences: readonly MonthOccurrenc
     };
   });
 
-  return { busy: busyChips([...onDay.filter(inAllDay), ...timed.map((t) => t.o)], ctx), allDay, bands };
+  return { busy: busyChips([...onDay.filter(inAllDay), ...timed.map((t) => t.o)], ctx), allDay, bands, done };
 }
 
 /** The day's timed events by start (then title), each with its slot and row. An event the engine can't read is left out. */
@@ -145,8 +152,10 @@ export function layoutDaySheet(date: string, occurrences: readonly MonthOccurren
     'reminder' in a || 'reminder' in b ? compareDayRows(a, b) : a.order - b.order,
   );
   const title = s.title(words.weekdays[weekday(date)] ?? '', longDate(date));
-  const count = onDayReminders.length
-    ? strings.calendar.reminders.sheetCount(events.length ? s.count(events.length) : null, strings.calendar.reminders.count(onDayReminders.length))
+  // The count is what's still to do; done ones are listed at the bottom.
+  const toDo = onDayReminders.filter((x) => !x.doneAt).length;
+  const count = toDo
+    ? strings.calendar.reminders.sheetCount(events.length ? s.count(events.length) : null, strings.calendar.reminders.count(toDo))
     : s.count(events.length);
   return { title, count, rows: rows.map((r) => r.item), addLabel: s.addLabel(title) };
 }

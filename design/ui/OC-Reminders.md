@@ -19,13 +19,13 @@ Height ≥ 58, padding 4 px 0, divider `#F2E6C4` 1.5 px between rows. Left to ri
 2. Member dot: 28 px circle in the member colour, initial 13/900 ("All" 10/900). 50 % opacity when done.
 3. 10 px, then title 16/800, one line, ellipsis (done: struck through, `#5A503A`); detail line 13/700 `#5A503A`, one line, ellipsis. On the Reminders screen the detail line starts with the repeat icon and/or notes icon (14 px) when they apply.
 4. Late badge (only when late): 12/900, padding 3 × 8, `#FFE3C2` / `#8A4B00`, "2d late", "3h late".
-5. Vertical ⋮: 20 px icon, tap target 36 × 44, flush right.
+5. No ⋮ (spec 058). Everything right of the dot (title, detail, late badge) opens the drawer, on Home and the Reminders screen.
 
 ## Home card
 - Header: "Reminders" 20/900 + green "+" (44 px olive circle, white plus, same as the calendar card) → create sheet.
 - Top 3 rows (056 `reminders_home`).
 - Footer row (border-top): "See all reminders" 15/800 olive · right "{n} more today · {n} snoozed" 14/700 + chevron. Parts drop when zero; if both are zero it reads just "See all reminders".
-- ⋮ opens the glass menu (same style as the event ⋯ menu): label "SNOOZE UNTIL" · "In 1 hour  16:00" (timed only) · "Tomorrow  Thu 12" · "Next week  Wed 18" · "Next month  Fri, Dec 11" · "Pick a date…" · divider · "Edit" · "Delete reminder" (`#9A3412`).
+- Spec 058: no ⋮ menu. Tapping a row (right of the dot) opens its drawer, where snooze, edit and delete are. (057 had a glass menu here: snooze times, Pick a date…, Edit, Delete reminder.)
 
 ## Reminders screen
 - Title "Reminders" with back; SegmentedControl "Mine" · "Everyone's".
@@ -61,7 +61,7 @@ Errors: empty title → "Give your reminder a name." (`#8A4B00`, under the field
 Written for the build (spec 057, not drawn):
 - A time typed on the web that isn't one → "Use a time like 15:00." under the "Set a time" row.
 - "Custom" in Repeat shows the event sheet's repeats (Daily, Weekly, Every 2 weeks, Monthly, Yearly) and its On / Ends card (OC-CalAddMore).
-- Deleting a repeating reminder (drawer, Home's ⋮, the edit sheet): Dialog "Delete all future reminders?" · "Every date of “{title}” goes. You can bring it back from Recently deleted for 30 days." · "Delete reminder" / "Keep it". A one-off is deleted at once, with the toast "Reminder deleted" and Undo.
+- Deleting a repeating reminder (drawer, the edit sheet): Dialog "Delete all future reminders?" · "Every date of “{title}” goes. You can bring it back from Recently deleted for 30 days." · "Delete reminder" / "Keep it". A one-off is deleted at once, with the toast "Reminder deleted" and Undo.
 - Late under a day, in the drawer: "{n} hours late." A repeat that isn't weekly, missed once: " The one on {date} was missed too."
 - After "Mark as done" on a one-off reminder the green card has its title only; a repeat with no next date says "The next one stays on schedule."
 - A reminder that was deleted or finished while its edit sheet opened: the toast "This reminder was deleted." and the sheet closes.
@@ -73,12 +73,15 @@ Written for the build (spec 057, not drawn):
 Reminder row = tick box (26 px, radius 8) in place of stripe + avatar; title 17/800; detail "{time or Any time} · {name}"; late badge on the right. Toggle "Reminders": a round 44 alarm button, on = olive/white, off = white (see below).
 
 Written for the build (spec 058, not drawn):
-- The "Reminders" toggle is a round 44 icon button (`alarm`, named "Reminders"), olive when on and white when off. In Agenda and Day it sits after the people button in the header's second row, where ‹ › were (Day swipes; Agenda scrolls and has Today). Month and Week have no toggle in the header: days with reminders get a small `alarm` beside the date number (13 px in Month, 17 in Week: a little larger than the number; on the line below when there's no room beside it: in Month the whole week moves down one row so multi-day bars stay lined up), and their day sheet lists the reminders with the same toggle beside its title. One setting, remembered per person on this device, for all of them.
+- The "Reminders" toggle is a round 44 icon button (`alarm`, named "Reminders"), olive when on and white when off. In Agenda and Day it sits after the people button in the header's second row, where ‹ › were (Day swipes; Agenda scrolls and has Today). Month and Week have no toggle in the header: days with reminders get a small `alarm` beside the date number (13 px in Month, 17 in Week: a little larger than the number). When there's no room beside the number: in Month that one day puts it on its first row (its chips start one row lower, and a multi-day bar in the top lane skips that day); in Week every day's clock goes under its number, so the week's heads stay even, and their day sheet lists the reminders with the same toggle beside its title. One setting, remembered per person on this device, for all of them.
 - The day sheet (Month, and since 058 Week: a tap on a day opens it, not Day view) lists the day's reminders among its events in Agenda's order; its count reads "2 events · 1 reminder", or "1 reminder".
 - A late reminder brought to today reads "{name} · was due {Mon}" ("was due yesterday", "was due Mon, Nov 2" from a week back), as on the screen.
 - Day view: late and any-time reminders are under "All day", after the all-day events (late ones first); timed ones in the band of their time among the events. A band with only reminders has no "+ Add in the …" row.
 - A later repeat's box, pressed before its day: the toast "Not yet: it's due Sat, Nov 14." Its screen-reader name is "Not yet: {title}".
 - Screen readers read a row as "{title}, reminder, {detail}, {late badge}".
+- Done today (spec 058): a ticked reminder goes to the bottom of Today, struck through ("Done just now"), and stays there until midnight, after a reload too ("Done at 15:20"), on the Reminders screen and in the calendar (Agenda's Today, Day view's "Done" group after the bands, the day sheet). Wherever it was ticked from (Overdue, Tomorrow…), it's listed under Today. A repeat's next date shows as usual. Ticking it again undoes it. Home drops it once it's left or reloaded. Month and Week marks count only what's still to do.
+- The drawer's who pill and when line sit just under the title (057's −10 px pull made the list clip the pill). Sheet titles and their right button (✕, "Edit") are centred on each other (BottomSheet README).
+- The Reminders screen's lists are plain white cards (radius 22, padding 0 14): no extra space above, below or between rows.
 
 ## Lock Screen
 Order newest first. Titles: "In 1 hour: {title}", "Now: {title}", "Still to do: {title}". Long-press actions: "Done" · "In 1 hour" · "Tomorrow".

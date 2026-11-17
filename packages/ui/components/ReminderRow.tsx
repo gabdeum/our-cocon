@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { avatarFills, EdgeRing, type AvatarColor } from './Avatar';
@@ -20,13 +19,9 @@ export interface ReminderRowProps {
   /** The Reminders screen's detail icons, with their names ("Repeats", "Has notes"). */
   repeats?: string;
   notes?: string;
-  /** Tapping the title opens it (the Reminders screen's drawer); `openLabel`: "Open {title}". */
+  /** Everything right of the dot (title, detail, late badge) is one button that opens the drawer; `openLabel`: "Open {title}". */
   onOpen?: () => void;
   openLabel?: string;
-  /** The ⋮ at the right, as a menu: an ActionMenu with `trigger="dots"` (Home). */
-  trailing?: ReactNode;
-  /** The ⋮ at the right, as a button that opens a dialog (the Reminders screen's drawer): "Open {title}". */
-  more?: { label: string; onPress: () => void };
   /** Offline: the tick box keeps its look, not pressable. */
   disabled?: boolean;
   /** The last row: no divider under it. */
@@ -49,7 +44,7 @@ function MemberDot({ initial, color, name, done }: ReminderRowProps['member'] & 
  * ReminderRow README (OC-HomeReminders, OC-Reminders): tick box · member dot · title and detail ·
  * late badge · ⋮. Min 58 tall, a 1.5 px divider between rows.
  */
-export function ReminderRow({ title, detail, member, done = false, onToggle, toggleLabel, late, repeats, notes, onOpen, openLabel, trailing, more, disabled, last = false }: ReminderRowProps) {
+export function ReminderRow({ title, detail, member, done = false, onToggle, toggleLabel, late, repeats, notes, onOpen, openLabel, disabled, last = false }: ReminderRowProps) {
   const text = (
     <>
       <Text size={16} weight="800" numberOfLines={1} strike={done} color={done ? 'ink-muted' : 'ink'}>
@@ -72,6 +67,14 @@ export function ReminderRow({ title, detail, member, done = false, onToggle, tog
       </View>
     </>
   );
+  const badge =
+    late && !done ? (
+      <View className="ml-8 flex-none rounded-full bg-warn-soft px-8 py-[3px]">
+        <Text size={12} weight="900" color="warn">
+          {late}
+        </Text>
+      </View>
+    ) : null;
   return (
     <View className={cn('min-h-[58px] flex-row items-center py-4', !last && 'border-b-[1.5px] border-line')}>
       {onToggle ? (
@@ -91,31 +94,22 @@ export function ReminderRow({ title, detail, member, done = false, onToggle, tog
       ) : null}
       <MemberDot {...member} done={done} />
       {onOpen ? (
-        <Pressable role="button" aria-label={openLabel} onPress={onOpen} className={cn('ml-10 min-w-0 flex-1 gap-[1px] rounded-[8px] py-2 active:bg-surface-soft', focusRing)}>
-          {text}
-        </Pressable>
-      ) : (
-        <View className="ml-10 min-w-0 flex-1 gap-[1px]">{text}</View>
-      )}
-      {late && !done ? (
-        <View className="ml-8 flex-none rounded-full bg-warn-soft px-8 py-[3px]">
-          <Text size={12} weight="900" color="warn">
-            {late}
-          </Text>
-        </View>
-      ) : null}
-      {trailing ? <View className="-mr-8 flex-none">{trailing}</View> : null}
-      {more ? (
         <Pressable
           role="button"
-          aria-label={more.label}
+          aria-label={openLabel}
           aria-haspopup="dialog"
-          onPress={more.onPress}
-          className={cn('-mr-8 h-control-md w-[36px] flex-none items-center justify-center rounded-[12px] active:bg-surface-soft', focusRing)}
+          onPress={onOpen}
+          className={cn('-mr-8 ml-10 min-h-control-md min-w-0 flex-1 flex-row items-center rounded-[8px] py-2 pr-8 active:bg-surface-soft', focusRing)}
         >
-          <Icon name="more-vertical" size={20} color="ink" />
+          <View className="min-w-0 flex-1 gap-[1px]">{text}</View>
+          {badge}
         </Pressable>
-      ) : null}
+      ) : (
+        <>
+          <View className="ml-10 min-w-0 flex-1 gap-[1px]">{text}</View>
+          {badge}
+        </>
+      )}
     </View>
   );
 }

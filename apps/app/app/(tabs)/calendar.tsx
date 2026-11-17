@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { loadCalendarSettings, loadEvents, loadRemindersInRange, type PlacedReminder } from '@cocon/data';
+import { loadCalendarSettings, loadEvents, loadRemindersDoneToday, loadRemindersInRange, type PlacedReminder } from '@cocon/data';
 import { addDays, dateLabel, todayIn } from '@cocon/calendar';
 import { CalendarScreen } from '../../components/calendar/CalendarScreen';
 import { ReminderDrawerHost, type OpenDrawer } from '../../components/reminders/ReminderDrawerHost';
 import { calendarRemindersKey, type CalendarReminders } from '../../lib/calendar-reminders';
+import { remindersDoneKey } from '../../lib/reminders';
 import { useOnline } from '../../lib/online';
 import { useReminderActions, useReminderContext } from '../../lib/reminder-actions';
 import { useToast } from '../../lib/toast';
@@ -65,6 +66,8 @@ export default function CalendarTab() {
     enabled: familyId !== null && eventDays !== null && remindersFrom <= remindersTo,
     placeholderData: (previous) => previous,
   });
+  // Done today: at the bottom of today until midnight (spec 058).
+  const doneToday = useQuery({ queryKey: remindersDoneKey(familyId ?? '', today, timeZone), queryFn: () => loadRemindersDoneToday(client, timeZone), enabled: familyId !== null });
   // The actions change every render; the views only need to redraw when the reminders do.
   const latest = useRef(actions);
   useEffect(() => {
@@ -75,14 +78,15 @@ export default function CalendarTab() {
     () => ({
       rows: reminderRows.data,
       ticked,
+      done: doneToday.data,
       gone,
       readOnly: !online,
       onTick: (row: PlacedReminder) => void latest.current.tick(row, 'calendar'),
-      onUntick: (id) => void latest.current.untick(id),
+      onUntick: (id, dueAt) => void latest.current.untick(id, doneToday.data?.find((d) => d.row.id === id && d.row.due_at === dueAt)),
       onNotYet: (date) => toast.show({ text: strings.calendar.reminders.notYet(dateLabel(date)) }),
       onOpen: (row) => setDrawer({ row, source: 'calendar' }),
     }),
-    [reminderRows.data, ticked, gone, online, toast, setDrawer],
+    [reminderRows.data, doneToday.data, ticked, gone, online, toast, setDrawer],
   );
 
   // Once each time the tab opens, with the view it opens on; switching views sends calendar_view_changed.
