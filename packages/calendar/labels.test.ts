@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SLOT_TIMES } from './slots';
-import { dateLabel, dayTitles, fitTitle, formatTime, monthTitles, placeLine, rangeLabel, timeLabel, titleWidth, uses24h, weekTitles, whenWord } from './labels';
+import { dateLabel, dayTitles, fitTitle, formatTime, monthTitles, placeLine, rangeLabel, textWidth, timeLabel, titleWidth, uses24h, weekTitles, whenWord } from './labels';
 
 const custom = (start_time: string, end_time: string) => ({ time_type: 'custom' as const, slots: [], start_time, end_time });
 
@@ -143,5 +143,13 @@ describe('placeLine', () => {
   it('puts a place typed over several lines on one', () => {
     expect(placeLine('Little Notes studio\n  4 Elm St \n\n75011 Paris')).toBe('Little Notes studio, 4 Elm St, 75011 Paris');
     expect(placeLine('Café Lalo')).toBe('Café Lalo');
+  });
+});
+
+describe('textWidth (spec 058)', () => {
+  it('measures short text at any size: the title width without its tracking, scaled', () => {
+    expect(textWidth('Nov 1', 28)).toBeCloseTo(titleWidth('Nov 1') + 0.5 * 'Nov 1'.length, 6);
+    expect(textWidth('25', 11)).toBeCloseTo((textWidth('25', 28) * 11) / 28, 6);
+    expect(textWidth('', 15)).toBe(0);
   });
 });
