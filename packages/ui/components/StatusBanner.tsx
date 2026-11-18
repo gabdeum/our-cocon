@@ -16,6 +16,9 @@ export interface StatusBannerProps {
   onAction?: () => void;
   /** Draws the button as a round icon (Undo, Try again) with `actionLabel` as its name (spec 053). */
   actionIcon?: IconName;
+  /** A text button before the round one: "See the list" beside Undo. */
+  linkLabel?: string;
+  onLink?: () => void;
   /** A round ✕ at the end ("Dismiss"): the toast always has one (spec 053). */
   dismissLabel?: string;
   onDismiss?: () => void;
@@ -23,7 +26,7 @@ export interface StatusBannerProps {
 }
 
 /** Confirmation with Undo (StatusBanner README › oc-status). Never stack two; a new one replaces the old. */
-export function StatusBanner({ message, tone = 'sage', actionLabel, onAction, actionIcon, dismissLabel, onDismiss, className }: StatusBannerProps) {
+export function StatusBanner({ message, tone = 'sage', actionLabel, onAction, actionIcon, linkLabel, onLink, dismissLabel, onDismiss, className }: StatusBannerProps) {
   const color = tone === 'warn' ? 'warn' : 'ink';
   return (
     <View
@@ -34,6 +37,13 @@ export function StatusBanner({ message, tone = 'sage', actionLabel, onAction, ac
       <Text size={15} weight="800" color={color} className="flex-1">
         {message}
       </Text>
+      {linkLabel && onLink ? (
+        <Pressable role="button" onPress={onLink} className={cn('h-control-md justify-center px-12', focusRing)}>
+          <Text size={15} weight="900" color={color} underline>
+            {linkLabel}
+          </Text>
+        </Pressable>
+      ) : null}
       {actionLabel && onAction && actionIcon ? (
         <IconButton variant="tint" icon={actionIcon} iconSize={20} iconColor={color} label={actionLabel} onPress={onAction} />
       ) : actionLabel && onAction ? (

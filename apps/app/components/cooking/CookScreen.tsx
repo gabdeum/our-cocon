@@ -236,7 +236,7 @@ function Cooking({
     tracker.track('cooking_exited', { at_step: sent(at + 1), step_count: sent(count) });
     close();
   };
-  // "Done cooking" logs the cook and opens the Done sheet (spec 051 FR-005; decision 21).
+  // "Done cooking" logs the cook and shows the Done toast (spec 051 FR-005; decision 21).
   const next = () => {
     if (!last) return jump(at + 1);
     if (closed.current) return;

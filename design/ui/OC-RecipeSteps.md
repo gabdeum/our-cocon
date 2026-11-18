@@ -14,7 +14,7 @@ The full step (text, temperature check, timer, tip) is in cooking mode; the shar
 ## Interactions
 | Element | Result |
 | --- | --- |
-| A step row | → cooking mode at that step (`/recipes/[id]/cook?step={id}&from=recipe`): it resumes the cook in progress there, or starts one. ✕ returns here; "Done cooking" returns here with the Done sheet (OC-CookDone) |
+| A step row | → cooking mode at that step (`/recipes/[id]/cook?step={id}&from=recipe`): it resumes the cook in progress there, or starts one. ✕ returns here; "Done cooking" returns here with the Done toast (OC-CookDone) |
 
 ## Accessibility labels
 A step row is a link: "Step {n}: {name or text}, {35:00} timer. Opens in cooking mode" (the timer part only when it has one; spec 030). A step timer says "1 minute left on {timer}" once, politely, when it gets to 1 minute, and the toast "{timer} is done" at zero.

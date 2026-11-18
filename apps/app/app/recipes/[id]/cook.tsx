@@ -105,7 +105,7 @@ export default function CookRoute() {
     if (router.canGoBack() && (!step || params.from === 'recipe')) router.back();
     else router.replace((id ? `/recipes/${id}` : '/recipes') as Href);
   };
-  // FR-005: "Done cooking" logs it, then the recipe page opens the Done sheet.
+  // FR-005: "Done cooking" logs it, then the recipe page shows the Done toast.
   const done = async () => {
     const session = cook?.session;
     if (!session || !id) return close();

@@ -54,7 +54,6 @@ export default function RecipesTab() {
     onShown: clearDeleted,
   });
   return (
-    <>
     <RecipeList
       recipes={list.data}
       members={state.status === 'ready' ? state.members : []}
@@ -80,7 +79,5 @@ export default function RecipesTab() {
       onCookDone={(cook, name) => void actions.finish(cook, name)}
       onCookCancel={(cook) => void actions.cancel(cook)}
     />
-    {actions.sheet}
-    </>
   );
 }

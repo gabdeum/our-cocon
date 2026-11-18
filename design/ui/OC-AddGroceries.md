@@ -15,8 +15,8 @@ Source `screens/OC-AddGroceries.dc.html` · Route `/recipes/[id]/add-to-grocerie
 | n = 1 | "Add 1 item" |
 | n = 0 | disabled "Nothing selected" |
 
-## Success state (same sheet)
-Sage disc with check · "Added {n} items to groceries" · "The whole family can see them now." · underlined "Undo" · buttons soft "Back to recipe" and ink "See the list".
+## Once added
+The sheet closes on the recipe page and a toast (Toast README) says "Added {n} items to groceries", with a text button "See the list" (→ Groceries), round Undo and ✕. No success state in the sheet.
 
 ## States not drawn
 | State | Copy |
@@ -24,9 +24,9 @@ Sage disc with check · "Added {n} items to groceries" · "The whole family can 
 | Unticked row | name in ink-muted (not the drawn faint colour, which is too light to read), no strike-through, no merge note |
 | Adding | the Add button keeps its width and reads "Adding…" |
 | Add failed | Callout warn "Couldn't add these items. Check your connection and try again."; the ticks stay as they were |
-| Undo failed | Callout warn "Couldn't undo. Try again." over the success state |
+| Undo failed | warn toast "Couldn't undo. Try again." |
 | Offline | the offline StatusBanner; the list stays readable, the Add button is off |
-| Leaving | "Back to recipe", "See the list", Cancel and the scrim take the sheet away before the next screen shows |
+| Leaving | Add (once saved), Cancel and the scrim take the sheet away before the next screen shows |
 
 ## Rules
 - Every ingredient starts ticked; there's no pantry. Untick what you have.
@@ -35,3 +35,4 @@ Sage disc with check · "Added {n} items to groceries" · "The whole family can 
 
 ## Changelog
 - 2026-11-12 (051 FR-010): "In recipe: {detail}" under the name; the merge note stays its own line.
+- 2026-11-17 (Gabriel's ask): the success state is replaced by a toast, "Added {n} items to groceries" · See the list · Undo · ✕; "Back to recipe" and "The whole family can see them now." removed.

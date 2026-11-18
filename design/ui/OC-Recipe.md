@@ -62,7 +62,7 @@ Source `screens/OC-Recipe.dc.html` (shared with the Steps tab; at 430 wide, in p
 | Cart | → add-to-groceries sheet |
 | Start recipe | → cooking mode at step 1 (`/recipes/[id]/cook`); when someone is already cooking it, the sheet below first |
 | Resume · step {k} / card Resume | → cooking mode at the cook's step, with its servings and version |
-| Done cooking / card Done | logs it as cooked and opens the Done sheet (OC-CookDone) |
+| Done cooking / card Done | logs it as cooked and shows the Done toast (OC-CookDone) |
 | Card Cancel | ends the cook (not counted); toast "Cancelled" with "Undo" |
 
 ## Already being cooked (not drawn)

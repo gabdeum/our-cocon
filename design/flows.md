@@ -39,8 +39,8 @@
 
 ## Main flows
 
-1. **Find and cook.** Home or Recipes → tap a recipe → Recipe (adjust Servings, Version) → a step in the Steps tab, or "Start recipe" → Cook → Next … "Done cooking" → back to Recipe with the Done sheet (OC-CookDone). ✕ leaves cooking mode with the cook still in progress: Recipes lists it under "In progress", and the recipe page's main button reads "Resume · step {k}".
-   - **Pick up or finish a cook.** Recipes › In progress card, or the recipe page's in-progress card: Resume → Cook at its step; Done → the Done sheet; Cancel → toast "Cancelled" with "Undo". "Start recipe" while someone's cooking it → sheet "Resume {member}'s" or "Start over".
+1. **Find and cook.** Home or Recipes → tap a recipe → Recipe (adjust Servings, Version) → a step in the Steps tab, or "Start recipe" → Cook → Next … "Done cooking" → back to Recipe with the Done toast (OC-CookDone). ✕ leaves cooking mode with the cook still in progress: Recipes lists it under "In progress", and the recipe page's main button reads "Resume · step {k}".
+   - **Pick up or finish a cook.** Recipes › In progress card, or the recipe page's in-progress card: Resume → Cook at its step; Done → toast "{recipe} is done!" with "Undo"; Cancel → toast "Cancelled" with "Undo". "Start recipe" while someone's cooking it → sheet "Resume {member}'s" or "Start over".
 2. **Shop for a recipe.** Recipe → cart button ("Add to groceries") → AddGroceries (untick what you have) → "Add N items" → success → "See the list" → Groceries.
 3. **Timers.** Any timed step → "Start timer" → pill appears on every screen → tap the pill → Timers. With nothing running: Menu › Timers tile.
 4. **Scale or convert.** Recipe → "…" next to Servings → panel → "Scale by an ingredient" (ScaleIng → "Apply to recipe" → Recipe) or "Unit converter" (Units → close → Recipe).

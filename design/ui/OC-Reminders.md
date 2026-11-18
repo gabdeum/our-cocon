@@ -24,6 +24,7 @@ Height ≥ 58, padding 4 px 0, divider `#F2E6C4` 1.5 px between rows. Left to ri
 ## Home card
 - Header: "Reminders" 20/900 + green "+" (44 px olive circle, white plus, same as the calendar card) → create sheet.
 - Top 3 rows (056 `reminders_home`).
+- Hidden when nothing is due today or late (snoozed and later ones don't count; Gabriel, 2026-11-17). One ticked on Home keeps it, struck through, until Home is left.
 - Footer row (border-top): "See all reminders" 15/800 olive · right "{n} more today · {n} snoozed" 14/700 + chevron. Parts drop when zero; if both are zero it reads just "See all reminders".
 - Spec 058: no ⋮ menu. Tapping a row (right of the dot) opens its drawer, where snooze, edit and delete are. (057 had a glass menu here: snooze times, Pick a date…, Edit, Delete reminder.)
 
