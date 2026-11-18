@@ -27,7 +27,7 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Specs 012, 051
 - Cooking mode runs inside the recipe's cook (spec 051): opening it resumes the cook in progress, at its step, with its servings and version; with none, it starts one at step 1 ("Start over" cancels the old one first). Offline, it still cooks, but nothing is saved.
 - The step is saved to the cook 2 s after it settles, and on leaving.
 - ✕, and Back on step 1, leave cooking mode and return to the recipe; the cook stays in progress and timers keep running.
-- "Done cooking" logs the cook as done and returns to the recipe page, which opens the Done sheet (OC-CookDone). When it can't save, it returns to the recipe with the cook still in progress.
+- "Done cooking" logs the cook as done and returns to the recipe page, which shows the Done toast (OC-CookDone). When it can't save, it returns to the recipe with the cook still in progress.
 - "Scale by an ingredient" and "Unit converter" close the options sheet and open their sheet over cooking mode; closing it comes back to the same step.
 
 ## States

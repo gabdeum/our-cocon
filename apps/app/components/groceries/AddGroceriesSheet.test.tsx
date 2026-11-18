@@ -1,5 +1,5 @@
 // Spec 022 (design/ui/OC-AddGroceries.md): US1 untick what you have, US2 the merge note, US3 the
-// success state and Undo, and the edge cases (nothing ticked, one item, offline, a failed add).
+// success toast with Undo and See the list, and the edge cases (nothing ticked, one item, offline, a failed add).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { render } from '../../test/render';
@@ -68,7 +68,7 @@ describe('Add to groceries', () => {
     expect(screen.queryByText(/Already on the list/)).toBeNull();
   });
 
-  it('US3: Add shows "Added 5 items to groceries" with Undo, Back to recipe and See the list', async () => {
+  it('US3: Add closes the sheet on a toast "Added 5 items to groceries" with See the list and Undo', async () => {
     const { api, tracker, onClose, onSeeList } = setup();
     fireEvent.click(row(/^Butter/));
     fireEvent.click(row(/^Eggs/));
@@ -77,16 +77,24 @@ describe('Add to groceries', () => {
     await flush();
     expect(api.add).toHaveBeenCalledWith(lines.filter((l) => !['Butter', 'Eggs', 'Nutmeg'].includes(l.name)));
     expect(tracker.track).toHaveBeenCalledWith('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3 });
-    expect(screen.getByText('Added 5 items to groceries')).toBeTruthy();
-    expect(screen.getByText('The whole family can see them now.')).toBeTruthy();
-    expect(button('See the list')).toBeTruthy();
-    expect(button('Back to recipe')).toBeTruthy();
+    // Taken away before leaving, so it never stays over the next screen.
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(onClose).toHaveBeenCalled();
+    expect(screen.getByRole('status').textContent).toBe('Added 5 items to groceriesSee the list');
+    expect(button('Dismiss')).toBeTruthy();
     fireEvent.click(button('Undo'));
     await flush();
     expect(api.undo).toHaveBeenCalledWith(added);
-    expect(button('Add 5 items')).toBeTruthy();
-    expect(onClose).not.toHaveBeenCalled();
     expect(onSeeList).not.toHaveBeenCalled();
+  });
+
+  it('"See the list" on the toast opens the list', async () => {
+    const { onSeeList } = setup();
+    fireEvent.click(button('Add 8 items'));
+    await flush();
+    fireEvent.click(button('See the list'));
+    expect(onSeeList).toHaveBeenCalled();
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('unticks everything at once, then ticks it all back', () => {
@@ -101,15 +109,6 @@ describe('Add to groceries', () => {
     expect(button('Add 8 items')).toBeTruthy();
   });
 
-  it.each(['See the list', 'Back to recipe'])('"%s" takes the sheet away before leaving, so it never stays over the next screen', async (label) => {
-    const { onSeeList, onClose } = setup();
-    fireEvent.click(button('Add 8 items'));
-    await flush();
-    fireEvent.click(button(label));
-    expect(label === 'See the list' ? onSeeList : onClose).toHaveBeenCalled();
-    expect(screen.queryByRole('dialog')).toBeNull();
-  });
-
   it('says what to do when adding or undoing fails', async () => {
     setup({ api: { add: vi.fn().mockResolvedValueOnce(null).mockResolvedValue(added), undo: vi.fn().mockResolvedValue(false) } });
     fireEvent.click(button('Add 8 items'));
@@ -119,8 +118,7 @@ describe('Add to groceries', () => {
     await flush();
     fireEvent.click(button('Undo'));
     await flush();
-    expect(screen.getByText("Couldn't undo. Try again.")).toBeTruthy();
-    expect(screen.getByText('Added 8 items to groceries')).toBeTruthy();
+    expect(screen.getByRole('status').textContent).toBe("Couldn't undo. Try again.");
   });
 
   it('offline: the list stays readable but Add is off', () => {

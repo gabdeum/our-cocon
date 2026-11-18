@@ -1245,10 +1245,8 @@ export const strings = {
     add: (n: number) => (n === 1 ? 'Add 1 item' : `Add ${n} items`),
     nothingSelected: 'Nothing selected',
     adding: 'Adding…',
+    // The toast once added, with Undo and "See the list".
     added: (n: number) => (n === 1 ? 'Added 1 item to groceries' : `Added ${n} items to groceries`),
-    addedBody: 'The whole family can see them now.',
-    undo: 'Undo',
-    backToRecipe: 'Back to recipe',
     seeList: 'See the list',
     close: 'Close',
     // Not drawn (OC-AddGroceries › States).
@@ -1396,16 +1394,9 @@ export const strings = {
   },
   // design/ui/OC-CookDone.md (spec 051 FR-005): after "Done".
   cookDone: {
-    title: (recipe: string) => `${recipe} is done!`,
-    /** "Logged as cooked today by Gabriel. That’s 5 times now." */
-    body: (member: string, times: number) => `Logged as cooked today by ${member}. ${times === 1 ? 'That’s the first time.' : `That’s ${times} times now.`}`,
-    undo: 'Undo',
-    undoneTitle: 'Still in progress',
-    undoneBody: (step: number) => `It’s back at the top of Recipes, at step ${step}.`,
-    markDone: 'Mark as done',
-    back: 'Back to the recipe',
+    /** The Done toast (spec 051 FR-005): "Leek & bacon quiche is done! That’s 5 times now." */
+    toast: (recipe: string, times: number) => `${recipe} is done! ${times === 1 ? 'That’s the first time.' : `That’s ${times} times now.`}`,
     close: 'Close',
-    failed: "Couldn't save. Check your connection and try again.",
   },
   // Total time (spec 006 FR-002): "40 min", "2 h", "1 h 05".
   time: {

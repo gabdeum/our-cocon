@@ -37,7 +37,7 @@ Source `screens/OC-Recipes.dc.html` · Route `/recipes` · Specs 006, 007, 051
 | RecipeItem | → `/recipes/[id]` |
 | Resume | → cooking mode at the cook's step, with its servings and version (`/recipes/[id]/cook`) |
 | Cancel | ends the cook (not counted as cooked); it leaves the section and a toast "Cancelled" with "Undo" shows |
-| Done | logs it as cooked, at any step, and opens the Done sheet (OC-CookDone) |
+| Done | logs it as cooked, at any step, and shows the Done toast (OC-CookDone) |
 
 ## Screen readers (spec 030)
 A search says what it found once it settles: "3 recipes", "1 recipe", or "No recipes match “{query}”.".

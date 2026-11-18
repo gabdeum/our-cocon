@@ -21,7 +21,7 @@ const recipeRoute = (id: string, page: string) => `/recipes/${id}/${page}` as Hr
 
 /**
  * /recipes/[id] (spec 008): the recipe page. `?tab=steps` opens the Steps tab (009). `?cooked=<id>`
- * opens the Done sheet for a cook cooking mode just logged (spec 051 FR-005).
+ * shows the Done toast for a cook cooking mode just logged (spec 051 FR-005).
  */
 export default function RecipeRoute() {
   const params = useLocalSearchParams<{ id: string; tab?: string; cooked?: string; servings?: string }>();
@@ -68,7 +68,7 @@ export default function RecipeRoute() {
     cookAt(step ? `step=${encodeURIComponent(step)}&from=recipe` : 'from=recipe');
   };
 
-  // Back from cooking mode's "Done cooking": the Done sheet for that cook.
+  // Back from cooking mode's "Done cooking": the Done toast for that cook.
   const cookedId = z.uuid().safeParse(params.cooked).data ?? null;
   useEffect(() => {
     if (!cookedId || !recipe.data) return;
@@ -134,7 +134,6 @@ export default function RecipeRoute() {
         }}
         onClose={() => setBusy(null)}
       />
-      {actions.sheet}
     </>
   );
 }

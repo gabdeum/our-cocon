@@ -46,6 +46,8 @@ export interface ToastRequest {
   onAction?: () => void;
   /** A round icon button instead of the text one: `undo`, `retry` (spec 053 FR-013). */
   actionIcon?: IconName;
+  /** A text button before the round one: "See the list" beside Undo. Also closes the toast. */
+  link?: { label: string; onPress: () => void };
 }
 
 /** Toast README › Timing: 5 s, or 8 s with a button to give time to reach it. A failure stays until closed (spec 053 FR-014). */
@@ -103,7 +105,7 @@ export function ToastProvider({ children, dismissLabel = 'Dismiss', onDismiss }:
 
   useEffect(() => {
     if (!toast || toast.tone === 'warn') return;
-    const timer = setTimeout(() => setToast(null), toast.onAction ? TOAST_ACTION_MS : TOAST_MS);
+    const timer = setTimeout(() => setToast(null), toast.onAction || toast.link ? TOAST_ACTION_MS : TOAST_MS);
     return () => clearTimeout(timer);
   }, [toast]);
 
@@ -144,6 +146,15 @@ export function ToastHost({ base = false }: { base?: boolean }) {
           tone={toast.tone}
           actionLabel={toast.actionLabel}
           actionIcon={toast.actionIcon}
+          linkLabel={toast.link?.label}
+          onLink={
+            toast.link
+              ? () => {
+                  ctx.hide();
+                  toast.link?.onPress();
+                }
+              : undefined
+          }
           dismissLabel={ctx.dismissLabel}
           onDismiss={ctx.dismiss}
           onAction={

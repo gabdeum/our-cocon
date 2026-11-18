@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { View } from 'react-native';
-import { BottomSheet, Button, Link, ListGroup, ListRow, SheetFooter, SuccessPanel } from '@cocon/ui';
+import { BottomSheet, Link, ListGroup, ListRow, SheetFooter } from '@cocon/ui';
 import type { IngredientFactsInput } from '@cocon/quantity';
 import type { Tracker, UnitSystem } from '@cocon/schemas';
-import { useFailureToast } from '../../lib/toast';
+import { useFailureToast, useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import type { AddedFromRecipe, RecipeGroceryLine } from '../../lib/add-from-recipe';
 import { mergeNotes } from '../../lib/add-from-recipe';
@@ -32,19 +31,23 @@ export interface AddGroceriesSheetProps {
   api: AddGroceriesApi;
   tracker: Tracker;
   onClose: () => void;
+  /** The toast's "See the list", once the sheet has closed. */
   onSeeList: () => void;
 }
 
-/** Add to groceries (spec 022; design/ui/OC-AddGroceries.md). No pantry: everything starts ticked. */
+/**
+ * Add to groceries (spec 022; design/ui/OC-AddGroceries.md). No pantry: everything starts ticked.
+ * Once added the sheet closes on a toast: "Added 3 items to groceries", See the list, Undo.
+ */
 export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, units = 'metric', api, tracker, onClose, onSeeList }: AddGroceriesSheetProps) {
   const online = useOnline();
+  const toast = useToast();
   // FR-001: every ingredient ticked to start; ids that are unticked.
   const [off, setOff] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   // Failures are warn toasts (spec 053 FR-015).
   useFailureToast(failed);
-  const [done, setDone] = useState<{ count: number; added: AddedFromRecipe } | null>(null);
   // On the web a Modal can stay over the next screen while this one leaves: take it away first.
   const [leaving, setLeaving] = useState(false);
   const leave = (go: () => void) => () => {
@@ -75,26 +78,22 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, un
       return;
     }
     tracker.track('groceries_added_from_recipe', { ingredient_count: count, unticked_count: lines.length - count });
-    setDone({ count, added });
+    toast.show({
+      text: a.added(count),
+      onUndo: () => undo(added),
+      undoFailed: a.undoFailed,
+      action: { label: a.seeList, onPress: onSeeList },
+    });
+    close();
   };
 
-  const undo = async () => {
-    if (!done || busy) return;
-    setBusy(true);
-    setFailed(null);
-    const ok = await api.undo(done.added);
-    setBusy(false);
-    if (ok) setDone(null);
-    else setFailed(a.undoFailed);
+  // From the toast, after the sheet has gone: a rejection shows "Couldn't undo".
+  const undo = async (added: AddedFromRecipe) => {
+    if (!(await api.undo(added))) throw new Error('undo failed');
   };
 
   const close = leave(onClose);
-  const footer = done ? (
-    <View className="flex-row gap-10">
-      <Button label={a.backToRecipe} variant="soft" onPress={close} className="flex-1" />
-      <Button label={a.seeList} variant="ink" onPress={leave(onSeeList)} className="flex-1" />
-    </View>
-  ) : (
+  const footer = (
     <SheetFooter
       cancel={{ label: a.cancel, onPress: close }}
       primary={{ label: count === 0 ? a.nothingSelected : a.add(count), onPress: () => void add(), disabled: count === 0 || !online, busy, busyLabel: a.adding }}
@@ -102,36 +101,32 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, un
   );
 
   // "Untick all" when anything is ticked, else "Tick all".
-  const tickAll = !done && lines.length > 0 ? <Link label={count > 0 ? a.untickAll : a.tickAll} onPress={() => setOff(count > 0 ? new Set(lines.map((l) => l.id)) : new Set())} /> : undefined;
+  const tickAll = lines.length > 0 ? <Link label={count > 0 ? a.untickAll : a.tickAll} onPress={() => setOff(count > 0 ? new Set(lines.map((l) => l.id)) : new Set())} /> : undefined;
 
   if (leaving) return null;
   return (
     <BottomSheet visible title={a.title} lead={a.lead(recipeName, servings)} headerAction={tickAll} closeLabel={a.close} onClose={close} footer={footer}>
       <OfflineBanner screen="recipe" tracker={tracker} />
-      {done ? (
-        <SuccessPanel title={a.added(done.count)} body={a.addedBody} undoLabel={a.undo} onUndo={() => void undo()} actions={null} />
-      ) : (
-        <ListGroup title={a.group} note={a.groupNote}>
-          {lines.map((line, i) => {
-            const on = ticked.has(line.id);
-            const note = on ? notes.get(line.id) : undefined;
-            return (
-              <ListRow
-                key={line.id}
-                title={line.name}
-                dim={!on}
-                detail={line.detail ? strings.groceries.inRecipe(line.detail) : undefined}
-                sub={note}
-                subTone="warn"
-                leading={{ kind: 'checkbox', checked: on }}
-                trailing={line.shown ? { kind: 'value', text: line.shown } : undefined}
-                onPress={() => toggle(line.id)}
-                last={i === lines.length - 1}
-              />
-            );
-          })}
-        </ListGroup>
-      )}
+      <ListGroup title={a.group} note={a.groupNote}>
+        {lines.map((line, i) => {
+          const on = ticked.has(line.id);
+          const note = on ? notes.get(line.id) : undefined;
+          return (
+            <ListRow
+              key={line.id}
+              title={line.name}
+              dim={!on}
+              detail={line.detail ? strings.groceries.inRecipe(line.detail) : undefined}
+              sub={note}
+              subTone="warn"
+              leading={{ kind: 'checkbox', checked: on }}
+              trailing={line.shown ? { kind: 'value', text: line.shown } : undefined}
+              onPress={() => toggle(line.id)}
+              last={i === lines.length - 1}
+            />
+          );
+        })}
+      </ListGroup>
     </BottomSheet>
   );
 }

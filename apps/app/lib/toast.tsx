@@ -26,7 +26,7 @@ export interface ToastRequest {
   undoFailed?: string;
   /** A round "Try again" (retry icon), for something that failed and can be retried (spec 053 FR-015). */
   retry?: () => void;
-  /** Another button than Undo: "Open timers". */
+  /** Another button than Undo: "Open timers". With Undo or Try again, a text button before it ("See the list"). */
   action?: { label: string; onPress: () => void };
 }
 
@@ -46,6 +46,7 @@ export function useToast() {
           actionLabel: onUndo ? strings.toast.undo : retry ? strings.toast.tryAgain : action?.label,
           actionIcon: onUndo ? 'undo' : retry ? 'retry' : undefined,
           onAction: onUndo ? () => void onUndo().catch(() => toast.show({ text: undoFailed ?? strings.toast.undoFailed, tone: 'warn' })) : (retry ?? action?.onPress),
+          link: (onUndo || retry) && action ? action : undefined,
         }),
     }),
     [toast],
