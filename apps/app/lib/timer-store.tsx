@@ -195,8 +195,9 @@ export function createTimerStore({ storage, userId, tracker, alerts, live, isFor
     if (finished.length || cleared) {
       // Ended on screen: the in-app alert plays (spec 010) and the phone's is already hidden, so its
       // follow-up goes (047 edge cases). Ended unseen: the phone's alert and follow-up stay, silently.
+      // An alarm (spec 061) rings on screen too, until it is stopped: it never goes here.
       const seen = onScreen ? finished : [];
-      syncAlerts(timers, next, seen.map((t) => t.id));
+      syncAlerts(timers, next, alerts?.rings ? [] : seen.map((t) => t.id));
       timers = next;
       if (seen.length) pillHidden = false;
       save();
@@ -300,7 +301,8 @@ export function createTimerStore({ storage, userId, tracker, alerts, live, isFor
     },
     seenDone() {
       // The Timers screen can stay open behind the Lock Screen: only on screen does it count.
-      if (!isForeground()) return;
+      // An alarm (spec 061) rings until it is stopped, on its own buttons or the timer's.
+      if (!isForeground() || alerts?.rings) return;
       const done = timers.filter((t) => t.state === 'done').map((t) => t.id);
       if (alerts && done.length) void alerts.cancel(done);
     },
@@ -313,7 +315,9 @@ export function createTimerStore({ storage, userId, tracker, alerts, live, isFor
       const taps = await live.takeActions();
       if (destroyed) return;
       taps.forEach((tap: LiveActionRecord) => {
-        tracker.track('timer_live_activity_action', { action: tap.action });
+        // Spec 061: an alarm's "+1 min" or "Stop" counts as the alert's, as spec 047's notification did.
+        if (tap.source === 'alarm') tracker.track('timer_alert_action', { action: tap.action === 'add_minute' ? 'add_minute' : 'stop' });
+        else tracker.track('timer_live_activity_action', { action: tap.action });
         // Never later than now, whatever the phone's clock said.
         change((ts, at) => applyLiveAction(ts, { ...tap, at: Math.min(tap.at, at) }));
       });
@@ -380,6 +384,9 @@ function forwardingAlerts(): TimerAlertScheduler & { use: (alerts: TimerAlertSch
   let current: TimerAlertScheduler | undefined;
   return {
     use: (alerts) => void (current = alerts),
+    get rings() {
+      return current?.rings;
+    },
     schedule: async (t) => current?.schedule(t),
     cancel: async (ids) => current?.cancel(ids),
     reconcile: async (ts) => current?.reconcile(ts),

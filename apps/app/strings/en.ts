@@ -1366,6 +1366,9 @@ export const strings = {
     /** The settings button in the header, and the sheet it opens. */
     options: 'Cooking options',
     closeOptions: 'Close cooking options',
+    // Spec 062: the round timer button left of "Cooking options", and its sheet.
+    timers: 'Timers',
+    closeTimers: 'Close timers',
     /** The switch in the options sheet. */
     awake: 'Screen stays on',
     awakeOnHint: "Your screen won't lock while you cook",

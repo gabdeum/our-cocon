@@ -389,3 +389,42 @@ describe('Cooking mode (spec 012)', () => {
     expect(screen.queryByText('Bon appétit!')).toBeNull();
   });
 });
+
+describe('Timers in cooking mode (spec 062)', () => {
+  it('the round timer button, left of the options, opens every timer and the quick ones; a quick timer starts there', async () => {
+    const { tracker } = await setup();
+    const timersButton = screen.getByRole('button', { name: 'Timers' });
+    const options = screen.getByRole('button', { name: 'Cooking options' });
+    expect(timersButton.compareDocumentPosition(options) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    press('Timers');
+    expect(tracker.track).toHaveBeenCalledWith('cook_timers_opened', { timer_count: 0 });
+    const sheet = screen.getByRole('dialog', { name: 'Timers' });
+    expect(within(sheet).getByText('No timers running. Start one from any recipe step.')).toBeTruthy();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Start a 5 min kitchen timer' }));
+    expect(within(sheet).getByText('Kitchen timer')).toBeTruthy();
+    expect(within(sheet).getByRole('button', { name: 'Pause: Kitchen timer' })).toBeTruthy();
+    // A kitchen timer has no step to go to.
+    expect(within(sheet).queryByRole('button', { name: /^Go to step:/ })).toBeNull();
+    // On the backdrop, outside the sheet itself.
+    expect(screen.getByRole('button', { name: 'Close timers' })).toBeTruthy();
+    await expectAccessible(sheet);
+    // Done: "Add 1 more minute" runs it again, Dismiss takes it away.
+    await act(async () => void vi.advanceTimersByTime(5 * 60 * 1000 + 500));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Add 1 more minute: Kitchen timer' }));
+    expect(within(sheet).getByRole('button', { name: 'Pause: Kitchen timer' })).toBeTruthy();
+    await act(async () => void vi.advanceTimersByTime(60 * 1000 + 500));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Dismiss: Kitchen timer' }));
+    expect(within(sheet).queryByText('Kitchen timer')).toBeNull();
+  });
+
+  it('a timer of this recipe goes to its step, closing the sheet', async () => {
+    await setup();
+    fireEvent.click(within(section(1)).getByRole('button', { name: 'Start timer' }));
+    press('Timers');
+    const sheet = screen.getByRole('dialog', { name: 'Timers' });
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Go to step: Blind bake' }));
+    expect(screen.queryByRole('dialog', { name: 'Timers' })).toBeNull();
+    expect(isCurrent(1)).toBe(true);
+  });
+});

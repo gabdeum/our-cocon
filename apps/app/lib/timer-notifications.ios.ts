@@ -3,6 +3,8 @@ import * as Notifications from 'expo-notifications';
 import { strings } from '../strings/en';
 import { readPrefs } from './notifications';
 import { handleTimerAction } from './timer-alert-actions';
+import { alarmNotifications, withAlarmCleanup } from './timer-alarms';
+import { timerAlarmsNative } from './timer-alarms-native';
 import { createTimerAlerts, devLog, TIMER_CATEGORY, TIMER_SOUND, TIMER_THREAD, type LocalNotifications } from './timer-alerts';
 import { tracker } from './tracker';
 
@@ -47,7 +49,11 @@ const local: LocalNotifications = {
   },
 };
 
-export const timerNotifications: LocalNotifications | null = local;
+/** Removing and listing also cover spec 061's alarms, so sign-out and a switch turned off clear them too. */
+export const timerNotifications: LocalNotifications | null = timerAlarmsNative ? withAlarmCleanup(local, timerAlarmsNative) : local;
+
+/** Spec 061 (iOS 26): each timer's alert as an alarm, once alarms are allowed. */
+export const timerAlarmNotifications: LocalNotifications | null = timerAlarmsNative ? alarmNotifications(local, timerAlarmsNative) : null;
 
 /** For a "+1 min" handled while no timer store is running: the same switches the app would use. */
 async function alertsFor(userId: string) {

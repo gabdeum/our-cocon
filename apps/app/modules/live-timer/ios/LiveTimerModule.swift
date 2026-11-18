@@ -71,6 +71,39 @@ public final class LiveTimerModule: Module {
       LiveTimerTaps.take()
     }
 
+    // Spec 061: timer alarms through AlarmKit (TimerAlarmsBridge.swift).
+    Function("alarmsAvailable") { () -> Bool in
+      TimerAlarmsLink.bridge?.alarmsAvailable() ?? false
+    }
+
+    Function("alarmAuthorization") { () -> String in
+      TimerAlarmsLink.bridge?.alarmAuthorization() ?? "denied"
+    }
+
+    AsyncFunction("requestAlarms") { (promise: Promise) in
+      guard let bridge = TimerAlarmsLink.bridge else { return promise.resolve("denied") }
+      bridge.requestAlarmAuthorization { promise.resolve($0) }
+    }
+
+    AsyncFunction("scheduleAlarm") { (json: String, at: Double, promise: Promise) in
+      guard let bridge = TimerAlarmsLink.bridge else { return promise.resolve(false) }
+      bridge.scheduleAlarm(json, at: at) { promise.resolve($0) }
+    }
+
+    AsyncFunction("cancelAlarms") { (alertIds: [String]) in
+      TimerAlarmsLink.bridge?.cancelAlarms(alertIds)
+    }
+
+    AsyncFunction("clearAlarms") { (promise: Promise) in
+      guard let bridge = TimerAlarmsLink.bridge else { return promise.resolve(nil) }
+      bridge.clearAlarms { promise.resolve(nil) }
+    }
+
+    AsyncFunction("alarmIds") { (promise: Promise) in
+      guard let bridge = TimerAlarmsLink.bridge else { return promise.resolve([String]()) }
+      bridge.alarmIds { promise.resolve($0) }
+    }
+
     OnStartObserving {
       self.observer = NotificationCenter.default.addObserver(forName: LiveTimerTaps.tapped, object: nil, queue: .main) { [weak self] _ in
         self?.sendEvent("onAction", [:])

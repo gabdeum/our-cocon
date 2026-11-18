@@ -1,6 +1,6 @@
 # OC-Notifications — what the phone shows
 
-Sources `screens/OC-NotifAsk.dc.html`, `OC-NotifLockTimer.dc.html`, `OC-NotifIsland.dc.html`, `OC-NotifLockDone.dc.html`, `OC-NotifLockReminders.dc.html`, `OC-NotifLockTodo.dc.html` · Specs 046–049, 059
+Sources `screens/OC-NotifAsk.dc.html`, `OC-NotifLockTimer.dc.html`, `OC-NotifIsland.dc.html`, `OC-NotifLockDone.dc.html`, `OC-NotifLockReminders.dc.html`, `OC-NotifLockTodo.dc.html` · Specs 046–049, 059, 061
 
 Lock Screen mock-ups show content and order only; iOS draws the notification chrome. Notification titles and bodies are plain text (no emoji).
 
@@ -19,6 +19,9 @@ Not drawn (spec 048): every timer paused, the pill says "{n} paused"; done in th
 ## Timer done (047)
 Title "{label} is done" · body "{recipe} · step {n}" or "{n}-minute kitchen timer". Long-press actions: "+1 min" · "Stop".
 Follow-up after 2 min: "Still waiting: {label}" · "Done {n} minutes ago."
+
+## Timer alarm (061, iOS 26)
+With alarms allowed, the timer-done alert is an alarm: it rings with the kitchen-bell chime through silent mode and Focus until "Stop" or "+1 min", also with the app open (the app then shows only its "{name} is done" toast, with no chime of its own). No follow-up. iOS draws the alarm itself (from iOS 26.1, its own Stop); its words: title "{label} is done", buttons "+1 min" · "Stop". While it rings, its Live Activity is OC-NotifLockDone's honey card with the 2 px ink border: bell, "{label} is done" 17/900, "{recipe} · step {n}" or "{n}-minute kitchen timer" 13/700, ink pill "+1 min" and soft "Stop"; Dynamic Island: compact = bell · "{label} is done" (honey), minimal = bell, expanded = bell 36, title and sub, buttons "+1 min" · "Stop" on `island-button`. "Stop" dismisses the done timer; "+1 min" runs it again for a minute, as "Add 1 more minute". iOS asks once, on the first timer started: "Our Cocon rings when a kitchen timer ends, even when your iPhone is on silent." (app.json, NSAlarmKitUsageDescription); refused, or iOS before 26: the notification above.
 
 ## Event reminders (049)
 | Kind | Title | Body example |

@@ -20,8 +20,13 @@ export interface CookLayoutProps {
   /** "Exit cooking mode": the round ✕ that closes cooking mode (spec 050). */
   exitLabel: string;
   onExit: () => void;
-  /** Right of Exit, before the options button: the TimerPill while timers run. */
+  /** Right of Exit, before the timers and options buttons: the TimerPill while timers run. */
   status?: ReactNode;
+  /** The round timer button left of the options button: "Timers" (spec 062). Left out: no button. */
+  timersLabel?: string;
+  onTimers?: () => void;
+  /** The timers button, so its sheet can give focus back to it. */
+  timersRef?: Ref<HostInstance>;
   /** The options button (round settings, like the TopBar's) on the right: "Cooking options". */
   optionsLabel: string;
   onOptions: () => void;
@@ -58,7 +63,7 @@ export interface CookLayoutProps {
  * on the last) are ink, so they never pass for Back or Next.
  */
 export function CookLayout(props: CookLayoutProps) {
-  const { exitLabel, onExit, status, optionsLabel, onOptions, optionsRef, progress, children, endLabel, backLabel, onBack, backExits, nextLabel, onNext, nextFinishes, scrollRef, onScroll, onViewportLayout, snapOffsets } = props;
+  const { exitLabel, onExit, status, timersLabel, onTimers, timersRef, optionsLabel, onOptions, optionsRef, progress, children, endLabel, backLabel, onBack, backExits, nextLabel, onNext, nextFinishes, scrollRef, onScroll, onViewportLayout, snapOffsets } = props;
   // The ✕ sits where the TopBar of the loading state put it, so it doesn't jump when the steps arrive.
   const top = useTopEdge();
   return (
@@ -68,6 +73,7 @@ export function CookLayout(props: CookLayoutProps) {
           <IconButton variant="round" icon="close" iconSize={20} label={exitLabel} onPress={onExit} />
           <View className="min-w-0 flex-shrink flex-row items-center justify-end gap-8">
             {status}
+            {timersLabel && onTimers ? <IconButton ref={timersRef} variant="round" icon="timer" label={timersLabel} onPress={onTimers} /> : null}
             <IconButton ref={optionsRef} variant="round" icon="settings" label={optionsLabel} onPress={onOptions} />
           </View>
         </View>

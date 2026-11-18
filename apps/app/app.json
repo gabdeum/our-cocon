@@ -21,7 +21,8 @@
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSSupportsLiveActivities": true
+        "NSSupportsLiveActivities": true,
+        "NSAlarmKitUsageDescription": "Our Cocon rings when a kitchen timer ends, even when your iPhone is on silent."
       },
       "usesAppleSignIn": true,
       "associatedDomains": [
