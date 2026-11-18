@@ -28,6 +28,10 @@ body{margin:0}
           <sc-if value="{{pill.hasMore}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; font-weight: 900; background: #FFCF5C; padding: 5px 8px; border-radius: 999px">{{pill.more}}</span></sc-if>
         </a>
       </sc-if>
+      <!-- Spec 062: opens the "Timers" sheet: every timer (as on Timers) and the quick kitchen timers. -->
+      <button aria-label="Timers" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: #FFF0C9; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+      </button>
       <!-- Opens the "Cooking options" sheet: "Screen stays on" and the recipe page's "…" options. -->
       <button aria-label="Cooking options" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: #FFF0C9; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer">
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>

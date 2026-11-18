@@ -26,7 +26,7 @@ export function generate() {
     'packages/ui/tailwind.theme.cjs': tailwindTheme(tokens),
     'packages/ui/icons.generated.tsx': iconsTsx(icons, logo, brands),
     // Spec 048: the Live Activity is SwiftUI, so it gets the same tokens and icons in Swift.
-    'apps/app/targets/timer-activity/Theme.swift': themeSwift(tokens),
+    'apps/app/targets/timer-activity/_shared/Theme.swift': themeSwift(tokens),
     ...widgetAssets(icons, logo, 'apps/app/targets/timer-activity/Assets.xcassets'),
   };
 }

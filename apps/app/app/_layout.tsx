@@ -32,7 +32,9 @@ import { ToastProvider, useToast } from '../lib/toast';
 import { NotificationsProvider, useNotifications } from '../lib/notifications-context';
 import { nativeNotifications } from '../lib/notifications-native';
 import { clearPrefs, unregisterDevice } from '../lib/notifications';
-import { timerNotifications } from '../lib/timer-notifications';
+import { timerAlarmNotifications, timerNotifications } from '../lib/timer-notifications';
+import { timerAlarmsNative } from '../lib/timer-alarms-native';
+import { useAlarmPermission } from '../lib/timer-alarms';
 // Spec 059: a reminder's Lock Screen actions are listened for as soon as the app's code loads.
 import '../lib/todo-notifications';
 import { clearFollowUps, createTimerAlerts, liveAlert } from '../lib/timer-alerts';
@@ -96,16 +98,23 @@ function Notifications({ children }: { children: ReactNode }) {
 function Timers({ children }: { children: ReactNode }) {
   const { state } = useSession();
   const { maybeAsk, status, prefs } = useNotifications();
-  const onStart = useCallback(() => maybeAsk('timer'), [maybeAsk]);
+  // Spec 061 (iOS 26): alarms take the place of the done notification once allowed. iOS asks on the
+  // first timer started; the notifications question (spec 046) then comes only if alarms are refused.
+  const { permission: alarmPermission, request: askAlarms } = useAlarmPermission(timerAlarmsNative, tracker);
+  const onStart = useCallback(() => {
+    if (alarmPermission === 'notDetermined') void askAlarms().then((answer) => answer !== 'authorized' && maybeAsk('timer'));
+    else if (alarmPermission !== 'authorized') maybeAsk('timer');
+  }, [alarmPermission, askAlarms, maybeAsk]);
   const userId = state.status === 'ready' ? state.userId : '';
-  // Spec 047: Lock Screen alerts, while notifications are allowed and "Alert when a timer ends" is on.
-  // None until the iPhone has said: "off" for that moment would cancel the alerts already waiting.
-  const enabled = status === 'granted' && prefs.timers_alert;
+  const alarms = timerAlarmNotifications !== null && alarmPermission === 'authorized';
+  // Spec 047: Lock Screen alerts, while notifications (or alarms) are allowed and "Alert when a timer
+  // ends" is on. None until the iPhone has said: "off" for that moment would cancel the alerts already waiting.
+  const enabled = (alarms || status === 'granted') && prefs.timers_alert;
   const known = status !== null;
-  const alerts = useMemo(
-    () => (timerNotifications && userId && known ? createTimerAlerts({ local: timerNotifications, userId, storage: deviceStorage, tracker, enabled }) : undefined),
-    [userId, known, enabled],
-  );
+  const alerts = useMemo(() => {
+    const local = alarms ? timerAlarmNotifications : timerNotifications;
+    return local && userId && known ? createTimerAlerts({ local, userId, storage: deviceStorage, tracker, enabled, alarms }) : undefined;
+  }, [userId, known, enabled, alarms]);
   // Spec 048: the Lock Screen card while "Timer on Lock Screen" is on (it needs no notification
   // permission). Its "+1 min" moves the alerts too, so it carries them while they're on.
   const live = useMemo(
@@ -128,10 +137,13 @@ function Timers({ children }: { children: ReactNode }) {
   return (
     <TimersProvider userId={userId} storage={deviceStorage} tracker={tracker} onStart={onStart} alerts={alerts} live={live}>
       {children}
-      <TimerAlerts chime={playChime} vibrate={vibrateDone} onOpenTimers={() => router.push('/timers')} />
+      {/* With alarms (spec 061) the phone rings, on screen too: the app only shows "Blind bake is done". */}
+      <TimerAlerts chime={alerts?.rings ? quiet : playChime} vibrate={alerts?.rings ? quiet : vibrateDone} onOpenTimers={() => router.push('/timers')} />
     </TimersProvider>
   );
 }
+
+const quiet = () => undefined;
 
 // Every timer notification on this phone, whoever's, and the Lock Screen card (specs 047 and 048:
 // signed out, however the session ended, or another person signed in).
@@ -140,6 +152,7 @@ const removeAllTimerAlerts =
   phoneAlerts || liveTimerNative
     ? async () => {
         if (liveTimerNative) await endLiveActivity(liveTimerNative).catch(() => undefined);
+        await timerAlarmsNative?.clear().catch(() => undefined);
         if (phoneAlerts) await createTimerAlerts({ local: phoneAlerts, userId: '', storage: deviceStorage, tracker, enabled: false }).cancelAll();
       }
     : undefined;
@@ -148,6 +161,7 @@ const removeAllTimerAlerts =
 // notification switches (spec 046), and a shared recipe still waiting to be saved (spec 019).
 const clearDevice = async (userId: string) => {
   if (liveTimerNative) await endLiveActivity(liveTimerNative).catch(() => undefined);
+  await timerAlarmsNative?.clear().catch(() => undefined);
   if (timerNotifications) await createTimerAlerts({ local: timerNotifications, userId, storage: AsyncStorage, tracker, enabled: false }).cancelAll();
   await clearFollowUps(AsyncStorage, userId);
   await clearTimers(AsyncStorage, userId);

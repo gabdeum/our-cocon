@@ -123,6 +123,11 @@ export function alertChanges(prev: readonly Timer[], next: readonly Timer[]): { 
 
 /** What the timer store calls (spec 047 SC-002: every action). Each never throws: timers work without it. */
 export interface TimerAlertScheduler {
+  /**
+   * Spec 061: the alerts are alarms (iOS 26), which ring until stopped, even with the app open: the app
+   * never hides them and plays no chime of its own. Absent: notifications (spec 047).
+   */
+  readonly rings?: boolean;
   schedule(timer: Timer): Promise<void>;
   /** Both of each timer's notifications, waiting or already shown. */
   cancel(timerIds: readonly string[]): Promise<void>;
@@ -149,8 +154,10 @@ export interface TimerAlertsOptions {
   userId: string;
   storage: ChoiceStorage;
   tracker: Tracker;
-  /** Notifications allowed on this phone and "Alert when a timer ends" on (FR, edge cases). */
+  /** Notifications (or alarms) allowed on this phone and "Alert when a timer ends" on (FR, edge cases). */
   enabled: boolean;
+  /** Spec 061: `local` schedules AlarmKit alarms. One alert per timer, with no follow-up: it rings until stopped. */
+  alarms?: boolean;
   now?: () => number;
 }
 
@@ -192,7 +199,7 @@ export async function clearFollowUps(storage: { removeItem: (key: string) => Pro
  * Follow-ups that were scheduled and never cancelled are remembered on the phone (`timer id → when it
  * fires`), so `timer_alert_followup_sent` goes once for each one that arrived.
  */
-export function createTimerAlerts({ local, userId, storage, tracker, enabled, now = Date.now }: TimerAlertsOptions): TimerAlertScheduler {
+export function createTimerAlerts({ local, userId, storage, tracker, enabled, alarms = false, now = Date.now }: TimerAlertsOptions): TimerAlertScheduler {
   const failed = (e: unknown) => devLog('failed:', e instanceof Error ? e.message : String(e));
   // The follow-up record is only storage: its changes go one after another, after the iPhone has the requests.
   let records: Promise<unknown> = Promise.resolve();
@@ -229,6 +236,7 @@ export function createTimerAlerts({ local, userId, storage, tracker, enabled, no
     if (fireAt - now() < 1000) return Promise.resolve();
     touch(t.id);
     const data: TimerAlertData = { kind: 'timer_done', route: '/timers', timerId: t.id, userId };
+    if (alarms) return local.scheduleAt(alertId(t.id), fireAt, alertContent(t), data).catch(failed);
     const again = fireAt + FOLLOW_UP_MS;
     // Both asked for now, before any await.
     const asked = [local.scheduleAt(alertId(t.id), fireAt, alertContent(t), data), local.scheduleAt(followUpId(t.id), again, followUpContent(t), data)];
@@ -246,6 +254,7 @@ export function createTimerAlerts({ local, userId, storage, tracker, enabled, no
   const timerOf = (notificationId: string) => notificationId.slice('timer:'.length).replace(/:again$/, '');
 
   return {
+    rings: alarms,
     schedule,
     cancel,
     async reconcile(timers) {
@@ -261,8 +270,10 @@ export function createTimerAlerts({ local, userId, storage, tracker, enabled, no
         const waiting = (await local.ids()).filter(isTimerAlert);
         // A timer scheduled or cancelled since this re-check began is already right.
         const changed = (id: string) => (touched.get(id) ?? 0) > since;
-        // Keep a running timer's two, and a done one's follow-up still to come; anything else goes.
-        const keep = new Set(enabled ? timers.flatMap((t) => (t.state === 'paused' ? [] : [alertId(t.id), followUpId(t.id)])) : []);
+        // Keep a running timer's two, and a done one's follow-up still to come (or its alarm, still
+        // ringing); anything else goes, a follow-up too once alarms took over.
+        const ours = (t: Timer) => (alarms ? [alertId(t.id)] : [alertId(t.id), followUpId(t.id)]);
+        const keep = new Set(enabled ? timers.flatMap((t) => (t.state === 'paused' ? [] : ours(t))) : []);
         const stale = waiting.filter((id) => !keep.has(id) && !changed(timerOf(id)));
         if (stale.length) {
           void local.remove(stale).catch(failed);

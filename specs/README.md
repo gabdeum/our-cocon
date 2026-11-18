@@ -97,6 +97,8 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 56 | 058 Reminders in the calendar | 056, 057, 039, 040 | OC-CalAgendaReminders |
 | 57 | 059 Reminder notifications | 056, 046, 049 | OC-NotifLockTodo, OC-SettingsNotif |
 | 58 | 060 Reminder tools for AI assistants | 056, 044, 026 | OC-Connect |
+| 59 | 061 Timer alarms that always ring (iOS 26) | 047, 048 | OC-NotifLockDone |
+| 60 | 062 Timers from cooking mode | 011, 012 | OC-Cook |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
 Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order, then the top bar (050) across every pushed screen.

@@ -11,6 +11,12 @@ import WidgetKit
 struct TimerActivityBundle: WidgetBundle {
   var body: some Widget {
     TimerActivityWidget()
+    // Spec 061: the ringing timer alarm (TimerAlarmWidget.swift).
+    #if canImport(AlarmKit)
+    if #available(iOS 26.0, *) {
+      TimerAlarmWidget()
+    }
+    #endif
   }
 }
 

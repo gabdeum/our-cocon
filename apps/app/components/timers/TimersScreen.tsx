@@ -1,20 +1,17 @@
 import { useEffect, useRef } from 'react';
-import { AppState, View } from 'react-native';
-import { PushedScreen, Text, TimePresets, TimerCard } from '@cocon/ui';
+import { View } from 'react-native';
+import { PushedScreen, Text } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
-import { useTimers, useTimerStore } from '../../lib/timer-store';
-import { clock, MINUTE, progress, remaining, type Timer } from '../../lib/timers';
+import { useTimers } from '../../lib/timer-store';
+import type { Timer } from '../../lib/timers';
 import { stepStillThere } from '../../lib/cooking';
 import type { RecipeDetail } from '../../lib/recipe';
+import { TimerList, useSeenDone } from './TimerList';
+
+export { QUICK_MINUTES } from './TimerList';
 
 const copy = strings.timersScreen;
-/** The quick kitchen timers at the bottom (FR-004): 5 · 10 · 15 · 30 min. */
-export const QUICK_MINUTES = [5, 10, 15, 30] as const;
-
-const stateLabel = { running: copy.running, paused: copy.paused, done: copy.done } as const;
-const actionLabel = { running: copy.pause, paused: copy.resume, done: copy.addMinute } as const;
-
 export interface TimersScreenProps {
   onBack: () => void;
   tracker: Tracker;
@@ -33,8 +30,7 @@ export interface TimersScreenProps {
  * "Go to step" (032-later L19).
  */
 export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep, focused = true }: TimersScreenProps) {
-  const store = useTimerStore();
-  const { timers, now } = useTimers();
+  const { timers } = useTimers();
 
   // Once per visit, with how many timers there were on arrival.
   const opened = useRef(false);
@@ -43,22 +39,10 @@ export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep, focuse
     opened.current = true;
     tracker.track('timers_screen_opened', { timer_count: timers.length });
   }, [tracker, timers.length]);
-  // Spec 047 FR-001: seen here, so done timers' Lock Screen alerts and follow-ups go (also once a
-  // cold start from a tapped alert has read the saved timers).
-  const done = timers
-    .filter((t) => t.state === 'done')
-    .map((t) => t.id)
-    .join(',');
-  useEffect(() => {
-    if (!done || !focused) return;
-    store.seenDone();
-    // Left open behind the Lock Screen: counts once the app is back on screen.
-    const sub = AppState.addEventListener('change', (s) => s === 'active' && store.seenDone());
-    return () => sub.remove();
-  }, [store, done, focused]);
+  // Spec 047 FR-001: seen here, unless another screen is on top.
+  useSeenDone(focused);
 
   const running = timers.filter((t) => t.state === 'running').length;
-  const newestFirst = [...timers].reverse();
 
   const goTo = (t: Timer) => {
     const { recipeId, stepId } = t;
@@ -66,46 +50,13 @@ export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep, focuse
     return { label: copy.goToStep, a11y: copy.goToStepA11y(t.label), onPress: () => onGoToStep(recipeId, stepId) };
   };
 
-  const card = (t: Timer) => (
-    <TimerCard
-      key={t.id}
-      name={t.label}
-      sub={copy.sub(t.recipeName ?? copy.noRecipe, stateLabel[t.state])}
-      state={t.state}
-      clock={clock(remaining(t, now))}
-      progress={progress(t, now)}
-      actionLabel={actionLabel[t.state]}
-      onAction={() => (t.state === 'running' ? store.pause(t.id) : t.state === 'paused' ? store.resume(t.id) : store.add(t.id, MINUTE))}
-      actionA11y={copy.forTimer(actionLabel[t.state], t.label)}
-      secondaryLabel={t.state === 'done' ? copy.dismiss : copy.stop}
-      secondaryA11y={copy.forTimer(t.state === 'done' ? copy.dismiss : copy.stop, t.label)}
-      onSecondary={() => (t.state === 'done' ? store.dismiss(t.id) : store.stop(t.id))}
-      minusLabel={copy.minus}
-      plusLabel={copy.plus}
-      minusA11y={copy.forTimer(copy.minusA11y, t.label)}
-      plusA11y={copy.forTimer(copy.plusA11y, t.label)}
-      onMinus={() => store.add(t.id, -MINUTE)}
-      onPlus={() => store.add(t.id, MINUTE)}
-      link={goTo(t)}
-    />
-  );
-
   return (
     <PushedScreen className="gap-12" topBar={{ back: { label: copy.back, onPress: onBack }, title: copy.title }}>
       <Text size={15} weight="700" color="ink-muted">
         {copy.summary(running, timers.length)}
       </Text>
       <View className="gap-12 pt-6">
-        {newestFirst.map(card)}
-        {timers.length === 0 ? (
-          <Text size={16} weight="700" color="ink-muted" align="center" className="px-10 py-40">
-            {copy.empty}
-          </Text>
-        ) : null}
-        <TimePresets
-          label={copy.quick}
-          presets={QUICK_MINUTES.map((m) => ({ label: copy.preset(m), a11y: copy.quickA11y(m), onPress: () => void store.quick(m * MINUTE) }))}
-        />
+        <TimerList linkFor={goTo} />
         <Text variant="caption" color="ink-muted" align="center">
           {copy.footnote}
         </Text>

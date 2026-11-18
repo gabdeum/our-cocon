@@ -5,7 +5,7 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Specs 012, 051
 ## Layout
 1. Fixed header:
    - Round ✕ (IconButton `--round`, label "Leave cooking mode, stays in progress", spec 050) (left).
-   - Right: TimerPill while timers run, then a round settings button "Cooking options" (IconButton `--round`, like the ✕).
+   - Right: TimerPill while timers run, then a round timer button "Timers" (spec 062), then a round settings button "Cooking options" (both IconButton `--round`, like the ✕).
    - The header's padding (safe area, at least 52, then 16 at the sides) matches the loading state's TopBar, so the ✕ doesn't move when the steps appear.
    - Cooking Progress bar (one segment per step, tappable).
    - "Step {n} of {m}" (left, olive 14/900 uppercase) and "Serves {n} · swipe up for next" (right, muted).
@@ -16,6 +16,8 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Specs 012, 051
    - Switch "Screen stays on", hint "Your screen won't lock while you cook" / "Your screen locks as usual". It starts from the "Keep screen on" setting (spec 027) and lasts for this visit.
    - "Edit step {n}" › (ListRow with a chevron, the current step): closes the sheet and opens the recipe form (full-screen) on Steps with that step open. A step a chosen variant adds or changes opens that variant in Variants instead, since it decides what the step says. Saved or cancelled, it comes back to cooking mode at the same step.
    - Then the recipe page's "…" options, as in OC-Recipe: "I'm using a kitchen scale", "Scale by an ingredient ›", "Unit converter ›", and "Units" Metric | Imperial. They change the steps at once; the kitchen scale is remembered for the recipe on this device, the units only for this visit (shared with the recipe page under it, spec 051).
+
+6. "Timers" sheet (spec 062; BottomSheet, title "Timers", close label "Close timers"): the Timers screen's list (OC-Timers 3–4): one card per timer, newest first, with "−1", clock, "+1", Pause | Resume | "Add 1 more minute" and Stop | Dismiss; "No timers running. Start one from any recipe step." when there are none; then TimePresets "Quick kitchen timer" (5 · 10 · 15 · 30 min). A quick timer starts at once and its card shows in the sheet, which stays open. A timer of this recipe's steps has "Go to step": it closes the sheet and goes to that step here; other timers have no link. Done timers shown in the open sheet count as seen, as on Timers (spec 047).
 
 ## Behaviour
 - Next, Back and segment taps scroll smoothly to the step's top (−8 px offset). Scroll position tracking pauses for 700 ms during that scroll.
@@ -42,9 +44,10 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Specs 012, 051
 | Opened at a step while the page is still laying out (fonts loading, steps above growing) | Keeps landing on that step for 2 s, until the person scrolls |
 
 ## Accessibility labels
-Segments: "Go to step {n}: {name}" ("Go to step {n}" for a step with no name). Settings button: "Cooking options"; the options sheet's close label: "Close cooking options". Timer buttons: "Start timer", "Pause", "Resume", "Done", "One minute less", "One minute more". After Next, Back or a segment: "Step {n} of {total}: {name}" ("Step {n} of {total}" without a name; spec 030). With Reduce Motion the steps jump instead of scrolling, and the others dim at once.
+Segments: "Go to step {n}: {name}" ("Go to step {n}" for a step with no name). Settings button: "Cooking options"; the options sheet's close label: "Close cooking options". Timer button: "Timers"; its sheet's close label: "Close timers"; card labels as on Timers ("Pause: Blind bake", "Go to step: Blind bake"). Timer buttons: "Start timer", "Pause", "Resume", "Done", "One minute less", "One minute more". After Next, Back or a segment: "Step {n} of {total}: {name}" ("Step {n} of {total}" without a name; spec 030). With Reduce Motion the steps jump instead of scrolling, and the others dim at once.
 
 ## Changelog
 - 2026-11-05 (050): "Cooking options" is a round IconButton; the header lines up with the loading state's TopBar.
 - 2026-11-10: "Edit step {n}" in the options sheet opens the recipe form at the current step.
 - 2026-11-12 (051): leaving keeps the cook in progress (✕ "Leave cooking mode, stays in progress"; Back on step 1 leaves too); the last step's "Done cooking" logs it and opens the Done sheet; "Exit" and "Finish" removed; "Units: {x}" link row in the options sheet.
+- 2026-11-17 (062): a round timer button "Timers" left of "Cooking options" opens the "Timers" sheet (every timer and the quick kitchen timers).

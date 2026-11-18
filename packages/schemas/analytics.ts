@@ -123,6 +123,8 @@ export const events = {
   my_units_changed: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
   // Spec 012: "Screen stays on" switched in cooking mode's options sheet, for this visit.
   cook_screen_awake_toggled: z.strictObject({ on: z.boolean() }),
+  // Spec 062: the Timers sheet opened from cooking mode's round timer button, with how many timers there were.
+  cook_timers_opened: z.strictObject({ timer_count: z.int().min(0).max(100) }),
   // Spec 013: the "…" panel's quick toggles: the kitchen scale per recipe on this device; units for
   // this visit only (spec 051).
   kitchen_scale_toggled: z.strictObject({ on: z.boolean() }),
@@ -276,6 +278,8 @@ export const events = {
   // Spec 047: a timer-done alert on the phone: its "+1 min" or "Stop", or tapped open; and the one follow-up that arrived.
   timer_alert_action: z.strictObject({ action: z.enum(['add_minute', 'stop', 'open']) }),
   timer_alert_followup_sent: z.strictObject({}),
+  // Spec 061: the answer to iOS's question about alarms (iOS 26), asked on the first timer started.
+  timer_alarms_permission_result: z.strictObject({ granted: z.boolean() }),
   // Spec 048: the Live Activity started (timers on the Lock Screen), and its "+1 min" / "Pause" / "Resume".
   timer_live_activity_started: z.strictObject({ timer_count: z.int().min(1).max(100) }),
   timer_live_activity_action: z.strictObject({ action: z.enum(['add_minute', 'remove_minute', 'pause', 'resume', 'stop', 'dismiss']) }),

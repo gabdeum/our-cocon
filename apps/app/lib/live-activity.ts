@@ -176,6 +176,8 @@ export const LiveActionRecord = z.object({
   action: LiveTimerAction,
   /** When it was tapped (ms). The app may only see it later. */
   at: z.number(),
+  /** Spec 061: "alarm" for a ringing alarm's "+1 min" or "Stop" (they go through the card when it shows that timer). */
+  source: z.enum(['card', 'alarm']).optional(),
 });
 export type LiveActionRecord = z.infer<typeof LiveActionRecord>;
 

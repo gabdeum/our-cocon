@@ -9,6 +9,9 @@ import { defaultCooking, formatOf, recipeView, servingsMax, servingsText, type C
 import { startIndex, stepEditTarget } from '../../lib/cooking';
 import { useCookAwake } from '../../lib/keep-awake';
 import { AppTimerPill, useHasTimers } from '../timers/AppTimerPill';
+import { TimerList, useSeenDone } from '../timers/TimerList';
+import { useTimers } from '../../lib/timer-store';
+import type { Timer } from '../../lib/timers';
 import { useStepTimerControl, type StepTimerInput } from '../recipes/step-timer';
 import { MoreOptions } from '../recipes/MoreOptions';
 import { useStepScroll } from './use-step-scroll';
@@ -167,6 +170,11 @@ function Cooking({
   const awake = useCookAwake(keepAwake);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const optionsButton = useRef<HostInstance>(null);
+  // Spec 062: every timer and the quick ones, without leaving the steps.
+  const [timersOpen, setTimersOpen] = useState(false);
+  const timersButton = useRef<HostInstance>(null);
+  const { timers } = useTimers();
+  useSeenDone(timersOpen);
   const hasPill = useHasTimers();
 
   const scroller = useRef<ScrollViewInstance>(null);
@@ -236,6 +244,21 @@ function Cooking({
     onDone();
   };
 
+  // In the Timers sheet, a timer of this recipe's steps goes to its step here (as Timers' "Go to step").
+  const goToStep = (t: Timer) => {
+    const index = t.recipeId === recipe.id ? steps.findIndex((step) => step.id === t.stepId) : -1;
+    if (index < 0) return undefined;
+    const ts = strings.timersScreen;
+    return {
+      label: ts.goToStep,
+      a11y: ts.goToStepA11y(t.label),
+      onPress: () => {
+        setTimersOpen(false);
+        jump(index);
+      },
+    };
+  };
+
   // The options' sheets open over cooking mode and come back to it.
   const openSheet = (open: () => void) => () => {
     setOptionsOpen(false);
@@ -251,6 +274,12 @@ function Cooking({
       optionsLabel={c.options}
       onOptions={() => setOptionsOpen(true)}
       optionsRef={optionsButton}
+      timersLabel={c.timers}
+      onTimers={() => {
+        tracker.track('cook_timers_opened', { timer_count: Math.min(timers.length, 100) });
+        setTimersOpen(true);
+      }}
+      timersRef={timersButton}
       progress={
         <CookProgress
           count={count}
@@ -290,6 +319,9 @@ function Cooking({
         </CookSection>
       ))}
     </CookLayout>
+    <BottomSheet visible={timersOpen} returnFocusRef={timersButton} onClose={() => setTimersOpen(false)} title={c.timers} closeLabel={c.closeTimers}>
+      <TimerList linkFor={goToStep} />
+    </BottomSheet>
     {/* Mounted only while open (a closed react-native-web Modal can still catch taps). */}
     <BottomSheet
       visible={optionsOpen}

@@ -8,7 +8,7 @@ The cooking-mode frame (Patterns.md › Cooking mode, OC-Cook): a fixed header, 
 | --- | --- |
 | Header | padding safe-area (52) / 16 / 12, gap 12, `surface-page`, 1.5 px `line` bottom border; the progress row inset 4 more, so it stays 20 from the edges |
 | Exit | IconButton `--round` (40, `shadow-button`), close icon 20, label "Exit cooking mode"; it sits where the loading state's TopBar put it (TopBar README, spec 050) |
-| Right | the TimerPill (48 tall) while timers run, then an IconButton `--round` with the settings icon: "Cooking options" |
+| Right | the TimerPill (48 tall) while timers run, then an IconButton `--round` with the timer icon, "Timers" (spec 062), then one with the settings icon, "Cooking options"; gap 8 |
 | Progress | Progress `--cook` under the top row |
 | Body | scrolls, padding 0 20, `scroll-snap-type: y mandatory` (iPhone: `snapToOffsets` from `snapPoints`: step tops, and the end of a step taller than the screen) |
 | End | "Bon appétit!" olive 18/900, centred, 280 tall with 30 on top |
