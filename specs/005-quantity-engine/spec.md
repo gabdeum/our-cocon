@@ -14,7 +14,8 @@
 **Acceptance**:
 1. **Given** imperial, **Then** 300 ml shows "1¼ cups", 20 g shows "0.7 oz", 1.2 kg shows "2.6 lb".
 2. **Given** the kitchen scale off, **When** an ingredient has a cup weight, **Then** 100 g Gruyère shows "about 1 cup" and 20 g butter shows "about 1½ tbsp".
-3. **Given** temperature 180 °C, **Then** metric shows "180 °C (350 °F)" and imperial shows "350 °F (180 °C)".
+3. **Given** the kitchen scale on, **When** a weight with a known density comes to less than ¼ cup, **Then** it shows spoons with the weight: 20 g butter shows "1½ tbsp butter (20 g)" ("1½ tbsp" · "20 g" in the list); 100 g Gruyère stays "100 g".
+4. **Given** temperature 180 °C, **Then** metric shows "180 °C (350 °F)" and imperial shows "350 °F (180 °C)".
 
 ### User Story 3 — Steps read naturally (P1)
 **Given** step text "Add {ing:<leek id>} finely sliced" (tokens from spec 016), **Then** it renders "Add 2 leeks (300 g) finely sliced", matching the user's example: "Add 1 small onion (70 g) finely chopped".
@@ -52,6 +53,7 @@
   - `whole_only` items (eggs) never get the fit; ingredients without sizes or a weight are unchanged. Without a fit, pieces round to the nearest ½ (FR-003).
   - Kitchen scale off (spec 013): the weight in brackets is dropped ("¾ onion").
   - Sizes come from the catalog facts passed in (FR-008). The recipe's amount itself never changes; a catalog edit can only change how it is worded.
+- **FR-010**: Small weights in spoons. A weight (g, kg, oz, lb) whose ingredient has a catalog density and no piece fit (FR-009) shows as tsp or tbsp (FR-004, rounded to the nearest ½) when that comes to less than ¼ cup, with the weight after it: "1 tsp sugar (4 g)", "1½ tbsp butter (0.7 oz)". In ingredient lists the weight is the sub-line. From ¼ cup on, or when it rounds below ½ tsp, the weight alone. Kitchen scale off: spoons or cups only, as before ("about 1½ tbsp butter"). Without a density, the weight alone (FR-008).
 
 ## Success Criteria
 - **SC-001**: Over 95% line coverage, with table-driven tests for every unit pair.
@@ -72,3 +74,4 @@ None.
 - 2026-10-18: Shipped `@cocon/quantity`: `scale`, `format`, `renderStep`, `formatTemperature`, `convert` and unit constants, with 223 tests and 100% line coverage (CI checks 95%). Changes agreed while planning: FR-005 now rounds ovens to 25 °F and thermometer checks to 5 °F (US2.3's 350 °F needed it). FR-009 and US4 rewritten to Gabriel's revised piece fit (fractions of the default size, whole pieces of other sizes, spoons for tiny amounts, no 25% rule). Other choices: tsp and tbsp stay spoons in metric up to ¼ cup, then ml (piece-fit spoon amounts too); spoon units are picked after rounding, so just under 1 tbsp reads "1 tbsp"; an amount that rounds to 0 shows "a pinch" in every unit (never "1 tsp"; in imperial that means weights under about 1.4 g); scaling by a piece ingredient accepts a weight through its piece weight (saved, else the catalog size). Fluid ounces and gas mark are left to spec 013's converter.
 - 2026-10-18: After review, as Gabriel asked: temperature tokens `{temp:…}` in step text (FR-006; specs 016 FR-006 and 023 FR-004 now create them); the default size wins the piece fit within 10% (FR-009); catalog piece nouns now name the ingredient ("cloves of garlic", "salmon fillets"; catalog version 2, new data migration).
 - 2026-10-19: As Gabriel asked while testing 008: the default size is never named ("2½ leeks", not "2½ medium leeks"), so whole and half pieces read alike; and a volume shows its weight as the sub-line when the catalog knows the density and the kitchen scale is on ("350 ml" · "350 g"; in oz for imperial). The step phrase stays without it.
+- 2026-11-19: As Gabriel asked: small weights show spoons with the weight when the kitchen scale is on (FR-010, US2.3): "1½ tbsp butter (20 g)", up to ¼ cup; from there on, the weight alone.

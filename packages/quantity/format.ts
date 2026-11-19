@@ -190,11 +190,17 @@ export function format(row: QuantityIngredient, options: FormatOptions): Formatt
     const grams = toBase(q, unit);
     if (sizes) return pieceFit(grams, ing, facts, sizes, options);
     const density = facts.density_g_per_ml;
-    if (!options.scale && density) {
+    const w = weight(grams, options.system);
+    if (density) {
       const v = usVolume(grams / density);
-      if (v) return measured({ amount: `about ${v.amount}`, unit: v.unit }, noun);
+      if (!options.scale) {
+        if (v) return measured({ amount: `about ${v.amount}`, unit: v.unit }, noun);
+      } else if (v && w && v.unit !== 'cup' && v.unit !== 'cups') {
+        // FR-010: below ¼ cup, spoons first and the weight after: "1½ tbsp butter (20 g)".
+        return { amount: v.amount, unit: v.unit, sub: text(w), phrase: `${text(v)} ${noun} (${text(w)})` };
+      }
     }
-    return measured(weight(grams, options.system), noun);
+    return measured(w, noun);
   }
 
   const perPiece = pieceWeight(ing);
