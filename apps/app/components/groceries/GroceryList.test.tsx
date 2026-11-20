@@ -634,3 +634,60 @@ describe('Groceries menus on larger screens (spec 065)', () => {
     expect(screen.getByRole('dialog', { name: 'Grocery settings' }).dataset.testid).toBe('sheet-popover');
   });
 });
+
+describe('Groceries › larger screens (spec 069)', () => {
+  // The seed's list: Produce 2, Bakery 2, Dairy & eggs 3, with a second recipe for the card grid.
+  const soup = { ...quiche, id: 'r-soup', name: 'Pumpkin soup', serves: 4 };
+  const pumpkin = groceryItem({ id: 'pumpkin', name: 'Pumpkin', catalog_key: 'pumpkin', quantity: 1, unit: 'kg', aisle: 'produce', recipes: soup, recipe_id: soup.id });
+  const seedList = [...sample.filter((i) => i.aisle !== 'spices_baking'), pumpkin];
+  const column = (n: number) => screen.queryByTestId(`grocery-col-${n}`);
+  const headingsIn = (n: number) => within(column(n) as HTMLElement).getAllByRole('heading').map((h) => h.textContent);
+  const rowsIn = (n: number) => within(column(n) as HTMLElement).getAllByRole('checkbox').length;
+
+  it.each([390, 599])('FR-001: at %i, one column as before', (width) => {
+    dims.width = width;
+    setup({ items: seedList });
+    expect(column(1)).toBeNull();
+    expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual(['Groceries', 'Produce', 'Bakery', 'Dairy & eggs']);
+    expect(screen.getByRole('button', { name: 'Clear done items' }).closest('[style*="max-width"]')).toBeNull();
+  });
+
+  it.each([820, 1180])('FR-002, FR-003, SC-001: at %i, aisles in two columns read by column, cards two by two, Clear pair centred', (width) => {
+    dims.width = width;
+    setup({ items: seedList });
+    expect(headingsIn(1)).toEqual(['Produce', 'Bakery']);
+    expect(headingsIn(2)).toEqual(['Dairy & eggs']);
+    // Each column starts with an aisle heading.
+    for (const n of [1, 2]) expect((column(n) as HTMLElement).firstElementChild?.querySelector('[role="heading"]')).toBeTruthy();
+    expect(Math.abs(rowsIn(1) - rowsIn(2))).toBeLessThanOrEqual(1);
+    const quicheCard = screen.getByRole('link', { name: 'Open Leek & bacon quiche' });
+    const soupCard = screen.getByRole('link', { name: 'Open Pumpkin soup' });
+    expect(quicheCard.parentElement?.parentElement?.parentElement).toBe(soupCard.parentElement?.parentElement?.parentElement);
+    const pair = screen.getByRole('button', { name: 'Clear done items' }).closest('[style*="max-width"]') as HTMLElement;
+    expect(pair.style.maxWidth).toBe('420px');
+    expect(within(pair).getByRole('button', { name: 'Clear all items' })).toBeTruthy();
+  });
+
+  it('FR-004: ticking or a new row in an aisle moves nothing; a new aisle or a resize splits again', () => {
+    dims.width = 820;
+    const { rerender } = setup({ items: seedList });
+    fireEvent.click(row('Apples'));
+    rerender({ items: seedList.map((i) => (i.id === 'apples' ? { ...i, checked: true } : i)) });
+    expect(headingsIn(1)).toEqual(['Produce', 'Bakery']);
+    // Four more in Produce would balance as Produce | Bakery, Dairy: kept as it was while open.
+    const more = [1, 2, 3, 4].map((n) => groceryItem({ id: `p${n}`, name: `Leek ${n}`, catalog_key: `leek_${n}`, aisle: 'produce' }));
+    rerender({ items: [...seedList, ...more] });
+    expect(headingsIn(1)).toEqual(['Produce', 'Bakery']);
+    // A new aisle splits again.
+    rerender({ items: [...seedList, ...more, groceryItem({ id: 'peas', name: 'Peas', aisle: 'frozen' })] });
+    expect(headingsIn(1)).toEqual(['Produce']);
+    expect(headingsIn(2)).toEqual(['Bakery', 'Dairy & eggs', 'Frozen']);
+    // So does a resize through the phone layout.
+    dims.width = 390;
+    rerender({ items: [...seedList, ...more] });
+    expect(column(1)).toBeNull();
+    dims.width = 820;
+    rerender({ items: [...seedList, ...more] });
+    expect(headingsIn(1)).toEqual(['Produce']);
+  });
+});

@@ -102,7 +102,7 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L164 | P3 | **Zoom a step photo.** 066's full-screen photo shows the whole picture, without pinch-to-zoom. Add zoom if people ask to see details. | 066 | none |
 | L160 | P2 | **Calendar add button beside the rail.** From 960 there's no bottom bar, but the calendar's floating add button (and its first-visit hint) still sits 112 from the bottom, where it cleared the bar. 070's header "+ Event" button may replace it at ≥ 600; otherwise bring it down to the 24 gutter beside the rail. | 064 | 070 |
 | L161 | P2 | **No Month day sheet from 600.** 065 FR-005: at medium and expanded the Month view's day sheet shouldn't open, the inline selected-day panel replaces it. 065 left it opening as a centred card so Month keeps a way to see a day until the panel exists. Week's day sheet stays a card (flows.md). | 065 | 070 |
-| L162 | P3 | **Grocery row menu from a long-press or swipe.** From 600, the ⋮ opens the row's menu as a popover pointing at it; a long-press or swipe has no ⋮ to point at, so the menu opens as a centred card. Point it at the row's ⋮ instead if that feels off. | 065 | 069 |
+| L162 | P3 | **Grocery row menu from a long-press or swipe.** From 600, the ⋮ opens the row's menu as a popover pointing at it; a long-press or swipe has no ⋮ to point at, so the menu opens as a centred card. Point it at the row's ⋮ instead if that feels off (needs `ListRow` to hand out its ⋮ button). 069 left it as is. | 065 | none |
 | L165 | P3 | **Cap tab screens at 1200 on a wide iPad.** On the web `AppFrame` caps content at 1200 beside the rail (063 FR-005), but the iPhone and iPad app always fills the window, so on a 13-inch iPad in landscape (1376) Home and the other tab screens run about 24 wider than 1200. Centre their content at max 1200 on native too. | 068 | none |
 
 ## Changelog
@@ -180,3 +180,4 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 - 2026-11-20 (066): did L158 for `CookLayout` (edited: `TopBar` left for 067); added L164 (zoom a step photo). L163 (keep the current step in view in the step list) was added, then done in the same build.
 - 2026-11-20 (067): did L158 (`TopBar` sits at the safe area + 24 from 600, on every pushed screen). No new tasks.
 - 2026-11-20 (068): no tasks named 068. Added L165 (tab screens capped at 1200 on a wide iPad).
+- 2026-11-20 (069): L162 left as is (the card from a long-press or swipe stays), **Do with** none. No new tasks.
