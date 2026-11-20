@@ -1,8 +1,8 @@
 // Spec 020: what the grocery list shows (aisles, source lines, Need, recipe cards, who's shopping).
 // Spec 021: what to buy beside the name (summed per catalog entry) and the family's own pack size.
-import { DEFAULT_FAMILY_SETTINGS, type FamilySettings } from '@cocon/schemas';
+import { DEFAULT_FAMILY_SETTINGS, type Aisle, type FamilySettings } from '@cocon/schemas';
 import { describe, expect, it, vi } from 'vitest';
-import { amountText, buyText, byName, combineRows, editItem, editText, groupByAisle, recipeCards, rowAmounts, rowItem, rowSource, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
+import { aisleColumns, amountText, buyText, byName, combineRows, editItem, editText, groupByAisle, recipeCards, rowAmounts, rowItem, rowSource, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
 import { alex, gabriel, groceryItem, mia, packData } from '../test/fakes';
 
 const members = [gabriel, alex, mia];
@@ -308,5 +308,33 @@ describe('savePackSize (spec 021 FR-004)', () => {
     expect(call).toHaveBeenLastCalledWith(expect.objectContaining({ packs: null }), expect.anything());
     expect(await savePackSize(client, 'fam', { catalog_key: 'heavy_cream' }, 'a bag')).toBe('invalid');
     expect(await savePackSize(client, 'fam', { catalog_key: null }, '25 cl')).toBe('failed');
+  });
+});
+
+describe('aisleColumns (spec 069)', () => {
+  const aisle = (name: Aisle, n: number) => ({ aisle: name, rows: Array.from({ length: n }, (_, i) => i) });
+  // The sample list: Produce 2, Bakery 2, Dairy & eggs 3.
+  const sample = [aisle('produce', 2), aisle('bakery', 2), aisle('dairy_eggs', 3)];
+  const names = (cols: { aisle: Aisle }[][]) => cols.map((c) => c.map((a) => a.aisle));
+
+  it('FR-002: reads by column, weighing rows plus the heading; SC-001: item rows differ by one at most', () => {
+    const { columns } = aisleColumns(sample, 2);
+    expect(names(columns)).toEqual([['produce', 'bakery'], ['dairy_eggs']]);
+    const rows = columns.map((c) => c.reduce((n, a) => n + a.rows.length, 0));
+    expect(Math.abs((rows[0] ?? 0) - (rows[1] ?? 0))).toBeLessThanOrEqual(1);
+  });
+
+  it('one column on the phone', () => {
+    expect(names(aisleColumns(sample, 1).columns)).toEqual([['produce', 'bakery', 'dairy_eggs']]);
+  });
+
+  it('FR-004: more rows in an aisle keep the split; a new aisle or column count splits again', () => {
+    const { split } = aisleColumns(sample, 2);
+    const grown = [aisle('produce', 9), aisle('bakery', 2), aisle('dairy_eggs', 3)];
+    expect(names(aisleColumns(grown, 2, split).columns)).toEqual([['produce', 'bakery'], ['dairy_eggs']]);
+    expect(names(aisleColumns(grown, 2).columns)).toEqual([['produce'], ['bakery', 'dairy_eggs']]);
+    const added = [...sample, aisle('frozen', 1)];
+    expect(aisleColumns(added, 2, split).split).not.toBe(split);
+    expect(aisleColumns(sample, 1, split).split).not.toBe(split);
   });
 });

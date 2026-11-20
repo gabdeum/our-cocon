@@ -23,3 +23,4 @@ None new.
 
 ## Changelog
 - 2026-11-19: Ready.
+- 2026-11-20: Shipped. From 600 the recipe cards sit two by two (gap 10), the aisles in two columns read by column (063 `splitColumns`, weight = rows + 1, gap 14, both columns starting with an aisle heading), and Clear done / Clear all are a centred pair at most 420 wide (new token `layout-button-pair`). The split is kept while the screen is open (`aisleColumns` in `lib/groceries.ts`): ticking or a new row in an aisle moves nothing; a new or emptied aisle, or a change of tier, splits again. Below 600 nothing changes. Also, on Gabriel's call: the strip behind the side rail was the navigation library's default grey on every screen; the root now gives it a navigation theme with the page colour (see 064). Deviations: the add field stays pinned under the header (spec 050), and the space between header, add field and list stays the app's 18 (the source draws 14). No new events. An update is enough (no native change).

@@ -2,7 +2,7 @@ import '../global.css';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Stack, router, useGlobalSearchParams, usePathname, useSegments, type Href } from 'expo-router';
+import { DefaultTheme, Stack, ThemeProvider as NavigationTheme, router, useGlobalSearchParams, usePathname, useSegments, type Href } from 'expo-router';
 import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -15,7 +15,7 @@ import {
   Nunito_900Black,
 } from '@expo-google-fonts/nunito';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { AppFrame, ThemeProvider, useLayoutTier } from '@cocon/ui';
+import { AppFrame, ThemeProvider, theme, useLayoutTier } from '@cocon/ui';
 import { tracker } from '../lib/tracker';
 import { trackAppOpened } from '../lib/app-opened';
 import { useLayoutAnalytics } from '../lib/layout-analytics';
@@ -184,6 +184,13 @@ const restored = new Promise<void>((resolve) => (cacheRestored = resolve));
 // Nothing is drawn until Nunito is loaded, so the first paint is already in Nunito (FR-003).
 void SplashScreen.preventAutoHideAsync();
 
+/**
+ * Behind every screen, the navigation library paints its own background (light grey by default).
+ * It shows wherever a screen leaves room, like the 104 slot behind the side rail from 960 (spec
+ * 064): the page's colour there too.
+ */
+const navigationTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: theme.color.surfacePage } };
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
@@ -230,6 +237,7 @@ export default function RootLayout() {
               <Timers>
               <CalendarPrefsProvider>
                 <SessionGate />
+                <NavigationTheme value={navigationTheme}>
                 <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
                   <Stack.Screen name="(tabs)" />
                   <Stack.Screen name="welcome/index" />
@@ -271,6 +279,7 @@ export default function RootLayout() {
                   <Stack.Screen name="dev/sheet" options={presentation.sheet} />
                   <Stack.Screen name="dev/modal" options={presentation.fullScreen} />
                 </Stack>
+                </NavigationTheme>
               </CalendarPrefsProvider>
               </Timers>
               </Notifications>
