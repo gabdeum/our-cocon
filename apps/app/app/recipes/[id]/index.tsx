@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { loadCook, loadOpenCooks } from '@cocon/data';
 import { MAX_TRACKED_STEPS } from '@cocon/schemas';
+import { useLayoutTier } from '@cocon/ui';
+import { RouteRail } from '../../../components/RouteRail';
 import { AlreadyCookingSheet } from '../../../components/cooking/AlreadyCookingSheet';
 import { useCookActions } from '../../../components/cooking/use-cook-actions';
 import { RecipePage, type RecipeTab } from '../../../components/recipes/RecipePage';
+import { RecipeWithList } from '../../../components/recipes/RecipeWithList';
+import { useRecipeList } from '../../../components/recipes/use-recipe-list';
+import { recipeLayout } from '../../../lib/recipe-layout';
 import { useCalendarDisplay } from '../../../lib/calendar-prefs';
 import { useCooked, useOpenCooks, type CookSession } from '../../../lib/cook-sessions';
 import { loadRecipe, recipeKey } from '../../../lib/recipe';
@@ -21,7 +27,8 @@ const recipeRoute = (id: string, page: string) => `/recipes/${id}/${page}` as Hr
 
 /**
  * /recipes/[id] (spec 008): the recipe page. `?tab=steps` opens the Steps tab (009). `?cooked=<id>`
- * shows the Done toast for a cook cooking mode just logged (spec 051 FR-005).
+ * shows the Done toast for a cook cooking mode just logged (spec 051 FR-005). From 960 the rail and
+ * the Recipes list sit beside it (spec 067): picking another recipe swaps it on this same route.
  */
 export default function RecipeRoute() {
   const params = useLocalSearchParams<{ id: string; tab?: string; cooked?: string; servings?: string }>();
@@ -84,10 +91,27 @@ export default function RecipeRoute() {
   const [visit, setVisit] = useState(0);
   useFocusEffect(useCallback(() => setVisit((v) => v + 1), []));
   const back = () => (router.canGoBack() ? router.back() : router.replace('/recipes'));
+  const { tier, width } = useLayoutTier();
+  const layout = recipeLayout(tier, width, Platform.OS === 'web');
+  const list = useRecipeList(layout.split);
+  // SC-002: the URL changes (web), the list stays; a recipe's own params don't carry over.
+  const pick = (next: string) => {
+    setBusy(null);
+    router.setParams({ id: next, tab: undefined, servings: undefined, cooked: undefined });
+  };
   const name = (uid: string | null) => members.find((m) => m.user_id === uid)?.display_name ?? strings.recipe.formerMember;
   return (
-    <>
+    <RecipeWithList
+      layout={layout}
+      list={list}
+      rail={<RouteRail active="recipes" tracker={tracker} onOpenTimers={() => router.push('/timers')} />}
+      currentId={id ?? undefined}
+      onPick={pick}
+    >
       <RecipePage
+        // Another recipe starts fresh: its own choices, scroll and options.
+        key={id}
+        layout={layout}
         recipe={id ? recipe.data : null}
         failed={recipe.isError && recipe.data === undefined}
         onRetry={() => void recipe.refetch()}
@@ -97,7 +121,7 @@ export default function RecipeRoute() {
         tab={tab === 'steps' ? 'steps' : 'ingredients'}
         onTabChange={(next: RecipeTab) => router.setParams({ tab: next })}
         storage={deviceStorage}
-        onBack={back}
+        onBack={layout.split ? undefined : back}
         onShare={go('share')}
         onEdit={edit}
         onAddToGroceries={go('add-to-groceries')}
@@ -134,6 +158,6 @@ export default function RecipeRoute() {
         }}
         onClose={() => setBusy(null)}
       />
-    </>
+    </RecipeWithList>
   );
 }

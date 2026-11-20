@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useMemo, useState, type ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
-import { announce, Button, Callout, CookSessionCard, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
+import { announce, Button, Callout, ColumnScreen, CookSessionCard, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
 import { activeFilterKeys, emptyFilters, type RecipeFilters, type Tracker } from '@cocon/schemas';
 import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
@@ -45,6 +45,10 @@ export interface RecipeListProps {
   onCookCancel?: (cook: CookSession) => void;
   /** The member's clock (spec 029): "since 18:40" or "since 6:40 PM". */
   use24h?: boolean;
+  /** `column`: the list beside a recipe from 960 (spec 067 FR-005), smaller rows, the open one outlined. */
+  variant?: 'tab' | 'column';
+  /** The recipe open beside the column. */
+  currentId?: string;
 }
 
 function useDebounced<T>(value: T, ms: number): T {
@@ -76,7 +80,11 @@ export function RecipeList({
   onCookDone,
   onCookCancel,
   use24h = true,
+  variant = 'tab',
+  currentId,
 }: RecipeListProps) {
+  const column = variant === 'column';
+  const Screen = column ? ColumnScreen : TabScreen;
   const online = useOnline();
   useFailureToast(recipes === undefined && failed && r.loadFailed, onRetry);
   const [query, setQuery] = useState('');
@@ -108,7 +116,9 @@ export function RecipeList({
   };
 
   const open = (id: string) => {
-    tracker.track('recipe_opened', { from: settled ? 'search' : 'list' });
+    // Beside the recipe, picking the open one again changes nothing.
+    if (column && id === currentId) return;
+    tracker.track('recipe_opened', { from: column ? 'split_list' : settled ? 'search' : 'list' });
     onOpen(id);
   };
 
@@ -116,7 +126,7 @@ export function RecipeList({
 
   if (recipes === undefined) {
     return (
-      <TabScreen>
+      <Screen>
         {header}
         <OfflineBanner screen="recipes" tracker={tracker} />
         {/* A failed first load is a toast with Try again (spec 053 FR-015); the skeleton stays. */}
@@ -126,13 +136,13 @@ export function RecipeList({
           <RecipeItemSkeleton />
         </View>
         {footer}
-      </TabScreen>
+      </Screen>
     );
   }
 
   if (recipes.length === 0) {
     return (
-      <TabScreen>
+      <Screen>
         {header}
         <OfflineBanner screen="recipes" tracker={tracker} />
         <View className="gap-14">
@@ -144,7 +154,7 @@ export function RecipeList({
           <Callout variant="ai" label={r.emptyAiLabel} text={r.emptyAiHint} />
         </View>
         {footer}
-      </TabScreen>
+      </Screen>
     );
   }
 
@@ -158,6 +168,8 @@ export function RecipeList({
         placeholderTone={tone.get(recipe.id)}
         photoUri={recipe.photo_path ? photoUrls[recipe.photo_path] : undefined}
         onPress={() => open(recipe.id)}
+        size={column ? 'sm' : undefined}
+        current={column && recipe.id === currentId}
       />
     ));
 
@@ -194,7 +206,7 @@ export function RecipeList({
     ) : null;
 
   return (
-    <TabScreen
+    <Screen
       header={header}
       pinned={
         <>
@@ -239,12 +251,12 @@ export function RecipeList({
           </View>
         </View>
       ) : (
-        <View className="gap-14">
+        <View className={column ? 'gap-8' : 'gap-14'}>
           <Overline className="mt-4">{r.allGroup(results.length)}</Overline>
           {renderItems(results)}
         </View>
       )}
       {footer}
-    </TabScreen>
+    </Screen>
   );
 }

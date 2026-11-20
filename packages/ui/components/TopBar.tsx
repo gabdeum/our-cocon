@@ -2,6 +2,7 @@ import { Children, createContext, useCallback, useContext, useEffect, useRef, us
 import { Animated, View, type HostInstance, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { cn } from '../cn';
+import { useLayoutTier } from '../layout';
 import { useReduceMotion } from '../reduceMotion';
 import { theme } from '../theme';
 import { IconButton } from './IconButton';
@@ -9,8 +10,8 @@ import { Text } from './Text';
 
 /** What a screen gives its top bar; the layout adds the scroll state. */
 export interface TopBarConfig {
-  /** "Back to Menu"; `close` is cooking mode's ✕ ("Exit cooking mode"). */
-  back: { label: string; onPress: () => void; icon?: 'back' | 'close' };
+  /** "Back to Menu"; `close` is cooking mode's ✕ ("Exit cooking mode"). Left out beside the Recipes list from 960 (spec 067). */
+  back?: { label: string; onPress: () => void; icon?: 'back' | 'close' };
   /** The page's name: always shown on settings and list screens, faded in on detail screens. */
   title?: string;
   /** `onScroll`: detail screens keep their big heading (in a TopBarHeading) and show the name once it is under the bar. */
@@ -42,10 +43,14 @@ export function useTopEdge(min = MIN_TOP) {
 
 /**
  * One bar at the top of every pushed screen (TopBar README): round back button, the title centred on
- * the screen whatever the sides hold, up to two round actions. The layout keeps it pinned.
+ * the screen whatever the sides hold, up to two round actions. The layout keeps it pinned. From 600
+ * it sits 24 under the safe area, like the screens' content (spec 063 FR-003).
  */
 export function TopBar({ back, title, titleMode = 'always', actions, scrolled = false, titleShown = false, transparent = false }: TopBarProps) {
-  const top = useTopEdge();
+  const { tier } = useLayoutTier();
+  const phoneTop = useTopEdge();
+  const wideTop = useTopEdge(0) + theme.layout.topWide;
+  const top = tier === 'compact' ? phoneTop : wideTop;
   const reduce = useReduceMotion();
   const always = titleMode === 'always';
   const visible = always || titleShown;
@@ -70,7 +75,7 @@ export function TopBar({ back, title, titleMode = 'always', actions, scrolled = 
     >
       <View pointerEvents={through} className="flex-row items-center gap-8">
         <View pointerEvents={through} className="flex-1 items-start" style={{ minWidth: side }}>
-          <IconButton variant="round" icon={back.icon ?? 'back'} iconSize={back.icon === 'close' ? 20 : undefined} label={back.label} onPress={back.onPress} />
+          {back ? <IconButton variant="round" icon={back.icon ?? 'back'} iconSize={back.icon === 'close' ? 20 : undefined} label={back.label} onPress={back.onPress} /> : null}
         </View>
         {/* NativeWind doesn't style Animated.View: it only fades; the Text carries the look. */}
         <Animated.View pointerEvents="none" style={{ opacity, flexShrink: 1, alignItems: 'center' }}>

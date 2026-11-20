@@ -1,4 +1,4 @@
-import { useContext, useState, type ReactNode, type Ref } from 'react';
+import { useContext, useMemo, useState, type ReactNode, type Ref } from 'react';
 import { Platform, ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
@@ -167,8 +167,10 @@ export function FormScreen({ bar, children, scrollRef, scrollEnabled = true }: {
 const PHOTO = 240;
 
 export interface PhotoScreenProps {
-  /** The photo, or a PhotoPlaceholder, filling the 240 header. */
+  /** The photo, or a PhotoPlaceholder, filling the header. */
   photo: ReactNode;
+  /** The header's height: 240, or 280 beside two columns (spec 067, `theme.layout.heroWide`). */
+  photoHeight?: number;
   /** Over the photo, then pinned on the page background once the photo has scrolled away (spec 050). */
   topBar: TopBarConfig;
   /** Above the content, e.g. a StatusBanner. */
@@ -177,6 +179,8 @@ export interface PhotoScreenProps {
   floating?: ReactNode;
   /** Fixed at the bottom while the page scrolls under it, on a cream fade: the recipe page's action bar (spec 051 FR-014). */
   footer?: ReactNode;
+  /** From 600 (spec 067 FR-006): the footer sits on the right, at most this wide. */
+  footerMax?: number;
   children: ReactNode;
 }
 
@@ -186,14 +190,16 @@ export interface PhotoScreenProps {
  * bottom over the content (14 top, 16 sides, 28 bottom), on a fade from clear to the page
  * background by 26% of its height, so the page reads as it scrolls under it.
  */
-export function PhotoScreen({ photo, topBar, banner, floating, footer, children }: PhotoScreenProps) {
-  const bar = useTopBar(topBar, PHOTO);
+export function PhotoScreen({ photo, photoHeight = PHOTO, topBar, banner, floating, footer, footerMax, children }: PhotoScreenProps) {
+  const bar = useTopBar(topBar, photoHeight);
   const wide = useWideEdges();
   return (
     <View className="flex-1">
       <TopBarHeadingProvider value={bar.register}>
         <ScrollView showsVerticalScrollIndicator={false} onScroll={bar.onScroll} scrollEventThrottle={16} className="flex-1 bg-surface-page">
-          <View className="h-[240px] overflow-hidden">{photo}</View>
+          <View className="overflow-hidden" style={{ height: photoHeight }}>
+            {photo}
+          </View>
           <View className={cn('-mt-[30px] gap-18 rounded-t-[30px] bg-surface-page pt-24', wide ? 'px-24' : 'px-20', footer ? 'pb-[120px]' : 'pb-[40px]')}>
             {banner}
             {children}
@@ -211,7 +217,13 @@ export function PhotoScreen({ photo, topBar, banner, floating, footer, children 
       {footer ? (
         <View pointerEvents="box-none" className="absolute bottom-0 left-0 right-0 z-[9] px-16 pb-28 pt-14">
           <FooterFade />
-          {footer}
+          {footerMax ? (
+            <View testID="photo-screen-footer" style={{ width: '100%', maxWidth: footerMax, alignSelf: 'flex-end' }}>
+              {footer}
+            </View>
+          ) : (
+            footer
+          )}
         </View>
       ) : null}
     </View>
@@ -232,6 +244,75 @@ function FooterFade() {
         </Defs>
         <Rect width="100%" height="100%" fill="url(#footer-fade)" />
       </Svg>
+    </View>
+  );
+}
+
+export interface SplitViewProps {
+  /** From 960: the NavRail, in its 104 slot. */
+  rail?: ReactNode;
+  /** From 960: a list beside the detail (a ColumnScreen), 320 wide. Without it the detail fills the screen. */
+  list?: ReactNode;
+  /** The detail: a whole screen (PhotoScreen, PushedScreen). */
+  children: ReactNode;
+}
+
+const PANEL_MARGIN = 12;
+
+/**
+ * A list beside its detail from 960 (SplitView README, spec 067 FR-005): rail · list 320 · the detail
+ * in a framed panel (12 margin top, right and bottom, or the safe area when larger; radius 28, 2 px
+ * `line-strong`), scrolling inside. The panel already clears the safe area, so the screen inside it
+ * sees none. Without `list` the detail fills the screen as before; it keeps its place in the tree
+ * either way, so crossing 960 never remounts it or loses its scroll.
+ */
+export function SplitView({ rail, list, children }: SplitViewProps) {
+  const insets = useContext(SafeAreaInsetsContext);
+  const split = list != null;
+  const inner = useMemo(() => (split && insets ? { ...insets, top: 0, bottom: 0, left: 0, right: 0 } : insets), [split, insets]);
+  return (
+    <View className="flex-1 flex-row bg-surface-page">
+      {rail ? <View style={{ width: theme.layout.rail }}>{rail}</View> : null}
+      {split ? (
+        <View testID="split-list" style={{ width: theme.layout.panelExpanded }}>
+          {list}
+        </View>
+      ) : null}
+      <View
+        testID="split-detail"
+        className={cn('min-w-0 flex-1 bg-surface-page', split && 'overflow-hidden rounded-2xl border-2 border-line-strong')}
+        style={
+          split
+            ? {
+                marginTop: Math.max(PANEL_MARGIN, insets?.top ?? 0),
+                marginBottom: Math.max(PANEL_MARGIN, insets?.bottom ?? 0),
+                marginRight: Math.max(PANEL_MARGIN, insets?.right ?? 0),
+              }
+            : undefined
+        }
+      >
+        <SafeAreaInsetsContext.Provider value={inner}>{children}</SafeAreaInsetsContext.Provider>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * The list column beside a detail (SplitView README): padding 28 (under the safe area) / 12 / 16 /
+ * 20; `header` and `pinned` stay, the rest scrolls, 12 apart.
+ */
+export function ColumnScreen({ header, pinned, children }: { header?: ReactNode; pinned?: ReactNode; children: ReactNode }) {
+  const insets = useContext(SafeAreaInsetsContext);
+  return (
+    <View className="flex-1 gap-12 pb-16 pl-20 pr-12" style={{ paddingTop: (insets?.top ?? 0) + 28 }}>
+      {/* Only as tall as they are: a horizontal pill row (a ScrollView) would otherwise grow into the list's room. */}
+      <View testID="column-top" className="flex-none gap-12">
+        {header}
+        {pinned}
+      </View>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerClassName="gap-8 pb-8" keyboardShouldPersistTaps="handled">
+        {children}
+      </ScrollView>
     </View>
   );
 }

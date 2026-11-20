@@ -86,8 +86,8 @@ export const events = {
   catalog_override_saved: z.strictObject({ field: z.enum(['aisle', 'piece_weight', 'packs', 'custom']) }),
   // Spec 006: a search on the recipe list settled (after the 150 ms pause). Never the query text.
   recipes_searched: z.strictObject({ query_length: z.int().min(1), result_count: z.int().min(0) }),
-  // Spec 006: a recipe page was opened, and from where.
-  recipe_opened: z.strictObject({ from: z.enum(['list', 'search', 'home', 'link']) }),
+  // Spec 006: a recipe page was opened, and from where. Spec 067: `split_list` from the list beside the recipe (from 960).
+  recipe_opened: z.strictObject({ from: z.enum(['list', 'search', 'home', 'link', 'split_list']) }),
   // Spec 007: filters were applied ("Show N recipes" or a quick pill). Which groups, never their values.
   recipe_filters_applied: z.strictObject({
     filter_keys: z.array(FilterKey).max(4).refine((keys) => new Set(keys).size === keys.length, 'Each key once'),
@@ -116,6 +116,8 @@ export const events = {
   // Spec 051: a cooking session started (`resumed_existing`: "Resume" on the "already cooking"
   // sheet), resumed from a card, and ended. `steps_seen` counts from 1; `minutes` from its start.
   cook_started: z.strictObject({ recipe_id: z.uuid(), resumed_existing: z.boolean() }),
+  // Spec 067: a step card on the recipe page opened cooking mode at that step (from 1).
+  cook_started_from_step: z.strictObject({ step: z.int().min(1).max(MAX_TRACKED_STEPS) }),
   cook_resumed: z.strictObject({ from: z.enum(['list', 'recipe', 'home']), step: z.int().min(1).max(MAX_TRACKED_STEPS) }),
   cook_finished: z.strictObject({
     status: z.enum(['done', 'cancelled']),

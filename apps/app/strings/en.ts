@@ -665,7 +665,13 @@ export const strings = {
     stepsLabel: 'Steps',
     /** A row in the Steps tab opens cooking mode there. */
     /** A step row's screen-reader name (spec 030): "Step 3: Bake, 35:00 timer. Opens in cooking mode". */
-    openStep: (n: number, title: string, clock?: string) => `Step ${n}: ${title}${clock ? `, ${clock} timer` : ''}. Opens in cooking mode`,
+    // Spec 067: the timer's length ("12 min timer") and the Variant tag are said too.
+    openStep: (n: number, title: string, duration?: string, variant?: boolean) =>
+      `Step ${n}: ${title}${variant ? ', Variant' : ''}${duration ? `, ${duration} timer` : ''}. Opens in cooking mode`,
+    // Spec 067 (OC-LargeScreens § Recipe): above the step cards, and the options link beside the columns.
+    stepsHint: 'Tap a step to open it in cooking mode',
+    moreOptionsLink: 'More options · scale, units',
+    closeOptions: 'Close options',
     // The Steps tab (spec 009, OC-RecipeSteps).
     steps: {
       tempLabel: 'Temperature check:',

@@ -20,6 +20,16 @@ A recipe in a list: thumbnail, name, one meta line and who added it.
 | Focus | 3 px olive outline, offset 2 |
 | Loading | same container; `surface-soft` blocks for the thumbnail (84, radius 16) and three lines (name 18 tall at 75 %, meta 14 at 50 %, author 13 at 33 %, `radius-xs`, gap 8). No spinner; hidden from screen readers. Lists show 3 while loading |
 
+## Small, in a list beside a recipe (`size="sm"`, spec 067)
+
+The Recipes list next to the open recipe from 960 (OC-RecipeResponsive): same parts, smaller.
+
+| Part | Spec |
+| --- | --- |
+| Container | radius 20, padding 8, gap 12, 2 px border: `olive` on the open recipe (`current`, `aria-current="page"`), transparent otherwise |
+| Thumbnail | 64 × 64, radius 14 |
+| List | items 8 apart |
+
 ## Summary (`oc-recipe-item--summary`)
 
 The recipe named at the top of a sheet (OC-Share, spec 019): not tappable, surface-card, radius 20, padding 10, gap 12; thumbnail 64, radius 14 (peach with the initial when there's no photo); name 17/900, then one 14/600 ink-muted line ("From the Our Cocon family").

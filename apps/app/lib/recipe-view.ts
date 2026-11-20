@@ -44,7 +44,8 @@ export interface StepLine {
   parts: StepPart[];
   /** "the center should reach 71 °C (160 °F) and barely wobble." Null when there's none or the thermometer setting is off. */
   tempCheck: string | null;
-  timer: { seconds: number; label: string; clock: string } | null;
+  /** `duration` is the step card's pill (spec 067): "12 min", "1 h 10". */
+  timer: { seconds: number; label: string; clock: string; duration: string } | null;
   tip: string | null;
   /** The step's photo in storage (spec 009 FR-004; shown from spec 014). */
   photoPath: string | null;
@@ -65,6 +66,11 @@ export interface RecipeView {
 export function timerClock(seconds: number): string {
   const s = Math.max(0, Math.round(seconds));
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+/** A step timer's length on its card (spec 067 FR-004): whole minutes, never under 1, as total times read. */
+export function timerDuration(seconds: number): string {
+  return formatTotalTime(Math.max(1, Math.round(seconds / 60)));
 }
 
 export type { CookingSettings } from '@cocon/schemas';
@@ -93,7 +99,7 @@ export function recipeView(
     variant: step.fromVariant,
     parts: stepParts(step.body, scaled.ingredients, options, knownNames),
     tempCheck: cooking.thermometer ? renderTemperatureCheck(step.temp_check_text ?? null, step.temp_check_c ?? null, options.system) : null,
-    timer: step.timer_seconds ? { seconds: step.timer_seconds, label: step.timer_label ?? step.name ?? '', clock: timerClock(step.timer_seconds) } : null,
+    timer: step.timer_seconds ? { seconds: step.timer_seconds, label: step.timer_label ?? step.name ?? '', clock: timerClock(step.timer_seconds), duration: timerDuration(step.timer_seconds) } : null,
     tip: step.tip ?? null,
     photoPath: step.photo_path ?? null,
   }));

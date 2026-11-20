@@ -72,6 +72,8 @@ import {
   StepText,
   Stepper,
   NavRail,
+  SplitView,
+  ColumnScreen,
   TabBar,
   CalendarHeader,
   EventBar,
@@ -924,6 +926,9 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <RecipeItem name="Leek & bacon quiche" meta="1 h 10 · Serves 6 · 2 variants" author="La Cuisine de Mamie · p. 48" onPress={noop} />
         <RecipeItem name="Grandma's apple tart" meta="1 h 30 · Serves 8" author="Mia" placeholderTone="sage" onPress={noop} />
         <RecipeItemSkeleton />
+        {/* Spec 067: in the list beside a recipe, smaller, the open one outlined. */}
+        <RecipeItem name="Leek & bacon quiche" meta="1 h 10 · Serves 6" author="La Cuisine de Mamie · p. 48" size="sm" current onPress={noop} />
+        <RecipeItem name="Pumpkin soup" meta="40 min · Serves 4" author="Mia" placeholderTone="honey" size="sm" onPress={noop} />
         <GroceryRecipeCard name="Leek & bacon quiche" meta="3 items on the list · serves 6" openLabel="Open Leek & bacon quiche" moreLabel="More for Leek & bacon quiche" onOpen={noop} onMore={noop} />
         <GroceryRecipeCard name="Old soup" meta="From a deleted recipe" openLabel="Open Old soup" moreLabel="More for Old soup" onOpen={null} onMore={noop} />
       </Section>
@@ -940,7 +945,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <StepFootnote text="−1 / +1 changes a timer by a minute, even while it runs." />
       </Section>
       <Section group="Cooking" title="StepRow">
-        <StepRow number={2} title="Blind bake" clock="12:00" accessibilityLabel="Step 2: Blind bake, 12:00 timer. Opens in cooking mode" onPress={noop} />
+        <StepRow number={2} title="Blind bake" duration="12 min" accessibilityLabel="Step 2: Blind bake, 12 min timer. Opens in cooking mode" onPress={noop} />
+        <StepRow number={1} title="Make the dough" tag="Variant" duration="30 min" accessibilityLabel="Step 1: Make the dough, Variant, 30 min timer. Opens in cooking mode" onPress={noop} />
         <StepRow number={3} title="Cook the filling" accessibilityLabel="Step 3: Cook the filling. Opens in cooking mode" onPress={noop} />
       </Section>
 
@@ -1119,6 +1125,25 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
               />
             </View>
           ))}
+        </View>
+      </Section>
+
+      <Section group="Navigation" title="SplitView">
+        {/* Spec 067: rail · list · the detail in its framed panel, in a window 600 tall. */}
+        <View style={{ height: theme.layout.medium }}>
+          <SplitView
+            rail={<NavRail label="Main" items={[...tabs]} active="recipes" onSelect={noop} />}
+            list={
+              <ColumnScreen header={<Text variant="titleLg">Recipes</Text>}>
+                <RecipeItem name="Leek & bacon quiche" meta="1 h 10 · Serves 6" author="La Cuisine de Mamie · p. 48" size="sm" current onPress={noop} />
+                <RecipeItem name="Pumpkin soup" meta="40 min · Serves 4" author="Mia" placeholderTone="honey" size="sm" onPress={noop} />
+              </ColumnScreen>
+            }
+          >
+            <View className="flex-1 items-center justify-center">
+              <Text color="ink-muted">The recipe</Text>
+            </View>
+          </SplitView>
         </View>
       </Section>
 

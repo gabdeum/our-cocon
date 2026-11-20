@@ -205,6 +205,18 @@ describe('spec 051 events', () => {
   });
 });
 
+describe('spec 067 events', () => {
+  it('sends where a recipe opened from and the step number, nothing else', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('recipe_opened', { from: 'split_list' });
+    tracker.track('cook_started_from_step', { step: 4 });
+    expect(t.capture).toHaveBeenCalledTimes(2);
+    expect(() => tracker.track('cook_started_from_step', { step: 0 })).toThrow();
+    expect(() => tracker.track('cook_started_from_step', { step: 2, name: 'Blind bake' } as never)).toThrow();
+  });
+});
+
 describe('spec 013 events', () => {
   it('sends the converter units, and nothing else', () => {
     const t = fakeTransport();

@@ -23,7 +23,7 @@ export {
 
 export { DetailText, Text, type TextProps, type TextVariant, type TextColor, type Weight } from './components/Text';
 export { BrandMark, Icon, Logo, type BrandName, type IconName, type IconProps } from './components/Icon';
-export { AppFrame, TabScreen, PushedScreen, PhotoScreen, PublicScreen, FormScreen, type PhotoScreenProps, type PublicScreenProps } from './components/Layout';
+export { AppFrame, TabScreen, PushedScreen, PhotoScreen, PublicScreen, FormScreen, SplitView, ColumnScreen, type PhotoScreenProps, type PublicScreenProps, type SplitViewProps } from './components/Layout';
 
 export { Button, DisclosureButton, Link, type ButtonProps, type ButtonVariant, type ButtonSize, type DisclosureButtonProps, type LinkProps } from './components/Button';
 export { IconButton, type IconButtonProps, type IconButtonVariant } from './components/IconButton';
