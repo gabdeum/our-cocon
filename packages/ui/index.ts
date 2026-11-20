@@ -91,7 +91,7 @@ export { NavRail, type NavRailProps } from './components/NavRail';
 export { BottomSheet, SheetFooter, type BottomSheetProps } from './components/BottomSheet';
 export { Dialog, type DialogProps } from './components/Dialog';
 export { FormProgress, CookProgress, StepBar } from './components/Progress';
-export { CookLayout, CookSection, cookStepHeight, type CookLayoutProps, type CookSectionProps } from './components/CookLayout';
+export { CookLayout, CookSection, cookColumns, cookStepHeight, type CookLayoutProps, type CookSectionProps } from './components/CookLayout';
 export { CookStepList, type CookStepListItem, type CookStepListProps } from './components/CookStepList';
 export { PhotoViewer, StepPhoto, type PhotoViewerProps, type StepPhotoProps } from './components/PhotoViewer';
 export { TabHeader, BrandRow, BrandHeader, Lead, FormBar } from './components/ScreenHeader';

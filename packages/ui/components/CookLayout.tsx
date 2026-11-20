@@ -41,9 +41,9 @@ export interface CookLayoutProps {
   optionsExpanded?: boolean;
   /** The CookProgress bar with "Step N of M". */
   progress: ReactNode;
-  /** From 600: the timers panel on the right, 290 (320 from 960), full height; it brings its own scrolling (spec 066 FR-002). */
+  /** From 600: the timers panel on the right (`cookColumns`), full height; it brings its own scrolling (spec 066 FR-002). */
   panel?: ReactNode;
-  /** From 960: the CookStepList on the left (spec 066 FR-003). */
+  /** From 960: the CookStepList on the left (spec 066 FR-003), `cookColumns` wide. */
   stepList?: ReactNode;
   /** The CookSections. */
   children: ReactNode;
@@ -80,7 +80,8 @@ export interface CookLayoutProps {
  */
 export function CookLayout(props: CookLayoutProps) {
   const { exitLabel, onExit, title, subtitle, pill, timersLabel, onTimers, timersRef, optionsLabel, onOptions, optionsRef, optionsExpanded, progress, panel, stepList, children, endLabel, backLabel, onBack, backExits, nextLabel, onNext, nextFinishes, scrollRef, onScroll, onViewportLayout, snapOffsets } = props;
-  const { tier } = useLayoutTier();
+  const { tier, width } = useLayoutTier();
+  const columns = cookColumns(tier, width);
   const wide = tier !== 'compact';
   // The ✕ sits where the TopBar of the loading state put it, so it doesn't jump when the steps arrive.
   // From 600: safe area + 24, as every screen (spec 063, 032-later L158).
@@ -112,7 +113,7 @@ export function CookLayout(props: CookLayoutProps) {
       </View>
 
       <View className={cn('flex-1 flex-row', wide && 'gap-16 px-20 pb-20 pt-16')}>
-        {wide && stepList ? <View className="flex-none">{stepList}</View> : null}
+        {wide && stepList ? <View className="flex-none" style={{ width: columns.stepList }}>{stepList}</View> : null}
         <View className="min-w-0 flex-1">
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -155,7 +156,7 @@ export function CookLayout(props: CookLayoutProps) {
           </View>
         </View>
         {wide && panel ? (
-          <View className="flex-none" style={{ width: tier === 'expanded' ? theme.layout.panelExpanded : theme.layout.panelMedium }}>
+          <View className="flex-none" style={{ width: columns.panel }}>
             {panel}
           </View>
         ) : null}
@@ -213,6 +214,22 @@ export function CookSection({ title, photo, current, minHeight = MIN_STEP, onLay
       {web && snapEnd ? <View aria-hidden pointerEvents="none" className="absolute bottom-0 left-0 right-0 h-0" style={snapEndMark} /> : null}
     </View>
   );
+}
+
+const clamp = (min: number, value: number, max: number) => Math.min(max, Math.max(min, Math.round(value)));
+
+/**
+ * The side columns from 600 (spec 066): they grow a little with the window so the steps fill the
+ * middle instead of centring on a large iPad, and stay the widest column. Step list (960+): 18 % of
+ * the window, 260 to 300. Timers panel: 24 %, from 290 (320 from 960) to 380. The steps take the
+ * rest, up to `layout-reading`.
+ */
+export function cookColumns(tier: LayoutTier, windowWidth: number): { stepList: number; panel: number } {
+  const { stepList, stepListMax, panelMedium, panelExpanded, panelMax } = theme.layout;
+  return {
+    stepList: clamp(stepList, windowWidth * 0.18, stepListMax),
+    panel: clamp(tier === 'expanded' ? panelExpanded : panelMedium, windowWidth * 0.24, panelMax),
+  };
 }
 
 /** A step section's least height (OC-Cook): 500. */

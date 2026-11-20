@@ -1,6 +1,7 @@
 // Spec 066: the step list beside cooking mode from 960, and a step's photo seen full screen.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cookColumns } from './CookLayout';
 import { CookStepList, stepListScroll } from './CookStepList';
 import { PhotoViewer, StepPhoto } from './PhotoViewer';
 import { TimePresets } from './TimePresets';
@@ -38,6 +39,16 @@ describe('CookStepList', () => {
     expect(stepListScroll({ y: 380, height: 56 }, view)).toBe(208);
     // Above, after scrolling down: back up, never past the top.
     expect(stepListScroll({ y: 40, height: 56 }, { y: 300, height: 400 })).toBe(0);
+  });
+});
+
+describe('cookColumns', () => {
+  it('grows the side columns a little with the window: the steps fill the middle on a large iPad and stay the widest', () => {
+    // iPad mini upright, 11" sideways, 13" sideways, a wide desktop window.
+    expect(cookColumns('medium', 744)).toEqual({ stepList: 260, panel: 290 });
+    expect(cookColumns('expanded', 1180)).toEqual({ stepList: 260, panel: 320 });
+    expect(cookColumns('expanded', 1366)).toEqual({ stepList: 260, panel: 328 });
+    expect(cookColumns('expanded', 1920)).toEqual({ stepList: 300, panel: 380 });
   });
 });
 

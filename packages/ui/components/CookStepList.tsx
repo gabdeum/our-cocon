@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
-import { theme } from '../theme';
 import { cn, focusRing } from '../cn';
 import { useReduceMotion } from '../reduceMotion';
 import { Icon } from './Icon';
@@ -59,7 +58,7 @@ export function CookStepList({ title, steps, current, onSelect, numbered }: Cook
   // eslint-disable-next-line react-hooks/exhaustive-deps -- runs on a new current step only
   useEffect(() => show(true), [current]);
   return (
-    <View role="navigation" aria-label={title} className="flex-1 rounded-xl bg-surface-card p-10" style={{ width: theme.layout.stepList }}>
+    <View role="navigation" aria-label={title} className="flex-1 rounded-xl bg-surface-card p-10">
       <ScrollView
         ref={scroll}
         showsVerticalScrollIndicator={false}
