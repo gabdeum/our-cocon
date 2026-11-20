@@ -36,18 +36,24 @@ export interface BrandRowProps {
   brand: string;
   /** AvatarStack of the family. */
   avatars?: ReactNode;
+  /** In the mark and name's place: the BrandHeader beside the rail, which shows the mark (spec 068 FR-003). */
+  lead?: ReactNode;
 }
 
 /** Home's brand row: the mark and name, the family on the right; pinned (ScreenHeader README › Brand row). */
-export function BrandRow({ brand, avatars }: BrandRowProps) {
+export function BrandRow({ brand, avatars, lead }: BrandRowProps) {
   return (
-    <View className="flex-row items-center justify-between">
-      <View className="flex-row items-center gap-8">
-        <Logo size={34} />
-        <Text variant="titleSm" style={{ letterSpacing: -0.3 }}>
-          {brand}
-        </Text>
-      </View>
+    <View className="flex-row items-center justify-between gap-12">
+      {lead ? (
+        <View className="min-w-0 flex-1">{lead}</View>
+      ) : (
+        <View className="flex-row items-center gap-8">
+          <Logo size={34} />
+          <Text variant="titleSm" style={{ letterSpacing: -0.3 }}>
+            {brand}
+          </Text>
+        </View>
+      )}
       {avatars}
     </View>
   );
