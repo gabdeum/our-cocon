@@ -16,3 +16,7 @@ Reference: `design/screens/OC-CalMonth.dc.html` (inline styles are the exact val
 ## Rules
 
 - Private events of others read "Busy" (spec 043).
+
+## From 600 wide (spec 070)
+
+`size="wide"` in the month page: 20 tall, 12/800 text, radius 6, padding 0 6; "+N" (`MoreCount`) 12/900.

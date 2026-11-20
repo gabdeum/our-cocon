@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { addDays, weekRange, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { FloatingAdd, HourGrid, Swipeable, tabBottomPad, useLayoutTier } from '@cocon/ui';
+import { cn, FloatingAdd, HourGrid, Swipeable, tabBottomPad, useLayoutTier } from '@cocon/ui';
 import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { layoutWeekGrid } from '../../lib/calendar-week';
 import { isDayEvent, layoutDaySheet } from '../../lib/calendar-day';
@@ -64,7 +64,10 @@ export function WeekView({
 }: WeekViewProps) {
   const now = useNow(timeZone);
   // TabBar README: 180 under the content for the floating tab bar; 28 beside the rail (spec 064).
-  const bottomPad = tabBottomPad(useLayoutTier().tier);
+  const { tier } = useLayoutTier();
+  const bottomPad = tabBottomPad(tier);
+  // Spec 070 FR-005: from 600, 44 px hours and larger heads and cards; "+ Event" is in the header.
+  const wide = tier !== 'compact';
   const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
   const { start } = weekRange(anchor, weekStartsOn);
@@ -78,8 +81,8 @@ export function WeekView({
   const [width, setWidth] = useState<number | undefined>(undefined);
   const { fontScale } = useWindowDimensions();
   const grid = useMemo(
-    () => layoutWeekGrid(anchor, occurrences, { weekStartsOn, today, look, slotTimes, now, use24h, reminders: counts, width, textScale: fontScale }),
-    [anchor, occurrences, weekStartsOn, today, look, slotTimes, now, use24h, counts, width, fontScale],
+    () => layoutWeekGrid(anchor, occurrences, { weekStartsOn, today, look, slotTimes, now, use24h, reminders: counts, width, textScale: fontScale, wide }),
+    [anchor, occurrences, weekStartsOn, today, look, slotTimes, now, use24h, counts, width, fontScale, wide],
   );
   const [sheetDate, setSheetDate] = useState<string | null>(null);
   const dayCtx = useMemo(() => ({ today, now, look, slotTimes, members, use24h }), [today, now, look, slotTimes, members, use24h]);
@@ -101,7 +104,7 @@ export function WeekView({
   return (
     <View className="flex-1" onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       {/* The day and All day rows stay put; the hours scroll inside the card. */}
-      <View className="flex-1 px-8 pt-4">
+      <View className={cn('flex-1 pt-4', wide ? 'px-24' : 'px-8')}>
         <Swipeable page={start} onSwipe={onSwipe}>
           <HourGrid
             {...grid}
@@ -110,10 +113,11 @@ export function WeekView({
             onBlockPress={openEvent}
             onEmptyLongPress={(date, hour) => onAddEvent(date, hour === null ? undefined : { time: `${String(hour).padStart(2, '0')}:00` })}
             bottomInset={bottomPad}
+            size={wide ? 'wide' : 'phone'}
           />
         </Swipeable>
       </View>
-      <FloatingAdd label={strings.calendar.month.addEvent} onPress={() => onAddEvent(addDay)} hint={null} />
+      {wide ? null : <FloatingAdd label={strings.calendar.month.addEvent} onPress={() => onAddEvent(addDay)} hint={null} />}
       {sheetDate ? (
         <DaySheet
           date={sheetDate}

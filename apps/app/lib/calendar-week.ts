@@ -1,6 +1,6 @@
 import { addDays, calendarWordsEn, daysBetween, fromMinutes, layoutDay, layoutSpans, parts, sortSlots, textWidth, timeRange, toMinutes, weekRange, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
-import { GRID_FIRST_HOUR, GRID_HOURS, HOUR_HEIGHT, type HourGridProps, type WeekAllDayBar, type WeekBlock, type WeekColumn, type WeekDayHead } from '@cocon/ui';
-import { chipLook, eventLook, longDate, occurrenceKey, weekdayLetters, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
+import { GRID_FIRST_HOUR, GRID_HOURS, HOUR_HEIGHT, WIDE_HOUR_HEIGHT, type HourGridProps, type WeekAllDayBar, type WeekBlock, type WeekColumn, type WeekDayHead } from '@cocon/ui';
+import { chipLook, eventLook, longDate, occurrenceKey, weekdayLetters, weekdayShort, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import { strings } from '../strings/en';
 import { clock, hourOnly } from './clock';
 
@@ -10,15 +10,15 @@ const words = calendarWordsEn;
 
 const GRID_START = GRID_FIRST_HOUR * 60;
 const GRID_END = 24 * 60;
-/** HourGrid README: a block is never shorter than this, so its top line still reads. */
-const MIN_BLOCK = 22;
+/** HourGrid README: a block is never shorter than this, so its top line still reads (30 from 600, spec 070). */
+const MIN_BLOCK = { phone: 22, wide: 30 };
 
 /** FR-001: "06:00" … "23:00", as drawn; "6 AM" … "11 PM" in 12-hour time (spec 029, L95). */
 export const hourLabels = Array.from({ length: GRID_HOURS }, (_, i) => fromMinutes(GRID_START + i * 60));
 const hourLabels12 = hourLabels.map((t) => hourOnly(t, false));
 
-/** Distance from the grid's top for a time in minutes (36 px per hour from 06:00). */
-const yOf = (minutes: number) => ((minutes - GRID_START) / 60) * HOUR_HEIGHT;
+/** Distance from the grid's top for a time in minutes (36 px per hour from 06:00, 44 from 600 wide). */
+const yOf = (minutes: number, hour: number) => ((minutes - GRID_START) / 60) * hour;
 
 export interface WeekGridContext {
   weekStartsOn: WeekStartsOn;
@@ -34,23 +34,32 @@ export interface WeekGridContext {
   /** The view's width in px and the text size multiplier: whether the alarm clocks fit beside the numbers. */
   width?: number;
   textScale?: number;
+  /** Spec 070 FR-005: from 600 wide, 44 px hours, "Sun" heads and "who · time" on every card. */
+  wide?: boolean;
 }
 
-/** HourGrid README: the card's 8 px sides, the 38 px hour labels, 4 on the right and 2 between the 7 day heads. */
-const HEAD_SIDES = 8 + 8 + 38 + 4 + 6 * 2;
-/** The 17 px alarm clock 1 after the 15 px number; today's number is in a 28 px circle. */
+/**
+ * HourGrid README: the view's sides (8 each, 24 from 600), the hour labels (38, 52 from 600), 4 on
+ * the right and 2 between the 7 day heads; the number (15, 18 from 600) and today's circle (28, 34).
+ */
+const HEAD = {
+  phone: { sides: 8 + 8 + 38 + 4 + 6 * 2, num: 15, circle: 28 },
+  wide: { sides: 24 + 24 + 52 + 4 + 6 * 2, num: 18, circle: 34 },
+};
+/** The 17 px alarm clock 1 after the number. */
 const MARK = 17 + 1;
 
 /**
  * Spec 058: whether the week's alarm clocks go under the numbers. If one doesn't fit beside its
  * number, they all go under, so the week's heads stay even.
  */
-export function marksBelow(dates: readonly string[], ctx: Pick<WeekGridContext, 'today' | 'reminders' | 'width' | 'textScale'>): boolean {
+export function marksBelow(dates: readonly string[], ctx: Pick<WeekGridContext, 'today' | 'reminders' | 'width' | 'textScale' | 'wide'>): boolean {
   if (ctx.width === undefined) return false;
-  const column = (ctx.width - HEAD_SIDES) / 7;
+  const head = ctx.wide ? HEAD.wide : HEAD.phone;
+  const column = (ctx.width - head.sides) / 7;
   return dates.some((date) => {
     if (!ctx.reminders?.get(date)) return false;
-    const num = date === ctx.today ? 28 : textWidth(String(parts(date).day), 15) * (ctx.textScale ?? 1);
+    const num = date === ctx.today ? head.circle : textWidth(String(parts(date).day), head.num) * (ctx.textScale ?? 1);
     return num + MARK > column;
   });
 }
@@ -73,7 +82,7 @@ const dayName = (date: string) => words.weekdays[weekday(date)] ?? '';
 export function layoutWeekGrid(anchor: string, occurrences: readonly MonthOccurrence[], ctx: WeekGridContext): WeekGrid {
   const { start, end } = weekRange(anchor, ctx.weekStartsOn);
   const dates = Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  const letters = weekdayLetters(ctx.weekStartsOn);
+  const letters = ctx.wide ? weekdayShort(ctx.weekStartsOn) : weekdayLetters(ctx.weekStartsOn);
   const inWeek = occurrences.filter((o) => o.starts_on <= end && o.ends_on >= start);
 
   const below = marksBelow(dates, ctx);
@@ -112,11 +121,13 @@ export function layoutWeekGrid(anchor: string, occurrences: readonly MonthOccurr
   }));
 
   const now = toMinutes(ctx.now);
-  const nowY = dates.includes(ctx.today) && now >= GRID_START && now < GRID_END ? yOf(now) : null;
+  const nowY = dates.includes(ctx.today) && now >= GRID_START && now < GRID_END ? yOf(now, ctx.wide ? WIDE_HOUR_HEIGHT : HOUR_HEIGHT) : null;
   return { days, bars, columns, hourLabels: ctx.use24h === false ? hourLabels12 : hourLabels, nowY };
 }
 
 function dayBlocks(events: readonly MonthOccurrence[], date: string, ctx: WeekGridContext): WeekBlock[] {
+  const hour = ctx.wide ? WIDE_HOUR_HEIGHT : HOUR_HEIGHT;
+  const minBlock = ctx.wide ? MIN_BLOCK.wide : MIN_BLOCK.phone;
   const timed = events.flatMap((o) => {
     try {
       const range = timeRange(o, ctx.slotTimes);
@@ -128,8 +139,8 @@ function dayBlocks(events: readonly MonthOccurrence[], date: string, ctx: WeekGr
       return [];
     }
   });
-  // Lanes from what's drawn, so a short block that's stretched to 22 px doesn't cover the next.
-  const drawnEnd = (t: { from: number; to: number }) => Math.min(GRID_END, Math.max(t.to, t.from + Math.ceil((MIN_BLOCK / HOUR_HEIGHT) * 60)));
+  // Lanes from what's drawn, so a short block that's stretched to its least height doesn't cover the next.
+  const drawnEnd = (t: { from: number; to: number }) => Math.min(GRID_END, Math.max(t.to, t.from + Math.ceil((minBlock / hour) * 60)));
   const lanes = new Map(layoutDay(timed.map((t) => ({ id: t.key, start: fromMinutes(t.from), end: fromMinutes(drawnEnd(t)) }))).map((l) => [l.id, l]));
   return timed.map(({ o, key, range, from, to }) => {
     const { initials, colors } = eventLook(o.members, ctx.look);
@@ -140,13 +151,14 @@ function dayBlocks(events: readonly MonthOccurrence[], date: string, ctx: WeekGr
     const lane = lanes.get(key) ?? { lane: 0, lanes: 1 };
     return {
       key,
-      top: lane.lanes > 1 ? initials : [initials, when].filter(Boolean).join(' '),
+      // Side by side on a phone there's only room for the initials; from 600 the time stays (OC-CalendarResponsive).
+      top: lane.lanes > 1 && !ctx.wide ? initials : [initials, when].filter(Boolean).join(' '),
       title: o.title,
       label: w.blockLabel(o.title, whoText(o.members, ctx.look), w.dayLabel(dayName(date), longDate(date)), slot ? slotNames.join(', ') : w.timeRange(clock(range.start, use24h), clock(range.end, use24h))),
       colors,
       kind: slot ? 'slot' : 'custom',
-      y: yOf(from) + 1,
-      height: Math.max(MIN_BLOCK, ((to - from) / 60) * HOUR_HEIGHT - 2),
+      y: yOf(from, hour) + 1,
+      height: Math.max(minBlock, ((to - from) / 60) * hour - 2),
       lane: lane.lane,
       lanes: lane.lanes,
     };

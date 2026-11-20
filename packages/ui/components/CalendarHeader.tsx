@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, View, type HostInstance } from 'react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { cn, focusRing } from '../cn';
+import { useLayoutTier } from '../layout';
 import { theme } from '../theme';
 import { Button } from './Button';
 import { Icon } from './Icon';
 import { IconButton } from './IconButton';
 import { TogglePill } from './Pill';
 import type { IconName } from './Icon';
-import { MemberChip, MemberStack, type MemberChipColor } from './MemberChip';
-import type { Segment } from './SegmentedControl';
+import { MemberChip, MemberFilterChip, MemberStack, type MemberChipColor } from './MemberChip';
+import { SegmentedControl, type Segment } from './SegmentedControl';
 import { Text } from './Text';
 
 export interface CalendarHeaderChip {
@@ -62,6 +64,10 @@ export interface CalendarHeaderProps<V extends string> {
    * screen-reader actions (VoiceOver's Actions rotor), so paging never needs a swipe.
    */
   arrows?: boolean;
+  /** From 600 (spec 070): the olive "+ Event" button in row 1 ("Event" beside a plus; read "Add event"), in place of the floating add button. */
+  add?: { label: string; a11yLabel: string; onPress: () => void };
+  /** From 600: the people chips' source for `onToggle` is the chips row, not the popover. */
+  onToggleChip?: (key: string) => void;
 }
 
 /** Off ‹ ›: the web's ← → page, unless someone is typing or a menu is open. */
@@ -95,6 +101,44 @@ const FALLBACK = { x: 20, y: 156, width: 350 };
  * that close on an outside tap or Escape; picking a view closes its menu, ticking people doesn't.
  */
 export function CalendarHeader<V extends string>(p: CalendarHeaderProps<V>) {
+  const { tier } = useLayoutTier();
+  return tier === 'compact' ? <PhoneHeader {...p} /> : <WideHeader {...p} />;
+}
+
+/**
+ * From 600 wide (spec 070 FR-002, OC-CalendarResponsive): title, ‹ Today › and "+ Event" in row 1;
+ * the views as a segmented control and the people as chips in row 2, nothing behind a menu.
+ */
+function WideHeader<V extends string>(p: CalendarHeaderProps<V>) {
+  const insets = useContext(SafeAreaInsetsContext);
+  const onChip = p.onToggleChip ?? p.onToggle;
+  return (
+    <View className="gap-10 bg-surface-page px-24 pb-10" style={{ paddingTop: (insets?.top ?? 0) + theme.layout.topWide }}>
+      <View className="flex-row items-center gap-10">
+        <Text size={32} weight="900" role="heading" aria-level={1} numberOfLines={1} className="min-w-0 flex-1" style={{ letterSpacing: -0.6 }}>
+          {p.title}
+        </Text>
+        <IconButton variant="card" icon="back" label={p.prevLabel} onPress={p.onPrev} />
+        <Button variant="soft" size="sm" label={p.todayLabel} onPress={p.onToday} />
+        <IconButton variant="card" icon="chevron-right" label={p.nextLabel} onPress={p.onNext} />
+        {p.add ? <Button variant="olive" size="sm" icon="plus" label={p.add.label} aria-label={p.add.a11yLabel} onPress={p.add.onPress} /> : null}
+      </View>
+      <View className="flex-row flex-wrap items-center gap-10">
+        <SegmentedControl variant="hug" label={p.viewsLabel} segments={p.views} value={p.view} onChange={p.onView} />
+        {p.toggle ? <TogglePill label={p.toggle.label} icon={p.toggle.icon} selected={p.toggle.pressed} onPress={p.toggle.onPress} /> : null}
+        <View className="flex-1" />
+        <View role="group" aria-label={p.filterLabel} className="flex-row flex-wrap gap-6">
+          {p.chips.map((c) => (
+            <MemberFilterChip key={c.key} name={c.name} initial={c.initial} color={c.color} pressed={c.pressed} onPress={() => onChip(c.key)} />
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/** Below 600: the phone header (spec 036). */
+function PhoneHeader<V extends string>(p: CalendarHeaderProps<V>) {
   const [open, setOpen] = useState<Menu | null>(null);
   const [at, setAt] = useState(FALLBACK);
   const rowRef = useRef<HostInstance>(null);

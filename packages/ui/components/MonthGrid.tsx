@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
 import { FlatList, Platform, Pressable, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent, type TextStyle } from 'react-native';
-import { LARGE_TEXT_SCALE, useLargeText } from '../a11y';
+import { LARGE_TEXT_SCALE, pressedState, useLargeText } from '../a11y';
 import { useReduceMotion } from '../reduceMotion';
 import { cn, focusRing } from '../cn';
 import { tabBottomPad, useLayoutTier } from '../layout';
 import { theme } from '../theme';
-import { EventBar, EventChip, Fill, MoreCount, type EventColor } from './EventChip';
+import { EventBar, EventChip, Fill, MoreCount, type ChipSize, type EventColor } from './EventChip';
 import { Icon } from './Icon';
 import { Text } from './Text';
 
@@ -80,15 +80,22 @@ export interface MonthGridProps {
 // react-native-web always adds an ellipsis to one-line text, but lets the style override it (iOS uses ellipsizeMode).
 const clipOnWeb = (Platform.OS === 'web' ? { textOverflow: 'clip' } : {}) as TextStyle;
 
-function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
+/** MonthGrid README › Date: an 18 px row with 11 px text; from 600 (spec 070) a 24 px row with 14 px text. */
+const DATE = {
+  phone: { row: 'h-[18px]', badge: 'h-[18px] min-w-[18px] rounded-[9px]', text: 11, line: 18 },
+  wide: { row: 'h-[24px]', badge: 'h-[24px] min-w-[24px] rounded-[12px]', text: 14, line: 24 },
+} as const;
+
+function DateMark({ cell, muted, size }: { cell: MonthCell; muted: boolean; size: ChipSize }) {
+  const d = DATE[size];
   const mark = cell.reminders ? <Icon name="alarm" size={13} color={muted ? 'inkMuted' : 'olive'} /> : null;
-  // MonthGrid README › Date: an 18 px row. Today is an olive circle; the 1st an ink pill "Nov 1"
-  // (olive when the 1st is today), clipped with no "…". A day with reminders adds a 13 px alarm clock.
+  // MonthGrid README › Date: today is an olive circle; the 1st an ink pill "Nov 1" (olive when the
+  // 1st is today), clipped with no "…". A day with reminders adds a 13 px alarm clock.
   if (cell.first || cell.today) {
     return (
-      <View className="h-[18px] max-w-full flex-row items-center gap-[2px] self-start">
-        <View className={cn('h-[18px] min-w-[18px] flex-shrink items-center justify-center rounded-[9px]', cell.first && 'px-[5px]', cell.today ? 'bg-olive' : 'bg-ink')}>
-          <Text size={11} weight="900" color={cell.today ? 'on-olive' : 'on-ink'} numberOfLines={1} ellipsizeMode="clip" maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={[{ lineHeight: 18 }, clipOnWeb]}>
+      <View className={cn(d.row, 'max-w-full flex-row items-center gap-[2px] self-start')}>
+        <View className={cn(d.badge, 'flex-shrink items-center justify-center', cell.first && 'px-[5px]', cell.today ? 'bg-olive' : 'bg-ink')}>
+          <Text size={d.text} weight="900" color={cell.today ? 'on-olive' : 'on-ink'} numberOfLines={1} ellipsizeMode="clip" maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={[{ lineHeight: d.line }, clipOnWeb]}>
             {cell.dateText}
           </Text>
         </View>
@@ -97,8 +104,8 @@ function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
     );
   }
   return (
-    <View className="h-[18px] flex-row items-center gap-[2px] pl-[3px]">
-      <Text size={11} weight="800" color={muted ? 'ink-muted' : 'ink'} maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={{ lineHeight: 18 }}>
+    <View className={cn(d.row, 'flex-row items-center gap-[2px] pl-[3px]')}>
+      <Text size={d.text} weight="800" color={muted ? 'ink-muted' : 'ink'} maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={{ lineHeight: d.line }}>
         {cell.dateText}
       </Text>
       {mark}
@@ -106,25 +113,25 @@ function DateMark({ cell, muted }: { cell: MonthCell; muted: boolean }) {
   );
 }
 
-/** An empty 15 px row; the week's alarm-clock row holds the clock of a day whose date left no room for it (spec 058). */
-function SpaceRow({ mark, muted }: { mark?: boolean; muted?: boolean }) {
-  return <View className="h-[15px] justify-center pl-[3px]">{mark ? <Icon name="alarm" size={13} color={muted ? 'inkMuted' : 'olive'} /> : null}</View>;
+/** An empty chip row (15 px, 20 from 600); the week's alarm-clock row holds the clock of a day whose date left no room for it (spec 058). */
+function SpaceRow({ mark, muted, size = 'phone' }: { mark?: boolean; muted?: boolean; size?: ChipSize }) {
+  return <View className={cn(size === 'wide' ? 'h-[20px]' : 'h-[15px]', 'justify-center pl-[3px]')}>{mark ? <Icon name="alarm" size={13} color={muted ? 'inkMuted' : 'olive'} /> : null}</View>;
 }
 
 /**
  * Largest text sizes (spec 030 User Story 3): the first chip, then a dot per further event, so nothing
  * is cut mid-word in a 120 px cell. The cell's label still names every event; the day sheet shows them.
  */
-function LargeTextItems({ cell, muted }: { cell: MonthCell; muted: boolean }) {
+function LargeTextItems({ cell, muted, size }: { cell: MonthCell; muted: boolean; size: ChipSize }) {
   const chips = cell.items.filter((i): i is Extract<MonthCellItem, { kind: 'chip' }> => i.kind === 'chip');
   const [first, ...rest] = chips;
   const spaces = cell.items.filter((i): i is Extract<MonthCellItem, { kind: 'space' }> => i.kind === 'space');
   return (
     <>
       {spaces.map((item) => (
-        <SpaceRow key={item.key} mark={item.mark} muted={muted} />
+        <SpaceRow key={item.key} mark={item.mark} muted={muted} size={size} />
       ))}
-      {first ? <EventChip text={first.text} colors={first.colors} /> : null}
+      {first ? <EventChip text={first.text} colors={first.colors} size={size} /> : null}
       {rest.length || cell.more ? (
         <View aria-hidden className="flex-row flex-wrap gap-[3px] pl-[3px] pt-[2px]">
           {rest.map((c) => (
@@ -132,51 +139,138 @@ function LargeTextItems({ cell, muted }: { cell: MonthCell; muted: boolean }) {
               <Fill colors={c.colors} rounded="rounded-full" />
             </View>
           ))}
-          {cell.more ? <MoreCount text={cell.more} /> : null}
+          {cell.more ? <MoreCount text={cell.more} size={size} /> : null}
         </View>
       ) : null}
     </>
   );
 }
 
-function Cell({ cell, mutePast, addLabel, onPress, onLongPress }: { cell: MonthCell; mutePast: boolean; addLabel: string; onPress: () => void; onLongPress: () => void }) {
-  const muted = mutePast && cell.past && !cell.today;
+interface CellLook {
+  size: ChipSize;
+  /** From 600: the row's height, a day outside the month shown (faded) and the selected day (spec 070). */
+  height?: number;
+  outside?: boolean;
+  selected?: boolean;
+}
+
+function Cell({
+  cell,
+  mutePast,
+  addLabel,
+  onPress,
+  onLongPress,
+  look = { size: 'phone' },
+}: {
+  cell: MonthCell;
+  mutePast: boolean;
+  addLabel: string;
+  onPress: () => void;
+  onLongPress: () => void;
+  look?: CellLook;
+}) {
+  const wide = look.size === 'wide';
+  const muted = (mutePast && cell.past && !cell.today) || !!look.outside;
   const largeText = useLargeText();
   return (
     <Pressable
       role="button"
-      aria-haspopup="dialog"
+      // Phone: a tap opens the day sheet. From 600 it selects the day for the panel beside or below.
+      aria-haspopup={wide ? undefined : 'dialog'}
+      {...(wide ? pressedState(!!look.selected) : {})}
       aria-label={cell.label}
       accessibilityActions={[{ name: 'longpress', label: addLabel }]}
       onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && onLongPress()}
       onPress={onPress}
       onLongPress={onLongPress}
-      className={cn('h-[120px] min-w-0 flex-1 gap-[2px] overflow-hidden border-b border-r border-line px-[3px] pb-4 pt-[3px]', muted ? 'bg-surface-page' : 'bg-surface-card', focusRing)}
+      className={cn(
+        'min-w-0 flex-1 gap-[2px] overflow-hidden border-b border-r border-line',
+        wide ? 'p-6' : 'h-[120px] px-[3px] pb-4 pt-[3px]',
+        muted && !(wide && look.selected) ? 'bg-surface-page' : 'bg-surface-card',
+        focusRing,
+      )}
+      style={wide ? { height: look.height } : undefined}
     >
-      <DateMark cell={cell} muted={muted} />
+      <DateMark cell={cell} muted={muted} size={look.size} />
       {largeText ? (
-        <LargeTextItems cell={cell} muted={muted} />
+        <LargeTextItems cell={cell} muted={muted} size={look.size} />
       ) : (
         <>
-          {cell.items.map((item) => (item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} /> : <SpaceRow key={item.key} mark={item.mark} muted={muted} />))}
-          {cell.more ? <MoreCount text={cell.more} /> : null}
+          {cell.items.map((item) =>
+            item.kind === 'chip' ? <EventChip key={item.key} text={item.text} colors={item.colors} size={look.size} /> : <SpaceRow key={item.key} mark={item.mark} muted={muted} size={look.size} />,
+          )}
+          {cell.more ? <MoreCount text={cell.more} size={look.size} /> : null}
         </>
       )}
-      {cell.today ? <View aria-hidden pointerEvents="none" className="absolute inset-0 border-olive" style={{ borderWidth: 2.5 }} /> : null}
+      {/* The selected day (from 600) is ringed in ink; today keeps its olive ring otherwise. */}
+      {look.selected ? (
+        <View aria-hidden pointerEvents="none" className="absolute inset-0 border-ink" style={{ borderWidth: 2.5 }} />
+      ) : cell.today ? (
+        <View aria-hidden pointerEvents="none" className="absolute inset-0 border-olive" style={{ borderWidth: 2.5 }} />
+      ) : null}
     </Pressable>
   );
 }
 
-function Week({ week, ...p }: { week: MonthWeek } & Pick<MonthGridProps, 'onDayPress' | 'onDayLongPress' | 'addLabel'> & { mutePast: boolean }) {
+function Week({
+  week,
+  look,
+  ...p
+}: { week: MonthWeek; look?: (cell: MonthCell) => CellLook } & Pick<MonthGridProps, 'onDayPress' | 'onDayLongPress' | 'addLabel'> & { mutePast: boolean; height?: number }) {
+  const wide = look !== undefined;
   return (
-    <View className="h-[120px] bg-surface-card">
+    <View className={cn('bg-surface-card', !wide && 'h-[120px]')} style={wide ? { height: p.height } : undefined}>
       <View className="flex-row">
         {week.cells.map((cell) => (
-          <Cell key={cell.date} cell={cell} mutePast={p.mutePast} addLabel={p.addLabel} onPress={() => p.onDayPress(cell.date)} onLongPress={() => p.onDayLongPress(cell.date)} />
+          <Cell
+            key={cell.date}
+            cell={cell}
+            mutePast={p.mutePast}
+            addLabel={p.addLabel}
+            onPress={() => p.onDayPress(cell.date)}
+            onLongPress={() => p.onDayLongPress(cell.date)}
+            look={look?.(cell)}
+          />
         ))}
       </View>
       {week.bars.map((bar) => (
-        <EventBar {...bar} key={bar.key} />
+        <EventBar {...bar} key={bar.key} size={wide ? 'month-wide' : 'month'} />
+      ))}
+    </View>
+  );
+}
+
+export interface MonthPageProps extends Pick<MonthGridProps, 'onDayPress' | 'onDayLongPress' | 'addLabel' | 'mutePast'> {
+  /** "Sun" … "Sat", from the first day of the week. */
+  weekdays: readonly string[];
+  /** The month's rows, from the one holding its 1st to the one holding its last day. */
+  weeks: readonly MonthWeek[];
+  /** The 1st of the month shown: days around it are faded. */
+  month: string;
+  /** Each row's height: 124 at medium, sharing the window's height at expanded. */
+  rowHeight: number;
+  /** The day whose panel is open: ringed in ink. */
+  selected: string;
+}
+
+/**
+ * From 600 wide (spec 070 FR-003/FR-004, MonthGrid README › From 600): one month at a time in a
+ * white card, weekday names over the rows, larger dates and 20 px chips. A tap selects a day.
+ */
+export function MonthPage({ weekdays, weeks, month, rowHeight, selected, mutePast = true, ...p }: MonthPageProps) {
+  const inMonth = month.slice(0, 7);
+  const look = (cell: MonthCell): CellLook => ({ size: 'wide', height: rowHeight, outside: cell.date.slice(0, 7) !== inMonth, selected: cell.date === selected });
+  return (
+    <View className="overflow-hidden rounded-[22px] bg-surface-card">
+      <View aria-hidden className="flex-row border-b-[1.5px] border-line pb-6 pt-8">
+        {weekdays.map((w, i) => (
+          <Text key={i} size={13} weight="900" color="ink-muted" align="center" className="flex-1">
+            {w}
+          </Text>
+        ))}
+      </View>
+      {weeks.map((week) => (
+        <Week key={week.key} week={week} look={look} height={rowHeight} mutePast={mutePast} onDayPress={p.onDayPress} onDayLongPress={p.onDayLongPress} addLabel={p.addLabel} />
       ))}
     </View>
   );

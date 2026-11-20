@@ -1564,6 +1564,9 @@ export const strings = {
       peopleButton: (shownNames: string[] | null) => `Show events for: ${shownNames ? shownNames.join(', ') : 'everyone'}`,
       showAll: 'Show all',
       close: 'Close',
+      /** From 600 (spec 070, OC-LargeScreens › Copy "+ Event"): a plus icon, then "Event"; read "Add event". */
+      addEvent: 'Event',
+      addEventLabel: 'Add event',
     },
     // design/ui/OC-CalMonth.md (spec 037).
     month: {
@@ -1588,6 +1591,10 @@ export const strings = {
         empty: 'Nothing planned yet.',
         addLabel: (day: string) => `Add event on ${day}`,
         close: 'Close',
+      },
+      /** From 600 (spec 070): the selected day's panel; its title, count and rows are the sheet's. "+ Add on Sun 25". */
+      panel: {
+        addOn: (day: string) => `+ Add on ${day}`,
       },
     },
     week: {
@@ -1621,6 +1628,15 @@ export const strings = {
       rowLabel: (parts: string[], now: boolean) => [...parts.filter(Boolean), ...(now ? ['happening now'] : [])].join(', '),
       /** "Lyon trip, Everyone, all day, Day 2 of 3". */
       allDayLabel: (title: string, who: string, tag: string | null) => [title, who, 'all day', ...(tag ? [tag] : [])].filter(Boolean).join(', '),
+      /** From 960 (spec 070 FR-007): the mini month and the next three days beside the bands. */
+      aside: {
+        comingUp: 'Coming up',
+        nothingPlanned: 'Nothing planned',
+        /** A mini month day, for screen readers: "October 25", "October 26, has events". */
+        dayLabel: (date: string, hasEvents: boolean) => (hasEvents ? `${date}, has events` : date),
+        /** A "Coming up" row, for screen readers: "Monday October 26: Run · Baby yoga". */
+        rowLabel: (day: string, text: string) => `${day}: ${text}`,
+      },
     },
     /** OC-CalAgenda (spec 040). Rows reuse `day`'s time line, "Now", "Birthday" and "Day N of M". */
     agenda: {

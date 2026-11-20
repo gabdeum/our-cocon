@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { memberInitials, type Tracker } from '@cocon/schemas';
 import type { CalendarView, SlotKey } from '@cocon/schemas/calendar';
-import { DEFAULT_SLOT_TIMES, shiftAnchor, viewFor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
+import { DEFAULT_SLOT_TIMES, addDays, shiftAnchor, viewFor, weekRange, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { CalendarHeader, useSheetPresentation, type CalendarHeaderChip } from '@cocon/ui';
+import { CalendarHeader, useLayoutTier, useSheetPresentation, type CalendarHeaderChip } from '@cocon/ui';
 import { arrowLabels, headerTitle, viewSegments } from '../../lib/calendar-header';
 import { useCalendarFilter } from '../../lib/calendar-filter';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
@@ -105,14 +105,23 @@ export function CalendarScreen({
     if (occurrence && viewFor(occurrence, myMemberId).view === 'busy') setBusy(occurrence);
     else openEventPage(id, date);
   };
+  const { tier } = useLayoutTier();
+  const wide = tier !== 'compact';
   // Month view: the month that fills the grid (FR-005), and ‹ › / Today's scroll requests.
   const [shown, setShown] = useState(() => firstOfMonth(anchor));
   const [jump, setJump] = useState<{ month: string; toToday?: boolean; nonce: number }>();
+  // The day other views open on from Month: today in this month, else the 1st.
+  const dayInMonth = (month: string) => (firstOfMonth(today) === month ? today : month);
+  // Spec 070: from 600 Month shows one month with a selected day's panel; it starts on the day the URL names.
+  const [selected, setSelected] = useState(() => (firstOfMonth(anchor) === firstOfMonth(today) ? today : anchor));
   // Back on Month from another view: open on the day that view showed.
   const [lastView, setLastView] = useState(view);
   if (view !== lastView) {
     setLastView(view);
-    if (view === 'month') setShown(firstOfMonth(anchor));
+    if (view === 'month') {
+      setShown(firstOfMonth(anchor));
+      setSelected(anchor);
+    }
   }
   // Week and Day load around the month of the day they show; Agenda asks for its own weeks.
   const { from, to } = eventWindow(view === 'month' ? shown : firstOfMonth(anchor));
@@ -136,39 +145,47 @@ export function CalendarScreen({
   ];
   const arrows = arrowLabels(view);
 
-  const onToggle = (key: string) => {
+  const onToggle = (key: string, source: 'menu' | 'chips' = 'menu') => {
     const next = toggle(key);
-    tracker.track('calendar_member_filter_changed', { members_visible: chips.filter((c) => !next.has(c.key)).length });
+    tracker.track('calendar_member_filter_changed', { members_visible: chips.filter((c) => !next.has(c.key)).length, source });
   };
   const shownChips = chips.filter((c) => c.pressed);
   const filtered = shownChips.length < chips.length;
   const onShowAll = () => {
     if (!filtered) return;
     showAll();
-    tracker.track('calendar_member_filter_changed', { members_visible: chips.length });
+    tracker.track('calendar_member_filter_changed', { members_visible: chips.length, source: 'menu' });
   };
   const onView = (next: CalendarView) => {
     if (next === view) return;
-    if (view === 'month') onNavigate({ view: next, date: dayInMonth(shown) });
+    // From 600 the selected day; on the phone today in the month shown, else its 1st.
+    if (view === 'month') onNavigate({ view: next, date: wide ? selected : dayInMonth(shown) });
     else onNavigate({ view: next });
     tracker.track('calendar_view_changed', { from: view, to: next });
   };
-  // The day other views open on from Month: today in this month, else the 1st.
-  const dayInMonth = (month: string) => (firstOfMonth(today) === month ? today : month);
   const goToMonth = (month: string, toToday = false) => {
     setShown(month);
+    setSelected(dayInMonth(month));
     setJump((j) => ({ month, toToday, nonce: (j?.nonce ?? 0) + 1 }));
+  };
+  // Spec 070 FR-002: "+ Event" adds where the floating button did: the day shown in Day, today in
+  // a week that holds it (else its first day), and today in Month and Agenda.
+  const addDay = () => {
+    if (view === 'day') return anchor;
+    if (view !== 'week') return today;
+    const { start } = weekRange(anchor, weekStartsOn);
+    return today >= start && today <= addDays(start, 6) ? today : start;
   };
   const paging =
     view === 'month'
       ? {
-          title: headerTitle('month', shown, today, width, weekStartsOn),
+          title: headerTitle('month', shown, today, width, weekStartsOn, tier),
           onPrev: () => goToMonth(shiftAnchor('month', shown, -1)),
           onNext: () => goToMonth(shiftAnchor('month', shown, 1)),
           onToday: () => goToMonth(firstOfMonth(today), true),
         }
       : {
-          title: headerTitle(view, anchor, today, width, weekStartsOn),
+          title: headerTitle(view, anchor, today, width, weekStartsOn, tier),
           onPrev: () => onNavigate({ date: shiftAnchor(view, anchor, -1) }),
           onNext: () => onNavigate({ date: shiftAnchor(view, anchor, 1) }),
           onToday: () => (agenda && anchor === today ? setAgendaTop((n) => n + 1) : onNavigate({ date: today })),
@@ -191,6 +208,7 @@ export function CalendarScreen({
         viewButtonLabel={h.viewButton(h.views[view])}
         chips={chips}
         onToggle={onToggle}
+        onToggleChip={(key) => onToggle(key, 'chips')}
         onShowAll={onShowAll}
         peopleLabel={filtered ? h.peopleCount(shownChips.length, chips.length) : h.peopleAll}
         peopleButtonLabel={h.peopleButton(filtered ? shownChips.map((c) => c.name) : null)}
@@ -199,6 +217,7 @@ export function CalendarScreen({
         closeLabel={h.close}
         toggle={reminders && listView ? { label: strings.calendar.reminders.toggle, icon: 'alarm', pressed: showReminders, onPress: () => onShowReminders(!showReminders) } : undefined}
         arrows={!(reminders && listView)}
+        add={{ label: h.addEvent, a11yLabel: h.addEventLabel, onPress: () => onAddEvent(addDay()) }}
       />
       <View className="px-20">
         <OfflineBanner screen="calendar" tracker={tracker} />
@@ -223,7 +242,14 @@ export function CalendarScreen({
           reminders={reminders}
           showReminders={showReminders}
           onShowReminders={onShowReminders}
-          showHint={monthHint.show}
+          // The hint points at the floating add button, which isn't there from 600.
+          showHint={monthHint.show && !wide}
+          selected={selected}
+          onSelect={(date) => {
+            setSelected(date);
+            tracker.track('calendar_day_selected', { view: 'month', source: 'grid' });
+          }}
+          onSwipe={(direction) => goToMonth(shiftAnchor('month', shown, direction))}
           onDismissHint={() => {
             monthHint.onDismiss();
             tracker.track('calendar_first_hint_dismissed', {});
@@ -274,6 +300,11 @@ export function CalendarScreen({
           }}
           onOpenEvent={onOpenEvent}
           reminders={shownReminders}
+          weekStartsOn={weekStartsOn}
+          onPickDay={(date, source) => {
+            onNavigate({ date });
+            tracker.track('calendar_day_selected', { view: 'day', source });
+          }}
         />
       ) : null}
       {agenda ? (

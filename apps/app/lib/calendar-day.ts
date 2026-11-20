@@ -126,6 +126,8 @@ export interface DaySheet {
   rows: DayBandItem[];
   /** "Add event on Sunday, October 25". */
   addLabel: string;
+  /** From 600, the panel's add button (spec 070): "+ Add on Sun 25". */
+  addOn: string;
 }
 
 /**
@@ -157,7 +159,8 @@ export function layoutDaySheet(date: string, occurrences: readonly MonthOccurren
   const count = toDo
     ? strings.calendar.reminders.sheetCount(events.length ? s.count(events.length) : null, strings.calendar.reminders.count(toDo))
     : s.count(events.length);
-  return { title, count, rows: rows.map((r) => r.item), addLabel: s.addLabel(title) };
+  const short = `${words.weekdaysShort[weekday(date)] ?? ''} ${Number(date.slice(8))}`;
+  return { title, count, rows: rows.map((r) => r.item), addLabel: s.addLabel(title), addOn: strings.calendar.month.panel.addOn(short) };
 }
 
 function eventRow(o: MonthOccurrence, range: { start: string; end: string }, date: string, ctx: DayViewContext): DayEventItem {

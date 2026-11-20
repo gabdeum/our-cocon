@@ -5,7 +5,7 @@ import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
 import { Text } from './Text';
 
-export type SegmentedVariant = 'light' | 'pill' | 'tabs';
+export type SegmentedVariant = 'light' | 'pill' | 'tabs' | 'hug';
 
 export interface Segment<K extends string> {
   key: K;
@@ -16,7 +16,7 @@ export interface SegmentedControlProps<K extends string> {
   segments: Segment<K>[];
   value: K;
   onChange: (key: K) => void;
-  /** light: settings (units, store) · pill: hugs content · tabs: switch the view (Ingredients · 9 / Steps · 6). */
+  /** light: settings (units, store) · pill: hugs content · tabs: switch the view (Ingredients · 9 / Steps · 6) · hug: light, sized to its labels (the calendar's views from 600, spec 070). */
   variant?: SegmentedVariant;
   /** Screen-reader name of the group. */
   label: string;
@@ -29,11 +29,13 @@ const tracks: Record<SegmentedVariant, string> = {
   light: 'flex-row gap-4 rounded-md bg-surface-soft p-4',
   pill: 'self-start flex-row gap-4 rounded-pill bg-surface-soft p-4',
   tabs: 'flex-row gap-4 rounded-[20px] bg-ink p-[5px]',
+  hug: 'self-start flex-row gap-4 rounded-md bg-surface-soft p-4',
 };
 const items: Record<SegmentedVariant, string> = {
   light: 'h-control-md flex-1 rounded-sm',
   pill: 'h-[36px] rounded-pill px-14',
   tabs: 'h-[48px] flex-1 rounded-lg',
+  hug: 'h-control-md rounded-sm px-18',
 };
 
 /** Two to four exclusive options in one track (SegmentedControl README). */
@@ -57,7 +59,7 @@ export function SegmentedControl<K extends string>({ segments, value, onChange, 
             className={cn('items-center justify-center', items[variant], on && (tabs ? 'bg-honey' : 'bg-surface-card'), focusRing)}
             style={on && !tabs ? { boxShadow: theme.shadow.segment } : undefined}
           >
-            <Text size={tabs ? 16 : 14} weight={on ? '900' : '700'} color={on ? 'ink' : tabs ? 'on-ink' : 'ink-muted'} numberOfLines={1}>
+            <Text size={tabs ? 16 : variant === 'hug' ? 15 : 14} weight={on ? '900' : '700'} color={on ? 'ink' : tabs ? 'on-ink' : 'ink-muted'} numberOfLines={1}>
               {s.label}
             </Text>
           </Pressable>

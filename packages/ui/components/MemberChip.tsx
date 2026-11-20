@@ -45,6 +45,31 @@ export function MemberChip({ name, initial, color, pressed, onPress, last = fals
   );
 }
 
+/**
+ * MemberChip README › Filter chip: a person in the calendar header's row of chips from 600 wide
+ * (spec 070). Shown: white. Hidden: outlined, pale dot, muted struck-through name.
+ */
+export function MemberFilterChip({ name, initial, color, pressed, onPress }: Omit<MemberChipProps, 'last'>) {
+  return (
+    <Pressable
+      role="button"
+      {...pressedState(pressed)}
+      aria-label={name}
+      onPress={onPress}
+      className={cn(
+        'h-[40px] flex-none flex-row items-center gap-6 rounded-pill pl-4 pr-12',
+        pressed ? 'bg-surface-card active:bg-surface-card-pressed' : 'border-2 border-line-strong bg-transparent pl-[2px] pr-10 active:bg-surface-soft',
+        focusRing,
+      )}
+    >
+      <MemberDot initial={initial} color={color} size={30} pale={!pressed} />
+      <Text size={14} weight="800" color={pressed ? 'ink' : 'ink-muted'} numberOfLines={1} style={pressed ? undefined : { textDecorationLine: 'line-through' }}>
+        {name}
+      </Text>
+    </Pressable>
+  );
+}
+
 export interface MemberPickerChipProps {
   name: string;
   initial: string;
@@ -95,20 +120,21 @@ export function MemberStack({ people, filtered }: MemberStackProps) {
   );
 }
 
-type DotSize = 26 | 28 | 32 | 34;
+type DotSize = 26 | 28 | 30 | 32 | 34;
 // The screens' dots: box, initial (one letter / "All"), Others' icon.
 const dots: Record<DotSize, { box: string; text: number; all: number; icon: number }> = {
   26: { box: 'h-[26px] w-[26px]', text: 12, all: 9, icon: 14 },
   28: { box: 'h-[28px] w-[28px]', text: 13, all: 11, icon: 18 },
+  30: { box: 'h-[30px] w-[30px]', text: 12, all: 10, icon: 16 },
   32: { box: 'h-[32px] w-[32px]', text: 14, all: 11, icon: 18 },
   34: { box: 'h-[34px] w-[34px]', text: 14, all: 11, icon: 18 },
 };
 
-/** MemberChip README › Dot: the member color with the initial; "All" smaller; Others a person icon. */
-function MemberDot({ initial, color, size, className, style }: { initial: string; color: MemberChipColor; size: DotSize; className?: string; style?: { boxShadow: string } }) {
+/** MemberChip README › Dot: the member color with the initial; "All" smaller; Others a person icon. `pale`: a hidden person's dot (spec 070). */
+function MemberDot({ initial, color, size, pale = false, className, style }: { initial: string; color: MemberChipColor; size: DotSize; pale?: boolean; className?: string; style?: { boxShadow: string } }) {
   const d = dots[size];
   return (
-    <View aria-hidden className={cn('items-center justify-center rounded-full', d.box, avatarFills[color], className)} style={style}>
+    <View aria-hidden className={cn('items-center justify-center rounded-full', d.box, avatarFills[pale ? 'others' : color], className)} style={style}>
       {color === 'others' ? (
         <Icon name="person" size={d.icon} color="inkMuted" />
       ) : (

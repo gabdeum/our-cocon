@@ -82,6 +82,9 @@ import {
   HourGrid,
   Swipeable,
   MemberChip,
+  MemberFilterChip,
+  MiniMonth,
+  ComingUpRow,
   MemberPickerChip,
   MemberBadge,
   IconRow,
@@ -289,6 +292,13 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <MemberChip name="Everyone" initial="All" color="everyone" pressed onPress={() => undefined} />
           <MemberChip name="Others" initial="" color="others" pressed onPress={() => undefined} />
         </PillRow>
+        {/* Spec 070: the calendar header's chips from 600 wide; Eva hidden. */}
+        <PillRow>
+          <MemberFilterChip name="Gabriel" initial="G" color="honey" pressed onPress={() => undefined} />
+          <MemberFilterChip name="Eva" initial="E" color="rose" pressed={false} onPress={() => undefined} />
+          <MemberFilterChip name="Everyone" initial="All" color="everyone" pressed onPress={() => undefined} />
+          <MemberFilterChip name="Others" initial="" color="others" pressed onPress={() => undefined} />
+        </PillRow>
       </Section>
 
       <Section group="Calendar" title="EventChip and EventBar">
@@ -298,6 +308,9 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <EventChip text="All Labor Day BBQ" colors={['everyone', 'others']} />
           <EventChip text="Dinner at Sam’s" colors={['others']} />
           <MoreCount text="+2" />
+          {/* Spec 070: the month's chips from 600 wide. */}
+          <EventChip text="J Baby swim" colors={['sky']} size="wide" />
+          <MoreCount text="+2" size="wide" />
           <View className="h-control-lg">
             <EventBar text="All Grandma visits" label="Grandma visits, October 16 to October 19" colors={['everyone']} column={5} days={2} lane={0} startsHere endsHere={false} />
           </View>
@@ -622,6 +635,15 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         <SegmentedControl label="Units" segments={[{ key: 'metric', label: 'Metric · g, ml, °C' }, { key: 'imperial', label: 'Imperial · oz, °F' }]} value={units} onChange={setUnits} />
         <SegmentedControl label="Store" variant="pill" segments={[{ key: 'us', label: 'US' }, { key: 'eu', label: 'Europe' }]} value={store} onChange={setStore} />
         <SegmentedControl label="Recipe" variant="tabs" segments={[{ key: 'ingredients', label: 'Ingredients · 9' }, { key: 'steps', label: 'Steps · 6' }]} value={view} onChange={setView} />
+        <SegmentedControl label="Calendar view" variant="hug" segments={[{ key: 'month', label: 'Month' }, { key: 'week', label: 'Week' }, { key: 'day', label: 'Day' }]} value="week" onChange={noop} />
+      </Section>
+
+      <Section group="Calendar" title="MiniMonth and ComingUpRow (spec 070)">
+        <View className="gap-14" style={{ width: theme.layout.dayAside }}>
+          <MiniMonth title="October" weekdays={['S', 'M', 'T', 'W', 'T', 'F', 'S']} days={galleryMiniMonth} onPress={noop} />
+          <ComingUpRow weekday="Mon" num="26" text="Run · Baby yoga" label="Monday October 26: Run · Baby yoga" onPress={noop} />
+          <ComingUpRow weekday="Tue" num="27" text="Nothing planned" label="Tuesday October 27: Nothing planned" onPress={noop} />
+        </View>
       </Section>
 
       <Section group="Inputs" title="Stepper">
@@ -1308,3 +1330,12 @@ function ReorderGallery() {
     />
   );
 }
+
+/** October 2026 for the MiniMonth sample: starts on a Thursday; the 27th shown, today the 25th. */
+const galleryMiniMonth = Array.from({ length: 35 }, (_, i) => {
+  const day = i - 3;
+  const outside = day < 1 || day > 31;
+  const num = day < 1 ? 30 + day : day > 31 ? day - 31 : day;
+  const date = `2026-${day < 1 ? '09' : day > 31 ? '11' : '10'}-${String(num).padStart(2, '0')}`;
+  return { date, num: String(num), label: date, selected: day === 27, today: day === 25, outside, hasEvents: [4, 11, 18, 25, 27, 28].includes(day) };
+});

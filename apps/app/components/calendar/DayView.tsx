@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { ScrollView, View } from 'react-native';
 import type { SlotKey } from '@cocon/schemas/calendar';
-import type { SlotTimes } from '@cocon/calendar';
+import type { SlotTimes, WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { AllDayRow, DayReminderRow, FloatingAdd, MemberCount, SlotBand, Swipeable, Text, tabBottomPad, useLayoutTier } from '@cocon/ui';
+import { AllDayRow, ComingUpRow, DayReminderRow, FloatingAdd, MemberCount, MiniMonth, SlotBand, splitColumns, Swipeable, Text, tabBottomPad, theme, useLayoutTier, type DayBand } from '@cocon/ui';
+import { comingUp, miniMonth } from '../../lib/calendar-aside';
 import { layoutDayView } from '../../lib/calendar-day';
 import { placeForScreen, pressReminderBox, type CalendarReminders } from '../../lib/calendar-reminders';
-import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
+import { eventWindow, firstOfMonth, memberLook, monthOccurrences, monthRange, parseOccurrenceKey, weekdayLetters, type MonthOccurrence } from '../../lib/calendar-month';
 import { useNow } from '../../lib/use-now';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
@@ -36,13 +37,26 @@ export interface DayViewProps {
   onOpenEvent: (id: string, date: string) => void;
   /** Spec 058: the day's reminders; none while the header's toggle hides them. */
   reminders?: CalendarReminders;
+  /** Spec 070 FR-007: the mini month's weeks, from 960. */
+  weekStartsOn?: WeekStartsOn;
+  /** Spec 070 FR-007: a day picked in the mini month or "Coming up". */
+  onPickDay?: (date: string, source: 'mini_month' | 'coming_up') => void;
 }
 
-/** Spec 039 (OC-CalDay): who's busy, All day, and the five bands of one day, swiped left and right; 058 its reminders. */
-export function DayView({ members, myMemberId, events, slotTimes, hidden, date, today, timeZone, onSwipe, onAddEvent, onAddInSlot, onOpenEvent, reminders }: DayViewProps) {
+/** Spec 070 FR-006: a band's share of its column, so the two columns end near each other. */
+const bandWeight = (b: DayBand) => 1 + Math.max(1, b.events.length);
+
+/**
+ * Spec 039 (OC-CalDay): who's busy, All day, and the five bands of one day, swiped left and right;
+ * 058 its reminders. From 600 (spec 070) the bands sit in two columns read by column and "+ Event"
+ * is in the header; from 960 a mini month and "Coming up" are beside them.
+ */
+export function DayView({ members, myMemberId, events, slotTimes, hidden, date, today, timeZone, onSwipe, onAddEvent, onAddInSlot, onOpenEvent, reminders, weekStartsOn = 0, onPickDay = () => undefined }: DayViewProps) {
   const now = useNow(timeZone);
+  const { tier } = useLayoutTier();
   // TabBar README: 180 under the content for the floating tab bar; 28 beside the rail (spec 064).
-  const bottomPad = tabBottomPad(useLayoutTier().tier);
+  const bottomPad = tabBottomPad(tier);
+  const wide = tier !== 'compact';
   const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
   const { from, to } = eventWindow(firstOfMonth(date));
@@ -64,11 +78,23 @@ export function DayView({ members, myMemberId, events, slotTimes, hidden, date, 
     const { id, date: series } = parseOccurrenceKey(key);
     onOpenEvent(id, series);
   };
+  const band = (b: (typeof day.bands)[number]) => (
+    <SlotBand
+      key={b.key}
+      band={b}
+      onEventPress={openEvent}
+      onAdd={() => onAddInSlot(date, b.slot)}
+      onReminderToggle={toggleReminder}
+      onReminderOpen={openReminder}
+      readOnly={reminders?.readOnly}
+    />
+  );
 
   return (
-    <View className="flex-1">
+    <View className={tier === 'expanded' ? 'flex-1 flex-row' : 'flex-1'}>
+      <View className="min-w-0 flex-1">
       <Swipeable page={date} onSwipe={onSwipe}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-16 px-20 pt-4" contentContainerStyle={{ paddingBottom: bottomPad }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName={wide ? 'gap-16 px-24 pt-4' : 'gap-16 px-20 pt-4'} contentContainerStyle={{ paddingBottom: bottomPad }}>
           {day.busy.length ? (
             <View role="group" aria-label={d.busyLabel} className="flex-row flex-wrap gap-8">
               {day.busy.map((c) => (
@@ -90,17 +116,17 @@ export function DayView({ members, myMemberId, events, slotTimes, hidden, date, 
               )}
             </View>
           ) : null}
-          {day.bands.map((b) => (
-            <SlotBand
-              key={b.key}
-              band={b}
-              onEventPress={openEvent}
-              onAdd={() => onAddInSlot(date, b.slot)}
-              onReminderToggle={toggleReminder}
-              onReminderOpen={openReminder}
-              readOnly={reminders?.readOnly}
-            />
-          ))}
+          {wide ? (
+            <View className="flex-row gap-16">
+              {splitColumns(day.bands, 2, bandWeight).map((bands, i) => (
+                <View key={i} testID={`band-column-${i}`} className="min-w-0 flex-1 gap-16">
+                  {bands.map(band)}
+                </View>
+              ))}
+            </View>
+          ) : (
+            day.bands.map(band)
+          )}
           {day.done.length ? (
             <View className="gap-8">
               <Text role="heading" size={18} weight="900">
@@ -113,7 +139,45 @@ export function DayView({ members, myMemberId, events, slotTimes, hidden, date, 
           ) : null}
         </ScrollView>
       </Swipeable>
-      <FloatingAdd label={strings.calendar.month.addEvent} onPress={() => onAddEvent(date)} hint={null} />
+      </View>
+      {tier === 'expanded' ? <DayAside date={date} today={today} occurrences={occurrences} slotTimes={slotTimes} weekStartsOn={weekStartsOn} onPickDay={onPickDay} bottomPad={bottomPad} /> : null}
+      {wide ? null : <FloatingAdd label={strings.calendar.month.addEvent} onPress={() => onAddEvent(date)} hint={null} />}
     </View>
+  );
+}
+
+/** Spec 070 FR-007 (OC-CalendarResponsive at 1180): a 300 px column with the mini month and the next three days. */
+function DayAside({
+  date,
+  today,
+  occurrences,
+  slotTimes,
+  weekStartsOn,
+  onPickDay,
+  bottomPad,
+}: {
+  date: string;
+  today: string;
+  occurrences: readonly MonthOccurrence[];
+  slotTimes: SlotTimes;
+  weekStartsOn: WeekStartsOn;
+  onPickDay: (date: string, source: 'mini_month' | 'coming_up') => void;
+  bottomPad: number;
+}) {
+  const range = useMemo(() => monthRange(today, weekStartsOn), [today, weekStartsOn]);
+  const mini = useMemo(() => miniMonth(date, today, occurrences, range), [date, today, occurrences, range]);
+  const next = useMemo(() => comingUp(date, occurrences, slotTimes), [date, occurrences, slotTimes]);
+  return (
+    <ScrollView style={{ width: theme.layout.dayAside, flexGrow: 0 }} contentContainerClassName="gap-14 pr-24 pt-4" contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
+      <MiniMonth title={mini.title} weekdays={weekdayLetters(weekStartsOn)} days={mini.days} onPress={(d) => onPickDay(d, 'mini_month')} />
+      <View className="gap-8">
+        <Text role="heading" aria-level={2} size={13} weight="900" color="ink-muted" className="uppercase">
+          {d.aside.comingUp}
+        </Text>
+        {next.map((x) => (
+          <ComingUpRow key={x.date} weekday={x.weekday} num={x.num} text={x.text} label={x.label} onPress={() => onPickDay(x.date, 'coming_up')} />
+        ))}
+      </View>
+    </ScrollView>
   );
 }

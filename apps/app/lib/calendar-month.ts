@@ -20,7 +20,7 @@ import {
 import type { StoredEvent } from '@cocon/data';
 import { memberInitials } from '@cocon/schemas';
 import type { EventMember } from '@cocon/schemas/calendar';
-import type { EventColor, MonthBar, MonthCell, MonthCellItem, MonthWeek } from '@cocon/ui';
+import type { EventColor, LayoutTier, MonthBar, MonthCell, MonthCellItem, MonthWeek } from '@cocon/ui';
 import type { Member } from './session';
 import { strings } from '../strings/en';
 
@@ -76,6 +76,35 @@ export function monthShownAt(range: MonthRange, topRow: number): string {
 /** S M T W T F S from the first day of the week. */
 export function weekdayLetters(weekStartsOn: WeekStartsOn): string[] {
   return [...m.weekdays.slice(weekStartsOn), ...m.weekdays.slice(0, weekStartsOn)];
+}
+
+/** Spec 070 FR-003: Sun Mon … Sat from the first day of the week, over the grid from 600. */
+export function weekdayShort(weekStartsOn: WeekStartsOn): string[] {
+  return [...words.weekdaysShort.slice(weekStartsOn), ...words.weekdaysShort.slice(0, weekStartsOn)];
+}
+
+/** Spec 070: from 600 the grid shows one month at a time, the rows holding its 1st to its last day. */
+export function monthPageWeeks(range: MonthRange, month: string): number[] {
+  const { year, month: mo } = parts(month);
+  const first = firstWeekOfMonth(range, month);
+  const last = weekIndexOf(range, addDays(makeDate(year, mo + 1, 1), -1));
+  return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+}
+
+/** OC-LargeScreens › Calendar: rows 124 tall at medium; at expanded they share the height the grid has (less its 40 weekday row), at least 96. */
+export const MEDIUM_ROW_HEIGHT = 124;
+const MIN_EXPANDED_ROW = 96;
+const WEEKDAY_ROW = 40;
+
+/** FR-003/FR-004: a week row's height in the month from 600. `available` is the grid's height, unknown before layout. */
+export function monthRowHeight(tier: LayoutTier, available: number | undefined, weeks: number): number {
+  if (tier !== 'expanded' || available === undefined) return MEDIUM_ROW_HEIGHT;
+  return Math.max(MIN_EXPANDED_ROW, Math.floor((available - WEEKDAY_ROW) / weeks));
+}
+
+/** From 600 a cell has a 24 date row and 6 padding (30), then rows of 20 px chips 2 apart: as many as fit. */
+export function chipRowsFor(rowHeight: number): number {
+  return Math.max(1, Math.floor((rowHeight - 30) / 22));
 }
 
 /**
@@ -156,10 +185,10 @@ export function chipLook(members: readonly EventMember[], title: string, look: M
   return { text: initials && withInitials ? `${initials} ${title}` : title, colors };
 }
 
-const isMultiDay = (o: MonthOccurrence) => o.ends_on > o.starts_on;
+export const isMultiDay = (o: MonthOccurrence) => o.ends_on > o.starts_on;
 
 /** FR-003 order for one day's chips: all-day first, then by start (slot or time). */
-function startMinutes(o: MonthOccurrence, slotTimes: SlotTimes): number {
+export function startMinutes(o: MonthOccurrence, slotTimes: SlotTimes): number {
   try {
     const range = timeRange(o, slotTimes);
     return range ? toMinutes(range.start) : -1;
@@ -193,24 +222,28 @@ export interface WeekContext {
   /** A day cell's width in px, and the text size multiplier (up to 135%): whether the alarm clock fits beside the date. */
   cellWidth?: number;
   textScale?: number;
+  /** Spec 070: from 600, rows a cell holds (`chipRowsFor`, else five) and the larger cell (14 px date, 6 padding). */
+  rows?: number;
+  wide?: boolean;
 }
 
 /** MonthGrid README › Date: the 13 px alarm clock 2 after the date; a cell's 3 px sides and 1 px border. */
 const MARK = 13 + 2;
-const CELL_SIDES = 3 + 3 + 1;
-/** The date text's size, and the most it grows (MonthGrid's `LARGE_TEXT_SCALE`). */
-const DATE_SIZE = 11;
+/** The date text's size, its pill or circle and the cell's sides with its 1 px border: phone, then from 600 (spec 070). */
+const CELL = { phone: { date: 11, circle: 18, sides: 3 + 3 + 1 }, wide: { date: 14, circle: 24, sides: 6 + 6 + 1 } };
+/** The most the date grows (MonthGrid's `LARGE_TEXT_SCALE`). */
 const DATE_MAX_SCALE = 1.35;
 
 /** Spec 058: whether a day's alarm clock fits beside its date (else it goes on the line below). */
-export function markFitsBeside(date: string, ctx: Pick<WeekContext, 'today' | 'cellWidth' | 'textScale'>): boolean {
+export function markFitsBeside(date: string, ctx: Pick<WeekContext, 'today' | 'cellWidth' | 'textScale' | 'wide'>): boolean {
   if (ctx.cellWidth === undefined) return true;
+  const c = ctx.wide ? CELL.wide : CELL.phone;
   const { month, day } = parts(date);
   const text = day === 1 ? m.firstOfMonth(words.monthsShort[month - 1] ?? '') : String(day);
-  const w = textWidth(text, DATE_SIZE) * Math.min(ctx.textScale ?? 1, DATE_MAX_SCALE);
-  // The 1st is a pill (padding 5 each side), today a circle at least 18 wide, other days 3 from the edge.
-  const date_ = day === 1 ? Math.max(18, w + 10) : date === ctx.today ? Math.max(18, w) : 3 + w;
-  return date_ + MARK <= ctx.cellWidth - CELL_SIDES;
+  const w = textWidth(text, c.date) * Math.min(ctx.textScale ?? 1, DATE_MAX_SCALE);
+  // The 1st is a pill (padding 5 each side), today a circle, other days 3 from the edge.
+  const date_ = day === 1 ? Math.max(c.circle, w + 10) : date === ctx.today ? Math.max(c.circle, w) : 3 + w;
+  return date_ + MARK <= ctx.cellWidth - c.sides;
 }
 
 /**
@@ -224,6 +257,7 @@ export function markFitsBeside(date: string, ctx: Pick<WeekContext, 'today' | 'c
 export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[], ctx: WeekContext): MonthWeek {
   const start = weekStartAt(ctx.range, index);
   const end = addDays(start, 6);
+  const maxRows = ctx.rows ?? ROWS_PER_CELL;
   const inWeek = occurrences.filter((o) => o.starts_on <= end && o.ends_on >= start);
 
   const spans = inWeek.filter(isMultiDay).map((o) => ({ o, from: o.starts_on < start ? start : o.starts_on, to: o.ends_on > end ? end : o.ends_on }));
@@ -243,9 +277,9 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
       .map((x) => x.o);
     // The alarm clock's row, when it's below the date: no bar or chip in it.
     const reserved = below.has(date) ? 1 : 0;
-    // Five rows if every bar's lane and every chip fit in them, else four and "+N".
-    const fits = covering.every((s) => laneOf(s) >= reserved && laneOf(s) < ROWS_PER_CELL) && singles.length <= ROWS_PER_CELL - covering.length - reserved;
-    return { date, covering, singles, reserved, rows: fits ? ROWS_PER_CELL : ROWS_PER_CELL - 1 };
+    // Every row (five on the phone) if each bar's lane and every chip fit in them, else one fewer and "+N".
+    const fits = covering.every((s) => laneOf(s) >= reserved && laneOf(s) < maxRows) && singles.length <= maxRows - covering.length - reserved;
+    return { date, covering, singles, reserved, rows: fits ? maxRows : maxRows - 1 };
   });
 
   // A bar runs over the days whose rows reach its lane, in one piece per run of such days.

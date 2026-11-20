@@ -23,3 +23,14 @@ Reference: `design/screens/OC-CalWeek.dc.html` (inline styles are the exact valu
 - The "All day" row holds all-day events and anything spanning more than one day, as week EventBars stacked 30 px apart (`layoutSpans`).
 - Blocks are never shorter than 22 px, and lanes count that drawn height, so a short block doesn't cover the next. An event before 06:00 is drawn from 06:00.
 - React Native has no inset shadow: the slot outline and the 3 px left edge are drawn over the fill. Same look.
+
+## From 600 wide (spec 070, `size="wide"`)
+
+| Part | Spec |
+| --- | --- |
+| Grid | 44 px per hour; 52 px gutter with 12 px hour labels |
+| Day head | weekday "Sun" 13/900 over the number 18 (today: olive 34 circle) |
+| All day row | bars 32 tall, 14/800, stacked 34 apart |
+| Block | padding 5 / 6, radius 10, "who · time" 12/900 (kept on overlapping blocks too), title 14/800, at least 30 tall |
+
+- Tapping a day still opens its day sheet (a centred card from 600, spec 065), never Day view.

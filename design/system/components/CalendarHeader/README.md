@@ -17,3 +17,17 @@ Reference: `design/screens/CalHeader.dc.html` (inline styles are the exact value
 ## Rules
 
 - Title: the first of the view's formats (longest first) that fits row 1 beside "Today" (262 px at 390), measured; see `design/ui/CalHeader.md` › Titles.
+
+## From 600 wide (spec 070)
+
+Reference: `design/screens/OC-CalendarResponsive.dc.html`, `design/ui/OC-LargeScreens.md` › Calendar.
+
+| Part | Spec |
+| --- | --- |
+| Frame | 24 under the safe area, 24 sides, 10 between rows |
+| Row 1 | title 32/900 (one line, the longest format that fits beside the buttons: "October", "October 25 – 31", "Sunday, October 25") · ‹ (44 round white) · Today (soft pill) · › · "+ Event" (olive pill 44: plus icon and "Event", read "Add event") |
+| Row 2 | the views as SegmentedControl `hug` · the Reminders toggle (Day and Agenda, spec 058) · then, right-aligned, the people as `MemberFilterChip`s (members, Everyone, Others), wrapping when there isn't room |
+
+- Nothing sits behind a menu: no view button, no people popover. The chips change the same filter as the phone's popover.
+- ‹ › always show, so ← → paging stays a phone-only stand-in.
+- "+ Event" replaces the views' floating add button (TabBar clearance isn't needed beside the rail).
