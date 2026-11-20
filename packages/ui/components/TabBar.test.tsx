@@ -71,4 +71,12 @@ describe('TabBar', () => {
     expect(box().style.height).toBe('160px');
     expect(screen.getByRole('link', { name: '2 timers running. Open timers' })).toBeTruthy();
   });
+
+  it('spec 064 FR-001: is capped at 520 wide (side padding included) and centred', () => {
+    const { container } = render(<TabBar label="Main" items={[...items]} active="home" onSelect={() => undefined} />);
+    expect(getComputedStyle(container.firstElementChild as HTMLElement).alignItems).toBe('center');
+    const bar = screen.getByTestId('tab-bar');
+    expect(bar.style.maxWidth).toBe('520px');
+    expect(getComputedStyle(bar).width).toBe('100%');
+  });
 });

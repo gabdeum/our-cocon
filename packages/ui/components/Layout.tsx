@@ -3,7 +3,7 @@ import { Platform, ScrollView, View, type ScrollViewInstance } from 'react-nativ
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
 import { cn } from '../cn';
-import { useLayoutTier } from '../layout';
+import { railInset, tabBottomPad, useLayoutTier } from '../layout';
 import { theme } from '../theme';
 import { Logo } from './Icon';
 import { Tag } from './Tag';
@@ -12,13 +12,14 @@ import { ToastHost } from './Toast';
 import { TopBarHeadingProvider, useTopBar, useTopEdge, type TopBarConfig } from './TopBar';
 
 /**
- * The app's frame: cream ground, everything (the tab bar included) inside it. On the web the phone
- * layout is centred at max 560 below 600 wide, and wider windows grow up to 1200, then centre
- * (spec 063 FR-005). The iPhone and iPad app always fill the window.
+ * The app's frame: cream ground, everything (the tab bar and rail included) inside it. On the web
+ * the phone layout is centred at max 560 below 600 wide, and wider windows grow up to 1200, then
+ * centre (spec 063 FR-005); from 960 the rail is added to that, so content beside it still reaches
+ * 1200 (spec 064). The iPhone and iPad app always fill the window.
  */
 export function AppFrame({ children }: { children: ReactNode }) {
   const { tier } = useLayoutTier();
-  const maxWidth = Platform.OS !== 'web' ? undefined : tier === 'compact' ? theme.layout.phoneMax : theme.layout.maxContent;
+  const maxWidth = Platform.OS !== 'web' ? undefined : tier === 'compact' ? theme.layout.phoneMax : theme.layout.maxContent + railInset(tier);
   return (
     <View className="flex-1 bg-surface-page" style={{ alignItems: 'center' }}>
       <View testID="app-frame" className="w-full flex-1 bg-surface-page" style={{ maxWidth }}>
@@ -48,10 +49,13 @@ export interface TabScreenProps {
 }
 
 /**
- * Tab screen (Patterns.md): 54 top, 20 sides, 180 bottom (room for the tab bar and timer pill). With
- * `pinned`, the status bar area is the page's own band and `pinned` sticks right under it.
+ * Tab screen (Patterns.md): 54 top, 20 sides, 180 bottom (room for the tab bar and timer pill; 28
+ * beside the rail, spec 064). With `pinned`, the status bar area is the page's own band and
+ * `pinned` sticks right under it.
  */
 export function TabScreen({ children, className, header, pinned }: TabScreenProps) {
+  const { tier } = useLayoutTier();
+  const bottom = tabBottomPad(tier);
   const phoneTop = useTopEdge(54);
   const wide = useWideEdges();
   const top = wide?.top ?? phoneTop;
@@ -62,8 +66,8 @@ export function TabScreen({ children, className, header, pinned }: TabScreenProp
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-surface-page"
-        contentContainerClassName={cn('gap-18 pb-[180px]', wide ? 'px-24' : 'px-20 pt-[54px]', className)}
-        contentContainerStyle={wide ? { paddingTop: wide.top } : undefined}
+        contentContainerClassName={cn('gap-18', wide ? 'px-24' : 'px-20 pt-[54px]', className)}
+        contentContainerStyle={wide ? { paddingTop: wide.top, paddingBottom: bottom } : { paddingBottom: bottom }}
       >
         {children}
       </ScrollView>
@@ -91,7 +95,8 @@ export function TabScreen({ children, className, header, pinned }: TabScreenProp
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-surface-page"
-        contentContainerClassName={cn('gap-18 pb-[180px]', wide ? 'px-24' : 'px-20')}
+        contentContainerClassName={cn('gap-18', wide ? 'px-24' : 'px-20')}
+        contentContainerStyle={{ paddingBottom: bottom }}
         stickyHeaderIndices={[header ? 1 : 0]}
         // A tap on the pinned part (a quick filter) lands while the keyboard is up.
         keyboardShouldPersistTaps="handled"

@@ -10,7 +10,13 @@ import { createTimerStore, TimersContext } from '../lib/timer-store';
 import type { ChoiceStorage } from '../lib/recipe-choices';
 import { fakeTracker } from '../test/fakes';
 
-afterEach(cleanup);
+const dims = vi.hoisted(() => ({ width: 390, height: 844, scale: 3, fontScale: 1 }));
+vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('react-native')>()), useWindowDimensions: () => ({ ...dims }) }));
+
+afterEach(() => {
+  cleanup();
+  dims.width = 390;
+});
 
 const routes = ['index', 'calendar', 'recipes', 'groceries', 'menu'].map((name) => ({ key: `${name}-key`, name }));
 
@@ -44,7 +50,7 @@ describe('AppTabBar', () => {
     expect(within(nav).getByRole('link', { name: 'Home' }).getAttribute('aria-current')).toBeNull();
     expect(screen.getByText('Groceries')).toBeTruthy();
     expect(screen.queryByText('Home')).toBeNull();
-    expect(t.capture).toHaveBeenCalledExactlyOnceWith('tab_selected', { tab: 'groceries' });
+    expect(t.capture).toHaveBeenCalledExactlyOnceWith('tab_selected', { tab: 'groceries', nav: 'bar' });
   });
 
   it('spec 036 US1: Home · Calendar · Recipes · Groceries · Menu; Calendar and Menu open their screens', () => {
@@ -55,13 +61,13 @@ describe('AppTabBar', () => {
 
     fireEvent.click(within(nav).getByRole('link', { name: 'Calendar' }));
     expect(within(nav).getByRole('link', { name: 'Calendar' }).getAttribute('aria-current')).toBe('page');
-    expect(t.capture).toHaveBeenLastCalledWith('tab_selected', { tab: 'calendar' });
+    expect(t.capture).toHaveBeenLastCalledWith('tab_selected', { tab: 'calendar', nav: 'bar' });
 
     // Menu is /menu (spec 029).
     fireEvent.click(within(nav).getByRole('link', { name: 'Menu' }));
     expect(within(nav).getByRole('link', { name: 'Menu' }).getAttribute('aria-current')).toBe('page');
     expect(screen.getByText('Menu')).toBeTruthy();
-    expect(t.capture).toHaveBeenLastCalledWith('tab_selected', { tab: 'menu' });
+    expect(t.capture).toHaveBeenLastCalledWith('tab_selected', { tab: 'menu', nav: 'bar' });
   });
 
   it('sends nothing when the current tab is tapped again', () => {
@@ -96,5 +102,59 @@ describe('AppTabBar', () => {
     expect(onOpenTimers).toHaveBeenCalledOnce();
     expect(t.capture).toHaveBeenCalledWith('timer_pill_tapped', { timer_count: 2 });
     store.destroy();
+  });
+
+  // Spec 064: the bar below 960, the side rail from 960, from the same tabs.
+  describe('on larger windows', () => {
+    it('SC-001: swaps bar and rail at 960 and keeps the current tab', () => {
+      const t = transport();
+      dims.width = 959;
+      const { rerender } = render(<Harness transport={t} />);
+      fireEvent.click(screen.getByRole('link', { name: 'Recipes' }));
+      // The bar: only the current tab shows its label.
+      expect(screen.queryByText('Home')).toBeNull();
+
+      dims.width = 960;
+      rerender(<Harness transport={t} />);
+      const rail = screen.getByRole('navigation', { name: 'Main' });
+      expect(within(rail).getByRole('link', { name: 'Recipes' }).getAttribute('aria-current')).toBe('page');
+      // The rail: every label, in the TabBar's order (SC-002).
+      expect(within(rail).getAllByRole('link').map((l) => l.textContent)).toEqual(['Home', 'Calendar', 'Recipes', 'Groceries', 'Menu']);
+
+      dims.width = 959;
+      rerender(<Harness transport={t} />);
+      expect(screen.getByRole('link', { name: 'Recipes' }).getAttribute('aria-current')).toBe('page');
+      expect(screen.queryByText('Home')).toBeNull();
+    });
+
+    it('sends tab_selected with nav: rail from the rail', () => {
+      const t = transport();
+      dims.width = 1180;
+      render(<Harness transport={t} />);
+      fireEvent.click(screen.getByRole('link', { name: 'Groceries' }));
+      expect(screen.getByRole('link', { name: 'Groceries' }).getAttribute('aria-current')).toBe('page');
+      expect(t.capture).toHaveBeenCalledExactlyOnceWith('tab_selected', { tab: 'groceries', nav: 'rail' });
+    });
+
+    it('FR-002: shows the running timer at the bottom of the rail, time and "+N" only, and opens Timers', () => {
+      const t = transport();
+      const store = createTimerStore({ storage: noStorage, userId: '', tracker: fakeTracker() });
+      const onOpenTimers = vi.fn();
+      dims.width = 1180;
+      render(<Harness transport={t} store={store} onOpenTimers={onOpenTimers} />);
+      expect(screen.queryByRole('link', { name: /Open timers/ })).toBeNull();
+
+      act(() => void store.start('Blind bake', 12 * 60, 'step'));
+      act(() => void store.quick());
+      const rail = screen.getByRole('navigation', { name: 'Main' });
+      const pill = within(rail).getByRole('link', { name: '2 timers running. Kitchen timer 05:00. Open timers' });
+      expect(pill.textContent).toBe('05:00+1');
+      expect(within(rail).queryByRole('button', { name: 'Hide the timer pill. Timers keep running' })).toBeNull();
+
+      fireEvent.click(pill);
+      expect(onOpenTimers).toHaveBeenCalledOnce();
+      expect(t.capture).toHaveBeenCalledWith('timer_pill_tapped', { timer_count: 2 });
+      store.destroy();
+    });
   });
 });

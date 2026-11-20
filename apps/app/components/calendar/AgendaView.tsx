@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
 import type { SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { EventListGroup, EventListRow, FloatingAdd, ReminderListRow, Text, useReduceMotion } from '@cocon/ui';
+import { EventListGroup, EventListRow, FloatingAdd, ReminderListRow, Text, useReduceMotion, tabBottomPad, useLayoutTier } from '@cocon/ui';
 import { AGENDA_EMPTY_PAGES, AGENDA_MAX_PAGES, agendaWindow, layoutAgenda } from '../../lib/calendar-agenda';
 import { memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { getAgendaPlace, setAgendaPlace } from '../../lib/agenda-session';
@@ -12,8 +12,6 @@ import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
 
-/** TabBar README: screens pad 180 under their content for the floating tab bar. */
-const BOTTOM_PAD = 180;
 /** Load the next 4 weeks when the end of the list is this close. */
 const LOAD_AHEAD = 600;
 
@@ -61,6 +59,8 @@ export function AgendaView({
   reminders,
 }: AgendaViewProps) {
   const now = useNow(timeZone);
+  // TabBar README: 180 under the content for the floating tab bar; 28 beside the rail (spec 064).
+  const bottomPad = tabBottomPad(useLayoutTier().tier);
   const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
   const [place] = useState(() => getAgendaPlace(userId, anchor));
@@ -140,7 +140,7 @@ export function AgendaView({
         scrollEventThrottle={16}
         onContentSizeChange={onContentSizeChange}
         contentContainerClassName="gap-18 px-20 pt-4"
-        contentContainerStyle={{ paddingBottom: BOTTOM_PAD }}
+        contentContainerStyle={{ paddingBottom: bottomPad }}
       >
         {groups.map((g) => (
           <EventListGroup key={g.date} heading={g.heading}>

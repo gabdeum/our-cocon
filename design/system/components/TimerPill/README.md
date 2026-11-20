@@ -12,10 +12,11 @@ A pill, visible while any timer is running, showing the one with the least time 
 | Clock | 17/900 tabular |
 | More | "+N" when other timers are running (paused and done ones aren't counted): honey pill, padding 6 10, 13/900 |
 | Hide | After the link part (padding 0 6 0 14), a 1.5 × 24 `line` divider, then a ✕ button 40 × 44 (close 16, ink-muted); the pill's right padding becomes 3 |
+| Rail (spec 064) | in the NavRail: 76 wide, white, 2 px honey border, radius 20, padding 8 4, gap 2, no shadow. Timer icon 20 (olive) over the clock 16/900 tabular, then "+N" (honey pill, padding 2 8, 12/900). No name and no ✕ |
 
 ## Placement
 
-- Tab screens: centred 10 above the TabBar (the TabBar component reserves 160 px of height for both).
+- Tab screens: centred 10 above the TabBar (the TabBar component reserves 160 px of height for both); at the bottom of the NavRail from 960 wide.
 - Recipe page: sticky, centred, 108 from the top.
 - Cooking mode: in the header, replacing the "Screen stays on" chip.
 
@@ -23,5 +24,5 @@ A pill, visible while any timer is running, showing the one with the least time 
 
 - Show the running timer with the least time left. Hide the pill while no timer is running (none yet, or all paused or done).
 - The name stops at 14 characters with an ellipsis; the clock never truncates.
-- `aria-label`: "2 timers running. Open timers", counting running timers only.
+- `aria-label`: "2 timers running. Open timers", counting running timers only. The rail form names the timer and its time: "2 timers running. Blind bake 11:42. Open timers".
 - The ✕ ("Hide the timer pill. Timers keep running") hides the pill on every screen without touching any timer; it shows again when a timer starts or finishes, or when the app reopens (spec 011 FR-008).

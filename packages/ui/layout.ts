@@ -27,6 +27,24 @@ export function gutterFor(tier: LayoutTier): number {
   return tier === 'compact' ? theme.layout.gutter : theme.layout.gutterWide;
 }
 
+/** Navigation (spec 064): the floating tab bar below 960, the side rail from 960. */
+export function navFor(tier: LayoutTier): 'bar' | 'rail' {
+  return tier === 'expanded' ? 'rail' : 'bar';
+}
+
+/** Where tab screens' content starts (spec 064 FR-003): after the 104 rail at expanded, else the edge. */
+export function railInset(tier: LayoutTier): number {
+  return tier === 'expanded' ? theme.layout.rail : 0;
+}
+
+/**
+ * Space under a tab screen's content (spec 064 FR-003): 180 for the floating tab bar and timer pill
+ * (TabBar README) below 960; 28 beside the rail, where nothing floats at the bottom.
+ */
+export function tabBottomPad(tier: LayoutTier): number {
+  return tier === 'expanded' ? 28 : 180;
+}
+
 /**
  * A list laid out in `columns` columns that read by column (FR-004): order kept, column 1 filled
  * top to bottom, then column 2. Each item goes where its middle falls, so a column breaks at the cut

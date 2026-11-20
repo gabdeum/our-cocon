@@ -9,11 +9,11 @@ afterEach(cleanup);
 const components = [
   'Button', 'IconButton', 'Pill', 'Tag', 'Switch', 'SegmentedControl', 'Stepper', 'TextField', 'MonthPicker',
   'ListRow', 'Card', 'RecipeItem', 'StatTile', 'Callout', 'Avatar', 'StatusBanner', 'StepCard', 'TimerCard',
-  'TimerPill', 'TimePresets', 'TabBar', 'BottomSheet', 'Dialog', 'Progress', 'ScreenHeader',
+  'TimerPill', 'TimePresets', 'TabBar', 'NavRail', 'BottomSheet', 'Dialog', 'Progress', 'ScreenHeader',
 ];
 
 // Rendering every component is slow under a full test run's load, and grows with each spec.
-it('shows a section for each of the 25 design-system components', { timeout: 15_000 }, () => {
+it('shows a section for each of the 26 design-system components', { timeout: 15_000 }, () => {
   render(<Gallery onBack={() => undefined} onOpenSheetRoute={() => undefined} onOpenModalRoute={() => undefined} />);
   for (const name of components) expect(screen.getByRole('heading', { name }), name).toBeTruthy();
 });

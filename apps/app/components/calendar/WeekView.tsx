@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { addDays, weekRange, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { FloatingAdd, HourGrid, Swipeable } from '@cocon/ui';
+import { FloatingAdd, HourGrid, Swipeable, tabBottomPad, useLayoutTier } from '@cocon/ui';
 import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
 import { layoutWeekGrid } from '../../lib/calendar-week';
 import { isDayEvent, layoutDaySheet } from '../../lib/calendar-day';
@@ -16,8 +16,6 @@ import { strings } from '../../strings/en';
 
 const w = strings.calendar.week;
 
-/** TabBar README: screens pad 180 under their content for the floating tab bar. */
-const BOTTOM_PAD = 180;
 
 export interface WeekViewProps {
   members: Member[];
@@ -65,6 +63,8 @@ export function WeekView({
   onShowReminders = () => undefined,
 }: WeekViewProps) {
   const now = useNow(timeZone);
+  // TabBar README: 180 under the content for the floating tab bar; 28 beside the rail (spec 064).
+  const bottomPad = tabBottomPad(useLayoutTier().tier);
   const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
   const { start } = weekRange(anchor, weekStartsOn);
@@ -109,7 +109,7 @@ export function WeekView({
             onDayPress={openDay}
             onBlockPress={openEvent}
             onEmptyLongPress={(date, hour) => onAddEvent(date, hour === null ? undefined : { time: `${String(hour).padStart(2, '0')}:00` })}
-            bottomInset={BOTTOM_PAD}
+            bottomInset={bottomPad}
           />
         </Swipeable>
       </View>

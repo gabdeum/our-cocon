@@ -26,13 +26,22 @@ it('caps the web app at 560 on the phone tier and 1200 from 600, centred', () =>
   expect(frameWidth()).toBe('560px');
   expect(getComputedStyle(screen.getByTestId('app-frame').parentElement as HTMLElement).alignItems).toBe('center');
   cleanup();
-  dims.width = 1300;
+  dims.width = 820;
   render(
     <AppFrame>
       <Text>Content</Text>
     </AppFrame>,
   );
   expect(frameWidth()).toBe('1200px');
+  // Spec 064: from 960 the 104 rail sits inside the frame, so content beside it still reaches 1200.
+  cleanup();
+  dims.width = 1400;
+  render(
+    <AppFrame>
+      <Text>Content</Text>
+    </AppFrame>,
+  );
+  expect(frameWidth()).toBe('1304px');
 });
 
 // SC-003: rotating or resizing re-renders, nothing remounts, so state (a timer, a step) stays.
@@ -84,6 +93,33 @@ it('keeps the phone spacing below 600 and sets the wide top from 600', () => {
       </Screen>,
     );
     expect(top()).toBe('24px');
+    cleanup();
+  }
+});
+
+// Spec 064 FR-003: tab screens keep 180 under their content for the floating bar below 960, and 28
+// beside the rail, where nothing floats at the bottom.
+it('pads tab screens 180 at the bottom below 960 and 28 from 960', () => {
+  const bottom = () => getComputedStyle(screen.getByTestId('body').parentElement as HTMLElement).paddingBottom;
+  for (const [width, pad] of [
+    [390, '180px'],
+    [959, '180px'],
+    [960, '28px'],
+  ] as const) {
+    dims.width = width;
+    render(
+      <TabScreen>
+        <View testID="body" />
+      </TabScreen>,
+    );
+    expect(bottom()).toBe(pad);
+    cleanup();
+    render(
+      <TabScreen pinned={<View />}>
+        <View testID="body" />
+      </TabScreen>,
+    );
+    expect(getComputedStyle(screen.getByTestId('body').parentElement?.parentElement as HTMLElement).paddingBottom).toBe(pad);
     cleanup();
   }
 });
