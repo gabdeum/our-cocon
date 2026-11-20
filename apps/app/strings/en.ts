@@ -1325,6 +1325,8 @@ export const strings = {
     label: (count: number) => `${count} ${count === 1 ? 'timer' : 'timers'} running. Open timers`,
     more: (others: number) => `+${others}`,
     hide: 'Hide the timer pill. Timers keep running',
+    // The side rail's pill shows only the time, so its label names the timer too (OC-NavResponsive, spec 064).
+    railLabel: (count: number, name: string, time: string) => `${count} ${count === 1 ? 'timer' : 'timers'} running. ${name} ${time}. Open timers`,
   },
   // design/ui/OC-Timers.md (spec 011)
   timersScreen: {

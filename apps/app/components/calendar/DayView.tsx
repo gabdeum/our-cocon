@@ -3,7 +3,7 @@ import { ScrollView, View } from 'react-native';
 import type { SlotKey } from '@cocon/schemas/calendar';
 import type { SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { AllDayRow, DayReminderRow, FloatingAdd, MemberCount, SlotBand, Swipeable, Text } from '@cocon/ui';
+import { AllDayRow, DayReminderRow, FloatingAdd, MemberCount, SlotBand, Swipeable, Text, tabBottomPad, useLayoutTier } from '@cocon/ui';
 import { layoutDayView } from '../../lib/calendar-day';
 import { placeForScreen, pressReminderBox, type CalendarReminders } from '../../lib/calendar-reminders';
 import { eventWindow, firstOfMonth, memberLook, monthOccurrences, parseOccurrenceKey } from '../../lib/calendar-month';
@@ -14,8 +14,6 @@ import { strings } from '../../strings/en';
 
 const d = strings.calendar.day;
 
-/** TabBar README: screens pad 180 under their content for the floating tab bar. */
-const BOTTOM_PAD = 180;
 
 export interface DayViewProps {
   members: Member[];
@@ -43,6 +41,8 @@ export interface DayViewProps {
 /** Spec 039 (OC-CalDay): who's busy, All day, and the five bands of one day, swiped left and right; 058 its reminders. */
 export function DayView({ members, myMemberId, events, slotTimes, hidden, date, today, timeZone, onSwipe, onAddEvent, onAddInSlot, onOpenEvent, reminders }: DayViewProps) {
   const now = useNow(timeZone);
+  // TabBar README: 180 under the content for the floating tab bar; 28 beside the rail (spec 064).
+  const bottomPad = tabBottomPad(useLayoutTier().tier);
   const { use24h } = useCalendarDisplay().prefs;
   const look = useMemo(() => memberLook(members), [members]);
   const { from, to } = eventWindow(firstOfMonth(date));
@@ -68,7 +68,7 @@ export function DayView({ members, myMemberId, events, slotTimes, hidden, date, 
   return (
     <View className="flex-1">
       <Swipeable page={date} onSwipe={onSwipe}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-16 px-20 pt-4" contentContainerStyle={{ paddingBottom: BOTTOM_PAD }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-16 px-20 pt-4" contentContainerStyle={{ paddingBottom: bottomPad }}>
           {day.busy.length ? (
             <View role="group" aria-label={d.busyLabel} className="flex-row flex-wrap gap-8">
               {day.busy.map((c) => (

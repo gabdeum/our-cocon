@@ -12,6 +12,8 @@ export interface AppTimerPillProps {
   tracker: Tracker;
   /** 48 tall in the cooking-mode header (spec 012). */
   compact?: boolean;
+  /** The side rail's form (spec 064): the time and "+N" only, no ✕, the name in its label. */
+  vertical?: boolean;
 }
 
 /**
@@ -20,7 +22,7 @@ export interface AppTimerPillProps {
  * don't count). Tapping it opens Timers and sends `timer_pill_tapped`; its ✕ hides it on every
  * screen, timers untouched, until one starts or finishes (FR-008), and sends `timer_pill_hidden`.
  */
-export function AppTimerPill({ onOpen, tracker, compact }: AppTimerPillProps) {
+export function AppTimerPill({ onOpen, tracker, compact, vertical }: AppTimerPillProps) {
   const store = useTimerStore();
   const { timer, left, count, running } = useMostUrgent();
   if (!timer) return null;
@@ -33,16 +35,19 @@ export function AppTimerPill({ onOpen, tracker, compact }: AppTimerPillProps) {
     store.hidePill();
   };
   const others = running - 1;
+  const name = pillName(timer.label);
+  const time = clock(left);
   return (
     <TimerPill
-      name={pillName(timer.label)}
-      clock={clock(left)}
+      name={name}
+      clock={time}
       more={others > 0 ? copy.more(others) : undefined}
-      label={copy.label(running)}
+      label={vertical ? copy.railLabel(running, name, time) : copy.label(running)}
       onPress={open}
-      onHide={hide}
+      onHide={vertical ? undefined : hide}
       hideLabel={copy.hide}
       compact={compact}
+      vertical={vertical}
     />
   );
 }

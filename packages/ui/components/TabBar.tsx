@@ -27,6 +27,8 @@ export interface TabBarProps<K extends string> {
 const CONTAINER_WITH_PILL = 160;
 const CONTAINER = 100;
 const BOTTOM = 26;
+/** Spec 064 FR-001: the bar's container, side padding included, never wider than 520. */
+const MAX_WIDTH = 520;
 
 /** Spec 036 FR-001: the selected tab's fixed width, sized to "Groceries" plus 16 px each side. */
 export const SELECTED_TAB_WIDTH = 132;
@@ -35,7 +37,8 @@ export const SELECTED_TAB_WIDTH = 132;
 export const TAB_LABEL_MIN_SCALE = 13 / 15;
 
 /**
- * The floating dark navigation pill (TabBar README), 16 from the sides and 26 from the bottom.
+ * The floating dark navigation pill (TabBar README), 16 from the sides and 26 from the bottom,
+ * capped at 520 and centred. Below 960 wide only; from 960 the NavRail takes its place (spec 064).
  * It floats over the screen, so screens pad their content 180 at the bottom (TabScreen does).
  */
 export function TabBar<K extends string>({ items, active, onSelect, label, timerPill, bottomInset = 0 }: TabBarProps<K>) {
@@ -43,43 +46,47 @@ export function TabBar<K extends string>({ items, active, onSelect, label, timer
   const bottom = Math.max(BOTTOM, bottomInset);
   const height = (timerPill ? CONTAINER_WITH_PILL : CONTAINER) - BOTTOM + bottom;
   return (
-    <View
-      pointerEvents="box-none"
-      className="absolute bottom-0 left-0 right-0 justify-end gap-10 px-16"
-      style={{ height, paddingBottom: bottom }}
-    >
-      {timerPill}
-      <View role="navigation" aria-label={label} className="h-tabbar flex-row gap-4 rounded-[34px] bg-ink p-8" style={{ boxShadow: theme.shadow.nav }}>
-        {items.map((item) => {
-          const on = item.key === active;
-          return (
-            <Pressable
-              // On the iPhone a tab is made anew when it's selected or unselected: its size from
-              // before (132, then still wider than the others) stuck. The web keeps it, for focus.
-              key={Platform.OS === 'web' ? item.key : `${item.key}:${on}`}
-              role="link"
-              aria-label={item.label}
-              aria-current={on ? 'page' : undefined}
-              accessibilityState={Platform.OS === 'web' ? undefined : { selected: on }}
-              onPress={() => onSelect(item.key)}
-              // The selected tab is a fixed width and never grows; the others share the rest, min 44 (spec 036 FR-001).
-              // Both looks set the same style keys, so nothing of one is left on the other.
-              className={cn('flex-row items-center justify-center gap-6 rounded-[26px]', on && 'bg-honey', focusRing)}
-              style={
-                on
-                  ? { flexBasis: SELECTED_TAB_WIDTH, flexGrow: 0, flexShrink: 0, minWidth: SELECTED_TAB_WIDTH, paddingHorizontal: 16 }
-                  : { flexBasis: 0, flexGrow: 1, flexShrink: 1, minWidth: 44, paddingHorizontal: 0 }
-              }
-            >
-              <Icon name={item.icon} size="md" color={on ? 'ink' : 'onInk'} />
-              {on ? (
-                <Text size={15} weight="800" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={TAB_LABEL_MIN_SCALE} className="shrink" aria-hidden>
-                  {item.label}
-                </Text>
-              ) : null}
-            </Pressable>
-          );
-        })}
+    <View pointerEvents="box-none" className="absolute bottom-0 left-0 right-0" style={{ height, alignItems: 'center' }}>
+      {/* Capped at 520 (side padding included) and centred on wider windows (spec 064 FR-001). */}
+      <View
+        pointerEvents="box-none"
+        testID="tab-bar"
+        className="flex-1 justify-end gap-10 px-16"
+        style={{ width: '100%', maxWidth: MAX_WIDTH, paddingBottom: bottom }}
+      >
+        {timerPill}
+        <View role="navigation" aria-label={label} className="h-tabbar flex-row gap-4 rounded-[34px] bg-ink p-8" style={{ boxShadow: theme.shadow.nav }}>
+          {items.map((item) => {
+            const on = item.key === active;
+            return (
+              <Pressable
+                // On the iPhone a tab is made anew when it's selected or unselected: its size from
+                // before (132, then still wider than the others) stuck. The web keeps it, for focus.
+                key={Platform.OS === 'web' ? item.key : `${item.key}:${on}`}
+                role="link"
+                aria-label={item.label}
+                aria-current={on ? 'page' : undefined}
+                accessibilityState={Platform.OS === 'web' ? undefined : { selected: on }}
+                onPress={() => onSelect(item.key)}
+                // The selected tab is a fixed width and never grows; the others share the rest, min 44 (spec 036 FR-001).
+                // Both looks set the same style keys, so nothing of one is left on the other.
+                className={cn('flex-row items-center justify-center gap-6 rounded-[26px]', on && 'bg-honey', focusRing)}
+                style={
+                  on
+                    ? { flexBasis: SELECTED_TAB_WIDTH, flexGrow: 0, flexShrink: 0, minWidth: SELECTED_TAB_WIDTH, paddingHorizontal: 16 }
+                    : { flexBasis: 0, flexGrow: 1, flexShrink: 1, minWidth: 44, paddingHorizontal: 0 }
+                }
+              >
+                <Icon name={item.icon} size="md" color={on ? 'ink' : 'onInk'} />
+                {on ? (
+                  <Text size={15} weight="800" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={TAB_LABEL_MIN_SCALE} className="shrink" aria-hidden>
+                    {item.label}
+                  </Text>
+                ) : null}
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );

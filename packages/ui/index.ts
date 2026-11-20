@@ -5,7 +5,7 @@ export { ThemeProvider, useThemeColors } from './ThemeProvider';
 export { cn } from './cn';
 export { announce, pressedState, useLargeText, useReturnFocus, LARGE_TEXT_SCALE } from './a11y';
 export { useReduceMotion } from './reduceMotion';
-export { gutterFor, layoutTier, splitColumns, useLayoutTier, type LayoutTier } from './layout';
+export { gutterFor, layoutTier, navFor, railInset, splitColumns, tabBottomPad, useLayoutTier, type LayoutTier } from './layout';
 
 export { DetailText, Text, type TextProps, type TextVariant, type TextColor, type Weight } from './components/Text';
 export { BrandMark, Icon, Logo, type BrandName, type IconName, type IconProps } from './components/Icon';
@@ -73,6 +73,7 @@ export { TimePresets, type TimePreset, type TimePresetsProps } from './component
 export { TimeRange, type TimeRangeField, type TimeRangeProps } from './components/TimeRange';
 export { TimeField, type TimeFieldProps } from './components/TimeField';
 export { TabBar, TAB_LABEL_MIN_SCALE, type TabBarItem, type TabBarProps } from './components/TabBar';
+export { NavRail, type NavRailProps } from './components/NavRail';
 export { BottomSheet, SheetFooter, type BottomSheetProps } from './components/BottomSheet';
 export { Dialog, type DialogProps } from './components/Dialog';
 export { FormProgress, CookProgress, StepBar } from './components/Progress';

@@ -68,6 +68,7 @@ import {
   StepPreview,
   StepText,
   Stepper,
+  NavRail,
   TabBar,
   CalendarHeader,
   EventBar,
@@ -1072,6 +1073,23 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             />
           </View>
         ))}
+      </Section>
+
+      <Section group="Navigation" title="NavRail">
+        {/* Each rail in its 104 slot, in a window 600 tall (a short laptop window). */}
+        <View className="flex-row gap-16" style={{ height: theme.layout.medium }}>
+          {[false, true].map((withTimer) => (
+            <View key={String(withTimer)} style={{ width: theme.layout.rail }}>
+              <NavRail
+                label="Main"
+                items={[...tabs]}
+                active={tab}
+                onSelect={setTab}
+                timer={withTimer ? <TimerPill vertical name="Blind bake" clock="11:42" more="+1" label="2 timers running. Blind bake 11:42. Open timers" onPress={noop} /> : undefined}
+              />
+            </View>
+          ))}
+        </View>
       </Section>
 
       <Section group="Navigation" title="Progress">

@@ -1,9 +1,8 @@
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
 import { Icon } from './Icon';
 import { Text } from './Text';
-import { View } from 'react-native';
 
 export interface TimerPillProps {
   /** "Blind bake". */
@@ -19,13 +18,40 @@ export interface TimerPillProps {
   hideLabel?: string;
   /** 48 tall in headers (cooking mode), 50 elsewhere. */
   compact?: boolean;
+  /**
+   * The NavRail's form (spec 064): 76 wide, the clock over the "+N" chip, no name and no ✕, so
+   * `label` should say the name and time.
+   */
+  vertical?: boolean;
 }
 
 /**
  * The most urgent timer, always visible (TimerPill README). Right padding 14, or 8 beside the "+N"
  * chip; with a ✕, the link ends at 6, then a divider and the 40 × 44 ✕ (pill padding right 3).
  */
-export function TimerPill({ name, clock, more, label, onPress, onHide, hideLabel, compact }: TimerPillProps) {
+export function TimerPill({ name, clock, more, label, onPress, onHide, hideLabel, compact, vertical }: TimerPillProps) {
+  if (vertical) {
+    return (
+      <Pressable
+        role="link"
+        aria-label={label}
+        onPress={onPress}
+        className={cn('w-[76px] items-center gap-[2px] rounded-[20px] border-2 border-honey bg-surface-card px-4 py-8', focusRing)}
+      >
+        <Icon name="timer" color="olive" />
+        <Text size={16} weight="900" tabular aria-hidden>
+          {clock}
+        </Text>
+        {more ? (
+          <View aria-hidden className="rounded-pill bg-honey px-8 py-[2px]">
+            <Text size={12} weight="900">
+              {more}
+            </Text>
+          </View>
+        ) : null}
+      </Pressable>
+    );
+  }
   return (
     <View
       className={cn('self-center flex-row items-center rounded-pill border-2 border-honey bg-surface-card', onHide && 'pr-[3px]', compact ? 'h-[48px]' : 'h-[50px]')}

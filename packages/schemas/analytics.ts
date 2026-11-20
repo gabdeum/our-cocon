@@ -43,9 +43,11 @@ export const events = {
     app_version: z.string().min(1),
   }),
   // Spec 002: a tab in the floating tab bar was tapped (sent only when it changes the tab).
-  // Spec 036 adds Calendar and renames Settings to Menu.
+  // Spec 036 adds Calendar and renames Settings to Menu. Spec 064: `nav` is the bar (below 960 wide)
+  // or the side rail (from 960).
   tab_selected: z.strictObject({
     tab: z.enum(['home', 'calendar', 'recipes', 'groceries', 'menu']),
+    nav: z.enum(['bar', 'rail']),
   }),
   // Spec 003: accounts and family.
   // Spec 045: Sign in with Apple on the iPhone.

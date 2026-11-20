@@ -43,15 +43,16 @@ describe('createTracker', () => {
     expect(() => createTracker(fakeTransport()).identify('gabriel@example.com', null)).toThrow();
   });
 
-  it('sends tab_selected with the tab only', () => {
+  it('sends tab_selected with the tab and the navigation only', () => {
     const t = fakeTransport();
-    createTracker(t).track('tab_selected', { tab: 'groceries' });
-    expect(t.capture).toHaveBeenCalledWith('tab_selected', { tab: 'groceries' });
+    createTracker(t).track('tab_selected', { tab: 'groceries', nav: 'rail' });
+    expect(t.capture).toHaveBeenCalledWith('tab_selected', { tab: 'groceries', nav: 'rail' });
   });
 
-  it('rejects an unknown tab', () => {
-    const props = { tab: 'timers' } as never;
-    expect(() => createTracker(fakeTransport()).track('tab_selected', props)).toThrow();
+  it('rejects an unknown tab or navigation', () => {
+    expect(() => createTracker(fakeTransport()).track('tab_selected', { tab: 'timers', nav: 'bar' } as never)).toThrow();
+    expect(() => createTracker(fakeTransport()).track('tab_selected', { tab: 'home', nav: 'drawer' } as never)).toThrow();
+    expect(() => createTracker(fakeTransport()).track('tab_selected', { tab: 'home' } as never)).toThrow();
   });
 
   it('does nothing without a transport', () => {

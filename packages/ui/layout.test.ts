@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, renderHook } from '@testing-library/react';
-import { gutterFor, layoutTier, splitColumns, useLayoutTier } from './layout';
+import { gutterFor, layoutTier, navFor, railInset, splitColumns, tabBottomPad, useLayoutTier } from './layout';
 
 const dims = vi.hoisted(() => ({ width: 390, height: 844, scale: 3, fontScale: 1 }));
 vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('react-native')>()), useWindowDimensions: () => ({ ...dims }) }));
@@ -99,5 +99,24 @@ describe('splitColumns', () => {
       [4, 5, 6],
       [7, 8, 9],
     ]);
+  });
+});
+
+// Spec 064: the bar below 960, the rail from 960; content after the rail and no bar padding beside it.
+describe('navigation by tier', () => {
+  it.each([
+    [959, 'bar', 0, 180],
+    [960, 'rail', 104, 28],
+  ] as const)('%i px: %s, content from %i, %i under it', (width, nav, inset, pad) => {
+    const tier = layoutTier(width);
+    expect(navFor(tier)).toBe(nav);
+    expect(railInset(tier)).toBe(inset);
+    expect(tabBottomPad(tier)).toBe(pad);
+  });
+
+  it('keeps the phone as today', () => {
+    expect(navFor('compact')).toBe('bar');
+    expect(railInset('compact')).toBe(0);
+    expect(tabBottomPad('compact')).toBe(180);
   });
 });

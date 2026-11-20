@@ -3,6 +3,7 @@ import { FlatList, Platform, Pressable, View, type LayoutChangeEvent, type Nativ
 import { LARGE_TEXT_SCALE, useLargeText } from '../a11y';
 import { useReduceMotion } from '../reduceMotion';
 import { cn, focusRing } from '../cn';
+import { tabBottomPad, useLayoutTier } from '../layout';
 import { theme } from '../theme';
 import { EventBar, EventChip, Fill, MoreCount, type EventColor } from './EventChip';
 import { Icon } from './Icon';
@@ -10,8 +11,6 @@ import { Text } from './Text';
 
 /** MonthGrid README › Cell: every day is 120 tall, so a row's offset is its index × 120. */
 export const MONTH_ROW_HEIGHT = 120;
-/** Room under the last row for the floating tab bar (TabBar README: screens pad 180). */
-const BOTTOM_PAD = 180;
 /** The title row counts a row as visible once all but its top 24 px have scrolled away (OC-CalMonth). */
 const ROW_SLACK = 24;
 
@@ -189,6 +188,8 @@ function Week({ week, ...p }: { week: MonthWeek } & Pick<MonthGridProps, 'onDayP
  */
 export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisibleIndex, jump, onTopRowChange, mutePast = true, ...p }: MonthGridProps) {
   const list = useRef<FlatList<number>>(null);
+  // Room under the last row for the floating tab bar: 180, or 28 beside the rail (spec 064).
+  const bottomPad = tabBottomPad(useLayoutTier().tier);
   const top = useRef(initialIndex);
   const placed = useRef(false);
   const data = useMemo(() => Array.from({ length: weekCount }, (_, i) => i), [weekCount]);
@@ -207,7 +208,7 @@ export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisib
   const onLayout = (e: LayoutChangeEvent) => {
     if (placed.current) return;
     placed.current = true;
-    const visibleRows = Math.floor((e.nativeEvent.layout.height - BOTTOM_PAD) / MONTH_ROW_HEIGHT);
+    const visibleRows = Math.floor((e.nativeEvent.layout.height - bottomPad) / MONTH_ROW_HEIGHT);
     let index = initialIndex;
     if (keepVisibleIndex !== undefined && visibleRows > 0 && keepVisibleIndex >= index + visibleRows) index = keepVisibleIndex - visibleRows + 1;
     list.current?.scrollToOffset({ offset: index * MONTH_ROW_HEIGHT, animated: false });
@@ -251,7 +252,7 @@ export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisib
         onScroll={onScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        ListFooterComponent={<View style={{ height: BOTTOM_PAD }} />}
+        ListFooterComponent={<View style={{ height: bottomPad }} />}
       />
     </View>
   );
