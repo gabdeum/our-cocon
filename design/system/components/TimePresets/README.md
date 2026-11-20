@@ -10,6 +10,10 @@ A labelled row of dashed buttons, one per length of time, that each start someth
 | Row | 4 equal columns, gap 8 |
 | Button | `control-lg` (54) tall, `radius-md`, transparent, 2 px dashed `line-dashed`; label 16/800 olive-deep, one line ("5 min") |
 
+### Eyebrow (spec 066)
+
+`eyebrow` for the narrower timers panel in cooking mode: label 13/900 uppercase ink-muted, 6 above the row ("Quick timer"); gap 6; buttons 48 tall, label 15/900.
+
 ## States
 
 Pressed: `surface-soft` fill. Focus: 3 px olive outline, offset 2. No disabled or selected state: every button is always available and nothing stays chosen.

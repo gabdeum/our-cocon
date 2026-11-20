@@ -1,5 +1,5 @@
 // Spec 012: cooking mode. US1 (Next, swipe, segments), US2 (the dark timer in the step and the
-// header pill), US3 (the screen stays on), the edge cases (Finish, the recipe page's servings and
+// pill), US3 (the screen stays on), the edge cases (Finish, the recipe page's servings and
 // variants) and the events. Scrolling itself is in use-step-scroll.test.ts.
 import { NO_RECIPE_OVERRIDES } from '@cocon/schemas';
 import type { ReactNode } from 'react';
@@ -86,12 +86,13 @@ async function setup(props: Partial<CookScreenProps> = {}) {
   const onClose = vi.fn();
   const onOpenTimers = vi.fn();
   const onDone = vi.fn();
+  const timerStorage = memoryStorage();
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <TimersProvider userId={gabriel.user_id} storage={memoryStorage()} tracker={tracker}>
+    <TimersProvider userId={gabriel.user_id} storage={timerStorage} tracker={tracker}>
       {children}
     </TimersProvider>
   );
-  const utils = render(
+  const element = () => (
     <CookScreen
       recipe={detail}
       userId={gabriel.user_id}
@@ -104,11 +105,16 @@ async function setup(props: Partial<CookScreenProps> = {}) {
       onEditStep={vi.fn()}
       onDone={onDone}
       {...props}
-    />,
-    { wrapper },
+    />
   );
+  const utils = render(element(), { wrapper });
   await settle();
-  return { ...utils, tracker, onClose, onOpenTimers, onDone };
+  // The window changed size: draw again (the mocked useWindowDimensions doesn't subscribe).
+  const redraw = async () => {
+    utils.rerender(element());
+    await settle();
+  };
+  return { ...utils, tracker, onClose, onOpenTimers, onDone, redraw };
 }
 
 const section = (i: number) => screen.getByTestId(`cook-step-${i}`);
@@ -152,7 +158,7 @@ describe('Cooking mode (spec 012)', () => {
     expect(screen.getByRole('button', { name: `Go to step 5: ${(quiche.steps[4]?.name ?? '')}` })).toBeTruthy();
   });
 
-  it('US2: a timed step has the dark timer; starting it puts the pill in the header, beside the options', async () => {
+  it('US2: a timed step has the dark timer; starting it shows the pill (at the bottom, spec 066)', async () => {
     const { tracker } = await setup();
     const blind = section(1);
     expect(within(blind).getByText('Blind bake timer')).toBeTruthy();
@@ -462,5 +468,171 @@ describe('Cooking settings on larger screens (spec 065)', () => {
     await act(async () => vi.advanceTimersByTime(10));
     expect(screen.getByRole('dialog', { name: 'Cooking options' }).dataset.testid).toBe('sheet');
     expect(screen.getByRole('button', { name: 'Cooking options', hidden: true }).getAttribute('aria-expanded')).toBe('false');
+  });
+});
+
+describe('Cooking mode on larger screens (spec 066)', () => {
+  const wide = (width: number, height: number) => {
+    dims.width = width;
+    dims.height = height;
+  };
+  const panel = () => screen.getByRole('region', { name: 'Timers' });
+  const stepList = () => screen.getByRole('navigation', { name: 'All steps' });
+  const follows = (a: Node, b: Node) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+  it('FR-001 / SC-003: on the phone the pill floats above Back / Next, not in the header; Timers and Settings stay', async () => {
+    await setup();
+    fireEvent.click(within(section(1)).getByRole('button', { name: 'Start timer' }));
+    const pill = screen.getByRole('link', { name: '1 timer running. Open timers' });
+    // After the steps and before Back / Next: in the no-height slot over the steps' bottom edge.
+    expect(follows(screen.getByText('Bon appétit! Tap Done cooking to log it.'), pill)).toBe(true);
+    expect(follows(pill, screen.getByRole('button', { name: 'Back' }))).toBe(true);
+    expect(screen.getByTestId('cook-pill').contains(pill)).toBe(true);
+    expect(follows(screen.getByRole('button', { name: 'Cooking options' }), pill)).toBe(true);
+    expect(screen.getByRole('button', { name: 'Timers' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Timers' })).toBeNull();
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+  });
+
+  it('FR-002: from 600 the header names the recipe, and the timers panel replaces the Timers button and the pill', async () => {
+    wide(820, 1180);
+    await setup();
+    expect(screen.getByRole('heading', { level: 1, name: 'Leek & bacon quiche' })).toBeTruthy();
+    expect(screen.getByText('Serves 6 · Classic')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Timers' })).toBeNull();
+    expect(within(panel()).getByRole('heading', { level: 2, name: 'Timers' })).toBeTruthy();
+    expect(within(panel()).getByText('0 running · 0 total')).toBeTruthy();
+    expect(within(panel()).getByText("Timers keep running when you leave the recipe. You'll hear a chime when one ends.")).toBeTruthy();
+    // The bars stay at medium.
+    expect(screen.getByRole('button', { name: 'Go to step 3: Cook the filling' })).toBeTruthy();
+    fireEvent.click(within(section(1)).getByRole('button', { name: 'Start timer' }));
+    expect(screen.queryByRole('link', { name: /Open timers/ })).toBeNull();
+    await expectAccessible();
+  });
+
+  it('SC-001: a step timer started at 820 shows in the step and the panel at once; pausing in either updates both', async () => {
+    wide(820, 1180);
+    await setup();
+    const blind = section(1);
+    fireEvent.click(within(blind).getByRole('button', { name: 'Start timer' }));
+    expect(within(panel()).getByRole('button', { name: 'Pause: Blind bake' })).toBeTruthy();
+    expect(within(panel()).getByText('1 running · 1 total')).toBeTruthy();
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Pause: Blind bake' }));
+    expect(within(blind).getByRole('button', { name: 'Resume' })).toBeTruthy();
+    fireEvent.click(within(blind).getByRole('button', { name: 'Resume' }));
+    expect(within(panel()).getByRole('button', { name: 'Pause: Blind bake' })).toBeTruthy();
+    // Its "Go to step" scrolls here.
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Go to step: Blind bake' }));
+    expect(isCurrent(1)).toBe(true);
+  });
+
+  it('FR-005: a quick timer from the panel starts at once, as on the Timers screen, sent as quick_panel', async () => {
+    wide(820, 1180);
+    const { tracker } = await setup();
+    expect(within(panel()).getByRole('group', { name: 'Quick timer' })).toBeTruthy();
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Start a 5 min kitchen timer' }));
+    expect(within(panel()).getByRole('button', { name: 'Pause: Kitchen timer' })).toBeTruthy();
+    expect(tracker.track).toHaveBeenCalledWith('timer_started', { from: 'quick_panel', minutes: 5 });
+  });
+
+  it('a bar tap sends cook_step_jump from the bars; Next does not', async () => {
+    wide(820, 1180);
+    const { tracker } = await setup();
+    press('Next step');
+    press('Go to step 4: Mix the custard');
+    expect(isCurrent(3)).toBe(true);
+    expect(tracker.track).toHaveBeenCalledWith('cook_step_jump', { source: 'bars', from: 2, to: 4 });
+    expect(tracker.track.mock.calls.filter(([e]) => e === 'cook_step_jump')).toHaveLength(1);
+  });
+
+  // The smooth scroll itself and its 700 ms pause: use-step-scroll.test.ts (jsdom has no layout).
+  it('FR-003 / SC-002: from 960 the step list replaces the bars; tapping step 5 makes it current at once', async () => {
+    wide(1180, 820);
+    const { tracker } = await setup();
+    // Only the list's rows go to a step: no bars.
+    expect(screen.getAllByRole('button', { name: /^Go to step 3/ })).toEqual([within(stepList()).getByRole('button', { name: 'Go to step 3: Cook the filling, timer 08:00' })]);
+    expect(screen.getByText('Tap a step to jump to it')).toBeTruthy();
+    expect(within(stepList()).getByRole('button', { name: 'Go to step 1: Preheat and line' }).getAttribute('aria-current')).toBe('step');
+    // A step timer shows its time in its row before it starts, then what's left once it runs.
+    const row2 = () => within(stepList()).getByRole('button', { name: /^Go to step 2: Blind bake, timer / });
+    expect(row2().getAttribute('aria-label')).toBe('Go to step 2: Blind bake, timer 12:00');
+    fireEvent.click(within(section(1)).getByRole('button', { name: 'Start timer' }));
+    expect(row2().getAttribute('aria-label')).toBe('Go to step 2: Blind bake, timer 12:00');
+    await act(async () => void vi.advanceTimersByTime(2000));
+    expect(row2().getAttribute('aria-label')).toBe('Go to step 2: Blind bake, timer 11:58');
+
+    fireEvent.click(within(stepList()).getByRole('button', { name: 'Go to step 5: Bake, timer 35:00' }));
+    expect(isCurrent(4)).toBe(true);
+    expect(screen.getByText(`Step 5 of ${STEPS}`)).toBeTruthy();
+    expect(within(stepList()).getByRole('button', { name: 'Go to step 5: Bake, timer 35:00' }).getAttribute('aria-current')).toBe('step');
+    expect(tracker.track).toHaveBeenCalledWith('cook_step_jump', { source: 'step_list', from: 1, to: 5 });
+    await expectAccessible();
+  });
+
+  it('FR-004: a step with a photo shows it small beside the title (72, 96 from 600); tapping opens it full screen', async () => {
+    const path = 'f/r/bake.jpg';
+    const withPhoto = { ...detail, steps: detail.steps.map((s, i) => (i === 4 ? { ...s, photo_path: path } : s)) };
+    const { redraw } = await setup({ recipe: withPhoto, photoUrls: { [path]: 'https://photos.test/bake.jpg' } });
+    const thumb = () => within(section(4)).getByRole('button', { name: 'See the photo for Bake larger' });
+    expect(thumb().style.width).toBe('72px');
+    // Only the step that has one.
+    expect(within(section(1)).queryByRole('button', { name: /See the photo/ })).toBeNull();
+    wide(820, 1180);
+    await redraw();
+    expect(thumb().style.width).toBe('96px');
+    fireEvent.click(thumb());
+    expect(screen.getByRole('dialog', { name: 'Photo for Bake' })).toBeTruthy();
+    press('Close photo');
+    expect(screen.queryByRole('dialog', { name: 'Photo for Bake' })).toBeNull();
+  });
+
+  it('FR-007: steps are at least 60 % of the window tall from 600, never under 500', async () => {
+    const { redraw } = await setup();
+    expect(section(0).style.minHeight).toBe('500px');
+    wide(820, 1180);
+    await redraw();
+    expect(section(0).style.minHeight).toBe('708px');
+    wide(1180, 600);
+    await redraw();
+    expect(section(0).style.minHeight).toBe('500px');
+  });
+
+  it('FR-006: Settings shows at every size and opens the cooking settings as a popover from 600', async () => {
+    const { redraw } = await setup();
+    expect(screen.getByRole('button', { name: 'Cooking options' })).toBeTruthy();
+    wide(1180, 820);
+    await redraw();
+    press('Cooking options');
+    await act(async () => vi.advanceTimersByTime(10));
+    expect(screen.getByRole('dialog', { name: 'Cooking options' }).dataset.testid).toBe('sheet-popover');
+  });
+
+  it('the phone Timers sheet closes when the window widens: the panel shows them instead', async () => {
+    const { redraw } = await setup();
+    press('Timers');
+    await act(async () => vi.advanceTimersByTime(10));
+    expect(screen.getByRole('dialog', { name: 'Timers' })).toBeTruthy();
+    wide(820, 1180);
+    await redraw();
+    expect(screen.queryByRole('dialog', { name: 'Timers' })).toBeNull();
+    expect(panel()).toBeTruthy();
+  });
+
+  // Scrolling back to the current step as the steps re-lay out: use-step-scroll.test.ts (jsdom has no layout).
+  it('FR-008: the step and the timers survive tier changes', async () => {
+    const { redraw } = await setup();
+    press('Next step');
+    press('Next step');
+    fireEvent.click(within(section(2)).getByRole('button', { name: 'Start timer' }));
+    wide(1180, 820);
+    await redraw();
+    expect(isCurrent(2)).toBe(true);
+    expect(within(stepList()).getByRole('button', { name: /^Go to step 3: Cook the filling, timer/ }).getAttribute('aria-current')).toBe('step');
+    expect(within(section(2)).getByRole('button', { name: 'Pause' })).toBeTruthy();
+    wide(390, 844);
+    await redraw();
+    expect(isCurrent(2)).toBe(true);
+    expect(screen.getByText(`Step 3 of ${STEPS}`)).toBeTruthy();
+    expect(within(section(2)).getByRole('button', { name: 'Pause' })).toBeTruthy();
   });
 });

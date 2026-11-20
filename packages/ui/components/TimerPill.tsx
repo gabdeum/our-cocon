@@ -16,8 +16,6 @@ export interface TimerPillProps {
   /** The ✕ that hides the pill without touching timers (spec 011 FR-008), and its label. */
   onHide?: () => void;
   hideLabel?: string;
-  /** 48 tall in headers (cooking mode), 50 elsewhere. */
-  compact?: boolean;
   /**
    * The NavRail's form (spec 064): 76 wide, the clock over the "+N" chip, no name and no ✕, so
    * `label` should say the name and time.
@@ -29,7 +27,7 @@ export interface TimerPillProps {
  * The most urgent timer, always visible (TimerPill README). Right padding 14, or 8 beside the "+N"
  * chip; with a ✕, the link ends at 6, then a divider and the 40 × 44 ✕ (pill padding right 3).
  */
-export function TimerPill({ name, clock, more, label, onPress, onHide, hideLabel, compact, vertical }: TimerPillProps) {
+export function TimerPill({ name, clock, more, label, onPress, onHide, hideLabel, vertical }: TimerPillProps) {
   if (vertical) {
     return (
       <Pressable
@@ -54,7 +52,7 @@ export function TimerPill({ name, clock, more, label, onPress, onHide, hideLabel
   }
   return (
     <View
-      className={cn('self-center flex-row items-center rounded-pill border-2 border-honey bg-surface-card', onHide && 'pr-[3px]', compact ? 'h-[48px]' : 'h-[50px]')}
+      className={cn('self-center flex-row items-center rounded-pill border-2 border-honey bg-surface-card', onHide && 'pr-[3px]', 'h-[50px]')}
       style={{ boxShadow: theme.shadow.float }}
     >
       <Pressable

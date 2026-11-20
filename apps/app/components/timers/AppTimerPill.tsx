@@ -10,19 +10,17 @@ export interface AppTimerPillProps {
   /** Opens the Timers screen (`/timers`). */
   onOpen: () => void;
   tracker: Tracker;
-  /** 48 tall in the cooking-mode header (spec 012). */
-  compact?: boolean;
   /** The side rail's form (spec 064): the time and "+N" only, no ✕, the name in its label. */
   vertical?: boolean;
 }
 
 /**
- * The running timer with the least time left, live, on tab screens and the recipe page (spec 011
- * US1), "+N" for the other running ones. Nothing while no timer is running (paused and done ones
+ * The running timer with the least time left, live, on tab screens, the recipe page and cooking mode (spec 011
+ * US1, 066), "+N" for the other running ones. Nothing while no timer is running (paused and done ones
  * don't count). Tapping it opens Timers and sends `timer_pill_tapped`; its ✕ hides it on every
  * screen, timers untouched, until one starts or finishes (FR-008), and sends `timer_pill_hidden`.
  */
-export function AppTimerPill({ onOpen, tracker, compact, vertical }: AppTimerPillProps) {
+export function AppTimerPill({ onOpen, tracker, vertical }: AppTimerPillProps) {
   const store = useTimerStore();
   const { timer, left, count, running } = useMostUrgent();
   if (!timer) return null;
@@ -46,7 +44,6 @@ export function AppTimerPill({ onOpen, tracker, compact, vertical }: AppTimerPil
       onPress={open}
       onHide={vertical ? undefined : hide}
       hideLabel={copy.hide}
-      compact={compact}
       vertical={vertical}
     />
   );

@@ -213,14 +213,16 @@ describe('timer store (spec 010)', () => {
     store.add(id, -60);
     store.set(id, 900);
     store.quick();
+    store.quick(15 * 60, 'quick_panel');
     expect(tracker.track.mock.calls).toEqual([
       ['timer_started', { from: 'step' }],
       ['timer_adjusted', { delta_min: 1 }],
       ['timer_adjusted', { delta_min: -1 }],
       ['timer_adjusted', { delta_min: 10 }],
-      ['timer_started', { from: 'quick' }],
+      ['timer_started', { from: 'quick', minutes: 5 }],
+      ['timer_started', { from: 'quick_panel', minutes: 15 }],
     ]);
-    expect(shown(store)).toEqual(['Blind bake 15:00 running', 'Kitchen timer 05:00 running']);
+    expect(shown(store)).toEqual(['Blind bake 15:00 running', 'Kitchen timer 05:00 running', 'Kitchen timer 15:00 running']);
     store.destroy();
   });
 

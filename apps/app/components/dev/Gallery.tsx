@@ -22,6 +22,9 @@ import {
   CookProgress,
   CookSessionCard,
   CookSection,
+  CookStepList,
+  PhotoViewer,
+  StepPhoto,
   CookTimerCard,
   Dialog,
   FilterButton,
@@ -192,6 +195,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
   const [calendarHidden, setCalendarHidden] = useState<string[]>(['e']);
   const [tab, setTab] = useState<(typeof tabs)[number]['key']>('recipes');
   const [cookStep, setCookStep] = useState(2);
+  const [viewing, setViewing] = useState(false);
   const [section, setSection] = useState('steps');
   const [amount, setAmount] = useState('250');
   const [unit, setUnit] = useState('g');
@@ -976,6 +980,31 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         </CookSection>
       </Section>
 
+      <Section group="Cooking" title="CookStepList">
+        <View style={{ width: theme.layout.stepList }}>
+          <CookStepList
+            title="All steps"
+            current={cookStep}
+            onSelect={setCookStep}
+            numbered={(n) => `Step ${n}`}
+            steps={[
+              { name: 'Preheat and line', time: null, label: 'Go to step 1: Preheat and line' },
+              { name: 'Blind bake', time: '11:42', running: true, label: 'Go to step 2: Blind bake, timer 11:42' },
+              { name: 'Cook the filling', time: '10:00', label: 'Go to step 3: Cook the filling, timer 10:00' },
+              { name: null, time: null, label: 'Go to step 4' },
+            ]}
+          />
+        </View>
+      </Section>
+
+      <Section group="Cooking" title="PhotoViewer">
+        <View className="flex-row gap-12">
+          <StepPhoto source={samplePhoto} size={72} label="See the photo for Bake larger" onPress={() => setViewing(true)} />
+          <StepPhoto source={samplePhoto} size={96} label="See the photo for Bake larger" onPress={() => setViewing(true)} />
+        </View>
+        <PhotoViewer source={viewing ? samplePhoto : null} label="Photo for Bake" closeLabel="Close photo" onClose={() => setViewing(false)} />
+      </Section>
+
       <Section group="Cooking" title="TimerPill">
         <TimerPill name="Blind bake" clock="11:42" more="+1" label="2 timers running. Open timers" onPress={noop} />
         <TimerPill name="Kitchen timer" clock="06:39" label="1 timer running. Open timers" onPress={noop} />
@@ -983,6 +1012,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
 
       <Section group="Cooking" title="TimePresets">
         <TimePresets label="Quick kitchen timer" presets={[5, 10, 15, 30].map((m) => ({ label: `${m} min`, a11y: `Start a ${m} min kitchen timer`, onPress: noop }))} />
+        <TimePresets label="Quick timer" eyebrow presets={[5, 10, 15, 30].map((m) => ({ label: `${m} min`, a11y: `Start a ${m} min kitchen timer`, onPress: noop }))} />
       </Section>
 
       <Section group="Overlays" title="BottomSheet">

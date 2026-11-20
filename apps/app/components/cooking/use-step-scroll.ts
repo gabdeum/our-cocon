@@ -16,6 +16,11 @@ export interface StepScroll {
   snaps: number[];
   /** Steps taller than the scroll area, which also snap at their end (CSS snapping on the web). */
   tall: boolean[];
+  /**
+   * The window changed size (a tier change, a rotation): stay on the current step while the steps lay
+   * out again, as when opened at a step (spec 066 FR-008).
+   */
+  hold: () => void;
 }
 
 /**
@@ -141,5 +146,12 @@ export function useStepScroll(count: number, initial: number, scrollTo: (y: numb
     [count, lock, scrollTo],
   );
 
-  return { current, onStepLayout, onViewport, onScroll, jump, snaps, tall };
+  const hold = useCallback(() => {
+    pending.current = current;
+    clearTimeout(settle.current);
+    settle.current = undefined;
+    aim();
+  }, [aim, current]);
+
+  return { current, onStepLayout, onViewport, onScroll, jump, snaps, tall, hold };
 }

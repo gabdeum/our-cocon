@@ -1393,6 +1393,25 @@ export const strings = {
     doneCooking: 'Done cooking',
     bonAppetit: 'Bon appétit! Tap Done cooking to log it.',
     loading: 'Loading recipe',
+    // Spec 066 (OC-CookResponsive): from 600 the header names the recipe; from 960 a step list.
+    /** Under the recipe name: "Serves 6 · Classic" ("Serves 6" when the recipe has no versions). */
+    servesLine: (serves: string, version: string | null) => (version ? `Serves ${serves} · ${version}` : `Serves ${serves}`),
+    /** The hint beside "Step N of M" when the step list replaces the bars. */
+    jumpHint: 'Tap a step to jump to it',
+    allSteps: 'All steps',
+    /** A step list row's name when the step has none. */
+    unnamedStep: (n: number) => `Step ${n}`,
+    /** A step list row for screen readers: "Go to step 3: Bake, timer 12:30". */
+    stepRow: (n: number, name: string | null, time: string | null) => {
+      const step = name ? `Go to step ${n}: ${name}` : `Go to step ${n}`;
+      return time ? `${step}, timer ${time}` : step;
+    },
+    /** The timers panel's quick presets (the Timers screen's own label is "Quick kitchen timer"). */
+    quickTimer: 'Quick timer',
+    /** A step's photo thumbnail, and the full-screen photo it opens. */
+    stepPhoto: (name: string | null, n: number) => (name ? `See the photo for ${name} larger` : `See the photo for step ${n} larger`),
+    photoOf: (name: string | null, n: number) => (name ? `Photo for ${name}` : `Photo for step ${n}`),
+    closePhoto: 'Close photo',
   },
   // design/ui/OC-CookDone.md (spec 051 FR-005): after "Done".
   cookDone: {

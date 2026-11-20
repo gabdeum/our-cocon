@@ -20,13 +20,19 @@ export interface TimersSnapshot {
   pillHidden: boolean;
 }
 
+/** Where a timer was started, for `timer_started`. */
+export type TimerSource = 'step' | 'quick' | 'quick_panel';
+
 export interface TimerStore {
   subscribe(listener: () => void): () => void;
   getSnapshot(): TimersSnapshot;
   /** Returns the new timer's id. */
-  start(label: string, seconds: number, from: 'step' | 'quick', origin?: TimerOrigin): string;
-  /** A quick "Kitchen timer" (FR-002); 5 min unless the Timers screen picks 10, 15 or 30 (spec 011). */
-  quick(seconds?: number): string;
+  start(label: string, seconds: number, from: TimerSource, origin?: TimerOrigin): string;
+  /**
+   * A quick "Kitchen timer" (FR-002); 5 min unless the Timers screen picks 10, 15 or 30 (spec 011).
+   * `quick_panel`: from cooking mode's timers panel (spec 066).
+   */
+  quick(seconds?: number, from?: 'quick' | 'quick_panel'): string;
   pause(id: string): void;
   resume(id: string): void;
   /** ±60 s (FR-002). */
@@ -266,11 +272,12 @@ export function createTimerStore({ storage, userId, tracker, alerts, live, isFor
       const id = `${now().toString(36)}-${(nextId++).toString(36)}`;
       pillHidden = false;
       change((ts, at) => T.start(ts, id, label, seconds, at, origin));
-      tracker.track('timer_started', { from });
+      // Quick ones say how long (spec 066); a step timer's length is the recipe's.
+      tracker.track('timer_started', from === 'step' ? { from } : { from, minutes: Math.max(1, Math.round(seconds / T.MINUTE)) });
       startedListeners.forEach((l) => l());
       return id;
     },
-    quick: (seconds = T.QUICK_SECONDS) => store.start(strings.timers.kitchenTimer, seconds, 'quick'),
+    quick: (seconds = T.QUICK_SECONDS, from = 'quick') => store.start(strings.timers.kitchenTimer, seconds, from),
     pause: (id) => change((ts, at) => T.pause(ts, id, at)),
     resume: (id) => change((ts, at) => T.resume(ts, id, at)),
     add(id, deltaSeconds) {

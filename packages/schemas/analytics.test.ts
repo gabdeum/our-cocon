@@ -134,6 +134,18 @@ describe('createTracker', () => {
     expect(() => tracker.track('timer_adjusted', { delta_min: 0.5 })).toThrow();
   });
 
+  it('sends quick timers from the panel and step jumps with numbers only (spec 066)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('timer_started', { from: 'quick_panel', minutes: 5 });
+    tracker.track('cook_step_jump', { source: 'step_list', from: 2, to: 5 });
+    expect(t.capture).toHaveBeenCalledWith('timer_started', { from: 'quick_panel', minutes: 5 });
+    expect(t.capture).toHaveBeenCalledWith('cook_step_jump', { source: 'step_list', from: 2, to: 5 });
+    expect(() => tracker.track('timer_started', { from: 'quick_panel', minutes: 0 })).toThrow();
+    expect(() => tracker.track('cook_step_jump', { source: 'next', from: 1, to: 2 } as never)).toThrow();
+    expect(() => tracker.track('cook_step_jump', { source: 'bars', from: 0, to: 2 })).toThrow();
+  });
+
   it('sends the pill and Timers screen events with a count only (spec 011)', () => {
     const t = fakeTransport();
     const tracker = createTracker(t);
