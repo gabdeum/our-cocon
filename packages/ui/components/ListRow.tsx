@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
-import { Animated, PanResponder, Platform, Pressable, View, type AccessibilityActionEvent } from 'react-native';
+import { Animated, PanResponder, Platform, Pressable, View, type AccessibilityActionEvent, type GestureResponderEvent } from 'react-native';
 import { useReduceMotion } from '../reduceMotion';
 import { cn, focusRing } from '../cn';
 import { Avatar, type AvatarColor } from './Avatar';
@@ -119,7 +119,8 @@ export interface ListRowProps {
    * (grocery rows: the vertical "…" that opens Edit). `accessibilityLabel` names what it acts on:
    * "Edit Heavy cream".
    */
-  action?: { icon: IconName; accessibilityLabel: string; onPress: () => void; disabled?: boolean };
+  /** `onPress` gets the button's press, to point a popover at it; `expanded` while that is open (honey fill, spec 065). */
+  action?: { icon: IconName; accessibilityLabel: string; onPress: (e: GestureResponderEvent) => void; disabled?: boolean; expanded?: boolean };
 }
 
 const SWIPE = 48;
@@ -241,10 +242,11 @@ export function ListRow({
         aria-label={action.accessibilityLabel}
         // It opens the row's sheet: the way in for web screen readers, which can't use the row's actions (L49).
         aria-haspopup="dialog"
+        aria-expanded={action.expanded}
         onPress={action.onPress}
         disabled={action.disabled}
         aria-disabled={action.disabled || undefined}
-        className={cn('h-control-md w-control-md items-center justify-center rounded-full active:bg-surface-card-pressed', flush ? '' : 'mr-6', action.disabled && 'opacity-dimmed', focusRing)}
+        className={cn('h-control-md w-control-md items-center justify-center rounded-full active:bg-surface-card-pressed', action.expanded && 'bg-honey active:bg-honey', flush ? '' : 'mr-6', action.disabled && 'opacity-dimmed', focusRing)}
       >
         <Icon name={action.icon} size={22} color="inkMuted" />
       </Pressable>

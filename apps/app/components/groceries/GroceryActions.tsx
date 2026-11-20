@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
+import type { HostInstance } from 'react-native';
 import { BottomSheet, Button, Link, ListGroup, ListRow, SheetFooter, TextField } from '@cocon/ui';
 import { AISLE_ORDER, type Aisle, type UnitSystem } from '@cocon/schemas';
 import { strings } from '../../strings/en';
@@ -32,6 +33,8 @@ export interface GroceryActionsProps {
   onSavePacks?: (item: GroceryItem, text: string | null) => Promise<'saved' | 'invalid' | 'failed'>;
   /** The family's units (spec 027): the Edit field shows the amount in them. */
   units?: UnitSystem;
+  /** The row's ⋮ that opened it: from 600 the menu is a popover pointing at it (spec 065); none, a card. */
+  anchorRef?: RefObject<HostInstance | null>;
 }
 
 /**
@@ -39,15 +42,15 @@ export interface GroceryActionsProps {
  * reader's actions) opens straight on Edit, which reads the text again on Save; below it, "Move to…"
  * lists the aisles and is remembered for the family, and "Remove" takes it off the list, with Undo.
  */
-export function GroceryActions({ item, view, onView, onClose, onRemove, onMove, onEdit, packs, onSavePacks, units = 'metric' }: GroceryActionsProps) {
+export function GroceryActions({ item, view, onView, onClose, onRemove, onMove, onEdit, packs, onSavePacks, units = 'metric', anchorRef }: GroceryActionsProps) {
   if (!item) return null;
 
-  if (view === 'packs' && packs && onSavePacks) return <PackSheet key={item.id} item={item} packs={packs} onClose={onClose} onSave={onSavePacks} />;
+  if (view === 'packs' && packs && onSavePacks) return <PackSheet key={item.id} item={item} packs={packs} onClose={onClose} onSave={onSavePacks} anchorRef={anchorRef} />;
 
   if (view === 'move') {
     const current = item.aisle ?? 'other';
     return (
-      <BottomSheet visible onClose={onClose} title={g.moveTo} lead={g.moveLead(item.name)} closeLabel={g.close}>
+      <BottomSheet visible kind="menu" anchorRef={anchorRef} onClose={onClose} title={g.moveTo} lead={g.moveLead(item.name)} closeLabel={g.close}>
         <ListGroup>
           {AISLE_ORDER.map((aisle, i) => (
             <ListRow
@@ -63,7 +66,7 @@ export function GroceryActions({ item, view, onView, onClose, onRemove, onMove, 
     );
   }
 
-  return <MenuSheet key={item.id} item={item} units={units} onView={onView} onClose={onClose} onRemove={onRemove} onEdit={onEdit} packs={packs && onSavePacks ? packs : null} />;
+  return <MenuSheet key={item.id} item={item} units={units} onView={onView} onClose={onClose} onRemove={onRemove} onEdit={onEdit} packs={packs && onSavePacks ? packs : null} anchorRef={anchorRef} />;
 }
 
 /** The first sheet: the item as one line to edit ("2 lemons", read again on Save), then Move to… and Remove. */
@@ -75,7 +78,8 @@ function MenuSheet({
   onEdit,
   packs,
   units,
-}: Pick<GroceryActionsProps, 'onView' | 'onClose' | 'onRemove' | 'onEdit'> & { item: GroceryItem; packs: ItemPacks | null; units: UnitSystem }) {
+  anchorRef,
+}: Pick<GroceryActionsProps, 'onView' | 'onClose' | 'onRemove' | 'onEdit' | 'anchorRef'> & { item: GroceryItem; packs: ItemPacks | null; units: UnitSystem }) {
   const [text, setText] = useState(() => editText(item, units));
   const [saving, setSaving] = useState(false);
   const save = async () => {
@@ -89,6 +93,8 @@ function MenuSheet({
   return (
     <BottomSheet
       visible
+      kind="menu"
+      anchorRef={anchorRef}
       onClose={onClose}
       title={g.editTitle}
       closeLabel={g.close}
@@ -110,7 +116,13 @@ function MenuSheet({
  * FR-004 (not drawn; OC-Groceries › Row menu): the family's own pack size for this item, for both
  * stores. "Use the usual sizes" goes back to the catalog's.
  */
-function PackSheet({ item, packs, onClose, onSave }: { item: GroceryItem; packs: ItemPacks; onClose: () => void; onSave: NonNullable<GroceryActionsProps['onSavePacks']> }) {
+function PackSheet({
+  item,
+  packs,
+  onClose,
+  onSave,
+  anchorRef,
+}: Pick<GroceryActionsProps, 'anchorRef'> & { item: GroceryItem; packs: ItemPacks; onClose: () => void; onSave: NonNullable<GroceryActionsProps['onSavePacks']> }) {
   const start = packs.corrected?.text ?? '';
   const [text, setText] = useState(start);
   const [saving, setSaving] = useState(false);
@@ -126,6 +138,8 @@ function PackSheet({ item, packs, onClose, onSave }: { item: GroceryItem; packs:
   return (
     <BottomSheet
       visible
+      kind="menu"
+      anchorRef={anchorRef}
       onClose={onClose}
       title={g.storeSize}
       lead={g.storeSizeLead(item.name)}

@@ -50,6 +50,7 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 
 - Popover: 360 wide, `surface-page`, 1.5 px `line` border, radius 22, `shadow-float`, padding 16, title 18/900. Top = anchor bottom + 12. Arrow 14 × 14 rotated square with the same border on two sides, **centred on the anchor button's centre**. No scrim. The anchor shows honey fill while open.
 - Centred card: 540 wide (≤ window − 48), radius 32, padding 20 / 24 / 22, `scrim` behind, 44 px round close button (soft) in the title row instead of the handle.
+- Toasts from 600: max 420 wide, still 12 below the safe area, centred (phone: 560 − 32).
 
 ## Cooking (066) · preview 390 × 844, 590 × 820, 744 × 1133, 820 × 1180, 1180 × 820
 

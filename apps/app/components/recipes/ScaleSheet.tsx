@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { AmountField, BottomSheet, Card, Link, RadioCard, SheetFooter, Text } from '@cocon/ui';
+import { AmountField, BottomSheet, Card, Link, RadioCard, SheetFooter, Text, useSheetPresentation } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import type { Unit } from '@cocon/schemas/recipes';
 import { strings } from '../../strings/en';
@@ -26,6 +26,7 @@ export interface ScaleSheetProps {
 /** Scale by an ingredient (spec 013 US2; design/ui/OC-ScaleIng.md). */
 export function ScaleSheet({ recipe, choices, settings = defaultFormat, tracker, onApply, onClose }: ScaleSheetProps) {
   const options = formatOf(choices, settings);
+  const presentation = useSheetPresentation('flow');
   const candidates = useMemo(() => scaleCandidates(recipe, choices, options), [recipe, choices, options.system, options.scale]); // eslint-disable-line react-hooks/exhaustive-deps
   // Opens on what was applied last, else the first ingredient.
   const applied = choices.scaledBy && candidates.find((c) => c.id === choices.scaledBy?.ingredientId) ? choices.scaledBy : null;
@@ -49,7 +50,7 @@ export function ScaleSheet({ recipe, choices, settings = defaultFormat, tracker,
   };
   const apply = () => {
     if (!by || !preview) return;
-    tracker.track('scaled_by_ingredient', {});
+    tracker.track('scaled_by_ingredient', { presentation });
     onApply(by);
   };
 

@@ -11,6 +11,8 @@ Round or rounded-square buttons holding a single icon, used over photos, in step
 | `--soft` | 44 circle | surface-soft / ink | Stepper minus, close in sheets |
 | `--olive` | 44 circle | olive / white | Stepper plus |
 | `--square` | 44, radius 14 | surface-soft / ink; honey when `aria-expanded="true"` | "More options" (…) |
+
+Any variant takes `expanded`: honey fill and `aria-expanded="true"` while what it opens is open (a popover pointing at it, spec 065).
 | `--olive-square` | 54, radius 18 | olive / white | Add item next to an input |
 | `--round` | 40 circle (touch target 44 through `hitSlop`), `shadow-button`, icon 22 (✕ 20) | surface-card / ink | The top bar's back and actions, on the page or over a photo (TopBar, spec 050); cooking mode's ✕ and options; Groceries' settings beside the title |
 | `--tint` | 40 circle (touch 44 through `hitSlop`), no shadow, icon 20 | `toast-button` (ink at 8%, 16% pressed) over whatever it sits on / the surrounding text colour | The toast's Undo, Try again and ✕ (spec 053) |

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { AmountField, BottomSheet, Card, IconButton, ResultTile, SegmentedControl, Text } from '@cocon/ui';
+import { AmountField, BottomSheet, Card, ResultTile, SegmentedControl, Text, useSheetPresentation } from '@cocon/ui';
 import { CONVERTER_UNITS, type ConverterTab, type ConverterUnit } from '@cocon/quantity';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
@@ -27,6 +27,12 @@ export function ConvertSheet({ recipe, choices, tracker, onClose }: ConvertSheet
   const [unit, setUnit] = useState<ConverterUnit>(converterStart.unit);
   const [text, setText] = useState('');
   const amount = parseAmount(text);
+  // Read when the value settles: resizing the window doesn't count as another use.
+  const shownAs = useSheetPresentation('flow');
+  const presentation = useRef(shownAs);
+  useEffect(() => {
+    presentation.current = shownAs;
+  }, [shownAs]);
 
   const ingredient = useMemo(() => {
     const ing = recipeIngredient(recipe, choices, tab);
@@ -38,7 +44,7 @@ export function ConvertSheet({ recipe, choices, tracker, onClose }: ConvertSheet
   // FR: one event once the value settles; the unit typed in and the main result's.
   useEffect(() => {
     if (amount === null || !main) return;
-    const timer = setTimeout(() => tracker.track('unit_converter_used', { from_unit: unit, to_unit: main }), CONVERT_SETTLE_MS);
+    const timer = setTimeout(() => tracker.track('unit_converter_used', { from_unit: unit, to_unit: main, presentation: presentation.current }), CONVERT_SETTLE_MS);
     return () => clearTimeout(timer);
   }, [amount, unit, main, tracker]);
 
@@ -49,7 +55,7 @@ export function ConvertSheet({ recipe, choices, tracker, onClose }: ConvertSheet
   const rows = [view.tiles.slice(0, 2), view.tiles.slice(2, 4)].filter((r) => r.length > 0);
 
   return (
-    <BottomSheet visible title={c.title} closeLabel={c.close} onClose={onClose} headerAction={<IconButton icon="close" label={c.close} variant="soft" onPress={onClose} />}>
+    <BottomSheet visible title={c.title} closeLabel={c.close} onClose={onClose} closeButton>
       <SegmentedControl
         label={c.tabsLabel}
         value={tab}

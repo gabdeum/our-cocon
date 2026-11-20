@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, type HostInstance, type ScrollViewInstance } from 'react-native';
-import { announce, BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, ListRow, PushedScreen, SettingRow, StepText, Text, useReduceMotion, type TopBarConfig } from '@cocon/ui';
+import { announce, BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, ListRow, PushedScreen, SettingRow, StepText, Text, useReduceMotion, useSheetPresentation, type TopBarConfig } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
@@ -169,6 +169,9 @@ function Cooking({
   }
   const awake = useCookAwake(keepAwake);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  // Settings is a menu (a popover from 600, its button honey while open); Timers a flow (spec 065).
+  const optionsAs = useSheetPresentation('menu');
+  const timersAs = useSheetPresentation('flow');
   const optionsButton = useRef<HostInstance>(null);
   // Spec 062: every timer and the quick ones, without leaving the steps.
   const [timersOpen, setTimersOpen] = useState(false);
@@ -274,9 +277,10 @@ function Cooking({
       optionsLabel={c.options}
       onOptions={() => setOptionsOpen(true)}
       optionsRef={optionsButton}
+      optionsExpanded={optionsOpen && optionsAs === 'popover'}
       timersLabel={c.timers}
       onTimers={() => {
-        tracker.track('cook_timers_opened', { timer_count: Math.min(timers.length, 100) });
+        tracker.track('cook_timers_opened', { timer_count: Math.min(timers.length, 100), presentation: timersAs });
         setTimersOpen(true);
       }}
       timersRef={timersButton}
@@ -325,6 +329,7 @@ function Cooking({
     {/* Mounted only while open (a closed react-native-web Modal can still catch taps). */}
     <BottomSheet
       visible={optionsOpen}
+      kind="menu"
       returnFocusRef={optionsButton}
       onClose={() => setOptionsOpen(false)}
       title={c.options}
@@ -338,7 +343,7 @@ function Cooking({
           value={keepAwake}
           onValueChange={(on) => {
             setKeepAwake(on);
-            tracker.track('cook_screen_awake_toggled', { on });
+            tracker.track('cook_screen_awake_toggled', { on, presentation: optionsAs });
           }}
         />
         <ListRow
@@ -360,6 +365,7 @@ function Cooking({
           onScaleByIngredient={openSheet(onScaleByIngredient)}
           onConvert={openSheet(onConvert)}
           onUnits={setVisitUnits}
+          presentation={optionsAs}
         />
       </View>
     </BottomSheet>

@@ -235,7 +235,10 @@ export const theme = {
     "maxContent": 1200,
     "panelMedium": 290,
     "panelExpanded": 320,
-    "rail": 104
+    "rail": 104,
+    "popover": 360,
+    "card": 540,
+    "toastWide": 420
   }
 } as const;
 

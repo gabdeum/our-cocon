@@ -55,7 +55,7 @@ describe('Unit converter', () => {
     expect(screen.getByText("300 ml heavy cream weighs about 300 g. Handy if you'd rather weigh it on your scale.")).toBeTruthy();
     expect(tracker.track).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(CONVERT_SETTLE_MS));
-    expect(tracker.track).toHaveBeenCalledWith('unit_converter_used', { from_unit: 'ml', to_unit: 'cup' });
+    expect(tracker.track).toHaveBeenCalledWith('unit_converter_used', { from_unit: 'ml', to_unit: 'cup', presentation: 'sheet' });
     // Spec 030 SC-001.
     await expectAccessible();
   });

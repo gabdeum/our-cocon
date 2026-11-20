@@ -14,6 +14,15 @@ import { forgetVisitUnits } from '../../lib/visit-units';
 import { fakeTracker, gabriel } from '../../test/fakes';
 import { expectAccessible } from '../../test/axe';
 
+// Spec 065: the window's width, for the sheets' presentation (390 unless a test widens it).
+const dims = vi.hoisted(() => ({ width: 390, height: 844 }));
+vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('react-native')>()), useWindowDimensions: () => ({ ...dims, scale: 2, fontScale: 1 }) }));
+afterEach(() => {
+  dims.width = 390;
+  dims.height = 844;
+});
+
+
 const keepAwake = vi.hoisted(() => ({
   isAvailableAsync: vi.fn(async () => true),
   activateKeepAwakeAsync: vi.fn(async () => undefined),
@@ -181,7 +190,7 @@ describe('Cooking mode (spec 012)', () => {
     await settle();
     expect(keepAwake.deactivateKeepAwake).toHaveBeenCalled();
     expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
-    expect(tracker.track).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false });
+    expect(tracker.track).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false, presentation: 'sheet' });
   });
 
   it('US3: the switch explains it when this browser cannot keep the screen on; it starts off when the setting is off', async () => {
@@ -207,7 +216,7 @@ describe('Cooking mode (spec 012)', () => {
     expect(screen.getByRole('switch', { name: "I'm using a kitchen scale" })).toBeTruthy();
     press('Imperial');
     expect(within(section(0)).getByText(/350 °F \(180 °C\)/)).toBeTruthy();
-    expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial' });
+    expect(tracker.track).toHaveBeenCalledWith('units_toggled', { system: 'imperial', presentation: 'sheet' });
     expect(JSON.parse((await storage.getItem(`cocon.recipe.${gabriel.user_id}.${detail.id}`)) ?? '{}').system ?? null).toBeNull();
     forgetVisitUnits(detail.id);
     fireEvent.click(screen.getByRole('link', { name: 'Unit converter' }));
@@ -398,7 +407,7 @@ describe('Timers in cooking mode (spec 062)', () => {
     expect(timersButton.compareDocumentPosition(options) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     press('Timers');
-    expect(tracker.track).toHaveBeenCalledWith('cook_timers_opened', { timer_count: 0 });
+    expect(tracker.track).toHaveBeenCalledWith('cook_timers_opened', { timer_count: 0, presentation: 'sheet' });
     const sheet = screen.getByRole('dialog', { name: 'Timers' });
     expect(within(sheet).getByText('No timers running. Start one from any recipe step.')).toBeTruthy();
     fireEvent.click(within(sheet).getByRole('button', { name: 'Start a 5 min kitchen timer' }));
@@ -426,5 +435,32 @@ describe('Timers in cooking mode (spec 062)', () => {
     fireEvent.click(within(sheet).getByRole('button', { name: 'Go to step: Blind bake' }));
     expect(screen.queryByRole('dialog', { name: 'Timers' })).toBeNull();
     expect(isCurrent(1)).toBe(true);
+  });
+});
+
+describe('Cooking settings on larger screens (spec 065)', () => {
+  it('opens as a popover under the Settings button, which shows honey while it is open; its events say so', async () => {
+    dims.width = 820;
+    dims.height = 1180;
+    const { tracker } = await setup();
+    press('Cooking options');
+    await act(async () => vi.advanceTimersByTime(10));
+    expect(screen.getByRole('dialog', { name: 'Cooking options' }).dataset.testid).toBe('sheet-popover');
+    expect(screen.getByRole('button', { name: 'Cooking options', hidden: true }).getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(screen.getByRole('switch', { name: 'Screen stays on' }));
+    await settle();
+    expect(tracker.track).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false, presentation: 'popover' });
+    // An outside tap closes it; the button goes back to white.
+    press('Close cooking options');
+    expect(screen.queryByRole('dialog', { name: 'Cooking options' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Cooking options' }).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('stays a bottom sheet on the phone, the button unchanged', async () => {
+    await setup();
+    press('Cooking options');
+    await act(async () => vi.advanceTimersByTime(10));
+    expect(screen.getByRole('dialog', { name: 'Cooking options' }).dataset.testid).toBe('sheet');
+    expect(screen.getByRole('button', { name: 'Cooking options', hidden: true }).getAttribute('aria-expanded')).toBe('false');
   });
 });

@@ -32,6 +32,8 @@ export interface CookLayoutProps {
   onOptions: () => void;
   /** The options button, so its sheet can give focus back to it (spec 030 FR-003). */
   optionsRef?: Ref<HostInstance>;
+  /** Its popover is open (honey fill, spec 065). */
+  optionsExpanded?: boolean;
   /** The CookProgress bar with "Step N of M". */
   progress: ReactNode;
   /** The CookSections. */
@@ -63,7 +65,7 @@ export interface CookLayoutProps {
  * on the last) are ink, so they never pass for Back or Next.
  */
 export function CookLayout(props: CookLayoutProps) {
-  const { exitLabel, onExit, status, timersLabel, onTimers, timersRef, optionsLabel, onOptions, optionsRef, progress, children, endLabel, backLabel, onBack, backExits, nextLabel, onNext, nextFinishes, scrollRef, onScroll, onViewportLayout, snapOffsets } = props;
+  const { exitLabel, onExit, status, timersLabel, onTimers, timersRef, optionsLabel, onOptions, optionsRef, optionsExpanded, progress, children, endLabel, backLabel, onBack, backExits, nextLabel, onNext, nextFinishes, scrollRef, onScroll, onViewportLayout, snapOffsets } = props;
   // The ✕ sits where the TopBar of the loading state put it, so it doesn't jump when the steps arrive.
   const top = useTopEdge();
   return (
@@ -74,7 +76,7 @@ export function CookLayout(props: CookLayoutProps) {
           <View className="min-w-0 flex-shrink flex-row items-center justify-end gap-8">
             {status}
             {timersLabel && onTimers ? <IconButton ref={timersRef} variant="round" icon="timer" label={timersLabel} onPress={onTimers} /> : null}
-            <IconButton ref={optionsRef} variant="round" icon="settings" label={optionsLabel} onPress={onOptions} />
+            <IconButton ref={optionsRef} variant="round" icon="settings" label={optionsLabel} expanded={optionsExpanded} onPress={onOptions} />
           </View>
         </View>
         <View className="px-4">{progress}</View>
