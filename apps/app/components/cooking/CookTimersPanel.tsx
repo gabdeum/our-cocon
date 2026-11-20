@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Text } from '@cocon/ui';
 import { strings } from '../../strings/en';
 import { useTimers } from '../../lib/timer-store';
@@ -14,7 +14,8 @@ export interface CookTimersPanelProps {
 
 /**
  * Cooking mode's timers panel from 600 (spec 066 FR-002, OC-CookResponsive): the Timers screen,
- * always open. Every timer on this device (all recipes), the quick timers, then the footnote.
+ * always open. Every timer on this device (all recipes), the quick timers, then the footnote. The
+ * title and the running count stay at the top while the rest scrolls.
  */
 export function CookTimersPanel({ linkFor }: CookTimersPanelProps) {
   const { timers } = useTimers();
@@ -22,8 +23,8 @@ export function CookTimersPanel({ linkFor }: CookTimersPanelProps) {
   useSeenDone(true);
   const running = timers.filter((t) => t.state === 'running').length;
   return (
-    <View role="region" aria-label={copy.title} className="gap-12">
-      <View>
+    <View role="region" aria-label={copy.title} className="flex-1">
+      <View className="pb-12">
         <Text size={22} weight="900" role="heading" aria-level={2}>
           {copy.title}
         </Text>
@@ -31,10 +32,12 @@ export function CookTimersPanel({ linkFor }: CookTimersPanelProps) {
           {copy.summary(running, timers.length)}
         </Text>
       </View>
-      <TimerList linkFor={linkFor} panel />
-      <Text variant="caption" color="ink-muted" align="center">
-        {copy.footnote}
-      </Text>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerClassName="gap-12">
+        <TimerList linkFor={linkFor} panel />
+        <Text variant="caption" color="ink-muted" align="center">
+          {copy.footnote}
+        </Text>
+      </ScrollView>
     </View>
   );
 }

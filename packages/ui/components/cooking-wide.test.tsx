@@ -1,7 +1,7 @@
 // Spec 066: the step list beside cooking mode from 960, and a step's photo seen full screen.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { CookStepList } from './CookStepList';
+import { CookStepList, stepListScroll } from './CookStepList';
 import { PhotoViewer, StepPhoto } from './PhotoViewer';
 import { TimePresets } from './TimePresets';
 
@@ -27,6 +27,17 @@ describe('CookStepList', () => {
     expect(rows[2]?.textContent).toBe('3Step 3');
     fireEvent.click(rows[2] as HTMLElement);
     expect(onSelect).toHaveBeenCalledWith(2);
+  });
+
+  it('scrolls to the current row only when it is out of sight, centring it', () => {
+    const view = { y: 0, height: 400 };
+    expect(stepListScroll({ y: 120, height: 56 }, view)).toBeNull();
+    // Step 10, below the list's bottom: centred.
+    expect(stepListScroll({ y: 600, height: 56 }, view)).toBe(428);
+    // Half hidden at the bottom counts as out of sight.
+    expect(stepListScroll({ y: 380, height: 56 }, view)).toBe(208);
+    // Above, after scrolling down: back up, never past the top.
+    expect(stepListScroll({ y: 40, height: 56 }, { y: 300, height: 400 })).toBe(0);
   });
 });
 

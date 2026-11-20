@@ -988,8 +988,8 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           numbered={(n) => `Step ${n}`}
           steps={[
             { name: 'Preheat and line', time: null, label: 'Go to step 1: Preheat and line' },
-            { name: 'Blind bake', time: '11:42', label: 'Go to step 2: Blind bake, timer 11:42' },
-            { name: 'Cook the filling', time: null, label: 'Go to step 3: Cook the filling' },
+            { name: 'Blind bake', time: '11:42', running: true, label: 'Go to step 2: Blind bake, timer 11:42' },
+            { name: 'Cook the filling', time: '10:00', label: 'Go to step 3: Cook the filling, timer 10:00' },
             { name: null, time: null, label: 'Go to step 4' },
           ]}
         />

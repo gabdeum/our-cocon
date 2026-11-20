@@ -550,17 +550,21 @@ describe('Cooking mode on larger screens (spec 066)', () => {
     wide(1180, 820);
     const { tracker } = await setup();
     // Only the list's rows go to a step: no bars.
-    expect(screen.getAllByRole('button', { name: /^Go to step 3/ })).toEqual([within(stepList()).getByRole('button', { name: 'Go to step 3: Cook the filling' })]);
+    expect(screen.getAllByRole('button', { name: /^Go to step 3/ })).toEqual([within(stepList()).getByRole('button', { name: 'Go to step 3: Cook the filling, timer 08:00' })]);
     expect(screen.getByText('Tap a step to jump to it')).toBeTruthy();
     expect(within(stepList()).getByRole('button', { name: 'Go to step 1: Preheat and line' }).getAttribute('aria-current')).toBe('step');
-    // A running step timer shows its time in its row.
+    // A step timer shows its time in its row before it starts, then what's left once it runs.
+    const row2 = () => within(stepList()).getByRole('button', { name: /^Go to step 2: Blind bake, timer / });
+    expect(row2().getAttribute('aria-label')).toBe('Go to step 2: Blind bake, timer 12:00');
     fireEvent.click(within(section(1)).getByRole('button', { name: 'Start timer' }));
-    expect(within(stepList()).getByRole('button', { name: 'Go to step 2: Blind bake, timer 12:00' })).toBeTruthy();
+    expect(row2().getAttribute('aria-label')).toBe('Go to step 2: Blind bake, timer 12:00');
+    await act(async () => void vi.advanceTimersByTime(2000));
+    expect(row2().getAttribute('aria-label')).toBe('Go to step 2: Blind bake, timer 11:58');
 
-    fireEvent.click(within(stepList()).getByRole('button', { name: 'Go to step 5: Bake' }));
+    fireEvent.click(within(stepList()).getByRole('button', { name: 'Go to step 5: Bake, timer 35:00' }));
     expect(isCurrent(4)).toBe(true);
     expect(screen.getByText(`Step 5 of ${STEPS}`)).toBeTruthy();
-    expect(within(stepList()).getByRole('button', { name: 'Go to step 5: Bake' }).getAttribute('aria-current')).toBe('step');
+    expect(within(stepList()).getByRole('button', { name: 'Go to step 5: Bake, timer 35:00' }).getAttribute('aria-current')).toBe('step');
     expect(tracker.track).toHaveBeenCalledWith('cook_step_jump', { source: 'step_list', from: 1, to: 5 });
     await expectAccessible();
   });

@@ -41,7 +41,7 @@ export interface CookLayoutProps {
   optionsExpanded?: boolean;
   /** The CookProgress bar with "Step N of M". */
   progress: ReactNode;
-  /** From 600: the timers panel on the right, 290 (320 from 960), scrolling on its own (spec 066 FR-002). */
+  /** From 600: the timers panel on the right, 290 (320 from 960), full height; it brings its own scrolling (spec 066 FR-002). */
   panel?: ReactNode;
   /** From 960: the CookStepList on the left (spec 066 FR-003). */
   stepList?: ReactNode;
@@ -155,9 +155,9 @@ export function CookLayout(props: CookLayoutProps) {
           </View>
         </View>
         {wide && panel ? (
-          <ScrollView showsVerticalScrollIndicator={false} className="flex-none" style={{ width: tier === 'expanded' ? theme.layout.panelExpanded : theme.layout.panelMedium }} contentContainerClassName="gap-12">
+          <View className="flex-none" style={{ width: tier === 'expanded' ? theme.layout.panelExpanded : theme.layout.panelMedium }}>
             {panel}
-          </ScrollView>
+          </View>
         ) : null}
       </View>
       <ToastHost />

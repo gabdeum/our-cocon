@@ -288,11 +288,16 @@ function Cooking({
     };
   };
 
-  // The step list's times: each step's own timer while it runs or is paused (spec 066 FR-003).
-  const stepTimes: Record<string, string> = {};
+  // The step list's times (spec 066 FR-003): what's left of a started step timer, else its full length.
+  const started: Record<string, Timer> = {};
   for (const t of timers) {
-    if (t.recipeId === recipe.id && t.stepId && t.state !== 'done') stepTimes[t.stepId] = clock(remaining(t, timersNow));
+    if (t.recipeId === recipe.id && t.stepId && t.state !== 'done') started[t.stepId] = t;
   }
+  const stepTime = (step: (typeof steps)[number]) => {
+    const t = started[step.id];
+    if (t) return { time: clock(remaining(t, timersNow)), running: t.state === 'running' };
+    return { time: step.timer ? clock(step.timer.seconds) : null, running: false };
+  };
   // "Serves 6 · Classic" from 600; the version only when the recipe has some.
   const versionName = recipe.variants.some((v) => v.kind === 'version') ? (recipe.variants.find((v) => v.id === choices.version)?.name ?? p.classic) : null;
   // FR-004: a small square beside the step's title, only when it has a photo.
@@ -338,8 +343,8 @@ function Cooking({
             onSelect={pick('step_list')}
             numbered={c.unnamedStep}
             steps={steps.map((step, i) => {
-              const time = stepTimes[step.id] ?? null;
-              return { name: step.name, time, label: c.stepRow(i + 1, step.name, time) };
+              const { time, running } = stepTime(step);
+              return { name: step.name, time, running, label: c.stepRow(i + 1, step.name, time) };
             })}
           />
         ) : null

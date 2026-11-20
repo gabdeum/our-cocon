@@ -24,7 +24,7 @@ The cooking-mode frame (Patterns.md › Cooking mode, OC-Cook): a fixed header, 
 | Header | padding safe area + `layout-top-wide` (24) / 20 / 12. Exit · the recipe's name 20/900 (−0.3) with "Serves 6 · Classic" 14/700 ink-muted under it · Settings. No Timers button and no pill: the panel shows them |
 | Body | padding 16 20 20, gap 16, in a row: (from 960) the CookStepList, the steps, the timers panel |
 | Steps | column up to `layout-reading` (640), centred, padding 0 8; the footer under it at the same width, padding 12 8 0, no border |
-| Panel | `layout-panel-medium` (290), `layout-panel-expanded` (320) from 960; scrolls on its own, gap 12 |
+| Panel | `layout-panel-medium` (290), `layout-panel-expanded` (320) from 960, full height; the content brings its own scrolling, so a title can stay at the top (cooking mode: "Timers" and the running count) |
 | `CookSection` | min height 60 % of the window, never under 500, so the next step peeks below |
 | Progress | from 960 only the "Step N of M" line (the step list replaces the bars) |
 

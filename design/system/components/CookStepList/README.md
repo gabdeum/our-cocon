@@ -11,7 +11,7 @@ Every step of the recipe beside cooking mode from 960 (spec 066, OC-CookResponsi
 | Row | min height 56, `radius-lg` (16), padding 6 10, gap 12, 2 px transparent border; a button |
 | Badge | 32 round, number 15/900. Current: `olive`, white number. Done: `olive-muted` with a 16 check. To do: `surface-soft` |
 | Name | 16, 800 (current 900); ink, done ones ink-muted; the step number's "Step N" when it has no name |
-| Time | while the step's timer runs or is paused: ink pill, 13/900 `on-ink` tabular, padding 3 8 |
+| Time | when the step has a timer: 13/900 tabular, padding 3 8, pill. Running: `ink` with `on-ink` text, what's left. Not started or paused: `line-strong` with `ink-muted` text (the full time, or what's left) |
 
 ## States
 
@@ -19,5 +19,6 @@ Current: `surface-soft` fill, 2 px `olive` border, `aria-current="step"`. Presse
 
 ## Rules
 
-- A row's screen-reader label is "Go to step 3: Bake", plus ", timer 12:30" while its timer shows.
+- A row's screen-reader label is "Go to step 3: Bake", plus ", timer 12:30" when it has a timer.
 - Tapping a row scrolls the steps to it, smoothly (instantly with Reduce Motion), like the bars.
+- The list keeps the current row in sight: when it changes, or on opening at a later step, the list scrolls to centre it if it isn't fully shown.
