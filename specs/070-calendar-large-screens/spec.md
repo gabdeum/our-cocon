@@ -26,7 +26,7 @@ Screen: `design/screens/OC-CalendarResponsive.dc.html` (pass `w`/`h`/`view`: mon
 | Event | Properties |
 | --- | --- |
 | `calendar_day_selected` | view, source (grid, mini_month, coming_up) |
-| `calendar_filter_changed` (existing) | + source `chips` |
+| `calendar_member_filter_changed` (existing) | + source (menu, chips) |
 
 ## Needs your attention
 - The Agenda view isn't designed for large screens yet; at ≥ 600 it can reuse the medium Day layout per day. Not in this spec.
@@ -34,3 +34,10 @@ Screen: `design/screens/OC-CalendarResponsive.dc.html` (pass `w`/`h`/`view`: mon
 ## Changelog
 - 2026-11-19: Ready.
 - 2026-11-19: FR-005 changed with Gabriel: tapping a day in Week keeps today's behaviour, the same as Month (the day sheet), instead of opening Day view.
+- 2026-11-20: Built. Header from 600 with the views as a segmented control (`SegmentedControl` `hug`), people chips (`MemberFilterChip`) and "+ Event", which replaces the floating add button (032-later L160). Month from 600 shows the selected day in a panel instead of the day sheet (L161): under the grid at medium (rows 124, two columns read by column), 320 beside it at expanded (rows share the height, at least 96). Week from 600: 44 px hours, "Sun 25" heads, "who · time" kept on side-by-side cards. Day from 600: bands in two columns read by column; from 960 a 300 px side column with `MiniMonth` and "Coming up" (`ComingUpRow`). New token `layout-day-aside` (300). Events: `calendar_day_selected`; `calendar_member_filter_changed` gains `source` (the spec called it `calendar_filter_changed`; it's the existing event, and the phone's popover sends `menu`). Deviations:
+  - Month from 600 shows one month at a time (‹ ›, Today and a swipe page it) instead of the continuous scroll, so the panel can sit under the grid and the rows can fill the height. Paging selects today in this month, else the 1st; switching to Week or Day opens on the selected day.
+  - The 058 Reminders toggle isn't drawn from 600: it sits after the views in Day and Agenda, and beside the panel's title in Month.
+  - Month's first-visit hint points at the floating add button, so it doesn't show from 600 (L167).
+  - The title is the longest format that fits at 32 px beside the buttons: at 600–700 a long day reads "Wed, Sep. 30".
+  - The mini month shows the month of the day Day view shows (FR-007's "current month"), so it follows you into the next month.
+  - Agenda from 600 gets the new header only (L166).

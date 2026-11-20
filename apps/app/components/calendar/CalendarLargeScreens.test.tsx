@@ -115,8 +115,12 @@ describe('Month from 600 (spec 070 FR-003/FR-004)', () => {
     expect(panel('Tuesday, October 27').textContent).toContain('Nothing planned yet.');
     expect(screen.getByRole('button', { name: /^October 27: / }).getAttribute('aria-pressed')).toBe('true');
 
+    const grid = screen.getByRole('button', { name: /^October 1: / }).parentElement?.parentElement?.parentElement;
     fireEvent.click(screen.getByRole('button', { name: /^October 28: / }));
     expect(screen.queryByRole('dialog')).toBeNull();
+    // The grid stays as it was: same month, same element, nothing paged or scrolled away.
+    expect(screen.getAllByRole('heading')[0]?.textContent).toBe('October');
+    expect(screen.getByRole('button', { name: /^October 1: / }).parentElement?.parentElement?.parentElement).toBe(grid);
     const day = panel('Wednesday, October 28');
     expect(day.textContent).toContain('2 events');
     expect(within(day).getAllByRole('link').map((r) => r.getAttribute('aria-label'))).toEqual(['Baby swim, Gabriel, 14:30', 'Yoga, Eva, Evening']);
@@ -150,6 +154,18 @@ describe('Month from 600 (spec 070 FR-003/FR-004)', () => {
     fireEvent.click(screen.getByRole('button', { name: /^October 29: / }));
     expect(panel('Thursday, October 29').textContent).toContain('1 event');
     expect(screen.queryByText('Got it')).toBeNull();
+  });
+});
+
+describe('event detail and add from 600 (spec 070 FR-008)', () => {
+  it("the panel's rows open the event, and its add button Add event, both pages that show as 065's centred cards", async () => {
+    const onOpenEvent = vi.fn();
+    const { onAddEvent } = await setup({ onOpenEvent });
+    fireEvent.click(screen.getByRole('button', { name: /^October 28: / }));
+    fireEvent.click(within(panel('Wednesday, October 28')).getByRole('link', { name: 'Baby swim, Gabriel, 14:30' }));
+    expect(onOpenEvent).toHaveBeenCalledWith(events[0]?.id, '2026-10-28');
+    fireEvent.click(screen.getByRole('button', { name: 'Add event on Wednesday, October 28' }));
+    expect(onAddEvent).toHaveBeenCalledWith('2026-10-28');
   });
 });
 
