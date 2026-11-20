@@ -139,7 +139,7 @@ export function ToastHost({ base = false }: { base?: boolean }) {
   if (!ctx || !toast || ctx.top !== id) return null;
   return (
     <View pointerEvents="box-none" className="absolute left-0 right-0 top-12 z-50 items-center px-16" style={{ marginTop: insets?.top ?? 0 }}>
-      <View className="w-full rounded-[18px]" style={{ maxWidth: theme.layout.maxWidth - 32, boxShadow: theme.shadow.lift }}>
+      <View className="w-full rounded-[18px]" style={{ maxWidth: theme.layout.phoneMax - 32, boxShadow: theme.shadow.lift }}>
         <StatusBanner
           key={toast.key}
           message={toast.text}

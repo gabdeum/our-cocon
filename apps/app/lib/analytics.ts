@@ -15,6 +15,7 @@ export function posthogTransport(config: AppConfig): AnalyticsTransport | null {
     identify: (userId) => posthog.identify(userId),
     group: (type, id) => posthog.group(type, id),
     reset: () => posthog.reset(),
+    register: (props) => void posthog.register(props as Parameters<PostHog['register']>[0]),
   };
 }
 

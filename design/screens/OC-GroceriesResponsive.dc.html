@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Groceries (responsive)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+  <sc-if value="{{rail}}" hint-placeholder-val="{{false}}">
+    <div style="width: 104px; flex: none">
+      <dc-import name="OC-NavResponsive" active="groceries" mode="rail" w="104" h="{{H}}" hint-size="104px,820px"></dc-import>
+    </div>
+  </sc-if>
+
+  <div style="{{scrollStyle}}">
+    <div style="{{pageStyle}}">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px">
+        <div style="min-width: 0">
+          <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px">Groceries</h1>
+          <div style="font-size: 15px; font-weight: 700; color: #5A503A">{{remaining}} to buy · shared with family</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; flex: none">
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; background: #D9E3A8; padding: 7px 12px; border-radius: 999px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #5A6820"></span>Eva is shopping</span>
+          <button onClick="{{flip}}" aria-label="Grocery settings (store: {{storeName}})" style="width: 48px; height: 48px; flex: none; border-radius: 50%; border: none; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 14px rgba(42,36,20,0.18)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px">
+        <label for="add" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Add an item</label>
+        <input id="add" placeholder="Add an item, e.g. 2 lemons" style="flex: 1; min-width: 0; height: 54px; box-sizing: border-box; border-radius: 18px; border: 2px solid #EEDFB5; background: #FFFFFF; padding: 0 16px; font-size: 16px; color: #2A2414">
+        <button aria-label="Add item" style="width: 54px; height: 54px; flex: none; border-radius: 18px; border: none; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+
+      <!-- Recipe cards: inline on phone and portrait, side panel from 960 -->
+      <sc-if value="{{noPanel}}" hint-placeholder-val="{{true}}">
+        <div style="{{recipeGrid}}">
+          <sc-for list="{{recipes}}" as="rc" hint-placeholder-count="2">
+            <div style="display: flex; align-items: center; background: #FFF0C9; border-radius: 18px">
+              <a href="OC-RecipeResponsive.dc.html" style="flex: 1; min-width: 0; display: flex; gap: 10px; align-items: center; padding: 10px 0 10px 12px; text-decoration: none; color: #2A2414">
+                <span style="{{rc.thumb}}"></span>
+                <span style="flex: 1; min-width: 0"><span style="display: block; font-size: 15px; font-weight: 800">{{rc.name}}</span><span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A">{{rc.meta}}</span></span>
+              </a>
+              <a href="#" aria-label="More for {{rc.name}}" style="width: 48px; height: 60px; flex: none; display: flex; align-items: center; justify-content: center; color: #2A2414"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></a>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <div style="{{aisleWrap}}">
+        <sc-for list="{{aisleCols}}" as="col" hint-placeholder-count="2">
+        <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+        <sc-for list="{{col.aisles}}" as="a" hint-placeholder-count="2">
+          <section style="display: flex; flex-direction: column; gap: 6px">
+            <h2 style="margin: 0 4px; font-size: 13px; font-weight: 900; color: #5A503A; text-transform: uppercase; letter-spacing: 0.7px">{{a.name}}</h2>
+            <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden">
+              <sc-for list="{{a.items}}" as="it" hint-placeholder-count="2">
+                <div style="{{it.row}}">
+                  <label style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 10px 0 10px 14px; min-height: 60px; box-sizing: border-box; cursor: pointer">
+                    <input type="checkbox" checked="{{it.done}}" onChange="{{it.toggle}}" style="width: 26px; height: 26px; accent-color: #5A6820; flex: none; margin: 0">
+                    <span style="flex: 1; min-width: 0">
+                      <span style="{{it.nameStyle}}">{{it.name}}<span style="font-weight: 700">: {{it.buy}}</span><sc-if value="{{it.hasNeed}}" hint-placeholder-val="{{false}}"><span style="font-weight: 600; color: #5A503A"> (need {{it.need}})</span></sc-if></span>
+                      <sc-if value="{{it.hasSource}}" hint-placeholder-val="{{true}}"><span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A; line-height: 1.35">{{it.source}}</span></sc-if>
+                    </span>
+                  </label>
+                  <button aria-label="Edit {{it.name}}" style="width: 44px; height: 44px; flex: none; margin-right: 4px; border: none; background: none; color: #5A503A; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+        </sc-for>
+        </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{noPanel}}" hint-placeholder-val="{{true}}">
+        <div style="{{clearRow}}">
+          <button onClick="{{clearDone}}" style="height: 52px; padding: 0 22px; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-size: 16px; font-weight: 800; cursor: pointer">Clear done</button>
+          <button style="height: 52px; padding: 0 22px; border-radius: 999px; border: 2px solid #9A3412; background: #FFFFFF; color: #9A3412; font-size: 16px; font-weight: 800">Clear all</button>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- ≥ 960: recipes, store and clear actions move to a side panel -->
+  <sc-if value="{{showPanel}}" hint-placeholder-val="{{false}}">
+    <aside style="width: 290px; flex: none; box-sizing: border-box; padding: 28px 20px 20px 0; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 900; color: #5A503A; text-transform: uppercase; letter-spacing: 0.7px">From recipes</h2>
+      <sc-for list="{{recipes}}" as="rc" hint-placeholder-count="2">
+        <div style="display: flex; align-items: center; background: #FFF0C9; border-radius: 18px">
+          <a href="OC-RecipeResponsive.dc.html" style="flex: 1; min-width: 0; display: flex; gap: 10px; align-items: center; padding: 10px 0 10px 12px; text-decoration: none; color: #2A2414">
+            <span style="{{rc.thumb}}"></span>
+            <span style="flex: 1; min-width: 0"><span style="display: block; font-size: 15px; font-weight: 800">{{rc.name}}</span><span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A">{{rc.meta}}</span></span>
+          </a>
+          <a href="#" aria-label="More for {{rc.name}}" style="width: 44px; height: 60px; flex: none; display: flex; align-items: center; justify-content: center; color: #2A2414"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></a>
+        </div>
+      </sc-for>
+      <span style="flex: 1"></span>
+      <button onClick="{{clearDone}}" style="height: 52px; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-size: 16px; font-weight: 800; cursor: pointer">Clear done</button>
+      <button style="height: 52px; border-radius: 999px; border: 2px solid #9A3412; background: #FFFFFF; color: #9A3412; font-size: 16px; font-weight: 800">Clear all</button>
+    </aside>
+  </sc-if>
+
+  <sc-if value="{{bar}}" hint-placeholder-val="{{true}}">
+    <div style="{{barWrap}}">
+      <dc-import name="OC-NavResponsive" active="groceries" mode="bar" w="{{W}}" h="160" timers="false" hint-size="390px,160px"></dc-import>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"w":{"editor":"number","default":390},"h":{"editor":"number","default":844},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { done: { bread: true }, store: 'us', cleared: {} };
+    this.data = [
+      { name: 'Produce', items: [
+        { id: 'apples', name: 'Apple', source: 'Added by Eva', need: '6 pieces', us: '6 pieces', eu: '6 pieces' },
+        { id: 'leek', name: 'Leek', source: 'In recipe: white and light green parts', need: '2 pieces', us: '2 pieces', eu: '2 pieces' }
+      ]},
+      { name: 'Bakery', items: [
+        { id: 'bread', name: 'Sourdough loaf', source: 'Added by Gabriel', need: '1 piece', us: '1 piece', eu: '1 piece' }
+      ]},
+      { name: 'Dairy & eggs', items: [
+        { id: 'butter', name: 'Butter', source: 'In recipes: for the pan · cold, cubed', need: '120 g', us: '1 pack · 4 sticks', eu: '1 pack · 250 g' },
+        { id: 'cheese', name: 'Gruyère', source: 'In recipe: grated', need: '100 g', us: '6 oz wedge', eu: '1 pack · 200 g' },
+        { id: 'cream', name: 'Heavy cream', source: 'In recipe: cold', need: '300 ml', us: '1 pint carton', eu: '2 × 20 cl' }
+      ]},
+      { name: 'Other', items: [
+        { id: 'gochu', name: 'Gochujang', source: 'Added by Eva', need: '3 tbsp', us: '2 fl oz', eu: '50 ml' },
+        { id: 'guanc', name: 'Guanciale', source: 'In recipe: cut into strips', need: '400 g', us: '1 lb', eu: '400 g' },
+        { id: 'zaatar', name: "Za'atar", source: '', need: '50 g', us: '2 oz', eu: '50 g' }
+      ]}
+    ];
+  }
+  renderVals() {
+    var self = this, s = this.state, us = s.store === 'us', remaining = 0;
+    var W = parseInt(this.props.w, 10) || 390, H = parseInt(this.props.h, 10) || 844;
+    var rail = W >= 960, mainW = rail ? W - 104 : W, cols = mainW >= 600 ? 2 : 1;
+    var aisles = this.data.map(function (a) {
+      var items = a.items.filter(function (it) { return !s.cleared[it.id]; });
+      return { name: a.name, items: items.map(function (it, i) {
+        var d = !!s.done[it.id], buy = us ? it.us : it.eu;
+        if (!d) remaining++;
+        return {
+          name: it.name, buy: buy, need: it.need, hasNeed: buy !== it.need, source: it.source, hasSource: !!it.source, done: d,
+          row: 'display: flex; align-items: center' + (i < items.length - 1 ? '; border-bottom: 1.5px solid #F2E6C4' : ''),
+          nameStyle: 'display: block; font-size: 16px; font-weight: 800; ' + (d ? 'text-decoration: line-through; color: #8F866C' : 'color: #2A2414'),
+          toggle: function () { var n = Object.assign({}, self.state.done); n[it.id] = !d; self.setState({ done: n }); }
+        };
+      }) };
+    }).filter(function (a) { return a.items.length; });
+    var seg = function (on) { return 'height: 44px; border-radius: 11px; border: none; font-size: 15px; cursor: pointer; color: #2A2414; ' + (on ? 'background: #FFFFFF; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)' : 'background: transparent; font-weight: 700; color: #5A503A'); };
+    return {
+      W: W, H: H, rail: rail, bar: !rail, noPanel: true, showPanel: false,
+      rootStyle: 'width: ' + W + 'px; height: ' + H + 'px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: Nunito, sans-serif; display: flex; position: relative; overflow: hidden',
+      scrollStyle: 'flex: 1; min-width: 0; height: ' + H + 'px; overflow-y: auto',
+      pageStyle: 'max-width: ' + (W >= 600 ? 1200 : 560) + 'px; margin: 0 auto; box-sizing: border-box; padding: ' + (W < 500 ? 54 : 24) + 'px ' + (W >= 600 ? 24 : 20) + 'px ' + (rail ? 28 : 180) + 'px; display: flex; flex-direction: column; gap: 14px',
+      recipeGrid: 'display: grid; grid-template-columns: repeat(' + cols + ', minmax(0, 1fr)); gap: 10px',
+      aisleWrap: 'display: grid; grid-template-columns: repeat(' + cols + ', minmax(0, 1fr)); gap: 14px; align-items: start',
+      aisleCols: (function () {
+        // Read by column: fill the first column top to bottom, then the next, splitting where heights balance.
+        var out = [], total = 0, acc = 0, k = 0;
+        for (var c = 0; c < cols; c++) out.push({ aisles: [] });
+        aisles.forEach(function (a) { total += a.items.length + 1; });
+        aisles.forEach(function (a) {
+          var wgt = a.items.length + 1;
+          if (k < cols - 1 && out[k].aisles.length && acc + wgt / 2 > total * (k + 1) / cols) k++;
+          out[k].aisles.push(a); acc += wgt;
+        });
+        return out;
+      })(),
+      clearRow: 'display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px' + (cols === 2 ? '; width: 100%; max-width: 420px; margin: 0 auto' : ''),
+      barWrap: 'position: absolute; left: 0; bottom: 0; width: ' + W + 'px; height: 160px',
+      recipes: [
+        { name: 'Leek & bacon quiche', meta: '3 items on the list · serves 6', thumb: 'width: 40px; height: 40px; flex: none; border-radius: 12px; background: #F5D9A8' },
+        { name: 'Pumpkin soup', meta: '2 items on the list · serves 4', thumb: 'width: 40px; height: 40px; flex: none; border-radius: 12px; background: #FFCF5C' }
+      ],
+      aisles: aisles, remaining: remaining + (remaining === 1 ? ' item' : ' items'),
+      storeName: us ? 'US' : 'Europe',
+      usOn: us ? 'true' : 'false', euOn: us ? 'false' : 'true', usStyle: seg(us), euStyle: seg(!us),
+      setUs: function () { self.setState({ store: 'us' }); }, setEu: function () { self.setState({ store: 'eu' }); },
+      flip: function () { self.setState({ store: us ? 'eu' : 'us' }); },
+      clearDone: function () { var c = Object.assign({}, self.state.cleared); Object.keys(self.state.done).forEach(function (k) { if (self.state.done[k]) c[k] = true; }); self.setState({ cleared: c, done: {} }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,7 +1,9 @@
-import { useState, type ReactNode, type Ref } from 'react';
-import { ScrollView, View, type ScrollViewInstance } from 'react-native';
+import { useContext, useState, type ReactNode, type Ref } from 'react';
+import { Platform, ScrollView, View, type ScrollViewInstance } from 'react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
 import { cn } from '../cn';
+import { useLayoutTier } from '../layout';
 import { theme } from '../theme';
 import { Logo } from './Icon';
 import { Tag } from './Tag';
@@ -10,17 +12,30 @@ import { ToastHost } from './Toast';
 import { TopBarHeadingProvider, useTopBar, useTopEdge, type TopBarConfig } from './TopBar';
 
 /**
- * The app's frame: cream ground, and on the web the mobile layout centred at max 720 wide
- * (constitution, Layout decision). Everything, the tab bar included, sits inside it.
+ * The app's frame: cream ground, everything (the tab bar included) inside it. On the web the phone
+ * layout is centred at max 560 below 600 wide, and wider windows grow up to 1200, then centre
+ * (spec 063 FR-005). The iPhone and iPad app always fill the window.
  */
 export function AppFrame({ children }: { children: ReactNode }) {
+  const { tier } = useLayoutTier();
+  const maxWidth = Platform.OS !== 'web' ? undefined : tier === 'compact' ? theme.layout.phoneMax : theme.layout.maxContent;
   return (
     <View className="flex-1 bg-surface-page" style={{ alignItems: 'center' }}>
-      <View testID="app-frame" className="w-full flex-1 bg-surface-page" style={{ maxWidth: theme.layout.maxWidth }}>
+      <View testID="app-frame" className="w-full flex-1 bg-surface-page" style={{ maxWidth }}>
         {children}
       </View>
     </View>
   );
+}
+
+/**
+ * From 600 wide (spec 063 FR-003): the 24 gutter, and content 24 under the safe area. Null on the
+ * phone, which keeps each screen's own top and 20 gutter.
+ */
+function useWideEdges() {
+  const { tier } = useLayoutTier();
+  const insets = useContext(SafeAreaInsetsContext);
+  return tier === 'compact' ? null : { top: (insets?.top ?? 0) + theme.layout.topWide };
 }
 
 export interface TabScreenProps {
@@ -37,12 +52,19 @@ export interface TabScreenProps {
  * `pinned`, the status bar area is the page's own band and `pinned` sticks right under it.
  */
 export function TabScreen({ children, className, header, pinned }: TabScreenProps) {
-  const top = useTopEdge(54);
+  const phoneTop = useTopEdge(54);
+  const wide = useWideEdges();
+  const top = wide?.top ?? phoneTop;
   const [at, setAt] = useState(0);
   const [stuck, setStuck] = useState(false);
   if (!pinned) {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-surface-page" contentContainerClassName={cn('gap-18 px-20 pb-[180px] pt-[54px]', className)}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="flex-1 bg-surface-page"
+        contentContainerClassName={cn('gap-18 pb-[180px]', wide ? 'px-24' : 'px-20 pt-[54px]', className)}
+        contentContainerStyle={wide ? { paddingTop: wide.top } : undefined}
+      >
         {children}
       </ScrollView>
     );
@@ -54,7 +76,7 @@ export function TabScreen({ children, className, header, pinned }: TabScreenProp
       key="pinned"
       testID="tab-pinned"
       onLayout={(e) => setAt(e.nativeEvent.layout.y)}
-      className={cn('-mx-20 gap-12 border-b-[1.5px] bg-surface-page px-20 pb-12', stuck ? 'border-line' : 'border-transparent')}
+      className={cn('gap-12 border-b-[1.5px] bg-surface-page pb-12', wide ? '-mx-24 px-24' : '-mx-20 px-20', stuck ? 'border-line' : 'border-transparent')}
       style={{ boxShadow: stuck ? theme.shadow.bar : undefined }}
     >
       {pinned}
@@ -69,7 +91,7 @@ export function TabScreen({ children, className, header, pinned }: TabScreenProp
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-surface-page"
-        contentContainerClassName="gap-18 px-20 pb-[180px]"
+        contentContainerClassName={cn('gap-18 pb-[180px]', wide ? 'px-24' : 'px-20')}
         stickyHeaderIndices={[header ? 1 : 0]}
         // A tap on the pinned part (a quick filter) lands while the keyboard is up.
         keyboardShouldPersistTaps="handled"
@@ -88,6 +110,7 @@ export function TabScreen({ children, className, header, pinned }: TabScreenProp
  */
 export function PushedScreen({ children, className, topBar }: { children: ReactNode; className?: string; topBar?: TopBarConfig }) {
   const bar = useTopBar(topBar);
+  const wide = useWideEdges();
   return (
     <View className="flex-1 bg-surface-page">
       {bar.node}
@@ -97,7 +120,8 @@ export function PushedScreen({ children, className, topBar }: { children: ReactN
           onScroll={bar.onScroll}
           scrollEventThrottle={16}
           className="flex-1 bg-surface-page"
-          contentContainerClassName={cn('gap-18 px-20 pb-28', topBar ? 'pt-18' : 'pt-[54px]', className)}
+          contentContainerClassName={cn('gap-18 pb-28', wide ? 'px-24' : 'px-20', topBar ? 'pt-18' : !wide && 'pt-[54px]', className)}
+          contentContainerStyle={wide && !topBar ? { paddingTop: wide.top } : undefined}
         >
           {children}
         </ScrollView>
@@ -113,10 +137,21 @@ export function PushedScreen({ children, className, topBar }: { children: ReactN
  * scroll clear of the keyboard (spec 030, L98).
  */
 export function FormScreen({ bar, children, scrollRef, scrollEnabled = true }: { bar: ReactNode; children: ReactNode; scrollRef?: Ref<ScrollViewInstance>; scrollEnabled?: boolean }) {
+  const wide = useWideEdges();
   return (
     <View className="flex-1 bg-surface-page">
-      <View className="px-16 pb-[14px] pt-[50px]">{bar}</View>
-      <ScrollView showsVerticalScrollIndicator={false} ref={scrollRef} scrollEnabled={scrollEnabled} className="flex-1" contentContainerClassName="gap-18 px-20 pb-[30px] pt-4" keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+      <View className={cn('pb-[14px]', wide ? 'px-24' : 'px-16 pt-[50px]')} style={wide ? { paddingTop: wide.top } : undefined}>
+        {bar}
+      </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        ref={scrollRef}
+        scrollEnabled={scrollEnabled}
+        className="flex-1"
+        contentContainerClassName={cn('gap-18 pb-[30px] pt-4', wide ? 'px-24' : 'px-20')}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
         {children}
       </ScrollView>
       <ToastHost />
@@ -148,12 +183,13 @@ export interface PhotoScreenProps {
  */
 export function PhotoScreen({ photo, topBar, banner, floating, footer, children }: PhotoScreenProps) {
   const bar = useTopBar(topBar, PHOTO);
+  const wide = useWideEdges();
   return (
     <View className="flex-1">
       <TopBarHeadingProvider value={bar.register}>
         <ScrollView showsVerticalScrollIndicator={false} onScroll={bar.onScroll} scrollEventThrottle={16} className="flex-1 bg-surface-page">
           <View className="h-[240px] overflow-hidden">{photo}</View>
-          <View className={cn('-mt-[30px] gap-18 rounded-t-[30px] bg-surface-page px-20 pt-24', footer ? 'pb-[120px]' : 'pb-[40px]')}>
+          <View className={cn('-mt-[30px] gap-18 rounded-t-[30px] bg-surface-page pt-24', wide ? 'px-24' : 'px-20', footer ? 'pb-[120px]' : 'pb-[40px]')}>
             {banner}
             {children}
           </View>
@@ -210,6 +246,7 @@ export interface PublicScreenProps {
  * header bar with the mark, the name and a tag, then an optional photo and the content. No tab bar.
  */
 export function PublicScreen({ brand, tag, photo, children }: PublicScreenProps) {
+  const wide = useWideEdges();
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-surface-page">
       <View className="h-[64px] flex-row items-center justify-between border-b-[1.5px] border-line bg-surface-card px-16">
@@ -225,7 +262,7 @@ export function PublicScreen({ brand, tag, photo, children }: PublicScreenProps)
         </View>
       </View>
       {photo ? <View className="h-[220px] overflow-hidden">{photo}</View> : null}
-      <View className="gap-16 px-20 pb-[40px] pt-20">{children}</View>
+      <View className={cn('gap-16 pb-[40px] pt-20', wide ? 'px-24' : 'px-20')}>{children}</View>
     </ScrollView>
   );
 }

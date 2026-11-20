@@ -270,7 +270,7 @@ module.exports = {
         "dimmed": "0.4"
       },
       "maxWidth": {
-        "frame": "720px"
+        "frame": "560px"
       }
     }
   },

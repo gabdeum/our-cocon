@@ -99,6 +99,14 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 58 | 060 Reminder tools for AI assistants | 056, 044, 026 | OC-Connect |
 | 59 | 061 Timer alarms that always ring (iOS 26) | 047, 048 | OC-NotifLockDone |
 | 60 | 062 Timers from cooking mode | 011, 012 | OC-Cook |
+| 61 | 063 Responsive foundation: layout tiers, spacing, iPad support | 002, 036 | OC-LargeScreens (UI doc) |
+| 62 | 064 Navigation on larger screens: tab bar, then side rail | 063, 036, 011 | OC-NavResponsive |
+| 63 | 065 Bottom sheets on larger screens: popover or centred card | 063, 002 | OC-SheetPopover, OC-SheetCard |
+| 64 | 066 Cooking mode on larger screens | 063, 065, 012, 010, 011, 062 | OC-CookResponsive |
+| 65 | 067 Recipe page and recipe list on larger screens | 063, 064, 065, 006, 008, 009, 012, 051 | OC-RecipeResponsive |
+| 66 | 068 Home on larger screens | 063, 064, 028, 057 | OC-HomeResponsive |
+| 67 | 069 Groceries on larger screens | 063, 064, 065, 020, 021, 052 | OC-GroceriesResponsive |
+| 68 | 070 Calendar on larger screens: month, week, day | 063, 064, 065, 036, 037, 038, 039, 058 | OC-CalendarResponsive |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
 Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order, then the top bar (050) across every pushed screen.
@@ -113,7 +121,7 @@ All 36 open questions are answered. The specs, UI specs and screens already refl
 | --- | --- | --- |
 | 1 | Language | English only in V1; all copy in one strings file so French can come later |
 | 2 | Backend | Self-hosted Supabase on Hetzner to start (staging, prod); portable to Supabase Cloud |
-| 3 | Layout | Centred mobile layout on web (max 720 px); iPad and desktop later |
+| 3 | Layout | Layout tiers by window width (spec 063): compact < 600 (phone layout, centred at max 560 on the web), medium 600–959, expanded ≥ 960; iPad supported (was: centred mobile layout on web, max 720 px) |
 | 4 | Hosts | `app.`, `mcp.`, `api.ourcocon.com`; `-staging` suffix (`app-staging.`); development is local |
 | 5 | CI | GitHub Actions: lint, type check, tests, dependency audit and secret scan on every push and PR |
 | 6 | Theme | Light only |
@@ -181,3 +189,5 @@ These have no drawn screen; their UI spec is the source of truth: sign-in, set u
 - 2026-11-12: Build order row 53: spec 055, assistants estimate instead of asking (054, links into the iPhone app, is row 52 on its own branch).
 - 2026-11-12: Build order row 52: spec 054, links to any page open the iPhone app (Universal Links), the web app without it.
 - 2026-11-15: Build order rows 54–58: Reminders, specs 056–060 (data and rules, screens, calendar, notifications, assistant tools), from the reminders design handoff.
+- 2026-11-19: Build order rows 61–68: larger screens (iPad and wide web), specs 063–070, from the large-screens design handoff. Layouts only; 063 replaces decision 3's centred 720 px web layout when it ships.
+- 2026-11-19: Decision 3 now the layout tiers (spec 063 shipped).

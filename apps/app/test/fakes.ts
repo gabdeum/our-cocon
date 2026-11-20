@@ -9,7 +9,7 @@ import type { PlacedReminder, StoredEvent } from '@cocon/data';
 export const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
 
 export function fakeTracker() {
-  return { track: vi.fn(), identify: vi.fn(), reset: vi.fn() } satisfies Tracker;
+  return { track: vi.fn(), identify: vi.fn(), reset: vi.fn(), register: vi.fn() } satisfies Tracker;
 }
 
 const ok = <T>(data: T) => Promise.resolve({ ok: true as const, data });

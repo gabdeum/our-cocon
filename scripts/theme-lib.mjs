@@ -17,8 +17,6 @@ export const NUNITO = {
 // Fills that have a pressed state ("darken the fill about 6%", Button README). Derived, not tokens.
 export const PRESSED = ['ink', 'olive', 'honey', 'sage', 'surface-soft', 'surface-card', 'danger'];
 
-export const MAX_WIDTH = 720;
-
 const camel = (name) => name.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
 const px = (value) => {
   const n = Number.parseFloat(value);
@@ -89,7 +87,7 @@ export function themeObject(tokens) {
     text: Object.fromEntries(Object.entries(textStyles(tokens)).map(([k, v]) => [camel(k), v])),
     opacity: byName(tokens.opacity.tokens, 'opacity-', Number),
     font: NUNITO,
-    layout: { maxWidth: MAX_WIDTH },
+    layout: byName(tokens.layout.tokens, 'layout-', px),
   };
 }
 
@@ -147,7 +145,8 @@ export function tailwindTheme(tokens) {
     fontSize,
     fontFamily,
     boxShadow,
-    extend: { opacity, maxWidth: { frame: `${MAX_WIDTH}px` } },
+    // `frame`: the phone layout's width, for cards that stay phone-sized on wider windows (Dialog).
+    extend: { opacity, maxWidth: { frame: tokens.layout.tokens.find((t) => t.name === 'layout-phone-max').value } },
   };
   const rootVars = Object.fromEntries(Object.entries(first).map(([k, v]) => [cssVar(k), v]));
   return `// ${HEADER}

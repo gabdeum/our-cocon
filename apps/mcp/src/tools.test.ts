@@ -20,7 +20,7 @@ const tick = defineTool({ name: 'tick_thing', title: 'Tick', description: 'Ticks
 function context(allowed = true): ToolContext & { track: ReturnType<typeof vi.fn>; rpc: ReturnType<typeof vi.fn> } {
   const track = vi.fn();
   const rpc = vi.fn(async () => ({ data: allowed, error: null }));
-  return { db: { rpc } as unknown as ToolContext['db'], userId: 'u', familyId: 'f', assistant: 'claude', appUrl: 'https://app', tracker: { track, identify: vi.fn(), reset: vi.fn() }, track, rpc };
+  return { db: { rpc } as unknown as ToolContext['db'], userId: 'u', familyId: 'f', assistant: 'claude', appUrl: 'https://app', tracker: { track, identify: vi.fn(), reset: vi.fn(), register: vi.fn() }, track, rpc };
 }
 
 describe('listing', () => {

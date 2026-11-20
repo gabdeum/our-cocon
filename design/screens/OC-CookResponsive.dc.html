@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Cooking mode (responsive)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+
+  <header style="{{headStyle}}">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <a href="#" aria-label="Leave cooking mode, stays in progress" style="text-decoration: none; width: 48px; height: 48px; flex: none; border-radius: 50%; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(42,36,20,0.18)">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </a>
+      <sc-if value="{{showTitle}}" hint-placeholder-val="{{false}}">
+        <div style="flex: 1; min-width: 0">
+          <div style="font-size: 20px; font-weight: 900; letter-spacing: -0.3px">Leek &amp; bacon quiche</div>
+          <div style="font-size: 14px; font-weight: 700; color: #5A503A">Serves 6 · Classic</div>
+        </div>
+      </sc-if>
+      <div style="display: flex; gap: 8px; flex: none">
+        <sc-if value="{{showTimersBtn}}" hint-placeholder-val="{{false}}">
+          <a href="#timers" aria-label="Open all timers" style="width: 48px; height: 48px; flex: none; border-radius: 50%; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(42,36,20,0.18)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></a>
+        </sc-if>
+        <a href="#cook-settings" aria-label="Cooking settings" style="width: 48px; height: 48px; flex: none; border-radius: 50%; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(42,36,20,0.18)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></a>
+      </div>
+    </div>
+    <sc-if value="{{showBars}}" hint-placeholder-val="{{true}}">
+      <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px">
+        <sc-for list="{{bars}}" as="b" hint-placeholder-count="6">
+          <button onClick="{{b.go}}" aria-label="{{b.label}}" style="height: 24px; padding: 8px 0; border: none; background: none; cursor: pointer"><span style="{{b.style}}"></span></button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <span style="font-size: 14px; font-weight: 900; color: #5A6820; text-transform: uppercase; letter-spacing: 0.8px">Step {{num}} of {{total}}</span>
+      <span style="font-size: 14px; font-weight: 700; color: #5A503A">{{hint}}</span>
+    </div>
+  </header>
+
+  <div style="{{bodyStyle}}">
+
+    <!-- Priority 3 (≥ 960 wide): all steps, to jump around -->
+    <sc-if value="{{showRail}}" hint-placeholder-val="{{false}}">
+      <nav aria-label="All steps" style="width: 260px; flex: none; background: #FFFFFF; border-radius: 22px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; overflow-y: auto">
+        <div style="font-size: 13px; font-weight: 900; color: #5A503A; text-transform: uppercase; letter-spacing: 0.7px; padding: 6px 8px 4px">All steps</div>
+        <sc-for list="{{rail}}" as="r" hint-placeholder-count="6">
+          <button onClick="{{r.go}}" aria-current="{{r.aria}}" style="{{r.btn}}">
+            <span style="{{r.badge}}">
+              <sc-if value="{{r.done}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></sc-if>
+              <sc-if value="{{r.notDone}}" hint-placeholder-val="{{true}}">{{r.num}}</sc-if>
+            </span>
+            <span style="{{r.nameStyle}}">{{r.name}}</span>
+            <sc-if value="{{r.hasClock}}" hint-placeholder-val="{{false}}"><span style="flex: none; font-size: 13px; background: #2A2414; color: #FFF8E3; font-weight: 900; padding: 3px 8px; border-radius: 999px; font-variant-numeric: tabular-nums">{{r.clock}}</span></sc-if>
+          </button>
+        </sc-for>
+      </nav>
+    </sc-if>
+
+    <!-- Priority 1 (always): the steps, exactly as on iPhone -->
+    <main style="flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0">
+      <div id="{{scrollId}}" onScroll="{{onScroll}}" style="{{scrollStyle}}">
+        <div style="{{colStyle}}">
+          <sc-for list="{{steps}}" as="s" hint-placeholder-count="6">
+            <section id="{{s.id}}" style="{{s.style}}">
+              <div style="display: flex; align-items: flex-start; gap: 14px">
+                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+                  <div style="font-size: 13px; font-weight: 900; color: #5A6820; text-transform: uppercase; letter-spacing: 0.8px">Step {{s.num}}</div>
+                  <h2 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1">{{s.name}}</h2>
+                </div>
+                <sc-if value="{{s.hasPhoto}}" hint-placeholder-val="{{false}}">
+                  <button aria-label="See the photo for {{s.name}} larger" style="{{photoStyle}}">[Photo]</button>
+                </sc-if>
+              </div>
+              <p style="margin: 0; font-size: 21px; line-height: 1.5; font-weight: 600"><sc-for list="{{s.parts}}" as="pt" hint-placeholder-count="3"><span style="{{pt.style}}">{{pt.text}}</span></sc-for></p>
+
+              <sc-if value="{{s.hasTimer}}" hint-placeholder-val="{{false}}">
+                <div style="background: #2A2414; color: #FFF8E3; border-radius: 26px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+                  <div style="font-size: 14px; font-weight: 700; color: #E6DFC9">{{s.tl}} timer</div>
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <button onClick="{{s.minus}}" aria-label="One minute less" style="width: 48px; height: 48px; flex: none; border-radius: 50%; border: none; background: #3E3622; color: #FFF8E3; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer">−1</button>
+                    <div role="timer" style="flex: 1; text-align: center; font-size: 46px; font-weight: 900; letter-spacing: -1px; font-variant-numeric: tabular-nums; line-height: 1">{{s.clock}}</div>
+                    <button onClick="{{s.plus}}" aria-label="One minute more" style="width: 48px; height: 48px; flex: none; border-radius: 50%; border: none; background: #3E3622; color: #FFF8E3; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer">+1</button>
+                  </div>
+                  <button onClick="{{s.toggle}}" style="height: 54px; border-radius: 999px; border: none; background: #FFCF5C; color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; cursor: pointer">{{s.action}}</button>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{s.hasTemp}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; gap: 10px; align-items: flex-start; background: #D9E3A8; border-radius: 18px; padding: 12px 14px">
+                  <svg aria-hidden="true" style="flex: none; margin-top: 2px" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0Z"/><path d="M12 9v7"/></svg>
+                  <div style="font-size: 16px; font-weight: 700; line-height: 1.4"><b>Temperature check:</b> {{s.temp}}</div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{s.hasTip}}" hint-placeholder-val="{{false}}">
+                <div style="background: #FFF0C9; border-radius: 18px; padding: 12px 14px">
+                  <div style="font-size: 12px; font-weight: 900; color: #8A4B00; text-transform: uppercase; letter-spacing: 0.7px">Chef's tip</div>
+                  <div style="font-size: 16px; font-weight: 600; line-height: 1.4; margin-top: 2px">{{s.tip}}</div>
+                </div>
+              </sc-if>
+            </section>
+          </sc-for>
+          <div style="height: 280px; display: flex; align-items: flex-start; justify-content: center; padding-top: 30px; font-size: 18px; font-weight: 900; color: #5A6820; text-align: center">Bon appétit! Tap Done cooking to log it.</div>
+        </div>
+      </div>
+
+      <!-- Phone: the timer pill floats at the bottom, same place as outside cooking mode -->
+      <sc-if value="{{showPill}}" hint-placeholder-val="{{true}}">
+        <div style="position: relative; height: 0; flex: none; z-index: 5">
+          <a href="#timers" aria-label="{{pill.aria}}" style="position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); height: 50px; box-sizing: border-box; padding: 0 6px 0 14px; border-radius: 999px; background: #FFFFFF; color: #2A2414; text-decoration: none; display: flex; align-items: center; gap: 10px; white-space: nowrap; border: 2px solid #FFCF5C; box-shadow: 0 6px 20px rgba(42,36,20,0.22)">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6820" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+            <span style="font-size: 15px; font-weight: 800">{{pill.name}}</span>
+            <span style="font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums">{{pill.clock}}</span>
+            <sc-if value="{{pill.hasMore}}" hint-placeholder-val="{{false}}"><span style="font-size: 13px; font-weight: 900; background: #FFCF5C; padding: 6px 10px; border-radius: 999px">{{pill.more}}</span></sc-if>
+          </a>
+        </div>
+      </sc-if>
+      <div style="{{footStyle}}">
+        <div style="{{footInner}}">
+          <button onClick="{{prev}}" style="height: 60px; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; cursor: pointer">Back</button>
+          <sc-if value="{{notLast}}" hint-placeholder-val="{{true}}"><button onClick="{{next}}" style="height: 60px; border-radius: 999px; border: none; background: #5A6820; color: #FFFFFF; font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; cursor: pointer">Next step</button></sc-if>
+          <sc-if value="{{isLast}}" hint-placeholder-val="{{false}}"><a href="#" style="height: 60px; border-radius: 999px; background: #5A6820; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900">Done cooking</a></sc-if>
+        </div>
+      </div>
+    </main>
+
+    <!-- Priority 2 (≥ 600 wide): the Timers screen, always open -->
+    <sc-if value="{{showPanel}}" hint-placeholder-val="{{false}}">
+      <aside id="timers" aria-label="Timers" style="{{panelStyle}}">
+        <div>
+          <h2 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.3px">Timers</h2>
+          <div style="font-size: 15px; font-weight: 700; color: #5A503A">{{summary}}</div>
+        </div>
+        <sc-for list="{{timers}}" as="t" hint-placeholder-count="2">
+          <article style="{{t.cardStyle}}">
+            <div style="min-width: 0">
+              <div style="font-size: 16px; font-weight: 900">{{t.name}}</div>
+              <div style="font-size: 13px; font-weight: 700; opacity: 0.8">{{t.recipe}} · {{t.state}}</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px">
+              <button onClick="{{t.minus}}" aria-label="One minute less on {{t.name}}" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: rgba(255,255,255,0.7); color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 900; cursor: pointer">−1</button>
+              <div role="timer" style="flex: 1; text-align: center; font-size: 38px; font-weight: 900; letter-spacing: -1px; font-variant-numeric: tabular-nums; line-height: 1">{{t.clock}}</div>
+              <button onClick="{{t.plus}}" aria-label="One minute more on {{t.name}}" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: rgba(255,255,255,0.7); color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 900; cursor: pointer">+1</button>
+            </div>
+            <div style="height: 6px; border-radius: 3px; background: rgba(42,36,20,0.12)" aria-hidden="true"><div style="{{t.barStyle}}"></div></div>
+            <div style="display: flex; gap: 8px">
+              <button onClick="{{t.toggle}}" style="flex: 1; height: 46px; border-radius: 999px; border: none; background: #2A2414; color: #FFFFFF; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer">{{t.action}}</button>
+              <button onClick="{{t.remove}}" style="height: 46px; padding: 0 14px; border-radius: 999px; border: none; background: rgba(255,255,255,0.7); color: #2A2414; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer">{{t.removeLabel}}</button>
+            </div>
+          </article>
+        </sc-for>
+        <sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+          <div style="padding: 24px 6px; text-align: center; font-size: 15px; font-weight: 700; color: #5A503A">No timers running. Start one from any recipe step.</div>
+        </sc-if>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 13px; font-weight: 900; color: #5A503A; text-transform: uppercase; letter-spacing: 0.7px">Quick timer</div>
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+            <sc-for list="{{quick}}" as="q" hint-placeholder-count="4">
+              <button onClick="{{q.start}}" aria-label="Start a {{q.label}} kitchen timer" style="height: 48px; border-radius: 14px; border: 2px dashed #CDBF95; background: transparent; color: #424D17; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer">{{q.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="font-size: 13px; font-weight: 600; color: #5A503A; text-align: center; line-height: 1.4">Timers keep running when you leave the recipe. You'll hear a chime when one ends.</div>
+      </aside>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"w":{"editor":"number","default":390},"h":{"editor":"number","default":844},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    var Q = function (t) { return { q: t }; };
+    // Same step data as the iPhone. `photo` is optional: only some steps have one.
+    this.steps = [
+      { k: 'line', name: 'Preheat and line', photo: true, parts: ['Preheat the oven to ', Q('180 °C (350 °F)'), '. Line a 23 cm (9 in) tart pan with ', Q('1 sheet of shortcrust pastry (230 g)'), ' and prick the base.'], tip: 'Chill the lined pan for 10 minutes so the edges don’t shrink.' },
+      { k: 'blind', name: 'Blind bake', parts: ['Bake the empty crust for 12 minutes until pale golden.'], timer: 720, tl: 'Blind bake' },
+      { k: 'fill', name: 'Cook the filling', photo: true, parts: ['Melt ', Q('20 g butter'), ' over medium heat. Add ', Q('2 leeks (300 g)'), ' finely sliced and cook until soft, then ', Q('200 g bacon lardons'), ' until golden.'], timer: 480, tl: 'Soften leeks' },
+      { k: 'custard', name: 'Mix the custard', parts: ['Whisk ', Q('3 large eggs (150 g)'), ' with ', Q('300 ml heavy cream'), ' and ', Q('1 pinch of nutmeg'), '. Stir in half of the ', Q('100 g grated Gruyère'), '.'] },
+      { k: 'bake', name: 'Bake', photo: true, parts: ['Spread the filling in the crust, pour over the custard and top with the rest of the cheese.'], timer: 2100, tl: 'Bake', temp: 'the center should reach 71 °C (160 °F) and barely wobble.', tip: 'If the top browns too fast, cover it loosely with foil.' },
+      { k: 'rest', name: 'Rest', parts: ['Let it rest for 10 minutes before slicing.'], timer: 600, tl: 'Rest' }
+    ];
+    this.qid = 1;
+    this.state = {
+      i: 2,
+      order: ['blind', 'simmer'],
+      timers: {
+        blind: { left: 702, total: 720, running: true, started: true, name: 'Blind bake', recipe: 'Leek & bacon quiche' },
+        simmer: { left: 0, total: 1200, running: false, started: true, name: 'Simmer', recipe: 'Pumpkin soup' }
+      }
+    };
+  }
+  componentDidMount() {
+    var self = this;
+    this.tick = setInterval(function () {
+      var t = self.state.timers, n = {}, ch = false;
+      Object.keys(t).forEach(function (k) {
+        var v = t[k];
+        if (v.running && v.left > 0) { n[k] = Object.assign({}, v, { left: v.left - 1, running: v.left - 1 > 0 }); ch = true; } else n[k] = v;
+      });
+      if (ch) self.setState({ timers: n });
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.tick); }
+  W() { return parseInt(this.props.w, 10) || 390; }
+  H() { return parseInt(this.props.h, 10) || 844; }
+  jump(i) {
+    var box = document.getElementById('cs' + this.W()), el = document.getElementById('cook-step-' + this.W() + '-' + i);
+    this.lock = true;
+    this.setState({ i: i });
+    if (box && el) box.scrollTo({ top: el.offsetTop - 8, behavior: 'smooth' });
+    var self = this;
+    clearTimeout(this.unlock);
+    this.unlock = setTimeout(function () { self.lock = false; }, 700);
+  }
+  clock(sec) { var m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
+  put(k, v) { var x = Object.assign({}, this.state.timers); x[k] = v; this.setState({ timers: x }); }
+  renderVals() {
+    var self = this, s = this.state, n = this.steps.length, W = this.W(), H = this.H();
+    // Width decides what fits, in priority order: steps → + timers → + step list.
+    var tier = W < 600 ? 'compact' : W < 960 ? 'medium' : 'expanded';
+    var compact = tier === 'compact', expanded = tier === 'expanded';
+    var phoneTop = W < 500 ? 52 : 28;
+    var hl = 'font-weight: 900; background: #FFCF5C; border-radius: 6px; padding: 0 4px';
+
+    var stepTimer = function (st) {
+      var t = s.timers[st.k];
+      return t || { left: st.timer || 0, total: st.timer || 0, running: false, started: false, name: st.tl, recipe: 'Leek & bacon quiche' };
+    };
+    var start = function (st, t, patch) {
+      var x = Object.assign({}, self.state.timers);
+      x[st.k] = Object.assign({}, t, patch);
+      var order = self.state.order.indexOf(st.k) === -1 ? [st.k].concat(self.state.order) : self.state.order;
+      self.setState({ timers: x, order: order });
+    };
+    var steps = this.steps.map(function (st, k) {
+      var t = stepTimer(st), cur = k === s.i;
+      return {
+        id: 'cook-step-' + W + '-' + k, num: k + 1, name: st.name, tl: st.tl || '', hasPhoto: !!st.photo,
+        style: 'min-height: ' + (compact ? 500 : Math.max(500, Math.round(H * 0.6))) + 'px; padding: 24px 0 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; scroll-snap-align: start; transition: opacity 0.25s; border-bottom: 1.5px dashed #EEDFB5; opacity: ' + (cur ? '1' : '0.4'),
+        parts: st.parts.map(function (p) { return typeof p === 'string' ? { text: p, style: '' } : { text: p.q, style: hl }; }),
+        hasTimer: !!st.timer, clock: self.clock(t.left),
+        action: t.left === 0 && t.started ? 'Done' : t.running ? 'Pause' : t.started ? 'Resume' : 'Start timer',
+        hasTemp: !!st.temp, temp: st.temp || '', hasTip: !!st.tip, tip: st.tip || '',
+        toggle: function () { if (t.left > 0) start(st, t, { running: !t.running, started: true }); },
+        minus: function () { start(st, t, { left: Math.max(30, t.left - 60) }); },
+        plus: function () { start(st, t, { left: t.left + 60, total: Math.max(t.total, t.left + 60) }); }
+      };
+    });
+
+    var running = 0, active = [];
+    var timers = s.order.filter(function (k) { return s.timers[k]; }).map(function (k) {
+      var t = s.timers[k], done = t.left === 0;
+      if (t.running) running++;
+      if (t.started) active.push(t);
+      var bg = done ? '#FFCF5C' : t.running ? '#D9E3A8' : '#FFF0C9';
+      var pct = t.total ? Math.max(0, Math.min(100, Math.round((1 - t.left / t.total) * 100))) : 0;
+      return {
+        name: t.name, recipe: t.recipe, clock: self.clock(t.left),
+        state: done ? 'Done!' : t.running ? 'Running' : 'Paused',
+        cardStyle: 'background: ' + bg + '; border-radius: 24px; padding: 14px; display: flex; flex-direction: column; gap: 10px' + (done ? '; border: 2px solid #2A2414' : ''),
+        barStyle: 'height: 6px; border-radius: 3px; background: #2A2414; width: ' + pct + '%',
+        action: done ? 'Add 1 more minute' : t.running ? 'Pause' : 'Resume',
+        removeLabel: done ? 'Dismiss' : 'Stop',
+        toggle: function () { self.put(k, done ? Object.assign({}, t, { left: 60, total: 60, running: true }) : Object.assign({}, t, { running: !t.running })); },
+        minus: function () { self.put(k, Object.assign({}, t, { left: Math.max(0, t.left - 60) })); },
+        plus: function () { self.put(k, Object.assign({}, t, { left: t.left + 60, total: Math.max(t.total, t.left + 60) })); },
+        remove: function () { var x = Object.assign({}, self.state.timers); delete x[k]; self.setState({ timers: x, order: self.state.order.filter(function (o) { return o !== k; }) }); }
+      };
+    });
+    active.sort(function (a, b) { return (b.running ? 1 : 0) - (a.running ? 1 : 0); });
+    var first = active[0];
+
+    var rail = this.steps.map(function (st, k) {
+      var cur = k === s.i, done = k < s.i, t = s.timers[st.k];
+      return {
+        num: k + 1, name: st.name, done: done, notDone: !done, aria: cur ? 'step' : 'false',
+        hasClock: !!(t && t.started && t.left > 0), clock: t ? self.clock(t.left) : '',
+        go: function () { self.jump(k); },
+        btn: 'display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 6px 10px; border-radius: 16px; cursor: pointer; color: #2A2414; font-family: Nunito, sans-serif; text-align: left; ' + (cur ? 'background: #FFF0C9; border: 2px solid #5A6820' : 'background: transparent; border: 2px solid transparent'),
+        badge: 'width: 32px; height: 32px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; ' + (cur ? 'background: #5A6820; color: #FFFFFF' : done ? 'background: #A9B46A; color: #2A2414' : 'background: #FFF0C9; color: #2A2414'),
+        nameStyle: 'flex: 1; min-width: 0; font-size: 16px; font-weight: ' + (cur ? '900' : '800') + '; color: ' + (done ? '#5A503A' : '#2A2414')
+      };
+    });
+
+    return {
+      rootStyle: 'width: ' + W + 'px; height: ' + H + 'px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: Nunito, sans-serif; display: flex; flex-direction: column; overflow: hidden',
+      headStyle: 'flex: none; padding: ' + phoneTop + 'px 20px 12px; display: flex; flex-direction: column; gap: 12px; background: #FFF8E3; border-bottom: 1.5px solid #F2E6C4',
+      bodyStyle: 'flex: 1; min-height: 0; display: flex; gap: 16px; ' + (compact ? '' : 'padding: 16px 20px 20px'),
+      scrollId: 'cs' + W,
+      scrollStyle: 'flex: 1; min-height: 0; overflow-y: auto; position: relative; scroll-snap-type: y proximity; padding: ' + (compact ? '0 20px' : '0 8px'),
+      colStyle: 'max-width: 640px; margin: 0 auto',
+      footStyle: 'flex: none; ' + (compact ? 'padding: 12px 20px 28px; border-top: 1.5px solid #F2E6C4' : 'padding: 12px 8px 0'),
+      footInner: 'display: grid; grid-template-columns: 1fr 2fr; gap: 10px; max-width: 640px; margin: 0 auto',
+      photoStyle: 'width: ' + (compact ? 72 : 96) + 'px; height: ' + (compact ? 72 : 96) + 'px; flex: none; border-radius: 16px; border: none; padding: 0; background: #F5D9A8; color: #6B4E1E; font-family: Nunito, sans-serif; font-size: 11px; font-weight: 700; cursor: zoom-in',
+      panelStyle: 'width: ' + (expanded ? 320 : 290) + 'px; flex: none; display: flex; flex-direction: column; gap: 12px; overflow-y: auto',
+      showTitle: !compact, showPill: compact && !!first, showTimersBtn: compact,
+      showBars: !expanded, showRail: expanded, showPanel: !compact,
+      hint: expanded ? 'Tap a step to jump to it' : 'Serves 6 · swipe up for next',
+      num: s.i + 1, total: n, steps: steps, rail: rail,
+      timers: timers, empty: timers.length === 0,
+      summary: running + ' running · ' + timers.length + ' total',
+      pill: first ? { name: first.name, clock: self.clock(first.left), hasMore: active.length > 1, more: '+' + (active.length - 1), aria: first.name + ' ' + self.clock(first.left) + (active.length > 1 ? ', ' + (active.length - 1) + ' more timer' + (active.length > 2 ? 's' : '') : '') + '. Open timers' } : { name: '', clock: '', hasMore: false, more: '', aria: '' },
+      bars: this.steps.map(function (st, k) {
+        return { label: 'Go to step ' + (k + 1) + ': ' + st.name, go: function () { self.jump(k); }, style: 'display: block; height: 8px; border-radius: 4px; background: ' + (k < s.i ? '#A9B46A' : k === s.i ? '#5A6820' : '#EEDFB5') };
+      }),
+      isLast: s.i === n - 1, notLast: s.i < n - 1,
+      onScroll: function (e) {
+        if (self.lock) return;
+        var box = e.currentTarget, best = 0;
+        for (var k = 0; k < n; k++) {
+          var el = document.getElementById('cook-step-' + W + '-' + k);
+          if (el && el.offsetTop - box.scrollTop < box.clientHeight * 0.35) best = k;
+        }
+        if (best !== self.state.i) self.setState({ i: best });
+      },
+      prev: function () { if (s.i > 0) self.jump(s.i - 1); },
+      next: function () { if (s.i < n - 1) self.jump(s.i + 1); },
+      quick: [5, 10, 15, 30].map(function (m) {
+        return { label: m + ' min', start: function () { var k = 'q' + (self.qid++), x = Object.assign({}, self.state.timers); x[k] = { left: m * 60, total: m * 60, running: true, started: true, name: m + ' min timer', recipe: 'No recipe' }; self.setState({ timers: x, order: self.state.order.concat([k]) }); } };
+      }),
+      addTimer: function () { var k = 'q' + (self.qid++), x = Object.assign({}, self.state.timers); x[k] = { left: 300, total: 300, running: true, started: true, name: 'Kitchen timer', recipe: 'No recipe' }; self.setState({ timers: x, order: self.state.order.concat([k]) }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

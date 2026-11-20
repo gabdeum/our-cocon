@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Recipe (responsive)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+
+  <!-- ≥ 960: side rail -->
+  <sc-if value="{{expanded}}" hint-placeholder-val="{{false}}">
+    <div style="width: 104px; flex: none">
+      <dc-import name="OC-NavResponsive" active="recipes" mode="rail" w="104" h="{{H}}" hint-size="104px,820px"></dc-import>
+    </div>
+  </sc-if>
+
+  <!-- ≥ 960: the Recipes list stays open next to the recipe -->
+  <sc-if value="{{expanded}}" hint-placeholder-val="{{false}}">
+    <section aria-label="Recipes" style="width: 320px; flex: none; box-sizing: border-box; padding: 28px 12px 16px 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px">Recipes</h1>
+        <a href="#" style="height: 44px; padding: 0 16px; border-radius: 999px; background: #5A6820; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 800"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New</a>
+      </div>
+      <label for="rq" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search recipes</label>
+      <div style="display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; border-radius: 18px; background: #FFFFFF; border: 2px solid #EEDFB5">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A503A" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="rq" placeholder="Search recipes or ingredients" style="flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 16px; color: #2A2414">
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <a href="#" style="height: 40px; padding: 0 14px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; font-size: 14px; font-weight: 800">Filters · 1</a>
+        <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFCF5C; display: flex; align-items: center; font-size: 14px; font-weight: 800">In season</span>
+        <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #FFF0C9; display: flex; align-items: center; font-size: 14px; font-weight: 700">Under 30 min</span>
+      </div>
+      <div style="font-size: 13px; font-weight: 900; color: #5A503A; text-transform: uppercase; letter-spacing: 0.7px">In season in November · 12</div>
+      <div style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px">
+        <sc-for list="{{list}}" as="r" hint-placeholder-count="4">
+          <a href="#" aria-current="{{r.aria}}" style="{{r.style}}">
+            <span style="{{r.thumb}}"></span>
+            <span style="flex: 1; min-width: 0"><span style="display: block; font-size: 16px; font-weight: 900">{{r.name}}</span><span style="display: block; font-size: 13px; font-weight: 700; color: #5A503A; margin-top: 2px">{{r.meta}}</span></span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- The recipe itself: same content as iPhone -->
+  <div style="{{detailStyle}}">
+    <div style="position: sticky; top: 0; height: 0; z-index: 11; pointer-events: none">
+      <div style="{{topBarStyle}}">
+        <sc-if value="{{showBack}}" hint-placeholder-val="{{true}}">
+          <a href="#" aria-label="Back to recipes" style="pointer-events: auto; width: 48px; height: 48px; border-radius: 50%; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(42,36,20,0.18)"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
+        </sc-if>
+        <span style="flex: 1"></span>
+        <a href="#" aria-label="Share recipe" style="pointer-events: auto; width: 48px; height: 48px; border-radius: 50%; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(42,36,20,0.18)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></a>
+        <a href="#" aria-label="Edit recipe" style="pointer-events: auto; width: 48px; height: 48px; border-radius: 50%; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(42,36,20,0.18)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg></a>
+      </div>
+    </div>
+
+    <div style="{{heroStyle}}">[Quiche photo]</div>
+
+    <div style="{{sheetStyle}}">
+      <div style="{{innerStyle}}">
+        <div>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1">Leek &amp; bacon quiche</h1>
+          <p style="margin: 6px 0 0; font-size: 16px; line-height: 1.4; color: #5A503A">Silky custard, sweet leeks and a crisp, buttery crust.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px">
+            <span style="background: #FFF0C9; font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px">1 h 10</span>
+            <span style="background: #FFF0C9; font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px">Best Oct – Mar</span>
+            <span style="background: #D9E3A8; font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px">La Cuisine de Mamie · p. 48</span>
+          </div>
+          <div style="margin-top: 10px; font-size: 13px; font-weight: 700; color: #5A503A">Cooked 4 times · last by Eva, 3 weeks ago</div>
+          <div role="status" style="{{cookingStyle}}">
+            <div style="display: flex; gap: 12px; align-items: center; flex: 1; min-width: 220px">
+              <span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2A2414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16v2a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7Z"/><path d="M8 4c0 2 2 2 2 4M14 4c0 2 2 2 2 4"/></svg></span>
+              <div style="flex: 1; min-width: 0"><div style="font-size: 16px; font-weight: 900">Cooking now · step 3 of 6</div><div style="font-size: 13px; font-weight: 600; color: #5A503A">Gabriel started at 18:40 · Classic, serves 6</div></div>
+            </div>
+            <div style="{{cookBtns}}">
+              <button style="height: 44px; padding: 0 16px; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-size: 14px; font-weight: 800">Cancel</button>
+              <a href="#" style="height: 44px; padding: 0 16px; border-radius: 999px; background: #FFF0C9; color: #2A2414; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800">Done</a>
+              <a href="OC-CookResponsive.dc.html" style="height: 44px; padding: 0 18px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900">Resume</a>
+            </div>
+          </div>
+        </div>
+
+        <div style="{{gridStyle}}">
+          <!-- Left / top: options + ingredients -->
+          <div style="display: flex; flex-direction: column; gap: 18px; min-width: 0">
+            <section style="display: flex; flex-direction: column; gap: 10px">
+              <h2 style="margin: 0; font-size: 16px; font-weight: 900">Version</h2>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                <sc-for list="{{variants}}" as="v" hint-placeholder-count="2">
+                  <button onClick="{{v.pick}}" aria-pressed="{{v.pressed}}" style="{{v.style}}">{{v.label}}</button>
+                </sc-for>
+              </div>
+              <button onClick="{{toggleDough}}" role="switch" aria-checked="{{doughAria}}" style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 14px; border-radius: 18px; border: none; background: #FFF0C9; color: #2A2414; text-align: left; cursor: pointer">
+                <span style="flex: 1"><span style="display: block; font-size: 15px; font-weight: 800">Make my own dough</span><span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A">Adds 3 ingredients and 1 step</span></span>
+                <span style="{{doughTrack}}"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF; display: block"></span></span>
+              </button>
+            </section>
+
+            <div style="background: #FFFFFF; border-radius: 22px; padding: 12px 12px 12px 16px; display: flex; align-items: center; gap: 8px">
+              <span style="flex: 1; font-size: 17px; font-weight: 900">Servings</span>
+              <button onClick="{{dec}}" aria-label="Fewer servings" style="width: 44px; height: 44px; border-radius: 50%; border: none; background: #FFF0C9; color: #2A2414; font-size: 22px; font-weight: 800; cursor: pointer">−</button>
+              <span style="width: 28px; text-align: center; font-size: 22px; font-weight: 900">{{servings}}</span>
+              <button onClick="{{inc}}" aria-label="More servings" style="width: 44px; height: 44px; border-radius: 50%; border: none; background: #5A6820; color: #FFFFFF; font-size: 22px; font-weight: 800; cursor: pointer">+</button>
+              <sc-if value="{{showTabs}}" hint-placeholder-val="{{true}}">
+                <button aria-label="More options" style="width: 44px; height: 44px; border-radius: 14px; border: none; background: #FFF0C9; color: #2A2414; display: flex; align-items: center; justify-content: center; margin-left: 4px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+              </sc-if>
+            </div>
+            <sc-if value="{{twoCol}}" hint-placeholder-val="{{false}}">
+              <button style="align-self: flex-start; margin-top: -10px; min-height: 44px; padding: 0 4px; border: none; background: none; color: #5A6820; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>More options · scale, units</button>
+            </sc-if>
+
+            <!-- Compact only: the Ingredients / Steps tabs -->
+            <sc-if value="{{showTabs}}" hint-placeholder-val="{{true}}">
+              <div role="tablist" aria-label="Recipe view" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #2A2414; border-radius: 20px; padding: 5px">
+                <button role="tab" onClick="{{showIng}}" aria-selected="{{ingAria}}" style="{{ingTabStyle}}">Ingredients · {{ingCount}}</button>
+                <button role="tab" onClick="{{showSteps}}" aria-selected="{{stepsAria}}" style="{{stepsTabStyle}}">Steps · {{stepCount}}</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{showIngList}}" hint-placeholder-val="{{true}}">
+              <section style="display: flex; flex-direction: column">
+                <sc-if value="{{twoCol}}" hint-placeholder-val="{{false}}"><h2 style="margin: 0 0 4px; font-size: 20px; font-weight: 900">Ingredients · {{ingCount}}</h2></sc-if>
+                <sc-for list="{{ingredients}}" as="ing" hint-placeholder-count="9">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1.5px solid #F2E6C4">
+                    <div style="width: 92px; flex: none; font-size: 17px; font-weight: 900">{{ing.amt}}</div>
+                    <div style="flex: 1; min-width: 0">
+                      <div style="font-size: 16px; font-weight: 700">{{ing.label}}</div>
+                      <sc-if value="{{ing.hasDetail}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; font-weight: 600; color: #5A503A; line-height: 1.35">{{ing.detail}}</div></sc-if>
+                      <sc-if value="{{ing.hasSub}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; font-weight: 600; color: #5A503A">{{ing.sub}}</div></sc-if>
+                    </div>
+                    <sc-if value="{{ing.variant}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; font-weight: 800; color: #424D17; background: #D9E3A8; padding: 4px 10px; border-radius: 999px">Variant</span></sc-if>
+                  </div>
+                </sc-for>
+              </section>
+            </sc-if>
+          </div>
+
+          <!-- Right / tab: steps -->
+          <sc-if value="{{showStepList}}" hint-placeholder-val="{{false}}">
+            <section style="display: flex; flex-direction: column; gap: 10px; min-width: 0">
+              <sc-if value="{{twoCol}}" hint-placeholder-val="{{false}}"><h2 style="margin: 0; font-size: 20px; font-weight: 900">Steps · {{stepCount}}</h2></sc-if>
+              <div style="font-size: 13px; font-weight: 600; color: #5A503A">Tap a step to open it in cooking mode</div>
+              <sc-for list="{{steps}}" as="s" hint-placeholder-count="6">
+                <a href="OC-CookResponsive.dc.html" aria-label="Step {{s.num}}: {{s.name}}. Open in cooking mode" style="text-decoration: none; color: #2A2414; background: #FFFFFF; border-radius: 22px; padding: 10px 12px 10px 14px; min-height: 64px; box-sizing: border-box; display: flex; align-items: center; gap: 12px">
+                  <span style="width: 32px; height: 32px; flex: none; border-radius: 50%; background: #FFCF5C; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900">{{s.num}}</span>
+                  <span style="flex: 1; min-width: 0; font-size: 18px; font-weight: 900">{{s.name}}</span>
+                  <sc-if value="{{s.isVariant}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; font-weight: 800; color: #424D17; background: #D9E3A8; padding: 4px 10px; border-radius: 999px">Variant</span></sc-if>
+                  <sc-if value="{{s.hasTimer}}" hint-placeholder-val="{{false}}"><span aria-label="Timer {{s.mins}}" style="flex: none; display: flex; align-items: center; gap: 5px; background: #FFF0C9; font-size: 14px; font-weight: 800; padding: 6px 10px; border-radius: 999px; font-variant-numeric: tabular-nums"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A6820" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>{{s.mins}}</span></sc-if>
+                  <sc-if value="{{s.hasPhoto}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="width: 48px; height: 48px; flex: none; border-radius: 12px; background: #F5D9A8"></span></sc-if>
+                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A503A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex: none"><path d="m9 6 6 6-6 6"/></svg>
+                </a>
+              </sc-for>
+            </section>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <div style="position: sticky; bottom: 0; z-index: 9; padding: 14px 16px 28px; background: linear-gradient(rgba(255,248,227,0), #FFF8E3 26%)">
+      <div style="{{footInner}}">
+        <a href="#" aria-label="Add to groceries" style="{{cartStyle}}"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><sc-if value="{{cartLabel}}" hint-placeholder-val="{{false}}"><span>Add to groceries</span></sc-if></a>
+        <a href="OC-CookResponsive.dc.html" style="flex: 1; min-width: 0; height: 60px; border-radius: 999px; background: #2A2414; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; font-weight: 900; box-shadow: 0 6px 18px rgba(42,36,20,0.22)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8Z"/></svg>Resume · step 3</a>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"w":{"editor":"number","default":390},"h":{"editor":"number","default":844},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'ingredients', servings: 6, variant: 'classic', dough: false }; }
+  half(n) { var r = Math.max(0.5, Math.round(n * 2) / 2), w = Math.floor(r); return (r - w) ? (w ? w + '½' : '½') : String(w); }
+  renderVals() {
+    var self = this, s = this.state, f = s.servings / 6;
+    var W = parseInt(this.props.w, 10) || 390, H = parseInt(this.props.h, 10) || 844;
+    // Priorities: recipe → ingredients and steps side by side (no tabs) → + recipe list and rail.
+    var expanded = W >= 960, detailW = expanded ? W - 104 - 320 : W, twoCol = detailW >= 600;
+    var g = function (q) { return Math.round(q * f) + ' g'; };
+    var defs = [];
+    if (s.dough) {
+      defs.push({ id: 'flour', label: 'Flour', amt: g(200), variant: true, phrase: g(200) + ' flour' });
+      defs.push({ id: 'cbutter', label: 'Cold butter', detail: 'cubed', amt: g(100), variant: true, phrase: g(100) + ' cold butter' });
+      defs.push({ id: 'water', label: 'Ice water', amt: Math.round(50 * f) + ' ml', variant: true, phrase: Math.round(50 * f) + ' ml ice water' });
+    } else defs.push({ id: 'pastry', label: 'Shortcrust pastry', amt: this.half(f), sub: Math.round(230 * f) + ' g', phrase: this.half(f) + ' sheet of shortcrust pastry (' + Math.round(230 * f) + ' g)' });
+    defs.push({ id: 'butter', label: 'Butter', detail: 'for the pan', amt: g(20), phrase: g(20) + ' butter' });
+    defs.push({ id: 'leek', label: 'Leeks', detail: 'white and light green parts', amt: this.half(2 * f), sub: Math.round(300 * f) + ' g', phrase: this.half(2 * f) + ' leeks (' + Math.round(300 * f) + ' g)' });
+    if (s.variant === 'veg') defs.push({ id: 'filling', label: 'Mushrooms', detail: 'sliced', amt: g(250), variant: true, phrase: g(250) + ' sliced mushrooms' });
+    else defs.push({ id: 'filling', label: 'Bacon lardons', amt: g(200), phrase: g(200) + ' bacon lardons' });
+    defs.push({ id: 'eggs', label: 'Large eggs', amt: this.half(3 * f), sub: Math.round(150 * f) + ' g', phrase: this.half(3 * f) + ' large eggs (' + Math.round(150 * f) + ' g)' });
+    defs.push({ id: 'cream', label: 'Heavy cream', detail: 'cold', amt: Math.round(300 * f) + ' ml', phrase: Math.round(300 * f) + ' ml heavy cream' });
+    defs.push({ id: 'cheese', label: 'Gruyère', detail: 'grated', amt: g(100), phrase: g(100) + ' grated Gruyère' });
+    defs.push({ id: 'nutmeg', label: 'Nutmeg', amt: '1 pinch', phrase: '1 pinch of nutmeg' });
+    var R = {}; defs.forEach(function (d) { R[d.id] = d; });
+    var I = function (id) { return { ing: id }; };
+    var raw = [];
+    if (s.dough) raw.push({ name: 'Make the dough', v: true, parts: ['Rub ', I('flour'), ' and ', I('cbutter'), ' together until sandy. Add ', I('water'), ', bring into a ball, wrap and chill.'], timer: 1800, tip: 'Cold hands and cold butter make a flakier crust.' });
+    raw.push({ name: 'Preheat and line', photo: true, parts: ['Preheat the oven to 180 °C (350 °F). Line a 23 cm (9 in) tart pan with ', s.dough ? 'the rolled-out dough' : I('pastry'), ' and prick the base with a fork.'], tip: 'Chill the lined pan for 10 minutes so the edges don’t shrink.' });
+    raw.push({ name: 'Blind bake', parts: ['Bake the empty crust for 12 minutes until pale golden.'], timer: 720 });
+    raw.push({ name: 'Cook the filling', photo: true, parts: ['In a large pan, melt ', I('butter'), ' over medium heat. Add ', I('leek'), ' finely sliced and cook 6–8 minutes until soft. Add ', I('filling'), ' and cook 5 minutes until golden.'], timer: 480 });
+    raw.push({ name: 'Mix the custard', parts: ['Whisk ', I('eggs'), ' with ', I('cream'), ' and ', I('nutmeg'), '. Season, then stir in half of the ', I('cheese'), '.'] });
+    raw.push({ name: 'Bake', photo: true, parts: ['Spread the filling in the crust, pour over the custard and top with the rest of the cheese. Bake for 35 minutes.'], timer: 2100, temp: 'the center should reach 71 °C (160 °F) and barely wobble.', tip: 'If the top browns too fast, cover it loosely with foil.' });
+    raw.push({ name: 'Rest', parts: ['Let it rest for 10 minutes before slicing, so it holds together.'], timer: 600 });
+    var hl = 'font-weight: 900; background: #FFF0C9; border-radius: 6px; padding: 1px 4px';
+    var clock = function (sec) { var m = Math.floor(sec / 60), x = sec % 60; return (m < 10 ? '0' : '') + m + ':' + (x < 10 ? '0' : '') + x; };
+    var steps = raw.map(function (r, i) {
+      return {
+        num: i + 1, name: r.name, isVariant: !!r.v, hasPhoto: !!r.photo,
+        parts: r.parts.map(function (p) { return typeof p === 'string' ? { text: p, style: '' } : { text: R[p.ing].phrase, style: hl }; }),
+        hasTemp: !!r.temp, temp: r.temp || '', hasTip: !!r.tip, tip: r.tip || '', hasTimer: !!r.timer, clock: clock(r.timer || 0), mins: Math.round((r.timer || 0) / 60) + ' min'
+      };
+    });
+    var ingredients = defs.map(function (d) { return { amt: d.amt, label: d.label, detail: d.detail || '', hasDetail: !!d.detail, sub: d.sub || '', hasSub: !!d.sub, variant: !!d.variant }; });
+    var pillOn = 'height: 44px; padding: 0 18px; border-radius: 999px; border: none; background: #5A6820; color: #FFFFFF; font-size: 15px; font-weight: 800; cursor: pointer';
+    var pillOff = 'height: 44px; padding: 0 18px; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-size: 15px; font-weight: 800; cursor: pointer';
+    var tabOn = 'height: 48px; border-radius: 16px; border: none; background: #FFCF5C; color: #2A2414; font-size: 16px; font-weight: 900; cursor: pointer';
+    var tabOff = 'height: 48px; border-radius: 16px; border: none; background: transparent; color: #E6DFC9; font-size: 16px; font-weight: 700; cursor: pointer';
+    var isIng = s.tab === 'ingredients';
+    var cartLabel = W >= 430;
+    var LIST = [
+      { name: 'Leek & bacon quiche', meta: '1 h 10 · cooking now', bg: '#F5D9A8', on: true },
+      { name: 'Pumpkin soup', meta: '40 min · Vegetarian', bg: '#FFCF5C' },
+      { name: "Grandma's apple tart", meta: '1 h 30 · Serves 8', bg: '#D9E3A8' },
+      { name: 'Chicken tagine with apricots', meta: '1 h 45 · Serves 6', bg: '#F5D9A8' }
+    ];
+    return {
+      H: H, expanded: expanded, twoCol: twoCol, showBack: !expanded,
+      rootStyle: 'width: ' + W + 'px; height: ' + H + 'px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: Nunito, sans-serif; display: flex; overflow: hidden',
+      detailStyle: 'flex: 1; min-width: 0; height: ' + H + 'px; overflow-y: auto; position: relative' + (expanded ? '; margin: 12px 12px 12px 0; height: ' + (H - 24) + 'px; box-sizing: border-box; border-radius: 28px; border: 2px solid #EEDFB5; background: #FFF8E3' : ''),
+      topBarStyle: 'position: absolute; top: ' + (W < 500 ? 52 : 20) + 'px; left: 16px; right: 16px; display: flex; gap: 8px; pointer-events: none',
+      heroStyle: 'height: ' + (twoCol ? 280 : 240) + 'px; background: #F5D9A8; display: flex; align-items: center; justify-content: center; color: #6B4E1E; font-size: 14px; font-weight: 700',
+      sheetStyle: 'background: #FFF8E3; border-radius: 30px 30px 0 0; margin-top: -30px; position: relative; padding: 24px ' + (W >= 600 ? 24 : 20) + 'px 40px',
+      innerStyle: 'display: flex; flex-direction: column; gap: 18px; max-width: 1200px; margin: 0 auto',
+      gridStyle: twoCol ? 'display: grid; grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr); gap: 28px; align-items: start' : 'display: flex; flex-direction: column; gap: 18px',
+      cookingStyle: 'margin-top: 14px; background: #FFFFFF; border: 2px solid #FFCF5C; border-radius: 22px; padding: 14px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center',
+      cookBtns: twoCol ? 'display: flex; gap: 8px' : 'display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 8px; width: 100%',
+      footInner: 'display: flex; gap: 10px; max-width: ' + (twoCol ? 520 : 9999) + 'px; margin-left: auto',
+      cartLabel: cartLabel,
+      cartStyle: 'height: 60px; flex: none; box-sizing: border-box; border-radius: 999px; border: 2px solid #5A6820; background: #FFFFFF; color: #424D17; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; font-weight: 800; ' + (cartLabel ? 'padding: 0 18px' : 'width: 60px'),
+      list: LIST.map(function (r) {
+        return { name: r.name, meta: r.meta, aria: r.on ? 'true' : 'false', thumb: 'width: 64px; height: 64px; flex: none; border-radius: 14px; background: ' + r.bg, style: 'text-decoration: none; color: #2A2414; display: flex; gap: 12px; align-items: center; background: #FFFFFF; border-radius: 20px; padding: 8px; border: 2px solid ' + (r.on ? '#5A6820' : 'transparent') };
+      }),
+      variants: [{ id: 'classic', label: 'Classic' }, { id: 'veg', label: 'Vegetarian' }].map(function (v) {
+        var on = s.variant === v.id;
+        return { label: v.label, pressed: on ? 'true' : 'false', style: on ? pillOn : pillOff, pick: function () { self.setState({ variant: v.id }); } };
+      }),
+      doughAria: s.dough ? 'true' : 'false',
+      doughTrack: 'width: 52px; height: 32px; flex: none; border-radius: 16px; padding: 3px; box-sizing: border-box; display: flex; ' + (s.dough ? 'background: #5A6820; justify-content: flex-end' : 'background: #D8CBA4; justify-content: flex-start'),
+      servings: s.servings,
+      showTabs: !twoCol, showIngList: twoCol || isIng, showStepList: twoCol || !isIng,
+      ingTabStyle: isIng ? tabOn : tabOff, stepsTabStyle: isIng ? tabOff : tabOn,
+      ingAria: isIng ? 'true' : 'false', stepsAria: isIng ? 'false' : 'true',
+      ingCount: ingredients.length, stepCount: steps.length, ingredients: ingredients, steps: steps,
+      inc: function () { self.setState({ servings: Math.min(16, s.servings + 1) }); },
+      dec: function () { self.setState({ servings: Math.max(1, s.servings - 1) }); },
+      toggleDough: function () { self.setState({ dough: !s.dough }); },
+      showIng: function () { self.setState({ tab: 'ingredients' }); },
+      showSteps: function () { self.setState({ tab: 'steps' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

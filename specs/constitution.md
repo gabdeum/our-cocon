@@ -63,10 +63,11 @@ These rules apply to every spec in `specs/`. Specs reference them instead of rep
 - **Language:** English only in V1. Every string lives in the strings file, so French can be added later.
 - **Backend:** self-hosted Supabase on Hetzner, one stack each for staging and prod; move to Supabase Cloud if running it gets too heavy (see spec 001).
 - **Hosts:** `app.`, `mcp.` and `api.ourcocon.com` (Supabase) in prod; `app-staging.`, `mcp-staging.` and `api-staging.ourcocon.com` for staging (one subdomain level, so Cloudflare's free certificate covers them). Development is local.
-- **Layout:** the web uses the centred mobile layout (max 720 px) in V1. iPad and desktop layouts come later.
+- **Layout:** layout tiers by window width, never by device (spec 063): compact < 600 (the phone layout; on the web centred at max 560), medium 600–959, expanded ≥ 960 (content up to 1200, then centred). The iPhone app also runs on iPad, in every orientation and split view.
 - **Theme:** light only in V1.
 - **Accessibility:** WCAG 2.2 AA.
 - **Calendar:** see "Calendar decisions" C1–C16 in `specs/README.md`.
 
 ## Changelog
 - 2026-11-02: Notifications (specs 046–049): the iPhone app needs a development build (Expo Go can't do push or Live Activities); `apps/notifier` and `packages/notify` join the stack.
+- 2026-11-19: Layout decision: layout tiers (spec 063) replace the centred 720 px web layout.

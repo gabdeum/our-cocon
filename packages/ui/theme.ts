@@ -226,7 +226,16 @@ export const theme = {
     "900": "Nunito_900Black"
   },
   "layout": {
-    "maxWidth": 720
+    "medium": 600,
+    "expanded": 960,
+    "gutter": 20,
+    "gutterWide": 24,
+    "topWide": 24,
+    "phoneMax": 560,
+    "maxContent": 1200,
+    "panelMedium": 290,
+    "panelExpanded": 320,
+    "rail": 104
   }
 } as const;
 

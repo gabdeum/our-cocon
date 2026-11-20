@@ -102,7 +102,7 @@ export function BottomSheet({ visible, onClose, title, lead, leading, hero, head
           <Pressable role="button" aria-label={closeLabel} onPress={requestClose} className="absolute inset-0 bg-scrim" />
         </Animated.View>
         {/* NativeWind doesn't style Animated.View: it only slides; the View inside carries the look. */}
-        <Animated.View style={{ width: '100%', maxWidth: theme.layout.maxWidth, maxHeight: '92%', alignSelf: 'center', transform: [{ translateY: offset }] }}>
+        <Animated.View style={{ width: '100%', maxWidth: theme.layout.phoneMax, maxHeight: '92%', alignSelf: 'center', transform: [{ translateY: offset }] }}>
           <View role="dialog" aria-modal aria-labelledby={titleId} className="max-h-full gap-16 rounded-t-sheet bg-surface-page px-20 pb-28">
             {/* The drag strip starts at the sheet's top edge, so a finger just above the bar counts. */}
             <View {...pan.panHandlers} className="gap-16 pt-12">
