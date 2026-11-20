@@ -8,7 +8,7 @@ Reference: `design/screens/OC-HomeReminders.dc.html` and `OC-Reminders.dc.html` 
 
 | Part | Spec |
 | --- | --- |
-| Row | min 58, padding 4 0, 1.5 px `line` divider between rows (none under the last) |
+| Row | min 58, padding 4 0 (`size="sm"` on Home's card: min 50, padding 2 0), 1.5 px `line` divider between rows (none under the last) |
 | Tick box | 24, radius 8, 2.5 px `line-dashed` border on surface-card; done = olive fill with a white check. `role="checkbox"`, target 40 × 44 ("Mark done: {title}" / "Mark not done: {title}") |
 | Member dot | 28 circle in the member colour with its edge ring; initial 13/900, "All" 10/900; 50 % opacity when done. `role="img"` named after the member |
 | Text | 10 after the dot. Title 16/800 one line with ellipsis (done: struck through, ink-muted); detail 13/700 ink-muted one line |

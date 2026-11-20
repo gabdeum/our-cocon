@@ -28,6 +28,8 @@ export interface ReminderRowProps {
   disabled?: boolean;
   /** The last row: no divider under it. */
   last?: boolean;
+  /** `sm`: Home's Reminders card, min 50 and padding 2 0; `md`: the Reminders screen. */
+  size?: 'sm' | 'md';
 }
 
 /** ReminderRow README: the 28 px member dot, its initial 13/900 ("All" 10/900); half opacity when done. */
@@ -44,9 +46,9 @@ function MemberDot({ initial, color, name, done }: ReminderRowProps['member'] & 
 
 /**
  * ReminderRow README (OC-HomeReminders, OC-Reminders): tick box · member dot · title and detail ·
- * late badge · ⋮. Min 58 tall, a 1.5 px divider between rows.
+ * late badge · ⋮. Min 58 tall (50 at `sm`, on Home), a 1.5 px divider between rows.
  */
-export function ReminderRow({ title, detail, member, done = false, onToggle, toggleLabel, late, snoozed, repeats, notes, onOpen, openLabel, disabled, last = false }: ReminderRowProps) {
+export function ReminderRow({ title, detail, member, done = false, onToggle, toggleLabel, late, snoozed, repeats, notes, onOpen, openLabel, disabled, last = false, size = 'md' }: ReminderRowProps) {
   const text = (
     <>
       <Text size={16} weight="800" numberOfLines={1} strike={done} color={done ? 'ink-muted' : 'ink'}>
@@ -84,7 +86,7 @@ export function ReminderRow({ title, detail, member, done = false, onToggle, tog
       </View>
     ) : null;
   return (
-    <View className={cn('min-h-[58px] flex-row items-center py-4', !last && 'border-b-[1.5px] border-line')}>
+    <View className={cn(size === 'sm' ? 'min-h-[50px] py-2' : 'min-h-[58px] py-4', 'flex-row items-center', !last && 'border-b-[1.5px] border-line')}>
       {onToggle ? (
         <Pressable
           role="checkbox"

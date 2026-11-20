@@ -20,10 +20,10 @@ export interface CalCardProps {
   footer?: { label: string; onPress: () => void; hint?: string };
 }
 
-/** Home's calendar card (CalCard README): white, radius 26, padding 14 16 12, gap 12. Also Home's Reminders card (spec 057). */
+/** Home's calendar card (CalCard README): white, radius 26, padding 12 16 8, gap 8. Also Home's Reminders card (spec 057). */
 export function CalCard({ label, header, addLabel, onAdd, addDisabled, children, footer }: CalCardProps) {
   return (
-    <View role="region" aria-label={label} className="gap-12 rounded-[26px] bg-surface-card px-16 pb-12 pt-14">
+    <View role="region" aria-label={label} className="gap-8 rounded-[26px] bg-surface-card px-16 pb-8 pt-12">
       <View className="flex-row items-center gap-10">
         <View className="min-w-0 flex-1">{header}</View>
         <Pressable
@@ -42,7 +42,7 @@ export function CalCard({ label, header, addLabel, onAdd, addDisabled, children,
         <Pressable
           role="link"
           onPress={footer.onPress}
-          className={cn('min-h-touch-min flex-row items-center justify-between border-t-[1.5px] border-line pt-10', focusRing)}
+          className={cn('min-h-touch-min flex-row items-center justify-between border-t-[1.5px] border-line pt-6', focusRing)}
         >
           <Text size={15} weight="800" color="olive">
             {footer.label}

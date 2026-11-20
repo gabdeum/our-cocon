@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { memberInitials, type ActivityEntry, type HomeCardState, type Tracker } from '@cocon/schemas';
 import { DEFAULT_SLOT_TIMES, viewFor, type SlotTimes } from '@cocon/calendar';
 import type { CookSession, GroceryItem, HomeHero, StoredEvent } from '@cocon/data';
-import { AvatarStack, BrandHeader, BrandRow, Button, Card, HeroCard, HeroCarousel, StatTile, TabScreen, Text, type AvatarColor } from '@cocon/ui';
+import { AvatarStack, BrandHeader, BrandRow, Button, Card, HeroCard, HeroCarousel, StatTile, TabScreen, Text, useLayoutTier, type AvatarColor } from '@cocon/ui';
 import { ActivitySection, type ActivityShow } from '../activity/ActivitySection';
 import { BusySheet } from '../calendar/BusySheet';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -14,7 +14,7 @@ import { memberLook, parseOccurrenceKey } from '../../lib/calendar-month';
 import { firstName, greeting, homeDate, layoutCalendarCard, recipeToBuy } from '../../lib/home';
 import { stepTotal } from '../../lib/cook-sessions';
 import { formatTotalTime } from '../../lib/recipe-format';
-import type { UndoOutcome } from '../../lib/activity';
+import { HOME_ENTRIES, HOME_ENTRIES_WIDE, type UndoOutcome } from '../../lib/activity';
 import type { AccountMember, Member } from '../../lib/session';
 import { strings } from '../../strings/en';
 import { CalendarCard } from './CalendarCard';
@@ -55,7 +55,7 @@ export interface HomeScreenProps {
   groceries?: GroceryItem[];
   /** How many recipes the Recipes tab lists. */
   recipeCount?: number;
-  /** The 4 newest entries for `activityShow`. */
+  /** The newest entries for `activityShow` (`HOME_ENTRIES_WIDE`): 4 show on the phone, 5 from 600. */
   activity: readonly ActivityEntry[];
   activityShow: ActivityShow;
   onActivityShow: (to: ActivityShow) => void;
@@ -79,7 +79,10 @@ export interface HomeScreenProps {
   };
 }
 
-/** Spec 028 (OC-Home): brand row (pinned, spec 050 FR-007), greeting, reminders (spec 057), calendar card, the two tiles, latest recipe, Latest activity. */
+/**
+ * Spec 028 (OC-Home): brand row (pinned, spec 050 FR-007), greeting, reminders (spec 057), calendar
+ * card, the two tiles, latest recipe, Latest activity. From 600 (spec 068) the cards sit in two columns.
+ */
 export function HomeScreen({
   reminders,
   me,
@@ -105,6 +108,11 @@ export function HomeScreen({
   footer,
   navigate,
 }: HomeScreenProps) {
+  const { tier } = useLayoutTier();
+  // From 600: two columns (spec 068), 14 apart beside the rail, 18 otherwise.
+  const wide = tier !== 'compact';
+  const gap = tier === 'expanded' ? 14 : 18;
+  const photoHeight = tier === 'expanded' ? 160 : wide ? 200 : 170;
   const look = useMemo(() => memberLook(members), [members]);
   const { use24h, show_birthdays: showBirthdays } = useCalendarDisplay().prefs;
   const layout = useMemo(
@@ -126,146 +134,176 @@ export function HomeScreen({
     else navigate.event(id, date);
   };
 
-  return (
-    <TabScreen
-      pinned={
-        <BrandRow
-          brand={s.brand}
-          avatars={
-            <AvatarStack
-              members={members.map((m) => ({ initial: initials.get(m.id) ?? '?', color: m.color as AvatarColor }))}
-              moreLabel={s.moreMembers}
-              label={s.family(members.map((m) => m.display_name))}
-              onPress={navigate.family}
+  const avatars = (
+    <AvatarStack
+      members={members.map((m) => ({ initial: initials.get(m.id) ?? '?', color: m.color as AvatarColor }))}
+      moreLabel={s.moreMembers}
+      label={s.family(members.map((m) => m.display_name))}
+      onPress={navigate.family}
+    />
+  );
+  const header = <BrandHeader date={homeDate(today)} greeting={greeting(now, firstName(me.display_name))} />;
+  const calendarCard = (
+    <CalendarCard
+      layout={layout}
+      readOnly={readOnly}
+      onOpenEvent={openEvent}
+      onPickDay={(offset) => tracker.track('homepage_calendar_day_picked', { day_offset: offset })}
+      onAdd={(date, cardState) => {
+        tracker.track('homepage_calendar_add_tapped', { card_state: cardState });
+        navigate.addEvent(date);
+      }}
+      onToggle={(to) => tracker.track('homepage_calendar_toggled', { to })}
+      onSeeAll={navigate.agenda}
+      onOpenCalendar={navigate.calendar}
+    />
+  );
+  const tiles = (
+    <View className="flex-row gap-12">
+      <StatTile
+        icon="groceries"
+        value={toBuy}
+        label={s.toBuy}
+        tone="honey"
+        className="flex-1"
+        onPress={() => {
+          tracker.track('home_tile_tapped', { tile: 'groceries' });
+          navigate.groceries();
+        }}
+      />
+      <StatTile
+        icon="recipes"
+        value={recipeCount ?? 0}
+        label={s.familyRecipes}
+        tone="sage"
+        className="flex-1"
+        onPress={() => {
+          tracker.track('home_tile_tapped', { tile: 'recipes' });
+          navigate.recipes();
+        }}
+      />
+    </View>
+  );
+  const heroCard =
+    cooking.length > 0 ? (
+      // Something is cooking: its card replaces the latest recipe; several swipe side by side.
+      <HeroCarousel label={s.cookingRegion(cooking.length)} pageLabels={cooking.map((c) => s.showCook(c.name))}>
+        {cooking.map(({ cook, name, stepCount, photoUri }) => {
+          const total = stepTotal(stepCount, cook);
+          const resume = r.resumeA11y(name, cook.current_step + 1, total);
+          return (
+            <HeroCard
+              key={cook.id}
+              title={name}
+              badge={s.cookingNow(cook.current_step + 1, total)}
+              photoUri={photoUri}
+              photoHeight={photoHeight}
+              chips={[]}
+              openLabel={resume}
+              onPress={() => onCookResume?.(cook)}
+              actionsDisabled={readOnly}
+              actions={[
+                { label: p.cancel, a11y: r.cancelA11y(name), tone: 'danger', onPress: () => onCookCancel?.(cook) },
+                { label: p.done, a11y: r.doneA11y(name), tone: 'white', onPress: () => onCookDone?.(cook, name) },
+                { label: p.resume, a11y: resume, tone: 'ink', icon: 'play', onPress: () => onCookResume?.(cook) },
+              ]}
             />
-          }
+          );
+        })}
+      </HeroCarousel>
+    ) : hero ? (
+      <HeroCard
+        title={hero.name}
+        badge={s.latestRecipe}
+        photoUri={heroPhotoUri}
+        photoHeight={photoHeight}
+        chips={[
+          ...(hero.total_minutes ? [{ label: formatTotalTime(hero.total_minutes) }] : []),
+          { label: s.serves(hero.serves) },
+          ...(heroToBuy > 0 ? [{ label: s.toBuyChip(heroToBuy), tone: 'warn' as const }] : []),
+        ]}
+        onPress={() => {
+          tracker.track('home_hero_opened', {});
+          navigate.recipe(hero.id);
+        }}
+      />
+    ) : hero === null ? (
+      <Card tone="soft">
+        <Text variant="titleMd">{s.noRecipes.title}</Text>
+        <Text size={15} weight="600" color="ink-muted">
+          {s.noRecipes.body}
+        </Text>
+        <Button
+          label={s.noRecipes.action}
+          variant="olive"
+          onPress={() => {
+            tracker.track('first_recipe_cta_tapped', {});
+            navigate.newRecipe();
+          }}
         />
-      }
-    >
-      <BrandHeader date={homeDate(today)} greeting={greeting(now, firstName(me.display_name))} />
+        <Text size={14} weight="600" color="ink-muted">
+          {s.noRecipes.hint}
+        </Text>
+      </Card>
+    ) : null;
+  const activitySection = (
+    <ActivitySection
+      entries={activity.slice(0, wide ? HOME_ENTRIES_WIDE : HOME_ENTRIES)}
+      members={members}
+      tracker={tracker}
+      readOnly={readOnly}
+      onUndo={onUndo}
+      use24h={use24h}
+      show={activityShow}
+      onShow={(to) => {
+        tracker.track('homepage_activity_filter_changed', { to });
+        onActivityShow(to);
+      }}
+      onSeeAll={() => navigate.activity(activityShow)}
+    />
+  );
+  const invite =
+    members.length === 1 ? (
+      <Card tone="soft">
+        <Text size={18} weight="900">
+          {s.invite.title}
+        </Text>
+        <Text size={15} weight="600" color="ink-muted">
+          {s.invite.body}
+        </Text>
+        <Button label={s.invite.action} variant="olive" onPress={navigate.family} />
+      </Card>
+    ) : null;
+
+  return (
+    // Beside the rail (from 960), which shows the mark, the greeting takes the brand's place (FR-003).
+    <TabScreen pinned={<BrandRow brand={s.brand} avatars={avatars} lead={tier === 'expanded' ? header : undefined} />}>
+      {tier === 'expanded' ? null : header}
       <OfflineBanner screen="home" tracker={tracker} />
-      {reminders}
-      <CalendarCard
-        layout={layout}
-        readOnly={readOnly}
-        onOpenEvent={openEvent}
-        onPickDay={(offset) => tracker.track('homepage_calendar_day_picked', { day_offset: offset })}
-        onAdd={(date, cardState) => {
-          tracker.track('homepage_calendar_add_tapped', { card_state: cardState });
-          navigate.addEvent(date);
-        }}
-        onToggle={(to) => tracker.track('homepage_calendar_toggled', { to })}
-        onSeeAll={navigate.agenda}
-        onOpenCalendar={navigate.calendar}
-      />
-      <View className="flex-row gap-12">
-        <StatTile
-          icon="groceries"
-          value={toBuy}
-          label={s.toBuy}
-          tone="honey"
-          className="flex-1"
-          onPress={() => {
-            tracker.track('home_tile_tapped', { tile: 'groceries' });
-            navigate.groceries();
-          }}
-        />
-        <StatTile
-          icon="recipes"
-          value={recipeCount ?? 0}
-          label={s.familyRecipes}
-          tone="sage"
-          className="flex-1"
-          onPress={() => {
-            tracker.track('home_tile_tapped', { tile: 'recipes' });
-            navigate.recipes();
-          }}
-        />
-      </View>
-      {cooking.length > 0 ? (
-        // Something is cooking: its card replaces the latest recipe; several swipe side by side.
-        <HeroCarousel label={s.cookingRegion(cooking.length)} pageLabels={cooking.map((c) => s.showCook(c.name))}>
-          {cooking.map(({ cook, name, stepCount, photoUri }) => {
-            const total = stepTotal(stepCount, cook);
-            const resume = r.resumeA11y(name, cook.current_step + 1, total);
-            return (
-              <HeroCard
-                key={cook.id}
-                title={name}
-                badge={s.cookingNow(cook.current_step + 1, total)}
-                photoUri={photoUri}
-                chips={[]}
-                openLabel={resume}
-                onPress={() => onCookResume?.(cook)}
-                actionsDisabled={readOnly}
-                actions={[
-                  { label: p.cancel, a11y: r.cancelA11y(name), tone: 'danger', onPress: () => onCookCancel?.(cook) },
-                  { label: p.done, a11y: r.doneA11y(name), tone: 'white', onPress: () => onCookDone?.(cook, name) },
-                  { label: p.resume, a11y: resume, tone: 'ink', icon: 'play', onPress: () => onCookResume?.(cook) },
-                ]}
-              />
-            );
-          })}
-        </HeroCarousel>
-      ) : hero ? (
-        <HeroCard
-          title={hero.name}
-          badge={s.latestRecipe}
-          photoUri={heroPhotoUri}
-          chips={[
-            ...(hero.total_minutes ? [{ label: formatTotalTime(hero.total_minutes) }] : []),
-            { label: s.serves(hero.serves) },
-            ...(heroToBuy > 0 ? [{ label: s.toBuyChip(heroToBuy), tone: 'warn' as const }] : []),
-          ]}
-          onPress={() => {
-            tracker.track('home_hero_opened', {});
-            navigate.recipe(hero.id);
-          }}
-        />
-      ) : hero === null ? (
-        <Card tone="soft">
-          <Text variant="titleMd">{s.noRecipes.title}</Text>
-          <Text size={15} weight="600" color="ink-muted">
-            {s.noRecipes.body}
-          </Text>
-          <Button
-            label={s.noRecipes.action}
-            variant="olive"
-            onPress={() => {
-              tracker.track('first_recipe_cta_tapped', {});
-              navigate.newRecipe();
-            }}
-          />
-          <Text size={14} weight="600" color="ink-muted">
-            {s.noRecipes.hint}
-          </Text>
-        </Card>
-      ) : null}
-      <ActivitySection
-        entries={activity}
-        members={members}
-        tracker={tracker}
-        readOnly={readOnly}
-        onUndo={onUndo}
-        use24h={use24h}
-        show={activityShow}
-        onShow={(to) => {
-          tracker.track('homepage_activity_filter_changed', { to });
-          onActivityShow(to);
-        }}
-        onSeeAll={() => navigate.activity(activityShow)}
-      />
-      {members.length === 1 ? (
-        <Card tone="soft">
-          <Text size={18} weight="900">
-            {s.invite.title}
-          </Text>
-          <Text size={15} weight="600" color="ink-muted">
-            {s.invite.body}
-          </Text>
-          <Button label={s.invite.action} variant="olive" onPress={navigate.family} />
-        </Card>
-      ) : null}
+      {wide ? (
+        // Spec 068 FR-002: two columns read top to bottom; a hidden card leaves no gap.
+        <View className="flex-row items-start" style={{ gap }}>
+          <View testID="home-left" className="min-w-0" style={{ flex: 1.1, gap }}>
+            {reminders}
+            {calendarCard}
+            {heroCard}
+          </View>
+          <View testID="home-right" className="min-w-0" style={{ flex: 1, gap }}>
+            {tiles}
+            {activitySection}
+            {invite}
+          </View>
+        </View>
+      ) : (
+        <>
+          {reminders}
+          {calendarCard}
+          {tiles}
+          {heroCard}
+          {activitySection}
+          {invite}
+        </>
+      )}
       {footer}
       {busy ? <BusySheet occurrence={busy} members={members} slotTimes={slotTimes} onClose={() => setBusy(null)} /> : null}
     </TabScreen>

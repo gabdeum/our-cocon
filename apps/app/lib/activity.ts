@@ -19,6 +19,8 @@ export const activityFiltersKey = (familyId: string) => ['activity', familyId, '
 
 /** Home shows the latest four (spec 028 FR-006); the list loads 20 at a time (spec 053 FR-018). */
 export const HOME_ENTRIES = 4;
+/** Five from 600, in Home's right column (spec 068 FR-002). Home always loads these, so a resize never refetches. */
+export const HOME_ENTRIES_WIDE = 5;
 export const PAGE_SIZE = 20;
 
 /** Where the next page starts: the last entry shown. Entries can share a time, so its key breaks the tie (spec 053 FR-019). */

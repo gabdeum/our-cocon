@@ -39,7 +39,7 @@ export function EventListGroup({ heading, children }: { heading: string; childre
 
 /**
  * ListRow README › Event row: stripe, 36 avatar, title, sub-line and an optional tag; min 64 tall.
- * `sm` is Home's calendar card (CalCard): min 58, 5 stripe, 32 avatar, title 16, sub-line 13.
+ * `sm` is Home's calendar card (CalCard): min 50, 5 stripe, 32 avatar, title 16, sub-line 13.
  */
 export function EventListRow({ event, onPress, last, size = 'md' }: { event: EventListItem; onPress: () => void; last?: boolean; size?: 'sm' | 'md' }) {
   const two = event.initials.length > 1;
@@ -50,7 +50,7 @@ export function EventListRow({ event, onPress, last, size = 'md' }: { event: Eve
         role="link"
         aria-label={event.label}
         onPress={onPress}
-        className={cn(sm ? 'min-h-[58px] gap-10 py-6' : 'min-h-[64px] gap-12 py-8', 'flex-row items-center active:bg-surface-card-pressed', focusRing)}
+        className={cn(sm ? 'min-h-[50px] gap-10 py-4' : 'min-h-[64px] gap-12 py-8', 'flex-row items-center active:bg-surface-card-pressed', focusRing)}
       >
         <View aria-hidden className={cn(sm ? 'w-[5px]' : 'w-[6px]', 'self-stretch flex-none')}>
           <Fill colors={event.colors} rounded="rounded-[3px]" />

@@ -89,7 +89,7 @@ export function CalendarCard({ layout, readOnly, onOpenEvent, onPickDay, onAdd, 
         </View>
       ) : null}
       {view === 'week' ? (
-        <View className="gap-10">
+        <View className="gap-8">
           <WeekStrip days={layout.strip} picked={day?.date ?? null} onDay={pickDay} />
           {day ? (
             <View>
@@ -124,7 +124,7 @@ export function CalendarCard({ layout, readOnly, onOpenEvent, onPickDay, onAdd, 
         </View>
       ) : null}
       {view === 'empty' ? (
-        <View className="gap-12 pb-6 pt-4">
+        <View className="gap-10 pb-4 pt-2">
           <Text size={16} weight="700" color="ink-muted">
             {c.empty}
           </Text>

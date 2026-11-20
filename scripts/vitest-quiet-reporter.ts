@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import type { Reporter, TestModule } from 'vitest/node';
 
 /** Prints nothing when every test passes; otherwise each failure with its error, then a count. */
@@ -24,7 +25,9 @@ export default class QuietReporter implements Reporter {
     }
     for (const error of unhandledErrors) {
       failed++;
-      lines.push(`ERROR ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`);
+      // Vitest passes these as plain objects, some without a prototype: String() throws on those.
+      const { stack, message } = (error ?? {}) as { stack?: unknown; message?: unknown };
+      lines.push(`ERROR ${typeof stack === 'string' ? stack : typeof message === 'string' ? message : inspect(error)}`);
     }
 
     if (failed > 0) {
