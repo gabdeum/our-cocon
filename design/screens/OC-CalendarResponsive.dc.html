@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Calendar (responsive)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+  <sc-if value="{{rail}}" hint-placeholder-val="{{false}}">
+    <div style="width: 104px; flex: none">
+      <dc-import name="OC-NavResponsive" active="calendar" mode="rail" w="104" h="{{H}}" timers="false" hint-size="104px,820px"></dc-import>
+    </div>
+  </sc-if>
+
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; position: relative">
+
+    <!-- ===== Header ===== -->
+    <header style="{{headStyle}}">
+      <!-- Phone: the iPhone header, view and people behind buttons -->
+      <sc-if value="{{compact}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <h1 style="margin: 0; flex: 1; min-width: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{title}}</h1>
+          <button onClick="{{goToday}}" style="height: 44px; padding: 0 14px; flex: none; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-size: 15px; font-weight: 800; cursor: pointer">Today</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; position: relative">
+          <button onClick="{{toggleViewMenu}}" aria-haspopup="true" aria-expanded="{{viewMenuAria}}" style="height: 44px; padding: 0 12px 0 14px; border-radius: 999px; border: none; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 900; cursor: pointer">{{viewLabel}}<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <button aria-label="Show events for: everyone" style="height: 44px; padding: 0 10px 0 14px; border-radius: 999px; border: none; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 900">
+            <span aria-hidden="true" style="display: flex"><span style="width: 24px; height: 24px; border-radius: 50%; background: #FFCF5C; box-shadow: 0 0 0 2px #FFFFFF; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center">G</span><span style="width: 24px; height: 24px; margin-left: -7px; border-radius: 50%; background: #F4B6C2; box-shadow: 0 0 0 2px #FFFFFF; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center">E</span><span style="width: 24px; height: 24px; margin-left: -7px; border-radius: 50%; background: #A8D4F0; box-shadow: 0 0 0 2px #FFFFFF; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center">J</span></span>All<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <span style="flex: 1"></span>
+          <button onClick="{{goPrev}}" aria-label="{{prevLabel}}" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button onClick="{{goNext}}" aria-label="{{nextLabel}}" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+          <sc-if value="{{viewMenu}}" hint-placeholder-val="{{false}}">
+            <nav aria-label="Calendar view" style="position: absolute; left: 0; top: 52px; z-index: 30; width: 200px; background: #FFFFFF; border-radius: 18px; padding: 6px; box-sizing: border-box; box-shadow: 0 12px 28px rgba(42,36,20,0.22); display: flex; flex-direction: column">
+              <sc-for list="{{views}}" as="v" hint-placeholder-count="3">
+                <button onClick="{{v.pick}}" aria-current="{{v.aria}}" style="{{v.menuStyle}}">{{v.label}}</button>
+              </sc-for>
+            </nav>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- 600 and wider: view switch and people filter shown directly -->
+      <sc-if value="{{wide}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <h1 style="margin: 0; flex: 1; min-width: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{title}}</h1>
+          <button onClick="{{goPrev}}" aria-label="{{prevLabel}}" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button onClick="{{goToday}}" style="height: 44px; padding: 0 14px; flex: none; border-radius: 999px; border: none; background: #FFF0C9; color: #2A2414; font-size: 15px; font-weight: 800; cursor: pointer">Today</button>
+          <button onClick="{{goNext}}" aria-label="{{nextLabel}}" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: #FFFFFF; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+          <a href="#add-event" style="height: 44px; padding: 0 16px; flex: none; border-radius: 999px; background: #5A6820; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 800"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Event</a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <div role="group" aria-label="Calendar view" style="display: flex; gap: 4px; background: #FFF0C9; border-radius: 14px; padding: 4px; flex: none">
+            <sc-for list="{{views}}" as="v" hint-placeholder-count="3">
+              <button onClick="{{v.pick}}" aria-pressed="{{v.pressed}}" style="{{v.segStyle}}">{{v.label}}</button>
+            </sc-for>
+          </div>
+          <span style="flex: 1"></span>
+          <div role="group" aria-label="Show events for" style="display: flex; gap: 6px; flex-wrap: wrap">
+            <sc-for list="{{people}}" as="p" hint-placeholder-count="5">
+              <button onClick="{{p.toggle}}" aria-pressed="{{p.pressed}}" style="{{p.chip}}"><span style="{{p.dot}}">{{p.initial}}</span>{{p.name}}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </header>
+
+    <!-- ===== Body ===== -->
+    <div style="{{bodyStyle}}">
+
+      <!-- MONTH -->
+      <sc-if value="{{isMonth}}" hint-placeholder-val="{{true}}">
+        <div style="{{monthWrap}}">
+          <div style="{{gridCard}}">
+            <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); padding: 8px 0 6px; border-bottom: 1.5px solid #F2E6C4">
+              <sc-for list="{{weekdays}}" as="w" hint-placeholder-count="7"><span style="{{wdStyle}}">{{w}}</span></sc-for>
+            </div>
+            <sc-for list="{{weeks}}" as="wk" hint-placeholder-count="5">
+              <div style="position: relative">
+                <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr))">
+                  <sc-for list="{{wk.cells}}" as="c" hint-placeholder-count="7">
+                    <button aria-label="{{c.aria}}" onClick="{{c.open}}" style="{{c.style}}">
+                      <span style="{{c.numStyle}}">{{c.num}}</span>
+                      <sc-for list="{{c.chips}}" as="e" hint-placeholder-count="2"><span style="{{e.style}}"><span style="display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{e.text}}</span></span></sc-for>
+                      <sc-if value="{{c.more}}" hint-placeholder-val="{{false}}"><span style="{{moreStyle}}">{{c.moreText}}</span></sc-if>
+                    </button>
+                  </sc-for>
+                </div>
+                <sc-for list="{{wk.bars}}" as="bar" hint-placeholder-count="1"><span aria-hidden="true" style="{{bar.style}}"><span style="display: block; overflow: hidden; white-space: nowrap">{{bar.text}}</span></span></sc-for>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- 600+: the selected day stays open (below the grid upright, beside it from 960) instead of a sheet -->
+          <sc-if value="{{dayPanel}}" hint-placeholder-val="{{false}}">
+            <section aria-label="{{sel.title}}" style="{{panelStyle}}">
+              <div>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.3px">{{sel.title}}</h2>
+                <div style="font-size: 14px; font-weight: 700; color: #5A503A">{{sel.count}}</div>
+              </div>
+              <div style="{{selRows}}">
+                <sc-for list="{{selCols}}" as="sc" hint-placeholder-count="2">
+                <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+                <sc-for list="{{sc.rows}}" as="r" hint-placeholder-count="2">
+                  <a href="#event" style="background: #FFFFFF; border-radius: 20px; padding: 12px 14px 12px 12px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: #2A2414">
+                    <span aria-hidden="true" style="{{r.stripe}}"></span>
+                    <span style="{{r.avatar}}">{{r.initial}}</span>
+                    <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 800">{{r.title}}</span><span style="font-size: 14px; font-weight: 700; color: #5A503A">{{r.sub}}</span></span>
+                  </a>
+                </sc-for>
+                </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{sel.empty}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 16px; font-weight: 700; color: #5A503A">Nothing planned yet.</p></sc-if>
+              <a href="#add-event" style="min-height: 52px; border-radius: 18px; border: 2px dashed #CDBF95; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #424D17; font-size: 15px; font-weight: 800">+ Add on {{sel.short}}</a>
+            </section>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- WEEK -->
+      <sc-if value="{{isWeek}}" hint-placeholder-val="{{false}}">
+        <div style="{{weekCard}}">
+          <div style="{{weekHead}}">
+            <sc-for list="{{wdays}}" as="d" hint-placeholder-count="7">
+              <button onClick="{{d.open}}" aria-label="{{d.aria}}" style="display: flex; flex-direction: column; align-items: center; gap: 2px; border: none; background: none; color: #2A2414; min-height: 44px; cursor: pointer; padding: 0">
+                <span style="{{d.letterStyle}}">{{d.letter}}</span>
+                <span style="{{d.numStyle}}">{{d.num}}</span>
+              </button>
+            </sc-for>
+          </div>
+          <div style="padding: 6px 4px 8px 0; border-bottom: 1.5px solid #F2E6C4; display: flex; align-items: center">
+            <div style="{{gutterLabel}}">All day</div>
+            <div style="flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; min-height: 28px">
+              <sc-for list="{{allDayW}}" as="e" hint-placeholder-count="1"><a href="#event" style="{{e.style}}">{{e.text}}</a></sc-for>
+            </div>
+          </div>
+          <div style="display: flex; padding: 8px 4px 10px 0">
+            <div aria-hidden="true" style="{{hourCol}}">
+              <sc-for list="{{hours}}" as="h" hint-placeholder-count="18"><span style="{{h.style}}">{{h.label}}</span></sc-for>
+            </div>
+            <div style="{{gridStyle}}">
+              <sc-for list="{{cols}}" as="c" hint-placeholder-count="7">
+                <div style="{{c.style}}">
+                  <sc-for list="{{c.events}}" as="e" hint-placeholder-count="2">
+                    <a href="#event" aria-label="{{e.aria}}" style="{{e.style}}">
+                      <span style="{{e.topStyle}}">{{e.top}}</span>
+                      <span style="{{e.titleStyle}}">{{e.title}}</span>
+                    </a>
+                  </sc-for>
+                  <sc-if value="{{c.isToday}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="{{nowStyle}}"></span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- DAY -->
+      <sc-if value="{{isDay}}" hint-placeholder-val="{{false}}">
+        <div style="{{dayWrap}}">
+          <div style="{{dayMain}}">
+            <div aria-label="Who's busy this day" style="display: flex; gap: 8px; flex-wrap: wrap">
+              <sc-for list="{{busy}}" as="p" hint-placeholder-count="3">
+                <span style="height: 36px; padding: 0 12px 0 4px; border-radius: 999px; background: #FFFFFF; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800"><span style="{{p.dot}}">{{p.initial}}</span>{{p.label}}</span>
+              </sc-for>
+            </div>
+            <sc-if value="{{hasAllDay}}" hint-placeholder-val="{{false}}">
+              <section style="display: flex; flex-direction: column; gap: 8px">
+                <h2 style="margin: 0; font-size: 18px; font-weight: 900">All day</h2>
+                <sc-for list="{{dayAll}}" as="e" hint-placeholder-count="1"><a href="#event" style="{{e.style}}"><span>{{e.title}}</span><span style="font-size: 13px; font-weight: 800">{{e.tag}}</span></a></sc-for>
+              </section>
+            </sc-if>
+            <div style="{{bandGrid}}">
+              <sc-for list="{{bandCols}}" as="bc" hint-placeholder-count="2">
+              <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0">
+              <sc-for list="{{bc.bands}}" as="b" hint-placeholder-count="3">
+                <section style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+                  <h2 style="margin: 0; display: flex; align-items: baseline; gap: 8px"><span style="font-size: 18px; font-weight: 900">{{b.label}}</span><span style="font-size: 14px; font-weight: 700; color: #5A503A">{{b.hours}}</span></h2>
+                  <sc-for list="{{b.events}}" as="e" hint-placeholder-count="1">
+                    <a href="#event" style="background: #FFFFFF; border-radius: 20px; padding: 12px 14px 12px 12px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: #2A2414">
+                      <span aria-hidden="true" style="{{e.stripe}}"></span>
+                      <span style="{{e.avatar}}">{{e.initial}}</span>
+                      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                        <span style="font-size: 17px; font-weight: 800">{{e.title}}</span>
+                        <span style="font-size: 14px; font-weight: 700; color: #5A503A">{{e.sub}}</span>
+                        <sc-if value="{{e.hasDriver}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; font-weight: 800; color: #424D17">{{e.driver}}</span></sc-if>
+                      </span>
+                      <sc-if value="{{e.now}}" hint-placeholder-val="{{false}}"><span style="flex: none; background: #FFCF5C; font-size: 13px; font-weight: 900; padding: 5px 10px; border-radius: 999px">Now</span></sc-if>
+                    </a>
+                  </sc-for>
+                  <sc-if value="{{b.empty}}" hint-placeholder-val="{{false}}"><a href="#add-event" style="min-height: 52px; border-radius: 18px; border: 2px dashed #CDBF95; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #424D17; font-size: 15px; font-weight: 800">+ Add in the {{b.lower}}</a></sc-if>
+                </section>
+              </sc-for>
+              </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- 960+: a small month to jump between days, and what's coming next -->
+          <sc-if value="{{dayAside}}" hint-placeholder-val="{{false}}">
+            <aside style="width: 300px; flex: none; display: flex; flex-direction: column; gap: 14px">
+              <section style="background: #FFFFFF; border-radius: 22px; padding: 12px 12px 10px">
+                <div style="font-size: 16px; font-weight: 900; padding: 0 4px 6px">{{miniTitle}}</div>
+                <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px">
+                  <sc-for list="{{weekdays}}" as="w" hint-placeholder-count="7"><span style="text-align: center; font-size: 12px; font-weight: 900; color: #5A503A; padding-bottom: 2px">{{w}}</span></sc-for>
+                  <sc-for list="{{mini}}" as="m" hint-placeholder-count="35">
+                    <button onClick="{{m.open}}" aria-label="{{m.aria}}" style="{{m.style}}">{{m.num}}<span style="{{m.dot}}"></span></button>
+                  </sc-for>
+                </div>
+              </section>
+              <section style="display: flex; flex-direction: column; gap: 8px">
+                <h2 style="margin: 0; font-size: 13px; font-weight: 900; color: #5A503A; text-transform: uppercase; letter-spacing: 0.7px">Coming up</h2>
+                <sc-for list="{{upcoming}}" as="u" hint-placeholder-count="3">
+                  <button onClick="{{u.open}}" style="background: #FFFFFF; border: none; border-radius: 18px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; text-align: left; color: #2A2414; cursor: pointer">
+                    <span style="width: 44px; flex: none; text-align: center"><span style="display: block; font-size: 12px; font-weight: 900; color: #5A503A">{{u.dow}}</span><span style="display: block; font-size: 20px; font-weight: 900; line-height: 1.1">{{u.num}}</span></span>
+                    <span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 700; color: #5A503A; line-height: 1.4">{{u.text}}</span>
+                  </button>
+                </sc-for>
+              </section>
+            </aside>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- Phone only: add button and the day sheet -->
+    <sc-if value="{{compact}}" hint-placeholder-val="{{true}}">
+      <a href="#add-event" aria-label="Add event" style="position: absolute; right: 20px; bottom: 112px; z-index: 8; width: 60px; height: 60px; border-radius: 50%; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(42,36,20,0.25)"><svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></a>
+    </sc-if>
+    <sc-if value="{{bar}}" hint-placeholder-val="{{true}}">
+      <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 160px; z-index: 9; pointer-events: none">
+        <div style="pointer-events: auto"><dc-import name="OC-NavResponsive" active="calendar" mode="bar" w="{{W}}" h="160" timers="false" hint-size="390px,160px"></dc-import></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+      <div onClick="{{closeSheet}}" aria-hidden="true" style="position: absolute; inset: 0; z-index: 20; background: rgba(42,36,20,0.38)"></div>
+      <div role="dialog" aria-modal="true" aria-label="{{sel.title}}" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 21; max-height: 640px; box-sizing: border-box; background: #FFF8E3; border-radius: 28px 28px 0 0; padding: 10px 20px 34px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 -8px 28px rgba(42,36,20,0.2)">
+        <span aria-hidden="true" style="align-self: center; width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4"></span>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div style="flex: 1; min-width: 0"><h2 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.3px">{{sel.title}}</h2><div style="font-size: 14px; font-weight: 700; color: #5A503A">{{sel.count}}</div></div>
+          <button onClick="{{closeSheet}}" aria-label="Close" style="width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: #FFF0C9; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto">
+          <sc-for list="{{sel.rows}}" as="r" hint-placeholder-count="3">
+            <a href="#event" style="background: #FFFFFF; border-radius: 20px; padding: 12px 14px 12px 12px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: #2A2414">
+              <span aria-hidden="true" style="{{r.stripe}}"></span>
+              <span style="{{r.avatar}}">{{r.initial}}</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 800">{{r.title}}</span><span style="font-size: 14px; font-weight: 700; color: #5A503A">{{r.sub}}</span></span>
+            </a>
+          </sc-for>
+          <sc-if value="{{sel.empty}}" hint-placeholder-val="{{false}}"><p style="margin: 8px 0; font-size: 16px; font-weight: 700; color: #5A503A">Nothing planned yet.</p></sc-if>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"w":{"editor":"number","default":390},"h":{"editor":"number","default":844},"view":{"editor":"enum","options":["month","week","day"],"default":"month"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { view: props.view || 'month', mo: 0, wk: 0, dd: 0, sel: Date.UTC(2026, 9, 25), sheet: false, menu: false, hidden: {} };
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var W = parseInt(this.props.w, 10) || 390, H = parseInt(this.props.h, 10) || 844;
+    // Width decides what fits: phone → + view switch and people filter in view, selected day stays open → + side rail, day beside the month.
+    var compact = W < 600, rail = W >= 960, wide = !compact;
+    var side = compact ? 20 : 24, topPad = W < 500 ? 54 : 24;
+    var DAY = 86400000, TODAY = Date.UTC(2026, 9, 25);
+    var MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var MSHORT = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
+    var WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0', All: '#FF9478', Oth: '#EFE8D8' };
+    var NAME = { G: 'Gabriel', E: 'Eva', J: 'James', All: 'Everyone', Oth: 'Others' };
+    var ORDER = { 'All day': 0, 'Early morning': 1, 'Morning': 2, 'Lunch': 3, 'Afternoon': 4, 'Evening': 5 };
+    var hidden = s.hidden;
+    var visible = function (who) { return who.some(function (k) { return !hidden[k]; }); };
+    var bg = function (who) { return who[1] ? 'linear-gradient(90deg, ' + C[who[0]] + ' 50%, ' + C[who[1]] + ' 50%)' : C[who[0]]; };
+    var d = function (m, day) { return Date.UTC(2026, m - 1, day); };
+    var every = function (dow, from, to) { var out = []; for (var t = from; t <= to; t += DAY) if (new Date(t).getUTCDay() === dow) out.push(t); return out; };
+
+    // Same family events as the iPhone month.
+    var EV = [
+      { t: 'Baby music', who: ['J'], slot: 'Morning', days: every(6, d(9, 5), d(12, 12)) },
+      { t: 'Yoga', who: ['E'], slot: 'Evening', days: every(2, d(9, 1), d(12, 15)) },
+      { t: 'Baby swim', who: ['J'], slot: 'Afternoon', days: every(0, d(10, 4), d(12, 13)) },
+      { t: 'Poker', who: ['G'], slot: 'Evening', days: [d(9, 11), d(9, 25), d(10, 9), d(10, 23), d(10, 30), d(11, 6), d(11, 20), d(12, 4)] },
+      { t: 'Book club', who: ['E'], slot: 'Evening', days: [d(9, 17), d(10, 8), d(11, 12), d(12, 10)] },
+      { t: 'Pediatrician', who: ['J'], slot: 'Morning', days: [d(9, 14), d(10, 28), d(11, 11)] },
+      { t: 'School night', who: ['G', 'E'], slot: 'Evening', days: [d(10, 1)] },
+      { t: 'Apple picking', who: ['All'], slot: 'All day', days: [d(10, 11)] },
+      { t: 'Vet', who: ['G'], slot: 'Early morning', days: [d(10, 15)] },
+      { t: 'Brunch', who: ['All'], slot: 'Lunch', days: [d(10, 18), d(10, 25), d(11, 15)] },
+      { t: 'Busy', who: ['E'], slot: 'Afternoon', days: [d(10, 22)] },
+      { t: 'Movie night', who: ['All'], slot: 'Evening', days: [d(10, 25)] },
+      { t: 'Run', who: ['G'], slot: 'Early morning', days: [d(10, 26)] },
+      { t: 'Eva’s bday', who: ['E'], slot: 'All day', days: [d(10, 27)] },
+      { t: 'Dentist', who: ['G'], slot: 'Morning', days: [d(10, 29)] },
+      { t: 'Halloween', who: ['All'], slot: 'Afternoon', days: [d(10, 31)] },
+      { t: 'Surprise', who: ['G', 'J'], slot: 'Evening', days: [d(10, 31)] },
+      { t: 'Dinner at Sam’s', who: ['Oth'], slot: 'Evening', days: [d(11, 21)] },
+      { t: 'Thanksgiving', who: ['All'], slot: 'All day', days: [d(11, 26)] },
+      { t: 'Grandma visits', who: ['All'], slot: 'All day', span: [d(10, 16), d(10, 19)] },
+      { t: 'Lyon trip', who: ['E'], slot: 'All day', span: [d(10, 28), d(10, 30)] },
+      { t: 'Paris for the holidays', who: ['All'], slot: 'All day', span: [d(12, 19), d(12, 26)] }
+    ].filter(function (e) { return visible(e.who); });
+    var byDay = {};
+    EV.forEach(function (e) {
+      var ds = (e.days || []).slice();
+      if (e.span) for (var t = e.span[0]; t <= e.span[1]; t += DAY) ds.push(t);
+      ds.forEach(function (t) {
+        var part = !e.span ? 'single' : t === e.span[0] ? 'start' : t === e.span[1] ? 'end' : 'mid';
+        (byDay[t] = byDay[t] || []).push({ e: e, part: part });
+      });
+    });
+    var sortL = function (l) { return l.slice().sort(function (a, b) { return (a.e.span ? -1 : ORDER[a.e.slot]) - (b.e.span ? -1 : ORDER[b.e.slot]); }); };
+    var lbl = function (who) { return who.filter(function (w) { return w !== 'Oth'; }).slice(0, 2).join('·'); };
+    var dayRows = function (t) {
+      return sortL(byDay[t] || []).map(function (x) {
+        var e = x.e, col = bg(e.who), ini = lbl(e.who) || '';
+        return {
+          title: e.t, sub: e.span ? 'All day · day ' + (Math.round((t - e.span[0]) / DAY) + 1) + ' of ' + (Math.round((e.span[1] - e.span[0]) / DAY) + 1) : e.slot, initial: ini,
+          stripe: 'width: 6px; align-self: stretch; border-radius: 3px; flex: none; background: ' + col,
+          avatar: 'width: 36px; height: 36px; flex: none; border-radius: 50%; background: ' + col + '; display: flex; align-items: center; justify-content: center; font-size: ' + (ini.length > 1 ? '11px' : '15px') + '; font-weight: 900' + (e.who[0] === 'Oth' ? '; box-shadow: inset 0 0 0 1px #D8CBA4' : '')
+        };
+      });
+    };
+
+    // Two-column lists read by column: first column top to bottom, then the second, split where heights balance.
+    var splitCols = function (items, n, wf) {
+      var out = [], total = 0, acc = 0, k = 0;
+      for (var i = 0; i < n; i++) out.push([]);
+      items.forEach(function (x) { total += wf(x); });
+      items.forEach(function (x) {
+        var wgt = wf(x);
+        if (k < n - 1 && out[k].length && acc + wgt / 2 > total * (k + 1) / n) k++;
+        out[k].push(x); acc += wgt;
+      });
+      return out;
+    };
+    var view = s.view, title = '', unit = view;
+    // ---------- MONTH ----------
+    var first = Date.UTC(2026, 9 + s.mo, 1), fd = new Date(first), fy = fd.getUTCFullYear(), fm = fd.getUTCMonth();
+    var dim = new Date(Date.UTC(fy, fm + 1, 0)).getUTCDate(), lead = fd.getUTCDay(), gridStart = first - lead * DAY;
+    var nWeeks = Math.ceil((lead + dim) / 7);
+    var headH = compact ? topPad + 108 : topPad + 112;
+    var bodyAvail = H - headH - (rail ? 24 : 0);
+    var rowH = compact ? 120 : rail ? Math.max(96, Math.floor((bodyAvail - 40) / nWeeks)) : 124;
+    var chipH = compact ? 15 : 20, chipF = compact ? 10 : 12;
+    var maxChips = Math.max(1, Math.floor((rowH - (compact ? 26 : 30)) / (chipH + 2)));
+    var weeks = [];
+    for (var w = 0; w < nWeeks; w++) {
+      var cells = [];
+      for (var c = 0; c < 7; c++) {
+        var t = gridStart + (w * 7 + c) * DAY, dt = new Date(t), inM = dt.getUTCMonth() === fm;
+        var list = sortL(byDay[t] || []);
+        var cap = list.length > maxChips ? maxChips - 1 : maxChips;
+        var chips = list.slice(0, cap).map(function (x) {
+          if (x.part !== 'single') return { text: '', style: 'display: block; flex: none; height: ' + chipH + 'px' };
+          return { text: x.e.t, style: 'display: block; flex: none; height: ' + chipH + 'px; line-height: ' + chipH + 'px; padding: 0 ' + (compact ? 3 : 6) + 'px; border-radius: ' + (compact ? 4 : 6) + 'px; box-sizing: border-box; background: ' + bg(x.e.who) + '; font-size: ' + chipF + 'px; font-weight: 800; color: #2A2414' + (x.e.who[0] === 'Oth' ? '; box-shadow: inset 0 0 0 1px #D8CBA4' : '') };
+        });
+        var more = list.length - chips.length, isToday = t === TODAY, isSel = wide && t === s.sel, past = t < TODAY;
+        cells.push({
+          num: dt.getUTCDate(), chips: chips, more: more > 0, moreText: '+' + more,
+          aria: MON[dt.getUTCMonth()] + ' ' + dt.getUTCDate() + (list.length ? ': ' + list.map(function (x) { return x.e.t; }).join(', ') : ': nothing planned'),
+          open: (function (tt) { return function () { self.setState({ sel: tt, sheet: compact }); }; })(t),
+          style: 'width: 100%; border: none; text-align: left; cursor: pointer; height: ' + rowH + 'px; overflow: hidden; box-sizing: border-box; padding: ' + (compact ? '3px 3px 4px' : '6px 6px 6px') + '; display: flex; flex-direction: column; gap: 2px; color: #2A2414; border-right: 1px solid #F2E6C4; border-bottom: 1px solid #F2E6C4; ' +
+            (isSel ? 'box-shadow: inset 0 0 0 2.5px #2A2414; background: #FFFFFF' : isToday ? 'box-shadow: inset 0 0 0 2.5px #5A6820; background: #FFFFFF' : (!inM || past) ? 'background: #FFF8E3' : 'background: #FFFFFF'),
+          numStyle: isToday
+            ? 'align-self: flex-start; flex: none; min-width: ' + (compact ? 18 : 24) + 'px; height: ' + (compact ? 18 : 24) + 'px; border-radius: 12px; background: #5A6820; color: #FFFFFF; font-size: ' + (compact ? 11 : 14) + 'px; font-weight: 900; display: flex; align-items: center; justify-content: center'
+            : 'flex: none; height: ' + (compact ? 18 : 24) + 'px; padding-left: 2px; font-size: ' + (compact ? 11 : 14) + 'px; font-weight: 800; display: flex; align-items: center; color: ' + (!inM ? '#8F866C' : past ? '#5A503A' : '#2A2414')
+        });
+      }
+      weeks.push({ cells: cells, bars: [] });
+    }
+    var gIdx = function (t) { return Math.round((t - gridStart) / DAY); };
+    EV.filter(function (e) { return e.span; }).forEach(function (e) {
+      var a = Math.max(0, gIdx(e.span[0])), b = Math.min(nWeeks * 7 - 1, gIdx(e.span[1]));
+      while (a <= b) {
+        var wr = Math.floor(a / 7), end = Math.min(b, wr * 7 + 6), col = a % 7, n = end - a + 1;
+        var fp = a === gIdx(e.span[0]), lp = end === gIdx(e.span[1]);
+        weeks[wr].bars.push({
+          text: e.t + (fp ? '' : ' (cont.)'),
+          style: 'position: absolute; top: ' + (compact ? 23 : 32) + 'px; height: ' + chipH + 'px; line-height: ' + chipH + 'px; left: calc(' + (col * 100 / 7) + '% + ' + (compact ? 3 : 6) + 'px); width: calc(' + (n * 100 / 7) + '% - ' + (compact ? 6 : 12) + 'px); box-sizing: border-box; padding: 0 6px; border-radius: ' + (fp ? '6px' : '0') + ' ' + (lp ? '6px 6px' : '0 0') + ' ' + (fp ? '6px' : '0') + '; background: ' + bg(e.who) + '; font-size: ' + chipF + 'px; font-weight: 800; z-index: 1; pointer-events: none'
+        });
+        a = end + 1;
+      }
+    });
+    var selD = new Date(s.sel), selRows = dayRows(s.sel);
+    var sel = {
+      title: WD[selD.getUTCDay()] + ', ' + MON[selD.getUTCMonth()] + ' ' + selD.getUTCDate(),
+      short: WD[selD.getUTCDay()].slice(0, 3) + ' ' + selD.getUTCDate(),
+      count: selRows.length ? selRows.length + (selRows.length === 1 ? ' event' : ' events') : 'Nothing planned',
+      rows: selRows, empty: selRows.length === 0
+    };
+
+    // ---------- WEEK ----------
+    var wBase = TODAY + s.wk * 7 * DAY, wFirst = new Date(wBase), wLast = new Date(wBase + 6 * DAY);
+    var PX = compact ? 36 : 44, HS = 6, gut = compact ? 38 : 52;
+    var toH = function (x) { var p = x.split(':'); return +p[0] + (+p[1]) / 60; };
+    var SLOT = { 'Early morning': ['06:00', '09:00'], 'Morning': ['09:00', '12:00'], 'Lunch': ['12:00', '14:00'], 'Afternoon': ['14:00', '18:00'], 'Evening': ['18:00', '22:00'] };
+    var THIS_WEEK = [
+      { d: 0, slot: 'Lunch', who: ['All'], t: 'Brunch' }, { d: 0, s: '14:30', e: '16:30', who: ['J'], t: 'Baby swim' }, { d: 0, s: '16:00', e: '17:00', who: ['G'], t: 'Coffee' },
+      { d: 0, slot: 'Evening', who: ['All'], t: 'Movie night' }, { d: 0, s: '19:00', e: '23:00', who: ['G'], t: 'Poker' }, { d: 1, s: '06:30', e: '07:30', who: ['G'], t: 'Run' },
+      { d: 1, s: '08:00', e: '09:30', who: ['E', 'J'], t: 'Baby yoga' }, { d: 2, slot: 'Evening', who: ['E'], t: 'Yoga' }, { d: 3, s: '10:00', e: '10:30', who: ['J'], t: 'Pediatrician' },
+      { d: 4, s: '10:30', e: '11:15', who: ['G'], t: 'Dentist' }, { d: 4, s: '10:00', e: '12:00', who: ['G'], t: 'Work call' }, { d: 5, slot: 'Evening', who: ['G'], t: 'Poker' },
+      { d: 6, slot: 'Morning', who: ['J'], t: 'Baby music' }, { d: 6, s: '10:30', e: '12:30', who: ['E'], t: 'Brunch w/ Ana' }, { d: 6, s: '15:00', e: '17:30', who: ['All'], t: 'Halloween' },
+      { d: 6, slot: 'Evening', who: ['G', 'J'], t: 'Surprise' }
+    ];
+    var REPEAT = [{ d: 0, s: '14:30', e: '16:30', who: ['J'], t: 'Baby swim' }, { d: 1, s: '06:30', e: '07:30', who: ['G'], t: 'Run' }, { d: 2, slot: 'Evening', who: ['E'], t: 'Yoga' }, { d: 6, slot: 'Morning', who: ['J'], t: 'Baby music' }];
+    var ALLDAY = { 0: [{ t: 'Eva’s birthday', who: ['E'], col: 3, span: 1 }, { t: 'Lyon trip', who: ['E'], col: 4, span: 3 }] };
+    var WEV = (s.wk === 0 ? THIS_WEEK : REPEAT).filter(function (e) { return visible(e.who); }).map(function (e) {
+      var r = e.slot ? SLOT[e.slot] : [e.s, e.e];
+      return Object.assign({}, e, { a: toH(r[0]), b: toH(r[1]), label: e.slot || e.s });
+    });
+    var cols = [];
+    for (var dd = 0; dd < 7; dd++) {
+      var dl = WEV.filter(function (e) { return e.d === dd; }).sort(function (x, y) { return x.a - y.a || y.b - x.b; });
+      var lanes = [], groups = [], cur = null;
+      dl.forEach(function (e) {
+        if (!cur || e.a >= cur.end) { cur = { end: e.b, items: [], n: 1 }; groups.push(cur); lanes = []; }
+        var lane = 0; while (lanes[lane] !== undefined && lanes[lane] > e.a) lane++;
+        lanes[lane] = e.b; e.lane = lane; cur.items.push(e); cur.end = Math.max(cur.end, e.b); cur.n = Math.max(cur.n, lane + 1);
+      });
+      var evs = [];
+      groups.forEach(function (g) {
+        g.items.forEach(function (e) {
+          var wdt = 100 / g.n, narrow = g.n > 1 && compact;
+          evs.push({
+            top: narrow ? e.who.slice(0, 2).join('·') : e.who.slice(0, 2).join('·') + ' ' + e.label, title: e.t,
+            aria: e.t + ', ' + WD[e.d] + ', ' + (e.slot || e.s + ' to ' + e.e),
+            topStyle: 'font-size: ' + (compact ? 10 : 12) + 'px; font-weight: 900; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis',
+            titleStyle: 'font-size: ' + (compact ? 11 : 14) + 'px; font-weight: 800; line-height: 1.15; overflow: hidden; word-break: break-word',
+            style: 'position: absolute; top: ' + ((e.a - HS) * PX + 1) + 'px; height: ' + Math.max(compact ? 22 : 30, (e.b - e.a) * PX - 2) + 'px; left: calc(' + (e.lane * wdt) + '% + 1px); width: calc(' + wdt + '% - 2px); box-sizing: border-box; padding: ' + (compact ? '3px' : '5px 6px') + '; border-radius: ' + (compact ? 7 : 10) + 'px; overflow: hidden; display: flex; flex-direction: column; gap: 1px; text-decoration: none; color: #2A2414; background: ' + bg(e.who) + (e.slot ? '; box-shadow: inset 0 0 0 1.5px rgba(42,36,20,0.18)' : '; box-shadow: inset 3px 0 0 #2A2414')
+          });
+        });
+      });
+      var isT = s.wk === 0 && dd === 0;
+      cols.push({ isToday: isT, events: evs, style: 'position: relative; min-width: 0; height: ' + (18 * PX) + 'px' + (isT ? '; background: rgba(255,207,92,0.12)' : '') });
+    }
+    var hours = [];
+    for (var hh = HS; hh < 24; hh++) hours.push({ label: (hh < 10 ? '0' : '') + hh + ':00', style: 'position: absolute; right: 6px; top: ' + (hh === HS ? 0 : (hh - HS) * PX - 7) + 'px; font-size: ' + (compact ? 10 : 12) + 'px; font-weight: 800; color: #5A503A' });
+
+    // ---------- DAY ----------
+    var dT = TODAY + s.dd * DAY, dDate = new Date(dT), dwd = dDate.getUTCDay();
+    var BAND_START = { 'Early morning': '06:00', 'Morning': '09:00', 'Lunch': '12:00', 'Afternoon': '14:00', 'Evening': '18:00' };
+    var mk = function (who, ttl, band, start, place, extra) {
+      extra = extra || {};
+      return {
+        who: who, band: band, title: ttl, sub: (start === BAND_START[band] ? band : start) + (place ? ' · ' + place : ''), initial: who, now: !!extra.now, hasDriver: !!extra.driver, driver: extra.driver || '',
+        stripe: 'width: 6px; align-self: stretch; border-radius: 3px; flex: none; background: ' + C[who],
+        avatar: 'width: 36px; height: 36px; flex: none; border-radius: 50%; background: ' + C[who] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (who.length > 1 ? '12px' : '15px') + '; font-weight: 900'
+      };
+    };
+    var dl2 = [], dAll = [];
+    if (s.dd === 0) dl2 = [mk('All', 'Brunch at Grandma’s', 'Lunch', '12:00', 'Grandma’s house', { now: true }), mk('J', 'Baby swim class', 'Afternoon', '14:30', 'Aquatic Center', { driver: 'Gabriel takes James' }), mk('G', 'Coffee with Sam', 'Afternoon', '16:00', 'Café Lalo'), mk('All', 'Movie night', 'Evening', '18:00', 'Living room'), mk('G', 'Poker night', 'Evening', '18:00', 'at Sam’s')];
+    else {
+      if (dwd === 0) dl2.push(mk('J', 'Baby swim class', 'Afternoon', '14:30', 'Aquatic Center', { driver: 'Gabriel takes James' }));
+      if (dwd === 1) dl2.push(mk('G', 'Morning run', 'Early morning', '06:30', 'Riverside Park'));
+      if (dwd === 2) dl2.push(mk('E', 'Yoga', 'Evening', '18:00', 'Studio Ama'));
+      if (dwd === 6) dl2.push(mk('J', 'Baby music class', 'Morning', '09:00', 'Little Notes studio'));
+      if (s.dd === 3) dl2.push(mk('J', 'Pediatrician', 'Morning', '10:00', 'Dr. Lee', { driver: 'Gabriel takes James' }));
+      if (s.dd === 4) dl2.push(mk('G', 'Dentist', 'Morning', '10:30', 'Smile Dental'));
+      if (s.dd === 6) dl2.push(mk('All', 'Halloween walk', 'Afternoon', '15:00', 'Our street'));
+      if (s.dd === 2) dAll.push({ who: 'E', title: 'Eva’s birthday', tag: 'Birthday' });
+      if (s.dd >= 3 && s.dd <= 5) dAll.push({ who: 'E', title: 'Lyon trip', tag: 'Day ' + (s.dd - 2) + ' of 3' });
+    }
+    dl2 = dl2.filter(function (e) { return !hidden[e.who]; });
+    var bands = [
+      { label: 'Early morning', lower: 'early morning', hours: '06:00–09:00' }, { label: 'Morning', lower: 'morning', hours: '09:00–12:00' },
+      { label: 'Lunch', lower: 'lunch slot', hours: '12:00–14:00' }, { label: 'Afternoon', lower: 'afternoon', hours: '14:00–18:00' }, { label: 'Evening', lower: 'evening', hours: '18:00–22:00' }
+    ].map(function (b) { b.events = dl2.filter(function (e) { return e.band === b.label; }); b.empty = b.events.length === 0; return b; });
+    var counts = {}; dl2.concat(dAll).forEach(function (e) { counts[e.who] = (counts[e.who] || 0) + 1; });
+    var busy = ['G', 'E', 'J', 'All'].filter(function (k) { return counts[k]; }).map(function (k) {
+      return { initial: k, label: NAME[k] + ' ' + counts[k], dot: 'width: 28px; height: 28px; border-radius: 50%; background: ' + C[k] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (k.length > 1 ? '11px' : '13px') + '; font-weight: 900' };
+    });
+    // mini month (October) for the day view's side column
+    var octFirst = Date.UTC(2026, 9, 1), octLead = new Date(octFirst).getUTCDay(), mini = [];
+    for (var mi = 0; mi < 35; mi++) {
+      var mt = octFirst + (mi - octLead) * DAY, mdt = new Date(mt), inOct = mdt.getUTCMonth() === 9, isD = mt === dT, isTd = mt === TODAY, has = (byDay[mt] || []).length > 0;
+      mini.push({
+        num: mdt.getUTCDate(), aria: MON[mdt.getUTCMonth()] + ' ' + mdt.getUTCDate(),
+        open: (function (x) { return function () { self.setState({ dd: Math.round((x - TODAY) / DAY) }); }; })(mt),
+        style: 'height: 38px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; font-size: 14px; font-weight: ' + (isD ? '900' : '700') + '; ' + (isD ? 'background: #2A2414; color: #FFFFFF' : isTd ? 'background: #5A6820; color: #FFFFFF' : 'background: transparent; color: ' + (inOct ? '#2A2414' : '#8F866C')),
+        dot: 'width: 5px; height: 5px; border-radius: 50%; background: ' + (has ? (isD || isTd ? '#FFCF5C' : '#5A6820') : 'transparent')
+      });
+    }
+    var upcoming = [1, 2, 3].map(function (k) {
+      var ut = dT + k * DAY, ud = new Date(ut), names = sortL(byDay[ut] || []).map(function (x) { return x.e.t; });
+      return { dow: WD[ud.getUTCDay()].slice(0, 3), num: ud.getUTCDate(), text: names.length ? names.join(' · ') : 'Nothing planned', open: function () { self.setState({ dd: s.dd + k }); } };
+    });
+
+    // ---------- header ----------
+    if (view === 'month') title = MON[fm] + (fy === 2026 ? '' : ' ' + fy);
+    if (view === 'week') { var same = wFirst.getUTCMonth() === wLast.getUTCMonth(); title = (compact ? MSHORT : MON)[wFirst.getUTCMonth()] + ' ' + wFirst.getUTCDate() + ' – ' + (same ? '' : (compact ? MSHORT : MON)[wLast.getUTCMonth()] + ' ') + wLast.getUTCDate(); }
+    if (view === 'day') title = (compact ? WD[dwd].slice(0, 3) : WD[dwd]) + ', ' + MON[dDate.getUTCMonth()] + ' ' + dDate.getUTCDate();
+    var step = function (dir) {
+      if (view === 'month') self.setState({ mo: s.mo + dir });
+      if (view === 'week') self.setState({ wk: s.wk + dir });
+      if (view === 'day') self.setState({ dd: s.dd + dir });
+    };
+    var VIEWS = [{ id: 'month', label: 'Month' }, { id: 'week', label: 'Week' }, { id: 'day', label: 'Day' }];
+    var people = ['G', 'E', 'J', 'All', 'Oth'].map(function (k) {
+      var on = !hidden[k];
+      return {
+        name: NAME[k], initial: k === 'Oth' ? '' : k === 'All' ? 'All' : k, pressed: on ? 'true' : 'false',
+        toggle: function () { var h = Object.assign({}, self.state.hidden); h[k] = !h[k]; self.setState({ hidden: h }); },
+        chip: 'height: 40px; padding: 0 12px 0 4px; border-radius: 999px; border: none; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; cursor: pointer; ' + (on ? 'background: #FFFFFF; color: #2A2414' : 'background: transparent; color: #5A503A; box-shadow: inset 0 0 0 2px #EEDFB5; text-decoration: line-through'),
+        dot: 'width: 30px; height: 30px; border-radius: 50%; background: ' + (on ? C[k] : '#EFE8D8') + '; display: flex; align-items: center; justify-content: center; font-size: ' + (k === 'All' ? '10px' : '12px') + '; font-weight: 900' + (k === 'Oth' ? '; box-shadow: inset 0 0 0 1px #D8CBA4' : '')
+      };
+    });
+
+    return {
+      W: W, H: H, rail: rail, bar: !rail, compact: compact, wide: wide,
+      rootStyle: 'width: ' + W + 'px; height: ' + H + 'px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: Nunito, sans-serif; display: flex; overflow: hidden; position: relative',
+      headStyle: 'flex: none; padding: ' + topPad + 'px ' + side + 'px 10px; display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 12',
+      bodyStyle: 'flex: 1; min-height: 0; overflow-y: auto; padding: ' + (compact ? '4px 8px 180px' : '4px ' + side + 'px ' + (rail ? 24 : 180) + 'px'),
+      title: title, prevLabel: 'Previous ' + unit, nextLabel: 'Next ' + unit,
+      viewLabel: VIEWS.filter(function (v) { return v.id === view; })[0].label,
+      viewMenu: s.menu, viewMenuAria: s.menu ? 'true' : 'false', toggleViewMenu: function () { self.setState({ menu: !s.menu }); },
+      views: VIEWS.map(function (v) {
+        var on = v.id === view;
+        return {
+          label: v.label, pressed: on ? 'true' : 'false', aria: on ? 'page' : 'false',
+          pick: function () { self.setState({ view: v.id, menu: false }); },
+          segStyle: 'height: 44px; padding: 0 18px; border-radius: 11px; border: none; cursor: pointer; font-size: 15px; color: #2A2414; ' + (on ? 'background: #FFFFFF; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)' : 'background: transparent; font-weight: 700; color: #5A503A'),
+          menuStyle: 'min-height: 48px; padding: 0 12px; border-radius: 12px; border: none; text-align: left; cursor: pointer; color: #2A2414; font-size: 16px; ' + (on ? 'background: #FFF0C9; font-weight: 900' : 'background: transparent; font-weight: 700')
+        };
+      }),
+      people: people,
+      goPrev: function () { step(-1); }, goNext: function () { step(1); },
+      goToday: function () { self.setState({ mo: 0, wk: 0, dd: 0, sel: TODAY }); },
+      isMonth: view === 'month', isWeek: view === 'week', isDay: view === 'day',
+      // month
+      monthWrap: rail ? 'display: flex; gap: 16px; align-items: flex-start' : 'display: flex; flex-direction: column; gap: 16px',
+      gridCard: 'flex: 1; min-width: 0; background: #FFFFFF; border-radius: ' + (compact ? 20 : 22) + 'px; overflow: hidden',
+      wdStyle: 'text-align: center; font-size: ' + (compact ? 12 : 13) + 'px; font-weight: 900; color: #5A503A',
+      weekdays: compact ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+      weeks: weeks, moreStyle: 'flex: none; font-size: ' + (compact ? 10 : 12) + 'px; font-weight: 900; color: #5A503A; padding-left: 2px',
+      dayPanel: wide, sel: sel,
+      panelStyle: 'display: flex; flex-direction: column; gap: 12px; ' + (rail ? 'width: 320px; flex: none' : ''),
+      selRows: 'display: ' + (rail ? 'flex; flex-direction: column' : 'grid; grid-template-columns: repeat(2, minmax(0, 1fr))') + '; gap: 8px',
+      sheetOpen: compact && s.sheet && view === 'month', closeSheet: function () { self.setState({ sheet: false }); },
+      // week
+      weekCard: 'background: #FFFFFF; border-radius: ' + (compact ? 20 : 22) + 'px; overflow: hidden',
+      weekHead: 'display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; padding: 8px 4px 8px ' + gut + 'px; border-bottom: 1.5px solid #F2E6C4',
+      wdays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(function (l, i) {
+        var dt2 = new Date(wBase + i * DAY), td = s.wk === 0 && i === 0;
+        return {
+          letter: compact ? l : WD[i].slice(0, 3), num: dt2.getUTCDate(), aria: WD[i] + ' ' + MON[dt2.getUTCMonth()] + ' ' + dt2.getUTCDate() + ', open day',
+          open: (function (k) { return function () { self.setState({ view: 'day', dd: s.wk * 7 + k }); }; })(i),
+          letterStyle: 'font-size: ' + (compact ? 12 : 13) + 'px; font-weight: 900; color: #5A503A',
+          numStyle: td ? 'width: ' + (compact ? 28 : 34) + 'px; height: ' + (compact ? 28 : 34) + 'px; border-radius: 50%; background: #5A6820; color: #FFFFFF; font-size: ' + (compact ? 15 : 18) + 'px; font-weight: 900; display: flex; align-items: center; justify-content: center' : 'height: ' + (compact ? 28 : 34) + 'px; font-size: ' + (compact ? 15 : 18) + 'px; font-weight: 800; display: flex; align-items: center'
+        };
+      }),
+      gutterLabel: 'width: ' + gut + 'px; flex: none; text-align: right; padding-right: 6px; box-sizing: border-box; font-size: ' + (compact ? 10 : 12) + 'px; font-weight: 900; color: #5A503A',
+      allDayW: (s.wk === 0 ? ALLDAY[0] : []).filter(function (e) { return visible(e.who); }).map(function (e) {
+        return { text: e.t, style: 'grid-column: ' + e.col + ' / span ' + e.span + '; grid-row: 1; height: ' + (compact ? 28 : 32) + 'px; line-height: ' + (compact ? 28 : 32) + 'px; padding: 0 8px; border-radius: 8px; background: ' + bg(e.who) + '; color: #2A2414; text-decoration: none; font-size: ' + (compact ? 11 : 14) + 'px; font-weight: 800; white-space: nowrap; overflow: hidden' };
+      }),
+      hourCol: 'width: ' + gut + 'px; flex: none; position: relative; height: ' + (18 * PX) + 'px',
+      gridStyle: 'flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; height: ' + (18 * PX) + 'px; background: repeating-linear-gradient(to bottom, #F2E6C4 0, #F2E6C4 1px, transparent 1px, transparent ' + PX + 'px)',
+      cols: cols, hours: hours,
+      nowStyle: 'position: absolute; left: -2px; right: -2px; top: ' + ((toH('13:20') - HS) * PX) + 'px; height: 2px; background: #5A6820; z-index: 2',
+      // day
+      dayWrap: rail ? 'display: flex; gap: 20px; align-items: flex-start' : 'display: flex; flex-direction: column',
+      dayMain: 'flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px' + (compact ? '; padding: 0 12px' : ''),
+      bandGrid: compact ? 'display: flex; flex-direction: column; gap: 16px' : 'display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 16px; align-items: start',
+      bandCols: splitCols(bands, compact ? 1 : 2, function (b) { return 1 + Math.max(1, b.events.length); }).map(function (l) { return { bands: l }; }),
+      selCols: splitCols(selRows, wide && !rail ? 2 : 1, function () { return 1; }).map(function (l) { return { rows: l }; }),
+      busy: busy, hasAllDay: dAll.length > 0,
+      dayAll: dAll.map(function (e) { return { title: e.title, tag: e.tag, style: 'min-height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: 18px; background: ' + C[e.who] + '; color: #2A2414; text-decoration: none; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 800' }; }),
+      bands: bands, dayAside: rail, mini: mini, miniTitle: 'October', upcoming: upcoming
+    };
+  }
+}
+</script>
+</body>
+</html>

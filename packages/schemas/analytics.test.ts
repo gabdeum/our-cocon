@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createAnonymousTracker, createTracker, type AnalyticsTransport } from './analytics';
 
 function fakeTransport() {
-  return { capture: vi.fn(), identify: vi.fn(), group: vi.fn(), reset: vi.fn() } satisfies AnalyticsTransport;
+  return { capture: vi.fn(), identify: vi.fn(), group: vi.fn(), reset: vi.fn(), register: vi.fn() } satisfies AnalyticsTransport;
 }
 
 describe('createTracker', () => {
@@ -284,5 +284,34 @@ describe('createAnonymousTracker (spec 019)', () => {
 
   it('does nothing without a transport', () => {
     expect(() => createAnonymousTracker(null).track('shared_recipe_viewed', {})).not.toThrow();
+  });
+});
+
+// Spec 063: the layout tier and device class go with every event, and survive sign-out.
+describe('super properties', () => {
+  it('registers only the layout tier and device class', () => {
+    const t = fakeTransport();
+    createTracker(t).register({ layout_tier: 'medium', device_class: 'tablet' });
+    expect(t.register).toHaveBeenCalledWith({ layout_tier: 'medium', device_class: 'tablet' });
+    const extra = { layout_tier: 'medium', device_class: 'tablet', name: 'Gabriel' } as never;
+    expect(() => createTracker(t).register(extra)).toThrow();
+    expect(() => createTracker(t).register({ layout_tier: 'huge', device_class: 'tablet' } as never)).toThrow();
+  });
+
+  it('registers them again after a reset', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.reset();
+    expect(t.register).not.toHaveBeenCalled();
+    tracker.register({ layout_tier: 'compact', device_class: 'phone' });
+    tracker.reset();
+    expect(t.reset).toHaveBeenCalledTimes(2);
+    expect(t.register).toHaveBeenLastCalledWith({ layout_tier: 'compact', device_class: 'phone' });
+    expect(t.register).toHaveBeenCalledTimes(2);
+  });
+
+  it('works with a transport that has no super properties (the MCP server)', () => {
+    const { register: _, ...t } = fakeTransport();
+    expect(() => createTracker(t).register({ layout_tier: 'expanded', device_class: 'desktop' })).not.toThrow();
   });
 });

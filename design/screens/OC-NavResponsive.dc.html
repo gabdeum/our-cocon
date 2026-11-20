@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Navigation · tab bar or side rail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="{{root}}">
+  <!-- Below 960 wide: the iPhone tab bar, capped at 520 and centred -->
+  <sc-if value="{{isBar}}" hint-placeholder-val="{{true}}">
+    <div style="width: 100%; max-width: 520px; margin: 0 auto; height: 100%; box-sizing: border-box; padding: 0 16px 26px; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px">
+      <sc-if value="{{showTimers}}" hint-placeholder-val="{{true}}">
+        <a href="#timers" aria-label="2 timers running. Open timers" style="align-self: center; height: 50px; box-sizing: border-box; padding: 0 6px 0 14px; border-radius: 999px; background: #FFFFFF; color: #2A2414; text-decoration: none; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(42,36,20,0.22); border: 2px solid #FFCF5C">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6820" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+          <span style="font-size: 15px; font-weight: 800">Blind bake</span>
+          <span style="font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums">11:42</span>
+          <span style="font-size: 13px; font-weight: 900; background: #FFCF5C; padding: 6px 10px; border-radius: 999px">+1</span>
+        </a>
+      </sc-if>
+      <nav aria-label="Main" style="width: 100%; height: 68px; flex: none; border-radius: 34px; background: #2A2414; display: flex; gap: 4px; padding: 8px; box-sizing: border-box; box-shadow: 0 8px 24px rgba(42,36,20,0.25)">
+        <sc-for list="{{items}}" as="it" hint-placeholder-count="5">
+          <a href="{{it.href}}" aria-label="{{it.label}}" aria-current="{{it.aria}}" style="{{it.barStyle}}">
+            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{it.d}}"/></svg>
+            <sc-if value="{{it.on}}" hint-placeholder-val="{{false}}"><span>{{it.label}}</span></sc-if>
+          </a>
+        </sc-for>
+      </nav>
+    </div>
+  </sc-if>
+
+  <!-- 960 and wider: the same tabs as a side rail, labels always shown -->
+  <sc-if value="{{isRail}}" hint-placeholder-val="{{false}}">
+    <div style="height: 100%; box-sizing: border-box; padding: 12px 0 12px 12px">
+      <nav aria-label="Main" style="height: 100%; box-sizing: border-box; border-radius: 30px; background: #2A2414; padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 8px 24px rgba(42,36,20,0.25)">
+        <span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 12px; background: #FFCF5C; color: #2A2414; display: flex; align-items: center; justify-content: center; margin-bottom: 12px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M12 17.5s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6Z"/></svg>
+        </span>
+        <sc-for list="{{items}}" as="it" hint-placeholder-count="5">
+          <a href="{{it.href}}" aria-current="{{it.aria}}" style="{{it.railStyle}}">
+            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{it.d}}"/></svg>
+            <span>{{it.label}}</span>
+          </a>
+        </sc-for>
+        <span style="flex: 1"></span>
+        <sc-if value="{{showTimers}}" hint-placeholder-val="{{true}}">
+          <a href="#timers" aria-label="2 timers running. Blind bake 11:42. Open timers" style="width: 76px; box-sizing: border-box; padding: 8px 4px; border-radius: 20px; background: #FFFFFF; border: 2px solid #FFCF5C; color: #2A2414; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 2px">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6820" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+            <span style="font-size: 16px; font-weight: 900; font-variant-numeric: tabular-nums">11:42</span>
+            <span style="font-size: 12px; font-weight: 900; background: #FFCF5C; padding: 2px 8px; border-radius: 999px">+1</span>
+          </a>
+        </sc-if>
+      </nav>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["home","calendar","recipes","groceries","settings"],"default":"home"},"mode":{"editor":"enum","options":["bar","rail"],"default":"bar"},"w":{"editor":"number","default":390},"h":{"editor":"number","default":160},"timers":{"editor":"boolean","default":true},"$preview":{"width":390,"height":160}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var a = this.props.active || 'home', rail = this.props.mode === 'rail';
+    var w = parseInt(this.props.w, 10) || (rail ? 104 : 390), h = parseInt(this.props.h, 10) || 160;
+    var D = {
+      home: 'M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z',
+      calendar: 'M6 5h12a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3ZM3 10h18M8 3v4M16 3v4',
+      recipes: 'M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2ZM8 7h6M8 11h6',
+      groceries: 'M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6M10 20h.01M18 20h.01',
+      settings: 'M4 6h16M4 12h16M4 18h16'
+    };
+    var L = { home: 'Home', calendar: 'Calendar', recipes: 'Recipes', groceries: 'Groceries', settings: 'Menu' };
+    var H = { home: 'OC-HomeResponsive.dc.html', calendar: '#calendar', recipes: 'OC-RecipeResponsive.dc.html', groceries: 'OC-GroceriesResponsive.dc.html', settings: '#menu' };
+    var items = ['home', 'calendar', 'recipes', 'groceries', 'settings'].map(function (k) {
+      var on = k === a;
+      return {
+        href: H[k], label: L[k], d: D[k], on: on, aria: on ? 'page' : 'false',
+        barStyle: on
+          ? 'flex: 0 0 132px; width: 132px; padding: 0 16px; box-sizing: border-box; border-radius: 26px; background: #FFCF5C; color: #2A2414; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-size: 15px; font-weight: 800; white-space: nowrap'
+          : 'flex: 1 1 0; min-width: 44px; border-radius: 26px; color: #E6DFC9; display: flex; align-items: center; justify-content: center; text-decoration: none',
+        railStyle: 'width: 76px; height: 64px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 13px; ' + (on ? 'background: #FFCF5C; color: #2A2414; font-weight: 900' : 'color: #E6DFC9; font-weight: 700')
+      };
+    });
+    return {
+      root: 'width: ' + w + 'px; height: ' + h + 'px; box-sizing: border-box; font-family: Nunito, sans-serif; color: #2A2414',
+      isBar: !rail, isRail: rail, items: items, showTimers: this.props.timers !== false && this.props.timers !== 'false'
+    };
+  }
+}
+</script>
+</body>
+</html>

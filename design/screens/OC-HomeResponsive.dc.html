@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Our Cocon · Home (responsive)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+  <sc-if value="{{rail}}" hint-placeholder-val="{{false}}">
+    <div style="width: 104px; flex: none">
+      <dc-import name="OC-NavResponsive" active="home" mode="rail" w="104" h="{{H}}" hint-size="104px,820px"></dc-import>
+    </div>
+  </sc-if>
+
+  <div style="{{scrollStyle}}">
+    <div style="{{pageStyle}}">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <sc-if value="{{bar}}" hint-placeholder-val="{{true}}">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="width: 34px; height: 34px; border-radius: 11px; background: #FFCF5C; color: #2A2414; display: flex; align-items: center; justify-content: center">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M12 17.5s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6Z"/></svg>
+            </div>
+            <span style="font-size: 18px; font-weight: 900; letter-spacing: -0.3px">Our Cocon</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{rail}}" hint-placeholder-val="{{false}}">
+          <div>
+            <div style="font-size: 15px; font-weight: 700; color: #5A6820">Wednesday, Nov 18</div>
+            <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px">Hi Gabriel</h1>
+          </div>
+        </sc-if>
+        <div style="display: flex">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #FFCF5C; border: 2px solid #FFF8E3; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px">G</div>
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #F4B6C2; border: 2px solid #FFF8E3; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; margin-left: -10px">E</div>
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #A8D4F0; border: 2px solid #FFF8E3; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; margin-left: -10px">J</div>
+        </div>
+      </div>
+
+      <sc-if value="{{bar}}" hint-placeholder-val="{{true}}">
+        <div>
+          <div style="font-size: 15px; font-weight: 700; color: #5A6820">Wednesday, Nov 18</div>
+          <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.6px">Hi Gabriel</h1>
+        </div>
+      </sc-if>
+
+      <div style="{{gridStyle}}">
+        <div style="{{colStyle}}">
+          <!-- Today card (stands in for the CalCard component) -->
+          <section aria-label="Today" style="background: #FFFFFF; border-radius: 26px; padding: 14px 16px 8px">
+            <div style="display: flex; align-items: baseline; justify-content: space-between">
+              <h2 style="margin: 0; font-size: 20px; font-weight: 900">Today</h2>
+              <a href="#calendar" style="font-size: 15px; font-weight: 800; padding: 6px 0">Calendar</a>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; min-height: 56px; border-bottom: 1.5px solid #F2E6C4">
+              <span style="width: 48px; font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums">10:00</span>
+              <span style="width: 6px; height: 34px; border-radius: 3px; background: #FFCF5C"></span>
+              <span style="flex: 1"><span style="display: block; font-size: 16px; font-weight: 800">Pediatrician</span><span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A">Gabriel</span></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; min-height: 56px">
+              <span style="width: 48px; font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums">17:30</span>
+              <span style="width: 6px; height: 34px; border-radius: 3px; background: #F4B6C2"></span>
+              <span style="flex: 1"><span style="display: block; font-size: 16px; font-weight: 800">Yoga</span><span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A">Eva</span></span>
+            </div>
+          </section>
+
+          <a href="OC-RecipeResponsive.dc.html" style="text-decoration: none; color: #2A2414; border-radius: 28px; overflow: hidden; background: #FFF0C9; display: block">
+            <div style="{{heroStyle}}">
+              [Quiche photo]
+              <span style="position: absolute; top: 14px; left: 14px; background: #FFFFFF; font-size: 13px; font-weight: 800; padding: 6px 12px; border-radius: 999px">Latest recipe</span>
+            </div>
+            <div style="padding: 14px 18px 16px">
+              <div style="font-size: 22px; font-weight: 900; letter-spacing: -0.3px">Leek &amp; bacon quiche</div>
+              <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap">
+                <span style="background: #FFFFFF; font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px">1 h 10</span>
+                <span style="background: #FFFFFF; font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px">Serves 6</span>
+                <span style="background: #FFE3C2; color: #8A4B00; font-size: 14px; font-weight: 800; padding: 6px 12px; border-radius: 999px">2 to buy</span>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div style="{{colStyle}}">
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <a href="OC-GroceriesResponsive.dc.html" style="text-decoration: none; color: #2A2414; background: #FFCF5C; border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 16px">
+              <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+              <div><div style="font-size: 28px; font-weight: 900; line-height: 1">7</div><div style="font-size: 15px; font-weight: 700">to buy</div></div>
+            </a>
+            <a href="OC-RecipeResponsive.dc.html" style="text-decoration: none; color: #2A2414; background: #D9E3A8; border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 16px">
+              <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2Z"/><path d="M8 7h6M8 11h6"/></svg>
+              <div><div style="font-size: 28px; font-weight: 900; line-height: 1">32</div><div style="font-size: 15px; font-weight: 700">family recipes</div></div>
+            </a>
+          </div>
+
+          <section aria-label="Latest activity" style="background: #FFFFFF; border-radius: 26px; padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <h2 style="margin: 0; flex: 1; font-size: 20px; font-weight: 900">Latest activity</h2>
+              <div role="group" aria-label="Show" style="display: grid; grid-template-columns: repeat(2, auto); gap: 2px; background: #FFF0C9; border-radius: 12px; padding: 3px">
+                <button aria-pressed="{{allOn}}" onClick="{{showAll}}" style="{{allStyle}}">All</button>
+                <button aria-pressed="{{aiOn}}" onClick="{{showAi}}" style="{{aiStyle}}">AI only</button>
+              </div>
+            </div>
+            <sc-for list="{{acts}}" as="r" hint-placeholder-count="4">
+              <div style="{{r.row}}">
+                <span style="{{r.badge}}">{{r.badgeText}}</span>
+                <span style="flex: 1; min-width: 0">
+                  <span style="display: block; font-size: 15px; font-weight: 800">{{r.title}}</span>
+                  <span style="display: block; font-size: 13px; font-weight: 600; color: #5A503A">{{r.sub}}</span>
+                </span>
+                <sc-if value="{{r.canUndo}}" hint-placeholder-val="{{false}}"><a href="#" style="font-size: 15px; font-weight: 800; padding: 10px 4px">{{r.undo}}</a></sc-if>
+              </div>
+            </sc-for>
+            <a href="#activity" style="align-self: flex-start; font-size: 15px; font-weight: 800; padding: 6px 0">See all activity</a>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{bar}}" hint-placeholder-val="{{true}}">
+    <div style="{{barWrap}}">
+      <dc-import name="OC-NavResponsive" active="home" mode="bar" w="{{W}}" h="160" hint-size="390px,160px"></dc-import>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"w":{"editor":"number","default":390},"h":{"editor":"number","default":844},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { ai: false }; }
+  renderVals() {
+    var self = this, ai = this.state.ai;
+    var W = parseInt(this.props.w, 10) || 390, H = parseInt(this.props.h, 10) || 844;
+    var rail = W >= 960, twoCol = (rail ? W - 104 : W) >= 600, gap = rail ? 14 : 18;
+    var C = { G: '#FFCF5C', E: '#F4B6C2', J: '#A8D4F0' };
+    var ALL = [
+      { who: 'E', title: 'Eva added Pumpkin soup', sub: 'Recipes · via ChatGPT · 1 h ago', ai: true, undo: 'Undo' },
+      { who: 'G', title: 'Gabriel ticked 4 items', sub: 'Groceries · 2 h ago' },
+      { who: 'G', title: 'Gabriel added Pediatrician', sub: 'Calendar · via Claude · 3 h ago', ai: true, undo: 'Undo' },
+      { who: 'E', title: 'Eva edited Leek & bacon quiche', sub: 'Recipes · yesterday' },
+      { who: 'E', title: 'Eva deleted Lentil salad', sub: 'Recipes · via ChatGPT · yesterday', ai: true, undo: 'Restore' }
+    ];
+    var list = ALL.filter(function (r) { return !ai || r.ai; }).slice(0, twoCol ? 5 : 4);
+    var seg = function (on) { return 'height: 36px; padding: 0 12px; border-radius: 10px; border: none; font-size: 14px; cursor: pointer; color: #2A2414; ' + (on ? 'background: #FFFFFF; font-weight: 900; box-shadow: 0 1px 3px rgba(42,36,20,0.15)' : 'background: transparent; font-weight: 700; color: #5A503A'); };
+    return {
+      W: W, H: H, rail: rail, bar: !rail,
+      rootStyle: 'width: ' + W + 'px; height: ' + H + 'px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: Nunito, sans-serif; display: flex; position: relative; overflow: hidden',
+      scrollStyle: 'flex: 1; min-width: 0; height: ' + H + 'px; overflow-y: auto',
+      pageStyle: 'max-width: ' + (W >= 600 ? 1200 : 560) + 'px; margin: 0 auto; box-sizing: border-box; padding: ' + (W < 500 ? 54 : 24) + 'px ' + (W >= 600 ? 24 : 20) + 'px ' + (rail ? 20 : 180) + 'px; display: flex; flex-direction: column; gap: ' + gap + 'px',
+      gridStyle: twoCol ? 'display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: ' + gap + 'px; align-items: start' : 'display: flex; flex-direction: column; gap: 18px',
+      colStyle: 'display: flex; flex-direction: column; gap: ' + gap + 'px; min-width: 0',
+      heroStyle: 'height: ' + (rail ? 160 : twoCol ? 200 : 170) + 'px; background: #F5D9A8; display: flex; align-items: center; justify-content: center; color: #6B4E1E; font-weight: 700; font-size: 14px; position: relative',
+      barWrap: 'position: absolute; left: 0; bottom: 0; width: ' + W + 'px; height: 160px',
+      allOn: ai ? 'false' : 'true', aiOn: ai ? 'true' : 'false', allStyle: seg(!ai), aiStyle: seg(ai),
+      showAll: function () { self.setState({ ai: false }); }, showAi: function () { self.setState({ ai: true }); },
+      acts: list.map(function (r, i, arr) {
+        return {
+          title: r.title, sub: r.sub, canUndo: !!r.undo, undo: r.undo || '', badgeText: r.ai ? 'AI' : r.who,
+          row: 'display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 4px 0' + (i < arr.length - 1 ? '; border-bottom: 1.5px solid #F2E6C4' : ''),
+          badge: 'width: 36px; height: 36px; flex: none; border-radius: ' + (r.ai ? '12px' : '50%') + '; background: ' + C[r.who] + '; display: flex; align-items: center; justify-content: center; font-size: ' + (r.ai ? '12px' : '14px') + '; font-weight: 900' + (r.ai ? '; box-shadow: inset 0 0 0 2px #5A6820' : '')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

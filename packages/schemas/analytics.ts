@@ -305,12 +305,24 @@ export const events = {
 export type EventName = keyof typeof events;
 export type EventProps<E extends EventName> = z.infer<(typeof events)[E]>;
 
+/**
+ * Spec 063: sent with every app event (PostHog super properties). The window's layout tier and the
+ * kind of device, never anything about the person.
+ */
+export const superProperties = z.strictObject({
+  layout_tier: z.enum(['compact', 'medium', 'expanded']),
+  device_class: z.enum(['phone', 'tablet', 'desktop']),
+});
+export type SuperProperties = z.infer<typeof superProperties>;
+
 /** Where validated events go: PostHog in the app and MCP server, nothing in tests and local dev. */
 export interface AnalyticsTransport {
   capture(event: string, props: Record<string, unknown>): void;
   identify(userId: string): void;
   group(type: 'family', id: string): void;
   reset(): void;
+  /** Adds properties to every later event (the app only; the MCP server has none). */
+  register?(props: Record<string, unknown>): void;
 }
 
 export interface Tracker {
@@ -319,6 +331,8 @@ export interface Tracker {
   identify(userId: string, familyId: string | null): void;
   /** On sign-out, so the next person on this device starts fresh. */
   reset(): void;
+  /** Sets the super properties; they stay through `reset`. */
+  register(props: SuperProperties): void;
 }
 
 const noopTransport: AnalyticsTransport = {
@@ -330,6 +344,7 @@ const noopTransport: AnalyticsTransport = {
 
 export function createTracker(transport: AnalyticsTransport | null): Tracker {
   const out = transport ?? noopTransport;
+  let supers: SuperProperties | null = null;
   return {
     track(event, props) {
       const schema = events[event] as z.ZodType | undefined;
@@ -342,6 +357,12 @@ export function createTracker(transport: AnalyticsTransport | null): Tracker {
     },
     reset() {
       out.reset();
+      // PostHog's reset drops super properties; the window and device haven't changed.
+      if (supers) out.register?.(supers);
+    },
+    register(props) {
+      supers = superProperties.parse(props);
+      out.register?.(supers);
     },
   };
 }

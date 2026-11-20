@@ -1,0 +1,28 @@
+# Feature Specification: Home on larger screens
+
+**Feature Branch**: `068-home-large-screens` · **Status**: Ready · **Depends on**: 063, 064, 028, 057
+
+Screen: `design/screens/OC-HomeResponsive.dc.html` (pass `w`/`h`: 390, 820, 1180). UI spec: `design/ui/OC-LargeScreens.md` § Home.
+
+> The mockup's "Today" card is a stand-in for the app's calendar Home card, and it doesn't show the Reminders card. Use the real cards: header, calendar card, reminders card, latest recipe, stat tiles, latest activity. Only the column layout is new.
+
+## Functional requirements
+- **FR-001 Compact**: unchanged.
+- **FR-002 Medium and expanded (≥ 600)**: two columns (`1.1fr` / `1fr`), gap 18 (14 at expanded), each a stacked list read top to bottom:
+  - Left: the reminders card (when shown), the calendar card, the latest recipe card (photo 200 px; 160 px at expanded).
+  - Right: the two stat tiles, then Latest activity (shows 5 rows instead of 4).
+  Content max 1200, 24 px gutter (063).
+- **FR-003 Expanded header**: the rail shows the logo, so the logo row goes. The date and "Hi {name}" move up into the row with the family avatars (greeting left, avatars right). Top padding 20.
+- **FR-004** Order and visibility rules of each card are unchanged (hidden cards leave no gap).
+
+## Success criteria
+- **SC-001** At 820 and 1180, nothing on Home needs scrolling to reach the first activity row (with sample data).
+
+## Tracking (PostHog)
+None new.
+
+## Needs your attention
+- Reminders card placement on wide screens: top of the left column, above the calendar card (same order as phone). Say if it should go on the right.
+
+## Changelog
+- 2026-11-19: Ready.

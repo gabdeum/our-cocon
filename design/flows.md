@@ -88,6 +88,12 @@
 
 The tab bar's last tab is "Menu" (spec 036). Menu has two sections: **Apps** (tiles that open Calendar, Recipes, Groceries and Timers, and later parts with no tab) and **Settings** (Family, AI assistants, Calendar, Recipes, Groceries, Recently deleted). Every settings page goes back to Menu.
 
+## Larger screens (specs 063–070)
+
+No new routes: every screen keeps its route and gets new layouts from 600 px and 960 px wide (`design/ui/OC-LargeScreens.md`).
+- From 960 px, `/recipes/[id]` shows the Recipes list beside the recipe (spec 067). Choosing another recipe in the list swaps the recipe and updates the URL without a push; the back button is hidden. `/recipes` alone shows the list.
+- From 600 px, sheets open as a popover (menus) or a centred card (flows) instead of a bottom sheet, on the same routes (spec 065). Month's day sheet doesn't open there: the selected day shows inline (spec 070). Tapping a day in Week still opens the day sheet, as a centred card.
+
 ## Flows
 
 1. **Check today.** Home → calendar card (Today, or This week, or empty) → tap a row → OC-CalEvent; "+" → OC-CalAdd; "Open calendar" → Calendar tab.

@@ -17,11 +17,13 @@ describe('pnpm theme (spec 002, acceptance 1.1)', () => {
     for (const t of tokens.color.tokens) expect(theme.color[camel(t.name)]).toBe(t.value);
   });
 
-  it('exposes every spacing, radius, shadow and size token', () => {
+  it('exposes every spacing, radius, shadow, size and layout token', () => {
     for (const t of tokens.spacing.tokens) expect(theme.space[t.name.replace('space-', '')]).toBe(Number.parseFloat(t.value));
     for (const t of tokens.radius.tokens) expect(theme.radius[camel(t.name.replace('radius-', ''))]).toBe(Number.parseFloat(t.value));
     for (const t of tokens.shadow.tokens) expect(theme.shadow[t.name.replace('shadow-', '')]).toBe(t.value);
     for (const t of tokens.size.tokens) expect(theme.size[camel(t.name)]).toBe(Number.parseFloat(t.value));
+    for (const t of tokens.layout.tokens) expect(theme.layout[camel(t.name.replace('layout-', ''))]).toBe(Number.parseFloat(t.value));
+    expect(theme.layout).toMatchObject({ medium: 600, expanded: 960, gutter: 20, gutterWide: 24, maxContent: 1200, phoneMax: 560, rail: 104 });
   });
 
   it('exposes every text style with its line height in px and the Nunito file for its weight', () => {

@@ -9,7 +9,7 @@ Our Cocon is a family household app for recipes and groceries, used by everyone 
 - **Each `components/<Name>/README.md` holds the specs** (anatomy, sizes, states, rules) and its preview shows it live.
 - **Layouts live in `Patterns.md`.** How to make a component that doesn't exist yet lives in `Extending.md`; follow it so new pieces look native.
 - **Stack mapping (Expo).** Font: `@expo-google-fonts/nunito` (weights 500–900). Icons: the SVGs in Assets › Icons via `react-native-svg` (24 × 24, stroke 2–2.6, round caps). Shadows: `shadowColor/Offset/Opacity/Radius` on iOS plus `elevation` on Android, matching the shadow tokens. Checkbox colour: `olive`.
-- **Design width is 390 px** (iPhone 14/15). On the web the same mobile layouts are centred at a maximum content width of 720 px. A dedicated desktop layout hasn't been designed yet.
+- **Design width is 390 px** (iPhone 14/15). Wider windows use layout tiers by width, never by device (`layout` tokens, `useLayoutTier()` in `packages/ui`, `design/ui/OC-LargeScreens.md`): compact < 600 is the phone layout (centred at max 560 on the web), medium 600–959 and expanded ≥ 960 show more side by side, with a 24 gutter and content up to 1200. Two-column lists read by column (`splitColumns`).
 
 ## Principles
 

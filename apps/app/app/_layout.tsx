@@ -18,6 +18,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { AppFrame, ThemeProvider } from '@cocon/ui';
 import { tracker } from '../lib/tracker';
 import { trackAppOpened } from '../lib/app-opened';
+import { useLayoutAnalytics } from '../lib/layout-analytics';
 import { presentation } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 import { gateRedirect, openedPath, SessionProvider, useSession } from '../lib/session';
@@ -195,6 +196,8 @@ export default function RootLayout() {
   const ready = fontsLoaded || fontError !== null;
 
   useEffect(() => watchConnection(), []);
+  // Before app_opened, so it carries them too (spec 063).
+  useLayoutAnalytics(tracker);
 
   // Opened straight onto a shared recipe or event, nothing identified is sent (constitution VI, specs 019 and 042).
   const [firstSegment] = useSegments();
