@@ -17,3 +17,8 @@ Reference: `design/screens/OC-CalMonth.dc.html` (inline styles are the exact val
 - Cells under a bar keep that row empty so chips sit below it.
 - Overlapping bars stack 17 px apart (`layoutSpans` in @cocon/calendar); a month cell shows five rows, or four and "+N", so a bar in a row the cell doesn't show counts in its "+N" (a fifth-row bar is drawn only over the days that show five rows).
 - Month: not a tap target; the tap goes to the day cell under it (day sheet).
+
+## From 600 wide (spec 070)
+
+- `month-wide`: 20 tall, 12/800, radius 6, inset 6; first lane at 32 from the row's top, then 22 apart.
+- `week-wide`: the week's All day row, 32 tall, 14/800, 34 apart.

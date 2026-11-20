@@ -50,23 +50,25 @@ export { StatTile, type StatTileProps } from './components/StatTile';
 export { ActivityRow, LatestActivityCard, type ActivityRowProps, type LatestActivityCardProps } from './components/ActivityRow';
 export { Callout, type CalloutProps, type CalloutVariant } from './components/Callout';
 export { Avatar, AvatarStack, type AvatarColor, type MemberColor } from './components/Avatar';
-export { MemberBadge, MemberChip, MemberCount, MemberPickerChip, MemberStack, type MemberBadgeProps, type MemberChipColor, type MemberChipProps, type MemberCountProps, type MemberPickerChipProps } from './components/MemberChip';
+export { MemberBadge, MemberChip, MemberCount, MemberFilterChip, MemberPickerChip, MemberStack, type MemberBadgeProps, type MemberChipColor, type MemberChipProps, type MemberCountProps, type MemberPickerChipProps } from './components/MemberChip';
 export { SlotChip, type SlotChipProps } from './components/SlotChip';
 export { DayChip, type DayChipProps } from './components/DayChip';
 export { ChecklistAdd, ChecklistRow, type ChecklistRowProps } from './components/ChecklistRow';
 export { MemberPill, ReminderMore, ReminderRow, type ReminderRowProps } from './components/ReminderRow';
 export { WeekdayPicker, type WeekdayPickerProps } from './components/WeekdayPicker';
 export { DateGrid, type DateGridDay, type DateGridProps } from './components/DateGrid';
-export { EventBar, EventChip, Fill, MoreCount, BAR_STEP, BAR_TOP, WEEK_BAR_STEP, type EventBarProps, type EventChipProps, type EventColor } from './components/EventChip';
-export { MonthGrid, MONTH_ROW_HEIGHT, type MonthBar, type MonthCell, type MonthCellItem, type MonthGridProps, type MonthWeek } from './components/MonthGrid';
+export { EventBar, EventChip, Fill, MoreCount, BAR_STEP, BAR_TOP, WEEK_BAR_STEP, WIDE_WEEK_BAR_STEP, type ChipSize, type EventBarProps, type EventChipProps, type EventColor } from './components/EventChip';
+export { MonthGrid, MonthPage, MONTH_ROW_HEIGHT, type MonthBar, type MonthCell, type MonthCellItem, type MonthGridProps, type MonthPageProps, type MonthWeek } from './components/MonthGrid';
 export {
   HourGrid,
   GRID_FIRST_HOUR,
   GRID_HEIGHT,
   GRID_HOURS,
   HOUR_HEIGHT,
+  WIDE_HOUR_HEIGHT,
   hourAt,
   type HourGridProps,
+  type HourGridSize,
   type WeekAllDayBar,
   type WeekBlock,
   type WeekColumn,
@@ -78,6 +80,7 @@ export { CalCard, CalCardBanner, WeekStrip, type CalCardProps, type WeekStripDay
 export { AllDayRow, DayEventRow, DayReminderRow, SlotBand, type DayAllDayItem, type DayBand, type DayBandItem, type DayReminderItem, type DayEventItem, type SlotBandProps } from './components/SlotBand';
 export { FloatingAdd, Toast, ToastHost, ToastProvider, useToast, TOAST_MS, TOAST_ACTION_MS, type FloatingAddProps, type ToastProps, type ToastProviderProps, type ToastRequest } from './components/Toast';
 export { CalendarHeader, type CalendarHeaderChip, type CalendarHeaderProps } from './components/CalendarHeader';
+export { ComingUpRow, MiniMonth, type ComingUpRowProps, type MiniMonthDay, type MiniMonthProps } from './components/MiniMonth';
 export { ColorSwatch, type ColorSwatchProps, type SwatchOption } from './components/ColorSwatch';
 export { StatusBanner, Presence, AwakeChip, SuccessPanel } from './components/StatusBanner';
 export { StepCard, StepFootnote, StepRow, StepText, TimerRow, type StepTextPart, type TimerState } from './components/StepCard';

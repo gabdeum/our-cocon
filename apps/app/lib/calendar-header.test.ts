@@ -38,6 +38,16 @@ describe('calendar header (spec 036)', () => {
     expect(headerTitle(view, anchor, '2026-10-27', width, 0)).toBe(title);
   });
 
+  it.each([
+    ['month', '2026-10-27', 820, 'medium', 'October'],
+    ['week', '2026-10-27', 820, 'medium', 'October 25 – 31'],
+    ['day', '2026-10-28', 820, 'medium', 'Wednesday, October 28'],
+    ['day', '2026-10-28', 1180, 'expanded', 'Wednesday, October 28'],
+    ['day', '2026-09-30', 600, 'medium', 'Wed, Sep. 30'],
+  ] as const)('spec 070 FR-002: %s on %s at %i px (%s) reads "%s"', (view, anchor, width, tier, title) => {
+    expect(headerTitle(view, anchor, '2026-10-27', width, 0, tier)).toBe(title);
+  });
+
   it('FR-002: names the arrows by how far they move', () => {
     expect(arrowLabels('month')).toEqual({ prev: 'Previous month', next: 'Next month' });
     expect(arrowLabels('day')).toEqual({ prev: 'Previous day', next: 'Next day' });

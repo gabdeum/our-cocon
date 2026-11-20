@@ -19,6 +19,7 @@ Items share the width equally (pill: hug content).
 
 ## Rules
 
+- `hug` (spec 070): the light track sized to its labels: items 44 tall, padding 0 18, 15 px (900 selected on white with `shadow-segment`, 700 ink-muted otherwise). The calendar's views from 600.
 - Use `--tabs` only to switch the view of the same content (Ingredients · 9 / Steps · 6). Counts follow a middle dot.
 - Labels that need a unit hint carry it inline: "Metric · g, ml, °C".
 - `aria-pressed` for settings and `role="tab"` + `aria-selected` for tabs.

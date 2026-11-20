@@ -146,6 +146,18 @@ describe('createTracker', () => {
     expect(() => tracker.track('cook_step_jump', { source: 'bars', from: 0, to: 2 })).toThrow();
   });
 
+  it('sends the calendar day picks and filter source with enums only (spec 070)', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('calendar_day_selected', { view: 'month', source: 'grid' });
+    tracker.track('calendar_member_filter_changed', { members_visible: 4, source: 'chips' });
+    expect(t.capture).toHaveBeenCalledWith('calendar_day_selected', { view: 'month', source: 'grid' });
+    expect(t.capture).toHaveBeenCalledWith('calendar_member_filter_changed', { members_visible: 4, source: 'chips' });
+    expect(() => tracker.track('calendar_day_selected', { view: 'day', source: 'swipe' } as never)).toThrow();
+    expect(() => tracker.track('calendar_day_selected', { view: 'day', source: 'grid', date: '2026-10-25' } as never)).toThrow();
+    expect(() => tracker.track('calendar_member_filter_changed', { members_visible: 4 } as never)).toThrow();
+  });
+
   it('sends the pill and Timers screen events with a count only (spec 011)', () => {
     const t = fakeTransport();
     const tracker = createTracker(t);

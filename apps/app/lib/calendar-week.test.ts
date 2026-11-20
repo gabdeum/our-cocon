@@ -154,4 +154,12 @@ describe('week grid (spec 038)', () => {
     expect(block(grid(events), 0, 'Busy')?.label).toBe('Busy, Eva, Sunday October 25, 10:00 to 11:00');
     expect(grid(events, TODAY, {}, new Set([eva.id])).columns[0]?.blocks).toEqual([]);
   });
+
+  it('spec 070 FR-005: from 600, 44 px hours, "Sun" heads, and who · time on cards side by side', () => {
+    const g = grid([custom('Baby swim', '14:30', '16:30', [james.id]), custom('Coffee', '16:00', '17:00', [gabriel.id])], TODAY, { wide: true, now: '13:20' });
+    expect(pick(block(g, 0, 'Baby swim'))).toEqual({ top: 'J 14:30', y: 375, height: 86, lane: 0, lanes: 2, kind: 'custom' });
+    expect(pick(block(g, 0, 'Coffee'))).toEqual({ top: 'G 16:00', y: 441, height: 42, lane: 1, lanes: 2, kind: 'custom' });
+    expect(g.days.map((d) => d.letter)).toEqual(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+    expect(g.nowY).toBeCloseTo((13 + 20 / 60 - 6) * 44);
+  });
 });

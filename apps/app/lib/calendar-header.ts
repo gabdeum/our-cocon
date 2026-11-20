@@ -1,5 +1,6 @@
 import { CALENDAR_VIEWS, CalendarView, CalendarDate } from '@cocon/schemas/calendar';
-import { VIEW_STEP, dayTitles, fitTitle, monthTitles, parts, weekRange, weekTitles, type WeekStartsOn } from '@cocon/calendar';
+import { VIEW_STEP, dayTitles, fitTitle, monthTitles, parts, textWidth, weekRange, weekTitles, type WeekStartsOn } from '@cocon/calendar';
+import { gutterFor, railInset, type LayoutTier } from '@cocon/ui';
 import type { QueryClient } from '@tanstack/react-query';
 import type { StoredEvent } from '@cocon/data';
 import { strings } from '../strings/en';
@@ -25,16 +26,31 @@ export function entryFrom(param: unknown): 'nav' | 'homepage' {
   return param === 'home' ? 'homepage' : 'nav';
 }
 
-/** FR-003 (spec 034 FR-007): the longest of the view's title formats that fits beside "Today" on this screen. */
-export function headerTitle(view: CalendarView, anchor: string, today: string, width: number, weekStartsOn: WeekStartsOn): string {
+/** Spec 070: from 600 the title shares row 1 with ‹ Today › and "+ Event" (44 + 74 + 44 + 107 and four 10 gaps). */
+const WIDE_TITLE_CONTROLS = 310;
+const WIDE_TITLE_SIZE = 32;
+const WIDE_TITLE_TRACKING = -0.6;
+
+/** From 600: the first format that fits at 32 px in what row 1 leaves (the window less the rail, gutters and buttons). */
+function fitWide(formats: readonly string[], width: number, tier: LayoutTier): string {
+  const space = width - railInset(tier) - 2 * gutterFor(tier) - WIDE_TITLE_CONTROLS;
+  return formats.find((f) => textWidth(f, WIDE_TITLE_SIZE) + WIDE_TITLE_TRACKING * f.length <= space) ?? (formats[formats.length - 1] as string);
+}
+
+/**
+ * FR-003 (spec 034 FR-007): the longest of the view's title formats that fits beside "Today" on this
+ * screen; from 600 (spec 070 FR-002) the full formats at 32 px, "October 25 – 31", "Sunday, October 25".
+ */
+export function headerTitle(view: CalendarView, anchor: string, today: string, width: number, weekStartsOn: WeekStartsOn, tier: LayoutTier = 'compact'): string {
   if (view === 'agenda') return h.agendaTitle;
-  if (view === 'day') return fitTitle(dayTitles(anchor, today), width);
+  const fit = (formats: readonly string[]) => (tier === 'compact' ? fitTitle(formats, width) : fitWide(formats, width, tier));
+  if (view === 'day') return fit(dayTitles(anchor, today));
   if (view === 'week') {
     const { start, end } = weekRange(anchor, weekStartsOn);
-    return fitTitle(weekTitles(start, end, today), width);
+    return fit(weekTitles(start, end, today));
   }
   const { year, month } = parts(anchor);
-  return fitTitle(monthTitles(year, month, today), width);
+  return fit(monthTitles(year, month, today));
 }
 
 /** FR-002: "Previous month" / "Next week", by how far the arrows move the view. */

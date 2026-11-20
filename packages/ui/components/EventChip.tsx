@@ -39,24 +39,32 @@ export function Fill({ colors, rounded }: { colors: readonly EventColor[]; round
 // react-native-web always adds an ellipsis to one-line text, but lets the style override it (iOS uses ellipsizeMode).
 const clipOnWeb = (Platform.OS === 'web' ? { textOverflow: 'clip' } : {}) as TextStyle;
 
-/** 10/800 ink, one line, clipped at the padding with no "…" (EventChip README › Chip). */
-function ChipText({ text }: { text: string }) {
-  // A 15 px chip can't grow: past the large-text size the month shows dots instead (spec 030).
+/** Phone chips, or the month's larger ones from 600 wide (spec 070). */
+export type ChipSize = 'phone' | 'wide';
+
+/** EventChip README › Chip: 15 tall, so five fit in a month cell; from 600, 20 tall with 12 px text, radius 6, padding 6. */
+const CHIP = {
+  phone: { height: 15, text: 10, box: 'h-[15px] rounded-[4px] px-[3px]', rounded: 'rounded-[4px]', start: 'rounded-l-[4px]', end: 'rounded-r-[4px]' },
+  wide: { height: 20, text: 12, box: 'h-[20px] rounded-[6px] px-6', rounded: 'rounded-[6px]', start: 'rounded-l-[6px]', end: 'rounded-r-[6px]' },
+} as const;
+
+/** 10/800 ink (12 from 600), one line, clipped at the padding with no "…" (EventChip README › Chip). */
+function ChipText({ text, size = 'phone' }: { text: string; size?: ChipSize }) {
+  // A chip can't grow: past the large-text size the month shows dots instead (spec 030).
   return (
-    <Text size={10} weight="800" numberOfLines={1} ellipsizeMode="clip" maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={[{ lineHeight: CHIP_HEIGHT }, clipOnWeb]}>
+    <Text size={CHIP[size].text} weight="800" numberOfLines={1} ellipsizeMode="clip" maxFontSizeMultiplier={LARGE_TEXT_SCALE} style={[{ lineHeight: CHIP[size].height }, clipOnWeb]}>
       {text}
     </Text>
   );
 }
-
-/** EventChip README › Chip: 15 tall, so five fit in a month cell. */
-const CHIP_HEIGHT = 15;
 
 export interface EventChipProps {
   /** "{initials} {title}" from 430 px ("J Baby swim", "G·E School night"); the title alone below. */
   text: string;
   /** One or two fills, in the event's member order. */
   colors: readonly EventColor[];
+  /** From 600 wide, the month's 20 px chips (spec 070). */
+  size?: ChipSize;
 }
 
 /**
@@ -64,34 +72,35 @@ export interface EventChipProps {
  * `onPress` it's a link of its own, reaching into the gaps between chips; the month grid passes none, so
  * a tap goes to the day (spec 037 FR-008).
  */
-export function EventChip({ text, colors, onPress }: EventChipProps & { onPress?: () => void }) {
-  const look = 'h-[15px] overflow-hidden rounded-[4px] px-[3px]';
+export function EventChip({ text, colors, onPress, size = 'phone' }: EventChipProps & { onPress?: () => void }) {
+  const c = CHIP[size];
+  const look = cn('overflow-hidden', c.box);
   if (!onPress) {
     return (
       <View className={look}>
-        <Fill colors={colors} rounded="rounded-[4px]" />
-        <ChipText text={text} />
+        <Fill colors={colors} rounded={c.rounded} />
+        <ChipText text={text} size={size} />
       </View>
     );
   }
   return (
     <Pressable role="link" aria-label={text} onPress={onPress} hitSlop={{ top: 1, bottom: 2 }} className={cn(look, focusRing)}>
-      <Fill colors={colors} rounded="rounded-[4px]" />
-      <ChipText text={text} />
+      <Fill colors={colors} rounded={c.rounded} />
+      <ChipText text={text} size={size} />
     </Pressable>
   );
 }
 
-/** The cell's "+N" after four rows: 10/900 ink-muted. */
-export function MoreCount({ text }: { text: string }) {
+/** The cell's "+N" after the last row: 10/900 ink-muted (12/900 from 600). */
+export function MoreCount({ text, size = 'phone' }: { text: string; size?: ChipSize }) {
   return (
-    <Text size={10} weight="900" color="ink-muted" className="pl-[3px]" maxFontSizeMultiplier={LARGE_TEXT_SCALE}>
+    <Text size={size === 'wide' ? 12 : 10} weight="900" color="ink-muted" className="pl-[3px]" maxFontSizeMultiplier={LARGE_TEXT_SCALE}>
       {text}
     </Text>
   );
 }
 
-export interface EventBarProps extends EventChipProps {
+export interface EventBarProps extends Omit<EventChipProps, 'size'> {
   /** "Grandma visits, October 16 to October 19". */
   label: string;
   /** First column (0–6) and number of days in this week row. */
@@ -103,16 +112,21 @@ export interface EventBarProps extends EventChipProps {
   startsHere: boolean;
   endsHere: boolean;
   onPress?: () => void;
-  /** Month: over a week row of the grid. Week: in the week view's "All day" row. */
-  size?: 'month' | 'week';
+  /** Month: over a week row of the grid. Week: in the week view's "All day" row. `-wide`: their sizes from 600 (spec 070). */
+  size?: 'month' | 'week' | 'month-wide' | 'week-wide';
 }
 
 /** The month row's chip rhythm (EventBar README › Month): 23 from the top (3 padding, 18 date, 2 gap), then 15 + the cells' 2 px gap. */
 export const BAR_TOP = 23;
 export const BAR_STEP = 17;
-/** EventBar README › Week all-day row: 28 tall, stacked with the grid's 2 px gap. */
+/** From 600 (spec 070): 32 from the top (6 padding, 24 date, 2 gap), then 20 + 2. */
+export const WIDE_BAR_TOP = 32;
+export const WIDE_BAR_STEP = 22;
+/** EventBar README › Week all-day row: 28 tall, stacked with the grid's 2 px gap; 32 from 600. */
 export const WEEK_BAR_HEIGHT = 28;
 export const WEEK_BAR_STEP = 30;
+export const WIDE_WEEK_BAR_HEIGHT = 32;
+export const WIDE_WEEK_BAR_STEP = 34;
 
 /**
  * A multi-day event drawn over a month week row (EventBar README › Month), from its first to its
@@ -120,20 +134,23 @@ export const WEEK_BAR_STEP = 30;
  * Without `onPress` it's only drawn: taps reach the cell under it (the month's day sheet).
  */
 export function EventBar({ text, colors, label, column, days, lane, startsHere, endsHere, onPress, size = 'month' }: EventBarProps) {
-  const week = size === 'week';
-  const rounded = week ? cn(startsHere && 'rounded-l-[8px]', endsHere && 'rounded-r-[8px]') : cn(startsHere && 'rounded-l-[4px]', endsHere && 'rounded-r-[4px]');
+  const week = size === 'week' || size === 'week-wide';
+  const wide = size === 'month-wide' || size === 'week-wide';
+  const chip = CHIP[wide ? 'wide' : 'phone'];
+  const rounded = week ? cn(startsHere && 'rounded-l-[8px]', endsHere && 'rounded-r-[8px]') : cn(startsHere && chip.start, endsHere && chip.end);
   // The outer box spans the days; its padding is the inset (no calc() in React Native): 3 px in a
-  // month row, 1 px either side in the week row (the grid's 2 px gap).
-  const bar = cn('overflow-hidden', week ? 'h-[28px] px-6' : 'h-[15px] px-[3px]', rounded);
+  // month row (6 from 600), 1 px either side in the week row (the grid's 2 px gap).
+  const bar = cn('overflow-hidden', week ? (wide ? 'h-[32px] px-8' : 'h-[28px] px-6') : wide ? 'h-[20px] px-6' : 'h-[15px] px-[3px]', rounded);
+  const top = week ? lane * (wide ? WIDE_WEEK_BAR_STEP : WEEK_BAR_STEP) : wide ? WIDE_BAR_TOP + lane * WIDE_BAR_STEP : BAR_TOP + lane * BAR_STEP;
   const content = (
     <>
       <Fill colors={colors} rounded={rounded} />
       {week ? (
-        <Text size={11} weight="800" numberOfLines={1} ellipsizeMode="clip" style={[{ lineHeight: WEEK_BAR_HEIGHT }, clipOnWeb]}>
+        <Text size={wide ? 14 : 11} weight="800" numberOfLines={1} ellipsizeMode="clip" style={[{ lineHeight: wide ? WIDE_WEEK_BAR_HEIGHT : WEEK_BAR_HEIGHT }, clipOnWeb]}>
           {text}
         </Text>
       ) : (
-        <ChipText text={text} />
+        <ChipText text={text} size={wide ? 'wide' : 'phone'} />
       )}
     </>
   );
@@ -141,8 +158,8 @@ export function EventBar({ text, colors, label, column, days, lane, startsHere, 
     <View
       pointerEvents={onPress ? 'box-none' : 'none'}
       aria-hidden={!onPress}
-      className={cn('absolute z-10', week ? 'px-[1px]' : 'px-[3px]')}
-      style={{ top: week ? lane * WEEK_BAR_STEP : BAR_TOP + lane * BAR_STEP, left: `${(column * 100) / 7}%`, width: `${(days * 100) / 7}%` }}
+      className={cn('absolute z-10', week ? 'px-[1px]' : wide ? 'px-6' : 'px-[3px]')}
+      style={{ top, left: `${(column * 100) / 7}%`, width: `${(days * 100) / 7}%` }}
     >
       {onPress ? (
         <Pressable role="link" aria-label={label} onPress={onPress} className={cn(bar, focusRing)}>

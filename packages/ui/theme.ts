@@ -235,6 +235,7 @@ export const theme = {
     "maxContent": 1200,
     "panelMedium": 290,
     "panelExpanded": 320,
+    "dayAside": 300,
     "stepList": 260,
     "stepListMax": 300,
     "panelMax": 380,

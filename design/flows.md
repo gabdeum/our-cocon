@@ -65,7 +65,7 @@
 | OC-CalWeek | `/calendar?view=week&date=` | tab (same screen) | 038 |
 | OC-CalDay | `/calendar?view=day&date=` | tab (same screen) | 039 |
 | OC-CalAgenda | `/calendar?view=agenda` | tab (same screen) | 040 |
-| Day sheet (OC-CalMonthSheet) | over `/calendar` (Month), no route of its own | sheet | 037 |
+| Day sheet (OC-CalMonthSheet) | over `/calendar` (Month below 600; Week at every width, a centred card from 600), no route of its own. From 600 Month shows the selected day in a panel instead (spec 070) | sheet | 037, 070 |
 | OC-CalAdd / OC-CalAddMore | `/calendar/new` (`?date=&slot=`, or `&time=HH:MM` from a long press in the week grid: Starts at that hour, one hour long) · `/calendar/[id]/edit` (`?date=` for one occurrence) | sheet | 041, 043 |
 | OC-CalEvent | `/calendar/[id]` (`?date=` for one occurrence) | stack | 042 |
 | OC-CalEventDelete | dialog over OC-CalEvent | dialog | 042 |
@@ -97,7 +97,7 @@ No new routes: every screen keeps its route and gets new layouts from 600 px and
 ## Flows
 
 1. **Check today.** Home → calendar card (Today, or This week, or empty) → tap a row → OC-CalEvent; "+" → OC-CalAdd; "Open calendar" → Calendar tab.
-2. **Scan and drill in.** Calendar tab → Month (scroll through months) → tap a day (Month, or Week since 058) → day sheet → tap an event → OC-CalEvent, or "+" → OC-CalAdd for that day.
+2. **Scan and drill in.** Calendar tab → Month (scroll through months) → tap a day (Month, or Week since 058) → day sheet → tap an event → OC-CalEvent, or "+" → OC-CalAdd for that day. From 600 (spec 070): Month pages a month at a time and a tapped day opens in the panel under (or, from 960, beside) the grid; Day view's mini month and "Coming up" (from 960) open another day in Day view.
 3. **Quick add.** "+" anywhere → type title → Today → Evening → Save → toast with Undo.
 4. **Add with details.** OC-CalAdd → More options → Who, Repeat, Where, "Who takes James?" → Save.
 5. **Edit, move, delete.** OC-CalEvent → Edit (repeating: "This event only" / "All future events") → Save; Delete → dialog → toast "Event deleted · Undo".

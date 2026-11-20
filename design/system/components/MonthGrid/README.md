@@ -18,3 +18,19 @@ Reference: `design/screens/OC-CalMonth.dc.html` (inline styles are the exact val
 - The cell's accessible label lists each event with its people: "October 25: Baby swim (James), Movie night (Everyone)".
 - Tap anywhere on a cell = day sheet (chips and bars aren't separate targets); long-press = add event for that day (also offered to screen readers as an "Add event" action).
 - The weekday row is drawn fixed above the scrolling rows (`shadow-sticky`), which looks the same as the sticky row in the screen source.
+
+## From 600 wide: MonthPage (spec 070)
+
+One month at a time instead of the continuous scroll (the selected day's panel sits under or beside it). Reference: `design/screens/OC-CalendarResponsive.dc.html` (`view` month at 820 and 1180).
+
+| Part | Spec |
+| --- | --- |
+| Card | white, radius 22, clips; the rows from the month's 1st to its last day |
+| Weekdays | "Sun … Sat" 13/900 ink-muted, 1.5 px `line` under |
+| Row | 124 at medium; at expanded `max(96, (available − 40) / weeks)` |
+| Cell | padding 6; date 14 in a 24 row (today: olive 24 circle; the 1st: ink pill "Nov 1"); days outside the month on `surface-page` with muted dates |
+| Chips | EventChip `wide`: 20 tall, 12 text, radius 6, padding 6; as many as fit (`(row − 30) / 22`), then "+N" 12/900 |
+| Bars | EventBar `month-wide`: same size, from 32, 22 apart |
+| Selected | 2.5 px ink inset (`aria-pressed`); today keeps its olive ring when not selected |
+
+- Tap = select the day (no sheet); long-press = add event, as on the phone.

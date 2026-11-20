@@ -176,6 +176,8 @@ describe('layoutDaySheet', () => {
   it('titles the day and counts its events', () => {
     expect(sheet([]).title).toBe('Sunday, October 25');
     expect(sheet([]).addLabel).toBe('Add event on Sunday, October 25');
+    // Spec 070: the panel's button from 600.
+    expect(sheet([]).addOn).toBe('+ Add on Sun 25');
     expect([sheet([]).count, sheet([ev({})]).count, sheet([ev({}), ev({})]).count]).toEqual(['Nothing planned', '1 event', '2 events']);
   });
 

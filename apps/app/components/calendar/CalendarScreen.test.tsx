@@ -83,7 +83,7 @@ describe('Calendar header (spec 036)', () => {
     expect(chip('Eva').getAttribute('aria-pressed')).toBe('false');
     expect(people().textContent).toContain('3 of 4');
     expect(people().getAttribute('aria-label')).toBe('Show events for: Gabriel, Everyone, Others');
-    expect(first.tracker.track).toHaveBeenCalledWith('calendar_member_filter_changed', { members_visible: 3 });
+    expect(first.tracker.track).toHaveBeenCalledWith('calendar_member_filter_changed', { members_visible: 3, source: 'menu' });
     await act(async () => undefined);
     expect(JSON.parse(storage.data.get('cocon.calendar.filter.u-gabriel') ?? '')).toEqual({ hidden: ['u-eva'] });
     first.unmount();
@@ -104,7 +104,7 @@ describe('Calendar header (spec 036)', () => {
     fireEvent.click(chip('Eva'));
     fireEvent.click(chip('Others'));
     fireEvent.click(within(filter()).getByRole('button', { name: 'Show all' }));
-    expect(tracker.track).toHaveBeenLastCalledWith('calendar_member_filter_changed', { members_visible: 4 });
+    expect(tracker.track).toHaveBeenLastCalledWith('calendar_member_filter_changed', { members_visible: 4, source: 'menu' });
     expect(people().textContent).toContain('All');
     await act(async () => undefined);
     expect(JSON.parse(storage.data.get('cocon.calendar.filter.u-gabriel') ?? '')).toEqual({ hidden: [] });

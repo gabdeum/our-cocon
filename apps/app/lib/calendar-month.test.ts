@@ -6,18 +6,23 @@ import type { StoredEvent } from '@cocon/data';
 import type { MonthCellItem } from '@cocon/ui';
 import { gabriel, james, mia } from '../test/fakes';
 import {
+  MEDIUM_ROW_HEIGHT,
   chipLook,
+  chipRowsFor,
   eventWindow,
   firstWeekOfMonth,
   layoutWeek,
   markFitsBeside,
   memberLook,
   monthOccurrences,
+  monthPageWeeks,
   monthRange,
+  monthRowHeight,
   monthShownAt,
   weekIndexOf,
   weekStartAt,
   weekdayLetters,
+  weekdayShort,
   type WeekContext,
 } from './calendar-month';
 
@@ -265,5 +270,38 @@ describe('the alarm clock beside the date (spec 058)', () => {
     const wrapped = nov(five, [['2026-11-01', 1]], 46).cells[0];
     expect(wrapped?.items.filter((i) => i.kind === 'chip')).toHaveLength(3);
     expect(wrapped?.more).toBe('+2');
+  });
+});
+
+describe('spec 070: one month at a time from 600', () => {
+  it('FR-003: the month is the rows from its 1st to its last day, under Sun…Sat', () => {
+    expect(monthPageWeeks(range, '2026-10-01').map((i) => weekStartAt(range, i))).toEqual(['2026-09-27', '2026-10-04', '2026-10-11', '2026-10-18', '2026-10-25']);
+    // August 2026 starts on a Saturday and ends on a Monday: six rows.
+    expect(monthPageWeeks(range, '2026-08-01')).toHaveLength(6);
+    expect(weekdayShort(0)).toEqual(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+    expect(weekdayShort(1)[0]).toBe('Mon');
+  });
+
+  it('FR-003/FR-004: rows are 124 at medium; at expanded they share the height, at least 96', () => {
+    expect(monthRowHeight('medium', 900, 5)).toBe(MEDIUM_ROW_HEIGHT);
+    expect(monthRowHeight('expanded', undefined, 5)).toBe(MEDIUM_ROW_HEIGHT);
+    expect(monthRowHeight('expanded', 700, 5)).toBe(132);
+    expect(monthRowHeight('expanded', 500, 6)).toBe(96);
+  });
+
+  it('FR-003: as many 20 px chips as fit, then "+N"', () => {
+    expect(chipRowsFor(124)).toBe(4);
+    expect(chipRowsFor(96)).toBe(3);
+    expect(chipRowsFor(160)).toBe(5);
+    const day = '2026-10-14';
+    const events = ['A', 'B', 'C', 'D', 'E'].map((title) => ev({ title, starts_on: day, ends_on: day }));
+    const w = layoutWeek(weekIndexOf(range, day), monthOccurrences(events, '2026-10-01', '2026-10-31', gabriel.id, new Set()), { ...ctx, rows: chipRowsFor(124), wide: true });
+    expect(cell(w, day).items).toHaveLength(3);
+    expect(cell(w, day).more).toBe('+2');
+  });
+
+  it("FR-003: the alarm clock's room is worked out on the 14 px date", () => {
+    expect(markFitsBeside('2026-10-14', { today: TODAY, cellWidth: 40 })).toBe(true);
+    expect(markFitsBeside('2026-10-14', { today: TODAY, cellWidth: 40, wide: true })).toBe(false);
   });
 });
