@@ -256,7 +256,8 @@ function LoadedRecipe({
   const versionSection: ReactNode =
     recipe.variants.length > 0 && current ? (
       <View className="gap-10">
-        <Text size={16} weight="900" role="heading" aria-level={2}>
+        {/* Beside the columns, the same size as "Ingredients · n" and "Steps · n" (OC-LargeScreens § Recipe: column titles 20/900). */}
+        <Text size={twoColumn ? 20 : 16} weight="900" role="heading" aria-level={2}>
           {p.version}
         </Text>
         {versions.length > 0 ? (

@@ -53,6 +53,11 @@ describe('the recipe beside the Recipes list (spec 067)', () => {
     expect(within(list).getByRole('link', { name: /Leek & bacon quiche/ }).getAttribute('aria-current')).toBe('page');
     expect(within(list).getByRole('link', { name: /Pumpkin soup/ }).getAttribute('aria-current')).toBeNull();
     expect(within(screen.getByTestId('split-detail')).getByTestId('page').textContent).toBe('q');
+    // The title, search and filters stay only as tall as they are; the rows get the rest.
+    const top = screen.getByTestId('column-top');
+    expect(within(top).getByRole('searchbox', { name: 'Search recipes' })).toBeTruthy();
+    expect(within(top).getByRole('button', { name: /Filters/ })).toBeTruthy();
+    expect(within(top).queryByRole('link', { name: /Pumpkin soup/ })).toBeNull();
   });
 
   it('SC-002: picking another recipe swaps the panel and keeps the list as it was', () => {

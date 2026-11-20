@@ -305,8 +305,11 @@ export function ColumnScreen({ header, pinned, children }: { header?: ReactNode;
   const insets = useContext(SafeAreaInsetsContext);
   return (
     <View className="flex-1 gap-12 pb-16 pl-20 pr-12" style={{ paddingTop: (insets?.top ?? 0) + 28 }}>
-      {header}
-      {pinned}
+      {/* Only as tall as they are: a horizontal pill row (a ScrollView) would otherwise grow into the list's room. */}
+      <View testID="column-top" className="flex-none gap-12">
+        {header}
+        {pinned}
+      </View>
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerClassName="gap-8 pb-8" keyboardShouldPersistTaps="handled">
         {children}
       </ScrollView>

@@ -517,6 +517,8 @@ describe('larger screens (spec 067)', () => {
     expect(screen.getByRole('heading', { name: 'Steps · 6' })).toBeTruthy();
     expect(within(screen.getByRole('list', { name: 'Steps' })).getAllByRole('listitem')).toHaveLength(6);
     expect(screen.getByText('Tap a step to open it in cooking mode')).toBeTruthy();
+    // Version reads as a column title too (Gabriel, after 067 shipped).
+    expect(getComputedStyle(screen.getByRole('heading', { name: 'Version' })).fontSize).toBe('20px');
   });
 
   it('FR-003: the link under Servings opens the options as a popover', async () => {
