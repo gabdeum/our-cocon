@@ -245,40 +245,49 @@ export interface StepRowProps {
   number: number;
   /** The step's name, or its text when it has none (one line, cut short). */
   title: string;
-  /** The step timer's length ("35:00"), in a honey chip on the right. */
-  clock?: string;
-  /** "Step 3: Bake, 35:00 timer. Opens in cooking mode": the name stays in what's said (spec 030). */
+  /** "Variant" on a step a variant adds (spec 067 FR-004). */
+  tag?: string;
+  /** The step timer's length ("12 min"), in a soft pill on the right. */
+  duration?: string;
+  /** The step's photo, 48 square. */
+  photoUri?: string;
+  /** "Step 3: Bake, timer 35 min. Opens in cooking mode": the name stays in what's said (spec 030). */
   accessibilityLabel: string;
   onPress: () => void;
 }
 
-/** One step in the recipe page's step list (StepCard README › StepRow): a quick look that opens the step in cooking mode. */
-export function StepRow({ number, title, clock, accessibilityLabel, onPress }: StepRowProps) {
+/**
+ * One step in the recipe page's step list (StepCard README › StepRow, spec 067 FR-004): a quick look
+ * that opens the step in cooking mode. The whole card is the tap target.
+ */
+export function StepRow({ number, title, tag, duration, photoUri, accessibilityLabel, onPress }: StepRowProps) {
   const largeText = useLargeText();
   return (
     <Pressable
       role="link"
       aria-label={accessibilityLabel}
       onPress={onPress}
-      className={cn('min-h-[60px] flex-row items-center gap-10 rounded-lg bg-surface-card py-10 pl-14 pr-10 active:bg-surface-card-pressed', focusRing)}
+      className={cn('min-h-[64px] flex-row items-center gap-12 rounded-xl bg-surface-card py-10 pl-14 pr-12 active:bg-surface-card-pressed', focusRing)}
     >
       <View aria-hidden className="h-[32px] w-[32px] items-center justify-center rounded-full bg-honey">
         <Text size={15} weight="900">
           {number}
         </Text>
       </View>
-      <Text size={16} weight="800" numberOfLines={largeText ? undefined : 1} className="min-w-0 flex-1">
+      <Text size={18} weight="900" numberOfLines={largeText ? undefined : 1} className="min-w-0 flex-1">
         {title}
       </Text>
-      {clock ? (
-        <View className="flex-row items-center gap-4 rounded-pill bg-honey px-10 py-4">
-          <Icon name="timer" size={16} />
+      {tag ? <Tag label={tag} tone="sage" /> : null}
+      {duration ? (
+        <View testID="step-row-timer" className="flex-row items-center gap-[5px] rounded-pill bg-surface-soft px-10 py-6">
+          <Icon name="timer" size={16} color="olive" />
           <Text size={14} weight="800" tabular>
-            {clock}
+            {duration}
           </Text>
         </View>
       ) : null}
-      <Icon name="chevron-right" color="inkMuted" />
+      {photoUri ? <Photo uri={photoUri} className="h-[48px] w-[48px] rounded-[12px]" /> : null}
+      <Icon name="chevron-right" size={18} color="inkMuted" />
     </Pressable>
   );
 }

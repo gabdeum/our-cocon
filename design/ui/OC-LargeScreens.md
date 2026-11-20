@@ -71,6 +71,7 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 - Step card (all sizes): white, radius 22, padding 10 / 12 / 10 / 14, min 64, gap 12: badge 32 honey · title 18/900 · Variant tag · timer pill (soft, clock 16 olive, 14/800 tabular, "12 min") · photo 48 radius 12 · chevron 18. Whole card is the tap target → cooking mode at that step. Hint above: "Tap a step to open it in cooking mode" 13/600 muted.
 - ≥ 960: rail 104 · list column 320 (padding 28 / 12 / 16 / 20; rows 64 thumb, radius 20, 2 px olive border on the open one) · recipe panel with 12 margin (top/right/bottom), radius 28, 2 px `line-strong` border, internal scroll, no back button.
 - Footer ≥ 600: right-aligned, max 520, cart button with label.
+- Copy not drawn (067): the options popover is titled "More options" and its close is "Close options" (screen readers). A step card's label is "Step {n}: {name}", then ", Variant" and ", {12 min} timer" when they show, then ". Opens in cooking mode". A step a variant changes carries the Variant tag too, as in cooking mode.
 
 ## Home (068) · preview 390 × 844, 820 × 1180, 1180 × 820
 

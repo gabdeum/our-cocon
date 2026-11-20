@@ -15,7 +15,12 @@ These are the layouts every Our Cocon screen is built from. Compose new screens 
 - Photo 240 tall, edge to edge. Round white `IconButton`s (`--round`, 40) in the TopBar sit 52 from the top and 16 from the sides: back on the left, actions on the right, 8 apart.
 - The content sheet overlaps the photo by 30 with top radius 30, `surface-page`, padding 24 × 20.
 - The action bar (spec 051) sits fixed at the bottom on a cream fade (`surface-page` from clear to full by 26%, padding 14 × 16 × 28), always in reach while the page scrolls under it: a 60 cart button (IconButton `--outline`; from 430 wide an outline `lg` Button "Add to groceries") and the main CTA filling the rest (ink, 60, play icon, "Start recipe" or "Resume · step 3"). The `TimerPill` sticks centred 108 from the top while timers exist.
+- From 600 (spec 067): the TopBar sits 24 under the safe area, the sheet's sides are 24, and the action bar is on the right, at most 520 (`layout-footer-wide`). With ingredients and steps side by side the photo is 280 (`layout-hero-wide`).
 - In the app: `PhotoScreen` (packages/ui Layout), with the photo, the left and right buttons and the content.
+
+## List beside a detail (from 960)
+
+- Recipes (spec 067): the rail, the list in a 320 column, the detail in a framed panel. See SplitView README.
 
 ## Public page (shared recipe)
 

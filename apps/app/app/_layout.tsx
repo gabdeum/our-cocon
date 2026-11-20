@@ -15,7 +15,7 @@ import {
   Nunito_900Black,
 } from '@expo-google-fonts/nunito';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { AppFrame, ThemeProvider } from '@cocon/ui';
+import { AppFrame, ThemeProvider, useLayoutTier } from '@cocon/ui';
 import { tracker } from '../lib/tracker';
 import { trackAppOpened } from '../lib/app-opened';
 import { useLayoutAnalytics } from '../lib/layout-analytics';
@@ -194,6 +194,8 @@ export default function RootLayout() {
     Nunito_900Black,
   });
   const ready = fontsLoaded || fontError !== null;
+  // Spec 067: from 960 the recipe opens beside the list that's already on screen, without a slide.
+  const { tier } = useLayoutTier();
 
   useEffect(() => watchConnection(), []);
   // Before app_opened, so it carries them too (spec 063).
@@ -240,7 +242,7 @@ export default function RootLayout() {
                   <Stack.Screen name="oauth/consent" />
                   <Stack.Screen name="recipes/filters" options={presentation.sheet} />
                   <Stack.Screen name="recipes/new" options={presentation.fullScreen} />
-                  <Stack.Screen name="recipes/[id]/index" options={presentation.stack} />
+                  <Stack.Screen name="recipes/[id]/index" options={tier === 'expanded' ? { ...presentation.stack, animation: 'none' } : presentation.stack} />
                   <Stack.Screen name="recipes/[id]/cook" options={presentation.fullScreen} />
                   <Stack.Screen name="recipes/[id]/scale" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/convert" options={presentation.sheet} />

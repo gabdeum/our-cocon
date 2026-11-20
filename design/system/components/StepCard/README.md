@@ -27,13 +27,16 @@ Amounts come from the quantity engine, never typed: "20 g butter", "2 leeks (300
 
 ## StepRow
 
-The recipe page's Steps tab lists each step as a StepRow: a quick look that opens cooking mode at that step. The full StepCard stays on the shared page.
+The recipe page lists each step as a StepRow (the Steps tab on a phone, the Steps column from 600): a quick look that opens cooking mode at that step. The full StepCard stays on the shared page. Same card at every size (spec 067 FR-004, OC-LargeScreens § Recipe).
 
 | Part | Spec |
 | --- | --- |
-| Row | surface-card, radius 16, min-height 60, padding 10 10 10 14, gap 10; pressed `surface-card-pressed`; role link |
-| Left | number badge (as in StepCard) |
-| Title | the step's name, or its text when it has none: 16/800, one line, cut short |
-| Timer chip | only for a step with a timer: honey pill, padding 4 10, timer icon 16 and the length ("12:00") 14/800 tabular |
-| Right | chevron-right 20, ink-muted |
-| Label | "Open step {n} in cooking mode" |
+| Row | surface-card, radius 22, min-height 64, padding 10 12 10 14, gap 12; pressed `surface-card-pressed`; role link, the whole card is the tap target |
+| Left | number badge 32, honey, 15/900 |
+| Title | the step's name, or its text when it has none: 18/900, one line, cut short (wraps at the largest text size) |
+| Variant tag | only on a step a variant adds or changes: sage Tag "Variant" |
+| Timer pill | only for a step with a timer: `surface-soft` pill, padding 6 10, gap 5, timer icon 16 olive and the length ("12 min", "1 h 10") 14/800 tabular |
+| Photo | only when the step has one: 48 × 48, radius 12, decorative |
+| Right | chevron-right 18, ink-muted |
+| Label | "Step {n}: {name}[, Variant][, {12 min} timer]. Opens in cooking mode" |
+| Hint | above the list: "Tap a step to open it in cooking mode", 13/600 ink-muted |
