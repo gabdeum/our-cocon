@@ -7,6 +7,7 @@ import { EVENT_CATEGORIES, Reminder as ReminderSchema, type EventInput, type Rem
 import type { Tracker } from '@cocon/schemas';
 import {
   BottomSheet,
+  type BottomSheetProps,
   Button,
   Callout,
   ChecklistAdd,
@@ -109,8 +110,10 @@ type DateSheet = { for: 'date' | 'last' | 'ends'; month: string } | null;
 /**
  * OC-CalAdd / OC-CalAddMore (spec 041): add an event in about three taps, more options folded
  * away; the same sheet edits one. Never blocks on a conflict; Save explains what's missing.
+ * Returns the sheet's props, the draft and `patch` (as typed), so the add sheet can switch to a
+ * reminder and back (`AddSheet`).
  */
-export function EventSheet(p: EventSheetProps) {
+export function useEventForm(p: EventSheetProps) {
   const { initial, members, myMemberId, today, slotTimes } = p;
   const online = useOnline();
   const opened = useRef(0);
@@ -230,243 +233,250 @@ export function EventSheet(p: EventSheetProps) {
     ? dateGridMonth(dateSheet.month, today, p.weekStartsOn, dateSheet.for === 'date' ? undefined : d.date, dateSheet.for === 'last' ? addDays(d.date, MAX_SPAN) : undefined)
     : null;
 
-  return (
-    <BottomSheet
-      visible
-      fieldFocus={p.mode === 'new'}
-      onClose={close}
-      dirty={hasTitle && p.mode === 'new'}
-      title={p.mode === 'new' ? a.titleNew : a.titleEdit}
-      closeLabel={a.close}
-      headerAction={<Link label={a.cancel} tone="quiet" size={16} onPress={close} />}
-      footer={
-        <View className="gap-12">
-          <Button label={a.save} busy={saving} busyLabel={a.saving} block inactive={!hasTitle} disabled={!online} onPress={() => void save()} />
-        </View>
-      }
-    >
-      <TextField
-        label={a.what}
-        size="title"
-        value={d.title}
-        onChangeText={(title) => set({ title })}
-        maxLength={60}
-        placeholder={a.whatPlaceholder}
-        autoFocus={p.mode === 'new'}
-        warning={showError ? a.noTitle : undefined}
-        onFocus={() => setTitleFocused(true)}
-        // Later than the tap, so tapping a suggestion still lands on it.
-        onBlur={() => setTimeout(() => setTitleFocused(false), 200)}
-      />
-      {shownSuggestions.length ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" role="list" aria-label={a.suggestions} className="-mx-20 -mt-8" contentContainerClassName="gap-8 px-20">
-          {shownSuggestions.map((s, i) => (
-            <SuggestionPill key={s.lastEventId} title={s.title} detail={suggestionTime(s, slotTimes, use24h)} onPress={() => void pickSuggestion(s, i + 1)} />
-          ))}
-        </ScrollView>
-      ) : null}
-
-      <Section title={a.when}>
-        <View className="flex-row gap-8">
-          <DayChip label={a.today} sub={tiles.today} selected={tiles.picked === 'today'} onPress={() => pickDay('today')} />
-          <DayChip label={a.tomorrow} sub={tiles.tomorrow} selected={tiles.picked === 'tomorrow'} onPress={() => pickDay('tomorrow')} />
-          <DayChip label={a.otherDay} sub={tiles.other} selected={tiles.picked === 'other'} onPress={() => pickDay('other')} />
-        </View>
-        {/* Spec 053 FR-009: the last day of an event over several days; the length belongs to the series, so not for one date. */}
-        {p.occurrenceOnly ? null : (
-          <View className="flex-row flex-wrap items-center gap-8">
-            <Text size={14} weight="800">
-              {a.endsDay}
-            </Text>
-            <Choice label={a.sameDay} selected={last === null} onPress={() => set({ span: 0 })} />
-            <Choice label={last ? dateLabel(last) : a.pickLastDay} selected={last !== null} onPress={pickLast} />
-            {last ? <IconButton variant="soft" icon="close" iconSize={18} label={a.backToSameDay} onPress={() => set({ span: 0 })} /> : null}
-          </View>
-        )}
-      </Section>
-
-      <Section title={a.timeOfDay} hint={a.timeHint}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} role="group" aria-label={a.timeOfDay} className="-mx-20" contentContainerClassName="gap-8 px-20 pb-4 pt-2">
-          {slotChips(slotTimes, use24h).map((s) => (
-            <SlotChip key={s.key} label={s.label} hours={s.hours} selected={isChipOn(d.time, s.key)} onPress={() => set({ time: toggleSlot(d.time, s.key) })} />
-          ))}
-        </ScrollView>
-        {/* Typed on the web; the phone's time picker on iOS and Android. */}
-        <TimeRange
-          startLabel={a.starts}
-          endLabel={a.ends}
-          start={shown.start}
-          end={shown.end}
-          onChange={(field, value) => set({ time: (Platform.OS === 'web' ? typeTime : pickTime)(d.time, field, value, slotTimes) })}
-          startWarning={tried ? times.start : undefined}
-          endWarning={tried ? times.end : undefined}
-          use24h={use24h}
-          format={(t) => formatTime(t, use24h)}
-          fallback={pickerFallback(d.time, slotTimes, new Date())}
+  const sheet: BottomSheetProps = {
+    visible: true,
+    fieldFocus: p.mode === 'new',
+    onClose: close,
+    dirty: hasTitle && p.mode === 'new',
+    title: p.mode === 'new' ? a.titleNew : a.titleEdit,
+    closeLabel: a.close,
+    headerAction: <Link label={a.cancel} tone="quiet" size={16} onPress={close} />,
+    footer: (
+      <View className="gap-12">
+        <Button label={a.save} busy={saving} busyLabel={a.saving} block inactive={!hasTitle} disabled={!online} onPress={() => void save()} />
+      </View>
+    ),
+    children: (
+      <>
+        <TextField
+          label={a.what}
+          size="title"
+          value={d.title}
+          onChangeText={(title) => set({ title })}
+          maxLength={60}
+          placeholder={a.whatPlaceholder}
+          autoFocus={p.mode === 'new'}
+          warning={showError ? a.noTitle : undefined}
+          onFocus={() => setTitleFocused(true)}
+          // Later than the tap, so tapping a suggestion still lands on it.
+          onBlur={() => setTimeout(() => setTitleFocused(false), 200)}
         />
-      </Section>
+        {shownSuggestions.length ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" role="list" aria-label={a.suggestions} className="-mx-20 -mt-8" contentContainerClassName="gap-8 px-20">
+            {shownSuggestions.map((s, i) => (
+              <SuggestionPill key={s.lastEventId} title={s.title} detail={suggestionTime(s, slotTimes, use24h)} onPress={() => void pickSuggestion(s, i + 1)} />
+            ))}
+          </ScrollView>
+        ) : null}
 
-      <Section title={a.who}>
-        <View role="group" aria-label={a.who} className="flex-row flex-wrap gap-8">
-          {whoChips(members).map((c) => (
-            <MemberPickerChip key={c.key} name={c.name} initial={c.initial} color={c.color} selected={d.who.includes(c.key)} onPress={() => set({ who: toggleWho(d.who, c.key) })} />
-          ))}
-        </View>
-        {tried && noOne ? <FieldWarning text={a.noOne} /> : null}
-        {revealed.length ? <FieldWarning text={a.surpriseRevealed(revealed)} /> : null}
-      </Section>
-
-      {conflict ? (
-        <View role="status">
-          <Callout variant="warn" text={`${conflict} ${a.addAnyway}`} />
-        </View>
-      ) : null}
-
-      <DisclosureButton label={a.more} sub={more ? a.hide : a.moreHint} expanded={more} onPress={() => setMore(!more)} />
-
-      {more ? (
-        <View className="gap-20">
-          <Section title={a.type}>
-            <PillRow>
-              {EVENT_CATEGORIES.map((c) => (
-                <Choice
-                  key={c}
-                  label={a.types[c]}
-                  selected={d.category === c}
-                  // A birthday repeats every year, all day (spec 035 FR-006).
-                  onPress={() => set(c === 'birthday' ? { category: c, time: { kind: 'all_day' }, repeat: 'yearly' } : { category: d.category === c ? null : c })}
-                />
-              ))}
-            </PillRow>
-          </Section>
-
-          <TextField label={a.where} value={d.location} onChangeText={(location) => set({ location })} maxLength={200} placeholder={a.wherePlaceholder} multiline />
-
-          {managed.length ? (
-            <Section title={a.whoTakes(managed.map((m) => m.display_name))} hint={a.whoTakesHint(managed.map((m) => m.display_name))}>
-              <PillRow>
-                <Choice label={a.notDecided} selected={d.responsible === null} onPress={() => set({ responsible: null })} />
-                {takers(members).map((m) => (
-                  <Choice key={m.id} label={m.display_name} selected={d.responsible === m.id} onPress={() => set({ responsible: m.id })} />
-                ))}
-              </PillRow>
-            </Section>
-          ) : null}
-
-          {p.occurrenceOnly ? null : (
-            <Section title={a.repeat}>
-              <PillRow>
-                {/* Spec 053 FR-012: a daily repeat of an event over several days would overlap itself. */}
-                {REPEATS.filter((r) => r !== 'daily' || d.span === 0).map((r) => (
-                  <Choice
-                    key={r}
-                    label={a.repeats[r]}
-                    selected={d.repeat === r}
-                    // Weekly shows the day it repeats on: the start day until others are picked.
-                    onPress={() => set(r === 'weekly' && d.weekdays.length === 0 ? { repeat: r, weekdays: [weekday(d.date)] } : { repeat: r })}
-                  />
-                ))}
-              </PillRow>
-              {d.repeat !== 'never' ? <RepeatDetails d={d} set={set} tried={tried} onPickEnd={() => setDateSheet({ for: 'ends', month: firstOfMonth(d.ends.type === 'on' ? d.ends.date : d.date) })} /> : null}
-            </Section>
-          )}
-
-          {p.occurrenceOnly ? null : (
-            <Section title={a.reminder}>
-              <PillRow>
-                {REMINDERS.map((r) => (
-                  <Choice key={r} label={a.reminders[r]} selected={d.reminder === r} onPress={() => set({ reminder: r })} />
-                ))}
-              </PillRow>
-              {remindHint ? <Hint text={remindHint} /> : null}
-            </Section>
-          )}
-
-          {showVisibility ? (
-            <Section title={a.whoCanSee}>
-              <SegmentedControl
-                label={a.whoCanSeeLabel}
-                segments={VISIBILITIES.map((v) => ({ key: v, label: a.visibilities[v] }))}
-                value={d.visibility}
-                onChange={(visibility) => set({ visibility })}
-              />
-              <Hint text={a.visibilityHints[d.visibility]} />
-              {d.visibility === 'surprise' ? (
-                <View className="gap-12 rounded-lg bg-surface-card p-14">
-                  {tried && secret.hiddenFrom ? <FieldWarning text={secret.hiddenFrom} /> : null}
-                  <TextField
-                    label={a.coverTitle(hidden)}
-                    onCard
-                    value={d.coverTitle}
-                    onChangeText={(coverTitle) => set({ coverTitle })}
-                    maxLength={60}
-                    warning={tried ? secret.coverTitle : undefined}
-                  />
-                  <TextField label={a.coverNote(hidden)} onCard multiline value={d.coverNote} onChangeText={(coverNote) => set({ coverNote })} maxLength={200} />
-                  <Hint text={a.surpriseSummary(hidden)} />
-                </View>
-              ) : null}
-            </Section>
-          ) : null}
-
-          <View className="gap-8">
-            <TextField label={a.notes} value={d.notes} onChangeText={(notes) => set({ notes })} maxLength={2000} placeholder={a.notesPlaceholder} multiline />
-            {p.occurrenceOnly ? null : (
-              <View className="rounded-lg bg-surface-card px-14 py-4">
-                {d.checklist.map((c, i) => (
-                  <ChecklistRow
-                    key={c.id ?? `new-${i}`}
-                    label={c.label}
-                    done={false}
-                    remove={{ label: a.removeItem(c.label), onPress: () => set({ checklist: d.checklist.filter((_, j) => j !== i) }) }}
-                  />
-                ))}
-                {adding !== null ? (
-                  <TextField
-                    label={a.checklistItem}
-                    labelHidden
-                    size="sm"
-                    className="py-6"
-                    value={adding}
-                    autoFocus
-                    maxLength={80}
-                    onChangeText={setAdding}
-                    onSubmitEditing={addItem}
-                    onBlur={() => {
-                      if (adding.trim()) addItem();
-                      else setAdding(null);
-                    }}
-                    submitBehavior="submit"
-                  />
-                ) : null}
-                {d.checklist.length < MAX_CHECKLIST ? <ChecklistAdd label={a.addToChecklist} onPress={() => setAdding('')} /> : null}
-              </View>
-            )}
+        <Section title={a.when}>
+          <View className="flex-row gap-8">
+            <DayChip label={a.today} sub={tiles.today} selected={tiles.picked === 'today'} onPress={() => pickDay('today')} />
+            <DayChip label={a.tomorrow} sub={tiles.tomorrow} selected={tiles.picked === 'tomorrow'} onPress={() => pickDay('tomorrow')} />
+            <DayChip label={a.otherDay} sub={tiles.other} selected={tiles.picked === 'other'} onPress={() => pickDay('other')} />
           </View>
-        </View>
-      ) : null}
+          {/* Spec 053 FR-009: the last day of an event over several days; the length belongs to the series, so not for one date. */}
+          {p.occurrenceOnly ? null : (
+            <View className="flex-row flex-wrap items-center gap-8">
+              <Text size={14} weight="800">
+                {a.endsDay}
+              </Text>
+              <Choice label={a.sameDay} selected={last === null} onPress={() => set({ span: 0 })} />
+              <Choice label={last ? dateLabel(last) : a.pickLastDay} selected={last !== null} onPress={pickLast} />
+              {last ? <IconButton variant="soft" icon="close" iconSize={18} label={a.backToSameDay} onPress={() => set({ span: 0 })} /> : null}
+            </View>
+          )}
+        </Section>
 
-      {dateSheet && grid ? (
-        <BottomSheet visible onClose={() => setDateSheet(null)} title={dateSheet.for === 'date' ? a.pickDateTitle : dateSheet.for === 'last' ? a.lastDayTitle : a.endsOnTitle} closeLabel={a.close}>
-          <DateGrid
-            title={grid.title}
-            weekdays={weekdayLetters(p.weekStartsOn)}
-            weeks={grid.weeks}
-            selected={dateSheet.for === 'date' ? d.date : dateSheet.for === 'last' ? last : d.ends.type === 'on' ? d.ends.date : null}
-            onSelect={(date) => {
-              if (dateSheet.for === 'last') {
-                const span = daysBetween(d.date, date);
-                set(span > 0 && d.repeat === 'daily' ? { span, repeat: 'never' } : { span });
-              } else set(dateSheet.for === 'date' ? { date } : { ends: { type: 'on', date } });
-              setDateSheet(null);
-            }}
-            previous={{ label: a.previousMonth, onPress: () => setDateSheet({ ...dateSheet, month: shiftMonth(dateSheet.month, -1) }) }}
-            next={{ label: a.nextMonth, onPress: () => setDateSheet({ ...dateSheet, month: shiftMonth(dateSheet.month, 1) }) }}
+        <Section title={a.timeOfDay} hint={a.timeHint}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} role="group" aria-label={a.timeOfDay} className="-mx-20" contentContainerClassName="gap-8 px-20 pb-4 pt-2">
+            {slotChips(slotTimes, use24h).map((s) => (
+              <SlotChip key={s.key} label={s.label} hours={s.hours} selected={isChipOn(d.time, s.key)} onPress={() => set({ time: toggleSlot(d.time, s.key) })} />
+            ))}
+          </ScrollView>
+          {/* Typed on the web; the phone's time picker on iOS and Android. */}
+          <TimeRange
+            startLabel={a.starts}
+            endLabel={a.ends}
+            start={shown.start}
+            end={shown.end}
+            onChange={(field, value) => set({ time: (Platform.OS === 'web' ? typeTime : pickTime)(d.time, field, value, slotTimes) })}
+            startWarning={tried ? times.start : undefined}
+            endWarning={tried ? times.end : undefined}
+            use24h={use24h}
+            format={(t) => formatTime(t, use24h)}
+            fallback={pickerFallback(d.time, slotTimes, new Date())}
           />
-        </BottomSheet>
-      ) : null}
-    </BottomSheet>
-  );
+        </Section>
+
+        <Section title={a.who}>
+          <View role="group" aria-label={a.who} className="flex-row flex-wrap gap-8">
+            {whoChips(members).map((c) => (
+              <MemberPickerChip key={c.key} name={c.name} initial={c.initial} color={c.color} selected={d.who.includes(c.key)} onPress={() => set({ who: toggleWho(d.who, c.key) })} />
+            ))}
+          </View>
+          {tried && noOne ? <FieldWarning text={a.noOne} /> : null}
+          {revealed.length ? <FieldWarning text={a.surpriseRevealed(revealed)} /> : null}
+        </Section>
+
+        {conflict ? (
+          <View role="status">
+            <Callout variant="warn" text={`${conflict} ${a.addAnyway}`} />
+          </View>
+        ) : null}
+
+        <DisclosureButton label={a.more} sub={more ? a.hide : a.moreHint} expanded={more} onPress={() => setMore(!more)} />
+
+        {more ? (
+          <View className="gap-20">
+            <Section title={a.type}>
+              <PillRow>
+                {EVENT_CATEGORIES.map((c) => (
+                  <Choice
+                    key={c}
+                    label={a.types[c]}
+                    selected={d.category === c}
+                    // A birthday repeats every year, all day (spec 035 FR-006).
+                    onPress={() => set(c === 'birthday' ? { category: c, time: { kind: 'all_day' }, repeat: 'yearly' } : { category: d.category === c ? null : c })}
+                  />
+                ))}
+              </PillRow>
+            </Section>
+
+            <TextField label={a.where} value={d.location} onChangeText={(location) => set({ location })} maxLength={200} placeholder={a.wherePlaceholder} multiline />
+
+            {managed.length ? (
+              <Section title={a.whoTakes(managed.map((m) => m.display_name))} hint={a.whoTakesHint(managed.map((m) => m.display_name))}>
+                <PillRow>
+                  <Choice label={a.notDecided} selected={d.responsible === null} onPress={() => set({ responsible: null })} />
+                  {takers(members).map((m) => (
+                    <Choice key={m.id} label={m.display_name} selected={d.responsible === m.id} onPress={() => set({ responsible: m.id })} />
+                  ))}
+                </PillRow>
+              </Section>
+            ) : null}
+
+            {p.occurrenceOnly ? null : (
+              <Section title={a.repeat}>
+                <PillRow>
+                  {/* Spec 053 FR-012: a daily repeat of an event over several days would overlap itself. */}
+                  {REPEATS.filter((r) => r !== 'daily' || d.span === 0).map((r) => (
+                    <Choice
+                      key={r}
+                      label={a.repeats[r]}
+                      selected={d.repeat === r}
+                      // Weekly shows the day it repeats on: the start day until others are picked.
+                      onPress={() => set(r === 'weekly' && d.weekdays.length === 0 ? { repeat: r, weekdays: [weekday(d.date)] } : { repeat: r })}
+                    />
+                  ))}
+                </PillRow>
+                {d.repeat !== 'never' ? <RepeatDetails d={d} set={set} tried={tried} onPickEnd={() => setDateSheet({ for: 'ends', month: firstOfMonth(d.ends.type === 'on' ? d.ends.date : d.date) })} /> : null}
+              </Section>
+            )}
+
+            {p.occurrenceOnly ? null : (
+              <Section title={a.reminder}>
+                <PillRow>
+                  {REMINDERS.map((r) => (
+                    <Choice key={r} label={a.reminders[r]} selected={d.reminder === r} onPress={() => set({ reminder: r })} />
+                  ))}
+                </PillRow>
+                {remindHint ? <Hint text={remindHint} /> : null}
+              </Section>
+            )}
+
+            {showVisibility ? (
+              <Section title={a.whoCanSee}>
+                <SegmentedControl
+                  label={a.whoCanSeeLabel}
+                  segments={VISIBILITIES.map((v) => ({ key: v, label: a.visibilities[v] }))}
+                  value={d.visibility}
+                  onChange={(visibility) => set({ visibility })}
+                />
+                <Hint text={a.visibilityHints[d.visibility]} />
+                {d.visibility === 'surprise' ? (
+                  <View className="gap-12 rounded-lg bg-surface-card p-14">
+                    {tried && secret.hiddenFrom ? <FieldWarning text={secret.hiddenFrom} /> : null}
+                    <TextField
+                      label={a.coverTitle(hidden)}
+                      onCard
+                      value={d.coverTitle}
+                      onChangeText={(coverTitle) => set({ coverTitle })}
+                      maxLength={60}
+                      warning={tried ? secret.coverTitle : undefined}
+                    />
+                    <TextField label={a.coverNote(hidden)} onCard multiline value={d.coverNote} onChangeText={(coverNote) => set({ coverNote })} maxLength={200} />
+                    <Hint text={a.surpriseSummary(hidden)} />
+                  </View>
+                ) : null}
+              </Section>
+            ) : null}
+
+            <View className="gap-8">
+              <TextField label={a.notes} value={d.notes} onChangeText={(notes) => set({ notes })} maxLength={2000} placeholder={a.notesPlaceholder} multiline />
+              {p.occurrenceOnly ? null : (
+                <View className="rounded-lg bg-surface-card px-14 py-4">
+                  {d.checklist.map((c, i) => (
+                    <ChecklistRow
+                      key={c.id ?? `new-${i}`}
+                      label={c.label}
+                      done={false}
+                      remove={{ label: a.removeItem(c.label), onPress: () => set({ checklist: d.checklist.filter((_, j) => j !== i) }) }}
+                    />
+                  ))}
+                  {adding !== null ? (
+                    <TextField
+                      label={a.checklistItem}
+                      labelHidden
+                      size="sm"
+                      className="py-6"
+                      value={adding}
+                      autoFocus
+                      maxLength={80}
+                      onChangeText={setAdding}
+                      onSubmitEditing={addItem}
+                      onBlur={() => {
+                        if (adding.trim()) addItem();
+                        else setAdding(null);
+                      }}
+                      submitBehavior="submit"
+                    />
+                  ) : null}
+                  {d.checklist.length < MAX_CHECKLIST ? <ChecklistAdd label={a.addToChecklist} onPress={() => setAdding('')} /> : null}
+                </View>
+              )}
+            </View>
+          </View>
+        ) : null}
+
+        {dateSheet && grid ? (
+          <BottomSheet visible onClose={() => setDateSheet(null)} title={dateSheet.for === 'date' ? a.pickDateTitle : dateSheet.for === 'last' ? a.lastDayTitle : a.endsOnTitle} closeLabel={a.close}>
+            <DateGrid
+              title={grid.title}
+              weekdays={weekdayLetters(p.weekStartsOn)}
+              weeks={grid.weeks}
+              selected={dateSheet.for === 'date' ? d.date : dateSheet.for === 'last' ? last : d.ends.type === 'on' ? d.ends.date : null}
+              onSelect={(date) => {
+                if (dateSheet.for === 'last') {
+                  const span = daysBetween(d.date, date);
+                  set(span > 0 && d.repeat === 'daily' ? { span, repeat: 'never' } : { span });
+                } else set(dateSheet.for === 'date' ? { date } : { ends: { type: 'on', date } });
+                setDateSheet(null);
+              }}
+              previous={{ label: a.previousMonth, onPress: () => setDateSheet({ ...dateSheet, month: shiftMonth(dateSheet.month, -1) }) }}
+              next={{ label: a.nextMonth, onPress: () => setDateSheet({ ...dateSheet, month: shiftMonth(dateSheet.month, 1) }) }}
+            />
+          </BottomSheet>
+        ) : null}
+      </>
+    ),
+  };
+  return { sheet, draft: d, patch: set };
+}
+
+/** The add or edit sheet on its own. */
+export function EventSheet(p: EventSheetProps) {
+  return <BottomSheet {...useEventForm(p).sheet} />;
 }
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {

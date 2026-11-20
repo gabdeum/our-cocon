@@ -85,10 +85,10 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 
 ## Calendar (070) · preview month / week / day at 390 × 844, 820 × 1180, 1180 × 820
 
-- Header ≥ 600 row 1: title 32/900 · ‹ (44 round white) · Today (soft pill) · › · "+ Event" (olive pill 44). Row 2: segmented views (soft track, white selected with `shadow-segment`, items 44 tall, padding 18) · people chips right: 40 tall, white, padding 0 12 0 4, 30 px colour dot with initial, label 14/800; hidden = transparent with 2 px `line-strong` inset, pale dot, muted struck label.
-- Month ≥ 600: weekday labels 13/900 "Sun…Sat"; cell padding 6; day number 14 (today: olive 24 circle); chips 20 tall / 12 text / radius 6; "+N" 12/900; multi-day bars same size at top 32. Selected day: 2.5 inset ink.
+- Header ≥ 600 row 1: title 32/900 · ‹ (44 round white) · Today (soft pill) · › · "+ Event" (olive pill 44). Row 2: segmented views (soft track, white selected with `shadow-segment`, items 44 tall, padding 18) · people chips right: 40 tall, white, padding 0 12 0 4, 30 px colour dot with initial, label 14/800; hidden = transparent with 2 px `line-strong` inset, pale dot, muted struck label. With everyone shown, a chip shows only that person; tapping the last one shown shows everyone (2026-11-20).
+- Month ≥ 600: the phone's continuous vertical scroll, in a card (2026-11-20, Gabriel; the mockup pages a month at a time); weekday labels 13/900 "Sun…Sat"; cell padding 6; day number 14 (today: olive 24 circle); chips 20 tall / 12 text / radius 6; "+N" 12/900; multi-day bars same size at top 32. Selected day: 2.5 inset ink.
   - Medium: row 124; selected-day panel under the grid: title 22/900, count 14/700, rows (phone sheet rows) in 2 columns by column, gap 8, dashed add button 52.
-  - Expanded: row = max(96, (available − 40) / weeks); panel 320 beside the grid, one column.
+  - Expanded: row = max(96, (available − 40) / 5); panel 320 beside the grid, one column.
 - Week ≥ 600: hour 44 px, gutter 52 with 12 px labels; day header weekday 13/900 + number 18 (today olive 34 circle); all-day chips 32 tall 14/800; event cards padding 5 / 6, radius 10, "who · time" 12/900, title 14/800.
 - Day ≥ 600: sections in 2 columns by column, gap 16. Expanded side column 300: mini month card (white, radius 22, padding 12; cells 38 tall radius 12, 14 px; selected ink, today olive, 5 px dot for days with events: olive, honey on dark cells), then "Coming up" label (13/900 uppercase) and 3 white rows (radius 18, padding 10 / 12: weekday 12/900 muted over date 20/900, then titles 14/700 muted).
 

@@ -83,13 +83,14 @@ export function CookLayout(props: CookLayoutProps) {
   const { tier, width } = useLayoutTier();
   const columns = cookColumns(tier, width);
   const wide = tier !== 'compact';
-  // The ✕ sits where the TopBar of the loading state put it, so it doesn't jump when the steps arrive.
-  // From 600: safe area + 24, as every screen (spec 063, 032-later L158).
+  // The ✕ sits where the TopBar of the loading state put it (16 from the side at every size, not the
+  // mockup's 20 from 600), so it doesn't jump when the steps arrive. From 600: safe area + 24, as
+  // every screen (spec 063, 032-later L158).
   const phoneTop = useTopEdge();
   const wideTop = useTopEdge(0) + theme.layout.topWide;
   return (
     <View className="flex-1 bg-surface-page">
-      <View className={cn('gap-12 border-b-[1.5px] border-line bg-surface-page pb-12', wide ? 'px-20' : 'px-16')} style={{ paddingTop: wide ? wideTop : phoneTop }}>
+      <View className="gap-12 border-b-[1.5px] border-line bg-surface-page px-16 pb-12" style={{ paddingTop: wide ? wideTop : phoneTop }}>
         <View className="flex-row items-center justify-between gap-12">
           <IconButton variant="round" icon="close" iconSize={20} label={exitLabel} onPress={onExit} />
           {wide && title ? (

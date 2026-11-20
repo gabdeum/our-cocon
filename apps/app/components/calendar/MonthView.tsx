@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
 import type { SlotTimes, WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { FloatingAdd, MonthGrid, MonthPage, Swipeable, tabBottomPad, theme, useLayoutTier, type LayoutTier } from '@cocon/ui';
+import { FloatingAdd, MonthGrid, tabBottomPad, theme, useLayoutTier } from '@cocon/ui';
 import { isDayEvent, layoutDaySheet } from '../../lib/calendar-day';
 import { placeForScreen, reminderCounts, type CalendarReminders } from '../../lib/calendar-reminders';
 import {
@@ -13,7 +13,6 @@ import {
   layoutWeek,
   memberLook,
   monthOccurrences,
-  monthPageWeeks,
   monthRange,
   monthRowHeight,
   monthShownAt,
@@ -21,9 +20,6 @@ import {
   weekIndexOf,
   weekdayLetters,
   weekdayShort,
-  type MonthOccurrence,
-  type MonthRange,
-  type WeekContext,
 } from '../../lib/calendar-month';
 import type { Member } from '../../lib/session';
 import { useNow } from '../../lib/use-now';
@@ -64,16 +60,15 @@ export interface MonthViewProps {
   reminders?: CalendarReminders;
   showReminders?: boolean;
   onShowReminders?: (on: boolean) => void;
-  /** From 600 (spec 070): the day whose panel is open, a tap on another day, and a swipe to the next or previous month. */
+  /** From 600 (spec 070): the day whose panel is open, and a tap on another day. */
   selected?: string;
   onSelect?: (date: string) => void;
-  onSwipe?: (direction: 1 | -1) => void;
 }
 
 /**
  * Spec 037 (OC-CalMonth): the continuous month grid, the first-visit hint and the add button. From
- * 600 wide (spec 070) one month at a time, with the selected day's panel and no add button (the
- * header has "+ Event").
+ * 600 wide (spec 070) the same scroll with larger rows, the selected day's panel under it (medium)
+ * or beside it (expanded), and no add button (the header has "+ Event").
  */
 export function MonthView({
   width,
@@ -98,7 +93,6 @@ export function MonthView({
   onShowReminders = () => undefined,
   selected = month,
   onSelect = () => undefined,
-  onSwipe = () => undefined,
 }: MonthViewProps) {
   const { tier } = useLayoutTier();
   const range = useMemo(() => monthRange(today, weekStartsOn), [today, weekStartsOn]);
@@ -144,43 +138,68 @@ export function MonthView({
     [jump, range, today],
   );
   const content = { occurrences, ctx: dayCtx, timeZone, hidden, reminders, showReminders, onShowReminders, onOpenEvent: openEvent };
-  const pageCtx = useMemo(() => ({ range, today, look, slotTimes, initials: true, reminders: counts, textScale: fontScale }), [range, today, look, slotTimes, counts, fontScale]);
+  // From 600: rows 124 (medium), or sharing the grid's height five weeks at a time (expanded, 124 until it's measured; the grid keeps its top week).
+  const [gridHeight, setGridHeight] = useState<number | undefined>(undefined);
+  const rowHeight = monthRowHeight(tier, gridHeight, 5);
+  const wideWeekAt = useCallback(
+    (index: number) =>
+      layoutWeek(index, occurrences, { range, today, look, slotTimes, initials: true, reminders: counts, textScale: fontScale, rows: chipRowsFor(rowHeight), wide: true, cellWidth }),
+    [occurrences, range, today, look, slotTimes, counts, fontScale, rowHeight, cellWidth],
+  );
+  const grid = (weekAtIndex: typeof weekAt, wide?: { rowHeight: number; selected: string }) => (
+    <MonthGrid
+      mutePast={fadePast}
+      weekdays={wide ? weekdayShort(weekStartsOn) : weekdayLetters(weekStartsOn)}
+      weekCount={range.weekCount}
+      weekAt={weekAtIndex}
+      initialIndex={initialIndex}
+      keepVisibleIndex={keepVisibleIndex}
+      jump={gridJump}
+      onTopRowChange={(top) => onMonthShown(monthShownAt(range, top))}
+      // From 600 a tap selects the day for the panel (spec 070, L161); on the phone it opens the day sheet.
+      onDayPress={wide ? onSelect : openDay}
+      onDayLongPress={onAddEvent}
+      addLabel={m.addEvent}
+      wide={wide}
+    />
+  );
 
   if (tier !== 'compact') {
+    const bottom = tabBottomPad(tier);
+    const panel = (columns: 1 | 2) => <DayPanel date={selected} columns={columns} {...content} onAdd={() => onAddEvent(selected)} />;
+    const measure = (e: { nativeEvent: { layout: { width: number; height: number } } }) => {
+      setGridWidth(e.nativeEvent.layout.width);
+      setGridHeight(e.nativeEvent.layout.height);
+    };
+    const wideGrid = grid(wideWeekAt, { rowHeight, selected });
+    // Spec 070 FR-003/FR-004 (OC-CalendarResponsive): the panel under the grid (medium) or 320 beside it (expanded).
+    if (tier === 'medium') {
+      return (
+        <View className="flex-1 gap-16 px-24 pt-4">
+          <View className="min-h-0" style={{ flex: 3 }} onLayout={measure}>
+            {wideGrid}
+          </View>
+          <ScrollView style={{ flex: 2 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: bottom }}>
+            {panel(2)}
+          </ScrollView>
+        </View>
+      );
+    }
     return (
-      <MonthPaged
-        tier={tier}
-        range={range}
-        month={month}
-        weekCtx={pageCtx}
-        occurrences={occurrences}
-        weekStartsOn={weekStartsOn}
-        mutePast={fadePast}
-        selected={selected}
-        onSelect={onSelect}
-        onSwipe={onSwipe}
-        onAddEvent={onAddEvent}
-        addLabel={m.addEvent}
-        panel={(columns) => <DayPanel date={selected} columns={columns} {...content} onAdd={() => onAddEvent(selected)} />}
-      />
+      <View className="flex-1 flex-row items-start gap-16 px-24 pt-4" style={{ paddingBottom: bottom }}>
+        <View className="min-w-0 flex-1 self-stretch" onLayout={measure}>
+          {wideGrid}
+        </View>
+        <ScrollView className="self-stretch" style={{ width: theme.layout.panelExpanded, flexGrow: 0 }} showsVerticalScrollIndicator={false}>
+          {panel(1)}
+        </ScrollView>
+      </View>
     );
   }
 
   return (
     <View className="flex-1" onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
-      <MonthGrid
-        mutePast={fadePast}
-        weekdays={weekdayLetters(weekStartsOn)}
-        weekCount={range.weekCount}
-        weekAt={weekAt}
-        initialIndex={initialIndex}
-        keepVisibleIndex={keepVisibleIndex}
-        jump={gridJump}
-        onTopRowChange={(top) => onMonthShown(monthShownAt(range, top))}
-        onDayPress={openDay}
-        onDayLongPress={onAddEvent}
-        addLabel={m.addEvent}
-      />
+      {grid(weekAt)}
       <FloatingAdd label={m.addEvent} onPress={() => onAddEvent(today)} hint={showHint ? { text: m.hint, actionLabel: m.gotIt, onAction: onDismissHint } : null} />
       {sheetDate ? (
         <DaySheet
@@ -193,75 +212,6 @@ export function MonthView({
           }}
         />
       ) : null}
-    </View>
-  );
-}
-
-interface MonthPagedProps {
-  tier: Exclude<LayoutTier, 'compact'>;
-  range: MonthRange;
-  month: string;
-  weekCtx: Omit<WeekContext, 'rows' | 'wide' | 'cellWidth'>;
-  occurrences: readonly MonthOccurrence[];
-  weekStartsOn: WeekStartsOn;
-  mutePast: boolean;
-  selected: string;
-  onSelect: (date: string) => void;
-  onSwipe: (direction: 1 | -1) => void;
-  onAddEvent: (date: string) => void;
-  addLabel: string;
-  panel: (columns: 1 | 2) => ReactNode;
-}
-
-/**
- * Spec 070 FR-003/FR-004 (OC-CalendarResponsive): the month shown as one card, 124 px rows with the
- * selected day's panel under it (medium), or rows sharing the window's height with the panel 320
- * beside it (expanded). A tap selects a day; no sheet opens (L161).
- */
-function MonthPaged({ tier, range, month, weekCtx, occurrences, weekStartsOn, mutePast, selected, onSelect, onSwipe, onAddEvent, addLabel, panel }: MonthPagedProps) {
-  const [gridHeight, setGridHeight] = useState<number | undefined>(undefined);
-  const [gridWidth, setGridWidth] = useState<number | undefined>(undefined);
-  const indices = useMemo(() => monthPageWeeks(range, month), [range, month]);
-  const rowHeight = monthRowHeight(tier, gridHeight, indices.length);
-  const rows = chipRowsFor(rowHeight);
-  const cellWidth = gridWidth === undefined ? undefined : gridWidth / 7;
-  const weeks = useMemo(() => indices.map((i) => layoutWeek(i, occurrences, { ...weekCtx, rows, wide: true, cellWidth })), [indices, occurrences, weekCtx, rows, cellWidth]);
-  const bottom = tabBottomPad(tier);
-  const grid = (
-    <View onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
-      <MonthPage
-        weekdays={weekdayShort(weekStartsOn)}
-        weeks={weeks}
-        month={month}
-        rowHeight={rowHeight}
-        selected={selected}
-        mutePast={mutePast}
-        onDayPress={onSelect}
-        onDayLongPress={onAddEvent}
-        addLabel={addLabel}
-      />
-    </View>
-  );
-  if (tier === 'medium') {
-    return (
-      <Swipeable page={month} onSwipe={onSwipe}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-16 px-24 pt-4" contentContainerStyle={{ paddingBottom: bottom }}>
-          {grid}
-          {panel(2)}
-        </ScrollView>
-      </Swipeable>
-    );
-  }
-  return (
-    <View className="flex-1 flex-row items-start gap-16 px-24 pt-4" style={{ paddingBottom: bottom }}>
-      <View className="min-w-0 flex-1 self-stretch" onLayout={(e) => setGridHeight(e.nativeEvent.layout.height)}>
-        <Swipeable page={month} onSwipe={onSwipe}>
-          <ScrollView showsVerticalScrollIndicator={false}>{grid}</ScrollView>
-        </Swipeable>
-      </View>
-      <ScrollView className="self-stretch" style={{ width: theme.layout.panelExpanded, flexGrow: 0 }} showsVerticalScrollIndicator={false}>
-        {panel(1)}
-      </ScrollView>
     </View>
   );
 }

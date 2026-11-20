@@ -32,7 +32,7 @@ export async function writeHidden(storage: ChoiceStorage, userId: string, hidden
   }
 }
 
-/** The hidden chips for this person, with a toggle and Show all that remember them. */
+/** The hidden chips for this person, with a toggle, Show all, Show none and one person only, all remembered. */
 export function useCalendarFilter(userId: string, storage: ChoiceStorage = deviceStorage) {
   // Kept with whose it is, so another person signing in never sees the last one's choice.
   const [stored, setStored] = useState<{ userId: string; hidden: ReadonlySet<string> } | null>(null);
@@ -62,5 +62,16 @@ export function useCalendarFilter(userId: string, storage: ChoiceStorage = devic
     void writeHidden(storage, userId, NONE);
   }, [storage, userId]);
 
-  return { hidden, toggle, showAll };
+  /** Hides every chip in `keys` but `chip`, or all of them without one (the phone's Show none). */
+  const showOnly = useCallback(
+    (keys: readonly string[], chip?: string): ReadonlySet<string> => {
+      const next = new Set(keys.filter((k) => k !== chip));
+      setStored({ userId, hidden: next });
+      void writeHidden(storage, userId, next);
+      return next;
+    },
+    [storage, userId],
+  );
+
+  return { hidden, toggle, showAll, showOnly };
 }

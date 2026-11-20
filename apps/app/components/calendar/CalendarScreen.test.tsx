@@ -98,6 +98,20 @@ describe('Calendar header (spec 036)', () => {
     expect(chip('Eva').getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('Show none hides everyone while all are shown, so one person can be picked', async () => {
+    const storage = memoryStorage();
+    const { tracker } = await setup({ storage });
+    expect(within(filter()).queryByRole('button', { name: 'Show all' })).toBeNull();
+    fireEvent.click(within(filter()).getByRole('button', { name: 'Show none' }));
+    expect(tracker.track).toHaveBeenLastCalledWith('calendar_member_filter_changed', { members_visible: 0, source: 'menu' });
+    expect(chip('Eva').getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(chip('Eva'));
+    expect(people().getAttribute('aria-label')).toBe('Show events for: Eva');
+    expect(within(filter()).getByRole('button', { name: 'Show all' })).toBeTruthy();
+    await act(async () => undefined);
+    expect(JSON.parse(storage.data.get('cocon.calendar.filter.u-gabriel') ?? '')).toEqual({ hidden: ['m-u-gabriel', 'everyone', 'others'] });
+  });
+
   it('Show all shows everyone again, remembered and tracked', async () => {
     const storage = memoryStorage();
     const { tracker } = await setup({ storage });

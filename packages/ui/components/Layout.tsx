@@ -140,25 +140,45 @@ export function PushedScreen({ children, className, topBar }: { children: ReactN
  * fields scroll under them (4 20 30, 18 apart). `scrollRef` lets Save bring a warned field into view;
  * `scrollEnabled` false holds the page still while a row is dragged. On the iPhone the fields
  * scroll clear of the keyboard (spec 030, L98).
+ *
+ * `card`: from 600, a centred card over the dimmed screen instead, as the add sheets are (spec 065):
+ * 540 wide (at most the window less 48), the window's height less 96. Its screen is presented
+ * transparent; the scrim doesn't close it (the bar's Cancel does, and asks before losing changes).
  */
-export function FormScreen({ bar, children, scrollRef, scrollEnabled = true }: { bar: ReactNode; children: ReactNode; scrollRef?: Ref<ScrollViewInstance>; scrollEnabled?: boolean }) {
+export function FormScreen({ bar, children, scrollRef, scrollEnabled = true, card = false }: { bar: ReactNode; children: ReactNode; scrollRef?: Ref<ScrollViewInstance>; scrollEnabled?: boolean; card?: boolean }) {
   const wide = useWideEdges();
+  const { width } = useLayoutTier();
+  const body = (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      ref={scrollRef}
+      scrollEnabled={scrollEnabled}
+      className="flex-1"
+      contentContainerClassName={cn('gap-18 pb-[30px] pt-4', wide ? 'px-24' : 'px-20')}
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+    >
+      {children}
+    </ScrollView>
+  );
+  if (card && wide) {
+    return (
+      <View className="flex-1 items-center justify-center px-24 py-[48px]">
+        <View aria-hidden className="absolute inset-0 bg-scrim" />
+        <View role="dialog" aria-modal testID="form-card" className="flex-1 overflow-hidden rounded-sheet bg-surface-page" style={{ width: Math.min(theme.layout.card, width - 48) }}>
+          <View className="px-24 pb-[14px] pt-20">{bar}</View>
+          {body}
+        </View>
+        <ToastHost />
+      </View>
+    );
+  }
   return (
     <View className="flex-1 bg-surface-page">
       <View className={cn('pb-[14px]', wide ? 'px-24' : 'px-16 pt-[50px]')} style={wide ? { paddingTop: wide.top } : undefined}>
         {bar}
       </View>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        ref={scrollRef}
-        scrollEnabled={scrollEnabled}
-        className="flex-1"
-        contentContainerClassName={cn('gap-18 pb-[30px] pt-4', wide ? 'px-24' : 'px-20')}
-        keyboardShouldPersistTaps="handled"
-        automaticallyAdjustKeyboardInsets
-      >
-        {children}
-      </ScrollView>
+      {body}
       <ToastHost />
     </View>
   );

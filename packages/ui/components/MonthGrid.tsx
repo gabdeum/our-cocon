@@ -75,6 +75,11 @@ export interface MonthGridProps {
   addLabel: string;
   /** Past days on surface-page with muted dates (the setting comes with spec 029). */
   mutePast?: boolean;
+  /**
+   * From 600 (spec 070): rows `rowHeight` tall with larger dates and 20 px chips, weekday names
+   * over them, and the day whose panel is open ringed in ink (a tap selects a day).
+   */
+  wide?: { rowHeight: number; selected: string };
 }
 
 // react-native-web always adds an ellipsis to one-line text, but lets the style override it (iOS uses ellipsizeMode).
@@ -148,9 +153,8 @@ function LargeTextItems({ cell, muted, size }: { cell: MonthCell; muted: boolean
 
 interface CellLook {
   size: ChipSize;
-  /** From 600: the row's height, a day outside the month shown (faded) and the selected day (spec 070). */
+  /** From 600: the row's height and the selected day (spec 070). */
   height?: number;
-  outside?: boolean;
   selected?: boolean;
 }
 
@@ -170,7 +174,7 @@ function Cell({
   look?: CellLook;
 }) {
   const wide = look.size === 'wide';
-  const muted = (mutePast && cell.past && !cell.today) || !!look.outside;
+  const muted = mutePast && cell.past && !cell.today;
   const largeText = useLargeText();
   return (
     <Pressable
@@ -240,50 +244,18 @@ function Week({
   );
 }
 
-export interface MonthPageProps extends Pick<MonthGridProps, 'onDayPress' | 'onDayLongPress' | 'addLabel' | 'mutePast'> {
-  /** "Sun" … "Sat", from the first day of the week. */
-  weekdays: readonly string[];
-  /** The month's rows, from the one holding its 1st to the one holding its last day. */
-  weeks: readonly MonthWeek[];
-  /** The 1st of the month shown: days around it are faded. */
-  month: string;
-  /** Each row's height: 124 at medium, sharing the window's height at expanded. */
-  rowHeight: number;
-  /** The day whose panel is open: ringed in ink. */
-  selected: string;
-}
-
-/**
- * From 600 wide (spec 070 FR-003/FR-004, MonthGrid README › From 600): one month at a time in a
- * white card, weekday names over the rows, larger dates and 20 px chips. A tap selects a day.
- */
-export function MonthPage({ weekdays, weeks, month, rowHeight, selected, mutePast = true, ...p }: MonthPageProps) {
-  const inMonth = month.slice(0, 7);
-  const look = (cell: MonthCell): CellLook => ({ size: 'wide', height: rowHeight, outside: cell.date.slice(0, 7) !== inMonth, selected: cell.date === selected });
-  return (
-    <View className="overflow-hidden rounded-[22px] bg-surface-card">
-      <View aria-hidden className="flex-row border-b-[1.5px] border-line pb-6 pt-8">
-        {weekdays.map((w, i) => (
-          <Text key={i} size={13} weight="900" color="ink-muted" align="center" className="flex-1">
-            {w}
-          </Text>
-        ))}
-      </View>
-      {weeks.map((week) => (
-        <Week key={week.key} week={week} look={look} height={rowHeight} mutePast={mutePast} onDayPress={p.onDayPress} onDayLongPress={p.onDayLongPress} addLabel={p.addLabel} />
-      ))}
-    </View>
-  );
-}
-
 /**
  * The continuous month grid (MonthGrid README, OC-CalMonth): a fixed weekday row over one
  * virtualised vertical list of week rows, each 120 tall, with multi-day bars drawn over the cells.
+ * From 600 (spec 070) the same scroll in a white card beside or above the selected day's panel.
  */
-export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisibleIndex, jump, onTopRowChange, mutePast = true, ...p }: MonthGridProps) {
+export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisibleIndex, jump, onTopRowChange, mutePast = true, wide, ...p }: MonthGridProps) {
   const list = useRef<FlatList<number>>(null);
-  // Room under the last row for the floating tab bar: 180, or 28 beside the rail (spec 064).
-  const bottomPad = tabBottomPad(useLayoutTier().tier);
+  const rowHeight = wide?.rowHeight ?? MONTH_ROW_HEIGHT;
+  // Room under the last row for the floating tab bar: 180, or 28 beside the rail (spec 064). From
+  // 600 the screen pads the grid and its panel instead.
+  const tabPad = tabBottomPad(useLayoutTier().tier);
+  const bottomPad = wide ? 0 : tabPad;
   const top = useRef(initialIndex);
   const placed = useRef(false);
   const data = useMemo(() => Array.from({ length: weekCount }, (_, i) => i), [weekCount]);
@@ -295,17 +267,26 @@ export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisib
   }, [reduce]);
 
   useEffect(() => {
-    if (jump) list.current?.scrollToOffset({ offset: jump.index * MONTH_ROW_HEIGHT, animated: !reduceMotion.current });
+    if (jump) list.current?.scrollToOffset({ offset: jump.index * rowHeight, animated: !reduceMotion.current });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only a new jump scrolls; a new row height keeps the top row (below)
   }, [jump]);
+
+  // From 600 the rows grow and shrink with the window: the same week stays at the top.
+  const lastHeight = useRef(rowHeight);
+  useEffect(() => {
+    if (lastHeight.current === rowHeight) return;
+    lastHeight.current = rowHeight;
+    list.current?.scrollToOffset({ offset: top.current * rowHeight, animated: false });
+  }, [rowHeight]);
 
   // FR-001: open on the first week of the month, moved down just enough to show today's row.
   const onLayout = (e: LayoutChangeEvent) => {
     if (placed.current) return;
     placed.current = true;
-    const visibleRows = Math.floor((e.nativeEvent.layout.height - bottomPad) / MONTH_ROW_HEIGHT);
+    const visibleRows = Math.floor((e.nativeEvent.layout.height - bottomPad) / rowHeight);
     let index = initialIndex;
     if (keepVisibleIndex !== undefined && visibleRows > 0 && keepVisibleIndex >= index + visibleRows) index = keepVisibleIndex - visibleRows + 1;
-    list.current?.scrollToOffset({ offset: index * MONTH_ROW_HEIGHT, animated: false });
+    list.current?.scrollToOffset({ offset: index * rowHeight, animated: false });
     if (index !== top.current) {
       top.current = index;
       onTopRowChange(index);
@@ -313,22 +294,34 @@ export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisib
   };
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.max(0, Math.floor((e.nativeEvent.contentOffset.y + ROW_SLACK) / MONTH_ROW_HEIGHT));
+    const index = Math.max(0, Math.floor((e.nativeEvent.contentOffset.y + ROW_SLACK) / rowHeight));
     if (index === top.current) return;
     top.current = index;
     onTopRowChange(index);
   };
 
+  const isWide = wide !== undefined;
+  const selected = wide?.selected;
+  const look = useMemo(
+    () => (isWide ? (cell: MonthCell): CellLook => ({ size: 'wide', height: rowHeight, selected: cell.date === selected }) : undefined),
+    [isWide, rowHeight, selected],
+  );
   const renderItem = useCallback(
-    ({ item }: { item: number }): ReactElement => <Week week={weekAt(item)} mutePast={mutePast} onDayPress={p.onDayPress} onDayLongPress={p.onDayLongPress} addLabel={p.addLabel} />,
-    [weekAt, mutePast, p.onDayPress, p.onDayLongPress, p.addLabel],
+    ({ item }: { item: number }): ReactElement => (
+      <Week week={weekAt(item)} look={look} height={rowHeight} mutePast={mutePast} onDayPress={p.onDayPress} onDayLongPress={p.onDayLongPress} addLabel={p.addLabel} />
+    ),
+    [weekAt, look, rowHeight, mutePast, p.onDayPress, p.onDayLongPress, p.addLabel],
   );
 
   return (
-    <View className="flex-1 px-8 pt-4">
-      <View aria-hidden className="z-10 flex-row rounded-t-[20px] border-b-[1.5px] border-line bg-surface-card pb-6 pt-8" style={{ boxShadow: theme.shadow.sticky }}>
+    <View className={cn('flex-1', wide ? 'overflow-hidden rounded-[22px] bg-surface-card' : 'px-8 pt-4')}>
+      <View
+        aria-hidden
+        className={cn('z-10 flex-row border-b-[1.5px] border-line bg-surface-card pb-6 pt-8', !wide && 'rounded-t-[20px]')}
+        style={wide ? undefined : { boxShadow: theme.shadow.sticky }}
+      >
         {weekdays.map((w, i) => (
-          <Text key={i} size={12} weight="900" color="ink-muted" align="center" className="flex-1">
+          <Text key={i} size={wide ? 13 : 12} weight="900" color="ink-muted" align="center" className="flex-1">
             {w}
           </Text>
         ))}
@@ -338,7 +331,7 @@ export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisib
         data={data}
         keyExtractor={String}
         renderItem={renderItem}
-        getItemLayout={(_, index) => ({ length: MONTH_ROW_HEIGHT, offset: index * MONTH_ROW_HEIGHT, index })}
+        getItemLayout={(_, index) => ({ length: rowHeight, offset: index * rowHeight, index })}
         initialScrollIndex={initialIndex}
         initialNumToRender={8}
         windowSize={7}
@@ -346,7 +339,7 @@ export function MonthGrid({ weekdays, weekCount, weekAt, initialIndex, keepVisib
         onScroll={onScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        ListFooterComponent={<View style={{ height: bottomPad }} />}
+        ListFooterComponent={bottomPad ? <View style={{ height: bottomPad }} /> : undefined}
       />
     </View>
   );

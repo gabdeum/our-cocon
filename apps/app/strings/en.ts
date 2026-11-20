@@ -1563,6 +1563,8 @@ export const strings = {
       /** The people button's name: who is shown, or everyone. */
       peopleButton: (shownNames: string[] | null) => `Show events for: ${shownNames ? shownNames.join(', ') : 'everyone'}`,
       showAll: 'Show all',
+      /** The menu's button while everyone shows (Show all once someone is hidden). */
+      showNone: 'Show none',
       close: 'Close',
       /** From 600 (spec 070, OC-LargeScreens › Copy "+ Event"): a plus icon, then "Event"; read "Add event". */
       addEvent: 'Event',
@@ -1676,6 +1678,8 @@ export const strings = {
     add: {
       titleNew: 'New event',
       titleEdit: 'Edit event',
+      /** The new-event sheet's switch to a new reminder (its segments are the two sheets' titles). */
+      newKind: 'What to add',
       cancel: 'Cancel',
       what: "What's happening?",
       whatPlaceholder: 'e.g. Poker night',

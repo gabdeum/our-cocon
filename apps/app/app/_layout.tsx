@@ -249,7 +249,8 @@ export default function RootLayout() {
                   <Stack.Screen name="e/[token]" />
                   <Stack.Screen name="oauth/consent" />
                   <Stack.Screen name="recipes/filters" options={presentation.sheet} />
-                  <Stack.Screen name="recipes/new" options={presentation.fullScreen} />
+                  {/* From 600 the form is a centred card over the recipes (FormScreen `card`). */}
+                  <Stack.Screen name="recipes/new" options={tier === 'compact' ? presentation.fullScreen : { ...presentation.sheet, animation: 'fade' }} />
                   <Stack.Screen name="recipes/[id]/index" options={tier === 'expanded' ? { ...presentation.stack, animation: 'none' } : presentation.stack} />
                   <Stack.Screen name="recipes/[id]/cook" options={presentation.fullScreen} />
                   <Stack.Screen name="recipes/[id]/scale" options={presentation.sheet} />

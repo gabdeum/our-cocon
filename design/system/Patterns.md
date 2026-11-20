@@ -51,6 +51,7 @@ These are the layouts every Our Cocon screen is built from. Compose new screens 
 - Under it, `Progress` with named sections (Details · Ingredients · Steps · Variants), each tappable.
 - Fields 18 apart. An "Advanced mode" switch on an ink card reveals extra fields inline.
 - The last block is an ink "Next: <section>" button. On the last section it becomes "Save recipe", followed by a danger link.
+- A new recipe from 600 wide: the same form in a centred card (540, the window's height less 96) over the dimmed screen, as the add sheets are (`FormScreen` `card`). The scrim doesn't close it; Cancel does.
 
 ## Cooking mode
 
