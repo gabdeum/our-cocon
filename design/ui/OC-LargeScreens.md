@@ -66,7 +66,7 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 
 ## Recipe (067) · preview 390 × 844, 744 × 1133, 1180 × 820
 
-- ≥ 600: hero 280; sheet padding 24 sides; grid `minmax(260px, .8fr) minmax(0, 1.2fr)`, gap 28. Column titles 20/900 ("Ingredients · 9", "Steps · 6"), and "Version" too (Gabriel, 067; the source draws it 16). No tabs.
+- ≥ 600: hero 280; sheet padding 24 sides; two equal columns, the ingredients one never under 260 (Gabriel, 067; the source draws `minmax(260px, .8fr) minmax(0, 1.2fr)`), gap 28. Column titles 20/900 ("Ingredients · 9", "Steps · 6"), and "Version" too (Gabriel, 067; the source draws it 16). No tabs.
 - More options link: under the Servings card (−10 margin), olive 15/800, sliders icon 18, 44 tall.
 - Step card (all sizes): white, radius 22, padding 10 / 12 / 10 / 14, min 64, gap 12: badge 32 honey · title 18/900 · Variant tag · timer pill (soft, clock 16 olive, 14/800 tabular, "12 min") · photo 48 radius 12 · chevron 18. Whole card is the tap target → cooking mode at that step. Hint above: "Tap a step to open it in cooking mode" 13/600 muted.
 - ≥ 960: rail 104 · list column 320 (padding 28 / 12 / 16 / 20; rows 64 thumb, radius 20, 2 px olive border on the open one) · recipe panel with 12 margin (top/right/bottom), radius 28, 2 px `line-strong` border, internal scroll, no back button.

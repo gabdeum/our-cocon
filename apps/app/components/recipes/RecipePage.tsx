@@ -440,7 +440,8 @@ function LoadedRecipe({
 
       {twoColumn && view ? (
         <View testID="recipe-columns" className="flex-row items-start gap-28">
-          <View className="gap-18" style={{ flex: 0.8, minWidth: theme.layout.ingredientsMin }}>
+          {/* Two equal columns (Gabriel, 067; the source draws .8fr / 1.2fr). */}
+          <View testID="ingredients-column" className="gap-18" style={{ flex: 1, minWidth: theme.layout.ingredientsMin }}>
             {versionSection}
             {servingsCard}
             {current ? (
@@ -455,7 +456,7 @@ function LoadedRecipe({
               {ingredientList}
             </View>
           </View>
-          <View className="min-w-0 gap-10" style={{ flex: 1.2 }}>
+          <View testID="steps-column" className="min-w-0 gap-10" style={{ flex: 1 }}>
             <Text size={20} weight="900" role="heading" aria-level={2}>
               {p.stepsTab(view.stepCount)}
             </Text>
