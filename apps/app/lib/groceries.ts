@@ -1,6 +1,7 @@
 import { combineAmounts, groceryIdentity, parseGroceryLine, parsePackSize, type GroceryAmount, type IngredientFactsInput, type PackPlan, type StorePack, type UnitSystem } from '@cocon/quantity';
 import { familyIngredientRow, GroceryItemUpdate, type Aisle, type FamilySettings, type Unit } from '@cocon/schemas';
 import * as data from '@cocon/data';
+import { splitColumns } from '@cocon/ui';
 import type { AddResult, GroceryItem, GroceryRow, GroceryServings, PackData, RowAmounts } from '@cocon/data';
 import { strings } from '../strings/en';
 import { matchIngredients } from './recipe-ingredients';
@@ -47,6 +48,35 @@ export const groceryServingsKey = (familyId: string) => ['grocery_recipes', fami
 
 /** The header's count: rows not ticked yet (combineRows). */
 export const toBuyCount = (rows: readonly Pick<GroceryRow, 'checked'>[]) => rows.filter((r) => !r.checked).length;
+
+/** Where each aisle sits from 600 (spec 069), and what it was split for: the aisles in order and the column count. */
+export interface AisleSplit {
+  key: string;
+  column: ReadonlyMap<Aisle, number>;
+}
+
+/**
+ * Aisles in `columns` columns read by column (spec 069 FR-002, 063 `splitColumns`), each weighing
+ * its rows plus its heading; an aisle is never split. FR-004: while the aisles and the column count
+ * stay the same, `previous` is kept, so ticking or a new row in an aisle moves nothing.
+ */
+export function aisleColumns<T extends { aisle: Aisle; rows: readonly unknown[] }>(
+  aisles: readonly T[],
+  columns: number,
+  previous?: AisleSplit | null,
+): { columns: T[][]; split: AisleSplit } {
+  const key = `${columns}:${aisles.map((a) => a.aisle).join(',')}`;
+  const split =
+    previous?.key === key
+      ? previous
+      : {
+          key,
+          column: new Map(splitColumns(aisles, columns, (a) => a.rows.length + 1).flatMap((col, i) => col.map((a) => [a.aisle, i] as const))),
+        };
+  const out: T[][] = Array.from({ length: columns }, () => []);
+  for (const a of aisles) out[split.column.get(a.aisle) ?? 0]?.push(a);
+  return { columns: out, split };
+}
 
 const fromLiveRecipe = (item: Pick<GroceryItem, 'recipes'>) => !!item.recipes && !item.recipes.deleted_at;
 

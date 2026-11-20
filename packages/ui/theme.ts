@@ -246,7 +246,8 @@ export const theme = {
     "toastWide": 420,
     "heroWide": 280,
     "footerWide": 520,
-    "ingredientsMin": 260
+    "ingredientsMin": 260,
+    "buttonPair": 420
   }
 } as const;
 

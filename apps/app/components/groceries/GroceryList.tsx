@@ -14,12 +14,15 @@ import {
   TabScreen,
   Text,
   TextField,
+  theme,
+  useLayoutTier,
   useSheetPresentation,
   type SheetPresentation,
 } from '@cocon/ui';
 import type { Aisle, FamilySettings, FamilySettingsUpdate, Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import {
+  aisleColumns,
   byName,
   combineRows,
   groupByAisle,
@@ -32,6 +35,7 @@ import {
   toBuyCount,
   recipeItems,
   type AddResult,
+  type AisleSplit,
   type GroceryItem,
   type GroceryRow,
   type GroceryServings,
@@ -83,6 +87,13 @@ export interface GroceryListProps {
   now?: number;
 }
 
+/** Two by two, for the recipe cards' grid from 600 (spec 069). */
+function pairs<T>(list: readonly T[]): [T, ...T[]][] {
+  const out: [T, ...T[]][] = [];
+  for (let i = 0; i < list.length; i += 2) out.push(list.slice(i, i + 2) as [T, ...T[]]);
+  return out;
+}
+
 /** Re-renders every 30 s, so presence ends 10 minutes after the last tick without a change. */
 function useClock(fixed: number | undefined): number {
   const [now, setNow] = useState(() => fixed ?? Date.now());
@@ -125,6 +136,9 @@ export function GroceryList(props: GroceryListProps) {
   const rowAnchor = useRef<HostInstance | null>(null);
   const [cardMenu, setCardMenu] = useState<string | null>(null);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
+  // From 600 (spec 069): recipe cards two by two, aisles in two columns, the Clear pair centred.
+  const wide = useLayoutTier().tier !== 'compact';
+  const [split, setSplit] = useState<AisleSplit | null>(null);
 
   const list = useMemo(() => items ?? [], [items]);
   const rows = useMemo(() => combineRows(list), [list]);
@@ -133,6 +147,9 @@ export function GroceryList(props: GroceryListProps) {
   const amounts = useMemo(() => rowAmounts(rows, packs, settings), [rows, packs, settings]);
   const titleOf = (row: GroceryRow) => amounts.get(row.id)?.name ?? (row.items[0] as GroceryItem).name;
   const aisles = groupByAisle(rows).map((a) => ({ aisle: a.aisle, rows: byName(a.items, titleOf) }));
+  // FR-004: split again only when an aisle comes or goes, or the column count changes.
+  const columns = aisleColumns(aisles, wide ? 2 : 1, split);
+  if (columns.split !== split) setSplit(columns.split);
   const done = rows.filter((r) => r.checked);
   const shopping = shopper(list, me, members, now);
   const menuRow = menu ? (rows.find((r) => r.id === menu.id) ?? null) : null;
@@ -273,6 +290,64 @@ export function GroceryList(props: GroceryListProps) {
     { name: 'remove', label: g.remove, onAction: () => remove(row) },
   ];
 
+  const recipeCard = (card: RecipeCard) => (
+    <GroceryRecipeCard
+      key={card.id}
+      name={card.name}
+      meta={card.deleted ? g.fromDeletedRecipe : g.recipeMeta(card.count, card.serves)}
+      photoUri={card.photo_path ? photoUrls[card.photo_path] : undefined}
+      openLabel={g.openRecipe(card.name)}
+      moreLabel={g.moreForRecipe(card.name)}
+      onOpen={card.deleted ? null : () => openRecipe(card)}
+      onMore={() => setCardMenu(card.id)}
+    />
+  );
+
+  const aisleSection = ({ aisle, rows: aisleRows }: (typeof aisles)[number]) => (
+    <View key={aisle} className="gap-6">
+      <Overline className="mt-4">{strings.aisles[aisle]}</Overline>
+      <ListGroup>
+        {aisleRows.map((row, i) => {
+          const { detail, note } = amounts.get(row.id) ?? {};
+          const title = titleOf(row);
+          const openMenu = online
+            ? () => {
+                rowAnchor.current = null;
+                openRow(row, 'menu');
+              }
+            : undefined;
+          return (
+            <ListRow
+              key={row.id}
+              title={title}
+              titleDetail={detail ? { text: detail, note } : undefined}
+              sub={rowSource(row, members) ?? undefined}
+              subTone="soft"
+              done={row.checked}
+              leading={{ kind: 'checkbox', checked: row.checked }}
+              action={{
+                icon: 'more-vertical',
+                accessibilityLabel: g.editItem(title),
+                onPress: (e) => {
+                  rowAnchor.current = e.currentTarget as unknown as HostInstance;
+                  openRow(row, 'menu', true);
+                },
+                disabled: !online,
+                expanded: menu?.id === row.id && menu.anchored === true && menuAs === 'popover',
+              }}
+              onPress={() => void toggle(row)}
+              disabled={!online}
+              onLongPress={openMenu}
+              onSwipeLeft={openMenu}
+              actions={online ? menuActions(row) : undefined}
+              last={i === aisleRows.length - 1}
+            />
+          );
+        })}
+      </ListGroup>
+    </View>
+  );
+
   return (
     <TabScreen
       header={header}
@@ -296,18 +371,25 @@ export function GroceryList(props: GroceryListProps) {
     >
       <OfflineBanner screen="groceries" tracker={tracker} />
 
-      {cards.map((card) => (
-        <GroceryRecipeCard
-          key={card.id}
-          name={card.name}
-          meta={card.deleted ? g.fromDeletedRecipe : g.recipeMeta(card.count, card.serves)}
-          photoUri={card.photo_path ? photoUrls[card.photo_path] : undefined}
-          openLabel={g.openRecipe(card.name)}
-          moreLabel={g.moreForRecipe(card.name)}
-          onOpen={card.deleted ? null : () => openRecipe(card)}
-          onMore={() => setCardMenu(card.id)}
-        />
-      ))}
+      {wide ? (
+        // Spec 069 FR-002: a 2-column grid; an odd last card keeps its half.
+        cards.length > 0 ? (
+          <View className="gap-10">
+            {pairs(cards).map((pair) => (
+              <View key={pair[0].id} className="flex-row gap-10">
+                {pair.map((card) => (
+                  <View key={card.id} className="min-w-0 flex-1">
+                    {recipeCard(card)}
+                  </View>
+                ))}
+                {pair.length === 1 ? <View className="flex-1" /> : null}
+              </View>
+            ))}
+          </View>
+        ) : null
+      ) : (
+        cards.map(recipeCard)
+      )}
 
       {list.length === 0 ? (
         <View className="gap-8">
@@ -318,53 +400,21 @@ export function GroceryList(props: GroceryListProps) {
         </View>
       ) : null}
 
-      {aisles.map(({ aisle, rows: aisleRows }) => (
-        <View key={aisle} className="gap-6">
-          <Overline className="mt-4">{strings.aisles[aisle]}</Overline>
-          <ListGroup>
-            {aisleRows.map((row, i) => {
-              const { detail, note } = amounts.get(row.id) ?? {};
-              const title = titleOf(row);
-              const openMenu = online
-                ? () => {
-                    rowAnchor.current = null;
-                    openRow(row, 'menu');
-                  }
-                : undefined;
-              return (
-                <ListRow
-                  key={row.id}
-                  title={title}
-                  titleDetail={detail ? { text: detail, note } : undefined}
-                  sub={rowSource(row, members) ?? undefined}
-                  subTone="soft"
-                  done={row.checked}
-                  leading={{ kind: 'checkbox', checked: row.checked }}
-                  action={{
-                    icon: 'more-vertical',
-                    accessibilityLabel: g.editItem(title),
-                    onPress: (e) => {
-                      rowAnchor.current = e.currentTarget as unknown as HostInstance;
-                      openRow(row, 'menu', true);
-                    },
-                    disabled: !online,
-                    expanded: menu?.id === row.id && menu.anchored === true && menuAs === 'popover',
-                  }}
-                  onPress={() => void toggle(row)}
-                  disabled={!online}
-                  onLongPress={openMenu}
-                  onSwipeLeft={openMenu}
-                  actions={online ? menuActions(row) : undefined}
-                  last={i === aisleRows.length - 1}
-                />
-              );
-            })}
-          </ListGroup>
+      {wide ? (
+        // FR-002/003: two columns read by column, both starting with an aisle heading on the same line.
+        <View className="flex-row items-start gap-14">
+          {columns.columns.map((col, c) => (
+            <View key={c} testID={`grocery-col-${c + 1}`} className="min-w-0 flex-1 gap-14">
+              {col.map(aisleSection)}
+            </View>
+          ))}
         </View>
-      ))}
+      ) : (
+        aisles.map(aisleSection)
+      )}
 
       {/* Spec 052 FR-007: two equal buttons, always there; each off when it has nothing to clear. */}
-      <View className="mt-4 flex-row gap-10">
+      <View className={wide ? 'mt-4 w-full flex-row gap-10 self-center' : 'mt-4 flex-row gap-10'} style={wide ? { maxWidth: theme.layout.buttonPair } : undefined}>
         <View className="min-w-0 flex-1">
           <Button
             label={g.clearDoneButton}
