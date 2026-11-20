@@ -1,7 +1,7 @@
 import { NavRail, TabBar, navFor, useLayoutTier } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TABS, type TabKey } from '../lib/navigation';
+import { RAIL_ITEMS, TABS, type RailKey, type TabKey } from '../lib/navigation';
 import { strings } from '../strings/en';
 import { AppTimerPill, useHasTimers } from './timers/AppTimerPill';
 
@@ -17,9 +17,17 @@ export interface TabNavigationProps {
 /**
  * Connects the design-system TabBar to Expo Router's tabs and sends `tab_selected` (spec 002), with
  * the TimerPill (011). From 960 wide the NavRail takes the bar's place, with the same tabs and
- * rules (spec 064); only this component changes, so the screens keep their route and scroll.
+ * rules (spec 064) plus Reminders and Timers; only this component changes, so the screens keep their
+ * route and scroll.
  */
-export function AppTabBar({ state, emitter, navigateToTab, tracker, onOpenTimers }: TabNavigationProps & { tracker: Tracker; onOpenTimers: () => void }) {
+export function AppTabBar({
+  state,
+  emitter,
+  navigateToTab,
+  tracker,
+  onOpenTimers,
+  onOpenPage,
+}: TabNavigationProps & { tracker: Tracker; onOpenTimers: () => void; onOpenPage: (key: 'reminders' | 'timers') => void }) {
   const insets = useSafeAreaInsets();
   const nav = navFor(useLayoutTier().tier);
   const hasTimers = useHasTimers();
@@ -36,13 +44,20 @@ export function AppTabBar({ state, emitter, navigateToTab, tracker, onOpenTimers
     tracker.track('tab_selected', { tab: key, nav });
   };
 
+  // The rail also has Reminders and Timers, pushed over the tabs (they show the rail too).
+  const selectOnRail = (key: RailKey) => {
+    if (key !== 'reminders' && key !== 'timers') return select(key);
+    onOpenPage(key);
+    tracker.track('tab_selected', { tab: key, nav });
+  };
+
   if (nav === 'rail') {
     return (
       <NavRail
         label={strings.tabBar.label}
-        items={[...TABS]}
-        active={active}
-        onSelect={select}
+        items={[...RAIL_ITEMS]}
+        active={active as RailKey}
+        onSelect={selectOnRail}
         insets={insets}
         timer={hasTimers ? <AppTimerPill vertical onOpen={onOpenTimers} tracker={tracker} /> : undefined}
       />

@@ -50,7 +50,7 @@ describe('createTracker', () => {
   });
 
   it('rejects an unknown tab or navigation', () => {
-    expect(() => createTracker(fakeTransport()).track('tab_selected', { tab: 'timers', nav: 'bar' } as never)).toThrow();
+    expect(() => createTracker(fakeTransport()).track('tab_selected', { tab: 'settings', nav: 'bar' } as never)).toThrow();
     expect(() => createTracker(fakeTransport()).track('tab_selected', { tab: 'home', nav: 'drawer' } as never)).toThrow();
     expect(() => createTracker(fakeTransport()).track('tab_selected', { tab: 'home' } as never)).toThrow();
   });

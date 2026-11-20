@@ -203,6 +203,10 @@ export default function RootLayout() {
   const ready = fontsLoaded || fontError !== null;
   // Spec 067: from 960 the recipe opens beside the list that's already on screen, without a slide.
   const { tier } = useLayoutTier();
+  // From 600 these are centred cards over the screen below (FormScreen and PushedScreen `card`).
+  // From 960 Reminders and Timers are rail destinations: they appear in place, like a tab.
+  const railPage = tier === 'expanded' ? { ...presentation.stack, animation: 'none' as const } : presentation.stack;
+  const card = (phone: (typeof presentation)[keyof typeof presentation]) => (tier === 'compact' ? phone : { ...presentation.sheet, animation: 'fade' as const });
 
   useEffect(() => watchConnection(), []);
   // Before app_opened, so it carries them too (spec 063).
@@ -249,24 +253,23 @@ export default function RootLayout() {
                   <Stack.Screen name="e/[token]" />
                   <Stack.Screen name="oauth/consent" />
                   <Stack.Screen name="recipes/filters" options={presentation.sheet} />
-                  {/* From 600 the form is a centred card over the recipes (FormScreen `card`). */}
-                  <Stack.Screen name="recipes/new" options={tier === 'compact' ? presentation.fullScreen : { ...presentation.sheet, animation: 'fade' }} />
+                  <Stack.Screen name="recipes/new" options={card(presentation.fullScreen)} />
                   <Stack.Screen name="recipes/[id]/index" options={tier === 'expanded' ? { ...presentation.stack, animation: 'none' } : presentation.stack} />
                   <Stack.Screen name="recipes/[id]/cook" options={presentation.fullScreen} />
                   <Stack.Screen name="recipes/[id]/scale" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/convert" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/share" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/add-to-groceries" options={presentation.sheet} />
-                  <Stack.Screen name="recipes/[id]/edit" options={presentation.fullScreen} />
+                  <Stack.Screen name="recipes/[id]/edit" options={card(presentation.fullScreen)} />
                   <Stack.Screen name="recipes/[id]/settings" options={presentation.stack} />
                   <Stack.Screen name="calendar/new" options={presentation.sheet} />
-                  <Stack.Screen name="calendar/[id]/index" options={presentation.stack} />
+                  <Stack.Screen name="calendar/[id]/index" options={card(presentation.stack)} />
                   <Stack.Screen name="calendar/[id]/edit" options={presentation.sheet} />
                   <Stack.Screen name="calendar/[id]/share" options={presentation.sheet} />
-                  <Stack.Screen name="reminders/index" options={presentation.stack} />
+                  <Stack.Screen name="reminders/index" options={railPage} />
                   <Stack.Screen name="reminders/new" options={presentation.sheet} />
                   <Stack.Screen name="reminders/[id]/edit" options={presentation.sheet} />
-                  <Stack.Screen name="timers" options={presentation.stack} />
+                  <Stack.Screen name="timers" options={railPage} />
                   <Stack.Screen name="activity" options={presentation.stack} />
                   <Stack.Screen name="settings/index" />
                   <Stack.Screen name="settings/family" options={presentation.stack} />

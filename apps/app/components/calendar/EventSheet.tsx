@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { addDays, dateLabel, daysBetween, formatTime, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import { loadEvent, loadEvents, suggestEventTitles, type Db, type StoredEvent, type TitleSuggestion } from '@cocon/data';
@@ -21,6 +21,7 @@ import {
   Link,
   MemberPickerChip,
   PillRow,
+  RowScroll,
   SegmentedControl,
   SlotChip,
   SuggestionPill,
@@ -262,11 +263,11 @@ export function useEventForm(p: EventSheetProps) {
           onBlur={() => setTimeout(() => setTitleFocused(false), 200)}
         />
         {shownSuggestions.length ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" role="list" aria-label={a.suggestions} className="-mx-20 -mt-8" contentContainerClassName="gap-8 px-20">
+          <RowScroll keyboardShouldPersistTaps="handled" role="list" aria-label={a.suggestions} className="-mx-20 -mt-8" contentContainerClassName="gap-8 px-20">
             {shownSuggestions.map((s, i) => (
               <SuggestionPill key={s.lastEventId} title={s.title} detail={suggestionTime(s, slotTimes, use24h)} onPress={() => void pickSuggestion(s, i + 1)} />
             ))}
-          </ScrollView>
+          </RowScroll>
         ) : null}
 
         <Section title={a.when}>
@@ -289,11 +290,11 @@ export function useEventForm(p: EventSheetProps) {
         </Section>
 
         <Section title={a.timeOfDay} hint={a.timeHint}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} role="group" aria-label={a.timeOfDay} className="-mx-20" contentContainerClassName="gap-8 px-20 pb-4 pt-2">
+          <RowScroll role="group" aria-label={a.timeOfDay} className="-mx-20" contentContainerClassName="gap-8 px-20 pb-4 pt-2">
             {slotChips(slotTimes, use24h).map((s) => (
               <SlotChip key={s.key} label={s.label} hours={s.hours} selected={isChipOn(d.time, s.key)} onPress={() => set({ time: toggleSlot(d.time, s.key) })} />
             ))}
-          </ScrollView>
+          </RowScroll>
           {/* Typed on the web; the phone's time picker on iOS and Android. */}
           <TimeRange
             startLabel={a.starts}

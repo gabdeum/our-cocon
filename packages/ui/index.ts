@@ -30,6 +30,7 @@ export { IconButton, type IconButtonProps, type IconButtonVariant } from './comp
 export { AppGrid, AppTile, type AppTileProps } from './components/AppTile';
 export { IconTile, type IconTileProps, type IconTileTone } from './components/IconTile';
 export { Pill, FilterButton, Choice, PersonPill, PillRow, SuggestionPill, TogglePill, type SuggestionPillProps } from './components/Pill';
+export { RowScroll } from './components/RowScroll';
 export { Tag, Meta, type TagTone, type MetaTone } from './components/Tag';
 export { Switch, SettingRow, type SwitchProps, type SettingRowProps } from './components/Switch';
 export { SegmentedControl, SegmentedSettingRow, type SegmentedControlProps, type Segment } from './components/SegmentedControl';

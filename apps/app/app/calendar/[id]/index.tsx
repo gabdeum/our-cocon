@@ -24,7 +24,8 @@ const a = strings.calendar.add;
  * this member sees in full opens here; a surprise's cover opens OC-CalSurprise (spec 043); Busy, or
  * a date that isn't one of the event's, says it couldn't open (Busy opens as a sheet over the views).
  * Opened from a view, it shows the copy that view already loaded while the event refetches; from a
- * link with nothing cached, the header bar and skeleton blocks (OC-CalEvent, Loading).
+ * link with nothing cached, the header bar and skeleton blocks (OC-CalEvent, Loading). From 600 it is a
+ * centred card over the calendar (PushedScreen `card`).
  */
 export default function EventRoute() {
   const params = useLocalSearchParams<{ id: string; date?: string }>();
@@ -42,7 +43,7 @@ export default function EventRoute() {
   if (state.status !== 'ready' || !familyId || !myMemberId) return null;
   if (id && event.isPending) {
     return (
-      <PushedScreen className="gap-16" topBar={{ back: { label: e.back, onPress: page.close } }}>
+      <PushedScreen className="gap-16" card topBar={{ back: { label: e.back, onPress: page.close } }}>
         <View role="progressbar" aria-label={e.loading} className="gap-12">
           <View className="h-28 w-2/3 rounded-xs bg-surface-soft" />
           {[0, 1, 2].map((n) => (
@@ -62,7 +63,7 @@ export default function EventRoute() {
   const occurrence = ev && date && seesInFull(ev, myMemberId) ? eventOccurrence(ev, date) : null;
   if (!ev || !date || !occurrence) {
     return (
-      <PushedScreen className="gap-16" topBar={{ back: { label: e.back, onPress: page.close } }}>
+      <PushedScreen className="gap-16" card topBar={{ back: { label: e.back, onPress: page.close } }}>
         <View className="gap-6">
           <Text size={22} weight="900" role="heading" aria-level={1}>
             {a.loadFailedTitle}

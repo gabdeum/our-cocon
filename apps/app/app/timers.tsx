@@ -1,6 +1,8 @@
 import { router, useIsFocused, type Href } from 'expo-router';
 import { useQueries } from '@tanstack/react-query';
 import { z } from 'zod';
+import { navFor, SplitView, useLayoutTier } from '@cocon/ui';
+import { RouteRail } from '../components/RouteRail';
 import { TimersScreen } from '../components/timers/TimersScreen';
 import { loadRecipe, recipeKey, type RecipeDetail } from '../lib/recipe';
 import { useSession } from '../lib/session';
@@ -8,7 +10,10 @@ import { useTimers } from '../lib/timer-store';
 import { cookStepPath } from '../lib/links';
 import { tracker } from '../lib/tracker';
 
-/** /timers (spec 011): reachable from anywhere through the TimerPill or the done banner. */
+/**
+ * /timers (spec 011): reachable from anywhere through the TimerPill or the done banner, and from the
+ * rail from 960, which it shows too in place of its back button.
+ */
 export default function TimersRoute() {
   const { state, client } = useSession();
   const focused = useIsFocused();
@@ -23,13 +28,16 @@ export default function TimersRoute() {
     })),
   });
   const recipes: Record<string, RecipeDetail | null | undefined> = Object.fromEntries(ids.map((id, i) => [id, loaded[i]?.data]));
+  const rail = navFor(useLayoutTier().tier) === 'rail';
   return (
-    <TimersScreen
-      tracker={tracker}
-      focused={focused}
-      onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-      recipes={recipes}
-      onGoToStep={(recipeId, stepId) => router.push(cookStepPath(recipeId, stepId) as Href)}
-    />
+    <SplitView rail={rail ? <RouteRail active="timers" tracker={tracker} onOpenTimers={() => undefined} /> : undefined}>
+      <TimersScreen
+        tracker={tracker}
+        focused={focused}
+        onBack={rail ? undefined : () => (router.canGoBack() ? router.back() : router.replace('/'))}
+        recipes={recipes}
+        onGoToStep={(recipeId, stepId) => router.push(cookStepPath(recipeId, stepId) as Href)}
+      />
+    </SplitView>
   );
 }

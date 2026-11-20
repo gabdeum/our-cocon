@@ -153,7 +153,7 @@ export function SuggestionPill({ title, detail, className, ...props }: Suggestio
   );
 }
 
-/** A row of pills: filters scroll horizontally (wrap them in a ScrollView), choices wrap. */
+/** A row of pills: filters scroll horizontally (wrap them in a RowScroll), choices wrap. */
 export function PillRow({ children, wrap = true, className }: { children: ReactNode; wrap?: boolean; className?: string }) {
   return <View className={cn('flex-row items-center gap-8', wrap && 'flex-wrap', className)}>{children}</View>;
 }

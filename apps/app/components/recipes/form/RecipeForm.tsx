@@ -665,8 +665,9 @@ export function RecipeForm({
       <FormScreen
         scrollRef={scroll}
         scrollEnabled={!dragging}
-        // A new recipe is a centred card from 600, as a new event or reminder is.
-        card={isNew}
+        // A centred card from 600, new or edited, as a new event or reminder is. Outside it is Cancel.
+        card
+        onDismiss={cancel}
         bar={
           <FormBar
             cancelLabel={f.cancel}

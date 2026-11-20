@@ -12,7 +12,8 @@ import { strings } from '../../../strings/en';
 const f = strings.recipeForm;
 
 /**
- * /recipes/[id]/edit?section=… (spec 014): the recipe form for a saved recipe, a full-screen modal.
+ * /recipes/[id]/edit?section=… (spec 014): the recipe form for a saved recipe, a full-screen modal
+ * (a centred card from 600, as a new recipe is).
  * Its entry is the recipe page's pencil (spec 051 FR-012); saved or cancelled, it goes back to the recipe.
  * `&focus=this-recipe` opens Details at "This recipe" (the recipe page's "Units: Metric", FR-013).
  * `&variant=<id>` opens that variant in Variants, `&variant=new` starts one (017).
@@ -39,7 +40,7 @@ export default function EditRecipeRoute() {
   if (state.status !== 'ready') return null;
   if (!id || recipe.data === null || (recipe.isError && recipe.data === undefined)) {
     return (
-      <FormScreen bar={null}>
+      <FormScreen bar={null} card onDismiss={back}>
         <Text variant="titleLg" role="heading" aria-level={1}>
           {f.loadFailedTitle}
         </Text>
@@ -52,7 +53,7 @@ export default function EditRecipeRoute() {
   // Waits for a fresh copy, so the form never starts from an old one.
   if (!recipe.data || recipe.isFetching) {
     return (
-      <FormScreen bar={null}>
+      <FormScreen bar={null} card onDismiss={back}>
         <RecipeItemSkeleton />
       </FormScreen>
     );

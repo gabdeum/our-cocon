@@ -1,7 +1,7 @@
 import { railInset, useLayoutTier } from '@cocon/ui';
 import { Tabs, router } from 'expo-router';
 import { AppTabBar } from '../../components/AppTabBar';
-import { TABS } from '../../lib/navigation';
+import { RAIL_PAGES, TABS } from '../../lib/navigation';
 import { tracker } from '../../lib/tracker';
 
 /**
@@ -12,7 +12,7 @@ export default function TabsLayout() {
   const { tier } = useLayoutTier();
   return (
     <Tabs
-      tabBar={(props) => <AppTabBar {...props} tracker={tracker} onOpenTimers={() => router.push('/timers')} />}
+      tabBar={(props) => <AppTabBar {...props} tracker={tracker} onOpenTimers={() => router.push('/timers')} onOpenPage={(key) => router.push(RAIL_PAGES[key])} />}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: 'transparent', paddingLeft: railInset(tier) } }}
     >
       {TABS.map((t) => (

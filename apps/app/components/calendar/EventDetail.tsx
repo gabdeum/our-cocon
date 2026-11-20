@@ -145,6 +145,8 @@ export function EventDetail(p: EventDetailProps) {
   return (
     <PushedScreen
       className="gap-16"
+      // From 600 the event opens in a centred card over the calendar.
+      card
       topBar={{
         back: { label: e.back, onPress: p.onBack },
         title: o.title,
