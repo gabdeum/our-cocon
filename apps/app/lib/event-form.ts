@@ -98,7 +98,8 @@ export function prefillFrom(params: { date?: unknown; slot?: unknown; time?: unk
   };
 }
 
-const plusHour = (time: string) => {
+/** An hour after "HH:MM", at most the end of the day. */
+export const plusHour = (time: string) => {
   const end = Math.min(toMinutes(time) + 60, 24 * 60);
   return `${String(Math.floor(end / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`;
 };

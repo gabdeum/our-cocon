@@ -88,11 +88,17 @@ describe('header from 600 (spec 070 FR-002)', () => {
     const storage = memoryStorage();
     const first = await setup({ storage });
     expect(screen.getByRole('button', { name: /^October 28: .*Yoga/ })).toBeTruthy();
-    fireEvent.click(within(chips()).getByRole('button', { name: 'Eva' }));
+    // With everyone shown, a chip shows only that person; the others are tapped back on.
+    const tap = (name: string) => fireEvent.click(within(chips()).getByRole('button', { name }));
+    tap('Gabriel');
+    expect(first.tracker.track).toHaveBeenLastCalledWith('calendar_member_filter_changed', { members_visible: 1, source: 'chips' });
+    expect(within(chips()).getByRole('button', { name: 'Everyone' }).getAttribute('aria-pressed')).toBe('false');
+    tap('Everyone');
+    tap('Others');
     await act(async () => undefined);
     expect(within(chips()).getByRole('button', { name: 'Eva' }).getAttribute('aria-pressed')).toBe('false');
     expect(screen.queryByRole('button', { name: /^October 28: .*Yoga/ })).toBeNull();
-    expect(first.tracker.track).toHaveBeenCalledWith('calendar_member_filter_changed', { members_visible: 3, source: 'chips' });
+    expect(first.tracker.track).toHaveBeenLastCalledWith('calendar_member_filter_changed', { members_visible: 3, source: 'chips' });
 
     first.rerender({ view: 'week', anchor: '2026-10-28' });
     expect(screen.queryByText('Yoga')).toBeNull();
@@ -105,6 +111,17 @@ describe('header from 600 (spec 070 FR-002)', () => {
     await setup({ storage });
     expect(within(chips()).getByRole('button', { name: 'Eva' }).getAttribute('aria-pressed')).toBe('false');
     expect(screen.queryByRole('button', { name: /^October 28: .*Yoga/ })).toBeNull();
+  });
+
+  it('a chip with everyone shown shows only that person; hiding them again shows everyone', async () => {
+    const { tracker } = await setup({ storage: memoryStorage() });
+    const pressed = () => within(chips()).getAllByRole('button').filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.getAttribute('aria-label'));
+    fireEvent.click(within(chips()).getByRole('button', { name: 'Eva' }));
+    expect(pressed()).toEqual(['Eva']);
+    expect(screen.queryByRole('button', { name: /^October 28: .*Baby swim/ })).toBeNull();
+    fireEvent.click(within(chips()).getByRole('button', { name: 'Eva' }));
+    expect(pressed()).toEqual(['Gabriel', 'Eva', 'Everyone', 'Others']);
+    expect(tracker.track).toHaveBeenLastCalledWith('calendar_member_filter_changed', { members_visible: 4, source: 'chips' });
   });
 });
 
@@ -132,12 +149,12 @@ describe('Month from 600 (spec 070 FR-003/FR-004)', () => {
     fireEvent.click(within(day).getByRole('button', { name: 'Add event on Wednesday, October 28' }));
     expect(onAddEvent).toHaveBeenCalledWith('2026-10-28');
     expect(within(day).getByText('+ Add on Wed 28')).toBeTruthy();
-    // FR-003: weekday names over the grid, one month at a time.
+    // FR-003: weekday names over the grid, which scrolls on into the next month like the phone's.
     expect(screen.getByText('Sun')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /^November 8: / })).toBeNull();
+    expect(screen.getByRole('button', { name: /^November 1: / })).toBeTruthy();
   });
 
-  it('‹ › page a month and select its 1st; switching view opens on the selected day', async () => {
+  it('‹ › scroll to a month and select its 1st; switching view opens on the selected day', async () => {
     const { onNavigate } = await setup();
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
     expect(screen.getAllByRole('heading')[0]?.textContent).toBe('November');

@@ -92,7 +92,7 @@ export function CalendarScreen({
   const listView = view === 'agenda' || view === 'day';
   // The day sheet is a flow: a centred card from 600 (spec 065).
   const daySheetAs = useSheetPresentation('flow');
-  const { hidden, toggle, showAll } = useCalendarFilter(userId, storage);
+  const { hidden, toggle, showAll, showOnly } = useCalendarFilter(userId, storage);
   // "Show birthdays" off (spec 029): birthdays leave every view.
   const showBirthdays = useCalendarDisplay().prefs.show_birthdays;
   const events = showBirthdays ? allEvents : allEvents?.filter((e) => e.category !== 'birthday');
@@ -112,7 +112,7 @@ export function CalendarScreen({
   const [jump, setJump] = useState<{ month: string; toToday?: boolean; nonce: number }>();
   // The day other views open on from Month: today in this month, else the 1st.
   const dayInMonth = (month: string) => (firstOfMonth(today) === month ? today : month);
-  // Spec 070: from 600 Month shows one month with a selected day's panel; it starts on the day the URL names.
+  // Spec 070: from 600 Month shows a selected day's panel; it starts on the day the URL names.
   const [selected, setSelected] = useState(() => (firstOfMonth(anchor) === firstOfMonth(today) ? today : anchor));
   // Back on Month from another view: open on the day that view showed.
   const [lastView, setLastView] = useState(view);
@@ -145,16 +145,24 @@ export function CalendarScreen({
   ];
   const arrows = arrowLabels(view);
 
-  const onToggle = (key: string, source: 'menu' | 'chips' = 'menu') => {
+  const onToggle = (key: string) => {
     const next = toggle(key);
-    tracker.track('calendar_member_filter_changed', { members_visible: chips.filter((c) => !next.has(c.key)).length, source });
+    tracker.track('calendar_member_filter_changed', { members_visible: chips.filter((c) => !next.has(c.key)).length, source: 'menu' });
   };
   const shownChips = chips.filter((c) => c.pressed);
   const filtered = shownChips.length < chips.length;
+  const keys = chips.map((c) => c.key);
+  // The phone's menu: Show all once someone is hidden, Show none while everyone shows.
   const onShowAll = () => {
-    if (!filtered) return;
-    showAll();
-    tracker.track('calendar_member_filter_changed', { members_visible: chips.length, source: 'menu' });
+    if (filtered) showAll();
+    else showOnly(keys);
+    tracker.track('calendar_member_filter_changed', { members_visible: filtered ? chips.length : 0, source: 'menu' });
+  };
+  // From 600: with everyone shown, a chip shows only that person; hiding the last one shows everyone again.
+  const onChip = (key: string) => {
+    const last = shownChips.length === 1 && shownChips[0]?.key === key;
+    const next = !filtered ? showOnly(keys, key) : last ? showOnly([]) : toggle(key);
+    tracker.track('calendar_member_filter_changed', { members_visible: chips.filter((c) => !next.has(c.key)).length, source: 'chips' });
   };
   const onView = (next: CalendarView) => {
     if (next === view) return;
@@ -208,12 +216,12 @@ export function CalendarScreen({
         viewButtonLabel={h.viewButton(h.views[view])}
         chips={chips}
         onToggle={onToggle}
-        onToggleChip={(key) => onToggle(key, 'chips')}
+        onToggleChip={onChip}
         onShowAll={onShowAll}
         peopleLabel={filtered ? h.peopleCount(shownChips.length, chips.length) : h.peopleAll}
         peopleButtonLabel={h.peopleButton(filtered ? shownChips.map((c) => c.name) : null)}
         filterLabel={h.filterLabel}
-        showAllLabel={h.showAll}
+        showAllLabel={filtered ? h.showAll : h.showNone}
         closeLabel={h.close}
         toggle={reminders && listView ? { label: strings.calendar.reminders.toggle, icon: 'alarm', pressed: showReminders, onPress: () => onShowReminders(!showReminders) } : undefined}
         arrows={!(reminders && listView)}
@@ -249,7 +257,6 @@ export function CalendarScreen({
             setSelected(date);
             tracker.track('calendar_day_selected', { view: 'month', source: 'grid' });
           }}
-          onSwipe={(direction) => goToMonth(shiftAnchor('month', shown, direction))}
           onDismissHint={() => {
             monthHint.onDismiss();
             tracker.track('calendar_first_hint_dismissed', {});

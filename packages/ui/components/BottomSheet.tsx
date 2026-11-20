@@ -7,6 +7,7 @@ import { useReduceMotion } from '../reduceMotion';
 import { theme } from '../theme';
 import { Button, type ButtonProps } from './Button';
 import { IconButton } from './IconButton';
+import { SegmentedControl, type Segment } from './SegmentedControl';
 import { Text } from './Text';
 import { ToastHost } from './Toast';
 
@@ -43,6 +44,11 @@ export interface BottomSheetProps {
   anchorRef?: RefObject<HostInstance | null>;
   /** A soft ✕ on the right of the title, at every size (a card always has one, in place of the handle). */
   closeButton?: boolean;
+  /**
+   * In place of the title, a pill SegmentedControl between related sheets: the calendar's "New event ·
+   * New reminder". `title` still names the dialog for screen readers.
+   */
+  titleSwitch?: { label: string; segments: Segment<string>[]; value: string; onChange: (key: string) => void };
 }
 
 const SWIPE_CLOSE = 80;
@@ -136,7 +142,7 @@ function Sheet({ visible, onClose, children, footer, floating, dirty, closeLabel
         </Animated.View>
         {/* NativeWind doesn't style Animated.View: it only slides; the View inside carries the look. */}
         <Animated.View style={{ width: '100%', maxWidth: theme.layout.phoneMax, maxHeight: '92%', alignSelf: 'center', transform: [{ translateY: offset }] }}>
-          <View role="dialog" aria-modal aria-labelledby={header.titleId} testID="sheet" className="max-h-full gap-16 rounded-t-sheet bg-surface-page px-20 pb-28">
+          <View role="dialog" aria-modal {...dialogName(header)} testID="sheet" className="max-h-full gap-16 rounded-t-sheet bg-surface-page px-20 pb-28">
             {/* The drag strip starts at the sheet's top edge, so a finger just above the bar counts. */}
             <View {...pan.panHandlers} className="gap-16 pt-12">
               <View aria-hidden className="h-[5px] w-[44px] self-center rounded-[3px] bg-line-handle" />
@@ -170,7 +176,7 @@ function Card({ visible, onClose, children, footer, floating, closeLabel, reques
           <View
             role="dialog"
             aria-modal
-            aria-labelledby={header.titleId}
+            {...dialogName(header)}
             testID="sheet-card"
             className="max-h-full gap-16 rounded-sheet bg-surface-page px-24 pb-[22px] pt-20"
             style={{ width: Math.min(theme.layout.card, width - 48) }}
@@ -208,7 +214,7 @@ function Popover({ visible, children, footer, closeLabel, requestClose, anchor, 
         <View
           role="dialog"
           aria-modal
-          aria-labelledby={header.titleId}
+          {...dialogName(header)}
           testID="sheet-popover"
           onLayout={(e) => natural ?? setNatural(e.nativeEvent.layout.height)}
           className="absolute gap-12 rounded-xl border-[1.5px] border-line bg-surface-page p-16"
@@ -229,18 +235,24 @@ function Popover({ visible, children, footer, closeLabel, requestClose, anchor, 
   );
 }
 
+/** The dialog's name: its title, or the title as a label when a switch shows in its place. */
+const dialogName = ({ title, titleId, titleSwitch }: Pick<Parts, 'title' | 'titleId' | 'titleSwitch'>) => (titleSwitch ? { 'aria-label': title } : { 'aria-labelledby': titleId });
+
 function Header({
   title,
   lead,
   leading,
   hero,
   headerAction,
+  titleSwitch,
   titleId,
   titleRef,
   small,
   close,
-}: Pick<Parts, 'title' | 'lead' | 'leading' | 'hero' | 'headerAction' | 'titleId' | 'titleRef'> & { small?: boolean; close: ReactNode }) {
-  const heading = small ? (
+}: Pick<Parts, 'title' | 'lead' | 'leading' | 'hero' | 'headerAction' | 'titleSwitch' | 'titleId' | 'titleRef'> & { small?: boolean; close: ReactNode }) {
+  const heading = titleSwitch ? (
+    <SegmentedControl variant="pill" label={titleSwitch.label} segments={titleSwitch.segments} value={titleSwitch.value} onChange={titleSwitch.onChange} />
+  ) : small ? (
     <Text size={18} weight="900" role="heading" nativeID={titleId}>
       {title}
     </Text>

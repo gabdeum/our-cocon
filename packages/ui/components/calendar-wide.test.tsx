@@ -5,7 +5,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { CalendarHeader } from './CalendarHeader';
 import { MemberFilterChip } from './MemberChip';
 import { ComingUpRow, MiniMonth, type MiniMonthDay } from './MiniMonth';
-import { MonthPage } from './MonthGrid';
+import { MonthGrid } from './MonthGrid';
 
 const dims = vi.hoisted(() => ({ width: 820, height: 1180 }));
 vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('react-native')>()), useWindowDimensions: () => ({ ...dims, scale: 2, fontScale: 1 }) }));
@@ -78,23 +78,25 @@ describe('MemberFilterChip', () => {
   });
 });
 
-describe('MonthPage', () => {
+describe('MonthGrid wide', () => {
   const cell = (date: string) => ({ date, label: `${date}: nothing planned`, dateText: String(Number(date.slice(8))), first: date.endsWith('-01'), today: date === '2026-10-27', past: false, items: [], more: null });
-  it('marks the selected day pressed and taps select a day', () => {
+  it('scrolls like the phone, marks the selected day pressed and taps select a day', () => {
     const onDayPress = vi.fn();
     const days = ['2026-10-25', '2026-10-26', '2026-10-27', '2026-10-28', '2026-10-29', '2026-10-30', '2026-10-31'];
     render(
-      <MonthPage
+      <MonthGrid
         weekdays={['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']}
-        weeks={[{ key: 'w', cells: days.map(cell), bars: [] }]}
-        month="2026-10-01"
-        rowHeight={124}
-        selected="2026-10-28"
+        weekCount={1}
+        weekAt={() => ({ key: 'w', cells: days.map(cell), bars: [] })}
+        initialIndex={0}
+        onTopRowChange={vi.fn()}
+        wide={{ rowHeight: 124, selected: '2026-10-28' }}
         onDayPress={onDayPress}
         onDayLongPress={vi.fn()}
         addLabel="Add event"
       />,
     );
+    expect(screen.getByText('Sun')).toBeTruthy();
     expect(screen.getByRole('button', { name: '2026-10-28: nothing planned' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('button', { name: '2026-10-27: nothing planned' }).getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(screen.getByRole('button', { name: '2026-10-30: nothing planned' }));

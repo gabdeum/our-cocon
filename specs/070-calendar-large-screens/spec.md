@@ -27,6 +27,7 @@ Screen: `design/screens/OC-CalendarResponsive.dc.html` (pass `w`/`h`/`view`: mon
 | --- | --- |
 | `calendar_day_selected` | view, source (grid, mini_month, coming_up) |
 | `calendar_member_filter_changed` (existing) | + source (menu, chips) |
+| `add_sheet_switched` (added 2026-11-20) | to (event, reminder) |
 
 ## Needs your attention
 - The Agenda view isn't designed for large screens yet; at ≥ 600 it can reuse the medium Day layout per day. Not in this spec.
@@ -41,3 +42,4 @@ Screen: `design/screens/OC-CalendarResponsive.dc.html` (pass `w`/`h`/`view`: mon
   - The title is the longest format that fits at 32 px beside the buttons: at 600–700 a long day reads "Wed, Sep. 30".
   - The mini month shows the month of the day Day view shows (FR-007's "current month"), so it follows you into the next month.
   - Agenda from 600 gets the new header only (L166).
+- 2026-11-20: After a first look (Gabriel): Month from 600 scrolls vertically like the phone (`MonthGrid` `wide`: rows 124 at medium, `max(96, (height − 40) / 5)` at expanded; `MonthPage` and the month swipe are gone), the panel under the grid (3 : 2 of the height, each scrolling) at medium and beside it at expanded; scrolling changes the title, not the selected day; ‹ › and Today still select. With everyone shown, a people chip shows only that person; tapping the last one shown shows everyone again. The phone's people menu reads "Show none" while everyone shows. The add sheet's title is a "New event · New reminder" switch on every size (`AddSheet`): the title, day, start time (a slot's first hour) and who go across, and only what changed since the last switch, so a slot or several people survive a trip to the reminder and back. New event: `add_sheet_switched` (to). An update is enough (no native change).
