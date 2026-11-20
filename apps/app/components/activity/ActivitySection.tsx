@@ -15,7 +15,7 @@ export interface ActivitySectionProps extends ActivityEntriesProps {
 }
 
 /**
- * Home's "Latest activity" (OC-Home › 6, spec 028 FR-006): the 4 newest changes by anyone, or by AI
+ * Home's "Latest activity" (OC-Home › 6, spec 028 FR-006): the newest changes (4, or 5 from 600) by anyone, or by AI
  * assistants only, AI ones with Undo, then "See all activity". Hidden while the log is empty.
  */
 export function ActivitySection({ show, onShow, onSeeAll, ...props }: ActivitySectionProps) {

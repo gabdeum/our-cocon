@@ -106,6 +106,8 @@ export interface HeroCardProps {
   actions?: HeroAction[];
   /** Offline: the actions can't save. */
   actionsDisabled?: boolean;
+  /** The photo's height: 170 on the phone; 200 in Home's column from 600, 160 from 960 (spec 068). */
+  photoHeight?: number;
 }
 
 /**
@@ -113,10 +115,10 @@ export interface HeroCardProps {
  * With `actions`, the photo and title are the link and the buttons sit under them (never a button
  * inside a link).
  */
-export function HeroCard({ title, badge, chips, photoUri, photoLabel, openLabel, onPress, actions, actionsDisabled }: HeroCardProps) {
+export function HeroCard({ title, badge, chips, photoUri, photoLabel, openLabel, onPress, actions, actionsDisabled, photoHeight = 170 }: HeroCardProps) {
   const top = (
     <>
-      <View className="h-[170px]">
+      <View testID="hero-photo" style={{ height: photoHeight }}>
         {photoUri ? (
           <Image source={{ uri: photoUri }} resizeMode="cover" className="h-full w-full" />
         ) : (

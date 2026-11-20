@@ -58,6 +58,7 @@ export function RemindersCard(p: RemindersCardProps) {
                 toggleLabel={done ? r.markNotDone(row.title) : r.markDone(row.title)}
                 disabled={p.readOnly}
                 last={i === p.rows.length - 1}
+                size="sm"
                 onOpen={done ? undefined : () => p.onOpen(row)}
                 openLabel={r.open(row.title)}
               />

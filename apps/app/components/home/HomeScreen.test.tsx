@@ -1,15 +1,24 @@
 // Spec 028 (OC-Home, CalCard): what's on today (US1), this week or nothing (US2), the latest
-// recipe (US3), the tiles (US4), and the edge cases: no recipes, a new family, Busy.
+// recipe (US3), the tiles (US4), and the edge cases: no recipes, a new family, Busy. Spec 068: the
+// two columns from 600.
 import { View } from 'react-native';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import type { ActivityEntry } from '@cocon/schemas';
 import type { HomeHero, StoredEvent } from '@cocon/data';
 import { ToastProvider } from '../../lib/toast';
 import { fakeTracker, gabriel, groceryItem, james, mia, storedEvent } from '../../test/fakes';
 import { HomeScreen, type HomeScreenProps } from './HomeScreen';
 import { expectAccessible } from '../../test/axe';
 
-afterEach(cleanup);
+const dims = vi.hoisted(() => ({ width: 390, height: 844 }));
+vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('react-native')>()), useWindowDimensions: () => ({ ...dims, scale: 2, fontScale: 1 }) }));
+
+afterEach(() => {
+  cleanup();
+  dims.width = 390;
+  dims.height = 844;
+});
 
 const eva = { ...mia, id: 'm-eva', display_name: 'Eva', color: 'rose' as const };
 const TODAY = '2026-10-25';
@@ -297,5 +306,129 @@ describe('Home › cooking now (spec 051 on 028)', () => {
     expect(screen.getByRole('button', { name: 'Done cooking Leek & bacon quiche' }).getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(screen.getByRole('link', { name: 'Resume Leek & bacon quiche, step 3 of 6' }));
     expect(onCookResume).toHaveBeenCalled();
+  });
+});
+
+describe('Home on larger screens (spec 068)', () => {
+  const entry = (n: number): ActivityEntry => ({
+    key: `${n}1111111-1111-4111-8111-111111111111`,
+    actor_id: gabriel.user_id,
+    source: 'app',
+    kind: 'recipe_created',
+    created_at: `2026-10-25T1${n}:00:00Z`,
+    count: 1,
+    names: [],
+    recipe_id: null,
+    recipe_name: `Soup ${n}`,
+    from_recipe_name: null,
+    event_id: null,
+    event_name: null,
+    event_when: null,
+    event_secret: false,
+    reminder_id: null,
+    reminder_name: null,
+    undone_by: null,
+    undone_at: null,
+    undo_action: null,
+    can_undo: false,
+    can_restore: false,
+  });
+  const activity = [1, 2, 3, 4, 5].map(entry);
+  const size = (width: number, height: number) => {
+    dims.width = width;
+    dims.height = height;
+  };
+  const items = (id: string) => Array.from(screen.getByTestId(id).children);
+  const holds = (item: Element | undefined, node: HTMLElement) => item?.contains(node) ?? false;
+  const reminders = <View role="region" aria-label="Reminders" />;
+
+  it('FR-001: on the phone, one column in the same order, with 4 activity rows', () => {
+    setup({ activity, reminders });
+    expect(screen.queryByTestId('home-left')).toBeNull();
+    expect(screen.getAllByText(/Soup \d/)).toHaveLength(4);
+    expect(screen.getByTestId('hero-photo').style.height).toBe('170px');
+    const after = (a: HTMLElement, b: HTMLElement) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING;
+    expect(after(screen.getByRole('region', { name: 'Reminders' }), screen.getByRole('region', { name: 'Family calendar' }))).toBeTruthy();
+    expect(after(screen.getByText('to buy'), screen.getByText('Latest recipe'))).toBeTruthy();
+    expect(after(screen.getByText('Latest recipe'), screen.getByText('Latest activity'))).toBeTruthy();
+  });
+
+  it('FR-002, SC-001: at 820, reminders, calendar and the latest recipe on the left; the tiles, then 5 activity rows, on the right', () => {
+    size(820, 1180);
+    setup({ activity, reminders });
+    const left = items('home-left');
+    expect(left).toHaveLength(3);
+    expect(holds(left[0], screen.getByRole('region', { name: 'Reminders' }))).toBe(true);
+    expect(holds(left[1], screen.getByRole('region', { name: 'Family calendar' }))).toBe(true);
+    expect(holds(left[2], screen.getByText('Latest recipe'))).toBe(true);
+    expect(screen.getByTestId('hero-photo').style.height).toBe('200px');
+    const right = items('home-right');
+    expect(holds(right[0], screen.getByText('to buy'))).toBe(true);
+    // Only the tiles sit above Latest activity.
+    expect(holds(right[1], screen.getByText('Latest activity'))).toBe(true);
+    expect(within(right[1] as HTMLElement).getAllByText(/Soup \d/)).toHaveLength(5);
+    // Below 960 the logo row stays, the greeting under it.
+    expect(screen.getByText('Our Cocon')).toBeTruthy();
+    expect(within(screen.getByTestId('tab-pinned')).queryByRole('heading', { name: 'Hi Gabriel' })).toBeNull();
+  });
+
+  it('FR-003: at 1180, no logo row: the date and greeting sit left of the family, photo 160', async () => {
+    size(1180, 820);
+    setup({ activity });
+    expect(screen.queryByText('Our Cocon')).toBeNull();
+    const pinned = within(screen.getByTestId('tab-pinned'));
+    expect(pinned.getByText('Sunday, Oct 25')).toBeTruthy();
+    expect(pinned.getByRole('heading', { name: 'Hi Gabriel' })).toBeTruthy();
+    expect(pinned.getByRole('link', { name: 'Family: Gabriel, Eva, James' })).toBeTruthy();
+    expect(screen.getAllByRole('heading', { name: 'Hi Gabriel' })).toHaveLength(1);
+    expect(screen.getByTestId('hero-photo').style.height).toBe('160px');
+    expect(holds(items('home-right')[1], screen.getByText('Latest activity'))).toBe(true);
+    await expectAccessible();
+  });
+
+  it.each([
+    [599, null, '170px', null],
+    [600, '18px', '200px', 'Our Cocon'],
+    [959, '18px', '200px', 'Our Cocon'],
+    [960, '14px', '160px', null],
+  ])('FR-002: at %i wide, columns 1.1 / 1 %s apart, photo %s', (width, gap, photo, brand) => {
+    size(width, 820);
+    setup({ activity });
+    expect(screen.getByTestId('hero-photo').style.height).toBe(photo);
+    if (width === 599) {
+      expect(screen.queryByTestId('home-left')).toBeNull();
+      expect(screen.getByText('Our Cocon')).toBeTruthy();
+      return;
+    }
+    const left = screen.getByTestId('home-left');
+    const right = screen.getByTestId('home-right');
+    expect(left.style.flexGrow).toBe('1.1');
+    expect(right.style.flexGrow).toBe('1');
+    expect([left.style.gap, right.style.gap, (left.parentElement as HTMLElement).style.gap]).toEqual([gap, gap, gap]);
+    expect(screen.queryByText('Our Cocon')?.textContent ?? null).toBe(brand);
+  });
+
+  it('FR-004: hidden cards leave no gap: no reminders, no recipes yet', () => {
+    size(820, 1180);
+    setup({ hero: null, recipeCount: 0 });
+    const left = items('home-left');
+    expect(left).toHaveLength(2);
+    expect(holds(left[0], screen.getByRole('region', { name: 'Family calendar' }))).toBe(true);
+    expect(holds(left[1], screen.getByText("What's for dinner?"))).toBe(true);
+    // No activity yet: the right column is just the tiles.
+    expect(items('home-right')).toHaveLength(1);
+  });
+
+  it('a cook in progress takes the latest recipe’s place in the left column', () => {
+    size(820, 1180);
+    setup({ cooking: [{ cook: { id: 'c', recipe_id: 'r-quiche', started_by: gabriel.user_id, started_at: '2026-10-25T10:00:00Z', last_active_at: '2026-10-25T10:10:00Z', current_step: 2, variant_id: null, servings: 6, status: 'in_progress' }, name: 'Leek & bacon quiche', stepCount: 6 }] });
+    expect(holds(items('home-left')[1], screen.getByText('Cooking now: step 3/6'))).toBe(true);
+    expect(screen.getByTestId('hero-photo').style.height).toBe('200px');
+  });
+
+  it('a new family’s invite card goes under the activity, on the right', () => {
+    size(820, 1180);
+    setup({ members: [gabriel], activity });
+    expect(holds(items('home-right')[2], screen.getByText('Invite your family'))).toBe(true);
   });
 });

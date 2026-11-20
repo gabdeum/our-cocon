@@ -8,7 +8,7 @@ import { DebugFooter } from '../../components/DebugFooter';
 import type { ActivityShow } from '../../components/activity/ActivitySection';
 import { HomeScreen, type HomeCook } from '../../components/home/HomeScreen';
 import { HomeReminders } from '../../components/reminders/HomeReminders';
-import { activityKey, HOME_ENTRIES, loadActivity, undoActivity } from '../../lib/activity';
+import { activityKey, HOME_ENTRIES_WIDE, loadActivity, undoActivity } from '../../lib/activity';
 import { calendarSettingsKey, eventsKey } from '../../lib/calendar-header';
 import { useOpenCooks } from '../../lib/cook-sessions';
 import { groceryListKey, loadGroceryList } from '../../lib/groceries';
@@ -47,7 +47,7 @@ export default function HomeTab() {
   // The other filter's rows stay until these load, so AI only doesn't flash "No AI changes yet."
   const activity = useQuery({
     queryKey: [...activityKey(familyId ?? '', filter), 'home'],
-    queryFn: () => loadActivity(client, HOME_ENTRIES, filter),
+    queryFn: () => loadActivity(client, HOME_ENTRIES_WIDE, filter),
     enabled,
     placeholderData: keepPreviousData,
   });
