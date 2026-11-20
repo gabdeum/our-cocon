@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { quiche, quicheIds } from '@cocon/schemas/quiche.fixture';
 import { format, scale } from '@cocon/quantity';
 import { applyVariants, ingredientNote, noVariants, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
-import { bestMonthsLabel, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, timerClock, type StepPart } from './recipe-view';
+import { bestMonthsLabel, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, timerClock, timerDuration, type StepPart } from './recipe-view';
 
 const recipe = { ...quiche, facts: {} };
 const dough = quiche.variants.find((v) => v.id === quicheIds.dough) as RecipeVariant;
@@ -188,7 +188,7 @@ describe('steps (spec 009)', () => {
     const steps = recipeView(recipe, 6, noVariants).steps;
     expect(text(steps[0]?.parts ?? [])).toMatch(/^Preheat the oven to 180 °C \(350 °F\)\./);
     expect(steps[0]).toMatchObject({ timer: null, tip: 'Chill the lined pan for 10 minutes so the edges don’t shrink.' });
-    expect(steps[1]?.timer).toEqual({ seconds: 720, label: 'Blind bake', clock: '12:00' });
+    expect(steps[1]?.timer).toEqual({ seconds: 720, label: 'Blind bake', clock: '12:00', duration: '12 min' });
     expect(steps[4]?.tempCheck).toBe('the center should reach 71 °C (160 °F) and barely wobble.');
     expect(recipeView(recipe, 6, noVariants, imperial).steps[4]?.tempCheck).toBe('the center should reach 160 °F (71 °C) and barely wobble.');
   });
@@ -256,6 +256,12 @@ describe('steps (spec 009)', () => {
             ids.forEach((id) => expect(lines.get(id)?.amount.startsWith(phrases.get(id)?.amount ?? '')).toBe(true));
           });
         }
+  });
+
+  it('timerDuration reads like a total time, never under a minute (spec 067)', () => {
+    expect(timerDuration(720)).toBe('12 min');
+    expect(timerDuration(4200)).toBe('1 h 10');
+    expect(timerDuration(20)).toBe('1 min');
   });
 
   it('timerClock pads minutes and seconds', () => {

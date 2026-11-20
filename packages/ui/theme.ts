@@ -242,7 +242,10 @@ export const theme = {
     "rail": 104,
     "popover": 360,
     "card": 540,
-    "toastWide": 420
+    "toastWide": 420,
+    "heroWide": 280,
+    "footerWide": 520,
+    "ingredientsMin": 260
   }
 } as const;
 

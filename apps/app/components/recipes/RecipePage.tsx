@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useWindowDimensions, View, type HostInstance } from 'react-native';
 import {
+  BottomSheet,
   Button,
   Card,
   Choice,
@@ -20,8 +21,9 @@ import {
   StepRow,
   Stepper,
   Text,
+  theme,
 } from '@cocon/ui';
-import type { CookedSummary, Tracker } from '@cocon/schemas';
+import { MAX_TRACKED_STEPS, type CookedSummary, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { cookedLine, pageCard, stepTotal, type CookSession } from '../../lib/cook-sessions';
@@ -29,6 +31,7 @@ import { forgetVisitUnits, useVisitUnits } from '../../lib/visit-units';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
 import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type CookingSettings, type StepLine } from '../../lib/recipe-view';
 import type { PhotoUrls } from '../../lib/recipe-photo';
+import type { RecipeLayout } from '../../lib/recipe-layout';
 import type { Member } from '../../lib/session';
 import { AppTimerPill } from '../timers/AppTimerPill';
 import { MoreOptions } from './MoreOptions';
@@ -54,7 +57,8 @@ export interface RecipePageProps {
   tab: RecipeTab;
   onTabChange: (tab: RecipeTab) => void;
   storage: ChoiceStorage;
-  onBack: () => void;
+  /** Left out beside the Recipes list from 960 (spec 067 FR-005): no back button there. */
+  onBack?: () => void;
   onShare: () => void;
   /** The pencil (spec 051 FR-012): the recipe form's Details. */
   onEdit: () => void;
@@ -88,12 +92,16 @@ export interface RecipePageProps {
   openAtServings?: number;
   /** Signed links of the recipe's and steps' photos, by path (032-later L10). */
   photoUrls?: PhotoUrls;
+  /** Spec 067 (lib/recipe-layout.ts): side by side from 600, beside the list from 960. The phone's by default. */
+  layout?: RecipeLayout;
 }
+
+const phoneLayout: RecipeLayout = { split: false, twoColumn: false, photoHeight: 240 };
 
 /** The recipe page (spec 008, design/ui/OC-Recipe.md) and its Steps tab (spec 009, OC-RecipeSteps.md). */
 export function RecipePage(props: RecipePageProps) {
   const { recipe, failed, onRetry, tracker, onBack } = props;
-  const back = { label: p.back, onPress: onBack };
+  const back = onBack ? { label: p.back, onPress: onBack } : undefined;
 
   if (recipe === undefined && !failed) {
     return (
@@ -150,7 +158,10 @@ function LoadedRecipe({
   visit = 0,
   openAtServings,
   photoUrls = {},
+  layout = phoneLayout,
 }: RecipePageProps & { recipe: RecipeDetail }) {
+  const { split, twoColumn } = layout;
+  const moreLink = useRef<HostInstance>(null);
   const max = servingsMax(recipe.serves);
   // Spec 051: Metric · Imperial in "…" holds for this visit only; closing the page forgets it.
   const [visitUnits, setVisitUnits] = useVisitUnits(recipe.id);
@@ -158,6 +169,12 @@ function LoadedRecipe({
   const cooking = useMemo(() => (visitUnits ? { ...settingsInForce, system: visitUnits } : settingsInForce), [settingsInForce, visitUnits]);
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  // Spec 067: open inline on a phone, the options don't reopen as a popover once the window widens.
+  const [openedAt, setOpenedAt] = useState(layout.twoColumn);
+  if (openedAt !== layout.twoColumn) {
+    setOpenedAt(layout.twoColumn);
+    setMoreOpen(false);
+  }
 
   // FR-006: open with what was picked last time on this device; from a grocery card (spec 052), at
   // its servings, the first time only (back from a sheet, the page reads what the sheet saved).
@@ -236,6 +253,122 @@ function LoadedRecipe({
     : cook.current_step >= total - 1
       ? { label: p.doneCooking, onPress: onCookDone }
       : { label: p.resumeAt(cook.current_step + 1), onPress: onCookResume };
+  const versionSection: ReactNode =
+    recipe.variants.length > 0 && current ? (
+      <View className="gap-10">
+        {/* Beside the columns, the same size as "Ingredients · n" and "Steps · n" (OC-LargeScreens § Recipe: column titles 20/900). */}
+        <Text size={twoColumn ? 20 : 16} weight="900" role="heading" aria-level={2}>
+          {p.version}
+        </Text>
+        {versions.length > 0 ? (
+          <PillRow>
+            <Choice label={p.classic} selected={current.version === null} onPress={() => pickVariants({ ...current, version: null })} />
+            {versions.map((v) => (
+              <Choice key={v.id} label={v.name} selected={current.version === v.id} onPress={() => pickVariants({ ...current, version: v.id })} />
+            ))}
+          </PillRow>
+        ) : null}
+        {options.map((v) => {
+          const on = current.options.includes(v.id);
+          return (
+            <SettingRow
+              key={v.id}
+              boxed
+              label={v.name}
+              hint={optionHint(v) ?? undefined}
+              value={on}
+              onValueChange={(next) => pickVariants({ ...current, options: next ? [...current.options, v.id] : current.options.filter((id) => id !== v.id) })}
+            />
+          );
+        })}
+      </View>
+    ) : null;
+  const servingsCard = (
+    <Card className="py-12 pl-16 pr-12">
+      <View className="flex-row items-center gap-8">
+        <Text size={17} weight="900" className="flex-1">
+          {p.servings}
+        </Text>
+        {current ? (
+          <Stepper
+            value={shown}
+            display={scaledName ? servingsText(shown) : undefined}
+            announcement={p.servingsAnnouncement(scaledName ? servingsText(shown) : String(shown))}
+            onChange={changeServings}
+            min={SERVINGS_MIN}
+            max={max}
+            decreaseLabel={p.fewerServings}
+            increaseLabel={p.moreServings}
+          />
+        ) : null}
+        {/* FR-003: beside the columns the ⋯ leaves Servings for the link under the card. */}
+        {twoColumn ? null : <IconButton icon="more" label={p.moreOptions} variant="square" iconSize={22} expanded={moreOpen} onPress={() => setMoreOpen((o) => !o)} className="ml-4" />}
+      </View>
+      {scaledName && current ? (
+        <View className="flex-row flex-wrap items-center gap-8">
+          {/* Meta and Link align themselves to the top; their wrappers let the row centre them. */}
+          <View>
+            <Meta label={more.scaledBy(scaledName)} tone="sage" />
+          </View>
+          <View>
+            <Link label={more.reset} aria-label={more.resetA11y(scaledName)} onPress={() => update({ ...current, scaledBy: null })} />
+          </View>
+        </View>
+      ) : null}
+      {moreOpen && current && !twoColumn ? (
+        <MoreOptions choices={current} settings={cooking} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} onUnits={setVisitUnits} />
+      ) : null}
+    </Card>
+  );
+  const ingredientList = view ? (
+    <View role="list" aria-label={p.ingredientsLabel}>
+      {view.ingredients.map((ing, i) => (
+        <IngredientRow
+          key={ing.id}
+          amount={ing.amount}
+          name={ing.name}
+          detail={ing.detail}
+          sub={ing.sub ?? undefined}
+          tag={ing.variant ? { label: p.variantTag, tone: 'sage' } : undefined}
+          last={i === view.ingredients.length - 1}
+        />
+      ))}
+    </View>
+  ) : null;
+  const openStep = (step: StepLine) => {
+    tracker.track('cook_started_from_step', { step: Math.min(step.number, MAX_TRACKED_STEPS) });
+    onOpenStep(step.id);
+  };
+  // FR-004: the hint, then a card per step; the whole card opens cooking mode at that step.
+  const stepList = view ? (
+    <>
+      <Text size={13} weight="600" color="ink-muted">
+        {p.stepsHint}
+      </Text>
+      <View role="list" aria-label={p.stepsLabel} className="gap-8">
+        {view.steps.map((step) => {
+          const title = step.name ?? stepText(step);
+          return (
+            <View key={step.id} role="listitem">
+              <StepRow
+                number={step.number}
+                title={title}
+                tag={step.variant ? p.variantTag : undefined}
+                duration={step.timer?.duration}
+                photoUri={step.photoPath ? photoUrls[step.photoPath] : undefined}
+                accessibilityLabel={p.openStep(step.number, title, step.timer?.duration, step.variant)}
+                onPress={() => openStep(step)}
+              />
+            </View>
+          );
+        })}
+      </View>
+    </>
+  ) : null;
+  const closeThen = (go: () => void) => () => {
+    setMoreOpen(false);
+    go();
+  };
   return (
     <PhotoScreen
       photo={
@@ -245,8 +378,9 @@ function LoadedRecipe({
           <PhotoPlaceholder initial={recipe.name.charAt(0).toUpperCase()} className="h-full" />
         )
       }
+      photoHeight={layout.photoHeight}
       topBar={{
-        back: { label: p.back, onPress: onBack },
+        back: onBack ? { label: p.back, onPress: onBack } : undefined,
         title: recipe.name,
         titleMode: 'onScroll',
         actions: [
@@ -254,12 +388,15 @@ function LoadedRecipe({
           <IconButton key="edit" variant="round" icon="edit" label={p.edit} onPress={onEdit} />,
         ],
       }}
-      floating={<AppTimerPill onOpen={onOpenTimers} tracker={tracker} />}
+      // From 960 the rail shows the timers (spec 064).
+      floating={split ? undefined : <AppTimerPill onOpen={onOpenTimers} tracker={tracker} />}
       footer={<ActionBar onAddToGroceries={onAddToGroceries} main={main} />}
+      // FR-006: from 600, on the right and at most 520 wide.
+      footerMax={split || twoColumn ? theme.layout.footerWide : undefined}
       banner={
         <>
           <OfflineBanner screen="recipe" tracker={tracker} />
-          {deletedBy ? <StatusBanner tone="warn" message={p.deleted(deletedBy)} actionLabel={p.back} onAction={onBack} /> : null}
+          {deletedBy ? <StatusBanner tone="warn" message={p.deleted(deletedBy)} actionLabel={onBack ? p.back : undefined} onAction={onBack} /> : null}
         </>
       }
     >
@@ -301,114 +438,65 @@ function LoadedRecipe({
         ) : null}
       </View>
 
-      {recipe.variants.length > 0 && current ? (
-        <View className="gap-10">
-          <Text size={16} weight="900" role="heading" aria-level={2}>
-            {p.version}
-          </Text>
-          {versions.length > 0 ? (
-            <PillRow>
-              <Choice label={p.classic} selected={current.version === null} onPress={() => pickVariants({ ...current, version: null })} />
-              {versions.map((v) => (
-                <Choice key={v.id} label={v.name} selected={current.version === v.id} onPress={() => pickVariants({ ...current, version: v.id })} />
-              ))}
-            </PillRow>
-          ) : null}
-          {options.map((v) => {
-            const on = current.options.includes(v.id);
-            return (
-              <SettingRow
-                key={v.id}
-                boxed
-                label={v.name}
-                hint={optionHint(v) ?? undefined}
-                value={on}
-                onValueChange={(next) => pickVariants({ ...current, options: next ? [...current.options, v.id] : current.options.filter((id) => id !== v.id) })}
-              />
-            );
-          })}
-        </View>
-      ) : null}
-
-      <Card className="py-12 pl-16 pr-12">
-        <View className="flex-row items-center gap-8">
-          <Text size={17} weight="900" className="flex-1">
-            {p.servings}
-          </Text>
-          {current ? (
-            <Stepper
-              value={shown}
-              display={scaledName ? servingsText(shown) : undefined}
-              announcement={p.servingsAnnouncement(scaledName ? servingsText(shown) : String(shown))}
-              onChange={changeServings}
-              min={SERVINGS_MIN}
-              max={max}
-              decreaseLabel={p.fewerServings}
-              increaseLabel={p.moreServings}
-            />
-          ) : null}
-          <IconButton icon="more" label={p.moreOptions} variant="square" iconSize={22} expanded={moreOpen} onPress={() => setMoreOpen((o) => !o)} className="ml-4" />
-        </View>
-        {scaledName && current ? (
-          <View className="flex-row flex-wrap items-center gap-8">
-            {/* Meta and Link align themselves to the top; their wrappers let the row centre them. */}
+      {twoColumn && view ? (
+        <View testID="recipe-columns" className="flex-row items-start gap-28">
+          {/* Two equal columns (Gabriel, 067; the source draws .8fr / 1.2fr). */}
+          <View testID="ingredients-column" className="gap-18" style={{ flex: 1, minWidth: theme.layout.ingredientsMin }}>
+            {versionSection}
+            {servingsCard}
+            {current ? (
+              <View ref={moreLink} className="-mt-10 self-start">
+                <Link label={p.moreOptionsLink} icon="settings" aria-expanded={moreOpen} onPress={() => setMoreOpen(true)} />
+              </View>
+            ) : null}
             <View>
-              <Meta label={more.scaledBy(scaledName)} tone="sage" />
-            </View>
-            <View>
-              <Link label={more.reset} aria-label={more.resetA11y(scaledName)} onPress={() => update({ ...current, scaledBy: null })} />
+              <Text size={20} weight="900" role="heading" aria-level={2} className="mb-4">
+                {p.ingredientsTab(view.ingredients.length)}
+              </Text>
+              {ingredientList}
             </View>
           </View>
-        ) : null}
-        {moreOpen && current ? (
-          <MoreOptions choices={current} settings={cooking} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} onUnits={setVisitUnits} />
-        ) : null}
-      </Card>
-
-      {view ? (
+          <View testID="steps-column" className="min-w-0 gap-10" style={{ flex: 1 }}>
+            <Text size={20} weight="900" role="heading" aria-level={2}>
+              {p.stepsTab(view.stepCount)}
+            </Text>
+            {stepList}
+          </View>
+        </View>
+      ) : (
         <>
-          <SegmentedControl
-            variant="tabs"
-            label={p.tabsLabel}
-            value={tab}
-            onChange={onTabChange}
-            segments={[
-              { key: 'ingredients', label: p.ingredientsTab(view.ingredients.length) },
-              { key: 'steps', label: p.stepsTab(view.stepCount) },
-            ]}
-          />
-          {tab === 'ingredients' ? (
-            <View>
-              <View role="list" aria-label={p.ingredientsLabel}>
-                {view.ingredients.map((ing, i) => (
-                  <IngredientRow
-                    key={ing.id}
-                    amount={ing.amount}
-                    name={ing.name}
-                    detail={ing.detail}
-                    sub={ing.sub ?? undefined}
-                    tag={ing.variant ? { label: p.variantTag, tone: 'sage' } : undefined}
-                    last={i === view.ingredients.length - 1}
-                  />
-                ))}
-              </View>
-            </View>
-          ) : (
-            <View role="list" aria-label={p.stepsLabel} className="gap-8">
-              {view.steps.map((step) => (
-                <View key={step.id} role="listitem">
-                  <StepRow
-                    number={step.number}
-                    title={step.name ?? stepText(step)}
-                    clock={step.timer?.clock}
-                    accessibilityLabel={p.openStep(step.number, step.name ?? stepText(step), step.timer?.clock)}
-                    onPress={() => onOpenStep(step.id)}
-                  />
-                </View>
-              ))}
-            </View>
-          )}
+          {versionSection}
+          {servingsCard}
+          {view ? (
+            <>
+              <SegmentedControl
+                variant="tabs"
+                label={p.tabsLabel}
+                value={tab}
+                onChange={onTabChange}
+                segments={[
+                  { key: 'ingredients', label: p.ingredientsTab(view.ingredients.length) },
+                  { key: 'steps', label: p.stepsTab(view.stepCount) },
+                ]}
+              />
+              {tab === 'ingredients' ? <View>{ingredientList}</View> : <View className="gap-10">{stepList}</View>}
+            </>
+          ) : null}
         </>
+      )}
+      {/* FR-003: the same options, as a popover pointing at the link (spec 065). */}
+      {twoColumn && current ? (
+        <BottomSheet kind="menu" visible={moreOpen} onClose={() => setMoreOpen(false)} title={p.moreOptions} closeLabel={p.closeOptions} returnFocusRef={moreLink}>
+          <MoreOptions
+            choices={current}
+            settings={cooking}
+            tracker={tracker}
+            onChange={update}
+            onScaleByIngredient={closeThen(onScaleByIngredient)}
+            onConvert={closeThen(onConvert)}
+            onUnits={setVisitUnits}
+          />
+        </BottomSheet>
       ) : null}
     </PhotoScreen>
   );

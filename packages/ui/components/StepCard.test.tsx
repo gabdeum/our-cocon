@@ -2,7 +2,7 @@
 // "1 minute left" and "done" come from the timer store (spec 030 FR-002).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { stepWords, TimerRow, type TimerRowProps } from './StepCard';
+import { StepRow, stepWords, TimerRow, type TimerRowProps } from './StepCard';
 
 afterEach(cleanup);
 
@@ -58,5 +58,24 @@ describe('stepWords', () => {
     expect(words[2]).toEqual([{ text: 'g', kind: 'amount', first: false, last: false }, { text: ' ', kind: 'amount' }]);
     expect(words[3]).toEqual([{ text: 'onion', kind: 'amount', first: false, last: true }, { text: ',', kind: 'plain' }, { text: ' ', kind: 'plain' }]);
     expect(words[5]).toEqual([{ text: 'leek', kind: 'missing' }, { text: '.', kind: 'plain' }]);
+  });
+});
+
+// Spec 067 FR-004: the step card on the recipe page, at every size.
+describe('StepRow', () => {
+  it('shows the number, name, Variant tag, timer length and photo; the whole card opens the step', () => {
+    const onPress = vi.fn();
+    render(<StepRow number={1} title="Make the dough" tag="Variant" duration="30 min" photoUri="https://example.test/dough.jpg" accessibilityLabel="Step 1: Make the dough, Variant, 30 min timer. Opens in cooking mode" onPress={onPress} />);
+    const card = screen.getByRole('link', { name: 'Step 1: Make the dough, Variant, 30 min timer. Opens in cooking mode' });
+    expect(card.textContent).toBe('1Make the doughVariant30 min');
+    expect(card.querySelector('img')).toBeTruthy();
+    fireEvent.click(card);
+    expect(onPress).toHaveBeenCalled();
+  });
+
+  it('leaves out what a step does not have', () => {
+    render(<StepRow number={4} title="Mix the custard" accessibilityLabel="Step 4: Mix the custard. Opens in cooking mode" onPress={vi.fn()} />);
+    expect(screen.getByRole('link').textContent).toBe('4Mix the custard');
+    expect(screen.queryByTestId('step-row-timer')).toBeNull();
   });
 });

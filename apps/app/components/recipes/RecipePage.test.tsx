@@ -451,7 +451,7 @@ describe('Steps tab (spec 009)', () => {
   it('FR-001: one row per step, in order, with its number, name and the timer length', async () => {
     await setup({ tab: 'steps' });
     expect(steps()).toHaveLength(6);
-    expect(steps().map((s) => s.textContent)).toEqual(['1Preheat and line', '2Blind bake12:00', '3Cook the filling08:00', '4Mix the custard', '5Bake35:00', '6Rest10:00']);
+    expect(steps().map((s) => s.textContent)).toEqual(['1Preheat and line', '2Blind bake12 min', '3Cook the filling8 min', '4Mix the custard', '5Bake35 min', '6Rest10 min']);
     // The details and timers are in cooking mode now.
     expect(screen.queryByRole('button', { name: /Start timer/ })).toBeNull();
     expect(screen.queryByText("Chef's tip")).toBeNull();
@@ -460,9 +460,20 @@ describe('Steps tab (spec 009)', () => {
 
   it('tapping a step opens cooking mode there', async () => {
     const onOpenStep = vi.fn();
-    await setup({ tab: 'steps', onOpenStep });
+    const { tracker } = await setup({ tab: 'steps', onOpenStep });
     fireEvent.click(step(3));
     expect(onOpenStep).toHaveBeenCalledWith(quiche.steps[2]?.id);
+    // Spec 067: which step, never its name (the tier rides on every event).
+    expect(tracker.track).toHaveBeenCalledWith('cook_started_from_step', { step: 3 });
+  });
+
+  it('067 FR-004: a step says its timer and Variant tag, under the hint', async () => {
+    await setup({ tab: 'steps' });
+    expect(screen.getByText('Tap a step to open it in cooking mode')).toBeTruthy();
+    expect(step(2).getAttribute('aria-label')).toBe('Step 2: Blind bake, 12 min timer. Opens in cooking mode');
+    fireEvent.click(screen.getByRole('switch', { name: /Make my own dough/ }));
+    await settle();
+    expect(step(1).getAttribute('aria-label')).toBe('Step 1: Make the dough, Variant, 30 min timer. Opens in cooking mode');
   });
 
   it('051 FR-014: the cart and "Start recipe" are side by side in the action bar, on both tabs', async () => {
@@ -481,8 +492,62 @@ describe('Steps tab (spec 009)', () => {
     fireEvent.click(screen.getByRole('switch', { name: /Make my own dough/ }));
     await settle();
     expect(steps()).toHaveLength(7);
-    expect(steps()[0]?.textContent).toBe('1Make the dough30:00');
-    expect(steps()[1]?.textContent).toBe('2Preheat and line');
+    expect(steps()[0]?.textContent).toBe('1Make the doughVariant30 min');
+    // A step the variant changes carries the tag too, as in cooking mode.
+    expect(steps()[1]?.textContent).toBe('2Preheat and lineVariant');
+  });
+});
+
+// Spec 067: from 600 the tabs give way to two columns, and the ⋯ to a link opening a popover.
+describe('larger screens (spec 067)', () => {
+  const wide = { split: false, twoColumn: true, photoHeight: 280 };
+
+  it('FR-001: the phone keeps its tabs', async () => {
+    await setup();
+    expect(screen.getByRole('tablist', { name: 'Recipe view' })).toBeTruthy();
+    expect(screen.queryByRole('list', { name: 'Steps' })).toBeNull();
+  });
+
+  it('SC-001 / FR-002: ingredients and steps both show, with no tabs', async () => {
+    await setup({ layout: wide });
+    expect(screen.queryByRole('tablist')).toBeNull();
+    const rows = within(screen.getByRole('list', { name: 'Ingredients' })).getAllByRole('listitem');
+    expect(rows.length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { name: `Ingredients · ${rows.length}` })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Steps · 6' })).toBeTruthy();
+    expect(within(screen.getByRole('list', { name: 'Steps' })).getAllByRole('listitem')).toHaveLength(6);
+    expect(screen.getByText('Tap a step to open it in cooking mode')).toBeTruthy();
+    // Version reads as a column title too (Gabriel, after 067 shipped).
+    expect(getComputedStyle(screen.getByRole('heading', { name: 'Version' })).fontSize).toBe('20px');
+    // Two equal columns (Gabriel, after 067 shipped).
+    expect(getComputedStyle(screen.getByTestId('ingredients-column')).flexGrow).toBe(getComputedStyle(screen.getByTestId('steps-column')).flexGrow);
+  });
+
+  it('FR-003: the link under Servings opens the options as a popover', async () => {
+    const onScaleByIngredient = vi.fn();
+    await setup({ layout: wide, onScaleByIngredient });
+    expect(screen.queryByRole('button', { name: 'More options' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More options · scale, units' }));
+    await settle();
+    const popover = screen.getByRole('dialog', { name: 'More options' });
+    expect(within(popover).getByRole('switch', { name: /kitchen scale/ })).toBeTruthy();
+    fireEvent.click(within(popover).getByText('Scale by an ingredient'));
+    expect(onScaleByIngredient).toHaveBeenCalled();
+    await settle();
+    expect(screen.queryByRole('dialog', { name: 'More options' })).toBeNull();
+  });
+
+  it('FR-006: the action bar sits on the right, at most 520 wide', async () => {
+    await setup({ layout: wide });
+    const footer = screen.getByTestId('photo-screen-footer');
+    expect(getComputedStyle(footer).maxWidth).toBe('520px');
+    expect(getComputedStyle(footer).alignSelf).toBe('flex-end');
+  });
+
+  it('FR-005: beside the list there is no back button', async () => {
+    await setup({ layout: { split: true, twoColumn: true, photoHeight: 280 }, onBack: undefined });
+    expect(screen.queryByRole('button', { name: 'Back to recipes' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Share recipe' })).toBeTruthy();
   });
 });
 

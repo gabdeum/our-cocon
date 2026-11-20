@@ -36,6 +36,10 @@ export interface CookSessionCardProps {
  * A recipe being cooked (CookSessionCard README, spec 051): white, honey border, radius 22, then
  * Cancel · Done · Resume (ink, play icon), 1 : 1 : 1.4.
  */
+/** The narrowest Cancel / Done and Resume (with its play icon) read in full at 14/800, padding 16. */
+const MIN_SOFT = 88;
+const MIN_RESUME = 124;
+
 export function CookSessionCard({ variant, title, line, steps, photoUri, openLabel, labels, a11y = {}, onCancel, onDone, onResume, disabled }: CookSessionCardProps) {
   const list = variant === 'list';
   const head = list ? (
@@ -75,14 +79,15 @@ export function CookSessionCard({ variant, title, line, steps, photoUri, openLab
   return (
     <View className={cn('rounded-xl border-2 border-honey bg-surface-card', list ? 'gap-10 p-10' : 'gap-12 p-14')}>
       {head}
-      <View className="flex-row gap-8">
-        <View className="flex-1">
+      {/* 1 : 1 : 1.4; too narrow for all three (the list beside a recipe, spec 067), Resume wraps under them, full width. */}
+      <View testID="cook-actions" className="flex-row gap-8" style={{ flexWrap: 'wrap' }}>
+        <View className="flex-1" style={{ minWidth: MIN_SOFT }}>
           <Button label={labels.cancel} aria-label={a11y.cancel} variant="soft" size="sm" block disabled={disabled} onPress={onCancel} />
         </View>
-        <View className="flex-1">
+        <View className="flex-1" style={{ minWidth: MIN_SOFT }}>
           <Button label={labels.done} aria-label={a11y.done} variant="soft" size="sm" block disabled={disabled} onPress={onDone} />
         </View>
-        <View className="flex-[1.4]">
+        <View testID="cook-resume" className="flex-[1.4]" style={{ minWidth: MIN_RESUME }}>
           <Button label={labels.resume} aria-label={a11y.resume} icon={list ? 'play' : undefined} variant="ink" size="sm" block disabled={disabled} onPress={onResume} />
         </View>
       </View>

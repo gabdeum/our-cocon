@@ -17,6 +17,10 @@ export interface RecipeItemProps {
   photoUri?: string;
   placeholderTone?: ThumbTone;
   onPress: () => void;
+  /** `sm` in the list beside a recipe (spec 067): 64 thumbnail, radius 20, padding 8. */
+  size?: 'md' | 'sm';
+  /** The recipe open beside the list: 2 px olive border, `aria-current`. */
+  current?: boolean;
 }
 
 /**
@@ -38,14 +42,26 @@ export function RecipeItemSkeleton() {
 }
 
 /** A recipe in a list (RecipeItem README): 84 thumbnail, name (2 lines), meta, author. */
-export function RecipeItem({ name, meta, author, photoUri, placeholderTone = 'peach', onPress }: RecipeItemProps) {
+export function RecipeItem({ name, meta, author, photoUri, placeholderTone = 'peach', onPress, size = 'md', current = false }: RecipeItemProps) {
   const largeText = useLargeText();
+  const sm = size === 'sm';
+  const thumb = sm ? 'h-[64px] w-[64px] rounded-[14px]' : 'h-[84px] w-[84px] rounded-lg';
   return (
-    <Pressable role="link" onPress={onPress} className={cn('flex-row items-center gap-14 rounded-xl bg-surface-card p-10 active:bg-surface-card-pressed', focusRing)}>
+    <Pressable
+      role="link"
+      onPress={onPress}
+      aria-current={current ? 'page' : undefined}
+      className={cn(
+        'flex-row items-center bg-surface-card active:bg-surface-card-pressed',
+        sm ? 'gap-12 rounded-[20px] border-2 p-8' : 'gap-14 rounded-xl p-10',
+        sm && (current ? 'border-olive' : 'border-transparent'),
+        focusRing,
+      )}
+    >
       {photoUri ? (
-        <Image source={{ uri: photoUri }} resizeMode="cover" className="h-[84px] w-[84px] rounded-lg" />
+        <Image source={{ uri: photoUri }} resizeMode="cover" className={thumb} />
       ) : (
-        <View aria-hidden className={cn('h-[84px] w-[84px] rounded-lg', thumbs[placeholderTone])} />
+        <View aria-hidden className={cn(thumb, thumbs[placeholderTone])} />
       )}
       <View className="min-w-0 flex-1">
         <Text size={17} weight="900" numberOfLines={largeText ? undefined : 2}>
