@@ -48,7 +48,7 @@ describe('US1: pieces at any serving size', () => {
 describe('US2: units follow the person', () => {
   it.each([
     [ing('Heavy cream', 300, 'ml'), '1¼', 'cups'],
-    [ing('Butter', 20, 'g', { facts: facts('butter') }), '0.7', 'oz'],
+    [ing('Butter', 20, 'g'), '0.7', 'oz'],
     [ing('Flour', 1.2, 'kg'), '2.6', 'lb'],
     [ing('Flour', 400, 'g'), '14.1', 'oz'],
     [ing('Milk', 60, 'ml'), '¼', 'cup'],
@@ -91,6 +91,17 @@ describe('US2: units follow the person', () => {
     // No density: no guess. No kitchen scale: no weights at all.
     expect(format(ing('Stock', 500, 'ml'), metric).sub).toBeNull();
     expect(format(ing('Heavy cream', 350, 'ml', { facts: facts('heavy_cream') }), noScale).sub).toBeNull();
+  });
+
+  it('shows small weights as spoons with the weight, up to ¼ cup (FR-010)', () => {
+    expect(format(ing('Butter', 20, 'g', { facts: facts('butter') }), metric)).toEqual({ amount: '1½', unit: 'tbsp', sub: '20 g', phrase: '1½ tbsp butter (20 g)' });
+    expect(phrase(ing('Sugar', 4, 'g', { facts: facts('sugar') }), metric)).toBe('1 tsp sugar (4 g)');
+    expect(phrase(ing('Butter', 20, 'g', { facts: facts('butter') }), imperial)).toBe('1½ tbsp butter (0.7 oz)');
+    // From ¼ cup on, the weight alone.
+    expect(phrase(ing('Butter', 60, 'g', { facts: facts('butter') }), metric)).toBe('60 g butter');
+    expect(phrase(ing('Gruyère', 100, 'g', { facts: facts('gruyere') }), metric)).toBe('100 g gruyère');
+    // Too little for ½ tsp: the weight alone.
+    expect(phrase(ing('Salt', 1, 'g', { facts: facts('salt') }), metric)).toBe('1 g salt');
   });
 
   it('keeps the weight when there is no density', () => {

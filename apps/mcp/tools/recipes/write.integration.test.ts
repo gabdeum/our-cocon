@@ -159,7 +159,7 @@ describe.skipIf(!local)('recipe write tools against local Supabase', () => {
         ['Soften {ing:Onion (filling)} in {ing:butter}.', 'Scatter {ing:onion (topping)} over the tart.'],
       );
       expect(error).toBeNull();
-      expect(data?.as_shown.steps.map((st: Result) => st.text)).toEqual(['Soften 2 onions (240 g) in 20 g butter, softened.', 'Scatter 1 onion (120 g), thinly sliced over the tart.']);
+      expect(data?.as_shown.steps.map((st: Result) => st.text)).toEqual(['Soften 2 onions (240 g) in 1½ tbsp butter (20 g), softened.', 'Scatter 1 onion (120 g), thinly sliced over the tart.']);
     });
 
     it('a short name two rows share asks for the full one', async () => {

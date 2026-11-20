@@ -35,7 +35,7 @@ These rules apply to every spec in `specs/`. Specs reference them instead of rep
 ## V. Quantities
 
 - Every amount shown anywhere comes from `@cocon/quantity` (spec 005). Nothing is typed by hand into display strings.
-- Counted items show their weight when known ("2 leeks (300 g)"); in ingredient lists, volumes do too, under the amount ("350 ml" · "350 g"). A default size is never named. Temperatures show both scales.
+- Counted items show their weight when known ("2 leeks (300 g)"); in ingredient lists, volumes do too, under the amount ("350 ml" · "350 g"). Small weights read in spoons first, up to ¼ cup ("1½ tbsp butter (20 g)"). A default size is never named. Temperatures show both scales.
 
 ## VI. Data and security
 
