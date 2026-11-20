@@ -235,6 +235,8 @@ export const theme = {
     "maxContent": 1200,
     "panelMedium": 290,
     "panelExpanded": 320,
+    "stepList": 260,
+    "reading": 640,
     "rail": 104,
     "popover": 360,
     "card": 540,

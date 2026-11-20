@@ -21,14 +21,16 @@ export interface TimerLink {
 export interface TimerListProps {
   /** A card's olive link on the right ("Go to step"), if it has one. */
   linkFor?: (t: Timer) => TimerLink | undefined;
+  /** In cooking mode's timers panel (spec 066): "Quick timer" as a small eyebrow, sent as `quick_panel`. */
+  panel?: boolean;
 }
 
 /**
  * Every timer on this device, newest first, with −1/+1, Pause/Resume and Stop; done ones offer
  * "Add 1 more minute" and Dismiss. Then the quick kitchen timers of 5, 10, 15 or 30 min. On the
- * Timers screen (spec 011) and in cooking mode's Timers sheet (spec 062).
+ * Timers screen (spec 011), in cooking mode's Timers sheet (spec 062) and its timers panel (spec 066).
  */
-export function TimerList({ linkFor }: TimerListProps) {
+export function TimerList({ linkFor, panel }: TimerListProps) {
   const store = useTimerStore();
   const { timers, now } = useTimers();
   const newestFirst = [...timers].reverse();
@@ -66,8 +68,9 @@ export function TimerList({ linkFor }: TimerListProps) {
         </Text>
       ) : null}
       <TimePresets
-        label={copy.quick}
-        presets={QUICK_MINUTES.map((m) => ({ label: copy.preset(m), a11y: copy.quickA11y(m), onPress: () => void store.quick(m * MINUTE) }))}
+        label={panel ? strings.cook.quickTimer : copy.quick}
+        eyebrow={panel}
+        presets={QUICK_MINUTES.map((m) => ({ label: copy.preset(m), a11y: copy.quickA11y(m), onPress: () => void store.quick(m * MINUTE, panel ? 'quick_panel' : 'quick') }))}
       />
     </View>
   );

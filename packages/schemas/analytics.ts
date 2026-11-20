@@ -98,7 +98,8 @@ export const events = {
   // Spec 008: a version pill or option switch was tapped; how many variants are now on (0 = Classic).
   variant_selected: z.strictObject({ variant_count: z.int().min(0).max(50) }),
   // Spec 010: timers, on this device only. Never their names.
-  timer_started: z.strictObject({ from: z.enum(['step', 'quick']) }),
+  // Spec 066: `quick_panel` from cooking mode's timers panel; `minutes` for quick ones (5, 10, 15, 30).
+  timer_started: z.strictObject({ from: z.enum(['step', 'quick', 'quick_panel']), minutes: z.int().min(1).max(1440).optional() }),
   // ±1 from the buttons; for "Set to" (011), the change in whole minutes.
   timer_adjusted: z.strictObject({ delta_min: z.int().min(-1440).max(1440) }),
   timer_finished: z.strictObject({}),
@@ -130,6 +131,8 @@ export const events = {
   cook_screen_awake_toggled: z.strictObject({ on: z.boolean(), presentation: SheetPresentation }),
   // Spec 062: the Timers sheet opened from cooking mode's round timer button, with how many timers there were.
   cook_timers_opened: z.strictObject({ timer_count: z.int().min(0).max(100), presentation: SheetPresentation }),
+  // Spec 066: a step picked from the progress bars or the step list (not Next / Back); steps from 1.
+  cook_step_jump: z.strictObject({ source: z.enum(['bars', 'step_list']), from: z.int().min(1).max(MAX_TRACKED_STEPS), to: z.int().min(1).max(MAX_TRACKED_STEPS) }),
   // Spec 013: the "…" panel's quick toggles: the kitchen scale per recipe on this device; units for
   // this visit only (spec 051). `presentation` only when toggled in cooking mode's settings, not on the recipe page.
   kitchen_scale_toggled: z.strictObject({ on: z.boolean(), presentation: SheetPresentation.optional() }),

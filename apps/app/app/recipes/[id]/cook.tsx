@@ -6,6 +6,7 @@ import { loadOpenCooks, saveCookStep } from '@cocon/data';
 import { CookScreen } from '../../../components/cooking/CookScreen';
 import { beginCook, finishCook, useRefreshCooks, type CookSession } from '../../../lib/cook-sessions';
 import { loadRecipe, recipeKey } from '../../../lib/recipe';
+import { recipePhotoPaths, useRecipePhotoUrls } from '../../../lib/recipe-photo';
 import { deviceStorage, readChoices, startingChoices } from '../../../lib/recipe-choices';
 import { useCookingSettings } from '../../../lib/recipe-settings';
 import { servingsMax } from '../../../lib/recipe-view';
@@ -35,6 +36,8 @@ export default function CookRoute() {
     enabled: familyId !== null && id !== null,
   });
   const cooking = useCookingSettings(recipe.data?.overrides);
+  // Spec 066 FR-004: the steps' photos.
+  const photoUrls = useRecipePhotoUrls(client, familyId, recipePhotoPaths(recipe.data));
   const refresh = useRefreshCooks();
   const step = typeof params.step === 'string' ? params.step : undefined;
 
@@ -142,6 +145,7 @@ export default function CookRoute() {
       }}
       visit={visit}
       cooking={cooking}
+      photoUrls={photoUrls}
     />
   );
 }

@@ -62,6 +62,7 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 - Step list (≥ 960): 260 wide white card, radius 22, padding 10. Rows min 56, radius 16, gap 12: badge 32 (current olive/white; done `olive-muted` + tick; upcoming soft), name 16 (current 900), running time pill (ink, 13/900, tabular).
 - Step photo: square 72 (phone) / 96 (≥ 600), radius 16, right of the title, top-aligned; only when present.
 - Step section min height: 500 (phone) / max(500, 60 % of window height).
+- Copy not drawn (066): the full-screen step photo is a dialog "Photo for {step name}" with a round ✕ "Close photo"; a step with no name reads "Step {n}" in the step list and "See the photo for step {n} larger" on its photo. Step list rows read "Go to step {n}: {name}", plus ", timer {time}" while its timer shows. The header's line is "Serves {n}" alone when the recipe has no versions.
 
 ## Recipe (067) · preview 390 × 844, 744 × 1133, 1180 × 820
 

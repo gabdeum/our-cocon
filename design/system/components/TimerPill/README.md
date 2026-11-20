@@ -6,7 +6,7 @@ A pill, visible while any timer is running, showing the one with the least time 
 
 | Part | Spec |
 | --- | --- |
-| Pill | 50 tall (48 in headers), radius pill, white, 2 px honey border, `shadow-float`, padding 0 14 (0 8 0 14 when the "+N" chip ends it), gap 10 |
+| Pill | 50 tall, radius pill, white, 2 px honey border, `shadow-float`, padding 0 14 (0 8 0 14 when the "+N" chip ends it), gap 10 |
 | Icon | timer 20, olive, stroke 2.4 |
 | Name | timer label 15/800, no wrap ("Blind bake") |
 | Clock | 17/900 tabular |

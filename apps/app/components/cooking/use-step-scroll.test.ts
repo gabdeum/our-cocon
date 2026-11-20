@@ -124,4 +124,15 @@ describe('useStepScroll', () => {
     expect(hook.result.current.snaps).toEqual([0, 512, 1032, 1240, 1932, 2452, 2972]);
     expect(hook.result.current.tall[2]).toBe(true);
   });
+
+  it('spec 066 FR-008: when the window changes size, it stays on the current step as the steps move', () => {
+    const { hook, scrollTo } = setup();
+    act(() => hook.result.current.jump(3));
+    act(() => vi.advanceTimersByTime(SCROLL_LOCK_MS));
+    act(() => hook.result.current.hold());
+    // From 600 the steps are 708 tall: step 4 now starts at 2124.
+    act(() => [0, 708, 1416, 2124, 2832, 3540].forEach((top, i) => hook.result.current.onStepLayout(i, top, 708)));
+    expect(scrollTo).toHaveBeenLastCalledWith(2116, false);
+    expect(hook.result.current.current).toBe(3);
+  });
 });

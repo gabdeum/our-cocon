@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, type HostInstance, type ScrollViewInstance } from 'react-native';
-import { announce, BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookTimerCard, ListRow, PushedScreen, SettingRow, StepText, Text, useReduceMotion, useSheetPresentation, type TopBarConfig } from '@cocon/ui';
+import { announce, BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookStepList, CookTimerCard, cookStepHeight, ListRow, PhotoViewer, PushedScreen, SettingRow, StepPhoto, StepText, Text, useLayoutTier, useReduceMotion, useSheetPresentation, type TopBarConfig } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
@@ -11,10 +11,11 @@ import { useCookAwake } from '../../lib/keep-awake';
 import { AppTimerPill, useHasTimers } from '../timers/AppTimerPill';
 import { TimerList, useSeenDone } from '../timers/TimerList';
 import { useTimers } from '../../lib/timer-store';
-import type { Timer } from '../../lib/timers';
+import { clock, remaining, type Timer } from '../../lib/timers';
 import { useStepTimerControl, type StepTimerInput } from '../recipes/step-timer';
 import { MoreOptions } from '../recipes/MoreOptions';
 import { useStepScroll } from './use-step-scroll';
+import { CookTimersPanel } from './CookTimersPanel';
 import { useVisitUnits } from '../../lib/visit-units';
 
 const c = strings.cook;
@@ -54,6 +55,8 @@ export interface CookScreenProps {
   visit?: number;
   /** The recipe's settings in force (spec 027): units, kitchen scale, thermometer checks and "Keep screen on". */
   cooking?: CookingSettings;
+  /** Signed links of the steps' photos, by path (spec 066 FR-004). */
+  photoUrls?: Readonly<Record<string, string>>;
   now?: () => number;
 }
 
@@ -148,6 +151,7 @@ function Cooking({
   onStep,
   onDone,
   cooking: settingsInForce = defaultCooking,
+  photoUrls = {},
   now = Date.now,
 }: LoadedProps & { choices: RecipeChoices; onChoices: (next: RecipeChoices) => void }) {
   // The recipe page's units, kitchen scale and scale by an ingredient too (013, 032-later L22).
@@ -176,16 +180,33 @@ function Cooking({
   // Spec 062: every timer and the quick ones, without leaving the steps.
   const [timersOpen, setTimersOpen] = useState(false);
   const timersButton = useRef<HostInstance>(null);
-  const { timers } = useTimers();
+  const { timers, now: timersNow } = useTimers();
   useSeenDone(timersOpen);
   const hasPill = useHasTimers();
+  // Spec 066: steps → + the timers panel from 600 → + the step list from 960.
+  const { tier, width, height } = useLayoutTier();
+  const wide = tier !== 'compact';
+  const expanded = tier === 'expanded';
+  // The Timers sheet is the phone's: from 600 the panel shows them.
+  if (wide && timersOpen) setTimersOpen(false);
+  // Spec 066 FR-004: the step photo shown full screen, and the thumbnail to give focus back to.
+  const [viewing, setViewing] = useState<{ uri: string; label: string } | null>(null);
+  const photoButtons = useRef<Record<string, HostInstance | null>>({});
+  const photoReturn = useRef<HostInstance | null>(null);
 
   const scroller = useRef<ScrollViewInstance>(null);
   // Reduce Motion: steps jump instead of gliding (spec 030 FR-004).
   const reduceMotion = useReduceMotion();
   const scrollTo = useCallback((y: number, animated: boolean) => scroller.current?.scrollTo({ y, animated: animated && !reduceMotion }), [reduceMotion]);
   const [initial] = useState(() => (stepId || !session ? startIndex(steps.map((s) => s.id), stepId) : Math.min(session.current_step, Math.max(count - 1, 0))));
-  const { current, onStepLayout, onViewport, onScroll, jump: scrollToStep, snaps, tall } = useStepScroll(count, initial, scrollTo);
+  const { current, onStepLayout, onViewport, onScroll, jump: scrollToStep, snaps, tall, hold } = useStepScroll(count, initial, scrollTo);
+  // FR-008: a new window size moves the steps; stay on the one that was current.
+  const size = useRef({ width, height });
+  useEffect(() => {
+    if (size.current.width === width && size.current.height === height) return;
+    size.current = { width, height };
+    hold();
+  }, [width, height, hold]);
   // Next, Back and the segments say where they landed: the scroll alone is silent (spec 030).
   const jump = (i: number) => {
     scrollToStep(i);
@@ -203,6 +224,11 @@ function Cooking({
 
   const at = Math.min(current, Math.max(count - 1, 0));
   const last = at === count - 1;
+  // A step picked from the bars or the step list (spec 066); Next and Back aren't jumps.
+  const pick = (source: 'bars' | 'step_list') => (i: number) => {
+    if (i !== at) tracker.track('cook_step_jump', { source, from: sent(at + 1), to: sent(i + 1) });
+    jump(i);
+  };
   // FR-002: the route saves the step to the cook.
   useEffect(() => {
     if (count > 0) onStep?.(at);
@@ -262,6 +288,33 @@ function Cooking({
     };
   };
 
+  // The step list's times: each step's own timer while it runs or is paused (spec 066 FR-003).
+  const stepTimes: Record<string, string> = {};
+  for (const t of timers) {
+    if (t.recipeId === recipe.id && t.stepId && t.state !== 'done') stepTimes[t.stepId] = clock(remaining(t, timersNow));
+  }
+  // "Serves 6 · Classic" from 600; the version only when the recipe has some.
+  const versionName = recipe.variants.some((v) => v.kind === 'version') ? (recipe.variants.find((v) => v.id === choices.version)?.name ?? p.classic) : null;
+  // FR-004: a small square beside the step's title, only when it has a photo.
+  const photoFor = (step: (typeof steps)[number], i: number) => {
+    const uri = step.photoPath ? photoUrls[step.photoPath] : undefined;
+    if (!uri) return undefined;
+    return (
+      <StepPhoto
+        ref={(el) => {
+          photoButtons.current[step.id] = el;
+        }}
+        source={{ uri }}
+        size={wide ? 96 : 72}
+        label={c.stepPhoto(step.name, i + 1)}
+        onPress={() => {
+          photoReturn.current = photoButtons.current[step.id] ?? null;
+          setViewing({ uri, label: c.photoOf(step.name, i + 1) });
+        }}
+      />
+    );
+  };
+
   // The options' sheets open over cooking mode and come back to it.
   const openSheet = (open: () => void) => () => {
     setOptionsOpen(false);
@@ -273,7 +326,24 @@ function Cooking({
     <CookLayout
       exitLabel={c.exitA11y}
       onExit={exit}
-      status={hasPill ? <AppTimerPill onOpen={onOpenTimers} tracker={tracker} compact /> : null}
+      title={recipe.name}
+      subtitle={c.servesLine(servingsText(view.servings), versionName)}
+      pill={hasPill ? <AppTimerPill onOpen={onOpenTimers} tracker={tracker} /> : null}
+      panel={wide ? <CookTimersPanel linkFor={goToStep} /> : null}
+      stepList={
+        expanded ? (
+          <CookStepList
+            title={c.allSteps}
+            current={at}
+            onSelect={pick('step_list')}
+            numbered={c.unnamedStep}
+            steps={steps.map((step, i) => {
+              const time = stepTimes[step.id] ?? null;
+              return { name: step.name, time, label: c.stepRow(i + 1, step.name, time) };
+            })}
+          />
+        ) : null
+      }
       optionsLabel={c.options}
       onOptions={() => setOptionsOpen(true)}
       optionsRef={optionsButton}
@@ -288,9 +358,10 @@ function Cooking({
         <CookProgress
           count={count}
           current={at}
-          onSelect={jump}
+          onSelect={pick('bars')}
           stepLabel={c.stepOf(at + 1, count)}
-          hint={c.hint(servingsText(view.servings))}
+          hint={expanded ? c.jumpHint : c.hint(servingsText(view.servings))}
+          bars={!expanded}
           segmentLabel={(i) => c.segment(i + 1, steps[i]?.name ?? null)}
         />
       }
@@ -312,7 +383,9 @@ function Cooking({
           key={step.id}
           testID={`cook-step-${i}`}
           title={step.name ?? undefined}
+          photo={photoFor(step, i)}
           current={i === at}
+          minHeight={cookStepHeight(tier, height)}
           onLayout={(e) => onStepLayout(i, e.nativeEvent.layout.y, e.nativeEvent.layout.height)}
           snapEnd={tall[i]}
         >
@@ -323,6 +396,7 @@ function Cooking({
         </CookSection>
       ))}
     </CookLayout>
+    <PhotoViewer source={viewing ? { uri: viewing.uri } : null} label={viewing?.label ?? ''} closeLabel={c.closePhoto} onClose={() => setViewing(null)} returnFocusRef={photoReturn} />
     <BottomSheet visible={timersOpen} returnFocusRef={timersButton} onClose={() => setTimersOpen(false)} title={c.timers} closeLabel={c.closeTimers}>
       <TimerList linkFor={goToStep} />
     </BottomSheet>
