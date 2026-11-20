@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { ListRow, SegmentedControl, SettingRow } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
+import type { SheetPresentation } from '@cocon/ui';
 import { strings } from '../../strings/en';
 import type { RecipeChoices } from '../../lib/recipe-choices';
 import type { FormatOptions, UnitSystem } from '@cocon/quantity';
@@ -22,6 +23,7 @@ export function MoreOptions({
   onScaleByIngredient,
   onConvert,
   onUnits,
+  presentation,
 }: {
   choices: RecipeChoices;
   /** The recipe's units and kitchen scale in force (spec 027), under the toggles. */
@@ -33,12 +35,14 @@ export function MoreOptions({
   onConvert: () => void;
   /** Metric · Imperial for this visit (lib/visit-units.ts). */
   onUnits: (system: UnitSystem) => void;
+  /** How cooking mode's settings show (spec 065), for the toggles' events; left out on the recipe page. */
+  presentation?: SheetPresentation;
 }) {
   // What's in force: the toggles, else the settings.
   const format = formatOf(choices, settings);
   const change = (next: RecipeChoices) => {
     // Tapping what's already in force changes nothing, and keeps following the settings.
-    if (next.kitchenScale !== null && next.kitchenScale !== format.scale) tracker.track('kitchen_scale_toggled', { on: next.kitchenScale });
+    if (next.kitchenScale !== null && next.kitchenScale !== format.scale) tracker.track('kitchen_scale_toggled', { on: next.kitchenScale, ...(presentation && { presentation }) });
     else return;
     onChange(next);
   };
@@ -65,7 +69,7 @@ export function MoreOptions({
               value={format.system}
               onChange={(system) => {
                 if (system === format.system) return;
-                tracker.track('units_toggled', { system });
+                tracker.track('units_toggled', { system, ...(presentation && { presentation }) });
                 onUnits(system);
               }}
               segments={[

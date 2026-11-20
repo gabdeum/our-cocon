@@ -26,6 +26,9 @@ const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 
 export const NotificationAskTrigger = z.enum(['timer', 'reminder', 'todo', 'settings']);
 export type NotificationAskTrigger = z.infer<typeof NotificationAskTrigger>;
 
+// Spec 065: how the sheet an event comes from showed: the bottom sheet (below 600), a popover or a centred card.
+export const SheetPresentation = z.enum(['sheet', 'popover', 'card']);
+
 /** Spec 028: the state Home's calendar card is in. */
 export const HomeCardState = z.enum(['today', 'week', 'empty']);
 export type HomeCardState = z.infer<typeof HomeCardState>;
@@ -124,17 +127,17 @@ export const events = {
   // Spec 051: a member picked their own units (Menu › Recipes › For you).
   my_units_changed: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
   // Spec 012: "Screen stays on" switched in cooking mode's options sheet, for this visit.
-  cook_screen_awake_toggled: z.strictObject({ on: z.boolean() }),
+  cook_screen_awake_toggled: z.strictObject({ on: z.boolean(), presentation: SheetPresentation }),
   // Spec 062: the Timers sheet opened from cooking mode's round timer button, with how many timers there were.
-  cook_timers_opened: z.strictObject({ timer_count: z.int().min(0).max(100) }),
+  cook_timers_opened: z.strictObject({ timer_count: z.int().min(0).max(100), presentation: SheetPresentation }),
   // Spec 013: the "…" panel's quick toggles: the kitchen scale per recipe on this device; units for
-  // this visit only (spec 051).
-  kitchen_scale_toggled: z.strictObject({ on: z.boolean() }),
-  units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
+  // this visit only (spec 051). `presentation` only when toggled in cooking mode's settings, not on the recipe page.
+  kitchen_scale_toggled: z.strictObject({ on: z.boolean(), presentation: SheetPresentation.optional() }),
+  units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']), presentation: SheetPresentation.optional() }),
   // Spec 013: "Apply to recipe" in Scale by an ingredient. Never which ingredient or how much.
-  scaled_by_ingredient: z.strictObject({}),
+  scaled_by_ingredient: z.strictObject({ presentation: SheetPresentation }),
   // Spec 013: the converter settled on a value; the unit typed in and the main (honey) result.
-  unit_converter_used: z.strictObject({ from_unit: ConverterUnitEvent, to_unit: ConverterResultUnitEvent }),
+  unit_converter_used: z.strictObject({ from_unit: ConverterUnitEvent, to_unit: ConverterResultUnitEvent, presentation: SheetPresentation }),
   // Spec 014: a recipe saved from the form. Whether it has a photo and the form's mode, never its text.
   recipe_created: z.strictObject({ source: z.enum(['app']), has_photo: z.boolean(), advanced_mode: z.boolean() }),
   // Spec 014: an existing recipe saved from the form, and the section Save was tapped in.
@@ -152,7 +155,7 @@ export const events = {
   recipe_restored: z.strictObject({ days_since_delete: z.int().min(0).max(30) }),
   // Spec 019: a view-only link made (when the share sheet opens, or "Create a new link"), and
   // stopped, with how many whole days it was shared.
-  share_link_created: z.strictObject({}),
+  share_link_created: z.strictObject({ presentation: SheetPresentation }),
   share_link_stopped: z.strictObject({ days_active: z.int().min(0) }),
   // Spec 019: on the public shared page. Anonymous only (`createAnonymousTracker`): no person,
   // even when the viewer is signed in (constitution VI).
@@ -170,13 +173,14 @@ export const events = {
   // Only which setting, never the recipe.
   recipe_setting_changed: z.strictObject({ setting: CookingSetting }),
   family_default_changed: z.strictObject({ setting: CookingSetting }),
-  // Spec 021: where the family shops changed (the grocery settings sheet).
-  store_profile_changed: z.strictObject({ profile: z.enum(['us', 'eu']) }),
+  // Spec 021: where the family shops changed (the grocery settings sheet; `presentation` only there, not from Menu › Groceries).
+  store_profile_changed: z.strictObject({ profile: z.enum(['us', 'eu']), presentation: SheetPresentation.optional() }),
   // "Clear all items" (confirmed), with how many rows: the whole list, ticked or not.
   all_items_cleared: z.strictObject({ count: z.int().min(1) }),
   // Spec 022: "Add to groceries…" on a recipe, with how many ingredients were added and how many
   // were left unticked. Never which ones.
-  groceries_added_from_recipe: z.strictObject({ ingredient_count: z.int().min(1).max(500), unticked_count: z.int().min(0).max(500) }),
+  // `presentation` (spec 065) from the app's sheet only: an assistant adding through MCP has none.
+  groceries_added_from_recipe: z.strictObject({ ingredient_count: z.int().min(1).max(500), unticked_count: z.int().min(0).max(500), presentation: SheetPresentation.optional() }),
   // Spec 052: the recipe opened from its card on the grocery list.
   grocery_recipe_opened: z.strictObject({ from: z.enum(['card']) }),
   // Spec 022: a recipe card's menu on the grocery list. Its items removed, and
@@ -216,7 +220,7 @@ export const events = {
   // first-visit hint dismissed.
   // Not sent since 058 (Week's tap opens the day sheet); kept so past data still reads.
   calendar_day_opened: z.strictObject({ from_view: CalendarView }),
-  calendar_day_sheet_opened: z.strictObject({ events: z.int().min(0) }),
+  calendar_day_sheet_opened: z.strictObject({ events: z.int().min(0), presentation: SheetPresentation }),
   calendar_first_hint_dismissed: z.strictObject({}),
   // Spec 038: a week swiped left (next) or right (previous); the header's arrows don't count.
   calendar_week_swiped: z.strictObject({ direction: z.enum(['next', 'previous']) }),

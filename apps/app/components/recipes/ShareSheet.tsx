@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Callout, Card, Dialog, IconButton, Link, LinkField, RecipeSummary, SettingRow, ShareTile } from '@cocon/ui';
+import { BottomSheet, Callout, Card, Dialog, Link, LinkField, RecipeSummary, SettingRow, ShareTile, useSheetPresentation } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useToast, useFailureToast } from '../../lib/toast';
@@ -38,6 +38,12 @@ export function ShareSheet({ recipeName, familyName, photoUri, api, tracker, onC
   const toast = useToast();
   const [confirmStop, setConfirmStop] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Read when the link is made: resizing the window mustn't make another.
+  const shownAs = useSheetPresentation('flow');
+  const presentation = useRef(shownAs);
+  useEffect(() => {
+    presentation.current = shownAs;
+  }, [shownAs]);
   useEffect(() => () => clearTimeout(copiedTimer.current), []);
 
   // The link is made when the sheet opens, and again with "Create a new link" (`attempt`).
@@ -46,7 +52,7 @@ export function ShareSheet({ recipeName, familyName, photoUri, api, tracker, onC
     let live = true;
     api.open().then(
       ({ created, ...link }) => {
-        if (created) tracker.track('share_link_created', {});
+        if (created) tracker.track('share_link_created', { presentation: presentation.current });
         if (live) setState({ kind: 'shared', link });
       },
       () => {
@@ -106,7 +112,7 @@ export function ShareSheet({ recipeName, familyName, photoUri, api, tracker, onC
   useFailureToast(state.kind === 'failed' && s.failed, again);
   return (
     <>
-      <BottomSheet visible title={s.title} closeLabel={s.close} onClose={onClose} headerAction={<IconButton icon="close" label={s.close} variant="soft" onPress={onClose} />}>
+      <BottomSheet visible title={s.title} closeLabel={s.close} onClose={onClose} closeButton>
 
         <RecipeSummary name={recipeName} sub={s.fromFamily(familyName)} photoUri={photoUri} photoLabel={s.photo} />
 

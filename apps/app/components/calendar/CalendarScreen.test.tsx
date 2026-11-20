@@ -270,7 +270,7 @@ describe('Month view (spec 037)', () => {
     expect(within(sheet).getByRole('heading').textContent).toBe('Wednesday, October 28');
     expect(sheet.textContent).toContain('2 events');
     expect(within(sheet).getAllByRole('link').map((r) => r.getAttribute('aria-label'))).toEqual(['Grandma visits, Everyone, All day · day 2 of 4', 'Baby swim, Gabriel, 14:30']);
-    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 2 });
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 2, presentation: 'sheet' });
     expect(onNavigate).not.toHaveBeenCalled();
 
     fireEvent.click(within(sheet).getByRole('link', { name: 'Baby swim, Gabriel, 14:30' }));
@@ -291,7 +291,7 @@ describe('Month view (spec 037)', () => {
     const sheet = screen.getByRole('dialog');
     expect(sheet.textContent).toContain('Nothing planned');
     expect(sheet.textContent).toContain('Nothing planned yet.');
-    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 0 });
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 0, presentation: 'sheet' });
     fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).toBeNull();
   });
@@ -406,7 +406,7 @@ describe('Week view (spec 038)', () => {
     const [head, column] = screen.getAllByRole('link', { name: 'Thursday October 29' });
     fireEvent.click(head as HTMLElement);
     expect(within(screen.getByRole('dialog')).getByRole('heading').textContent).toBe('Thursday, October 29');
-    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 0 });
+    expect(tracker.track).toHaveBeenCalledWith('calendar_day_sheet_opened', { events: 0, presentation: 'sheet' });
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
     fireEvent.click(column as HTMLElement);
     expect(screen.getByRole('dialog')).toBeTruthy();

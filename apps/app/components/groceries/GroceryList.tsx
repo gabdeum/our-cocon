@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { View, type HostInstance } from 'react-native';
 import {
   BottomSheet,
   Button,
@@ -14,6 +14,8 @@ import {
   TabScreen,
   Text,
   TextField,
+  useSheetPresentation,
+  type SheetPresentation,
 } from '@cocon/ui';
 import type { Aisle, FamilySettings, FamilySettingsUpdate, Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
@@ -75,7 +77,7 @@ export interface GroceryListProps {
   /** Packs per catalog entry on the list (lib/groceries.ts › loadPacks); undefined while loading. */
   packs: Record<string, PackData> | undefined;
   /** The grocery settings sheet's changes (where you shop, round up), for the whole family. */
-  onChangeSettings: (change: FamilySettingsUpdate) => Promise<'saved' | 'failed'>;
+  onChangeSettings: (change: FamilySettingsUpdate, presentation?: SheetPresentation) => Promise<'saved' | 'failed'>;
   onSavePacks: (item: GroceryItem, text: string | null) => Promise<'saved' | 'invalid' | 'failed'>;
   /** For tests; otherwise the clock, read again every 30 s so "is shopping" goes away. */
   now?: number;
@@ -110,11 +112,17 @@ export function GroceryList(props: GroceryListProps) {
   const [adding, setAdding] = useState(false);
   const toast = useToast();
   // `rest`: the row's other items when the menu opened, so an Edit clears only what was seen.
-  const [menu, setMenu] = useState<{ id: string; view: ActionView; rest: string[] } | null>(null);
+  // `anchored`: opened from its ⋮, which a popover points at.
+  const [menu, setMenu] = useState<{ id: string; view: ActionView; rest: string[]; anchored?: boolean } | null>(null);
   // Only a row that adds up to one amount is edited as a whole; otherwise Edit changes the first item.
-  const openRow = (row: GroceryRow, view: ActionView) =>
-    setMenu({ id: row.id, view, rest: rowItem(row, packs) === row.items[0] ? [] : row.items.slice(1).map((i) => i.id) });
+  const openRow = (row: GroceryRow, view: ActionView, anchored = false) =>
+    setMenu({ id: row.id, view, anchored, rest: rowItem(row, packs) === row.items[0] ? [] : row.items.slice(1).map((i) => i.id) });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // The row menu and settings are menus: from 600, popovers pointing at the ⋮ or the settings
+  // button, which shows honey while open (spec 065). A long-press or swipe has no ⋮: a card.
+  const menuAs = useSheetPresentation('menu');
+  const settingsButton = useRef<HostInstance>(null);
+  const rowAnchor = useRef<HostInstance | null>(null);
   const [cardMenu, setCardMenu] = useState<string | null>(null);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
 
@@ -137,7 +145,14 @@ export function GroceryList(props: GroceryListProps) {
       action={
         <View className="flex-row items-center gap-8">
           {shopping ? <Presence label={g.shopping(shopping)} /> : null}
-          <IconButton icon="settings" label={g.settingsButton} variant="round" onPress={() => setSettingsOpen(true)} />
+          <IconButton
+            ref={settingsButton}
+            icon="settings"
+            label={g.settingsButton}
+            variant="round"
+            expanded={settingsOpen && menuAs === 'popover'}
+            onPress={() => setSettingsOpen(true)}
+          />
         </View>
       }
     />
@@ -310,7 +325,12 @@ export function GroceryList(props: GroceryListProps) {
             {aisleRows.map((row, i) => {
               const { detail, note } = amounts.get(row.id) ?? {};
               const title = titleOf(row);
-              const openMenu = online ? () => openRow(row, 'menu') : undefined;
+              const openMenu = online
+                ? () => {
+                    rowAnchor.current = null;
+                    openRow(row, 'menu');
+                  }
+                : undefined;
               return (
                 <ListRow
                   key={row.id}
@@ -320,7 +340,16 @@ export function GroceryList(props: GroceryListProps) {
                   subTone="soft"
                   done={row.checked}
                   leading={{ kind: 'checkbox', checked: row.checked }}
-                  action={{ icon: 'more-vertical', accessibilityLabel: g.editItem(title), onPress: () => openRow(row, 'menu'), disabled: !online }}
+                  action={{
+                    icon: 'more-vertical',
+                    accessibilityLabel: g.editItem(title),
+                    onPress: (e) => {
+                      rowAnchor.current = e.currentTarget as unknown as HostInstance;
+                      openRow(row, 'menu', true);
+                    },
+                    disabled: !online,
+                    expanded: menu?.id === row.id && menu.anchored === true && menuAs === 'popover',
+                  }}
                   onPress={() => void toggle(row)}
                   disabled={!online}
                   onLongPress={openMenu}
@@ -371,6 +400,7 @@ export function GroceryList(props: GroceryListProps) {
         onMove={(item, aisle) => void move(item, aisle)}
         onEdit={edit}
         units={settings.units}
+        anchorRef={rowAnchor}
       />
 
       {menuCard ? (
@@ -388,8 +418,8 @@ export function GroceryList(props: GroceryListProps) {
       {/* Mounted only while open, like the row's sheets: on the web a closed Modal can linger,
           invisible, over the list and swallow every tap until its fade-out reports it ended. */}
       {settingsOpen ? (
-        <BottomSheet visible onClose={() => setSettingsOpen(false)} title={g.settingsTitle} closeLabel={g.close}>
-          <GrocerySettings settings={settings} onChange={props.onChangeSettings} readOnly={!online} />
+        <BottomSheet visible kind="menu" anchorRef={settingsButton} onClose={() => setSettingsOpen(false)} title={g.settingsTitle} closeLabel={g.close}>
+          <GrocerySettings settings={settings} onChange={(change) => props.onChangeSettings(change, menuAs)} readOnly={!online} />
         </BottomSheet>
       ) : null}
 

@@ -3,6 +3,7 @@ import { Platform, Pressable, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { announce } from '../a11y';
 import { cn, focusRing } from '../cn';
+import { useLayoutTier } from '../layout';
 import { theme } from '../theme';
 import type { IconName } from './Icon';
 import { IconButton } from './IconButton';
@@ -133,13 +134,15 @@ export function ToastHost({ base = false }: { base?: boolean }) {
   const id = useId();
   // No SafeAreaProvider (a test, the gallery): no notch.
   const insets = useContext(SafeAreaInsetsContext);
+  // From 600 the toast is smaller, still at the top in the middle (spec 065, L159).
+  const wide = useLayoutTier().tier !== 'compact';
   const register = ctx?.register;
   useEffect(() => register?.(id, base), [register, id, base]);
   const toast = ctx?.toast;
   if (!ctx || !toast || ctx.top !== id) return null;
   return (
     <View pointerEvents="box-none" className="absolute left-0 right-0 top-12 z-50 items-center px-16" style={{ marginTop: insets?.top ?? 0 }}>
-      <View className="w-full rounded-[18px]" style={{ maxWidth: theme.layout.phoneMax - 32, boxShadow: theme.shadow.lift }}>
+      <View className="w-full rounded-[18px]" style={{ maxWidth: wide ? theme.layout.toastWide : theme.layout.phoneMax - 32, boxShadow: theme.shadow.lift }}>
         <StatusBanner
           key={toast.key}
           message={toast.text}

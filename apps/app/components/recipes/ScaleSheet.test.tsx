@@ -46,7 +46,7 @@ describe('Scale by an ingredient', () => {
     expect(screen.getByText('Eggs are rounded to whole numbers. Cooking times stay the same.')).toBeTruthy();
     fireEvent.click(apply());
     expect(onApply).toHaveBeenCalledWith({ ingredientId: quicheIds.lardons, amount: 250, unit: 'g' });
-    expect(tracker.track).toHaveBeenCalledWith('scaled_by_ingredient', {});
+    expect(tracker.track).toHaveBeenCalledWith('scaled_by_ingredient', { presentation: 'sheet' });
   });
 
   it('edge: empty or 0 disables Apply with "Enter how much you have"', () => {

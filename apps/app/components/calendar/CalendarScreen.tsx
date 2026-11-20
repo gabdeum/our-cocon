@@ -4,7 +4,7 @@ import { memberInitials, type Tracker } from '@cocon/schemas';
 import type { CalendarView, SlotKey } from '@cocon/schemas/calendar';
 import { DEFAULT_SLOT_TIMES, shiftAnchor, viewFor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
-import { CalendarHeader, type CalendarHeaderChip } from '@cocon/ui';
+import { CalendarHeader, useSheetPresentation, type CalendarHeaderChip } from '@cocon/ui';
 import { arrowLabels, headerTitle, viewSegments } from '../../lib/calendar-header';
 import { useCalendarFilter } from '../../lib/calendar-filter';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
@@ -90,6 +90,8 @@ export function CalendarScreen({
   };
   const shownReminders = showReminders ? reminders : undefined;
   const listView = view === 'agenda' || view === 'day';
+  // The day sheet is a flow: a centred card from 600 (spec 065).
+  const daySheetAs = useSheetPresentation('flow');
   const { hidden, toggle, showAll } = useCalendarFilter(userId, storage);
   // "Show birthdays" off (spec 029): birthdays leave every view.
   const showBirthdays = useCalendarDisplay().prefs.show_birthdays;
@@ -215,7 +217,7 @@ export function CalendarScreen({
           jump={jump}
           onMonthShown={setShown}
           timeZone={timeZone}
-          onDaySheetOpened={(count) => tracker.track('calendar_day_sheet_opened', { events: count })}
+          onDaySheetOpened={(count) => tracker.track('calendar_day_sheet_opened', { events: count, presentation: daySheetAs })}
           onAddEvent={onAddEvent}
           onOpenEvent={onOpenEvent}
           reminders={reminders}
@@ -243,7 +245,7 @@ export function CalendarScreen({
             onNavigate({ date: shiftAnchor('week', anchor, direction) });
             tracker.track('calendar_week_swiped', { direction: direction === 1 ? 'next' : 'previous' });
           }}
-          onDaySheetOpened={(count) => tracker.track('calendar_day_sheet_opened', { events: count })}
+          onDaySheetOpened={(count) => tracker.track('calendar_day_sheet_opened', { events: count, presentation: daySheetAs })}
           onAddEvent={onAddEvent}
           onOpenEvent={onOpenEvent}
           reminders={reminders}

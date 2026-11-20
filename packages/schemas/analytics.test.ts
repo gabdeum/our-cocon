@@ -158,8 +158,8 @@ describe('createTracker', () => {
     expect(() => tracker.track('cooking_exited', { at_step: 0, step_count: 6 })).toThrow();
     expect(() => tracker.track('cook_finished', { status: 'done', cancel_reason: null, steps_seen: 6, minutes: 1.5 })).toThrow();
     expect(() => tracker.track('cooking_started', { step_count: 6, recipe: 'Quiche' } as never)).toThrow();
-    tracker.track('cook_screen_awake_toggled', { on: false });
-    expect(t.capture).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false });
+    tracker.track('cook_screen_awake_toggled', { on: false, presentation: 'popover' });
+    expect(t.capture).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false, presentation: 'popover' });
     expect(() => tracker.track('cook_screen_awake_toggled', { on: 'yes' } as never)).toThrow();
   });
 });
@@ -197,11 +197,14 @@ describe('spec 013 events', () => {
   it('sends the converter units, and nothing else', () => {
     const t = fakeTransport();
     const tracker = createTracker(t);
-    tracker.track('unit_converter_used', { from_unit: 'ml', to_unit: 'cup' });
+    tracker.track('unit_converter_used', { from_unit: 'ml', to_unit: 'cup', presentation: 'card' });
     tracker.track('kitchen_scale_toggled', { on: false });
-    tracker.track('units_toggled', { system: 'imperial' });
-    tracker.track('scaled_by_ingredient', {});
+    tracker.track('units_toggled', { system: 'imperial', presentation: 'popover' });
+    tracker.track('scaled_by_ingredient', { presentation: 'sheet' });
     expect(t.capture).toHaveBeenCalledTimes(4);
+    // Spec 065: how the sheet showed, one of three.
+    expect(() => tracker.track('scaled_by_ingredient', { presentation: 'drawer' } as never)).toThrow();
+    expect(() => tracker.track('scaled_by_ingredient', {} as never)).toThrow();
     expect(() => tracker.track('unit_converter_used', { from_unit: 'stone', to_unit: 'cup' } as never)).toThrow();
     expect(() => tracker.track('scaled_by_ingredient', { ingredient: 'Bacon' } as never)).toThrow();
   });
@@ -233,7 +236,7 @@ describe('spec 015 events', () => {
   it('sends the share link events with a day count only (spec 019)', () => {
     const t = fakeTransport();
     const tracker = createTracker(t);
-    tracker.track('share_link_created', {});
+    tracker.track('share_link_created', { presentation: 'card' });
     tracker.track('share_link_stopped', { days_active: 3 });
     expect(t.capture).toHaveBeenCalledWith('share_link_stopped', { days_active: 3 });
     expect(() => tracker.track('share_link_created', { recipe: 'Quiche' } as never)).toThrow();
@@ -265,10 +268,10 @@ describe('spec 015 events', () => {
   it('sends counts only when adding from a recipe (spec 022)', () => {
     const t = fakeTransport();
     const tracker = createTracker(t);
-    tracker.track('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3 });
-    expect(t.capture).toHaveBeenCalledWith('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3 });
-    expect(() => tracker.track('groceries_added_from_recipe', { ingredient_count: 0, unticked_count: 8 })).toThrow();
-    expect(() => tracker.track('groceries_added_from_recipe', { ingredient_count: 1, unticked_count: 0, recipe: 'Quiche' } as never)).toThrow();
+    tracker.track('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3, presentation: 'card' });
+    expect(t.capture).toHaveBeenCalledWith('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3, presentation: 'card' });
+    expect(() => tracker.track('groceries_added_from_recipe', { ingredient_count: 0, unticked_count: 8, presentation: 'card' })).toThrow();
+    expect(() => tracker.track('groceries_added_from_recipe', { ingredient_count: 1, unticked_count: 0, presentation: 'card', recipe: 'Quiche' } as never)).toThrow();
   });
 });
 

@@ -5,7 +5,21 @@ export { ThemeProvider, useThemeColors } from './ThemeProvider';
 export { cn } from './cn';
 export { announce, pressedState, useLargeText, useReturnFocus, LARGE_TEXT_SCALE } from './a11y';
 export { useReduceMotion } from './reduceMotion';
-export { gutterFor, layoutTier, navFor, railInset, splitColumns, tabBottomPad, useLayoutTier, type LayoutTier } from './layout';
+export {
+  gutterFor,
+  layoutTier,
+  navFor,
+  popoverPlacement,
+  railInset,
+  sheetPresentation,
+  splitColumns,
+  tabBottomPad,
+  useLayoutTier,
+  useSheetPresentation,
+  type LayoutTier,
+  type SheetKind,
+  type SheetPresentation,
+} from './layout';
 
 export { DetailText, Text, type TextProps, type TextVariant, type TextColor, type Weight } from './components/Text';
 export { BrandMark, Icon, Logo, type BrandName, type IconName, type IconProps } from './components/Icon';

@@ -100,8 +100,9 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L156 | P3 | **Reminders in OC-Connect's copy.** The lead ("…and add events for you"), the "Try saying" lines and the Disconnect dialog ("…your recipes, groceries and calendar") don't mention reminders. 060 left them as designed; add a line once the design gives the words. | 060 | none |
 | L157 | P2 | **Timer alerts in Settings with alarms.** With alarms allowed (spec 061) and notifications off, Menu › Notifications dims every switch, "Alert when a timer ends" too, though the alarm still rings; its hint also says "Chime and notification". Keep that switch usable while alarms are allowed, and say "Alarm, even on silent" in its hint (OC-SettingsNotif). | 061 | none |
 | L158 | P2 | **Top bar and cooking header spacing from 600.** 063 gives tab, pushed, form and photo screens the 24 gutter and a top of safe area + 24 from 600, but `TopBar` (its 52 top) and `CookLayout` still use the phone's spacing. Apply `useLayoutTier()` there as each screen's large layout is built. | 063 | 066, 067 |
-| L159 | P3 | **Toasts on wide windows.** Toasts are capped at 560 − 32 and centred; on a 1200 wide window they may read better under the rail's top or beside the content. Decide with the sheets. | 063 | 065 |
 | L160 | P2 | **Calendar add button beside the rail.** From 960 there's no bottom bar, but the calendar's floating add button (and its first-visit hint) still sits 112 from the bottom, where it cleared the bar. 070's header "+ Event" button may replace it at ≥ 600; otherwise bring it down to the 24 gutter beside the rail. | 064 | 070 |
+| L161 | P2 | **No Month day sheet from 600.** 065 FR-005: at medium and expanded the Month view's day sheet shouldn't open, the inline selected-day panel replaces it. 065 left it opening as a centred card so Month keeps a way to see a day until the panel exists. Week's day sheet stays a card (flows.md). | 065 | 070 |
+| L162 | P3 | **Grocery row menu from a long-press or swipe.** From 600, the ⋮ opens the row's menu as a popover pointing at it; a long-press or swipe has no ⋮ to point at, so the menu opens as a centred card. Point it at the row's ⋮ instead if that feels off. | 065 | 069 |
 
 ## Changelog
 - 2026-10-19: Created. Seeded with the open items from the Needs your attention sections of 003, 004 and 006.
@@ -174,3 +175,4 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 - 2026-11-17 (061, 062): no tasks named 061 or 062. Added L157 (the timer-alert switch in Settings with alarms).
 - 2026-11-19 (063): no tasks named 063. Added L158 (top bar and cooking header spacing from 600) and L159 (toasts on wide windows).
 - 2026-11-19 (064): no tasks named 064. Added L160 (the calendar's floating add button beside the rail).
+- 2026-11-20 (065): did L159 (toasts from 600: max 420, still top-centred, on Gabriel's call). Added L161 (no Month day sheet from 600) and L162 (the grocery row menu from a long-press or swipe).

@@ -76,7 +76,7 @@ describe('Add to groceries', () => {
     fireEvent.click(button('Add 5 items'));
     await flush();
     expect(api.add).toHaveBeenCalledWith(lines.filter((l) => !['Butter', 'Eggs', 'Nutmeg'].includes(l.name)));
-    expect(tracker.track).toHaveBeenCalledWith('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3 });
+    expect(tracker.track).toHaveBeenCalledWith('groceries_added_from_recipe', { ingredient_count: 5, unticked_count: 3, presentation: 'sheet' });
     // Taken away before leaving, so it never stays over the next screen.
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(onClose).toHaveBeenCalled();

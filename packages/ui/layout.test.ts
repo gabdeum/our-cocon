@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, renderHook } from '@testing-library/react';
-import { gutterFor, layoutTier, navFor, railInset, splitColumns, tabBottomPad, useLayoutTier } from './layout';
+import { POPOVER, gutterFor, layoutTier, navFor, popoverPlacement, railInset, sheetPresentation, splitColumns, tabBottomPad, useLayoutTier, useSheetPresentation } from './layout';
 
 const dims = vi.hoisted(() => ({ width: 390, height: 844, scale: 3, fontScale: 1 }));
 vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('react-native')>()), useWindowDimensions: () => ({ ...dims }) }));
@@ -118,5 +118,79 @@ describe('navigation by tier', () => {
     expect(navFor('compact')).toBe('bar');
     expect(railInset('compact')).toBe(0);
     expect(tabBottomPad('compact')).toBe(180);
+  });
+});
+
+// Spec 065 FR-001: one sheet, three presentations by tier.
+describe('sheetPresentation', () => {
+  it.each([
+    ['compact', 'menu', 'sheet'],
+    ['compact', 'flow', 'sheet'],
+    ['medium', 'menu', 'popover'],
+    ['medium', 'flow', 'card'],
+    ['expanded', 'menu', 'popover'],
+    ['expanded', 'flow', 'card'],
+  ] as const)('%s + %s is a %s', (tier, kind, out) => {
+    expect(sheetPresentation(tier, kind)).toBe(out);
+  });
+
+  it('follows the window for events', () => {
+    const { result, rerender } = renderHook(() => useSheetPresentation('menu'));
+    expect(result.current).toBe('sheet');
+    dims.width = 820;
+    rerender();
+    expect(result.current).toBe('popover');
+  });
+});
+
+// Spec 065 FR-002 and SC-002: the popover under its anchor, the arrow on the anchor's centre.
+describe('popoverPlacement', () => {
+  // The arrow's centre in window coordinates: inside the 1.5 border, half its 14 width.
+  const arrowCentre = (p: ReturnType<typeof popoverPlacement>) => p.left + POPOVER.border + p.arrowLeft + POPOVER.arrow / 2;
+
+  it('opens 12 below the anchor with its right edge 16 from the window when the anchor is on the right', () => {
+    // Cooking mode's Settings button at 820: 48 round, 20 from the right, 28 from the top.
+    const p = popoverPlacement({ x: 752, y: 28, width: 48, height: 48 }, { width: 820, height: 1180 });
+    expect(p.top).toBe(88);
+    expect(p.left + p.width).toBe(820 - 16);
+    expect(p.width).toBe(360);
+    expect(p.above).toBe(false);
+  });
+
+  it("opens under the anchor's left edge when there is room", () => {
+    const p = popoverPlacement({ x: 120, y: 200, width: 44, height: 44 }, { width: 1180, height: 820 });
+    expect(p.left).toBe(120);
+  });
+
+  const sizes = [
+    [390, 844],
+    [600, 960],
+    [744, 1133],
+    [820, 1180],
+    [1024, 768],
+    [1180, 820],
+  ] as const;
+  const anchors = (w: number) => [16, w / 2 - 22, w - 16 - 44, w - 20 - 48, 300];
+  it.each(sizes)('centres the arrow on the anchor within 1 px at %i × %i', (width, height) => {
+    for (const x of anchors(width)) {
+      for (const size of [40, 44, 48]) {
+        const p = popoverPlacement({ x, y: 100, width: size, height: size }, { width, height });
+        expect(Math.abs(arrowCentre(p) - (x + size / 2))).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it('opens above when it is taller than the room below and there is more above', () => {
+    const anchor = { x: 760, y: 1000, width: 44, height: 44 };
+    const p = popoverPlacement(anchor, { width: 820, height: 1180 }, 330);
+    expect(p.above).toBe(true);
+    expect(p.top).toBe(1000 - 12 - 330);
+    expect(Math.abs(arrowCentre(p) - 782)).toBeLessThanOrEqual(1);
+    // Short enough, it stays below.
+    expect(popoverPlacement(anchor, { width: 820, height: 1180 }, 100).above).toBe(false);
+  });
+
+  it('is never wider than the window less 16 on each side', () => {
+    expect(popoverPlacement({ x: 300, y: 40, width: 44, height: 44 }, { width: 360, height: 700 }).width).toBe(328);
   });
 });

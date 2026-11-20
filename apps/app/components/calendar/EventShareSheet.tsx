@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { BottomSheet, Dialog, IconButton, Link, LinkField, ShareTile } from '@cocon/ui';
+import { BottomSheet, Dialog, Link, LinkField, ShareTile } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useToast, useFailureToast } from '../../lib/toast';
@@ -87,7 +87,7 @@ export function EventShareSheet({ api, tracker, onClose }: { api: EventShareShee
   useFailureToast(state.kind === 'failed' && s.failed, again);
   return (
     <>
-      <BottomSheet visible title={e.shareTitle} lead={e.shareLead} closeLabel={s.close} onClose={onClose} headerAction={<IconButton icon="close" label={s.close} variant="soft" onPress={onClose} />}>
+      <BottomSheet visible title={e.shareTitle} lead={e.shareLead} closeLabel={s.close} onClose={onClose} closeButton>
 
         {state.kind === 'stopped' ? (
           <LinkField label={s.linkLabel} value={field} actionLabel={s.createNew} onAction={again} />

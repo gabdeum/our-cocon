@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CookingSetting, DEFAULT_FAMILY_SETTINGS, FamilySettingsUpdate, type FamilySettings, type MemberRecipeSettings, type Tracker, type UnitSystem } from '@cocon/schemas';
 import { loadFamilySettings, loadMyRecipeSettings, saveMyUnits } from '@cocon/data';
+import type { SheetPresentation } from '@cocon/ui';
 import { useSession } from './session';
 import type { Client } from './supabase';
 import { optimisticWrite } from './write';
@@ -28,6 +29,8 @@ export async function saveFamilySettings(client: Pick<Client, 'from'>, familyId:
 export async function changeFamilySettings(
   deps: { queryClient: ReturnType<typeof useQueryClient>; client: Pick<Client, 'from'>; tracker: Tracker; familyId: string; current: FamilySettings },
   change: FamilySettingsUpdate,
+  /** The Groceries settings sheet's presentation (spec 065); left out from Settings. */
+  presentation?: SheetPresentation,
 ): Promise<'saved' | 'failed'> {
   const { queryClient, client, tracker, familyId, current } = deps;
   const result = await optimisticWrite<FamilySettings>(
@@ -37,7 +40,7 @@ export async function changeFamilySettings(
     () => saveFamilySettings(client, familyId, change),
   );
   if (result === 'saved' && change.store_profile && change.store_profile !== current.store_profile) {
-    tracker.track('store_profile_changed', { profile: change.store_profile });
+    tracker.track('store_profile_changed', { profile: change.store_profile, ...(presentation && { presentation }) });
   }
   if (result === 'saved')
     for (const setting of CookingSetting.options) if (setting in change && change[setting] !== current[setting]) tracker.track('family_default_changed', { setting });
@@ -51,8 +54,8 @@ export function useFamilySettings() {
   const familyId = state.status === 'ready' ? state.family.id : null;
   const query = useQuery({ queryKey: familySettingsKey(familyId ?? ''), queryFn: () => loadFamilySettings(client), enabled: familyId !== null });
   const settings = query.data ?? DEFAULT_FAMILY_SETTINGS;
-  const change = (update: FamilySettingsUpdate) =>
-    familyId ? changeFamilySettings({ queryClient, client, tracker, familyId, current: settings }, update) : Promise.resolve('failed' as const);
+  const change = (update: FamilySettingsUpdate, presentation?: SheetPresentation) =>
+    familyId ? changeFamilySettings({ queryClient, client, tracker, familyId, current: settings }, update, presentation) : Promise.resolve('failed' as const);
   return { settings, loaded: query.data !== undefined, change };
 }
 

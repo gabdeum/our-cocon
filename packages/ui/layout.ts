@@ -64,3 +64,59 @@ export function splitColumns<T>(items: readonly T[], columns: number, weight: (i
   }
   return out;
 }
+
+/** How a sheet shows (spec 065 FR-001): what it is for, declared once by each sheet. */
+export type SheetKind = 'menu' | 'flow';
+export type SheetPresentation = 'sheet' | 'popover' | 'card';
+
+/** The bottom sheet below 600; from 600, a popover for short choices, a centred card for longer flows. */
+export function sheetPresentation(tier: LayoutTier, kind: SheetKind): SheetPresentation {
+  if (tier === 'compact') return 'sheet';
+  return kind === 'menu' ? 'popover' : 'card';
+}
+
+/** The presentation a sheet of this kind has right now, for its events (`presentation`). */
+export function useSheetPresentation(kind: SheetKind): SheetPresentation {
+  return sheetPresentation(useLayoutTier().tier, kind);
+}
+
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface PopoverPlacement {
+  left: number;
+  top: number;
+  width: number;
+  maxHeight: number;
+  /** The arrow's left, inside the popover's 1.5 border, so its centre sits on the anchor's centre (SC-002). */
+  arrowLeft: number;
+  /** Opened above the anchor (no room below): the arrow is at the bottom, pointing down. */
+  above: boolean;
+}
+
+/** Space between the anchor and the popover, the popover and the window edge, and the arrow's size. */
+export const POPOVER = { gap: 12, edge: 16, arrow: 14, border: 1.5, radius: 22 } as const;
+
+/**
+ * Where a popover opens (FR-002): 12 below the anchor, under the anchor's left edge when there's
+ * room, else with its right edge 16 from the window's. Its arrow is centred on the anchor's centre.
+ * Taller than the room below (`height`, once measured) and with more room above, it opens above.
+ */
+export function popoverPlacement(anchor: Rect, win: { width: number; height: number }, height?: number): PopoverPlacement {
+  const { gap, edge, arrow, border, radius } = POPOVER;
+  const width = Math.min(theme.layout.popover, win.width - 2 * edge);
+  const left = Math.max(edge, anchor.x + width <= win.width - edge ? anchor.x : win.width - edge - width);
+  const below = anchor.y + anchor.height + gap;
+  const roomBelow = win.height - edge - below;
+  const roomAbove = anchor.y - gap - edge;
+  const above = height != null && height > roomBelow && roomAbove > roomBelow;
+  const top = above ? Math.max(edge, anchor.y - gap - (height ?? 0)) : below;
+  const centre = anchor.x + anchor.width / 2;
+  // Kept clear of the rounded corners when the anchor sits past them.
+  const arrowLeft = Math.min(Math.max(centre - left - border - arrow / 2, radius / 2), width - 2 * border - arrow - radius / 2);
+  return { left, top, width, maxHeight: above ? roomAbove : roomBelow, arrowLeft, above };
+}

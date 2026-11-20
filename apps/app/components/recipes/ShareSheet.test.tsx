@@ -6,6 +6,15 @@ import { COPIED_MS, ShareSheet, type ShareSheetApi } from './ShareSheet';
 import { fakeTracker } from '../../test/fakes';
 import { expectAccessible } from '../../test/axe';
 
+// Spec 065: the window's width, for the sheets' presentation (390 unless a test widens it).
+const dims = vi.hoisted(() => ({ width: 390, height: 844 }));
+vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('react-native')>()), useWindowDimensions: () => ({ ...dims, scale: 2, fontScale: 1 }) }));
+afterEach(() => {
+  dims.width = 390;
+  dims.height = 844;
+});
+
+
 vi.mock('expo-linking', () => ({ createURL: (p: string) => `ourcocon://${p}` }));
 vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn() }));
 
@@ -63,7 +72,7 @@ describe('Share sheet', () => {
     expect(screen.getByText('Creating link…')).toBeTruthy();
     await act(async () => resolve({ ...link, created: true }));
     expect(screen.getByText(url)).toBeTruthy();
-    expect(tracker.track).toHaveBeenCalledWith('share_link_created', {});
+    expect(tracker.track).toHaveBeenCalledWith('share_link_created', { presentation: 'sheet' });
   });
 
   it('reuses an existing link without a new event', async () => {
@@ -144,5 +153,21 @@ describe('Share sheet', () => {
     expect(screen.getByText("Couldn't create the link. Check your connection and try again.")).toBeTruthy();
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Try again' })));
     expect(screen.getByText(url)).toBeTruthy();
+  });
+});
+
+describe('Share on larger screens (spec 065)', () => {
+  it.each([820, 1180])('opens as a centred card at %i, with one ✕ that closes it', async (width) => {
+    dims.width = width;
+    const onClose = vi.fn();
+    const tracker = fakeTracker();
+    render(<ShareSheet recipeName="Quiche" familyName="F" api={fakeApi()} tracker={tracker} onClose={onClose} />, { wrapper: ToastProvider });
+    await act(async () => undefined);
+    expect(screen.getByRole('dialog', { name: 'Share this recipe' }).dataset.testid).toBe('sheet-card');
+    const close = screen.getAllByRole('button', { name: 'Close' });
+    expect(close).toHaveLength(1);
+    fireEvent.click(close[0] as HTMLElement);
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(tracker.track).toHaveBeenCalledWith('share_link_created', { presentation: 'card' });
   });
 });

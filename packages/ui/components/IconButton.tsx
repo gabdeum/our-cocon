@@ -35,7 +35,7 @@ export interface IconButtonProps extends Omit<PressableProps, 'children' | 'styl
   /** Required: "Share recipe", "More servings". */
   label: string;
   variant?: IconButtonVariant;
-  /** `square` only: the "More options" panel is open (honey fill). */
+  /** What it opens is open (honey fill): the "More options" panel, or a popover pointing at it (spec 065). */
   expanded?: boolean;
   /** Icon size, 20–22 per README. */
   iconSize?: number;
@@ -53,9 +53,9 @@ export function IconButton({ icon, label, variant = 'default', expanded, iconSiz
     <Pressable
       role="button"
       aria-label={label}
-      aria-expanded={variant === 'square' ? expanded === true : undefined}
+      aria-expanded={expanded}
       disabled={disabled}
-      className={cn('items-center justify-center', look.box, variant === 'square' && expanded && 'bg-honey', focusRing, className)}
+      className={cn('items-center justify-center', look.box, expanded && 'bg-honey active:bg-honey', focusRing, className)}
       style={shadows[variant] ? { boxShadow: shadows[variant] } : undefined}
       hitSlop={slops[variant]}
       {...props}

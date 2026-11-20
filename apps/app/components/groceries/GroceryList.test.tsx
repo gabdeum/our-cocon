@@ -12,6 +12,15 @@ import { alex, fakeTracker, flush, gabriel, groceryItem, mia, packData } from '.
 import type { GroceryItem } from '../../lib/groceries';
 import { expectAccessible } from '../../test/axe';
 
+// Spec 065: the window's width, for the sheets' presentation (390 unless a test widens it).
+const dims = vi.hoisted(() => ({ width: 390, height: 844 }));
+vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('react-native')>()), useWindowDimensions: () => ({ ...dims, scale: 2, fontScale: 1 }) }));
+afterEach(() => {
+  dims.width = 390;
+  dims.height = 844;
+});
+
+
 vi.mock('expo-image-picker', () => ({}));
 vi.mock('expo-image-manipulator', () => ({ ImageManipulator: {}, SaveFormat: { JPEG: 'jpeg' } }));
 vi.mock('expo-crypto', () => ({ randomUUID: () => 'unused' }));
@@ -445,7 +454,7 @@ describe('Groceries › what to buy (spec 021)', () => {
     expect(screen.getByText('Buy 1 pint')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'European stores' }));
     await flush();
-    expect(props.onChangeSettings).toHaveBeenCalledWith({ store_profile: 'eu' });
+    expect(props.onChangeSettings).toHaveBeenCalledWith({ store_profile: 'eu' }, 'sheet');
     rerender({ settings: { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'eu', round_to_packs: true } });
     expect(screen.getByText('Buy 2 × 20 cl')).toBeTruthy();
     expect(line('Heavy cream')).toBe('Heavy cream: 2 × 20 cl (need 300 ml)');
@@ -464,7 +473,7 @@ describe('Groceries › what to buy (spec 021)', () => {
     await openSettings();
     fireEvent.click(screen.getByRole('switch', { name: 'Round up to store sizes' }));
     await flush();
-    expect(props.onChangeSettings).toHaveBeenCalledWith({ round_to_packs: false });
+    expect(props.onChangeSettings).toHaveBeenCalledWith({ round_to_packs: false }, 'sheet');
     rerender({ settings: { ...DEFAULT_FAMILY_SETTINGS, store_profile: 'us', round_to_packs: false } });
     expect(line('Heavy cream')).toBe('Heavy cream: 300 ml');
   });
@@ -606,5 +615,22 @@ describe('Groceries › what to buy (spec 021)', () => {
     await openSettings();
     expect(screen.getByRole('button', { name: 'US stores' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('group', { name: 'Where do you shop?' }).getAttribute('aria-disabled')).toBe('true');
+  });
+});
+
+describe('Groceries menus on larger screens (spec 065)', () => {
+  it("opens an item's ⋮ menu as a popover pointing at it, and the settings as one too", async () => {
+    dims.width = 1180;
+    dims.height = 820;
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Heavy cream' }));
+    await flush();
+    expect(screen.getByRole('dialog', { name: 'Edit item' }).dataset.testid).toBe('sheet-popover');
+    expect(screen.getByRole('button', { name: 'Edit Heavy cream', hidden: true }).getAttribute('aria-expanded')).toBe('true');
+    cleanup();
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Grocery settings' }));
+    await flush();
+    expect(screen.getByRole('dialog', { name: 'Grocery settings' }).dataset.testid).toBe('sheet-popover');
   });
 });

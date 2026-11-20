@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { BottomSheet, Link, ListGroup, ListRow, SheetFooter } from '@cocon/ui';
+import { BottomSheet, Link, ListGroup, ListRow, SheetFooter, useSheetPresentation } from '@cocon/ui';
 import type { IngredientFactsInput } from '@cocon/quantity';
 import type { Tracker, UnitSystem } from '@cocon/schemas';
 import { useFailureToast, useToast } from '../../lib/toast';
@@ -42,6 +42,7 @@ export interface AddGroceriesSheetProps {
 export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, units = 'metric', api, tracker, onClose, onSeeList }: AddGroceriesSheetProps) {
   const online = useOnline();
   const toast = useToast();
+  const presentation = useSheetPresentation('flow');
   // FR-001: every ingredient ticked to start; ids that are unticked.
   const [off, setOff] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -77,7 +78,7 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, un
       setFailed(a.addFailed);
       return;
     }
-    tracker.track('groceries_added_from_recipe', { ingredient_count: count, unticked_count: lines.length - count });
+    tracker.track('groceries_added_from_recipe', { ingredient_count: count, unticked_count: lines.length - count, presentation });
     toast.show({
       text: a.added(count),
       onUndo: () => undo(added),
