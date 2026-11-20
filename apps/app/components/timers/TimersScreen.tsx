@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
-import { PushedScreen, Text } from '@cocon/ui';
+import { PushedScreen, TabHeader, Text } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import { useTimers } from '../../lib/timer-store';
@@ -13,7 +13,8 @@ export { QUICK_MINUTES } from './TimerList';
 
 const copy = strings.timersScreen;
 export interface TimersScreenProps {
-  onBack: () => void;
+  /** Left out beside the rail from 960, which is the way out there. */
+  onBack?: () => void;
   tracker: Tracker;
   /** The step timers' recipes, by id: `undefined` while loading, `null` when gone. */
   recipes?: Readonly<Record<string, RecipeDetail | null | undefined>>;
@@ -51,10 +52,15 @@ export function TimersScreen({ onBack, tracker, recipes = {}, onGoToStep, focuse
   };
 
   return (
-    <PushedScreen className="gap-12" topBar={{ back: { label: copy.back, onPress: onBack }, title: copy.title }}>
-      <Text size={15} weight="700" color="ink-muted">
-        {copy.summary(running, timers.length)}
-      </Text>
+    // Beside the rail (no back) it is titled like a tab, the summary under the title.
+    <PushedScreen className="gap-12" topBar={onBack ? { back: { label: copy.back, onPress: onBack }, title: copy.title } : undefined}>
+      {onBack ? (
+        <Text size={15} weight="700" color="ink-muted">
+          {copy.summary(running, timers.length)}
+        </Text>
+      ) : (
+        <TabHeader title={copy.title} sub={copy.summary(running, timers.length)} />
+      )}
       <View className="gap-12 pt-6">
         <TimerList linkFor={goTo} />
         <Text variant="caption" color="ink-muted" align="center">

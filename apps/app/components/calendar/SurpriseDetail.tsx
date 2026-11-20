@@ -39,7 +39,7 @@ export function SurpriseDetail({ occurrence: o, members, slotTimes, now, onBack,
   ].filter((r) => r !== null);
 
   return (
-    <PushedScreen className="gap-16" topBar={{ back: { label: e.back, onPress: onBack }, title: o.title, titleMode: 'onScroll' }}>
+    <PushedScreen className="gap-16" card topBar={{ back: { label: e.back, onPress: onBack }, title: o.title, titleMode: 'onScroll' }}>
       <View className="gap-10">
         <TopBarHeading>
           <Text size={30} weight="900" role="heading" aria-level={1}>

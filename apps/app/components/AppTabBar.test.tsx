@@ -22,14 +22,26 @@ const routes = ['index', 'calendar', 'recipes', 'groceries', 'menu'].map((name) 
 
 const noStorage: ChoiceStorage = { getItem: async () => null, setItem: async () => undefined };
 
-function Harness({ transport, emitPrevented = false, store = createTimerStore({ storage: noStorage, userId: '', tracker: fakeTracker() }), onOpenTimers = vi.fn() }: { transport: AnalyticsTransport; emitPrevented?: boolean; store?: ReturnType<typeof createTimerStore>; onOpenTimers?: () => void }) {
+function Harness({
+  transport,
+  emitPrevented = false,
+  store = createTimerStore({ storage: noStorage, userId: '', tracker: fakeTracker() }),
+  onOpenTimers = vi.fn(),
+  onOpenPage = vi.fn(),
+}: {
+  transport: AnalyticsTransport;
+  emitPrevented?: boolean;
+  store?: ReturnType<typeof createTimerStore>;
+  onOpenTimers?: () => void;
+  onOpenPage?: (key: 'reminders' | 'timers') => void;
+}) {
   const [index, setIndex] = useState(0);
   const emitter: TabNavigationProps['emitter'] = { emit: () => ({ defaultPrevented: emitPrevented }) };
   const navigateToTab = (key: string) => setIndex(routes.findIndex((r) => r.key === key));
   return (
     <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } }}>
       <TimersContext.Provider value={store}>
-        <AppTabBar state={{ index, routes }} emitter={emitter} navigateToTab={navigateToTab} tracker={createTracker(transport)} onOpenTimers={onOpenTimers} />
+        <AppTabBar state={{ index, routes }} emitter={emitter} navigateToTab={navigateToTab} tracker={createTracker(transport)} onOpenTimers={onOpenTimers} onOpenPage={onOpenPage} />
       </TimersContext.Provider>
     </SafeAreaProvider>
   );
@@ -118,8 +130,8 @@ describe('AppTabBar', () => {
       rerender(<Harness transport={t} />);
       const rail = screen.getByRole('navigation', { name: 'Main' });
       expect(within(rail).getByRole('link', { name: 'Recipes' }).getAttribute('aria-current')).toBe('page');
-      // The rail: every label, in the TabBar's order (SC-002).
-      expect(within(rail).getAllByRole('link').map((l) => l.textContent)).toEqual(['Home', 'Calendar', 'Recipes', 'Groceries', 'Menu']);
+      // The rail: every label, in the TabBar's order (SC-002), with Reminders and Timers before Menu.
+      expect(within(rail).getAllByRole('link').map((l) => l.textContent)).toEqual(['Home', 'Calendar', 'Recipes', 'Groceries', 'Reminders', 'Timers', 'Menu']);
 
       dims.width = 959;
       rerender(<Harness transport={t} />);
@@ -134,6 +146,22 @@ describe('AppTabBar', () => {
       fireEvent.click(screen.getByRole('link', { name: 'Groceries' }));
       expect(screen.getByRole('link', { name: 'Groceries' }).getAttribute('aria-current')).toBe('page');
       expect(t.capture).toHaveBeenCalledExactlyOnceWith('tab_selected', { tab: 'groceries', nav: 'rail' });
+    });
+
+    it('opens Reminders and Timers from the rail, over the current tab', () => {
+      const t = transport();
+      const onOpenPage = vi.fn();
+      dims.width = 1180;
+      render(<Harness transport={t} onOpenPage={onOpenPage} />);
+      fireEvent.click(screen.getByRole('link', { name: 'Reminders' }));
+      expect(onOpenPage).toHaveBeenCalledExactlyOnceWith('reminders');
+      expect(screen.getByRole('link', { name: 'Home' }).getAttribute('aria-current')).toBe('page');
+      fireEvent.click(screen.getByRole('link', { name: 'Timers' }));
+      expect(onOpenPage).toHaveBeenLastCalledWith('timers');
+      expect(t.capture.mock.calls).toEqual([
+        ['tab_selected', { tab: 'reminders', nav: 'rail' }],
+        ['tab_selected', { tab: 'timers', nav: 'rail' }],
+      ]);
     });
 
     it('FR-002: shows the running timer at the bottom of the rail, time and "+N" only, and opens Timers', () => {

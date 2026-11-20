@@ -1,5 +1,5 @@
 import { useContext, useMemo, useState, type ReactNode, type Ref } from 'react';
-import { Platform, ScrollView, View, type ScrollViewInstance } from 'react-native';
+import { Platform, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
 import { cn } from '../cn';
@@ -112,28 +112,56 @@ export function TabScreen({ children, className, header, pinned }: TabScreenProp
 /**
  * Pushed screen without photo (Patterns.md). With `topBar` the bar stays pinned above the scrolling
  * content (spec 050); without one, the content starts 54 from the top.
+ *
+ * `card`: from 600, a centred card over the dimmed screen instead (spec 065's centred card, as
+ * FormScreen's): 540 wide (at most the window less 48), as tall as its content up to the window less
+ * 96, the bar at its top with a ✕ in place of the back arrow. A tap on the scrim goes back too. Its
+ * screen is presented transparent.
  */
-export function PushedScreen({ children, className, topBar }: { children: ReactNode; className?: string; topBar?: TopBarConfig }) {
-  const bar = useTopBar(topBar);
+export function PushedScreen({ children, className, topBar, card = false }: { children: ReactNode; className?: string; topBar?: TopBarConfig; card?: boolean }) {
   const wide = useWideEdges();
+  const { width } = useLayoutTier();
+  const asCard = card && wide !== null;
+  // A card closes rather than goes back: its button is a ✕.
+  const bar = useTopBar(asCard && topBar?.back ? { ...topBar, back: { icon: 'close', ...topBar.back } } : topBar);
+  const scroll = (
+    <TopBarHeadingProvider value={bar.register}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={bar.onScroll}
+        scrollEventThrottle={16}
+        className={asCard ? 'shrink grow-0' : 'flex-1 bg-surface-page'}
+        contentContainerClassName={cn('gap-18 pb-28', wide ? 'px-24' : 'px-20', topBar ? 'pt-18' : !wide && 'pt-[54px]', className)}
+        contentContainerStyle={wide && !topBar ? { paddingTop: asCard ? theme.layout.topWide : wide.top } : undefined}
+      >
+        {children}
+      </ScrollView>
+    </TopBarHeadingProvider>
+  );
+  if (asCard) {
+    return (
+      <View className="flex-1 items-center justify-center px-24 py-[48px]">
+        <Pressable aria-hidden onPress={topBar?.back?.onPress} className="absolute inset-0 bg-scrim" />
+        <View role="dialog" aria-modal testID="pushed-card" className="max-h-full overflow-hidden rounded-sheet bg-surface-page" style={{ width: Math.min(theme.layout.card, width - 48) }}>
+          {/* Inside the card the bar sits 24 from its top, clear of no status bar. */}
+          <SafeAreaInsetsContext.Provider value={NO_INSETS}>
+            {bar.node}
+            {scroll}
+          </SafeAreaInsetsContext.Provider>
+        </View>
+        <ToastHost />
+      </View>
+    );
+  }
   return (
     <View className="flex-1 bg-surface-page">
       {bar.node}
-      <TopBarHeadingProvider value={bar.register}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          onScroll={bar.onScroll}
-          scrollEventThrottle={16}
-          className="flex-1 bg-surface-page"
-          contentContainerClassName={cn('gap-18 pb-28', wide ? 'px-24' : 'px-20', topBar ? 'pt-18' : !wide && 'pt-[54px]', className)}
-          contentContainerStyle={wide && !topBar ? { paddingTop: wide.top } : undefined}
-        >
-          {children}
-        </ScrollView>
-      </TopBarHeadingProvider>
+      {scroll}
     </View>
   );
 }
+
+const NO_INSETS = { top: 0, bottom: 0, left: 0, right: 0 };
 
 /**
  * Create/edit form (Patterns.md › Form): the form bar and Progress stay at the top (50 16 0), the
@@ -143,9 +171,23 @@ export function PushedScreen({ children, className, topBar }: { children: ReactN
  *
  * `card`: from 600, a centred card over the dimmed screen instead, as the add sheets are (spec 065):
  * 540 wide (at most the window less 48), the window's height less 96. Its screen is presented
- * transparent; the scrim doesn't close it (the bar's Cancel does, and asks before losing changes).
+ * transparent; a tap on the scrim calls `onDismiss`, the bar's Cancel (which asks before losing changes).
  */
-export function FormScreen({ bar, children, scrollRef, scrollEnabled = true, card = false }: { bar: ReactNode; children: ReactNode; scrollRef?: Ref<ScrollViewInstance>; scrollEnabled?: boolean; card?: boolean }) {
+export function FormScreen({
+  bar,
+  children,
+  scrollRef,
+  scrollEnabled = true,
+  card = false,
+  onDismiss,
+}: {
+  bar: ReactNode;
+  children: ReactNode;
+  scrollRef?: Ref<ScrollViewInstance>;
+  scrollEnabled?: boolean;
+  card?: boolean;
+  onDismiss?: () => void;
+}) {
   const wide = useWideEdges();
   const { width } = useLayoutTier();
   const body = (
@@ -164,7 +206,7 @@ export function FormScreen({ bar, children, scrollRef, scrollEnabled = true, car
   if (card && wide) {
     return (
       <View className="flex-1 items-center justify-center px-24 py-[48px]">
-        <View aria-hidden className="absolute inset-0 bg-scrim" />
+        <Pressable aria-hidden onPress={onDismiss} className="absolute inset-0 bg-scrim" />
         <View role="dialog" aria-modal testID="form-card" className="flex-1 overflow-hidden rounded-sheet bg-surface-page" style={{ width: Math.min(theme.layout.card, width - 48) }}>
           <View className="px-24 pb-[14px] pt-20">{bar}</View>
           {body}

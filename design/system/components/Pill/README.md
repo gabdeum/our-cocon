@@ -13,7 +13,7 @@ Rounded toggles for filters, mutually exclusive choices (variants) and people.
 | suggestion | 40 | surface-soft; "{title}" ink 14/800, then " · {detail}" ink-muted 14/600 | A past choice to pick again: event titles with their start, "**Swim** · Morning" (spec 053). A row of them scrolls horizontally |
 | toggle (`TogglePill`) | 44 × 44 | round; on: olive with a white 20 px icon; off: surface-card with an ink icon. No visible word: `label` names it for screen readers | Shows or hides something, remembered on the device: the calendar's "Reminders" with `alarm`, in CalendarHeader's row 2 (Agenda, Day) and beside the day sheet's title (spec 058). `aria-pressed` |
 
-Padding is 0 14 (choice 0 18); gap 8 in a row. Rows of filter pills scroll horizontally, choices wrap.
+Padding is 0 14 (choice 0 18); gap 8 in a row. Rows of filter pills scroll horizontally (`RowScroll`: on the web a mouse wheel scrolls them sideways too), choices wrap.
 
 ## States
 

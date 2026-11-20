@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useMemo, useState, type ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
-import { announce, Button, Callout, ColumnScreen, CookSessionCard, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
+import { View } from 'react-native';
+import { announce, Button, Callout, ColumnScreen, CookSessionCard, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, RowScroll, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
 import { activeFilterKeys, emptyFilters, type RecipeFilters, type Tracker } from '@cocon/schemas';
 import { useFailureToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
@@ -219,13 +219,13 @@ export function RecipeList({
             autoCapitalize="none"
             returnKeyType="search"
           />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <RowScroll keyboardShouldPersistTaps="handled">
             <PillRow wrap={false}>
               <FilterButton label={r.filters(activeCount)} onPress={() => onOpenFilters?.(settled)} />
               <Pill label={r.inSeason} selected={inSeasonOn(filters, month)} onPress={() => applyFilters(toggleInSeason(filters, month))} />
               <Pill label={r.under30} selected={under30On(filters)} onPress={() => applyFilters(toggleUnder30(filters))} />
             </PillRow>
-          </ScrollView>
+          </RowScroll>
         </>
       }
     >

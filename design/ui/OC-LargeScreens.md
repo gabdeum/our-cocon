@@ -44,12 +44,12 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 ## Navigation (064)
 
 - < 960: existing tab bar, max 520 wide, centred; timer pill above it as today.
-- ≥ 960: rail. 12 px margin top/bottom/left, 30 radius, ink, `shadow-nav`. Logo tile 40 (honey, 12 radius) then 12 px gap. Items 76 × 64, radius 20, icon 24 over a 13 px label; active honey/ink 900, inactive `on-ink` 700. Timer button at the bottom: 76 wide, white, 2 px honey border, radius 20: clock 20, time 16/900 tabular, "+N" honey badge.
+- ≥ 960: rail, with Reminders and Timers before Menu (2026-11-20; those two pages show the rail in place of their back button, titled like a tab). 12 px margin top/bottom/left, 30 radius, ink, `shadow-nav`. Logo tile 40 (honey, 12 radius) then 12 px gap. Items 76 × 64, radius 20, icon 24 over a 13 px label; active honey/ink 900, inactive `on-ink` 700. Timer button at the bottom: 76 wide, white, 2 px honey border, radius 20: clock 20, time 16/900 tabular, "+N" honey badge.
 
 ## Sheets (065)
 
 - Popover: 360 wide, `surface-page`, 1.5 px `line` border, radius 22, `shadow-float`, padding 16, title 18/900. Top = anchor bottom + 12. Arrow 14 × 14 rotated square with the same border on two sides, **centred on the anchor button's centre**. No scrim. The anchor shows honey fill while open.
-- Centred card: 540 wide (≤ window − 48), radius 32, padding 20 / 24 / 22, `scrim` behind, 44 px round close button (soft) in the title row instead of the handle.
+- Centred card: 540 wide (≤ window − 48), radius 32, padding 20 / 24 / 22, `scrim` behind, 44 px round close button (soft) in the title row instead of the handle. Also, from 600 (2026-11-20): the recipe form, new or edited (a tap outside is Cancel), and an event's page (TopBar inside, ✕ for back; a tap outside closes).
 - Toasts from 600: max 420 wide, still 12 below the safe area, centred (phone: 560 − 32).
 
 ## Cooking (066) · preview 390 × 844, 590 × 820, 744 × 1133, 820 × 1180, 1180 × 820

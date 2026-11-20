@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import type { PlacedReminder } from '@cocon/data';
-import { Button, IconButton, PushedScreen, ReminderMore, ReminderRow, SegmentedControl, Text } from '@cocon/ui';
+import { Button, IconButton, PushedScreen, ReminderMore, ReminderRow, SegmentedControl, TabHeader, Text } from '@cocon/ui';
 import { LIST_SECTIONS, detailLine, lateBadge, reminderMember } from '../../lib/reminders';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
@@ -36,7 +36,8 @@ export interface RemindersScreenProps {
   onOpen: (row: PlacedReminder) => void;
   onMore: (section: (typeof LIST_SECTIONS)[number]) => void;
   onAdd: () => void;
-  onBack: () => void;
+  /** Left out beside the rail from 960, which is the way out there. */
+  onBack?: () => void;
 }
 
 /**
@@ -70,7 +71,9 @@ export function RemindersScreen(p: RemindersScreenProps) {
 
   return (
     <View className="flex-1 bg-surface-page">
-      <PushedScreen className="gap-16" topBar={{ back: { label: r.back, onPress: p.onBack }, title: r.title }}>
+      {/* Beside the rail (no back) it is titled like a tab. */}
+      <PushedScreen className="gap-16" topBar={p.onBack ? { back: { label: r.back, onPress: p.onBack }, title: r.title } : undefined}>
+        {p.onBack ? null : <TabHeader title={r.title} />}
         <SegmentedControl
           label={r.show}
           variant="light"

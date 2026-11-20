@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import type { Tracker } from '@cocon/schemas';
-import { AppGrid, ListGroup, ListRow, TabHeader, TabScreen, Text } from '@cocon/ui';
+import { AppGrid, cn, ListGroup, ListRow, TabHeader, TabScreen, Text, useLayoutTier } from '@cocon/ui';
 import { APPS, SETTINGS_PAGES, type AppKey, type SettingsPage } from '../../lib/apps';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -33,6 +33,7 @@ function Heading({ children }: { children: string }) {
 
 /** The Menu tab (spec 029, design/ui/OC-Menu.md): Apps, then Settings. */
 export function MenuScreen({ details, memberNames, connected, deleted, notificationsOff, tracker, onNavigate, footer }: MenuScreenProps) {
+  const wide = useLayoutTier().tier !== 'compact';
   const openApp = (app: (typeof APPS)[number]) => {
     tracker.track('menu_app_opened', { app: app.key });
     onNavigate(app.href);
@@ -53,30 +54,37 @@ export function MenuScreen({ details, memberNames, connected, deleted, notificat
       </View>
       <View className="gap-10">
         <Heading>{m.settings}</Heading>
-        <ListGroup>
-          {row('family', 'people', m.family, m.familyDetail(memberNames))}
-          {connected === undefined
-            ? row('ai', 'sparkle', m.aiAssistants, undefined)
-            : connected > 0
-              ? row('ai', 'sparkle', m.aiAssistants, m.connected(connected), false, 'olive')
-              : row('ai', 'sparkle', m.aiAssistants, m.notConnected)}
-          {notificationsOff
-            ? row('notifications', 'bell', m.notifications, m.notificationsOff, true, 'warn')
-            : row('notifications', 'bell', m.notifications, m.notificationsDetail, true)}
-        </ListGroup>
-        <ListGroup>
-          {row('calendar', 'calendar', m.calendar, m.calendarDetail)}
-          {row('recipes', 'recipes', m.recipes, m.recipesDetail)}
-          {row('groceries', 'groceries', m.groceries, m.groceriesDetail, true)}
-        </ListGroup>
-        <ListGroup>
-          <ListRow
-            title={m.recentlyDeleted}
-            trailing={{ kind: 'chevron', text: deleted === undefined ? undefined : m.items(deleted) }}
-            onPress={() => open('deleted')}
-            last
-          />
-        </ListGroup>
+        {/* From 600, two columns: you and your family, then each app's settings and Recently deleted. */}
+        <View className={wide ? 'flex-row items-start gap-14' : 'gap-10'}>
+          <View className={wide ? 'flex-1 basis-0' : undefined}>
+            <ListGroup>
+              {row('family', 'people', m.family, m.familyDetail(memberNames))}
+              {connected === undefined
+                ? row('ai', 'sparkle', m.aiAssistants, undefined)
+                : connected > 0
+                  ? row('ai', 'sparkle', m.aiAssistants, m.connected(connected), false, 'olive')
+                  : row('ai', 'sparkle', m.aiAssistants, m.notConnected)}
+              {notificationsOff
+                ? row('notifications', 'bell', m.notifications, m.notificationsOff, true, 'warn')
+                : row('notifications', 'bell', m.notifications, m.notificationsDetail, true)}
+            </ListGroup>
+          </View>
+          <View className={cn('gap-10', wide && 'flex-1 basis-0')}>
+            <ListGroup>
+              {row('calendar', 'calendar', m.calendar, m.calendarDetail)}
+              {row('recipes', 'recipes', m.recipes, m.recipesDetail)}
+              {row('groceries', 'groceries', m.groceries, m.groceriesDetail, true)}
+            </ListGroup>
+            <ListGroup>
+              <ListRow
+                title={m.recentlyDeleted}
+                trailing={{ kind: 'chevron', text: deleted === undefined ? undefined : m.items(deleted) }}
+                onPress={() => open('deleted')}
+                last
+              />
+            </ListGroup>
+          </View>
+        </View>
       </View>
       {footer}
     </TabScreen>
