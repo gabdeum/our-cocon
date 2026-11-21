@@ -243,7 +243,8 @@ export default function RootLayout() {
                 <SessionGate />
                 <NavigationTheme value={navigationTheme}>
                 <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
-                  <Stack.Screen name="(tabs)" />
+                  {/* From 960, back from Reminders or Timers opened on their own (a notification): the tabs appear in place too. */}
+                  <Stack.Screen name="(tabs)" options={tier === 'expanded' ? { animation: 'none' } : undefined} />
                   <Stack.Screen name="welcome/index" />
                   <Stack.Screen name="welcome/family" options={presentation.stack} />
                   <Stack.Screen name="auth/callback" />

@@ -14,7 +14,7 @@ const isPage = (key: RailKey): key is keyof typeof RAIL_PAGES => key in RAIL_PAG
 /**
  * The rail on a screen pushed over the tabs (spec 067: a recipe beside the Recipes list, from 960;
  * Reminders and Timers, 2026-11-20). The same items and timer as AppTabBar's rail; a tab goes back to
- * its screen under the stack. Reminders and Timers are pushed, or swapped for each other.
+ * its screen under the stack, without a slide. Reminders and Timers are pushed, or swapped for each other.
  */
 export function RouteRail({ active, tracker, onOpenTimers }: { active: RailKey; tracker: Tracker; onOpenTimers: () => void }) {
   const insets = useSafeAreaInsets();
@@ -28,7 +28,9 @@ export function RouteRail({ active, tracker, onOpenTimers }: { active: RailKey; 
     } else {
       const tab = TABS.find((t) => t.key === key);
       if (!tab) return;
-      router.navigate(tabHref(tab.route));
+      // Back to the tabs already under the stack, in place: `navigate` would push a second copy of
+      // them, sliding in.
+      router.dismissTo(tabHref(tab.route));
     }
     tracker.track('tab_selected', { tab: key, nav: 'rail' });
   };

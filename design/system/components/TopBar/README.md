@@ -8,7 +8,7 @@ Reference: `design/screens/OC-SettingsGroceries.dc.html` (title always), `OC-Cal
 
 | Part | Spec |
 | --- | --- |
-| Bar | sticky top 0, `surface-page` background, padding safe-area (52) / 16 / 8, grid `1fr auto 1fr`, gap 8. From 600: the safe area + 24 (`layout-top-wide`, spec 063) on top |
+| Bar | sticky top 0, `surface-page` background, padding safe-area (52) / 16 / 8, grid `1fr auto 1fr`, gap 8. From 600: `layout-top-wide` on top (12, or the safe area when taller: level with the rail; 24 inside a centred card) |
 | Scrolled | 1.5 px `line` bottom border + `shadow-bar` = 0 6px 14px -10px rgba(42,36,20,0.35) |
 | Round button | 40 × 40 (touch target 44), radius 50%, white, ink icon 22 (✕ 20), `shadow-button` = 0 4px 14px rgba(42,36,20,0.18) |
 | Title | 17/900, centered on the screen, one line, ellipsis, max 214 at 390 |

@@ -230,7 +230,7 @@ export const theme = {
     "expanded": 960,
     "gutter": 20,
     "gutterWide": 24,
-    "topWide": 24,
+    "topWide": 12,
     "phoneMax": 560,
     "maxContent": 1200,
     "panelMedium": 290,

@@ -9,7 +9,7 @@ import { Logo } from './Icon';
 import { Tag } from './Tag';
 import { Text } from './Text';
 import { ToastHost } from './Toast';
-import { TopBarHeadingProvider, useTopBar, useTopEdge, type TopBarConfig } from './TopBar';
+import { TopBarHeadingProvider, useTopBar, useTopEdge, useWideTop, type TopBarConfig } from './TopBar';
 
 /**
  * The app's frame: cream ground, everything (the tab bar and rail included) inside it. On the web
@@ -30,13 +30,13 @@ export function AppFrame({ children }: { children: ReactNode }) {
 }
 
 /**
- * From 600 wide (spec 063 FR-003): the 24 gutter, and content 24 under the safe area. Null on the
- * phone, which keeps each screen's own top and 20 gutter.
+ * From 600 wide (spec 063 FR-003): the 24 gutter, and content level with the rail (`useWideTop`).
+ * Null on the phone, which keeps each screen's own top and 20 gutter.
  */
 function useWideEdges() {
   const { tier } = useLayoutTier();
-  const insets = useContext(SafeAreaInsetsContext);
-  return tier === 'compact' ? null : { top: (insets?.top ?? 0) + theme.layout.topWide };
+  const top = useWideTop();
+  return tier === 'compact' ? null : { top };
 }
 
 export interface TabScreenProps {
@@ -132,7 +132,7 @@ export function PushedScreen({ children, className, topBar, card = false }: { ch
         scrollEventThrottle={16}
         className={asCard ? 'shrink grow-0' : 'flex-1 bg-surface-page'}
         contentContainerClassName={cn('gap-18 pb-28', wide ? 'px-24' : 'px-20', topBar ? 'pt-18' : !wide && 'pt-[54px]', className)}
-        contentContainerStyle={wide && !topBar ? { paddingTop: asCard ? theme.layout.topWide : wide.top } : undefined}
+        contentContainerStyle={wide && !topBar ? { paddingTop: asCard ? CARD_TOP : wide.top } : undefined}
       >
         {children}
       </ScrollView>
@@ -144,7 +144,7 @@ export function PushedScreen({ children, className, topBar, card = false }: { ch
         <Pressable aria-hidden onPress={topBar?.back?.onPress} className="absolute inset-0 bg-scrim" />
         <View role="dialog" aria-modal testID="pushed-card" className="max-h-full overflow-hidden rounded-sheet bg-surface-page" style={{ width: Math.min(theme.layout.card, width - 48) }}>
           {/* Inside the card the bar sits 24 from its top, clear of no status bar. */}
-          <SafeAreaInsetsContext.Provider value={NO_INSETS}>
+          <SafeAreaInsetsContext.Provider value={CARD_INSETS}>
             {bar.node}
             {scroll}
           </SafeAreaInsetsContext.Provider>
@@ -161,7 +161,9 @@ export function PushedScreen({ children, className, topBar, card = false }: { ch
   );
 }
 
-const NO_INSETS = { top: 0, bottom: 0, left: 0, right: 0 };
+const CARD_TOP = 24;
+// No status bar inside a card: its top stands for the card's own 24, which the TopBar keeps.
+const CARD_INSETS = { top: CARD_TOP, bottom: 0, left: 0, right: 0 };
 
 /**
  * Create/edit form (Patterns.md › Form): the form bar and Progress stay at the top (50 16 0), the
@@ -360,13 +362,14 @@ export function SplitView({ rail, list, children }: SplitViewProps) {
 }
 
 /**
- * The list column beside a detail (SplitView README): padding 28 (under the safe area) / 12 / 16 /
- * 20; `header` and `pinned` stay, the rest scrolls, 12 apart.
+ * The list column beside a detail (SplitView README): padding top as the tab screens (so its title
+ * stays where the Recipes tab had it) / 12 / 16 / 20; `header` and `pinned` stay, the rest scrolls,
+ * 12 apart.
  */
 export function ColumnScreen({ header, pinned, children }: { header?: ReactNode; pinned?: ReactNode; children: ReactNode }) {
-  const insets = useContext(SafeAreaInsetsContext);
+  const top = useWideTop();
   return (
-    <View className="flex-1 gap-12 pb-16 pl-20 pr-12" style={{ paddingTop: (insets?.top ?? 0) + 28 }}>
+    <View className="flex-1 gap-12 pb-16 pl-20 pr-12" style={{ paddingTop: top }}>
       {/* Only as tall as they are: a horizontal pill row (a ScrollView) would otherwise grow into the list's room. */}
       <View testID="column-top" className="flex-none gap-12">
         {header}
