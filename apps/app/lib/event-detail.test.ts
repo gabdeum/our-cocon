@@ -91,10 +91,9 @@ describe('the occurrence shown', () => {
   });
 });
 
-describe('the delete Dialog (FR-004)', () => {
-  it('says who added someone else’s event, and which choices a repeating one has', () => {
+describe('the delete Dialog (FR-004), for a repeating event', () => {
+  it('says who added someone else’s event, and its choices', () => {
     expect(deleteBody(music, gabriel.id, members)).toBe("Eva added this. Delete only this one, or this and all future ones? It's removed for the whole family.");
-    expect(deleteBody(babyMusic({ recurrence: null }), gabriel.id, members)).toBe('Eva added this. This removes it for the whole family.');
-    expect(deleteBody(babyMusic({ recurrence: null }), eva.id, members)).toBe('This removes it for the whole family.');
+    expect(deleteBody(music, eva.id, members)).toBe("Delete only this one, or this and all future ones? It's removed for the whole family.");
   });
 });

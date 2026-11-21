@@ -15,7 +15,7 @@ export interface NavRailProps<K extends string> {
   label: string;
   /** The TimerPill in its vertical form, at the bottom while any timer runs (spec 064 FR-002). */
   timer?: ReactNode;
-  /** Safe areas: the rail sits at least 12 from the top and bottom, more when an inset is larger. */
+  /** Safe areas: the rail sits 12 under the top one, and at least 12 from the bottom, more when its inset is larger. */
   insets?: { top: number; bottom: number };
 }
 
@@ -38,7 +38,8 @@ export function NavRail<K extends string>({ items, active, onSelect, label, time
       style={{
         width: theme.layout.rail,
         paddingLeft: MARGIN,
-        paddingTop: Math.max(MARGIN, insets?.top ?? 0),
+        // 12 under the status bar, level with the screens' first row (`useWideTop`).
+        paddingTop: (insets?.top ?? 0) + MARGIN,
         paddingBottom: Math.max(MARGIN, insets?.bottom ?? 0),
       }}
     >

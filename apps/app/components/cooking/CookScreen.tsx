@@ -339,6 +339,7 @@ function Cooking({
         expanded ? (
           <CookStepList
             title={c.allSteps}
+            position={c.stepPosition(at + 1, count)}
             current={at}
             onSelect={pick('step_list')}
             numbered={c.unnamedStep}
@@ -359,16 +360,18 @@ function Cooking({
         setTimersOpen(true);
       }}
       timersRef={timersButton}
+      // Beside the step list, its heading says where you are ("All steps · 3 of 6"): no step bar.
       progress={
-        <CookProgress
-          count={count}
-          current={at}
-          onSelect={pick('bars')}
-          stepLabel={c.stepOf(at + 1, count)}
-          hint={expanded ? c.jumpHint : c.hint(servingsText(view.servings))}
-          bars={!expanded}
-          segmentLabel={(i) => c.segment(i + 1, steps[i]?.name ?? null)}
-        />
+        expanded ? undefined : (
+          <CookProgress
+            count={count}
+            current={at}
+            onSelect={pick('bars')}
+            stepLabel={c.stepOf(at + 1, count)}
+            hint={c.hint(servingsText(view.servings))}
+            segmentLabel={(i) => c.segment(i + 1, steps[i]?.name ?? null)}
+          />
+        )
       }
       endLabel={c.bonAppetit}
       // Back always reads "Back" (spec 051); on the first step it leaves, as ✕ does, and the cook stays in progress.

@@ -36,10 +36,10 @@ describe('NavRail', () => {
     expect(onSelect).toHaveBeenCalledWith('groceries');
   });
 
-  it('floats in the 104 slot, 12 from the edges or the safe area when larger', () => {
+  it('floats in the 104 slot, 12 from the edges, 12 under the top safe area', () => {
     const { container } = render(<NavRail label="Main" items={[...items]} active="home" onSelect={() => undefined} insets={{ top: 24, bottom: 0 }} />);
     const slot = container.firstElementChild as HTMLElement;
-    expect(slot.style).toMatchObject({ width: '104px', paddingLeft: '12px', paddingTop: '24px', paddingBottom: '12px' });
+    expect(slot.style).toMatchObject({ width: '104px', paddingLeft: '12px', paddingTop: '36px', paddingBottom: '12px' });
   });
 
   it('shows the timer at the bottom only when given one', () => {

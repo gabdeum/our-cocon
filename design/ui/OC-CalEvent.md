@@ -20,7 +20,7 @@ Compact since spec 050 FR-006: a typical event fits one 390 × 844 screen withou
 | --- | --- |
 | Edit a repeating event | sheet "This event repeats" · "Change only Saturday, Oct 31, or every Saturday from now on?" · ink "This event only" · outline "All future events" · "Cancel" |
 | Delete repeating | Dialog "Delete “Baby music class”?" · "Eva added this. Delete only this one, or this and all future ones? It's removed for the whole family." · danger "Only this one" · danger outline "This and all future ones" · soft "Keep it" |
-| Delete one-off | "Delete “{title}”?" · "This removes it for the whole family." · danger "Delete" · soft "Keep it" (adds "{Name} added this." for someone else's event) |
+| Delete one-off | no Dialog: deleted at once, then the "Event deleted" toast with Undo (2026-11-21; was "Delete “{title}”?" · "This removes it for the whole family." · "Delete" · "Keep it") |
 | Deleted | toast "Event deleted" · "Undo" (also in Recently deleted, 30 days) |
 | Duplicate | date picker, then toast "Copied to {Sat, Nov 7}" · "Undo" |
 | Share | reuses OC-Share layout: title "Share this event", lead "People with the link see the title, day, time and place. No notes or checklist.", "Copy link", "Stop sharing" |

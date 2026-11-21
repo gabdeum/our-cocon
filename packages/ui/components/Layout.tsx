@@ -162,8 +162,8 @@ export function PushedScreen({ children, className, topBar, card = false }: { ch
 }
 
 const CARD_TOP = 24;
-// No status bar inside a card: its top stands for the card's own 24, which the TopBar keeps.
-const CARD_INSETS = { top: CARD_TOP, bottom: 0, left: 0, right: 0 };
+// No status bar inside a card: the TopBar adds its 12 (`useWideTop`) to make the card's own 24.
+const CARD_INSETS = { top: CARD_TOP - theme.layout.topWide, bottom: 0, left: 0, right: 0 };
 
 /**
  * Create/edit form (Patterns.md › Form): the form bar and Progress stay at the top (50 16 0), the

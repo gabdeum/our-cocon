@@ -1,13 +1,12 @@
 // Spec 018 US1 (design/ui/OC-Delete.md): "Delete recipe" at the end of the edit form's "This recipe"
-// (spec 051 FR-013) asks in a Dialog that names the recipe and its variants, then moves it to
-// Recently deleted for everyone.
+// (spec 051 FR-013) moves it to Recently deleted for everyone at once, with no Dialog (2026-11-21).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { render } from '../../../test/render';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import type { RecipeFormSection } from '@cocon/schemas';
 import { quiche } from '@cocon/schemas/quiche.fixture';
-import { fakeTracker, flush, last } from '../../../test/fakes';
+import { fakeTracker, flush } from '../../../test/fakes';
 import type { RecipeDetails } from '../../../lib/recipe-form';
 
 vi.mock('expo-image-picker', () => ({}));
@@ -74,9 +73,8 @@ function setup({ recipe = details(), section = 'details', fails = false }: { rec
   return { tracker, update, onDeleted };
 }
 
-// The Dialog's confirm repeats the label: the form's button is the first.
-const deleteLink = () => screen.queryAllByRole('button', { name: 'Delete recipe' })[0] ?? null;
-const tapDelete = () => fireEvent.click(screen.getAllByRole('button', { name: 'Delete recipe' })[0] as HTMLElement);
+const deleteLink = () => screen.queryByRole('button', { name: 'Delete recipe' });
+const tapDelete = () => fireEvent.click(screen.getByRole('button', { name: 'Delete recipe' }));
 
 describe('Delete recipe (OC-Delete)', () => {
   it('shows only at the end of an existing recipe, in Details › This recipe (spec 051)', () => {
@@ -90,38 +88,20 @@ describe('Delete recipe (OC-Delete)', () => {
     expect(deleteLink()).toBeNull();
   });
 
-  it('asks with the recipe name and its 2 variants, then deletes it for everyone', async () => {
+  it('deletes it for everyone at once, without asking', async () => {
     const { tracker, update, onDeleted } = setup();
     tapDelete();
-    const dialog = screen.getByRole('alertdialog', { name: 'Delete “Leek & bacon quiche”?' });
-    expect(dialog.textContent).toContain(
-      'It will disappear for the whole family, along with its 2 variants. You can bring it back from Recently deleted for 30 days.',
-    );
-    expect(screen.getByRole('button', { name: 'Keep it' })).toBeTruthy();
-    fireEvent.click(last(screen.getAllByRole('button', { name: 'Delete recipe' })));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
     await flush();
     expect(update).toHaveBeenCalledWith({ deleted_at: expect.any(String) });
     expect(tracker.track).toHaveBeenCalledWith('recipe_deleted', { source: 'app' });
     expect(onDeleted).toHaveBeenCalledOnce();
   });
 
-  it('says nothing about variants when there are none', () => {
-    setup({ recipe: details([]) });
-    tapDelete();
-    expect(screen.getByRole('alertdialog').textContent).toContain('It will disappear for the whole family. You can bring it back');
-  });
-
-  it('"Keep it" deletes nothing', () => {
-    const { update } = setup();
-    tapDelete();
-    fireEvent.click(screen.getByRole('button', { name: 'Keep it' }));
-    expect(update).not.toHaveBeenCalled();
-  });
 
   it('says what to do when deleting fails, and stays on the form', async () => {
     const { tracker, onDeleted } = setup({ fails: true });
     tapDelete();
-    fireEvent.click(last(screen.getAllByRole('button', { name: 'Delete recipe' })));
     await flush();
     expect(screen.getByText("Couldn't delete. Try again.")).toBeTruthy();
     expect(onDeleted).not.toHaveBeenCalled();
@@ -132,7 +112,6 @@ describe('Delete recipe (OC-Delete)', () => {
     act(() => onlineManager.setOnline(false));
     const { update } = setup();
     tapDelete();
-    expect(screen.queryByRole('alertdialog')).toBeNull();
     expect(update).not.toHaveBeenCalled();
   });
 });

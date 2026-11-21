@@ -19,6 +19,8 @@ export interface CookStepListItem {
 export interface CookStepListProps {
   /** "All steps": the heading and the list's name for screen readers. */
   title: string;
+  /** After the heading, in place of the step bar's "Step 3 of 6": "3 of 6" ("All steps · 3 of 6"). */
+  position?: string;
   steps: CookStepListItem[];
   /** 0-based. */
   current: number;
@@ -40,11 +42,11 @@ export function stepListScroll(row: Box, view: Box): number | null {
 
 /**
  * Every step beside cooking mode from 960 (CookStepList README, spec 066 FR-003): a white card,
- * one row per step with a number badge (a tick once done), its name and its timer's time. The
+ * headed "All steps · 3 of 6" (the header has no step bar then), one row per step with a number badge (a tick once done), its name and its timer's time. The
  * current one has a soft fill and an olive border. Tapping a row goes to that step. Scrolls on its own,
  * and to the current row whenever it changes or would be out of sight.
  */
-export function CookStepList({ title, steps, current, onSelect, numbered }: CookStepListProps) {
+export function CookStepList({ title, position, steps, current, onSelect, numbered }: CookStepListProps) {
   const reduceMotion = useReduceMotion();
   const scroll = useRef<ScrollViewInstance>(null);
   const rows = useRef<Record<number, Box>>({});
@@ -74,7 +76,7 @@ export function CookStepList({ title, steps, current, onSelect, numbered }: Cook
         }}
       >
         <Text size={13} weight="900" color="ink-muted" uppercase aria-hidden className="px-8 pb-4 pt-6" style={{ letterSpacing: 0.7 }}>
-          {title}
+          {position ? `${title} · ${position}` : title}
         </Text>
         {steps.map((step, i) => {
           const now = i === current;

@@ -13,7 +13,7 @@ vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('rea
 afterEach(cleanup);
 
 describe('CalendarHeader from 600', () => {
-  it('shows the views as a segmented control, the people as chips, ‹ Today › and "+ Event"', () => {
+  it('shows the views as a segmented control, the people as chips, ‹ Today › and "+ New"', () => {
     const onView = vi.fn();
     const onToggle = vi.fn();
     const onToggleChip = vi.fn();
@@ -49,7 +49,7 @@ describe('CalendarHeader from 600', () => {
         closeLabel="Close"
         toggle={{ label: 'Reminders', icon: 'alarm', pressed: true, onPress: vi.fn() }}
         arrows={false}
-        add={{ label: 'Event', a11yLabel: 'Add event', onPress: onAdd }}
+        add={{ label: 'New', a11yLabel: 'Add event', onPress: onAdd }}
       />,
     );
     expect(screen.getByRole('heading').textContent).toBe('Sunday, October 25');

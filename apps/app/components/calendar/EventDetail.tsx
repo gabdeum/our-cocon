@@ -93,7 +93,8 @@ export function EventDetail(p: EventDetailProps) {
   const menu = [
     { label: e.duplicate, onPress: () => setPicking(firstOfMonth(o.starts_on)) },
     ...(shareable ? [{ label: e.share, onPress: p.onShare }] : []),
-    { label: e.delete, onPress: () => setDialog(true), tone: 'danger' as const },
+    // A one-off goes at once, its toast has Undo (2026-11-21); a repeating one asks which dates.
+    { label: e.delete, onPress: () => (event.recurrence ? setDialog(true) : void remove('all')), tone: 'danger' as const },
   ];
 
   const tick = async (id: string, done: boolean) => {
@@ -252,9 +253,10 @@ export function EventDetail(p: EventDetailProps) {
         visible={dialog}
         title={e.deleteTitle(o.title)}
         body={deleteBody(event, p.myMemberId, members)}
-        confirmLabel={event.recurrence ? e.onlyThis : e.deleteConfirm}
-        onConfirm={() => void remove(event.recurrence ? 'this' : 'all')}
-        {...(event.recurrence ? { secondaryLabel: e.thisAndFuture, onSecondary: () => void remove('future') } : {})}
+        confirmLabel={e.onlyThis}
+        onConfirm={() => void remove('this')}
+        secondaryLabel={e.thisAndFuture}
+        onSecondary={() => void remove('future')}
         cancelLabel={e.keep}
         onCancel={() => setDialog(false)}
       />

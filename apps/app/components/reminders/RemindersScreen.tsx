@@ -42,7 +42,8 @@ export interface RemindersScreenProps {
 
 /**
  * OC-Reminders (spec 057 FR-003, FR-004): Mine · Everyone's, then Overdue, Today, Tomorrow and
- * Later, each a card with "Show more", and the olive "+". Spec 058: snoozed ones are in the section
+ * Later, each a card with "Show more", and the olive "+" (beside the rail, "+ New" in the title, as
+ * Recipes). Spec 058: snoozed ones are in the section
  * of the day they're back, with a "Snoozed" pill (no Snoozed row any more).
  */
 export function RemindersScreen(p: RemindersScreenProps) {
@@ -73,7 +74,9 @@ export function RemindersScreen(p: RemindersScreenProps) {
     <View className="flex-1 bg-surface-page">
       {/* Beside the rail (no back) it is titled like a tab. */}
       <PushedScreen className="gap-16" topBar={p.onBack ? { back: { label: r.back, onPress: p.onBack }, title: r.title } : undefined}>
-        {p.onBack ? null : <TabHeader title={r.title} />}
+        {p.onBack ? null : (
+          <TabHeader title={r.title} action={<Button label={r.new} aria-label={r.newReminder} variant="olive" size="sm" icon="plus" disabled={p.readOnly} onPress={p.onAdd} />} />
+        )}
         <SegmentedControl
           label={r.show}
           variant="light"
@@ -115,9 +118,9 @@ export function RemindersScreen(p: RemindersScreenProps) {
           </View>
         ) : null}
         {/* Room for the "+" over the last row. */}
-        <View aria-hidden className="h-control-xl" />
+        {p.onBack ? <View aria-hidden className="h-control-xl" /> : null}
       </PushedScreen>
-      <IconButton variant="fab" icon="plus" iconSize={28} label={r.newReminder} disabled={p.readOnly} onPress={p.onAdd} className="absolute bottom-28 right-20 z-20" />
+      {p.onBack ? <IconButton variant="fab" icon="plus" iconSize={28} label={r.newReminder} disabled={p.readOnly} onPress={p.onAdd} className="absolute bottom-28 right-20 z-20" /> : null}
     </View>
   );
 }

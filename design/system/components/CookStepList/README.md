@@ -7,7 +7,7 @@ Every step of the recipe beside cooking mode from 960 (spec 066, OC-CookResponsi
 | Part | Spec |
 | --- | --- |
 | Card | fills the width it's given (CookLayout: 260 to 300, with the window), full height, its rows scroll inside, `surface-card`, `radius-xl` (22), padding 10, gap 4; a `navigation` landmark named "All steps" |
-| Heading | "All steps" 13/900 ink-muted uppercase, letter-spacing 0.7, padding 6 8 4 |
+| Heading | "All steps · 3 of 6" 13/900 ink-muted uppercase, letter-spacing 0.7, padding 6 8 4 (the position stands for the header's "Step N of M", which cooking mode leaves out beside the list; 2026-11-21) |
 | Row | min height 56, `radius-lg` (16), padding 6 10, gap 12, 2 px transparent border; a button |
 | Badge | 32 round, number 15/900. Current: `olive`, white number. Done: `olive-muted` with a 16 check. To do: `surface-soft` |
 | Name | 16, 800 (current 900); ink, done ones ink-muted; the step number's "Step N" when it has no name |
