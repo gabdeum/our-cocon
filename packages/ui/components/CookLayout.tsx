@@ -39,8 +39,8 @@ export interface CookLayoutProps {
   optionsRef?: Ref<HostInstance>;
   /** Its popover is open (honey fill, spec 065). */
   optionsExpanded?: boolean;
-  /** The CookProgress bar with "Step N of M". */
-  progress: ReactNode;
+  /** The CookProgress bar with "Step N of M"; left out beside the step list, which says where you are. */
+  progress?: ReactNode;
   /** From 600: the timers panel on the right (`cookColumns`), full height; it brings its own scrolling (spec 066 FR-002). */
   panel?: ReactNode;
   /** From 960: the CookStepList on the left (spec 066 FR-003), `cookColumns` wide. */
@@ -85,14 +85,15 @@ export function CookLayout(props: CookLayoutProps) {
   const wide = tier !== 'compact';
   // The ✕ sits where the TopBar of the loading state put it (16 from the side at every size, not the
   // mockup's 20 from 600), so it doesn't jump when the steps arrive. From 600: where every screen
-  // starts (spec 063, 032-later L158).
+  // starts (spec 063, 032-later L158). It keeps to the top of its row: from 600 the name and
+  // "Serves 6" under it make the row taller than the loading bar's, and centring would drop it.
   const phoneTop = useTopEdge();
   const wideTop = useWideTop();
   return (
     <View className="flex-1 bg-surface-page">
       <View className="gap-12 border-b-[1.5px] border-line bg-surface-page px-16 pb-12" style={{ paddingTop: wide ? wideTop : phoneTop }}>
         <View className="flex-row items-center justify-between gap-12">
-          <IconButton variant="round" icon="close" iconSize={20} label={exitLabel} onPress={onExit} />
+          <IconButton variant="round" icon="close" iconSize={20} label={exitLabel} onPress={onExit} className="self-start" />
           {wide && title ? (
             <View className="min-w-0 flex-1">
               <Text size={20} weight="900" role="heading" aria-level={1} numberOfLines={1} style={{ letterSpacing: -0.3 }}>
@@ -105,12 +106,12 @@ export function CookLayout(props: CookLayoutProps) {
               ) : null}
             </View>
           ) : null}
-          <View className="flex-none flex-row items-center gap-8">
+          <View className="flex-none flex-row items-center gap-8 self-start">
             {!wide && timersLabel && onTimers ? <IconButton ref={timersRef} variant="round" icon="timer" label={timersLabel} onPress={onTimers} /> : null}
             <IconButton ref={optionsRef} variant="round" icon="settings" label={optionsLabel} expanded={optionsExpanded} onPress={onOptions} />
           </View>
         </View>
-        <View className="px-4">{progress}</View>
+        {progress ? <View className="px-4">{progress}</View> : null}
       </View>
 
       <View className={cn('flex-1 flex-row', wide && 'gap-16 px-20 pb-20 pt-16')}>

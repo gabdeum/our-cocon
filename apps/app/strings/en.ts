@@ -1069,14 +1069,6 @@ export const strings = {
   // design/ui/OC-Delete.md (spec 018): the danger link at the end of the edit form, and its Dialog.
   deleteRecipe: {
     link: 'Delete recipe',
-    title: (name: string) => `Delete “${name}”?`,
-    body: (variants: number) =>
-      variants === 0
-        ? 'It will disappear for the whole family. You can bring it back from Recently deleted for 30 days.'
-        : `It will disappear for the whole family, along with its ${variants === 1 ? 'variant' : `${variants} variants`}. You can bring it back from Recently deleted for 30 days.`,
-    bodyEmphasis: 'Recently deleted',
-    confirm: 'Delete recipe',
-    keep: 'Keep it',
     failed: "Couldn't delete. Try again.",
   },
   // design/flows.md › Recently deleted (spec 018; not drawn, copy in design/ui/OC-Settings.md).
@@ -1402,9 +1394,9 @@ export const strings = {
     // Spec 066 (OC-CookResponsive): from 600 the header names the recipe; from 960 a step list.
     /** Under the recipe name: "Serves 6 · Classic" ("Serves 6" when the recipe has no versions). */
     servesLine: (serves: string, version: string | null) => (version ? `Serves ${serves} · ${version}` : `Serves ${serves}`),
-    /** The hint beside "Step N of M" when the step list replaces the bars. */
-    jumpHint: 'Tap a step to jump to it',
     allSteps: 'All steps',
+    /** After "All steps" in the step list's heading (uppercased): "All steps · 3 of 6". */
+    stepPosition: (n: number, total: number) => `${n} of ${total}`,
     /** A step list row's name when the step has none. */
     unnamedStep: (n: number) => `Step ${n}`,
     /** A step list row for screen readers: "Go to step 3: Bake, timer 12:30". */
@@ -1566,8 +1558,8 @@ export const strings = {
       /** The menu's button while everyone shows (Show all once someone is hidden). */
       showNone: 'Show none',
       close: 'Close',
-      /** From 600 (spec 070, OC-LargeScreens › Copy "+ Event"): a plus icon, then "Event"; read "Add event". */
-      addEvent: 'Event',
+      /** From 600 (spec 070, OC-LargeScreens › Copy "+ New", as Recipes): a plus icon, then "New"; read "Add event". */
+      addEvent: 'New',
       addEventLabel: 'Add event',
     },
     // design/ui/OC-CalMonth.md (spec 037).
@@ -1860,9 +1852,7 @@ export const strings = {
       deleteTitle: (title: string) => `Delete “${title}”?`,
       /** Put before the body for someone else's event. */
       addedThis: (name: string) => `${name} added this.`,
-      deleteOneBody: 'This removes it for the whole family.',
       deleteRepeatBody: "Delete only this one, or this and all future ones? It's removed for the whole family.",
-      deleteConfirm: 'Delete',
       onlyThis: 'Only this one',
       thisAndFuture: 'This and all future ones',
       keep: 'Keep it',
@@ -1896,6 +1886,8 @@ export const strings = {
     title: 'Reminders',
     back: 'Back',
     newReminder: 'New reminder',
+    /** Beside the rail, the title's olive "+ New" (as Recipes'), read "New reminder". */
+    new: 'New',
     seeAll: 'See all reminders',
     /** The Home card footer's right side; each part drops when zero. */
     moreToday: (n: number) => `${n} more today`,

@@ -8,7 +8,7 @@ Reference: `design/screens/OC-NavResponsive.dc.html` (`mode="rail"`), `design/ui
 
 | Part | Spec |
 | --- | --- |
-| Slot | `layout-rail` (104) on the left of the frame; the rail floats in it, 12 from the left, 12 from the top and bottom (or the safe area when larger) |
+| Slot | `layout-rail` (104) on the left of the frame; the rail floats in it, 12 from the left, 12 under the top safe area, 12 from the bottom (or its safe area when larger) |
 | Rail | ink, radius 30, padding 14 8, gap 6, items centred, `shadow-nav` |
 | Logo tile | 40 × 40, honey, radius 12, the Our Cocon mark 24 in ink; 12 below it. Decorative |
 | Item | 76 × 64, radius 20, icon 24 over a 13 px label (gap 3), label always shown, one line (shrinks to 11 at the largest text size). Inactive: `on-ink`, 700 |

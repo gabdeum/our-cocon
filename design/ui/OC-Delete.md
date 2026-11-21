@@ -1,4 +1,6 @@
-# OC-Delete — Delete recipe (dialog)
+# OC-Delete — Delete recipe
+
+> 2026-11-21: "Delete recipe" deletes at once, with no Dialog: the Undo toast and Recently deleted are the way back. The dialog below is no longer shown.
 
 Source `screens/OC-Delete.dc.html` · Spec 018
 
@@ -10,7 +12,7 @@ Warn-soft disc with a danger trash icon · title "Delete “{recipe name}”?" �
 - 1 variant: "…along with its variant."
 
 ## After deleting
-The app goes to Recipes; StatusBanner "Recipe deleted" with "Undo" (8 s). Focus starts on "Keep it".
+The app goes to Recipes; StatusBanner "Recipe deleted" with "Undo" (8 s).
 
 ## Not drawn (spec 018 build)
 | State | Copy |

@@ -713,7 +713,7 @@ export function RecipeForm({
               scroll.current?.scrollTo({ y: Math.max(0, e.nativeEvent.layout.y - 12), animated: false });
             }}
             deleteButton={
-              onDeleted ? <DeleteRecipe name={recipe?.name ?? ''} variants={recipe?.variants?.length ?? 0} disabled={saving} onDelete={removeRecipe} /> : null
+              onDeleted ? <DeleteRecipe disabled={saving} onDelete={removeRecipe} /> : null
             }
           />
         ) : null}

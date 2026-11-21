@@ -8,25 +8,28 @@ export interface TabHeaderProps {
   title: string;
   /** "7 items to buy · shared with family". */
   sub?: string;
-  /** Small olive Button "New", or a Presence pill; aligned to the bottom of the title. */
+  /** Small olive Button "New", or a Presence pill; centred on the title's line. */
   action?: ReactNode;
 }
 
-/** Tab-screen title (ScreenHeader README › Tab title). */
+/**
+ * Tab-screen title (ScreenHeader README › Tab title). The title's line is 44 tall (a small button's
+ * height) with or without an action, so every tab's title sits at the same height, the calendar's too.
+ */
 export function TabHeader({ title, sub, action }: TabHeaderProps) {
   return (
-    <View className="flex-row items-end justify-between gap-12">
-      <View className="min-w-0 flex-1">
-        <Text variant="displayXl" role="heading" aria-level={1}>
+    <View>
+      <View className="min-h-control-md flex-row items-center justify-between gap-12">
+        <Text variant="displayXl" role="heading" aria-level={1} className="min-w-0 flex-1">
           {title}
         </Text>
-        {sub ? (
-          <Text size={15} weight="700" color="ink-muted">
-            {sub}
-          </Text>
-        ) : null}
+        {action}
       </View>
-      {action}
+      {sub ? (
+        <Text size={15} weight="700" color="ink-muted">
+          {sub}
+        </Text>
+      ) : null}
     </View>
   );
 }

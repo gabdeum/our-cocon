@@ -57,7 +57,7 @@ const chips = () => screen.getByRole('group', { name: 'Show events for' });
 const panel = (title: string) => screen.getByRole('region', { name: title });
 
 describe('header from 600 (spec 070 FR-002)', () => {
-  it('shows the views and people directly, and "+ Event" in place of the floating button', async () => {
+  it('shows the views and people directly, and "+ New" in place of the floating button', async () => {
     const { onNavigate, onAddEvent } = await setup();
     expect(screen.getAllByRole('heading')[0]?.textContent).toBe('October');
     expect(screen.queryByRole('button', { name: /^View: / })).toBeNull();
@@ -73,7 +73,7 @@ describe('header from 600 (spec 070 FR-002)', () => {
     await expectAccessible();
   });
 
-  it('titles Week and Day in full, and "+ Event" adds on the week\'s first day or the day shown', async () => {
+  it('titles Week and Day in full, and "+ New" adds on the week\'s first day or the day shown', async () => {
     const { onAddEvent, rerender } = await setup({ view: 'week', anchor: '2026-11-04' });
     expect(screen.getAllByRole('heading')[0]?.textContent).toBe('November 1 – 7');
     fireEvent.click(screen.getByRole('button', { name: 'Add event' }));

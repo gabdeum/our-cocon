@@ -33,7 +33,7 @@ Height ≥ 58, padding 4 px 0, divider `#F2E6C4` 1.5 px between rows. Left to ri
 - Section titles 18/900: "Overdue" (`#8A4B00`), "Today · Wed, Nov 11", "Tomorrow · Thu, Nov 12", "Later". Each section is a white card, radius 22.
 - Pagination row inside the card, after the last row: "Show more" 15/800 `#424D17` · right "{n} more" 14/700.
 - Spec 058: no "Snoozed" row. A snoozed reminder is listed in the section of the day it's back (Today, Tomorrow, Later), by when it's back, with a "Snoozed" pill (12/900 ink-muted on surface-soft) where "2d late" goes and the detail "Back tomorrow, Thu, Nov 12" / "Back Sun, Nov 22" / "Back at 16:00"; it has a tick box like the others. (057 folded them into a collapsed "Snoozed" row.)
-- Olive floating "+" 60 px, bottom right above the tab bar.
+- Olive floating "+" 60 px, bottom right above the tab bar. Beside the rail (≥ 960): an olive "+ New" beside the title instead, as Recipes (OC-LargeScreens).
 - Empty: "Nothing to remember. Nice." 17/900 + ink pill "New reminder".
 
 ## Drawer

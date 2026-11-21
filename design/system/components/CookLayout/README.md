@@ -26,7 +26,7 @@ The cooking-mode frame (Patterns.md › Cooking mode, OC-Cook): a fixed header, 
 | Steps | the rest of the width, up to `layout-reading` (960), centred only past it, padding 0 8; the footer under it at the same width, padding 12 8 0, no border |
 | Panel | 24 % of the window, from `layout-panel-medium` (290; `layout-panel-expanded`, 320, from 960) to `layout-panel-max` (380), full height; the content brings its own scrolling, so a title can stay at the top (cooking mode: "Timers" and the running count) |
 | `CookSection` | min height 60 % of the window, never under 500, so the next step peeks below |
-| Progress | from 960 only the "Step N of M" line (the step list replaces the bars) |
+| Progress | none from 960: the step list replaces the bars and its heading the "Step N of M" line ("All steps · 3 of 6"; 2026-11-21) |
 
 The step list's column is 18 % of the window, `layout-step-list` (260) to `layout-step-list-max` (300). `cookColumns(tier, width)` gives both side widths: the sides grow a little with the window so the steps fill the middle on a large iPad rather than centring, and stay the widest column.
 

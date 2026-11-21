@@ -119,9 +119,9 @@ export function placeActions(
   ];
 }
 
-/** The delete Dialog (FR-004): its body, with "{Name} added this." for someone else's event. */
+/** A repeating event's delete Dialog (FR-004): its body, with "{Name} added this." for someone else's event. */
 export function deleteBody(event: StoredEvent, myMemberId: string, members: readonly Member[]): string {
-  const body = event.recurrence ? e.deleteRepeatBody : e.deleteOneBody;
+  const body = e.deleteRepeatBody;
   const creator = event.creator_member_id !== myMemberId ? members.find((m) => m.id === event.creator_member_id) : undefined;
   return creator ? `${e.addedThis(creator.display_name)} ${body}` : body;
 }

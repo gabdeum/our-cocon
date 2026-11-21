@@ -32,12 +32,3 @@ describe('Recently deleted sub-line (spec 018)', () => {
     expect(daysLeft(ago(40 * 24), now)).toBe(0);
   });
 });
-
-describe('OC-Delete body', () => {
-  const body = strings.deleteRecipe.body;
-  it('names the variants that go with it', () => {
-    expect(body(2)).toBe('It will disappear for the whole family, along with its 2 variants. You can bring it back from Recently deleted for 30 days.');
-    expect(body(1)).toBe('It will disappear for the whole family, along with its variant. You can bring it back from Recently deleted for 30 days.');
-    expect(body(0)).toBe('It will disappear for the whole family. You can bring it back from Recently deleted for 30 days.');
-  });
-});

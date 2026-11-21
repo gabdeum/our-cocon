@@ -173,16 +173,13 @@ describe('Event detail', () => {
     expect(onDelete).toHaveBeenCalledWith('this');
   });
 
-  it('a one-off event of my own: "Delete" with no one to name', async () => {
+  it('a one-off event goes at once, with Undo in the toast and no Dialog', async () => {
     const { onDelete, tracker } = setup(babyMusic({ recurrence: null, starts_on: '2026-10-31', ends_on: '2026-10-31', creator_member_id: gabriel.id }));
     menu('Delete event');
-    const dialog = screen.getByRole('alertdialog', { name: 'Delete “Baby music class”?' });
-    expect(dialog.textContent).toContain('This removes it for the whole family.');
-    expect(dialog.textContent).not.toContain('added this');
-    expect(within(dialog).getAllByRole('button').map((b) => b.textContent)).toEqual(['Delete', 'Keep it']);
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
     await flush();
     expect(onDelete).toHaveBeenCalledWith('all');
+    expect(screen.getByRole('status').textContent).toContain('Event deleted');
     expect(tracker.track).toHaveBeenCalledWith('event_deleted', { scope: 'all', own_event: true, undone: false });
   });
 

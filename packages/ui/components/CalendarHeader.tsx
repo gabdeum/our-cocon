@@ -64,7 +64,7 @@ export interface CalendarHeaderProps<V extends string> {
    * screen-reader actions (VoiceOver's Actions rotor), so paging never needs a swipe.
    */
   arrows?: boolean;
-  /** From 600 (spec 070): the olive "+ Event" button in row 1 ("Event" beside a plus; read "Add event"), in place of the floating add button. */
+  /** From 600 (spec 070): the olive "+ New" button in row 1 ("New" beside a plus; read "Add event"), in place of the floating add button. */
   add?: { label: string; a11yLabel: string; onPress: () => void };
   /** From 600: the people chips' source for `onToggle` is the chips row, not the popover. */
   onToggleChip?: (key: string) => void;
@@ -106,7 +106,7 @@ export function CalendarHeader<V extends string>(p: CalendarHeaderProps<V>) {
 }
 
 /**
- * From 600 wide (spec 070 FR-002, OC-CalendarResponsive): title, ‹ Today › and "+ Event" in row 1;
+ * From 600 wide (spec 070 FR-002, OC-CalendarResponsive): title, ‹ Today › and "+ New" in row 1;
  * the views as a segmented control and the people as chips in row 2, nothing behind a menu.
  */
 function WideHeader<V extends string>(p: CalendarHeaderProps<V>) {
@@ -115,7 +115,8 @@ function WideHeader<V extends string>(p: CalendarHeaderProps<V>) {
   return (
     <View className="gap-10 bg-surface-page px-24 pb-10" style={{ paddingTop: top }}>
       <View className="flex-row items-center gap-10">
-        <Text size={32} weight="900" role="heading" aria-level={1} numberOfLines={1} className="min-w-0 flex-1" style={{ letterSpacing: -0.6 }}>
+        {/* The tab titles' style, so it sits at their height (TabHeader). */}
+        <Text variant="displayXl" role="heading" aria-level={1} numberOfLines={1} className="min-w-0 flex-1">
           {p.title}
         </Text>
         <IconButton variant="card" icon="back" label={p.prevLabel} onPress={p.onPrev} />

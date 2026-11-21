@@ -42,11 +42,12 @@ export function useTopEdge(min = MIN_TOP) {
 }
 
 /**
- * From 600 (spec 063 FR-003, tightened 2026-11-20): level with the rail, 12 from the top, or right
- * under the status bar when it is taller (the iPad's).
+ * From 600 (spec 063 FR-003, 2026-11-21): level with the rail, 12 under the status bar (12 from the
+ * top where there is none, as on the web).
  */
 export function useWideTop() {
-  return useTopEdge(theme.layout.topWide);
+  const insets = useContext(SafeAreaInsetsContext);
+  return (insets?.top ?? 0) + theme.layout.topWide;
 }
 
 /**

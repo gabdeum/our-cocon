@@ -32,7 +32,7 @@ Width only, never device type. Live on resize and rotation.
 ## Spacing
 
 - Gutter: 20 phone, **24 from 600**, measured from the screen edge or the rail.
-- Top: from 600, level with the rail: 12 from the top, or the safe area when taller (`layout-top-wide`; 2026-11-20, was safe area + 24). The phone keeps its current top.
+- Top: from 600, level with the rail: the safe area + 12 (`layout-top-wide`; 2026-11-21, was the safe area or 12 when larger, and safe area + 24 before that). The phone keeps its current top.
 - Content max width **1200**, centred only past that.
 - Panels: 290 (medium), 320 (expanded). Gaps between columns: 16–28 as noted per screen.
 - Cards, radii, colours, type styles, touch targets: the design system, unchanged. Type does not scale up.
@@ -44,7 +44,7 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 ## Navigation (064)
 
 - < 960: existing tab bar, max 520 wide, centred; timer pill above it as today.
-- ≥ 960: rail, with Reminders and Timers before Menu (2026-11-20; those two pages show the rail in place of their back button, titled like a tab). 12 px margin top/bottom/left, 30 radius, ink, `shadow-nav`. Logo tile 40 (honey, 12 radius) then 12 px gap. Items 76 × 64, radius 20, icon 24 over a 13 px label; active honey/ink 900, inactive `on-ink` 700. Timer button at the bottom: 76 wide, white, 2 px honey border, radius 20: clock 20, time 16/900 tabular, "+N" honey badge.
+- ≥ 960: rail, with Reminders and Timers before Menu (2026-11-20; those two pages show the rail in place of their back button, titled like a tab; Reminders then has an olive "+ New" beside its title, as Recipes, in place of the floating "+", 2026-11-21). 12 px margin top/bottom/left, 30 radius, ink, `shadow-nav`. Logo tile 40 (honey, 12 radius) then 12 px gap. Items 76 × 64, radius 20, icon 24 over a 13 px label; active honey/ink 900, inactive `on-ink` 700. Timer button at the bottom: 76 wide, white, 2 px honey border, radius 20: clock 20, time 16/900 tabular, "+N" honey badge.
 
 ## Sheets (065)
 
@@ -66,7 +66,7 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 
 ## Recipe (067) · preview 390 × 844, 744 × 1133, 1180 × 820
 
-- ≥ 600: hero 280; sheet padding 24 sides; two equal columns, the ingredients one never under 260 (Gabriel, 067; the source draws `minmax(260px, .8fr) minmax(0, 1.2fr)`), gap 28. Column titles 20/900 ("Ingredients · 9", "Steps · 6"), and "Version" too (Gabriel, 067; the source draws it 16). No tabs.
+- ≥ 600: hero 280; sheet padding 24 sides; two equal columns (Gabriel, 067; the source draws `minmax(260px, .8fr) minmax(0, 1.2fr)`; no minimum: they start at 744, each over 300), gap 28. Column titles 20/900 ("Ingredients · 9", "Steps · 6"), and "Version" too (Gabriel, 067; the source draws it 16). No tabs.
 - More options link: under the Servings card (−10 margin), olive 15/800, sliders icon 18, 44 tall.
 - Step card (all sizes): white, radius 22, padding 10 / 12 / 10 / 14, min 64, gap 12: badge 32 honey · title 18/900 · Variant tag · timer pill (soft, clock 16 olive, 14/800 tabular, "12 min") · photo 48 radius 12 · chevron 18. Whole card is the tap target → cooking mode at that step. Hint above: "Tap a step to open it in cooking mode" 13/600 muted.
 - ≥ 960: rail 104 · list column 320 (padding 12 / 12 / 16 / 20; rows 64 thumb, radius 20, 2 px olive border on the open one) · recipe panel with 12 margin (top/right/bottom), radius 28, 2 px `line-strong` border, internal scroll, no back button.
@@ -85,7 +85,7 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 
 ## Calendar (070) · preview month / week / day at 390 × 844, 820 × 1180, 1180 × 820
 
-- Header ≥ 600 row 1: title 32/900 · ‹ (44 round white) · Today (soft pill) · › · "+ Event" (olive pill 44). Row 2: segmented views (soft track, white selected with `shadow-segment`, items 44 tall, padding 18) · people chips right: 40 tall, white, padding 0 12 0 4, 30 px colour dot with initial, label 14/800; hidden = transparent with 2 px `line-strong` inset, pale dot, muted struck label. With everyone shown, a chip shows only that person; tapping the last one shown shows everyone (2026-11-20).
+- Header ≥ 600 row 1: title 32/900 · ‹ (44 round white) · Today (soft pill) · › · "+ New" (olive pill 44, as Recipes; 2026-11-21, was "+ Event"). Row 2: segmented views (soft track, white selected with `shadow-segment`, items 44 tall, padding 18) · people chips right: 40 tall, white, padding 0 12 0 4, 30 px colour dot with initial, label 14/800; hidden = transparent with 2 px `line-strong` inset, pale dot, muted struck label. With everyone shown, a chip shows only that person; tapping the last one shown shows everyone (2026-11-20).
 - Month ≥ 600: the phone's continuous vertical scroll, in a card (2026-11-20, Gabriel; the mockup pages a month at a time); weekday labels 13/900 "Sun…Sat"; cell padding 6; day number 14 (today: olive 24 circle); chips 20 tall / 12 text / radius 6; "+N" 12/900; multi-day bars same size at top 32. Selected day: 2.5 inset ink.
   - Medium: row 124; selected-day panel under the grid: title 22/900, count 14/700, rows (phone sheet rows) in 2 columns by column, gap 8, dashed add button 52.
   - Expanded: row = max(96, (available − 40) / 5); panel 320 beside the grid, one column.
@@ -94,4 +94,4 @@ Always **read by column**: fill column 1 top to bottom, then column 2 (`splitCol
 
 ## Copy (new strings only)
 
-- "Tap a step to jump to it" · "Quick timer" · "{n} min" · "{n} min timer" · "Tap a step to open it in cooking mode" · "More options · scale, units" · "+ Event" · "+ Add on {Sun 25}" · "Coming up" · "Nothing planned" · "All steps"
+- "Quick timer" · "{n} min" · "{n} min timer" · "Tap a step to open it in cooking mode" · "More options · scale, units" · "+ New" · "+ Add on {Sun 25}" · "Coming up" · "Nothing planned" · "All steps · {3} of {6}"

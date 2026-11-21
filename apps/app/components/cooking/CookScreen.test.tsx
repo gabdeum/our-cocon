@@ -546,12 +546,14 @@ describe('Cooking mode on larger screens (spec 066)', () => {
   });
 
   // The smooth scroll itself and its 700 ms pause: use-step-scroll.test.ts (jsdom has no layout).
-  it('FR-003 / SC-002: from 960 the step list replaces the bars; tapping step 5 makes it current at once', async () => {
+  it('FR-003 / SC-002: from 960 the step list replaces the bars and their line; tapping step 5 makes it current at once', async () => {
     wide(1180, 820);
     const { tracker } = await setup();
     // Only the list's rows go to a step: no bars.
     expect(screen.getAllByRole('button', { name: /^Go to step 3/ })).toEqual([within(stepList()).getByRole('button', { name: 'Go to step 3: Cook the filling, timer 08:00' })]);
-    expect(screen.getByText('Tap a step to jump to it')).toBeTruthy();
+    // Its heading says where you are, in place of "Step 1 of N" (2026-11-21).
+    expect(screen.queryByText(`Step 1 of ${STEPS}`)).toBeNull();
+    expect(within(stepList()).getByText(`All steps · 1 of ${STEPS}`)).toBeTruthy();
     expect(within(stepList()).getByRole('button', { name: 'Go to step 1: Preheat and line' }).getAttribute('aria-current')).toBe('step');
     // A step timer shows its time in its row before it starts, then what's left once it runs.
     const row2 = () => within(stepList()).getByRole('button', { name: /^Go to step 2: Blind bake, timer / });
@@ -563,7 +565,7 @@ describe('Cooking mode on larger screens (spec 066)', () => {
 
     fireEvent.click(within(stepList()).getByRole('button', { name: 'Go to step 5: Bake, timer 35:00' }));
     expect(isCurrent(4)).toBe(true);
-    expect(screen.getByText(`Step 5 of ${STEPS}`)).toBeTruthy();
+    expect(within(stepList()).getByText(`All steps · 5 of ${STEPS}`)).toBeTruthy();
     expect(within(stepList()).getByRole('button', { name: 'Go to step 5: Bake, timer 35:00' }).getAttribute('aria-current')).toBe('step');
     expect(tracker.track).toHaveBeenCalledWith('cook_step_jump', { source: 'step_list', from: 1, to: 5 });
     await expectAccessible();

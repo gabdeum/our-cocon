@@ -440,8 +440,9 @@ function LoadedRecipe({
 
       {twoColumn && view ? (
         <View testID="recipe-columns" className="flex-row items-start gap-28">
-          {/* Two equal columns (Gabriel, 067; the source draws .8fr / 1.2fr). */}
-          <View testID="ingredients-column" className="gap-18" style={{ flex: 1, minWidth: theme.layout.ingredientsMin }}>
+          {/* Two equal columns (Gabriel, 067; the source draws .8fr / 1.2fr). No min width: the iPhone's
+              layout adds the shared space on top of it, which squeezed the steps (two columns start at 744). */}
+          <View testID="ingredients-column" className="min-w-0 gap-18" style={{ flex: 1 }}>
             {versionSection}
             {servingsCard}
             {current ? (

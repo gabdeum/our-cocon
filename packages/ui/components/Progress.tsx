@@ -44,30 +44,26 @@ export interface CookProgressProps {
   hint?: string;
   /** Screen-reader name of each segment: (i) => "Go to step 3". */
   segmentLabel: (index: number) => string;
-  /** False from 960, where the step list replaces the bars (spec 066 FR-003): only the line under them. */
-  bars?: boolean;
 }
 
 /** Cooking-mode steps (Progress README › --cook): 8-tall bars in 44-tall tap areas; tap jumps. */
-export function CookProgress({ count, current, onSelect, stepLabel, hint, segmentLabel, bars = true }: CookProgressProps) {
+export function CookProgress({ count, current, onSelect, stepLabel, hint, segmentLabel }: CookProgressProps) {
   return (
     <View className="gap-6">
-      {bars ? (
-        <View className="flex-row gap-6">
-          {Array.from({ length: count }, (_, i) => (
-            <Pressable
-              key={i}
-              role="button"
-              aria-label={segmentLabel(i)}
-              aria-current={i === current ? 'step' : undefined}
-              onPress={() => onSelect(i)}
-              className={cn('min-h-touch-min flex-1 justify-center', focusRing)}
-            >
-              <View className={cn('h-8 rounded-[4px]', segment(i, current))} />
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
+      <View className="flex-row gap-6">
+        {Array.from({ length: count }, (_, i) => (
+          <Pressable
+            key={i}
+            role="button"
+            aria-label={segmentLabel(i)}
+            aria-current={i === current ? 'step' : undefined}
+            onPress={() => onSelect(i)}
+            className={cn('min-h-touch-min flex-1 justify-center', focusRing)}
+          >
+            <View className={cn('h-8 rounded-[4px]', segment(i, current))} />
+          </Pressable>
+        ))}
+      </View>
       <View className="flex-row items-center justify-between gap-8">
         <Text size={14} weight="900" color="olive" uppercase>
           {stepLabel}
