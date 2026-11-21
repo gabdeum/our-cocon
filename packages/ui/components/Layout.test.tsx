@@ -74,7 +74,7 @@ it('keeps what is open while the window changes tier', () => {
 });
 
 // SC-004 / FR-002: the phone keeps its own classes (54 top, 20 gutter) with no inline override; from
-// 600 the top is the safe area + 24. (Vitest doesn't run NativeWind, so only inline styles show here.)
+// 600 the top is level with the rail: 12, or the safe area when taller. (Vitest doesn't run NativeWind, so only inline styles show here.)
 it('keeps the phone spacing below 600 and sets the wide top from 600', () => {
   const top = () => getComputedStyle(screen.getByTestId('body').parentElement as HTMLElement).paddingTop;
   for (const Screen of [TabScreen, PushedScreen]) {
@@ -92,7 +92,7 @@ it('keeps the phone spacing below 600 and sets the wide top from 600', () => {
         <View testID="body" />
       </Screen>,
     );
-    expect(top()).toBe('24px');
+    expect(top()).toBe('12px');
     cleanup();
   }
 });

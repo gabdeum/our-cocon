@@ -1,6 +1,5 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, View, type HostInstance } from 'react-native';
-import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { cn, focusRing } from '../cn';
 import { useLayoutTier } from '../layout';
 import { theme } from '../theme';
@@ -12,6 +11,7 @@ import type { IconName } from './Icon';
 import { MemberChip, MemberFilterChip, MemberStack, type MemberChipColor } from './MemberChip';
 import { SegmentedControl, type Segment } from './SegmentedControl';
 import { Text } from './Text';
+import { useWideTop } from './TopBar';
 
 export interface CalendarHeaderChip {
   /** A member id, "everyone" or "others". */
@@ -110,10 +110,10 @@ export function CalendarHeader<V extends string>(p: CalendarHeaderProps<V>) {
  * the views as a segmented control and the people as chips in row 2, nothing behind a menu.
  */
 function WideHeader<V extends string>(p: CalendarHeaderProps<V>) {
-  const insets = useContext(SafeAreaInsetsContext);
+  const top = useWideTop();
   const onChip = p.onToggleChip ?? p.onToggle;
   return (
-    <View className="gap-10 bg-surface-page px-24 pb-10" style={{ paddingTop: (insets?.top ?? 0) + theme.layout.topWide }}>
+    <View className="gap-10 bg-surface-page px-24 pb-10" style={{ paddingTop: top }}>
       <View className="flex-row items-center gap-10">
         <Text size={32} weight="900" role="heading" aria-level={1} numberOfLines={1} className="min-w-0 flex-1" style={{ letterSpacing: -0.6 }}>
           {p.title}

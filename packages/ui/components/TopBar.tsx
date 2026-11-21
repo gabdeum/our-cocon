@@ -42,14 +42,22 @@ export function useTopEdge(min = MIN_TOP) {
 }
 
 /**
+ * From 600 (spec 063 FR-003, tightened 2026-11-20): level with the rail, 12 from the top, or right
+ * under the status bar when it is taller (the iPad's).
+ */
+export function useWideTop() {
+  return useTopEdge(theme.layout.topWide);
+}
+
+/**
  * One bar at the top of every pushed screen (TopBar README): round back button, the title centred on
  * the screen whatever the sides hold, up to two round actions. The layout keeps it pinned. From 600
- * it sits 24 under the safe area, like the screens' content (spec 063 FR-003).
+ * it starts where the screens' content does (`useWideTop`).
  */
 export function TopBar({ back, title, titleMode = 'always', actions, scrolled = false, titleShown = false, transparent = false }: TopBarProps) {
   const { tier } = useLayoutTier();
   const phoneTop = useTopEdge();
-  const wideTop = useTopEdge(0) + theme.layout.topWide;
+  const wideTop = useWideTop();
   const top = tier === 'compact' ? phoneTop : wideTop;
   const reduce = useReduceMotion();
   const always = titleMode === 'always';

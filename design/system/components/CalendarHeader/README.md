@@ -24,7 +24,7 @@ Reference: `design/screens/OC-CalendarResponsive.dc.html`, `design/ui/OC-LargeSc
 
 | Part | Spec |
 | --- | --- |
-| Frame | 24 under the safe area, 24 sides, 10 between rows |
+| Frame | top `layout-top-wide` (12, or the safe area when taller), 24 sides, 10 between rows |
 | Row 1 | title 32/900 (one line, the longest format that fits beside the buttons: "October", "October 25 – 31", "Sunday, October 25") · ‹ (44 round white) · Today (soft pill) · › · "+ Event" (olive pill 44: plus icon and "Event", read "Add event") |
 | Row 2 | the views as SegmentedControl `hug` · the Reminders toggle (Day and Agenda, spec 058) · then, right-aligned, the people as `MemberFilterChip`s (members, Everyone, Others), wrapping when there isn't room |
 

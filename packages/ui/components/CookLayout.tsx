@@ -5,7 +5,7 @@ import { cn } from '../cn';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
 import { Text } from './Text';
-import { useTopEdge } from './TopBar';
+import { useTopEdge, useWideTop } from './TopBar';
 import { theme } from '../theme';
 import { useLayoutTier, type LayoutTier } from '../layout';
 import { ToastHost } from './Toast';
@@ -84,10 +84,10 @@ export function CookLayout(props: CookLayoutProps) {
   const columns = cookColumns(tier, width);
   const wide = tier !== 'compact';
   // The ✕ sits where the TopBar of the loading state put it (16 from the side at every size, not the
-  // mockup's 20 from 600), so it doesn't jump when the steps arrive. From 600: safe area + 24, as
-  // every screen (spec 063, 032-later L158).
+  // mockup's 20 from 600), so it doesn't jump when the steps arrive. From 600: where every screen
+  // starts (spec 063, 032-later L158).
   const phoneTop = useTopEdge();
-  const wideTop = useTopEdge(0) + theme.layout.topWide;
+  const wideTop = useWideTop();
   return (
     <View className="flex-1 bg-surface-page">
       <View className="gap-12 border-b-[1.5px] border-line bg-surface-page px-16 pb-12" style={{ paddingTop: wide ? wideTop : phoneTop }}>
