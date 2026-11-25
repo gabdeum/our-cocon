@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, type HostInstance, type ScrollViewInstance } from 'react-native';
-import { announce, BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookStepList, CookTimerCard, cookStepHeight, ListRow, PhotoViewer, PushedScreen, SettingRow, StepPhoto, StepText, Text, useLayoutTier, useReduceMotion, useSheetPresentation, type TopBarConfig } from '@cocon/ui';
+import { announce, BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookStepList, CookTimerCard, cookStepHeight, ListRow, Overline, PhotoViewer, PushedScreen, StepPhoto, StepText, Text, useLayoutTier, useReduceMotion, useSheetPresentation, type TopBarConfig } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
 import { strings } from '../../strings/en';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
-import { defaultCooking, formatOf, recipeView, servingsMax, servingsText, type CookingSettings } from '../../lib/recipe-view';
+import { cookServings, defaultCooking, formatOf, recipeView, servingsMax, servingsText, type CookingSettings } from '../../lib/recipe-view';
 import { startIndex, stepEditTarget } from '../../lib/cooking';
 import { useCookAwake } from '../../lib/keep-awake';
 import { AppTimerPill, useHasTimers } from '../timers/AppTimerPill';
@@ -14,6 +14,7 @@ import { useTimers } from '../../lib/timer-store';
 import { clock, remaining, type Timer } from '../../lib/timers';
 import { useStepTimerControl, type StepTimerInput } from '../recipes/step-timer';
 import { MoreOptions } from '../recipes/MoreOptions';
+import { ScaledByLine, ServingsStepper, scaledName, useServings } from '../recipes/Servings';
 import { useStepScroll } from './use-step-scroll';
 import { CookTimersPanel } from './CookTimersPanel';
 import { useVisitUnits } from '../../lib/visit-units';
@@ -42,6 +43,8 @@ export interface CookScreenProps {
   session?: { current_step: number; servings: number; variant_id: string | null } | null;
   /** The step on screen (from 0), each time it changes: the route saves it to the cook. */
   onStep?: (index: number) => void;
+  /** Servings or version changed while cooking: the route saves them to the cook. */
+  onCookChoices?: (choices: { servings: number; variant_id: string | null }) => void;
   /** "Done cooking" on the last step (FR-005). */
   onDone: () => void;
   /** The TimerPill opens the Timers screen. */
@@ -100,7 +103,7 @@ type LoadedProps = CookScreenProps & { recipe: RecipeDetail; bar: TopBarConfig }
 
 /** The recipe page's current servings and variants on this device (spec 008 FR-006), then the steps. */
 function WithChoices(props: LoadedProps) {
-  const { recipe, storage, userId, bar, visit = 0, session } = props;
+  const { recipe, storage, userId, bar, visit = 0, session, onCookChoices } = props;
   const [choices, setChoices] = useState<RecipeChoices | null>(null);
   // A resumed cook keeps its servings and version (spec 051 US1.3), once; later changes are the cook's own.
   const resumed = useRef(false);
@@ -112,6 +115,12 @@ function WithChoices(props: LoadedProps) {
       if (session && !resumed.current) {
         resumed.current = true;
         const version = recipe.variants.some((v) => v.id === session.variant_id && v.kind === 'version') ? session.variant_id : null;
+        // This device's own choices hold when they're what the cook is at: a scale by an ingredient
+        // or 7½ servings is kept, not rounded away.
+        if (start.version === version && cookServings(recipe, start) === session.servings) {
+          setChoices(start);
+          return;
+        }
         const next = { ...start, servings: Math.min(session.servings, servingsMax(recipe.serves)), version, scaledBy: null };
         setChoices(next);
         void writeChoices(storage, userId, recipe.id, next);
@@ -128,6 +137,19 @@ function WithChoices(props: LoadedProps) {
 
   // A variant deleted while cooking no longer counts.
   const current = useMemo(() => (choices ? startingChoices(choices, recipe, servingsMax(recipe.serves)) : null), [choices, recipe]);
+  // Servings or version changed here (the stepper, the scale sheet, a variant): the cook follows.
+  // The first ones are what it started or resumed with.
+  const cookAt = current ? { servings: cookServings(recipe, current), variant_id: current.version } : null;
+  const cookKey = cookAt ? `${cookAt.servings}:${cookAt.variant_id}` : null;
+  const savedAt = useRef<string | null>(null);
+  useEffect(() => {
+    if (!cookKey || !cookAt) return;
+    const first = savedAt.current === null;
+    if (cookKey === savedAt.current) return;
+    savedAt.current = cookKey;
+    if (!first) onCookChoices?.(cookAt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cookKey]);
   if (!current) return <CookLoading bar={bar} />;
   const update = (next: RecipeChoices) => {
     setChoices(next);
@@ -163,15 +185,12 @@ function Cooking({
   const count = steps.length;
   // Events cap step counts (variants can add steps on top of a recipe's 100).
   const sent = (n: number) => Math.min(n, MAX_TRACKED_STEPS);
-  // "Screen stays on" in the options sheet, for this visit; it starts from the setting (spec 027).
-  const [keepAwake, setKeepAwake] = useState(cooking.keepAwake);
-  // The setting can arrive after the recipe (the family's load) or change live: follow it.
-  const [awakeSetting, setAwakeSetting] = useState(cooking.keepAwake);
-  if (awakeSetting !== cooking.keepAwake) {
-    setAwakeSetting(cooking.keepAwake);
-    setKeepAwake(cooking.keepAwake);
-  }
-  const awake = useCookAwake(keepAwake);
+  // "Keep screen on" is a recipe setting (spec 027: Menu › Recipes, or the recipe's own), not an option here.
+  useCookAwake(cooking.keepAwake);
+  // The Scaling section: the recipe page's stepper and "Scaled by … · Reset" (spec 008, 013).
+  const max = servingsMax(recipe.serves);
+  const changeServings = useServings({ current: choices, shown: view.servings, max, tracker, update: onChoices });
+  const scaled = view.scaledBy ? scaledName(view.scaledBy.name) : null;
   const [optionsOpen, setOptionsOpen] = useState(false);
   // Settings is a menu (a popover from 600, its button honey while open); Timers a flow (spec 065).
   const optionsAs = useSheetPresentation('menu');
@@ -417,17 +436,19 @@ function Cooking({
       title={c.options}
       closeLabel={c.closeOptions}
     >
+      <View>
+        <Overline>{c.scaling}</Overline>
+        <ListRow flush title={c.servings} trailing={{ kind: 'node', node: <ServingsStepper shown={view.servings} scaled={scaled != null} max={max} onChange={changeServings} /> }} />
+        {scaled ? (
+          <View className="pb-8">
+            <ScaledByLine name={scaled} onReset={() => onChoices({ ...choices, scaledBy: null })} />
+          </View>
+        ) : null}
+        <ListRow flush last title={strings.recipePage.more.scaleByIngredient} trailing={{ kind: 'chevron' }} onPress={openSheet(onScaleByIngredient)} />
+      </View>
       {/* One list: the sheet's gap would space the rows apart. */}
       <View>
-        <SettingRow
-          label={c.awake}
-          hint={awake === 'unsupported' ? c.awakeUnsupported : keepAwake ? c.awakeOnHint : c.awakeOffHint}
-          value={keepAwake}
-          onValueChange={(on) => {
-            setKeepAwake(on);
-            tracker.track('cook_screen_awake_toggled', { on, presentation: optionsAs });
-          }}
-        />
+        <Overline>{c.optionsSection}</Overline>
         <ListRow
           flush
           title={c.editStep(at + 1)}
@@ -444,7 +465,6 @@ function Cooking({
           settings={cooking}
           tracker={tracker}
           onChange={onChoices}
-          onScaleByIngredient={openSheet(onScaleByIngredient)}
           onConvert={openSheet(onConvert)}
           onUnits={setVisitUnits}
           presentation={optionsAs}

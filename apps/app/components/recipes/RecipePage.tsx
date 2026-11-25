@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useWindowDimensions, View, type HostInstance } from 'react-native';
 import {
   BottomSheet,
@@ -19,7 +19,6 @@ import {
   SettingRow,
   StatusBanner,
   StepRow,
-  Stepper,
   Text,
   theme,
 } from '@cocon/ui';
@@ -29,19 +28,18 @@ import type { RecipeDetail } from '../../lib/recipe';
 import { cookedLine, pageCard, stepTotal, type CookSession } from '../../lib/cook-sessions';
 import { forgetVisitUnits, useVisitUnits } from '../../lib/visit-units';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
-import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, servingsText, SERVINGS_MIN, variantCount, type CookingSettings, type StepLine } from '../../lib/recipe-view';
+import { defaultCooking, formatOf, optionHint, recipeChips, recipeView, servingsMax, SERVINGS_MIN, variantCount, type CookingSettings, type StepLine } from '../../lib/recipe-view';
 import type { PhotoUrls } from '../../lib/recipe-photo';
 import type { RecipeLayout } from '../../lib/recipe-layout';
 import type { Member } from '../../lib/session';
 import { AppTimerPill } from '../timers/AppTimerPill';
 import { MoreOptions } from './MoreOptions';
+import { ScaledByLine, ServingsStepper, scaledName, useServings } from './Servings';
 import { OfflineBanner } from '../sync/OfflineBanner';
 import { useOnline } from '../../lib/online';
 
 const p = strings.recipePage;
-const more = strings.recipePage.more;
-/** `servings_changed` waits for the stepper to settle, so 6 → 9 in three taps is one change. */
-export const SERVINGS_SETTLE_MS = 800;
+export { SERVINGS_SETTLE_MS } from './Servings';
 
 export type RecipeTab = 'ingredients' | 'steps';
 
@@ -210,28 +208,9 @@ function LoadedRecipe({
     void writeChoices(storage, userId, recipe.id, next);
   };
 
-  // `servings_changed` once the stepper settles, from where the burst of taps started.
-  // Leaving the page before it settles still sends the change.
-  const burst = useRef<{ from: number; to: number; timer: ReturnType<typeof setTimeout> } | null>(null);
-  const sendServings = useCallback(() => {
-    const b = burst.current;
-    burst.current = null;
-    if (!b) return;
-    clearTimeout(b.timer);
-    if (b.from !== b.to) tracker.track('servings_changed', { from: b.from, to: b.to });
-  }, [tracker]);
-  useEffect(() => sendServings, [sendServings]);
-  // Scaled by an ingredient (013), servings can be 7½: − goes to 7 and + to 8, and the scale ends.
   const shown = view?.servings ?? current?.servings ?? recipe.serves;
-  const changeServings = (stepped: number) => {
-    if (!current) return;
-    const to = Math.min(max, Math.max(SERVINGS_MIN, stepped > shown ? Math.floor(shown) + 1 : Math.ceil(shown) - 1));
-    const from = burst.current?.from ?? Math.min(max, Math.max(SERVINGS_MIN, Math.round(shown)));
-    clearTimeout(burst.current?.timer);
-    burst.current = { from, to, timer: setTimeout(() => sendServings(), SERVINGS_SETTLE_MS) };
-    update({ ...current, servings: to, scaledBy: null });
-  };
-  const scaledName = view?.scaledBy ? `${view.scaledBy.name.charAt(0).toLowerCase()}${view.scaledBy.name.slice(1)}` : null;
+  const changeServings = useServings({ current, shown, max, tracker, update });
+  const scaled = view?.scaledBy ? scaledName(view.scaledBy.name) : null;
 
   const pickVariants = (next: RecipeChoices) => {
     if (!current || (next.version === current.version && next.options.length === current.options.length && next.options.every((id) => current.options.includes(id)))) return;
@@ -290,31 +269,12 @@ function LoadedRecipe({
           {p.servings}
         </Text>
         {current ? (
-          <Stepper
-            value={shown}
-            display={scaledName ? servingsText(shown) : undefined}
-            announcement={p.servingsAnnouncement(scaledName ? servingsText(shown) : String(shown))}
-            onChange={changeServings}
-            min={SERVINGS_MIN}
-            max={max}
-            decreaseLabel={p.fewerServings}
-            increaseLabel={p.moreServings}
-          />
+          <ServingsStepper shown={shown} scaled={scaled != null} max={max} onChange={changeServings} />
         ) : null}
         {/* FR-003: beside the columns the ⋯ leaves Servings for the link under the card. */}
         {twoColumn ? null : <IconButton icon="more" label={p.moreOptions} variant="square" iconSize={22} expanded={moreOpen} onPress={() => setMoreOpen((o) => !o)} className="ml-4" />}
       </View>
-      {scaledName && current ? (
-        <View className="flex-row flex-wrap items-center gap-8">
-          {/* Meta and Link align themselves to the top; their wrappers let the row centre them. */}
-          <View>
-            <Meta label={more.scaledBy(scaledName)} tone="sage" />
-          </View>
-          <View>
-            <Link label={more.reset} aria-label={more.resetA11y(scaledName)} onPress={() => update({ ...current, scaledBy: null })} />
-          </View>
-        </View>
-      ) : null}
+      {scaled && current ? <ScaledByLine name={scaled} onReset={() => update({ ...current, scaledBy: null })} /> : null}
       {moreOpen && current && !twoColumn ? (
         <MoreOptions choices={current} settings={cooking} tracker={tracker} onChange={update} onScaleByIngredient={onScaleByIngredient} onConvert={onConvert} onUnits={setVisitUnits} />
       ) : null}

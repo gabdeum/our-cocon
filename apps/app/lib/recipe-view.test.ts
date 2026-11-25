@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { quiche, quicheIds } from '@cocon/schemas/quiche.fixture';
 import { format, scale } from '@cocon/quantity';
 import { applyVariants, ingredientNote, noVariants, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
-import { bestMonthsLabel, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, timerClock, timerDuration, type StepPart } from './recipe-view';
+import { bestMonthsLabel, cookServings, defaultFormat, optionHint, recipeChips, recipeView, servingsMax, timerClock, timerDuration, type StepPart } from './recipe-view';
 
 const recipe = { ...quiche, facts: {} };
 const dough = quiche.variants.find((v) => v.id === quicheIds.dough) as RecipeVariant;
@@ -268,5 +268,14 @@ describe('steps (spec 009)', () => {
     expect(timerClock(720)).toBe('12:00');
     expect(timerClock(330)).toBe('05:30');
     expect(timerClock(3600)).toBe('60:00');
+  });
+});
+
+describe('cookServings (spec 051)', () => {
+  it('is the whole servings in force, a scale by an ingredient included, within 1–50', () => {
+    expect(cookServings(recipe, { ...noVariants, servings: 6, scaledBy: null })).toBe(6);
+    // 250 g of the 200 g lardons is ×1.25: 7½ servings, saved as 8.
+    expect(cookServings(recipe, { ...noVariants, servings: 6, scaledBy: { ingredientId: quicheIds.lardons, amount: 250, unit: 'g' } })).toBe(8);
+    expect(cookServings(recipe, { ...noVariants, servings: 6, scaledBy: { ingredientId: quicheIds.lardons, amount: 5000, unit: 'g' } })).toBe(50);
   });
 });

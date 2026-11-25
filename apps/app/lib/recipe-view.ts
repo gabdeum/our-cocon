@@ -5,7 +5,7 @@ import type { Member } from './session';
 import type { RecipeDetail } from './recipe';
 import { formatTotalTime, memberName, recipeSource } from './recipe-format';
 import type { RecipeChoices } from './recipe-choices';
-import { mergedLine, scaleRecipe, withFacts, type IngredientLine, type LineIngredient, type PageScale } from '@cocon/data';
+import { appliedIngredients, mergedLine, scaleRecipe, withFacts, type IngredientLine, type LineIngredient, type PageScale } from '@cocon/data';
 
 // Shared with the MCP server (spec 024): the ingredient list as the page shows it.
 export { appliedIngredients, ingredientLine, mergedLine, rowScale, scaleRecipe, servingsText, type IngredientLine, type PageScale } from '@cocon/data';
@@ -27,6 +27,15 @@ export const formatOf = (choices: Pick<RecipeChoices, 'system' | 'kitchenScale'>
 /** FR-001 / edge cases: 1–16 servings, or up to what the recipe serves when it's more. */
 export const SERVINGS_MIN = 1;
 export const servingsMax = (serves: number) => Math.max(16, serves);
+
+/**
+ * The whole servings a cook is saved at (spec 051): the servings in force, a scale by an
+ * ingredient included (7½ → 8), within the cook's 1–50.
+ */
+export function cookServings(recipe: Pick<RecipeDetail, 'serves' | 'ingredients' | 'steps' | 'variants' | 'facts'>, choices: PageScale & VariantChoice): number {
+  const { servings } = scaleRecipe(recipe.serves, appliedIngredients(recipe, choices), choices);
+  return Math.min(50, Math.max(1, Math.round(servings)));
+}
 
 /** The list (FR-004): one line per ingredient, where its first row is. */
 export const ingredientLines = (rows: LineIngredient[], options: FormatOptions) => groupSameIngredient(rows).map((g) => mergedLine(g, options));

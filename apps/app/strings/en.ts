@@ -1367,12 +1367,10 @@ export const strings = {
     // Spec 062: the round timer button left of "Cooking options", and its sheet.
     timers: 'Timers',
     closeTimers: 'Close timers',
-    /** The switch in the options sheet. */
-    awake: 'Screen stays on',
-    awakeOnHint: "Your screen won't lock while you cook",
-    awakeOffHint: 'Your screen locks as usual',
-    /** The switch's hint when this browser can't keep the screen on (OC-Cook › States). */
-    awakeUnsupported: 'This browser may let the screen lock.',
+    /** The options sheet's sections: servings and scale by an ingredient, then the rest. */
+    scaling: 'Scaling',
+    servings: 'Servings',
+    optionsSection: 'More',
     /** The options sheet's row to the recipe form at the current step. */
     editStep: (n: number) => `Edit step ${n}`,
     stepOf: (n: number, total: number) => `Step ${n} of ${total}`,

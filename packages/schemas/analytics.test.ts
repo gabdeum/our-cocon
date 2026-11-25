@@ -182,9 +182,7 @@ describe('createTracker', () => {
     expect(() => tracker.track('cooking_exited', { at_step: 0, step_count: 6 })).toThrow();
     expect(() => tracker.track('cook_finished', { status: 'done', cancel_reason: null, steps_seen: 6, minutes: 1.5 })).toThrow();
     expect(() => tracker.track('cooking_started', { step_count: 6, recipe: 'Quiche' } as never)).toThrow();
-    tracker.track('cook_screen_awake_toggled', { on: false, presentation: 'popover' });
-    expect(t.capture).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false, presentation: 'popover' });
-    expect(() => tracker.track('cook_screen_awake_toggled', { on: 'yes' } as never)).toThrow();
+    expect(() => tracker.track('cook_screen_awake_toggled' as never, { on: false } as never)).toThrow();
   });
 });
 

@@ -129,8 +129,6 @@ export const events = {
   recipe_edit_opened: z.strictObject({ from: z.enum(['top_bar']) }),
   // Spec 051: a member picked their own units (Menu › Recipes › For you).
   my_units_changed: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
-  // Spec 012: "Screen stays on" switched in cooking mode's options sheet, for this visit.
-  cook_screen_awake_toggled: z.strictObject({ on: z.boolean(), presentation: SheetPresentation }),
   // Spec 062: the Timers sheet opened from cooking mode's round timer button, with how many timers there were.
   cook_timers_opened: z.strictObject({ timer_count: z.int().min(0).max(100), presentation: SheetPresentation }),
   // Spec 066: a step picked from the progress bars or the step list (not Next / Back); steps from 1.
