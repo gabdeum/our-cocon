@@ -25,6 +25,10 @@ A row inside a white list group: grocery items, picker items, settings links and
 | Icon row (`IconRow`, OC-CalEvent, spec 042) | facts about an event in a `ListGroup inset` card (padding 4 16): olive icon 22, gap 12, title 16/800, optional sub-line 14/700 ink-muted, optional olive links at the end, 16 apart ("Copy", "Open in Maps"); a place wraps up to 3 lines, then ends with "…" (`titleLines`); min 56 tall, 60 with a sub-line or links; 1.5 px `line` divider. Not pressable; only its links are |
 | Compact icon row (`IconRow compact`, spec 050 FR-006) | min 52, one line (a place wraps up to 3 lines, then "…", the pills centred beside it): title 15/800 then " · " and the sub-line 15/700 ink-muted ("1 hour before · reminds Gabriel · 08:00"); the member dots (MemberStack) can stand in for the icon, an olive icon can end the row (car on the who row), and the links become soft pills 36 tall, padding 0 12, 14/800, 8 apart. An action with an icon is a soft round 44 IconButton instead, in both rows, 8 apart: the place's copy and directions, read as "Copy {place}" and "Open {place} in Google Maps" |
 
+## Skeleton (`ListRowSkeleton`)
+
+Rows on their way (Patterns.md › Loading): a surface-card group, radius xl, of `count` rows 60 tall with the ListRow divider, each a 26 tick box and a name bar (14 tall, 60 % then 40 % wide) in surface-soft. No spinner; hidden from screen readers (what's loading says so). Used under a grocery recipe card being added.
+
 ## Rules
 
 - The whole row is the tap target (label wraps the checkbox).

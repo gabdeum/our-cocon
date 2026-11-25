@@ -19,6 +19,24 @@ export function Overline({ children, className }: { children: string; className?
   );
 }
 
+/**
+ * Rows on their way (Patterns.md › Loading): a surface-card group of `count` rows, each a tick
+ * box and a name bar in surface-soft, 60 tall like a ListRow, no spinner. Hidden from screen readers: whatever
+ * is loading says so.
+ */
+export function ListRowSkeleton({ count }: { count: number }) {
+  return (
+    <View aria-hidden testID="list-row-skeleton" className="overflow-hidden rounded-xl bg-surface-card">
+      {Array.from({ length: count }, (_, i) => (
+        <View key={i} className={cn('min-h-[60px] flex-row items-center gap-12 px-14', i < count - 1 && 'border-b-[1.5px] border-line')}>
+          <View className="h-[26px] w-[26px] rounded-[7px] bg-surface-soft" />
+          <View className={cn('h-[14px] rounded-xs bg-surface-soft', i % 2 ? 'w-2/5' : 'w-3/5')} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 /** A ListGroup's rows are its list's items (spec 030: a list holds only list items). */
 const InList = createContext(false);
 

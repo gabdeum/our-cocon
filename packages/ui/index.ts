@@ -42,7 +42,7 @@ export { RadioCard, type RadioCardProps } from './components/RadioCard';
 export { ResultTile, type ResultTileProps } from './components/ResultTile';
 export { PhotoField, type PhotoFieldProps } from './components/PhotoField';
 export { PhotoCrop, PHOTO_ASPECT, type CropRect, type PhotoCropProps } from './components/PhotoCrop';
-export { IconRow, ListGroup, ListRow, Overline, IngredientRow, type IconRowProps, type ListRowProps } from './components/ListRow';
+export { IconRow, ListGroup, ListRow, ListRowSkeleton, Overline, IngredientRow, type IconRowProps, type ListRowProps } from './components/ListRow';
 export { Card, HeroCard, HeroCarousel, Photo, PhotoPlaceholder, Thumb, type CardProps, type HeroAction, type HeroCardProps } from './components/Card';
 export { CookSessionCard, type CookSessionCardProps } from './components/CookSessionCard';
 export { GroceryRecipeCard, RecipeItem, RecipeItemSkeleton, RecipeSummary, type GroceryRecipeCardProps, type RecipeItemProps, type RecipeSummaryProps } from './components/RecipeItem';

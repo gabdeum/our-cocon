@@ -365,6 +365,17 @@ describe('Groceries', () => {
     expect(screen.getByText('Add items above, or from any recipe with “Add to groceries”.')).toBeTruthy();
     expect(screen.getByText('0 items to buy · shared with family')).toBeTruthy();
   });
+
+  it('shows a recipe whose items are on their way: its card says so, with skeleton rows, and no empty state', () => {
+    const pending = [{ id: 1, familyId: 'f', recipeId: 'r', recipeName: 'Leek & bacon quiche', photoPath: null, count: 8 }];
+    setup({ items: [], pending });
+    const card = screen.getByTestId('grocery-recipe-pending');
+    expect(card.textContent).toContain('Leek & bacon quiche');
+    expect(screen.getByText('Adding 8 items…').getAttribute('role')).toBe('status');
+    expect(screen.queryByRole('button', { name: /More for/ })).toBeNull();
+    expect(screen.getByTestId('list-row-skeleton').children).toHaveLength(3);
+    expect(screen.queryByText('Your list is empty.')).toBeNull();
+  });
 });
 
 describe('Groceries › one row per thing (spec 022)', () => {

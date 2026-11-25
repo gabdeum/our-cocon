@@ -126,7 +126,10 @@ export interface GroceryRecipeCardProps {
   moreLabel: string;
   /** Null for a recipe in Recently deleted: the body does nothing. */
   onOpen: (() => void) | null;
-  onMore: () => void;
+  /** Null while its items are being added: no "…" yet. */
+  onMore: (() => void) | null;
+  /** Its items are on their way (spec 022): the meta ("Adding 8 items…") is announced politely. */
+  pending?: boolean;
 }
 
 /**
@@ -134,7 +137,7 @@ export interface GroceryRecipeCardProps {
  * soft, radius 18. The body (40 thumbnail, name, meta) opens the recipe; the 48 × 60 "…"
  * at the right opens its menu.
  */
-export function GroceryRecipeCard({ name, meta, photoUri, openLabel, moreLabel, onOpen, onMore }: GroceryRecipeCardProps) {
+export function GroceryRecipeCard({ name, meta, photoUri, openLabel, moreLabel, onOpen, onMore, pending = false }: GroceryRecipeCardProps) {
   const body = (
     <>
       {/* The name is right beside it: the photo isn't read again (spec 030). */}
@@ -143,14 +146,14 @@ export function GroceryRecipeCard({ name, meta, photoUri, openLabel, moreLabel, 
         <Text size={15} weight="800">
           {name}
         </Text>
-        <Text size={13} weight="600" color="ink-muted">
+        <Text size={13} weight="600" color="ink-muted" role={pending ? 'status' : undefined} aria-live={pending ? 'polite' : undefined}>
           {meta}
         </Text>
       </View>
     </>
   );
   return (
-    <View className="flex-row items-center rounded-[18px] bg-surface-soft">
+    <View className={cn('flex-row items-center rounded-[18px] bg-surface-soft', pending && 'pr-12')} testID={pending ? 'grocery-recipe-pending' : undefined}>
       {onOpen ? (
         <Pressable role="link" aria-label={openLabel} onPress={onOpen} className={cn('min-w-0 flex-1 flex-row items-center gap-10 rounded-[18px] py-10 pl-12 active:bg-surface-soft-pressed', focusRing)}>
           {body}
@@ -158,9 +161,11 @@ export function GroceryRecipeCard({ name, meta, photoUri, openLabel, moreLabel, 
       ) : (
         <View className="min-w-0 flex-1 flex-row items-center gap-10 py-10 pl-12">{body}</View>
       )}
-      <Pressable role="button" aria-label={moreLabel} onPress={onMore} className={cn('h-[60px] w-[48px] items-center justify-center rounded-[18px] active:bg-surface-soft-pressed', focusRing)}>
-        <Icon name="more-vertical" size={22} color="ink" />
-      </Pressable>
+      {onMore ? (
+        <Pressable role="button" aria-label={moreLabel} onPress={onMore} className={cn('h-[60px] w-[48px] items-center justify-center rounded-[18px] active:bg-surface-soft-pressed', focusRing)}>
+          <Icon name="more-vertical" size={22} color="ink" />
+        </Pressable>
+      ) : null}
     </View>
   );
 }

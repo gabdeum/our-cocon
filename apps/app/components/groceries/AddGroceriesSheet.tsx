@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { BottomSheet, Link, ListGroup, ListRow, SheetFooter, useSheetPresentation } from '@cocon/ui';
 import type { IngredientFactsInput } from '@cocon/quantity';
 import type { Tracker, UnitSystem } from '@cocon/schemas';
-import { useFailureToast, useToast } from '../../lib/toast';
+import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import type { AddedFromRecipe, RecipeGroceryLine } from '../../lib/add-from-recipe';
 import { mergeNotes } from '../../lib/add-from-recipe';
@@ -45,10 +45,7 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, un
   const presentation = useSheetPresentation('flow');
   // FR-001: every ingredient ticked to start; ids that are unticked.
   const [off, setOff] = useState<ReadonlySet<string>>(new Set());
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState<string | null>(null);
-  // Failures are warn toasts (spec 053 FR-015).
-  useFailureToast(failed);
+  const [sent, setSent] = useState(false);
   // On the web a Modal can stay over the next screen while this one leaves: take it away first.
   const [leaving, setLeaving] = useState(false);
   const leave = (go: () => void) => () => {
@@ -68,23 +65,28 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, un
       return next;
     });
 
-  const add = async () => {
-    if (count === 0 || busy) return;
-    setBusy(true);
-    setFailed(null);
-    const added = await api.add(lines.filter((l) => ticked.has(l.id)));
-    setBusy(false);
-    if (!added) {
-      setFailed(a.addFailed);
-      return;
-    }
-    tracker.track('groceries_added_from_recipe', { ingredient_count: count, unticked_count: lines.length - count, presentation });
-    toast.show({
-      text: a.added(count),
-      onUndo: () => undo(added),
-      undoFailed: a.undoFailed,
-      action: { label: a.seeList, onPress: onSeeList },
-    });
+  // The sheet closes at once; the list shows the recipe's items on their way (`api.add`), then the
+  // toast says they're in, or that they couldn't be added, with Try again.
+  const add = () => {
+    if (count === 0 || sent) return;
+    setSent(true);
+    const picked = lines.filter((l) => ticked.has(l.id));
+    const unticked = lines.length - count;
+    const send = () =>
+      void api.add(picked).then((added) => {
+        if (!added) {
+          toast.show({ text: a.addFailed, tone: 'warn', retry: send });
+          return;
+        }
+        tracker.track('groceries_added_from_recipe', { ingredient_count: picked.length, unticked_count: unticked, presentation });
+        toast.show({
+          text: a.added(picked.length),
+          onUndo: () => undo(added),
+          undoFailed: a.undoFailed,
+          action: { label: a.seeList, onPress: onSeeList },
+        });
+      });
+    send();
     close();
   };
 
@@ -97,7 +99,7 @@ export function AddGroceriesSheet({ recipeName, servings, lines, list, facts, un
   const footer = (
     <SheetFooter
       cancel={{ label: a.cancel, onPress: close }}
-      primary={{ label: count === 0 ? a.nothingSelected : a.add(count), onPress: () => void add(), disabled: count === 0 || !online, busy, busyLabel: a.adding }}
+      primary={{ label: count === 0 ? a.nothingSelected : a.add(count), onPress: add, disabled: count === 0 || !online }}
     />
   );
 

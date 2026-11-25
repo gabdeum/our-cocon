@@ -66,3 +66,4 @@ A standard BottomSheet, laid out like Edit item (close label "Close"):
 - 2026-11-05 (050 FR-007): the Add row pinned under the status bar; "Grocery settings" moves to the title's right as a round IconButton.
 - 2026-11-12 (051 FR-009): the row source line shows the recipes' detail ("In recipe: {detail}", "In recipes: …"), "Added by {member}", never "via". The recipe card is unchanged.
 - 2026-11-12 (052 FR-004–FR-008): rows with no pack known show the amount in store units; the recipe card's body opens the recipe and its "…" opens the menu; "Clear done" and "Clear all" (red outline) at the same size; the recipe card menu redrawn (`OC-GroceryRecipeMenu`) with Cancel and Save from the start, without "Open recipe". `OC-GroceriesEU` added.
+- 2026-11-25: a recipe being added from Add to groceries shows at the top: its card (no "…") with "Adding {n} items…" and up to 3 skeleton rows (`ListRowSkeleton`), until its items are in. The empty state waits for it.

@@ -1170,6 +1170,8 @@ export const strings = {
     sourcePartsJoin: ' · ',
     // A recipe card (spec 052 FR-006): its body opens the recipe, its "…" the menu.
     onTheList: (items: number) => `${items === 1 ? '1 item' : `${items} items`} on the list`,
+    /** A recipe's items on their way to the list (spec 022), on its card. */
+    addingRecipe: (items: number) => (items === 1 ? 'Adding 1 item…' : `Adding ${items} items…`),
     recipeMeta: (items: number, serves: number) => `${items === 1 ? '1 item' : `${items} items`} on the list · serves ${serves}`,
     openRecipe: (recipe: string) => `Open ${recipe}`,
     moreForRecipe: (recipe: string) => `More for ${recipe}`,
