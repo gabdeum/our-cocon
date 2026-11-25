@@ -55,10 +55,10 @@ set changes = (
   select jsonb_agg(
     case c ->> 'type'
       when 'add_ingredient' then jsonb_set(c, '{ingredient}', pg_temp.fix_ingredient(c -> 'ingredient'))
-      when 'swap_ingredient' then jsonb_set(c, '{with}', (
+      when 'swap_ingredient' then jsonb_set(c, '{with}', coalesce((
         select jsonb_agg(pg_temp.fix_ingredient(w.value) order by w.ord)
         from jsonb_array_elements(c -> 'with') with ordinality as w (value, ord)
-      ))
+      ), c -> 'with'))
       else c
     end
     order by x.ord

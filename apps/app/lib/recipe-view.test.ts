@@ -36,7 +36,8 @@ describe('recipeView (FR-004)', () => {
     const at7 = recipeView(linked, 7, noVariants).ingredients;
     const find = (name: string) => at7.find((i) => i.name === name);
     expect(find('Leeks')).toMatchObject({ amount: '2½', sub: '350 g' });
-    expect(find('Eggs')).toMatchObject({ amount: '3½', sub: '175 g' });
+    // Eggs are whole-only: 3½ is 4 (spec 005 FR-003, 2026-11-25).
+    expect(find('Eggs')).toMatchObject({ amount: '4', sub: '200 g' });
     expect(find('Heavy cream')).toMatchObject({ amount: '350 ml', sub: '350 g' });
     // A variant's ingredient gets its facts too.
     const dough = recipeView({ ...linked, facts: { ...linked.facts, water: { density_g_per_ml: 1 } } }, 6, { version: null, options: [quicheIds.dough] }).ingredients;

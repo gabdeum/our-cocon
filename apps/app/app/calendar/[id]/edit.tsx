@@ -75,8 +75,9 @@ export default function EditEventRoute() {
     <AddSheet
       mode="edit"
       initialKind="event"
-      // A surprise never becomes a reminder (everyone sees those); nor a series only its creator splits.
-      switchable={e.visibility !== 'surprise' && canSplit}
+      // Only a family event becomes a reminder: everyone sees reminders, so a private event or a
+      // surprise would be shown to the people it's kept from.
+      switchable={e.visibility === 'family'}
       slotTimes={sheet.slotTimes}
       tracker={tracker}
       event={{

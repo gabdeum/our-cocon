@@ -1678,7 +1678,7 @@ export const strings = {
       editKind: 'Event or reminder',
       /** What an event has that a reminder can't hold, said before it's saved as one. */
       losesAsReminder: (parts: string[]) => `As a reminder, it won't keep ${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : parts[0]}.`,
-      lostParts: { people: 'several people', place: 'the place', type: 'the type', who_takes: 'who takes them', checklist: 'the checklist', private: 'being private (everyone will see it)' },
+      lostParts: { people: 'several people', place: 'the place', type: 'the type', who_takes: 'who takes them', checklist: 'the checklist' },
       /** A reminder's "If it's not done", which an event doesn't have. */
       losesAsEvent: "As an event, it won't keep “If it's not done”.",
       movedToReminders: 'Moved to Reminders.',
