@@ -16,7 +16,7 @@ export {
 export { format, pieceWeight } from './format';
 export { TEMPERATURE_CHECK_SLOT, ingredientToken, renderStep, renderTemperatureCheck, temperatureToken, type StepSegment } from './render-step';
 export { decimalText, fractionText, toStep } from './round';
-export { scale, type ScaleBy, type ScalableRecipe, type Scaled } from './scale';
+export { scale, wholeAmount, type ScaleBy, type ScalableRecipe, type Scaled } from './scale';
 export { formatTemperature, type TemperatureOptions } from './temperature';
 export { tokenizeTemperatures } from './temperature-text';
 export { tokenizeIngredients, type MentionTarget, type Tokenized } from './ingredient-tokens';

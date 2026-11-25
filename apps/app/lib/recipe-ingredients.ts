@@ -1,4 +1,4 @@
-import { ingredientToken, parseAmount, pieceNouns, type ParsedLine, type QuantityIngredient } from '@cocon/quantity';
+import { ingredientToken, parseAmount, pieceNouns, wholeAmount, type ParsedLine, type QuantityIngredient } from '@cocon/quantity';
 import {
   familyIngredientRow,
   IngredientInput,
@@ -216,6 +216,17 @@ export function quantityOf(d: IngredientDraft): QuantityIngredient {
   };
 }
 
+/**
+ * A whole-only ingredient (eggs, cloves) typed with a fraction: what one piece is called and the
+ * whole number Save keeps ("1½" eggs → "2"). Null when nothing changes.
+ */
+export function wholeHint(d: IngredientDraft): { noun: string; to: number } | null {
+  const quantity = parseAmount(d.quantity);
+  if (quantity === null || quantity === 'invalid' || !d.facts) return null;
+  const to = wholeAmount(quantity, { unit: d.unit, facts: d.facts });
+  return to === quantity ? null : { noun: nounsOf(d, d.name.trim()).plural, to };
+}
+
 const isBlank = (d: IngredientDraft) => !d.name.trim() && !d.quantity.trim() && !d.weight.trim();
 
 /**
@@ -243,7 +254,8 @@ export function readIngredients(drafts: IngredientDraft[]): { rows: IngredientSa
     const row = {
       name: split.name.slice(0, 80).trim(),
       catalog_key: d.catalogKey,
-      quantity,
+      // Eggs, cloves, bay leaves: never ½ (the field says so while typing, `wholeHint`).
+      quantity: quantity !== null && d.facts ? wholeAmount(quantity, { unit: d.unit, facts: d.facts }) : quantity,
       unit: d.unit,
       size_word: piece ? d.sizeWord : null,
       weight_per_piece_g: weight,

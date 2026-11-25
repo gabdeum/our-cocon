@@ -906,6 +906,8 @@ export const strings = {
       moveDown: 'Move down',
       suggestions: 'Suggestions',
       newIngredient: 'New ingredient. Pick its aisle:',
+      /** Eggs, cloves, bay leaves: a fraction typed is saved whole (spec 005 FR-003). */
+      wholeOnly: (noun: string, to: string) => `Only whole ${noun}: saved as ${to}.`,
       pickAisle: 'Pick an aisle',
       aisle: 'Aisle',
       warnings: {

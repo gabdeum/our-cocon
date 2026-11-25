@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import type { IngredientFacts } from '@cocon/schemas';
 import { Button, IngredientEditCard, Link, ListRow, ReorderList, Text, type IngredientEditField } from '@cocon/ui';
 import { strings } from '../../../strings/en';
-import type { IngredientDraft, IngredientWarning } from '../../../lib/recipe-ingredients';
+import { wholeHint, type IngredientDraft, type IngredientWarning } from '../../../lib/recipe-ingredients';
 import { unitText } from './IngredientSheets';
 
 const ing = strings.recipeForm.ingredients;
@@ -76,6 +76,7 @@ export function IngredientsSection(p: IngredientsSectionProps) {
             const warning = p.warnings[d.key];
             const piece = d.unit === 'piece';
             const suggested = p.suggestions?.key === d.key ? p.suggestions.items : [];
+            const whole = wholeHint(d);
             return (
               <IngredientEditCard
                 handle={handle}
@@ -122,6 +123,11 @@ export function IngredientsSection(p: IngredientsSectionProps) {
                       />
                     ))}
                   </View>
+                ) : null}
+                {whole ? (
+                  <Text variant="caption" color="ink-muted" role="status">
+                    {ing.wholeOnly(whole.noun, String(whole.to))}
+                  </Text>
                 ) : null}
                 {d.isNew && d.name.trim() ? (
                   <View className="flex-row flex-wrap items-center gap-x-8">

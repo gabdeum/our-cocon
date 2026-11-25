@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "ingredients": [
     {
       "key": "onion",
@@ -216,7 +216,8 @@
           }
         ]
       },
-      "source": "Piece weights: USDA FoodData Central (SR Legacy portion weights). Packs: typical US and EU supermarket listings."
+      "source": "Piece weights: USDA FoodData Central (SR Legacy portion weights). Packs: typical US and EU supermarket listings.",
+      "whole_only": true
     },
     {
       "key": "leek",
@@ -9320,7 +9321,6 @@
       "synonyms": {
         "en": [
           "ground cinnamon",
-          "cinnamon stick",
           "cinnamon powder",
           "cinammon"
         ]
@@ -9346,6 +9346,51 @@
         ]
       },
       "source": "Density: King Arthur Baking ingredient weight chart. Packs: typical US and EU supermarket listings."
+    },
+    {
+      "key": "cinnamon_stick",
+      "names": {
+        "en": {
+          "singular": "Cinnamon stick",
+          "plural": "Cinnamon sticks"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "cinnamon quill",
+          "whole cinnamon",
+          "cinnamon bark"
+        ]
+      },
+      "aisle": "spices_baking",
+      "sizes": {
+        "medium": 3
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "cinnamon stick",
+        "plural": "cinnamon sticks"
+      },
+      "whole_only": true,
+      "packs": {
+        "us": [
+          {
+            "size": 1.25,
+            "unit": "oz",
+            "label": "1.25 oz jar",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 6,
+            "unit": "piece",
+            "label": "pack of 6 sticks",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Piece weights: average of spice supplier listings (approximate). Packs: typical US and EU supermarket listings."
     },
     {
       "key": "cumin",
@@ -9994,7 +10039,8 @@
           }
         ]
       },
-      "source": "Piece weights: USDA FoodData Central (SR Legacy portion weights). Packs: typical US and EU supermarket listings."
+      "source": "Piece weights: USDA FoodData Central (SR Legacy portion weights). Packs: typical US and EU supermarket listings.",
+      "whole_only": true
     },
     {
       "key": "ground_cloves",
@@ -10006,7 +10052,6 @@
       },
       "synonyms": {
         "en": [
-          "whole clove",
           "ground clove",
           "clove powder"
         ]
@@ -10034,6 +10079,50 @@
       "source": "Density: King Arthur Baking ingredient weight chart. Packs: typical US and EU supermarket listings."
     },
     {
+      "key": "cloves",
+      "names": {
+        "en": {
+          "singular": "Clove",
+          "plural": "Cloves"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "whole clove",
+          "clove bud"
+        ]
+      },
+      "aisle": "spices_baking",
+      "sizes": {
+        "medium": 0.1
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "clove",
+        "plural": "cloves"
+      },
+      "whole_only": true,
+      "packs": {
+        "us": [
+          {
+            "size": 1,
+            "unit": "oz",
+            "label": "1 oz jar",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 25,
+            "unit": "g",
+            "label": "25 g jar",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Piece weights: average of spice supplier listings (approximate). Packs: typical US and EU supermarket listings."
+    },
+    {
       "key": "cardamom",
       "names": {
         "en": {
@@ -10044,11 +10133,9 @@
       "synonyms": {
         "en": [
           "ground cardamom",
-          "cardamom pod",
           "green cardamom",
-          "star anise",
-          "fennel seed",
-          "caraway seed"
+          "cardamom seed",
+          "cardamom powder"
         ]
       },
       "aisle": "spices_baking",
@@ -10072,6 +10159,168 @@
         ]
       },
       "source": "Density: King Arthur Baking ingredient weight chart. Packs: typical US and EU supermarket listings."
+    },
+    {
+      "key": "caraway_seed",
+      "names": {
+        "en": {
+          "singular": "Caraway seeds",
+          "plural": "Caraway seeds"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "caraway seed",
+          "caraway"
+        ]
+      },
+      "aisle": "spices_baking",
+      "density_g_per_ml": 0.44,
+      "packs": {
+        "us": [
+          {
+            "size": 1.5,
+            "unit": "oz",
+            "label": "1.5 oz jar",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 40,
+            "unit": "g",
+            "label": "40 g jar",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Density: USDA FoodData Central (SR Legacy, 1 tsp). Packs: typical US and EU supermarket listings."
+    },
+    {
+      "key": "fennel_seed",
+      "names": {
+        "en": {
+          "singular": "Fennel seeds",
+          "plural": "Fennel seeds"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "fennel seed",
+          "whole fennel seed"
+        ]
+      },
+      "aisle": "spices_baking",
+      "density_g_per_ml": 0.42,
+      "packs": {
+        "us": [
+          {
+            "size": 1.5,
+            "unit": "oz",
+            "label": "1.5 oz jar",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 40,
+            "unit": "g",
+            "label": "40 g jar",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Density: USDA FoodData Central (SR Legacy, 1 tsp). Packs: typical US and EU supermarket listings."
+    },
+    {
+      "key": "star_anise",
+      "names": {
+        "en": {
+          "singular": "Star anise",
+          "plural": "Star anise"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "star anise pod",
+          "whole star anise",
+          "chinese star anise"
+        ]
+      },
+      "aisle": "spices_baking",
+      "sizes": {
+        "medium": 0.5
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "star anise",
+        "plural": "star anise"
+      },
+      "whole_only": true,
+      "packs": {
+        "us": [
+          {
+            "size": 0.6,
+            "unit": "oz",
+            "label": "0.6 oz jar",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 15,
+            "unit": "g",
+            "label": "15 g jar",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Piece weights: average of spice supplier listings (approximate). Packs: typical US and EU supermarket listings."
+    },
+    {
+      "key": "cardamom_pod",
+      "names": {
+        "en": {
+          "singular": "Cardamom pod",
+          "plural": "Cardamom pods"
+        }
+      },
+      "synonyms": {
+        "en": [
+          "green cardamom pod",
+          "whole cardamom",
+          "black cardamom pod"
+        ]
+      },
+      "aisle": "spices_baking",
+      "sizes": {
+        "medium": 0.2
+      },
+      "default_size": "medium",
+      "nouns": {
+        "singular": "cardamom pod",
+        "plural": "cardamom pods"
+      },
+      "whole_only": true,
+      "packs": {
+        "us": [
+          {
+            "size": 1.5,
+            "unit": "oz",
+            "label": "1.5 oz jar",
+            "loose": false
+          }
+        ],
+        "eu": [
+          {
+            "size": 25,
+            "unit": "g",
+            "label": "25 g jar",
+            "loose": false
+          }
+        ]
+      },
+      "source": "Piece weights: average of spice supplier listings (approximate). Packs: typical US and EU supermarket listings."
     },
     {
       "key": "allspice",

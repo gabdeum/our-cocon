@@ -1,7 +1,7 @@
 // Spec 015: reading the ingredient rows on Save (US3 and the edge cases), the catalog's weight of
 // one piece (US2), and which steps use an ingredient (the remove dialog).
 import { describe, expect, it } from 'vitest';
-import { applyMatch, draftsFromRows, emptyDraft, ingredientsChanged, quantityText, readIngredients, sizesOf, stepsUsing, withName, withUnit, type FormFacts, type IngredientDraft } from './recipe-ingredients';
+import { applyMatch, draftsFromRows, emptyDraft, ingredientsChanged, quantityText, readIngredients, sizesOf, stepsUsing, wholeHint, withName, withUnit, type FormFacts, type IngredientDraft } from './recipe-ingredients';
 
 const row = (over: Partial<IngredientDraft>): IngredientDraft => ({ ...emptyDraft(over.id ?? 'id-1'), ...over });
 const leek: FormFacts = { catalog_key: 'leek', name: 'Leek', plural: 'Leeks', size_small_g: 100, size_medium_g: 150, size_large_g: 220, default_size: 'medium', noun_singular: null, noun_plural: null };
@@ -120,5 +120,19 @@ describe('loading and comparing', () => {
     ];
     expect(stepsUsing('a', steps)).toEqual([2, 3]);
     expect(stepsUsing('b', steps)).toEqual([]);
+  });
+});
+
+describe('whole-only ingredients (spec 005 FR-003)', () => {
+  const egg: FormFacts = { catalog_key: 'egg', name: 'Egg', plural: 'Eggs', size_small_g: 38, size_medium_g: 44, size_large_g: 50, default_size: 'large', noun_singular: null, noun_plural: null, whole_only: true };
+  it('saves a typed fraction whole, and says so while typing', () => {
+    const d = row({ id: 'e', name: 'Eggs', quantity: '1½', unit: 'piece', catalogKey: 'egg', facts: egg });
+    expect(wholeHint(d)).toEqual({ noun: 'eggs', to: 2 });
+    expect(readIngredients([d])).toMatchObject({ rows: [{ quantity: 2 }] });
+  });
+  it('leaves whole amounts, weights and other ingredients alone', () => {
+    expect(wholeHint(row({ name: 'Eggs', quantity: '3', unit: 'piece', facts: egg }))).toBeNull();
+    expect(wholeHint(row({ name: 'Eggs', quantity: '75', unit: 'g', facts: egg }))).toBeNull();
+    expect(wholeHint(row({ name: 'Leeks', quantity: '1½', unit: 'piece', facts: leek }))).toBeNull();
   });
 });

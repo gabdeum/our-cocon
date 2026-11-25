@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { matchIngredients, type MatchedFacts } from '@cocon/data';
-import { parseIngredientLine, pieceNouns, scalingAmountIn, tokenizeIngredients, tokenizeTemperatures, type MentionTarget } from '@cocon/quantity';
+import { parseIngredientLine, pieceNouns, scalingAmountIn, tokenizeIngredients, tokenizeTemperatures, wholeAmount, type MentionTarget } from '@cocon/quantity';
 import {
   IngredientInput,
   MAX_STEPS,
@@ -205,10 +205,13 @@ export async function ingredientRows(
       throw new ToolError(`Ingredient #${i + 1} (${d.name}): ${d.quantity} of what? Ask the member for the unit (${UNITS}) and send the line again.`);
     const piece = d.unit === 'piece';
     const nouns = piece ? (d.nouns ?? (facts?.noun_singular && facts.noun_plural ? { singular: facts.noun_singular, plural: facts.noun_plural } : pieceNouns(d.name))) : null;
+    // Eggs, cloves, bay leaves: whole numbers only, rounded and said in the reply.
+    const quantity = d.quantity != null && facts ? wholeAmount(d.quantity, { unit: d.unit, facts }) : d.quantity;
+    if (quantity !== d.quantity) warnings.push(`${where}Ingredient #${i + 1} (${d.name}): ${d.quantity} rounded to ${quantity}, it's only used whole.`);
     const row = {
       name: d.name.slice(0, 80).trim(),
       catalog_key: facts?.catalog_key ?? null,
-      quantity: d.quantity,
+      quantity,
       unit: d.unit,
       size_word: piece ? d.size_word : null,
       weight_per_piece_g: null,
