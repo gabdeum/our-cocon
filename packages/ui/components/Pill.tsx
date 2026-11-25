@@ -131,24 +131,27 @@ export interface SuggestionPillProps extends Omit<PressableProps, 'children' | '
   className?: string;
 }
 
-/** A past choice to pick again (spec 053 FR-001): 40 tall, surface-soft, "**Swim** · Morning". Scrolls in a row. */
+/**
+ * A past choice to pick again (spec 053 FR-001): 40 tall, surface-soft, "**Swim** · Morning". Scrolls in a row.
+ * At most 240 wide so the next pill shows: a long title ends in "…", the detail stays.
+ */
 export function SuggestionPill({ title, detail, className, ...props }: SuggestionPillProps) {
   return (
     <Pressable
       role="button"
       hitSlop={2}
       aria-label={detail ? `${title}, ${detail}` : title}
-      className={cn('h-[40px] flex-row items-center rounded-pill bg-surface-soft px-14 active:bg-surface-soft-pressed', focusRing, className)}
+      className={cn('h-[40px] max-w-[240px] flex-row items-center rounded-pill bg-surface-soft px-14 active:bg-surface-soft-pressed', focusRing, className)}
       {...props}
     >
-      <Text size={14} weight="800" numberOfLines={1}>
+      <Text size={14} weight="800" numberOfLines={1} className="min-w-0 shrink">
         {title}
-        {detail ? (
-          <Text size={14} weight="600" color="ink-muted">
-            {` · ${detail}`}
-          </Text>
-        ) : null}
       </Text>
+      {detail ? (
+        <Text size={14} weight="600" color="ink-muted" numberOfLines={1} className="shrink-0">
+          {` · ${detail}`}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }

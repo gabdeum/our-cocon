@@ -1674,6 +1674,15 @@ export const strings = {
       titleEdit: 'Edit event',
       /** The new-event sheet's switch to a new reminder (its segments are the two sheets' titles). */
       newKind: 'What to add',
+      /** The edit sheet's switch: an event can become a reminder and back (Gabriel, 2026-11-25). */
+      editKind: 'Event or reminder',
+      /** What an event has that a reminder can't hold, said before it's saved as one. */
+      losesAsReminder: (parts: string[]) => `As a reminder, it won't keep ${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : parts[0]}.`,
+      lostParts: { people: 'several people', place: 'the place', type: 'the type', who_takes: 'who takes them', checklist: 'the checklist', private: 'being private (everyone will see it)' },
+      /** A reminder's "If it's not done", which an event doesn't have. */
+      losesAsEvent: "As an event, it won't keep “If it's not done”.",
+      movedToReminders: 'Moved to Reminders.',
+      movedToCalendar: 'Moved to the calendar.',
       cancel: 'Cancel',
       what: "What's happening?",
       whatPlaceholder: 'e.g. Poker night',
@@ -1981,6 +1990,8 @@ export const strings = {
     saveFailed: "Couldn't save. Try again.",
     gone: 'This reminder was deleted.',
     // The sheet (OC-ReminderEdit)
+    /** Saved from the add sheet (with Undo, as a new event). */
+    createdToast: (title: string) => `${title} added to Reminders.`,
     sheetNew: 'New reminder',
     sheetEdit: 'Edit reminder',
     cancel: 'Cancel',

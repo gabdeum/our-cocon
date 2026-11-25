@@ -47,7 +47,7 @@ BottomSheet, cream, radius 30 top. In order:
 7. After an action: green card (`#D9E3A8`) "Done. Nice one." + "Next one: Mon, Nov 16. The missed weeks stay in its history." / "Snoozed until {date}" + "It's hidden until then and comes back without a late badge." Then "Undo" (cream) · "Close" (olive).
 
 ## Create / edit sheet
-Title "New reminder" / "Edit reminder", "Cancel". Fields in order: "Remind us to…" (placeholder "e.g. Pay the daycare") · "Due" (Today / Tomorrow / Other day) · "Set a time" switch + time field · "If it's not done" pills + hint line · "Repeat" pills · "For" person chips · "Notes · optional" textarea (placeholder "Details, a phone number, what to ask…", 1000 chars) · notification summary (bell, `#FFF0C9`) · "Save".
+The calendar's add sheet (OC-CalAdd) on its reminder side: the switch "New reminder" (with "New event") / "Edit reminder" (with "Edit event") in place of the title; "Cancel" on the phone only. Fields in order: "Remind us to…" (placeholder "e.g. Pay the daycare"; new only: up to 8 suggestion pills "{title} · {17:30 | Any time}" from the family's past reminders, as the event's; a pick fills the time, repeat, "If it's not done" and For from the latest one, keeping the day, the notes and anything changed) · "Due" (Today / Tomorrow / Other day) · "Set a time" switch + time field · "If it's not done" pills + hint line · "Repeat" pills · "For" person chips · "Notes · optional" textarea (placeholder "Details, a phone number, what to ask…", 1000 chars) · notification summary (bell, `#FFF0C9`) · "Save".
 
 Hint lines under "If it's not done":
 - Every hour: "Stays on Home and nudges every hour until someone ticks it."
@@ -88,3 +88,4 @@ Written for the build (spec 058, not drawn):
 
 ## Lock Screen
 Order newest first. Titles: "In 1 hour: {title}", "Now: {title}", "Still to do: {title}". Long-press actions: "Done" · "In 1 hour" · "Tomorrow".
+- 2026-11-25 (Gabriel): the create and edit sheet is the calendar's add sheet on its reminder side (switch to an event, which moves it when editing); title suggestions from past reminders; no "Cancel" beside the card's ✕.

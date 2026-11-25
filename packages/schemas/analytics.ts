@@ -249,7 +249,9 @@ export const events = {
     used_suggestion: z.boolean(),
   }),
   // The add sheet's "New event · New reminder" switch (what's typed goes across).
-  add_sheet_switched: z.strictObject({ to: z.enum(['event', 'reminder']) }),
+  add_sheet_switched: z.strictObject({ to: z.enum(['event', 'reminder']), mode: z.enum(['new', 'edit']) }),
+  // The edit sheet's switch saved: an event moved to the reminders, or a reminder to the calendar.
+  calendar_item_converted: z.strictObject({ from: z.enum(['event', 'reminder']), to: z.enum(['event', 'reminder']) }),
   // Spec 053 FR-001: a suggested title picked in the add sheet (its place in the list, how much was typed; never the text).
   event_title_suggestion_picked: z.strictObject({ position: z.int().min(1).max(10), query_length: z.int().min(1).max(60) }),
   event_updated: z.strictObject({ fields_changed: z.array(EventField), scope: z.enum(['all', 'this', 'future']) }),
@@ -306,6 +308,8 @@ export const events = {
   reminder_missed: z.strictObject({}),
   // Spec 057: a reminder saved from the new-reminder sheet; the Reminders screen opened (its filter)
   // and a section's next page; the drawer opened, and from where.
+  // A past title picked while typing a new reminder (as event_title_suggestion_picked): never the title.
+  reminder_title_suggestion_picked: z.strictObject({ position: z.int().min(1).max(10), query_length: z.int().min(1).max(80) }),
   reminder_created: z.strictObject({ has_time: z.boolean(), repeating: z.boolean(), rollover: ReminderRollover, has_notes: z.boolean(), assignee_is_self: z.boolean() }),
   reminders_list_viewed: z.strictObject({ filter: z.enum(['mine', 'everyone']) }),
   reminders_show_more: z.strictObject({ section: ReminderSection }),
