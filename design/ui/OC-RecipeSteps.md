@@ -5,7 +5,7 @@ Source `screens/OC-Recipe.dc.html` with `tab="steps"` (`screens/OC-RecipeSteps.d
 ## Layout
 Same header, version and servings blocks as OC-Recipe, then one StepRow per step, a quick look to find your place (StepCard README › StepRow):
 1. Number badge.
-2. The step's name (one line, cut short). A step with no name shows its text instead.
+2. The step's name, wrapping onto more lines when long. A step with no name shows its text instead, cut short after 2 lines.
 3. When the step has a timer, a honey chip on the right with a timer icon and its length ("12:00").
 4. A chevron.
 
@@ -23,5 +23,5 @@ A step row is a link: "Step {n}: {name or text}, {35:00} timer. Opens in cooking
 | State | Copy |
 | --- | --- |
 | A step mentions an ingredient that was deleted | the ingredient's last known name in muted text, no highlight; "an ingredient" when the name is gone too (the form warns, spec 016) |
-| A step with no name | the number badge and its text on one line |
+| A step with no name | the number badge and its text, cut short after 2 lines |
 | A step added by a variant | listed in its place; numbering never skips |

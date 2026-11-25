@@ -353,6 +353,7 @@ function LoadedRecipe({
               <StepRow
                 number={step.number}
                 title={title}
+                titleLines={step.name ? undefined : 2}
                 tag={step.variant ? p.variantTag : undefined}
                 duration={step.timer?.duration}
                 photoUri={step.photoPath ? photoUrls[step.photoPath] : undefined}
