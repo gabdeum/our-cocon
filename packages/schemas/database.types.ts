@@ -447,14 +447,14 @@ isOneToOne: true
                   ]
                 },"grocery_items": {
                   Row: {
-                    "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"checked": boolean,"checked_at": string | null,"checked_by": string | null,"created_at": string,"created_by": string | null,"deleted_at": string | null,"deleted_by": string | null,"family_id": string,"from_recipe": boolean,"id": string,"name": string,"quantity": number | null,"recipe_detail": string | null,"recipe_id": string | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null
+                    "aisle": Database["public"]['Enums']["aisle"] | null,"catalog_key": string | null,"checked": boolean,"checked_at": string | null,"checked_by": string | null,"created_at": string,"created_by": string | null,"deleted_at": string | null,"deleted_by": string | null,"deleted_share_link_id": string | null,"family_id": string,"from_recipe": boolean,"id": string,"name": string,"quantity": number | null,"recipe_detail": string | null,"recipe_id": string | null,"share_link_id": string | null,"source": string,"unit": Database["public"]['Enums']["unit"] | null,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"family_id": string,"from_recipe"?: boolean,"id"?: string,"name": string,"quantity"?: number | null,"recipe_detail"?: string | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"deleted_share_link_id"?: string | null,"family_id": string,"from_recipe"?: boolean,"id"?: string,"name": string,"quantity"?: number | null,"recipe_detail"?: string | null,"recipe_id"?: string | null,"share_link_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"family_id"?: string,"from_recipe"?: boolean,"id"?: string,"name"?: string,"quantity"?: number | null,"recipe_detail"?: string | null,"recipe_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
+                    "aisle"?: Database["public"]['Enums']["aisle"] | null,"catalog_key"?: string | null,"checked"?: boolean,"checked_at"?: string | null,"checked_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"deleted_at"?: string | null,"deleted_by"?: string | null,"deleted_share_link_id"?: string | null,"family_id"?: string,"from_recipe"?: boolean,"id"?: string,"name"?: string,"quantity"?: number | null,"recipe_detail"?: string | null,"recipe_id"?: string | null,"share_link_id"?: string | null,"source"?: string,"unit"?: Database["public"]['Enums']["unit"] | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -463,6 +463,12 @@ isOneToOne: true
 isOneToOne: false
       referencedRelation: "catalog_ingredients"
       referencedColumns: ["key"]
+    },{
+      foreignKeyName: "grocery_items_deleted_share_link_id_fkey"
+      columns: ["deleted_share_link_id"]
+isOneToOne: false
+      referencedRelation: "grocery_share_links"
+      referencedColumns: ["id"]
     },{
       foreignKeyName: "grocery_items_family_id_fkey"
       columns: ["family_id"]
@@ -475,6 +481,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "recipes"
       referencedColumns: ["id","family_id"]
+    },{
+      foreignKeyName: "grocery_items_share_link_id_fkey"
+      columns: ["share_link_id"]
+isOneToOne: false
+      referencedRelation: "grocery_share_links"
+      referencedColumns: ["id"]
     }
                   ]
                 },"grocery_recipes": {
@@ -501,6 +513,26 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "recipes"
       referencedColumns: ["id","family_id"]
+    }
+                  ]
+                },"grocery_share_links": {
+                  Row: {
+                    "can_edit": boolean,"created_at": string,"created_by": string | null,"duration": string,"expires_at": string | null,"family_id": string,"id": string,"source": string,"stopped_at": string | null,"stopped_by": string | null,"stopped_source": string | null,"token": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "can_edit"?: boolean,"created_at"?: string,"created_by"?: string | null,"duration"?: string,"expires_at"?: string | null,"family_id": string,"id"?: string,"source"?: string,"stopped_at"?: string | null,"stopped_by"?: string | null,"stopped_source"?: string | null,"token": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "can_edit"?: boolean,"created_at"?: string,"created_by"?: string | null,"duration"?: string,"expires_at"?: string | null,"family_id"?: string,"id"?: string,"source"?: string,"stopped_at"?: string | null,"stopped_by"?: string | null,"stopped_source"?: string | null,"token"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "grocery_share_links_family_id_fkey"
+      columns: ["family_id"]
+isOneToOne: false
+      referencedRelation: "families"
+      referencedColumns: ["id"]
     }
                   ]
                 },"invites": {
@@ -981,9 +1013,37 @@ isOneToOne: false
 "_fold":
 { Args: { "t": string }; Returns: string
                            },
+"_grocery_share_link":
+{ Args: { "p_token": string,"p_write": boolean }; Returns: {
+              "can_edit": boolean,
+"created_at": string,
+"created_by": string | null,
+"duration": string,
+"expires_at": string | null,
+"family_id": string,
+"id": string,
+"source": string,
+"stopped_at": string | null,
+"stopped_by": string | null,
+"stopped_source": string | null,
+"token": string,
+"updated_at": string,
+"updated_by": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "grocery_share_links"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "_ingredient_facts":
 { Args: { "fam": string }; Returns: {
               "aisle": Database["public"]['Enums']["aisle"],"catalog_key": string,"default_size": Database["public"]['Enums']["size_word"],"density_g_per_ml": number,"diet": (string)[],"family_ingredient_id": string,"name": string,"noun_plural": string,"noun_singular": string,"plural": string,"size_large_g": number,"size_medium_g": number,"size_small_g": number,"whole_only": boolean
+            }[]
+                           },
+"_ingredient_packs":
+{ Args: { "fam": string }; Returns: {
+              "catalog_key": string,"family_ingredient_id": string,"label": string,"loose": boolean,"position": number,"profile": Database["public"]['Enums']["store_profile"],"size": number,"unit": Database["public"]['Enums']["unit"]
             }[]
                            },
 "_leaving":
@@ -1319,6 +1379,11 @@ isOneToOne: false
               "created": boolean,"created_at": string,"token": string
             }[]
                            },
+"share_groceries":
+{ Args: { "p_can_edit": boolean,"p_duration": string,"p_expires_at": string }; Returns: {
+              "can_edit": boolean,"created": boolean,"created_at": string,"duration": string,"expires_at": string,"token": string
+            }[]
+                           },
 "share_recipe":
 { Args: { "p_recipe_id": string }; Returns: {
               "created": boolean,"created_at": string,"include_tips": boolean,"include_variants": boolean,"token": string
@@ -1326,6 +1391,21 @@ isOneToOne: false
                            },
 "shared_event":
 { Args: { "p_token": string }; Returns: Json
+                           },
+"shared_groceries":
+{ Args: { "p_token": string }; Returns: Json
+                           },
+"shared_grocery_add":
+{ Args: { "p_core": string,"p_full": string,"p_name": string,"p_quantity": number,"p_token": string,"p_unit": string }; Returns: Json
+                           },
+"shared_grocery_check":
+{ Args: { "p_checked": boolean,"p_ids": (string)[],"p_token": string }; Returns: number
+                           },
+"shared_grocery_clear":
+{ Args: { "p_ids": (string)[],"p_token": string }; Returns: number
+                           },
+"shared_grocery_restore":
+{ Args: { "p_ids": (string)[],"p_token": string }; Returns: number
                            },
 "shared_recipe":
 { Args: { "p_token": string }; Returns: Json

@@ -82,15 +82,18 @@ const fromLiveRecipe = (item: Pick<GroceryItem, 'recipes'>) => !!item.recipes &&
 
 /**
  * Spec 051 FR-009: "In recipe: grated", or nothing for a recipe ingredient without a detail.
- * Typed in: "Added by Mia", an assistant's too (who asked, not what typed it). An item from a
+ * Typed in: "Added by Mia", an assistant's too (who asked, not what typed it), or "Added via the shared
+ * link" (spec 072). An item from a
  * recipe that's in Recently deleted, or gone for good, reads "From a deleted recipe" (spec 018).
  */
 export function sourceLine(
-  item: Pick<GroceryItem, 'recipes' | 'recipe_detail' | 'from_recipe' | 'created_by'>,
+  item: Pick<GroceryItem, 'recipes' | 'recipe_detail' | 'from_recipe' | 'created_by' | 'source'>,
   members: readonly Pick<Member, 'user_id' | 'display_name'>[],
 ): string | null {
   if (fromLiveRecipe(item)) return item.recipe_detail ? strings.groceries.inRecipe(item.recipe_detail) : null;
   if (item.recipes || item.from_recipe) return strings.groceries.fromDeletedRecipe;
+  // Spec 072: a guest's, through the shared link.
+  if (item.source === 'link') return strings.groceries.addedViaLink;
   return strings.groceries.addedBy(members.find((m) => m.user_id === item.created_by)?.display_name ?? strings.recipe.formerMember);
 }
 
@@ -162,6 +165,26 @@ export const rowAmounts = (rows: readonly GroceryRow[], packs: Record<string, Pa
 /** FR-001 and spec 022: rows in each aisle in alphabetical order of the name shown, ticked or not. */
 export function byName<T>(rows: readonly T[], nameOf: (row: T) => string): T[] {
   return [...rows].sort((a, b) => nameOf(a).localeCompare(nameOf(b), 'en', { sensitivity: 'base' }));
+}
+
+/**
+ * Spec 072 FR-007: the list as plain text, what's still to buy by aisle, each row as the list shows
+ * it ("Onion: 2 pieces", "Heavy cream: 1 pint carton (need 300 ml)"). Null when nothing is left.
+ */
+export function listText(items: readonly GroceryItem[], packs: Record<string, PackData> | undefined, settings: FamilySettings): string | null {
+  const rows = data.combineRows(items).filter((r) => !r.checked);
+  if (rows.length === 0) return null;
+  const amounts = rowAmounts(rows, packs, settings);
+  const titleOf = (row: GroceryRow) => amounts.get(row.id)?.name ?? (row.items[0] as GroceryItem).name;
+  const lines: string[] = [strings.groceryShare.textTitle];
+  for (const { aisle, items: aisleRows } of data.groupByAisle(rows)) {
+    lines.push('', strings.aisles[aisle]);
+    for (const row of byName(aisleRows, titleOf)) {
+      const { detail, note } = amounts.get(row.id) ?? {};
+      lines.push(`- ${titleOf(row)}${detail ? `: ${detail}${note ? ` ${note}` : ''}` : ''}`);
+    }
+  }
+  return lines.join('\n');
 }
 
 export interface RecipeCard {

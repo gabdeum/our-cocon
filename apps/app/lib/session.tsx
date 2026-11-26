@@ -150,9 +150,9 @@ export function useSession(): SessionContextValue {
 }
 
 /** Routes anyone can open; the rest need a signed-in member (design/flows.md). */
-// `r`: a shared recipe (spec 019) and `e` a shared event (spec 042), open to anyone, signed in or not. `oauth`: an AI assistant asking
+// `r`: a shared recipe (spec 019), `e` a shared event (spec 042) and `g` a shared grocery list (spec 072), open to anyone, signed in or not. `oauth`: an AI assistant asking
 // to connect (spec 023); it signs people in itself, so it can bring them back with the request.
-const PUBLIC = new Set(['welcome', 'auth', 'join', 'r', 'e', 'oauth']);
+const PUBLIC = new Set(['welcome', 'auth', 'join', 'r', 'e', 'g', 'oauth']);
 
 /**
  * Where the gate sends someone, or null to stay. `segments` are Expo Router's route segments

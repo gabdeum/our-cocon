@@ -23,6 +23,8 @@
 | OC-Delete | dialog over the edit modal | dialog | 018 |
 | OC-AddGroceries | `/recipes/[id]/add-to-groceries` | sheet | 022 |
 | OC-Groceries | `/groceries` | tab | 020, 021 |
+| OC-ShareGroceries | `/groceries/share` | sheet | 072 |
+| OC-SharedGroceries | `/g/[token]` (public, no tab bar) | page | 072 |
 | OC-Menu | `/menu` (`/settings` redirects) | tab | 029 |
 | OC-Connect | `/settings/ai` | stack | 025 |
 | OC-Timers | `/timers` | stack (reachable from anywhere) | 011 |
@@ -46,10 +48,10 @@
 4. **Scale or convert.** Recipe → "…" next to Servings → panel → "Scale by an ingredient" (ScaleIng → "Apply to recipe" → Recipe) or "Unit converter" (Units → close → Recipe).
 5. **Create.** Recipes → "New" → EditBasics → "Next: Ingredients" → EditIngredients → "Next: Steps" → EditSteps → "Next: Variants" → EditVariants → "Save recipe" → Recipe.
 6. **Edit and delete.** Recipe → "Edit recipe" (pencil in the top bar) → Edit modal at Details → … → Save. To delete: Details › This recipe → "Delete recipe" → Delete dialog → "Delete recipe" → Recipes, with a StatusBanner "Recipe deleted · Undo". The recipe's own settings (screen, scale, thermometer) are in This recipe too; units are each member's (Menu › Recipes).
-7. **Share.** Recipe → share icon → Share → "Copy link" → friend opens `/r/[token]` → SharedView.
+7. **Share.** Recipe → share icon → Share → "Copy link" → friend opens `/r/[token]` → SharedView. The grocery list: Groceries → share icon → ShareGroceries → "Create link" → friend opens `/g/[token]` → SharedGroceries.
 8. **Connect AI.** Menu → "AI assistants" → Connect → "Connect" on an assistant → guided sheet (spec 025). In the assistant, adding Our Cocon opens Approve access (`/oauth/consent`; signed out, sign in first and come back) → "Allow" → back to the assistant.
 9. **Start and invite.** Sign in → (first time) Set up your family → Home. Menu → "Family" → "Invite someone" → share sheet → the invitee opens `/join/[token]` → signs in → "Join {family}" → Home.
-   Signed out, every page except Sign in, the sign-in link, Join, a shared recipe and Approve access goes to Sign in.
+   Signed out, every page except Sign in, the sign-in link, Join, a shared recipe, a shared list and Approve access goes to Sign in.
 
 ## Entry points not drawn on the canvas
 

@@ -2,7 +2,7 @@
 // Spec 021: what to buy beside the name (summed per catalog entry) and the family's own pack size.
 import { DEFAULT_FAMILY_SETTINGS, type Aisle, type FamilySettings } from '@cocon/schemas';
 import { describe, expect, it, vi } from 'vitest';
-import { aisleColumns, amountText, buyText, byName, combineRows, editItem, editText, groupByAisle, recipeCards, rowAmounts, rowItem, rowSource, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
+import { aisleColumns, amountText, buyText, byName, combineRows, editItem, editText, groupByAisle, listText, recipeCards, rowAmounts, rowItem, rowSource, savePackSize, shopper, sourceLine, toBuyCount } from './groceries';
 import { alex, gabriel, groceryItem, mia, packData } from '../test/fakes';
 
 const members = [gabriel, alex, mia];
@@ -78,6 +78,8 @@ describe('sourceLine (FR-003, spec 051 FR-009)', () => {
     expect(sourceLine(groceryItem({ created_by: mia.user_id }), members)).toBe('Added by Mia');
     expect(sourceLine(groceryItem({ created_by: alex.user_id, source: 'chatgpt' }), members)).toBe('Added by Alex');
     expect(sourceLine(groceryItem({ created_by: 'u-gone' }), members)).toBe('Added by Former member');
+    // Spec 072: a guest's, through the shared link.
+    expect(sourceLine(groceryItem({ created_by: null, source: 'link' }), members)).toBe('Added via the shared link');
   });
 
   it('says when the recipe was deleted, or is gone for good (spec 018, 032-later L39)', () => {
@@ -259,6 +261,26 @@ describe('rowAmounts with no pack known (spec 052 US2)', () => {
   it('a catalog item whose packs have not loaded yet shows only what is needed', () => {
     const cream = groceryItem({ id: 'cream', name: 'Heavy cream', catalog_key: 'heavy_cream', quantity: 300, unit: 'ml' });
     expect(rowAmounts(combineRows([cream]), undefined, us).get('cream')).toEqual({ detail: '300 ml' });
+  });
+});
+
+describe('listText (spec 072 FR-007)', () => {
+  const settings: FamilySettings = { ...DEFAULT_FAMILY_SETTINGS, round_to_packs: false };
+
+  it('copies what is still to buy, by aisle and name, as the rows read', () => {
+    const items = [
+      groceryItem({ id: 'a', name: 'Onions', catalog_key: 'onion', quantity: 2 }),
+      groceryItem({ id: 'b', name: 'Salt', catalog_key: null, quantity: null, aisle: 'spices_baking' }),
+      groceryItem({ id: 'c', name: 'Lemons', quantity: 1 }),
+      groceryItem({ id: 'd', name: 'Lemons', quantity: 2, created_by: mia.user_id }),
+      groceryItem({ id: 'e', name: 'Milk', catalog_key: 'milk', quantity: 1, unit: 'l', aisle: 'dairy_eggs', checked: true }),
+    ];
+    expect(listText(items, undefined, settings)).toBe(['Groceries', '', 'Produce', '- Lemons: 3 pieces', '- Onions: 2 pieces', '', 'Spices & baking', '- Salt'].join('\n'));
+  });
+
+  it('is null when everything is ticked', () => {
+    expect(listText([groceryItem({ checked: true })], undefined, settings)).toBeNull();
+    expect(listText([], undefined, settings)).toBeNull();
   });
 });
 

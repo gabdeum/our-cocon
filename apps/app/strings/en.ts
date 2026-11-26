@@ -788,6 +788,72 @@ export const strings = {
     /** The copy's Source field, crediting who shared it (FR-004). */
     source: (name: string) => `Shared by ${name}`,
   },
+  // design/ui/OC-ShareGroceries.md (spec 072): share the grocery list by link.
+  groceryShare: {
+    title: 'Share the grocery list',
+    close: 'Close',
+    info: (canEdit: boolean) =>
+      canEdit
+        ? 'Anyone with the link can see the list as it changes, without an account. They can add, tick and remove items.'
+        : 'Anyone with the link can see the list as it changes, without an account.',
+    howLong: 'How long',
+    durations: { '1h': '1 hour', today: 'Today', week: 'This week', none: 'Until I stop' },
+    canEdit: 'Let people edit it',
+    linkLabel: 'Link',
+    notShared: 'Not shared',
+    creating: 'Creating link…',
+    create: 'Create link',
+    copy: 'Copy link',
+    copied: 'Copied ✓',
+    copiedBanner: 'Link copied',
+    /** Under the link: when it ends, in the device's time. */
+    endsToday: (time: string) => `Ends today at ${time}`,
+    endsOn: (day: string, time: string) => `Ends ${day} at ${time}`,
+    untilStopped: 'Until you stop sharing',
+    message: 'Message',
+    email: 'Email',
+    more: 'More',
+    /** What Message, Email and More send. */
+    shareText: (url: string) => `Our grocery list — ${url}`,
+    copyText: 'Copy as text',
+    textCopied: 'List copied',
+    nothingToCopy: 'Nothing to buy on the list.',
+    /** The first line of the copied text. */
+    textTitle: 'Groceries',
+    stop: 'Stop sharing this link',
+    stopTitle: 'Stop sharing?',
+    stopBody: 'The link will stop working for everyone who has it.',
+    stopConfirm: 'Stop sharing',
+    stopKeep: 'Keep sharing',
+    failed: "Couldn't create the link. Check your connection and try again.",
+    retry: 'Try again',
+    changeFailed: "Couldn't change that. Try again.",
+  },
+  // design/ui/OC-SharedGroceries.md (spec 072): the public shared grocery list.
+  sharedGroceries: {
+    brand: 'Our Cocon',
+    tag: 'Shared list',
+    viewOnly: 'View only',
+    title: 'Groceries',
+    /** "From the Demanges family · ends today at 23:59". */
+    sub: (family: string, ends: string | null) => `From the ${family.replace(/^the\s+/i, '')} family${ends ? ` · ${ends}` : ''}`,
+    endsToday: (time: string) => `ends today at ${time}`,
+    endsOn: (day: string, time: string) => `ends ${day} at ${time}`,
+    loading: 'Loading the list',
+    stoppedTitle: 'This list is no longer shared.',
+    stoppedBody: 'Ask the person who sent it for a new link.',
+    loadFailedTitle: "We couldn't open this list.",
+    loadFailedBody: 'Check your connection and try again.',
+    retry: 'Try again',
+    emptyTitle: 'The list is empty.',
+    emptyBody: 'Add what you need above.',
+    /** A row's ✕, for screen readers. */
+    removeItem: (name: string) => `Remove ${name}`,
+    readOnly: 'The list is view only now.',
+    tooMany: 'Too many changes for now. Try again later.',
+    promoTitle: 'Run your home from one place',
+    promoBody: "Our Cocon keeps your family's recipes, groceries and calendar together.",
+  },
   // design/ui/OC-ScaleIng.md (spec 013)
   scaleSheet: {
     title: 'Scale by an ingredient',
@@ -1191,6 +1257,8 @@ export const strings = {
     removeRecipeItems: 'Remove its items',
     removedRecipe: (items: number, recipe: string) => `Removed ${items === 1 ? '1 item' : `${items} items`} for ${recipe}.`,
     addedBy: (name: string) => `Added by ${name}`,
+    // Spec 072: a row a guest added through the shared link.
+    addedViaLink: 'Added via the shared link',
     // Spec 021: what to buy, beside the name: "Heavy cream: 1 pint carton (need 300 ml)".
     needNote: (amount: string) => `(need ${amount})`,
     // A count, as read by @cocon/quantity: "1 piece", "2 pieces", "½ piece", "1½ pieces".
@@ -1201,6 +1269,7 @@ export const strings = {
     loose: (amount: string) => `${amount} loose`,
     // The list's settings sheet (the button beside "Add item").
     settingsButton: 'Grocery settings',
+    shareButton: 'Share the grocery list',
     settingsTitle: 'Grocery settings',
     editItem: (name: string) => `Edit ${name}`,
     // "Clear all" (screen reader "Clear all items") and its Dialog.

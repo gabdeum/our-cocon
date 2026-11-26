@@ -213,9 +213,9 @@ export default function RootLayout() {
   // Before app_opened, so it carries them too (spec 063).
   useLayoutAnalytics(tracker);
 
-  // Opened straight onto a shared recipe or event, nothing identified is sent (constitution VI, specs 019 and 042).
+  // Opened straight onto a shared recipe, event or list, nothing identified is sent (constitution VI, specs 019, 042 and 072).
   const [firstSegment] = useSegments();
-  const openedOnShared = useRef(['r', 'e'].includes(firstSegment ?? ''));
+  const openedOnShared = useRef(['r', 'e', 'g'].includes(firstSegment ?? ''));
   useEffect(() => {
     if (!openedOnShared.current) trackAppOpened(tracker, Platform.OS, Constants.expoConfig?.version ?? '0.0.0');
   }, []);
@@ -254,6 +254,7 @@ export default function RootLayout() {
                   <Stack.Screen name="join/[token]" />
                   <Stack.Screen name="r/[token]" />
                   <Stack.Screen name="e/[token]" />
+                  <Stack.Screen name="g/[token]" />
                   <Stack.Screen name="oauth/consent" />
                   <Stack.Screen name="recipes/filters" options={presentation.sheet} />
                   <Stack.Screen name="recipes/new" options={card(presentation.fullScreen)} />
@@ -263,6 +264,7 @@ export default function RootLayout() {
                   <Stack.Screen name="recipes/[id]/convert" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/share" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/add-to-groceries" options={presentation.sheet} />
+                  <Stack.Screen name="groceries/share" options={presentation.sheet} />
                   <Stack.Screen name="recipes/[id]/edit" options={card(presentation.fullScreen)} />
                   <Stack.Screen name="recipes/[id]/settings" options={presentation.stack} />
                   <Stack.Screen name="calendar/new" options={presentation.sheet} />

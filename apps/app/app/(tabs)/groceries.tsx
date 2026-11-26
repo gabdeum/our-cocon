@@ -84,6 +84,7 @@ export default function GroceriesTab() {
       onEdit={(item, text) => after(editItem(client, item, text, myUnits))}
       onMove={(item, aisle) => after(moveToAisle(client, familyId ?? '', item, items ?? [], aisle))}
       onOpenRecipe={(id, servings) => router.push(recipePage(id, servings))}
+      onShare={() => router.push('/groceries/share' as Href)}
       servings={servings.data}
       onSetServings={async (recipeId, from, to) => {
         try {
