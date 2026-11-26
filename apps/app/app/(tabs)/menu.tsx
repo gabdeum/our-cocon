@@ -19,6 +19,7 @@ import { useSession } from '../../lib/session';
 import { useTimers } from '../../lib/timer-store';
 import { config } from '../../lib/tracker';
 import { strings } from '../../strings/en';
+import { useTimeZone } from '../../lib/travel';
 
 const m = strings.menu;
 
@@ -34,7 +35,7 @@ export default function MenuTab() {
   const userId = state.status === 'ready' ? state.userId : '';
   const myMemberId = state.status === 'ready' ? (state.members.find((x) => x.user_id === state.userId)?.id ?? state.me.id) : null;
   const settings = useQuery({ queryKey: calendarSettingsKey(familyId ?? ''), queryFn: () => loadCalendarSettings(client), enabled });
-  const tz = settings.data?.homeTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const tz = useTimeZone(settings.data);
   const today = todayIn(tz);
   const { from, to } = cardWindow(today);
   const events = useQuery({ queryKey: eventsKey(familyId ?? '', from, to), queryFn: () => loadEvents(client, from, to), enabled });

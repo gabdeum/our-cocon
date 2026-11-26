@@ -21,6 +21,7 @@ import { deviceStorage, type ChoiceStorage } from './recipe-choices';
 import { useSession } from './session';
 import { useToast } from './toast';
 import { strings } from '../strings/en';
+import { useTimeZone } from './travel';
 
 const r = strings.reminders;
 
@@ -30,7 +31,7 @@ export function useReminderContext() {
   const familyId = state.status === 'ready' ? state.family.id : null;
   const settings = useQuery({ queryKey: calendarSettingsKey(familyId ?? ''), queryFn: () => loadCalendarSettings(client), enabled: familyId !== null });
   // The family's home time zone, or the device's until one is set (as the event sheet does).
-  const tz = settings.data?.homeTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const tz = useTimeZone(settings.data);
   const { prefs } = useCalendarDisplay();
   // Spec 059 (L149): each person's quiet hours and clock, for the sheet's "Notifies {name} at …".
   const quiet = useQuery({ queryKey: ['member_calendar_settings', 'family', familyId ?? ''], queryFn: () => loadFamilyQuietHours(client), enabled: familyId !== null });

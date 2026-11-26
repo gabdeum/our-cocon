@@ -228,6 +228,13 @@ export const events = {
   calendar_day_opened: z.strictObject({ from_view: CalendarView }),
   calendar_day_sheet_opened: z.strictObject({ events: z.int().min(0), presentation: SheetPresentation }),
   calendar_first_hint_dismissed: z.strictObject({}),
+  // Spec 071: the phone moved to another time zone: the drawer was shown; the member chose to keep
+  // their own times there, everyone's (the family's time zone moves), or stay on the family's time
+  // (with how many reminders moved); or their own times went back by themselves when the phone was
+  // on the family's time again. Never the zones.
+  travel_time_zone_asked: z.strictObject({}),
+  travel_time_zone_chosen: z.strictObject({ choice: z.enum(['keep', 'family', 'home']), reminders_moved: z.int().min(0) }),
+  travel_time_zone_ended: z.strictObject({ reminders_moved: z.int().min(0) }),
   // Spec 038: a week swiped left (next) or right (previous); the header's arrows don't count.
   calendar_week_swiped: z.strictObject({ direction: z.enum(['next', 'previous']) }),
   // Spec 039: a day swiped (the arrows don't count), and an empty band's "+ Add in the …" tapped.

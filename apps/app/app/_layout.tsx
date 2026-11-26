@@ -31,6 +31,7 @@ import { deviceStorage } from '../lib/recipe-choices';
 import { clearPendingSave } from '../lib/pending-save';
 import { ToastProvider, useToast } from '../lib/toast';
 import { NotificationsProvider, useNotifications } from '../lib/notifications-context';
+import { TravelHost } from '../components/calendar/TravelHost';
 import { nativeNotifications } from '../lib/notifications-native';
 import { clearPrefs, unregisterDevice } from '../lib/notifications';
 import { timerAlarmNotifications, timerNotifications } from '../lib/timer-notifications';
@@ -241,6 +242,7 @@ export default function RootLayout() {
               <Timers>
               <CalendarPrefsProvider>
                 <SessionGate />
+                <TravelHost />
                 <NavigationTheme value={navigationTheme}>
                 <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
                   {/* From 960, back from Reminders or Timers opened on their own (a notification): the tabs appear in place too. */}

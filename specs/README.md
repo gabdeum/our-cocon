@@ -107,6 +107,7 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 66 | 068 Home on larger screens | 063, 064, 028, 057 | OC-HomeResponsive |
 | 67 | 069 Groceries on larger screens | 063, 064, 065, 020, 021, 052 | OC-GroceriesResponsive |
 | 68 | 070 Calendar on larger screens: month, week, day | 063, 064, 065, 036, 037, 038, 039, 058 | OC-CalendarResponsive |
+| 69 | 071 Travelling to another time zone | 029, 034, 049, 056, 059 | OC-TravelTimeZone (not drawn) |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
 Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order, then the top bar (050) across every pushed screen.

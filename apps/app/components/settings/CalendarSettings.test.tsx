@@ -21,6 +21,8 @@ function setup(over: Partial<CalendarSettingsProps> = {}) {
     onSaveSlots: vi.fn().mockResolvedValue(undefined),
     onSetTimeZone: vi.fn().mockResolvedValue(undefined),
     phoneTimeZone: 'Europe/Paris',
+    myTimeZone: null,
+    onUseFamilyZone: vi.fn().mockResolvedValue(undefined),
     onOpenAi: vi.fn(),
     onBack: vi.fn(),
     tracker: fakeTracker(),
@@ -97,22 +99,35 @@ describe('Calendar settings (OC-CalSettings)', () => {
     expect(onSaveSlots).not.toHaveBeenCalled();
   });
 
-  it('others see the times of day without chevrons, and no time zone sheet', () => {
+  it('others see the times of day without chevrons; they can move the family’s time zone (spec 071)', () => {
     setup({ isOwner: false });
     expect(screen.queryByRole('link', { name: /Evening/ })).toBeNull();
     expect(screen.getByText('18:00–22:00')).toBeTruthy();
-    expect(screen.queryByRole('link', { name: /Home time zone/ })).toBeNull();
+    expect(screen.getByRole('link', { name: /Family time zone/ })).toBeTruthy();
   });
 
   it('FR-010: the owner uses this phone’s time zone; AI assistants opens its page', async () => {
     const { onSetTimeZone, onOpenAi, tracker } = setup();
-    fireEvent.click(screen.getByRole('link', { name: /Home time zone/ }));
+    fireEvent.click(screen.getByRole('link', { name: /Family time zone/ }));
     fireEvent.click(screen.getByRole('button', { name: "Use this phone's time zone (Paris (Central European Time))" }));
     await flush();
     expect(onSetTimeZone).toHaveBeenCalledWith('Europe/Paris');
     expect(tracker.track).toHaveBeenCalledWith('calendar_settings_changed', { setting: 'home_time_zone', value: 'phone' });
     fireEvent.click(screen.getByRole('link', { name: /AI assistants/ }));
     expect(onOpenAi).toHaveBeenCalledOnce();
+  });
+
+  it('spec 071: my time zone, only while I keep my times elsewhere, and back to the family’s', async () => {
+    const { onUseFamilyZone } = setup({ myTimeZone: 'America/Los_Angeles' });
+    fireEvent.click(screen.getByRole('link', { name: /My time zone/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use the family’s time zone (New York)' }));
+    await flush();
+    expect(onUseFamilyZone).toHaveBeenCalledOnce();
+  });
+
+  it('spec 071: no My time zone row on the family’s time', () => {
+    setup();
+    expect(screen.queryByText('My time zone')).toBeNull();
   });
 
   it('shows times in 12-hour time when the member picks it', () => {

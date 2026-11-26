@@ -133,6 +133,8 @@ export interface ReminderFamily {
   timeZone: string | null;
   slotTimes: SlotTimes;
   members: readonly ReminderMember[];
+  /** Spec 071: members keeping their times on another zone while away, by member id. */
+  awayTimeZones?: ReadonlyMap<string, string>;
 }
 
 /** One reminder to send now: an occurrence, the instant it was due and who gets it. */
@@ -151,6 +153,8 @@ const LATE_MS: Record<ReminderKind, number> = { minutes_15: 30 * 60_000, hour_be
  * FR-005: the reminders due at `now`, every occurrence placed by `expand` (exceptions respected).
  * Skipped: families without a home time zone, events added after their reminder time, reminders
  * too late, and occurrences nobody would get. Events the engine can't place are skipped too.
+ * Spec 071: a member away who keeps their times there is reminded on that zone's clock (16:00 in
+ * New York, not in Paris), so one occurrence may be due at different moments for different people.
  */
 export function remindersDue(events: readonly ReminderEvent[], families: ReadonlyMap<string, ReminderFamily>, now: Date): DueReminder[] {
   const due: DueReminder[] = [];
@@ -160,18 +164,25 @@ export function remindersDue(events: readonly ReminderEvent[], families: Readonl
     const today = todayIn(family.timeZone, now);
     let occurrences: Occurrence[];
     try {
-      occurrences = expand(event, addDays(today, -1), addDays(today, 2), event.exceptions);
+      // A day either side more than the home zone needs: a member away may be up to a day apart.
+      occurrences = expand(event, addDays(today, -2), addDays(today, 3), event.exceptions);
     } catch {
       continue;
     }
     for (const occurrence of occurrences) {
       const { date, time } = reminderAt(occurrence, event.reminder, family.slotTimes);
-      const at = zonedInstant(date, time, family.timeZone);
-      // At its time, never before (the notifier runs every minute).
-      if (at > now || now.getTime() - at.getTime() > LATE_MS[event.reminder]) continue;
-      if (new Date(event.created_at).getTime() > at.getTime()) continue;
-      const recipients = reminderRecipients(occurrence, family.members);
-      if (recipients.length) due.push({ occurrence, familyId: event.family_id, kind: event.reminder, at, recipients });
+      const byZone = new Map<string, ReminderRecipient[]>();
+      for (const r of reminderRecipients(occurrence, family.members)) {
+        const zone = family.awayTimeZones?.get(r.memberId) ?? family.timeZone;
+        byZone.set(zone, [...(byZone.get(zone) ?? []), r]);
+      }
+      for (const [zone, recipients] of byZone) {
+        const at = zonedInstant(date, time, zone);
+        // At its time, never before (the notifier runs every minute).
+        if (at > now || now.getTime() - at.getTime() > LATE_MS[event.reminder]) continue;
+        if (new Date(event.created_at).getTime() > at.getTime()) continue;
+        due.push({ occurrence, familyId: event.family_id, kind: event.reminder, at, recipients });
+      }
     }
   }
   return due;

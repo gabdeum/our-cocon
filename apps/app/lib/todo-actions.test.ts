@@ -1,13 +1,14 @@
 // Spec 059 FR-004 / SC-003: a reminder notification's Done, In 1 hour and Tomorrow, through the same
 // writes as the app. The writes are faked; their rules are tested in @cocon/data and @cocon/reminders.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { completeReminder, loadCalendarSettings, loadReminder, snoozeReminder } from '@cocon/data';
+import { completeReminder, loadCalendarSettings, loadMemberTravel, loadReminder, snoozeReminder } from '@cocon/data';
 import { fakeTracker } from '../test/fakes';
 import { handleTodoAction, type TodoActionDeps } from './todo-actions';
 
 vi.mock('@cocon/data', () => ({
   completeReminder: vi.fn(),
   loadCalendarSettings: vi.fn(),
+  loadMemberTravel: vi.fn(),
   loadReminder: vi.fn(),
   snoozeReminder: vi.fn(),
 }));
@@ -25,6 +26,7 @@ function deps(signedIn = true): TodoActionDeps & { tracker: ReturnType<typeof fa
 
 beforeEach(() => {
   vi.mocked(loadCalendarSettings).mockResolvedValue({ homeTimeZone: 'Europe/Paris', slotTimes: {} as never });
+  vi.mocked(loadMemberTravel).mockResolvedValue({ awayTimeZone: null, askedTimeZone: null });
   vi.mocked(loadReminder).mockResolvedValue({ id: ID, due_at: DUE, completed: false } as never);
   vi.mocked(completeReminder).mockReset().mockResolvedValue({ repeating: false, undo: {} as never, nextDueAt: null });
   vi.mocked(snoozeReminder).mockReset().mockResolvedValue({ until: DUE, previous: null });

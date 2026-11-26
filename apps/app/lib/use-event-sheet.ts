@@ -5,6 +5,7 @@ import { loadCalendarSettings } from '@cocon/data';
 import { calendarSettingsKey } from './calendar-header';
 import { useCalendarDisplay } from './calendar-prefs';
 import { useSession } from './session';
+import { useTimeZone } from './travel';
 
 /**
  * What the add and edit sheet routes share (spec 041): the family's slot times and "today" in the
@@ -16,7 +17,7 @@ export function useEventSheet() {
   const queryClient = useQueryClient();
   const familyId = state.status === 'ready' ? state.family.id : null;
   const settings = useQuery({ queryKey: calendarSettingsKey(familyId ?? ''), queryFn: () => loadCalendarSettings(client), enabled: familyId !== null });
-  const timeZone = settings.data?.homeTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const timeZone = useTimeZone(settings.data);
   const { prefs } = useCalendarDisplay();
   const myMemberId = state.status === 'ready' ? (state.members.find((m) => m.user_id === state.userId)?.id ?? state.me.id) : null;
   return {

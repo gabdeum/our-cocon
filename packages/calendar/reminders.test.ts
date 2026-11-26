@@ -147,6 +147,13 @@ describe('reminderText (FR-004, OC-Notifications)', () => {
 });
 
 describe('remindersDue (FR-005, SC-001)', () => {
+  it('spec 071: Gabriel keeping his times in Paris is reminded at 13:30 Paris time; the family at 13:30 New York time', () => {
+    const away = new Map([[FAMILY, { timeZone: TZ, slotTimes: DEFAULT_SLOT_TIMES, members, awayTimeZones: new Map([[GABRIEL, 'Europe/Paris']]) }]]);
+    const everyone = swim('hour_before', { members: ['everyone'] });
+    const inParis = zonedInstant('2026-11-08', '13:30', 'Europe/Paris');
+    expect(remindersDue([everyone], away, inParis).flatMap((d) => d.recipients.map((r) => r.memberId))).toEqual([GABRIEL]);
+    expect(remindersDue([everyone], away, at('2026-11-08', '13:30')).flatMap((d) => d.recipients.map((r) => r.memberId)).sort()).toEqual([EVA, LOU].sort());
+  });
   it('Story 1: Gabriel at 13:30 for the 14:30 swim class', () => {
     const [due] = remindersDue([swim()], families, at('2026-11-08', '13:30'));
     expect(due).toMatchObject({ familyId: FAMILY, kind: 'hour_before', at: at('2026-11-08', '13:30') });

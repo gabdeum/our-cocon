@@ -6,6 +6,7 @@ import { calendarWordsEn, checkSlotTimes, moveSlotEdge, slotNeighbour, toMinutes
 import { BottomSheet, Button, Card, Lead, ListGroup, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, SheetFooter, Text, TextField } from '@cocon/ui';
 import type { CalendarPrefs } from '../../lib/calendar-prefs';
 import { clock, zoneLabel } from '../../lib/clock';
+import { cityOf } from '../../lib/travel';
 import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
@@ -27,6 +28,10 @@ export interface CalendarSettingsProps {
   onSaveSlots: (slotTimes: SlotTimes) => Promise<void>;
   onSetTimeZone: (timeZone: string) => Promise<void>;
   phoneTimeZone: string;
+  /** Spec 071: the member's own time zone while they keep their times elsewhere, or null. */
+  myTimeZone: string | null;
+  /** Throws when the database refuses. */
+  onUseFamilyZone: () => Promise<void>;
   onOpenAi: () => void;
   onBack: () => void;
   tracker: Tracker;
@@ -64,11 +69,15 @@ export function CalendarSettings(p: CalendarSettingsProps) {
   const [editing, setEditing] = useState<SlotEdit | null>(null);
   const [saving, setSaving] = useState(false);
   const [zoneOpen, setZoneOpen] = useState(false);
+  const [myZoneOpen, setMyZoneOpen] = useState(false);
+  const familyCity = p.homeTimeZone ? cityOf(p.homeTimeZone) : '';
   const hours = (slot: SlotKey) => s.hours(clock(slotTimes[slot].start, prefs.use24h), clock(slotTimes[slot].end, prefs.use24h));
   const change = async (update: MemberCalendarSettingsUpdate) => {
     if ((await p.onChange(update)) === 'failed') saveFailed();
   };
   const ownerEdits = p.isOwner && !readOnly;
+  // Spec 071: any member moves the family's time zone once it's set (the travel drawer does too).
+  const zoneEdits = !readOnly && (p.isOwner || p.homeTimeZone !== null);
 
   async function saveSlot() {
     if (!editing) return;
@@ -79,6 +88,18 @@ export function CalendarSettings(p: CalendarSettingsProps) {
       await p.onSaveSlots(edited(slotTimes, editing));
       p.tracker.track('calendar_settings_changed', { setting: 'times_of_day', value: editing.slot });
       setEditing(null);
+    } catch {
+      saveFailed();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function backToFamilyZone() {
+    setSaving(true);
+    try {
+      await p.onUseFamilyZone();
+      setMyZoneOpen(false);
     } catch {
       saveFailed();
     } finally {
@@ -168,13 +189,17 @@ export function CalendarSettings(p: CalendarSettingsProps) {
           <ListRow
             title={s.homeTimeZone}
             sub={p.homeTimeZone ? zoneLabel(p.homeTimeZone) : s.notSet}
-            trailing={ownerEdits ? { kind: 'chevron' } : undefined}
-            onPress={
-              ownerEdits
-                ? () => setZoneOpen(true)
-                : undefined
-            }
+            trailing={zoneEdits ? { kind: 'chevron' } : undefined}
+            onPress={zoneEdits ? () => setZoneOpen(true) : undefined}
           />
+          {p.myTimeZone ? (
+            <ListRow
+              title={s.myTimeZone}
+              sub={zoneLabel(p.myTimeZone)}
+              trailing={readOnly ? undefined : { kind: 'chevron' }}
+              onPress={readOnly ? undefined : () => setMyZoneOpen(true)}
+            />
+          ) : null}
           <ListRow title={s.aiAssistants} sub={s.aiAssistantsSub} trailing={{ kind: 'chevron' }} onPress={p.onOpenAi} last />
         </ListGroup>
       </View>
@@ -211,6 +236,18 @@ export function CalendarSettings(p: CalendarSettingsProps) {
             </View>
           </View>
         ) : null}
+      </BottomSheet>
+
+      <BottomSheet visible={myZoneOpen} onClose={() => setMyZoneOpen(false)} title={s.myTimeZone} closeLabel={s.close}>
+        <View className="gap-14">
+          <Text size={15} weight="600" color="ink-muted">
+            {s.myTimeZoneLead(familyCity)}
+          </Text>
+          <Text size={16} weight="800">
+            {p.myTimeZone ? zoneLabel(p.myTimeZone) : ''}
+          </Text>
+          <Button label={s.useFamilyZone(familyCity)} block busy={saving} busyLabel={s.saving} onPress={() => void backToFamilyZone()} />
+        </View>
       </BottomSheet>
 
       <BottomSheet visible={zoneOpen} onClose={() => setZoneOpen(false)} title={s.homeTimeZone} closeLabel={s.close}>

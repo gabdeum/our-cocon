@@ -439,7 +439,9 @@ export const strings = {
       hours: (start: string, end: string) => `${start}–${end}`,
       slotLabel: (slot: string, hours: string) => `${slot}, ${hours}`,
       family: 'Family',
-      homeTimeZone: 'Home time zone',
+      homeTimeZone: 'Family time zone',
+      // Spec 071: only while the member keeps their own times on another zone.
+      myTimeZone: 'My time zone',
       aiAssistants: 'AI assistants',
       aiAssistantsSub: 'Let Claude, ChatGPT or Gemini add events',
       // The slot sheet (not drawn): Starts and Ends like Add event's custom times.
@@ -453,10 +455,13 @@ export const strings = {
       cancel: 'Cancel',
       save: 'Save',
       saving: 'Saving…',
-      // The time zone sheet (not drawn).
-      timeZoneLead: 'All dates in the family calendar use this time zone.',
+      // The time zone sheet (not drawn). Spec 071: any member moves the family; times stay as entered.
+      timeZoneLead: 'All dates in the family calendar use this time zone. Moving it keeps every event and reminder at the time it was entered.',
       usePhoneZone: (zone: string) => `Use this phone's time zone (${zone})`,
       sameZone: "That's the family's time zone already.",
+      // Spec 071: the My time zone sheet (not drawn).
+      myTimeZoneLead: (family: string) => `You keep your times on this time zone; the rest of the family is on ${family} time. They go back by themselves when your phone is on ${family} time again.`,
+      useFamilyZone: (family: string) => `Use the family’s time zone (${family})`,
       notSet: 'Not set yet',
       close: 'Close',
       saveFailed: "Couldn't save. Try again.",
@@ -1484,6 +1489,29 @@ export const strings = {
   },
   // design/system/components/Toast: the one toast, on every screen.
   // Spec 046: the ask sheet (design/ui/OC-Notifications.md › Ask sheet) and reminders shown in the app.
+  // design/ui/OC-TravelTimeZone.md (spec 071): the drawer when the phone moves to another time zone.
+  travel: {
+    title: (city: string) => `You’re on ${city} time`,
+    lead: (city: string, home: string, gap: string) => `Your phone moved to ${city} time, ${gap} ${home}. Should your plans keep the times you entered?`,
+    gap: (minutes: number) => {
+      const h = Math.floor(Math.abs(minutes) / 60);
+      const m = Math.abs(minutes) % 60;
+      const amount = [h ? `${h} hour${h === 1 ? '' : 's'}` : '', m ? `${m} minutes` : ''].filter(Boolean).join(' ');
+      return `${amount} ${minutes < 0 ? 'behind' : 'ahead of'}`;
+    },
+    exampleAt: (time: string) => `For example, an event you added for ${time}:`,
+    keep: 'Keep my times',
+    keepTitle: 'Keep my times (I am the only one travelling)',
+    keepSub: (time: string, city: string, home: string) => `Stays at ${time}, ${city} time, for you. The rest of the family stays on ${home} time.`,
+    keepFamily: 'Keep everyone’s time',
+    keepFamilyTitle: 'Keep everyone’s time (everyone is travelling)',
+    keepFamilySub: (time: string, city: string) => `The family moves to ${city} time: everyone’s plans stay at ${time}, ${city} time, and nobody else is asked.`,
+    stay: (home: string) => `Stay on ${home} time`,
+    staySub: (time: string, here: string, home: string, city: string) => `Happens at ${time} ${home} time, which is ${here} in ${city}.`,
+    note: (home: string) => `If only you keep your times, they go back by themselves when your phone is back on ${home} time.`,
+    failed: 'Couldn’t change your times. Check your connection and try again.',
+    close: 'Close',
+  },
   notifications: {
     askTitle: { timer: 'Know when it’s done', reminder: 'Get a heads-up before events', todo: 'Get reminded on time' },
     askBody: {
