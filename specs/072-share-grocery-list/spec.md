@@ -84,3 +84,4 @@ All copy is in the States tables of OC-ShareGroceries and OC-SharedGroceries, an
     - The add cap holds under parallel requests (a lock per link).
     - Guest writes are checked with a shared schema (`SharedGroceryWrite`) on the page.
     - The token helper's grants are revoked explicitly, with tests.
+- 2026-11-26: After a try on dev: only the endpoint's own `{"status":"not_shared"}` reads "no longer shared". Any other 404 (a gateway that doesn't know the function yet) reads "We couldn't open this list." Locally, a new Edge Function needs `supabase stop` then `supabase start` before it's served.

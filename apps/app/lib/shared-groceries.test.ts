@@ -23,13 +23,16 @@ describe('loadSharedGroceries (FR-003)', () => {
   });
 
   it('is "not shared" for a stopped link or a malformed token, without asking', async () => {
-    expect(await loadSharedGroceries(token, endpoint(answer(404)))).toEqual({ kind: 'not_shared' });
+    expect(await loadSharedGroceries(token, endpoint(answer(404, { status: 'not_shared' })))).toEqual({ kind: 'not_shared' });
     const fetch = answer(200, list);
     expect(await loadSharedGroceries('nope', endpoint(fetch))).toEqual({ kind: 'not_shared' });
     expect(fetch).not.toHaveBeenCalled();
   });
 
   it('throws when the endpoint fails or answers something else, so the page offers to try again', async () => {
+    // A gateway that doesn't know the function: "couldn't open", never "no longer shared".
+    const missing = vi.fn(async () => new Response('Function not found', { status: 404 }));
+    await expect(loadSharedGroceries(token, endpoint(missing as never))).rejects.toThrow();
     await expect(loadSharedGroceries(token, endpoint(answer(500)))).rejects.toThrow();
     await expect(loadSharedGroceries(token, endpoint(answer(200, { items: 'all of them' })))).rejects.toThrow();
   });
@@ -49,7 +52,8 @@ describe('writeSharedGroceries (FR-004, FR-005)', () => {
   });
 
   it('says why it was refused', async () => {
-    expect(await writeSharedGroceries(token, { op: 'clear', ids: [id] }, endpoint(answer(404)))).toBe('not_shared');
+    expect(await writeSharedGroceries(token, { op: 'clear', ids: [id] }, endpoint(answer(404, { status: 'not_shared' })))).toBe('not_shared');
+    expect(await writeSharedGroceries(token, { op: 'clear', ids: [id] }, endpoint(answer(404, 'Function not found')))).toBe('failed');
     expect(await writeSharedGroceries(token, { op: 'clear', ids: [id] }, endpoint(answer(403)))).toBe('read_only');
     expect(await writeSharedGroceries(token, { op: 'clear', ids: [id] }, endpoint(answer(429)))).toBe('too_many');
     expect(await writeSharedGroceries(token, { op: 'clear', ids: [id] }, endpoint(answer(500)))).toBe('failed');

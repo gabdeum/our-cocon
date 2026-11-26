@@ -21,6 +21,15 @@ const endpoint = (supabaseUrl: string) => `${supabaseUrl.replace(/\/+$/, '')}/fu
 const headers = (anonKey: string) => ({ apikey: anonKey, Authorization: `Bearer ${anonKey}` });
 
 /**
+ * The endpoint's own "not shared", not any 404: a gateway without the function (a local server
+ * started before it existed) answers "Function not found", which is a failure to say, not a stop.
+ */
+async function notShared(res: Response): Promise<boolean> {
+  const body: unknown = await res.json().catch(() => null);
+  return (body as { status?: unknown } | null)?.status === 'not_shared';
+}
+
+/**
  * A shared grocery list from the share endpoint (FR-003), signed out. "Not shared" for a bad,
  * stopped or ended link (all the same to the viewer); throws when the endpoint can't be reached,
  * so the page can offer to try again.
@@ -28,7 +37,7 @@ const headers = (anonKey: string) => ({ apikey: anonKey, Authorization: `Bearer 
 export async function loadSharedGroceries(token: string, { supabaseUrl, anonKey, fetch: get = fetch }: SharedEndpoint, signal?: AbortSignal): Promise<SharedGroceriesLoad> {
   if (!ShareToken.safeParse(token).success) return { kind: 'not_shared' };
   const res = await get(`${endpoint(supabaseUrl)}?token=${encodeURIComponent(token)}`, { headers: headers(anonKey), ...(signal ? { signal } : {}) });
-  if (res.status === 404) return { kind: 'not_shared' };
+  if (res.status === 404 && (await notShared(res))) return { kind: 'not_shared' };
   if (!res.ok) throw new Error(`Share endpoint answered ${res.status}`);
   const parsed = SharedGroceriesResponse.safeParse(await res.json());
   if (!parsed.success) throw new Error('Unexpected shared list');
@@ -50,7 +59,7 @@ export async function writeSharedGroceries(token: string, write: SharedWrite, { 
       body: JSON.stringify({ token, ...write }),
     });
     if (res.ok) return 'ok';
-    if (res.status === 404) return 'not_shared';
+    if (res.status === 404) return (await notShared(res)) ? 'not_shared' : 'failed';
     if (res.status === 403) return 'read_only';
     if (res.status === 429) return 'too_many';
     return 'failed';
