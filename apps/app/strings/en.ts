@@ -906,6 +906,8 @@ export const strings = {
       moveDown: 'Move down',
       suggestions: 'Suggestions',
       newIngredient: 'New ingredient. Pick its aisle:',
+      /** Eggs, cloves, bay leaves: a fraction typed is saved whole (spec 005 FR-003). */
+      wholeOnly: (noun: string, to: string) => `Only whole ${noun}: saved as ${to}.`,
       pickAisle: 'Pick an aisle',
       aisle: 'Aisle',
       warnings: {
@@ -1168,6 +1170,8 @@ export const strings = {
     sourcePartsJoin: ' · ',
     // A recipe card (spec 052 FR-006): its body opens the recipe, its "…" the menu.
     onTheList: (items: number) => `${items === 1 ? '1 item' : `${items} items`} on the list`,
+    /** A recipe's items on their way to the list (spec 022), on its card. */
+    addingRecipe: (items: number) => (items === 1 ? 'Adding 1 item…' : `Adding ${items} items…`),
     recipeMeta: (items: number, serves: number) => `${items === 1 ? '1 item' : `${items} items`} on the list · serves ${serves}`,
     openRecipe: (recipe: string) => `Open ${recipe}`,
     moreForRecipe: (recipe: string) => `More for ${recipe}`,
@@ -1367,12 +1371,10 @@ export const strings = {
     // Spec 062: the round timer button left of "Cooking options", and its sheet.
     timers: 'Timers',
     closeTimers: 'Close timers',
-    /** The switch in the options sheet. */
-    awake: 'Screen stays on',
-    awakeOnHint: "Your screen won't lock while you cook",
-    awakeOffHint: 'Your screen locks as usual',
-    /** The switch's hint when this browser can't keep the screen on (OC-Cook › States). */
-    awakeUnsupported: 'This browser may let the screen lock.',
+    /** The options sheet's sections: servings and scale by an ingredient, then the rest. */
+    scaling: 'Scaling',
+    servings: 'Servings',
+    optionsSection: 'More',
     /** The options sheet's row to the recipe form at the current step. */
     editStep: (n: number) => `Edit step ${n}`,
     stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
@@ -1672,6 +1674,15 @@ export const strings = {
       titleEdit: 'Edit event',
       /** The new-event sheet's switch to a new reminder (its segments are the two sheets' titles). */
       newKind: 'What to add',
+      /** The edit sheet's switch: an event can become a reminder and back (Gabriel, 2026-11-25). */
+      editKind: 'Event or reminder',
+      /** What an event has that a reminder can't hold, said before it's saved as one. */
+      losesAsReminder: (parts: string[]) => `As a reminder, it won't keep ${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : parts[0]}.`,
+      lostParts: { people: 'several people', place: 'the place', type: 'the type', who_takes: 'who takes them', checklist: 'the checklist' },
+      /** A reminder's "If it's not done", which an event doesn't have. */
+      losesAsEvent: "As an event, it won't keep “If it's not done”.",
+      movedToReminders: 'Moved to Reminders.',
+      movedToCalendar: 'Moved to the calendar.',
       cancel: 'Cancel',
       what: "What's happening?",
       whatPlaceholder: 'e.g. Poker night',
@@ -1979,6 +1990,8 @@ export const strings = {
     saveFailed: "Couldn't save. Try again.",
     gone: 'This reminder was deleted.',
     // The sheet (OC-ReminderEdit)
+    /** Saved from the add sheet (with Undo, as a new event). */
+    createdToast: (title: string) => `${title} added to Reminders.`,
     sheetNew: 'New reminder',
     sheetEdit: 'Edit reminder',
     cancel: 'Cancel',

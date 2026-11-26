@@ -1,4 +1,4 @@
-// The calendar's add sheet switches between a new event and a new reminder, keeping what's typed.
+// The add and edit sheet switches between an event and a reminder, keeping what's typed.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -22,9 +22,9 @@ function emptyClient() {
   return { from: () => query, rpc: async () => ({ data: [], error: null }) } as unknown as EventSheetProps['client'];
 }
 
-async function setup() {
+async function setup(over: (p: AddSheetProps) => AddSheetProps = (p) => p) {
   const tracker = fakeTracker();
-  const props: AddSheetProps = {
+  const base: AddSheetProps = {
     slotTimes: DEFAULT_SLOT_TIMES,
     tracker,
     event: {
@@ -52,6 +52,7 @@ async function setup() {
       onClose: vi.fn(),
     },
   };
+  const props = over(base);
   render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <AddSheet {...props} />
@@ -86,7 +87,7 @@ describe('AddSheet', () => {
     expect(pressed('Other day, Fri, Oct 30')).toBe('true');
     expect(screen.getByRole('switch', { name: 'Set a time' }).getAttribute('aria-checked')).toBe('true');
     expect(pressed(/^Eva/)).toBe('true');
-    expect(props.tracker.track).toHaveBeenLastCalledWith('add_sheet_switched', { to: 'reminder' });
+    expect(props.tracker.track).toHaveBeenLastCalledWith('add_sheet_switched', { to: 'reminder', mode: 'new' });
 
     fireEvent.change(screen.getByLabelText('Remind us to…'), { target: { value: 'Pay the nanny' } });
     switchTo('New event');
@@ -103,5 +104,40 @@ describe('AddSheet', () => {
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save' })));
     expect(props.reminder.onSave).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pay the daycare', due_date: '2026-10-30', time: null, assignee: 'everyone' }));
     expect(props.event.onSave).not.toHaveBeenCalled();
+  });
+
+  it('opens on a new reminder from the Reminders "+" (Gabriel: the same sheet, the reminder picked)', async () => {
+    await setup((p) => ({ ...p, initialKind: 'reminder' }));
+    expect(screen.getByRole('dialog', { name: 'New reminder' })).toBeTruthy();
+    expect(within(kind()).getByRole('button', { name: 'New reminder' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('the repeat and the notes go across', async () => {
+    await setup((p) => ({ ...p, event: { ...p.event, initial: { ...p.event.initial, repeat: 'weekly', weekdays: [5], notes: 'Bring towels' } } }));
+    switchTo('New reminder');
+    expect(pressed('Every week')).toBe('true');
+    expect((screen.getByLabelText('Notes') as HTMLTextAreaElement).value).toBe('Bring towels');
+  });
+
+  it('editing: "Edit event · Edit reminder"; saved as a reminder, it says what it won\'t keep and saves through the reminder', async () => {
+    const props = await setup((p) => ({
+      ...p,
+      mode: 'edit',
+      event: { ...p.event, mode: 'edit', initial: { ...p.event.initial, title: 'Swim', location: 'Pool', checklist: [{ label: 'Towels' }] } },
+      reminder: { ...p.reminder, mode: 'edit' },
+    }));
+    const group = screen.getByRole('group', { name: 'Event or reminder' });
+    fireEvent.click(within(group).getByRole('button', { name: 'Edit reminder' }));
+    expect(screen.getByText("As a reminder, it won't keep the place and the checklist.")).toBeTruthy();
+    expect(props.tracker.track).toHaveBeenLastCalledWith('add_sheet_switched', { to: 'reminder', mode: 'edit' });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save' })));
+    expect(props.reminder.onSave).toHaveBeenCalledWith(expect.objectContaining({ title: 'Swim' }));
+    expect(props.event.onSave).not.toHaveBeenCalled();
+  });
+
+  it('no switch for what can\'t move (a surprise)', async () => {
+    await setup((p) => ({ ...p, mode: 'edit', switchable: false, event: { ...p.event, mode: 'edit' } }));
+    expect(screen.queryByRole('group', { name: 'Event or reminder' })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Edit event' })).toBeTruthy();
   });
 });

@@ -78,4 +78,13 @@ describe('StepRow', () => {
     expect(screen.getByRole('link').textContent).toBe('4Mix the custard');
     expect(screen.queryByTestId('step-row-timer')).toBeNull();
   });
+
+  it('wraps a long name, and cuts a step text standing in for one after 2 lines', () => {
+    const name = 'Fold the egg whites into the chocolate in three goes, gently, keeping the air in';
+    const { unmount } = render(<StepRow number={2} title={name} accessibilityLabel={`Step 2: ${name}`} onPress={vi.fn()} />);
+    expect(screen.getByText(name).outerHTML).not.toMatch(/line-clamp|ellipsis|nowrap/i);
+    unmount();
+    render(<StepRow number={2} title={name} titleLines={2} accessibilityLabel={`Step 2: ${name}`} onPress={vi.fn()} />);
+    expect(screen.getByText(name).outerHTML).toMatch(/line-clamp/i);
+  });
 });

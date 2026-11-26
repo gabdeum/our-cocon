@@ -28,6 +28,7 @@ import {
   Text,
   TextField,
   TimeRange,
+  useSheetPresentation,
 } from '@cocon/ui';
 import { firstOfMonth, eventWindow, weekdayLetters } from '../../lib/calendar-month';
 import { eventsKey } from '../../lib/calendar-header';
@@ -67,6 +68,7 @@ import { RepeatDetails } from './RepeatDetails';
 import type { Member } from '../../lib/session';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { useToast } from '../../lib/toast';
+import { useTitleSuggestions } from '../../lib/use-title-suggestions';
 import { strings } from '../../strings/en';
 
 const a = strings.calendar.add;
@@ -117,6 +119,7 @@ type DateSheet = { for: 'date' | 'last' | 'ends'; month: string } | null;
 export function useEventForm(p: EventSheetProps) {
   const { initial, members, myMemberId, today, slotTimes } = p;
   const online = useOnline();
+  const presentation = useSheetPresentation('flow');
   const opened = useRef(0);
   useEffect(() => {
     opened.current = Date.now();
@@ -139,21 +142,10 @@ export function useEventForm(p: EventSheetProps) {
 
   // Spec 053 FR-001: past titles while typing a new event's; none when editing.
   const offerTitles = p.mode === 'new' && !p.occurrenceOnly;
-  const [titleFocused, setTitleFocused] = useState(false);
   const [suggested, setSuggested] = useState(false);
-  const [suggestions, setSuggestions] = useState<TitleSuggestion[]>([]);
-  useEffect(() => {
-    if (!offerTitles) return;
-    let stale = false;
-    const timer = setTimeout(() => void suggestEventTitles(p.client, d.title).then((s) => !stale && setSuggestions(s)), 150);
-    return () => {
-      stale = true;
-      clearTimeout(timer);
-    };
-  }, [offerTitles, p.client, d.title]);
-  const shownSuggestions = titleFocused && d.title.trim() ? suggestions : [];
+  const titles = useTitleSuggestions(offerTitles, d.title, (text) => suggestEventTitles(p.client, text));
   const pickSuggestion = async (s: TitleSuggestion, position: number) => {
-    setTitleFocused(false);
+    titles.dismiss();
     setD((prev) => ({ ...prev, title: s.title }));
     p.tracker.track('event_title_suggestion_picked', { position, query_length: Math.min(Math.max(d.title.trim().length, 1), 60) });
     const event = await loadEvent(p.client, s.lastEventId).catch(() => null);
@@ -241,7 +233,8 @@ export function useEventForm(p: EventSheetProps) {
     dirty: hasTitle && p.mode === 'new',
     title: p.mode === 'new' ? a.titleNew : a.titleEdit,
     closeLabel: a.close,
-    headerAction: <Link label={a.cancel} tone="quiet" size={16} onPress={close} />,
+    // The centred card from 600 has its ✕ (spec 065): no Cancel beside it (Gabriel).
+    headerAction: presentation === 'card' ? undefined : <Link label={a.cancel} tone="quiet" size={16} onPress={close} />,
     footer: (
       <View className="gap-12">
         <Button label={a.save} busy={saving} busyLabel={a.saving} block inactive={!hasTitle} disabled={!online} onPress={() => void save()} />
@@ -258,13 +251,12 @@ export function useEventForm(p: EventSheetProps) {
           placeholder={a.whatPlaceholder}
           autoFocus={p.mode === 'new'}
           warning={showError ? a.noTitle : undefined}
-          onFocus={() => setTitleFocused(true)}
-          // Later than the tap, so tapping a suggestion still lands on it.
-          onBlur={() => setTimeout(() => setTitleFocused(false), 200)}
+          onFocus={titles.onFocus}
+          onBlur={titles.onBlur}
         />
-        {shownSuggestions.length ? (
+        {titles.shown.length ? (
           <RowScroll keyboardShouldPersistTaps="handled" role="list" aria-label={a.suggestions} className="-mx-20 -mt-8" contentContainerClassName="gap-8 px-20">
-            {shownSuggestions.map((s, i) => (
+            {titles.shown.map((s, i) => (
               <SuggestionPill key={s.lastEventId} title={s.title} detail={suggestionTime(s, slotTimes, use24h)} onPress={() => void pickSuggestion(s, i + 1)} />
             ))}
           </RowScroll>

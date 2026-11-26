@@ -53,3 +53,4 @@ None.
 - 2026-10-23: Scale by an ingredient lists lines as the recipe page shows them: a line of several rows ("Onion (sauce)", "Onion (topping)") scales by their total, and is left out when their amounts don't add up (`rowScale`).
 - 2026-11-12 (051 FR-013): the Units quick toggle is replaced by a link row "Units: {Metric|Imperial}" · "Change in Edit › This recipe", which opens the recipe form at its own settings. A Metric · Imperial choice saved on a device no longer counts, and `units_toggled` is retired. The kitchen-scale toggle stays.
 - 2026-11-12 (051, after review with Gabriel): the Units toggle is back in the "…" panel and cooking mode's options, for the visit only (not saved on the device any more); `units_toggled` is sent again.
+- 2026-11-25: In cooking mode, "Scale by an ingredient" moved into the options sheet's new "Scaling" section, beside the servings stepper (spec 012). A scale by an ingredient now survives leaving and resuming a cook.

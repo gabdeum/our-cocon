@@ -234,6 +234,25 @@ export function formFromReminder(stored: StoredReminder, tz: string): ReminderFo
   };
 }
 
+/**
+ * A suggested title picked (as the event sheet's, spec 053 FR-003): the sheet filled like the
+ * latest reminder with that title: its time, repeat, rollover and who it's for. The day stays as
+ * picked, notes aren't copied (they were about that day), and whatever the person already changed
+ * (`touched`) keeps their value.
+ */
+export function reminderFromSuggestion(form: ReminderForm, stored: StoredReminder, tz: string, touched: ReadonlySet<keyof ReminderForm>): ReminderForm {
+  const like = formFromReminder(stored, tz);
+  const filled: Partial<ReminderForm> = { hasTime: like.hasTime, time: like.time, rollover: like.rollover, repeat: like.repeat, custom: like.custom, assignee: like.assignee };
+  // The time switch and its time go together, as do the repeat and its custom.
+  if (touched.has('hasTime')) touched = new Set([...touched, 'time']);
+  if (touched.has('repeat')) touched = new Set([...touched, 'custom']);
+  const kept = Object.fromEntries(Object.entries(filled).filter(([key]) => !touched.has(key as keyof ReminderForm)));
+  return { ...form, ...kept };
+}
+
+/** A suggestion's detail: its latest reminder's time ("17:30"), or "Any time". */
+export const suggestionTimeOf = (s: { hasTime: boolean; dueAt: string }, tz: string, use24h: boolean) => (s.hasTime ? formatTime(timeIn(tz, new Date(s.dueAt)), use24h) : strings.reminders.anyTime);
+
 /** What Save sends (056's `ReminderDraft`). */
 export function formToDraft(f: ReminderForm): ReminderDraft {
   const never = { type: 'never' } as const;

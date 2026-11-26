@@ -13,9 +13,9 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Specs 012, 051
 3. End of list: "Bon appétit! Tap Done cooking to log it." (olive 18/900, centred).
 4. Fixed footer: soft "Back" (⅓) and olive "Next step" (⅔). Back always reads "Back"; on the last step Next reads "Done cooking" (olive, not ink).
 5. "Cooking options" sheet (BottomSheet, title "Cooking options"):
-   - Switch "Screen stays on", hint "Your screen won't lock while you cook" / "Your screen locks as usual". It starts from the "Keep screen on" setting (spec 027) and lasts for this visit.
-   - "Edit step {n}" › (ListRow with a chevron, the current step): closes the sheet and opens the recipe form (full-screen) on Steps with that step open. A step a chosen variant adds or changes opens that variant in Variants instead, since it decides what the step says. Saved or cancelled, it comes back to cooking mode at the same step.
-   - Then the recipe page's "…" options, as in OC-Recipe: "I'm using a kitchen scale", "Scale by an ingredient ›", "Unit converter ›", and "Units" Metric | Imperial. They change the steps at once; the kitchen scale is remembered for the recipe on this device, the units only for this visit (shared with the recipe page under it, spec 051).
+   - "Scaling" (overline): "Servings" with the recipe page's Stepper (7½ while scaled by an ingredient; − / + go to 7 / 8 and end the scale), "Scaled by {ingredient} · Reset" under it while scaled, then "Scale by an ingredient ›". Changes apply to the steps at once, are remembered for the recipe page, and are saved to the cook (whole servings).
+   - "More" (overline): "Edit step {n}" › (ListRow with a chevron, the current step): closes the sheet and opens the recipe form (full-screen) on Steps with that step open. A step a chosen variant adds or changes opens that variant in Variants instead, since it decides what the step says. Saved or cancelled, it comes back to cooking mode at the same step.
+   - Then the recipe page's "…" options, as in OC-Recipe, less the scale by an ingredient: "I'm using a kitchen scale", "Unit converter ›", and "Units" Metric | Imperial. They change the steps at once; the kitchen scale is remembered for the recipe on this device, the units only for this visit (shared with the recipe page under it, spec 051).
 
 6. "Timers" sheet (spec 062; BottomSheet, title "Timers", close label "Close timers"): the Timers screen's list (OC-Timers 3–4): one card per timer, newest first, with "−1", clock, "+1", Pause | Resume | "Add 1 more minute" and Stop | Dismiss; "No timers running. Start one from any recipe step." when there are none; then TimePresets "Quick kitchen timer" (5 · 10 · 15 · 30 min). A quick timer starts at once and its card shows in the sheet, which stays open. A timer of this recipe's steps has "Go to step": it closes the sheet and goes to that step here; other timers have no link. Done timers shown in the open sheet count as seen, as on Timers (spec 047).
 
@@ -36,7 +36,7 @@ Source `screens/OC-Cook.dc.html` · Route `/recipes/[id]/cook` · Specs 012, 051
 | Loading | TopBar with the round ✕ "Leave cooking mode, stays in progress", then skeleton blocks (screen reader: "Loading recipe") |
 | Couldn't load | TopBar with the round ✕, then "We couldn't open this recipe." · "It may have been deleted, or you're offline." · "Try again" (as OC-Recipe) |
 | No steps | Closes straight back to the recipe |
-| Screen can't stay on (a browser without Wake Lock) | The switch's hint reads "This browser may let the screen lock." |
+| Screen can't stay on (a browser without Wake Lock) | Cooking goes on; the screen may lock (nothing shown) |
 | "Keep screen on" off (spec 027) | The switch starts off |
 | A timer paused or done | Not in the pill (TimerPill README) |
 | Opened at a step (Timers › "Go to step") | Starts at that step; a step that's gone starts at step 1. ✕ and "Done cooking" then open the recipe page |
@@ -51,3 +51,4 @@ Segments: "Go to step {n}: {name}" ("Go to step {n}" for a step with no name). S
 - 2026-11-10: "Edit step {n}" in the options sheet opens the recipe form at the current step.
 - 2026-11-12 (051): leaving keeps the cook in progress (✕ "Leave cooking mode, stays in progress"; Back on step 1 leaves too); the last step's "Done cooking" logs it and opens the Done sheet; "Exit" and "Finish" removed; "Units: {x}" link row in the options sheet.
 - 2026-11-17 (062): a round timer button "Timers" left of "Cooking options" opens the "Timers" sheet (every timer and the quick kitchen timers).
+- 2026-11-25: No "Screen stays on" switch: the screen follows "Keep screen on while cooking" (Menu › Recipes, or the recipe's own, spec 027). A "Scaling" section (servings, Scaled by · Reset, Scale by an ingredient) opens the sheet; the rest sits under "More". A resumed cook keeps this device's scale by an ingredient when the cook is at it.

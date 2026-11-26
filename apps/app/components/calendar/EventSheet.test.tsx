@@ -11,7 +11,13 @@ import { EventSheet, type EventSheetProps } from './EventSheet';
 import { alex as alexFake, fakeTracker, flush, gabriel as gabrielFake, james as jamesFake } from '../../test/fakes';
 import { expectAccessible } from '../../test/axe';
 
-afterEach(cleanup);
+// Spec 065: the window's width, for the sheet's presentation (390 unless a test widens it).
+const dims = vi.hoisted(() => ({ width: 390, height: 844 }));
+vi.mock('react-native', async (actual) => ({ ...(await actual<typeof import('react-native')>()), useWindowDimensions: () => ({ ...dims, scale: 2, fontScale: 1 }) }));
+afterEach(() => {
+  cleanup();
+  dims.width = 390;
+});
 
 const gabriel = { ...gabrielFake, id: '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a01' };
 const eva = { ...alexFake, id: '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a02', display_name: 'Eva' };
@@ -432,5 +438,12 @@ describe('Who can see it? (spec 043)', () => {
     expect(saved(props)).toMatchObject({ title: 'Swim', starts_on: TODAY, category: 'sport', location: 'Aquatic centre', slots: ['morning'], members: [james.id], responsible_member_id: gabriel.id, reminder: 'hour_before' });
     expect(saved(props).checklist).toEqual([{ label: 'Towel' }]);
     expect((props.onSave as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]).toMatchObject({ usedSuggestion: true });
+  });
+
+  it('no Cancel beside the ✕ on the centred card from 600 (Gabriel); the phone sheet keeps it', async () => {
+    dims.width = 820;
+    await setup();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
   });
 });

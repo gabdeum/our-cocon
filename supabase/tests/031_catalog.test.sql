@@ -3,7 +3,7 @@
 -- family's own corrections only to that family. The matching itself (normalising, US1–US3,
 -- SC-001) is tested from TypeScript in scripts/catalog.test.ts.
 begin;
-select plan(41);
+select plan(46);
 
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
@@ -95,6 +95,17 @@ select throws_ok($$ insert into public.family_ingredients (catalog_key, packs) v
   'packs must be shaped like PackSize');
 select throws_ok($$ insert into public.family_ingredients (catalog_key, custom_name, name_norm) values ('onion', 'Onion', 'onion') $$, '23514', null,
   'a row is a catalog correction or a custom ingredient, not both');
+
+-- Catalog 6: whole spices are their own ingredients, counted and kept whole; the ground ones aren't.
+select is(
+  (select string_agg(catalog_key || ':' || whole_only, ' ' order by idx) from public.match_ingredients(
+    '[{"full": "cinnamon stick", "core": "cinnamon stick"}, {"full": "ground cinnamon", "core": "ground cinnamon"}, {"full": "cardamom pod", "core": "cardamom pod"}, {"full": "cardamom seed", "core": "cardamom seed"}, {"full": "whole clove", "core": "whole clove"}, {"full": "star anise", "core": "star anise"}]')),
+  'cinnamon_stick:true cinnamon:false cardamom_pod:true cardamom:false cloves:true star_anise:true',
+  'sticks, pods, whole cloves and star anise each match their own whole ingredient');
+select is((select catalog_key from public.match_ingredients('[{"full": "ground cloves", "core": "ground cloves"}]')), 'ground_cloves', 'ground cloves stay ground');
+select is((select catalog_key from public.match_ingredients('[{"full": "garlic", "core": "garlic"}]')), 'garlic', 'garlic is still garlic');
+select is((select whole_only from public.ingredient_facts where catalog_key = 'garlic'), true, 'garlic cloves are only used whole');
+select is((select catalog_key from public.match_ingredients('[{"full": "fennel seed", "core": "fennel seed"}]')), 'fennel_seed', 'fennel seeds are no longer cardamom');
 
 select pg_temp.login('00000000-0000-0000-0000-00000000000f');
 select is(pg_temp.aisle_of('zaatar'), 'other', 'another family still gets Other');

@@ -67,6 +67,13 @@ export async function saveCookStep(client: Pick<Db, 'from'>, id: string, step: n
   if (error) throw error;
 }
 
+/** Servings or version changed while cooking: the cook resumes with them, and the cards show them. */
+export async function saveCookChoices(client: Pick<Db, 'from'>, id: string, choices: Pick<CookProgress, 'servings' | 'variant_id'>): Promise<void> {
+  const row = CookProgress.pick({ servings: true, variant_id: true }).parse(choices);
+  const { error } = await client.from('cook_sessions').update(row).eq('id', id).eq('status', 'in_progress');
+  if (error) throw error;
+}
+
 /**
  * FR-005, FR-006: Done or Cancel; the server records when and by whom. Throws when it's no longer
  * in progress (someone else ended it a moment ago).

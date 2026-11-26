@@ -31,7 +31,8 @@ export function MoreOptions({
   tracker: Tracker;
   /** Only called when a toggle changes what's in force. */
   onChange: (next: RecipeChoices) => void;
-  onScaleByIngredient: () => void;
+  /** Left out in cooking mode, whose Scaling section has it (OC-Cook). */
+  onScaleByIngredient?: () => void;
   onConvert: () => void;
   /** Metric · Imperial for this visit (lib/visit-units.ts). */
   onUnits: (system: UnitSystem) => void;
@@ -54,7 +55,7 @@ export function MoreOptions({
         value={format.scale}
         onValueChange={(on) => change({ ...choices, kitchenScale: on })}
       />
-      <ListRow flush title={more.scaleByIngredient} trailing={{ kind: 'chevron' }} onPress={onScaleByIngredient} />
+      {onScaleByIngredient ? <ListRow flush title={more.scaleByIngredient} trailing={{ kind: 'chevron' }} onPress={onScaleByIngredient} /> : null}
       <ListRow flush title={more.converter} trailing={{ kind: 'chevron' }} onPress={onConvert} />
       <ListRow
         flush

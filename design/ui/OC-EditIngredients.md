@@ -34,6 +34,7 @@ Source `screens/OC-EditIngredients.dc.html` · Route `…/edit?section=ingredien
 | Quantity without a unit | card border warn-border; unit button warn "Unit? ▾"; message "Pick a unit so we can convert and scale it." |
 | Removing an ingredient used in steps | Dialog "Remove {name}?" · "It's used in step {n}. We'll take it out of that step too." · danger "Remove" · soft "Cancel" |
 | Name not in the catalog | muted sub-line "New ingredient. Pick its aisle:" + aisle dropdown (spec 031) |
+| A fraction on a whole-only ingredient counted in pieces (eggs, cloves, bay leaves) | muted sub-line "Only whole {eggs}: saved as {2}." (spec 005 FR-003); Save keeps the whole number |
 | Paste result | StatusBanner "Added {n} ingredients. Check the amounts." |
 | Removing an ingredient used in several steps | Dialog "Remove {name}?" · "It's used in steps {2 and 4}. We'll take it out of those steps too." · danger "Remove" · soft "Cancel" |
 | Quantity unreadable | quantity field warn; "Type an amount like 2, 1½ or 1/2." |
@@ -47,3 +48,4 @@ Save checks Details first, then Ingredients: with a problem, it opens Ingredient
 
 ## Changelog
 - 2026-11-12 (051): "Detail (optional)" field under the quantity; lead and tip; paste and Save split the detail off at the first comma.
+- 2026-11-25: "Only whole {noun}: saved as {n}." under a whole-only ingredient typed with a fraction.

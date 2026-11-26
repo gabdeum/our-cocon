@@ -109,13 +109,17 @@ describe('Add to groceries', () => {
     expect(button('Add 8 items')).toBeTruthy();
   });
 
-  it('says what to do when adding or undoing fails', async () => {
-    setup({ api: { add: vi.fn().mockResolvedValueOnce(null).mockResolvedValue(added), undo: vi.fn().mockResolvedValue(false) } });
+  it('closes at once; when adding fails, the toast tries again with the same items; a failed undo says so', async () => {
+    const add = vi.fn().mockResolvedValueOnce(null).mockResolvedValue(added);
+    const { onClose } = setup({ api: { add, undo: vi.fn().mockResolvedValue(false) } });
     fireEvent.click(button('Add 8 items'));
+    expect(onClose).toHaveBeenCalledOnce();
     await flush();
     expect(screen.getByText("Couldn't add these items. Check your connection and try again.")).toBeTruthy();
-    fireEvent.click(button('Add 8 items'));
+    fireEvent.click(button('Try again'));
     await flush();
+    expect(add).toHaveBeenCalledTimes(2);
+    expect(add.mock.calls[1]?.[0]).toBe(add.mock.calls[0]?.[0]);
     fireEvent.click(button('Undo'));
     await flush();
     expect(screen.getByRole('status').textContent).toBe("Couldn't undo. Try again.");

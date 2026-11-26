@@ -7,6 +7,7 @@ import {
   GroceryRecipeCard,
   IconButton,
   ListGroup,
+  ListRowSkeleton,
   ListRow,
   Overline,
   Presence,
@@ -44,6 +45,7 @@ import {
 } from '../../lib/groceries';
 import { useOnline } from '../../lib/online';
 import type { Member } from '../../lib/session';
+import type { PendingGroceryAdd } from '../../lib/pending-grocery-adds';
 import { OfflineBanner } from '../sync/OfflineBanner';
 import { useFailureToast, useToast } from '../../lib/toast';
 import { GrocerySettings } from '../settings/GrocerySettings';
@@ -64,6 +66,8 @@ export interface GroceryListProps {
   members: readonly Pick<Member, 'user_id' | 'display_name'>[];
   tracker: Tracker;
   photoUrls: Record<string, string>;
+  /** Recipes whose items are on their way (Add to groceries, spec 022): a card and skeleton rows at the top. */
+  pending?: readonly PendingGroceryAdd[];
   onAdd: (text: string) => Promise<AddResult>;
   onToggle: (item: GroceryItem, checked: boolean) => Promise<'saved' | 'failed'>;
   onClear: (ids: string[]) => Promise<boolean>;
@@ -115,7 +119,7 @@ function useClock(fixed: number | undefined): number {
  * ticking, Edit and Remove act on all of it.
  */
 export function GroceryList(props: GroceryListProps) {
-  const { items, failed, onRetry, me, members, tracker, photoUrls, settings, packs } = props;
+  const { items, failed, onRetry, me, members, tracker, photoUrls, settings, packs, pending = [] } = props;
   const online = useOnline();
   useFailureToast(items === undefined && failed && g.loadFailed, onRetry);
   const now = useClock(props.now);
@@ -371,6 +375,22 @@ export function GroceryList(props: GroceryListProps) {
     >
       <OfflineBanner screen="groceries" tracker={tracker} />
 
+      {pending.map((add) => (
+        <View key={`pending-${add.id}`} className="gap-10">
+          <GroceryRecipeCard
+            pending
+            name={add.recipeName}
+            meta={g.addingRecipe(add.count)}
+            photoUri={add.photoPath ? photoUrls[add.photoPath] : undefined}
+            openLabel={add.recipeName}
+            moreLabel={add.recipeName}
+            onOpen={null}
+            onMore={null}
+          />
+          <ListRowSkeleton count={Math.min(add.count, 3)} />
+        </View>
+      ))}
+
       {wide ? (
         // Spec 069 FR-002: a 2-column grid; an odd last card keeps its half.
         cards.length > 0 ? (
@@ -391,7 +411,7 @@ export function GroceryList(props: GroceryListProps) {
         cards.map(recipeCard)
       )}
 
-      {list.length === 0 ? (
+      {list.length === 0 && pending.length === 0 ? (
         <View className="gap-8">
           <Text size={18} weight="900" role="heading" aria-level={2}>
             {g.emptyTitle}

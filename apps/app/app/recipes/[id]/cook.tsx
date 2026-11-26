@@ -2,14 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
-import { loadOpenCooks, saveCookStep } from '@cocon/data';
+import { loadOpenCooks, saveCookChoices, saveCookStep } from '@cocon/data';
 import { CookScreen } from '../../../components/cooking/CookScreen';
 import { beginCook, finishCook, useRefreshCooks, type CookSession } from '../../../lib/cook-sessions';
 import { loadRecipe, recipeKey } from '../../../lib/recipe';
 import { recipePhotoPaths, useRecipePhotoUrls } from '../../../lib/recipe-photo';
 import { deviceStorage, readChoices, startingChoices } from '../../../lib/recipe-choices';
 import { useCookingSettings } from '../../../lib/recipe-settings';
-import { servingsMax } from '../../../lib/recipe-view';
+import { cookServings, servingsMax } from '../../../lib/recipe-view';
 import { useSession } from '../../../lib/session';
 
 /** FR-002: the step is saved this long after it last changed, and on leaving. */
@@ -55,7 +55,7 @@ export default function CookRoute() {
           return;
         }
         const choices = startingChoices(await readChoices(deviceStorage, userId, id), loaded, servingsMax(loaded.serves));
-        const progress = { current_step: 0, variant_id: choices.version, servings: Math.min(50, Math.max(1, Math.round(choices.servings))) };
+        const progress = { current_step: 0, variant_id: choices.version, servings: cookServings(loaded, choices) };
         const session = await beginCook({ client, tracker }, familyId, id, progress, open ?? undefined);
         if (live) setCook({ session, resumed: false });
       } catch {
@@ -132,6 +132,9 @@ export default function CookRoute() {
       stepId={step}
       session={cook?.resumed ? cook.session : null}
       onStep={onStep}
+      onCookChoices={(choices) => {
+        if (sessionId) void saveCookChoices(client, sessionId, choices).then(refresh, () => undefined);
+      }}
       onDone={() => void done()}
       onClose={close}
       onOpenTimers={() => router.push('/timers')}

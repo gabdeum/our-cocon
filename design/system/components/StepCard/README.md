@@ -33,7 +33,7 @@ The recipe page lists each step as a StepRow (the Steps tab on a phone, the Step
 | --- | --- |
 | Row | surface-card, radius 22, min-height 64, padding 10 12 10 14, gap 12; pressed `surface-card-pressed`; role link, the whole card is the tap target |
 | Left | number badge 32, honey, 15/900 |
-| Title | the step's name, or its text when it has none: 18/900, one line, cut short (wraps at the largest text size) |
+| Title | the step's name, or its text when it has none: 18/900; a name wraps, a step's text is cut short after 2 lines (wraps in full at the largest text size) |
 | Variant tag | only on a step a variant adds or changes: sage Tag "Variant" |
 | Timer pill | only for a step with a timer: `surface-soft` pill, padding 6 10, gap 5, timer icon 16 olive and the length ("12 min", "1 h 10") 14/800 tabular |
 | Photo | only when the step has one: 48 × 48, radius 12, decorative |

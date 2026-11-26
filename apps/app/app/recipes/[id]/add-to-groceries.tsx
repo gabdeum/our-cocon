@@ -7,6 +7,7 @@ import { groceryListKey, groceryServingsKey, loadGroceryList } from '../../../li
 import { useFamilySettings, useMyRecipeSettings } from '../../../lib/family-settings';
 import { useRecipeSheet } from '../../../lib/use-recipe-sheet';
 import { useSession } from '../../../lib/session';
+import { whileAddingGroceries } from '../../../lib/pending-grocery-adds';
 
 /** /recipes/[id]/add-to-groceries (spec 022): pick the recipe's ingredients for the list, a sheet over the recipe page. */
 export default function AddToGroceriesRoute() {
@@ -21,26 +22,31 @@ export default function AddToGroceriesRoute() {
   const list = useQuery({ queryKey: key, queryFn: () => loadGroceryList(client), enabled: familyId !== null });
   const view = useMemo(() => (recipe && choices ? recipeGroceryLines(recipe, choices, cooking) : null), [recipe, choices, cooking]);
   const recipeId = recipe?.id;
+  const recipeName = recipe?.name ?? '';
+  const photoPath = recipe?.photo_path ?? null;
   const serves = view?.serves;
   const api = useMemo<AddGroceriesApi | null>(() => {
     if (!familyId || !recipeId || serves === undefined) return null;
-    const refresh = () => {
-      void queryClient.invalidateQueries({ queryKey: groceryListKey(familyId) });
-      void queryClient.invalidateQueries({ queryKey: groceryServingsKey(familyId) });
-    };
+    const refresh = () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: groceryListKey(familyId) }),
+        queryClient.invalidateQueries({ queryKey: groceryServingsKey(familyId) }),
+      ]).catch(() => undefined);
     return {
-      add: async (picked) => {
-        const added = await addFromRecipe(client, familyId, recipeId, picked, serves);
-        refresh();
-        return added;
-      },
+      // The list shows the recipe as being added until its items are in (refetched).
+      add: (picked) =>
+        whileAddingGroceries({ familyId, recipeId, recipeName, photoPath, count: picked.length }, async () => {
+          const added = await addFromRecipe(client, familyId, recipeId, picked, serves);
+          if (added) await refresh();
+          return added;
+        }),
       undo: async (added) => {
         const ok = await undoAddFromRecipe(client, added);
-        refresh();
+        void refresh();
         return ok;
       },
     };
-  }, [client, familyId, recipeId, serves, queryClient]);
+  }, [client, familyId, recipeId, recipeName, photoPath, serves, queryClient]);
   if (!recipe || !view || !api) return null;
   return (
     <AddGroceriesSheet

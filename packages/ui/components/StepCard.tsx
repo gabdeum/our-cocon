@@ -243,8 +243,10 @@ export function StepCard({ number, name, variantTag, parts, photo, children }: S
 
 export interface StepRowProps {
   number: number;
-  /** The step's name, or its text when it has none (one line, cut short). */
+  /** The step's name (wraps), or its text when it has none. */
   title: string;
+  /** Lines before the title is cut short: set for a step's text standing in for a name. */
+  titleLines?: number;
   /** "Variant" on a step a variant adds (spec 067 FR-004). */
   tag?: string;
   /** The step timer's length ("12 min"), in a soft pill on the right. */
@@ -260,7 +262,7 @@ export interface StepRowProps {
  * One step in the recipe page's step list (StepCard README › StepRow, spec 067 FR-004): a quick look
  * that opens the step in cooking mode. The whole card is the tap target.
  */
-export function StepRow({ number, title, tag, duration, photoUri, accessibilityLabel, onPress }: StepRowProps) {
+export function StepRow({ number, title, titleLines, tag, duration, photoUri, accessibilityLabel, onPress }: StepRowProps) {
   const largeText = useLargeText();
   return (
     <Pressable
@@ -274,7 +276,7 @@ export function StepRow({ number, title, tag, duration, photoUri, accessibilityL
           {number}
         </Text>
       </View>
-      <Text size={18} weight="900" numberOfLines={largeText ? undefined : 1} className="min-w-0 flex-1">
+      <Text size={18} weight="900" numberOfLines={largeText ? undefined : titleLines} className="min-w-0 flex-1">
         {title}
       </Text>
       {tag ? <Tag label={tag} tone="sage" /> : null}

@@ -44,6 +44,7 @@ A recipe on the grocery list (OC-Groceries, spec 052 FR-006). Two hit areas side
 | "…" | 48 × 60, `more-vertical` 22 ink, at the card's right. Screen reader: "More for {recipe}" |
 | Pressed | each part fills `surface-soft-pressed` on its own |
 | Deleted recipe | the body isn't a link; the meta reads "From a deleted recipe" |
+| Pending | its items are being added (spec 022): the body isn't a link, no "…" (12 right padding instead), the meta "Adding {n} items…" is a polite status |
 
 
 

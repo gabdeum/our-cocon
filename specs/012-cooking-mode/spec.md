@@ -40,7 +40,7 @@
 | `cooking_started` | step_count |
 | `cooking_finished` | step_count, minutes |
 | `cooking_exited` | at_step, step_count |
-| `cook_screen_awake_toggled` | on |
+| ~~`cook_screen_awake_toggled`~~ | removed 2026-11-25 |
 
 ## Warnings and errors
 All copy is in the States tables of the UI specs for: OC-Cook. New messages go there and in `strings/en.ts` first.
@@ -57,3 +57,4 @@ None.
 - 2026-10-28: Seen on the iPhone (Expo Go): the dark timer's clock was cut at the top (Nunito is 1.364 em tall and its line height was 1 em; the line is now that tall there, with negative margins keeping the box). Amount highlights had no padding or rounded corners and ran to the line's end when wrapping (the iPhone can't style text inside text): there, step text is laid out word by word (`stepWords`) and each amount piece is a rounded box. Scrolling keeps `decelerationRate="fast"`: `disableIntervalMomentum` was tried, but it doesn't apply to `snapToOffsets` and swipes skipped steps.
 - 2026-11-10: With Gabriel: "Edit step {n}" in the "Cooking options" sheet opens the recipe form at the current step (`/recipes/[id]/edit?section=steps&step=<id>`, the step open and scrolled to), or, for a step a chosen variant adds or changes, that variant (`section=variants&variant=<id>`; `stepEditTarget` in `lib/cooking.ts`). Saving or cancelling returns to cooking mode at the same step. No new event: `recipe_edited` already counts the save. OC-Cook.md updated.
 - 2026-11-12 (051, Gabriel's recipes review): leaving cooking mode keeps the cooking session in progress (✕ "Leave cooking mode, stays in progress"); the last step's button is "Done cooking", which logs it and opens the Done sheet (051 FR-002, FR-005).
+- 2026-11-25 (Gabriel's feedback): the options sheet no longer has "Screen stays on" (event `cook_screen_awake_toggled` removed): the screen follows "Keep screen on while cooking" (Menu › Recipes, or the recipe's own setting, spec 027). It opens with a "Scaling" section: the recipe page's servings stepper (shared `useServings` / `ServingsStepper` / `ScaledByLine` in `components/recipes/Servings.tsx`, sends `servings_changed`), "Scaled by … · Reset" and "Scale by an ingredient ›" (moved out of the `MoreOptions` rows in cooking mode); the rest sits under "More". Servings or version changed while cooking are saved to the cook (`saveCookChoices`), which is now saved at the servings in force, a scale by an ingredient included (`cookServings`: 7½ → 8). Fix: resuming a cook threw away this device's scale by an ingredient (it rewrote the choices from the cook's whole servings); it's kept when the cook is at it. An update is enough.

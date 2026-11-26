@@ -1352,6 +1352,11 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"suggest_reminder_titles":
+{ Args: { "p_limit"?: number,"p_query": string }; Returns: {
+              "due_at": string,"has_time": boolean,"last_reminder_id": string,"score": number,"title": string
+            }[]
+                           },
 "todo_candidates":
 { Args: { "p_now": string }; Returns: {
               "family_id": string,"reminder": Json,"time_zone": string

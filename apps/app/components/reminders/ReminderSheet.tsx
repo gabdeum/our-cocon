@@ -1,14 +1,16 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { addDays, formatTime, weekday, type WeekStartsOn } from '@cocon/calendar';
-import type { ReminderDraft } from '@cocon/schemas';
-import { BottomSheet, type BottomSheetProps, Button, Choice, DateGrid, DayChip, FieldWarning, Icon, Link, MemberPickerChip, PillRow, Switch, Text, TextField, TimeField } from '@cocon/ui';
+import { loadReminder, suggestReminderTitles, type Db, type ReminderTitleSuggestion } from '@cocon/data';
+import type { ReminderDraft, Tracker } from '@cocon/schemas';
+import { BottomSheet, type BottomSheetProps, Button, Choice, DateGrid, DayChip, FieldWarning, Icon, Link, MemberPickerChip, PillRow, RowScroll, SuggestionPill, Switch, Text, TextField, TimeField, useSheetPresentation } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import { dateGridMonth, dayTiles, endsProblem, shiftMonth, type RepeatChoice } from '../../lib/event-form';
 import { useOnline } from '../../lib/online';
-import { forChips, formRollover, formToDraft, isClockTime, notifySummary, REPEAT_CHOICES, rolloverChoices, type FamilyQuietHours, type ReminderForm } from '../../lib/reminders';
+import { forChips, formRollover, formToDraft, isClockTime, notifySummary, reminderFromSuggestion, REPEAT_CHOICES, rolloverChoices, suggestionTimeOf, type FamilyQuietHours, type ReminderForm } from '../../lib/reminders';
 import type { Member } from '../../lib/session';
 import { useToast } from '../../lib/toast';
+import { useTitleSuggestions } from '../../lib/use-title-suggestions';
 import { strings } from '../../strings/en';
 import { RepeatDetails } from '../calendar/RepeatDetails';
 
@@ -33,6 +35,8 @@ export interface ReminderSheetProps {
   onClose: () => void;
   /** Edit only: "Delete reminder" (the screen confirms a repeating one). */
   onDelete?: () => void;
+  /** Past titles while typing a new one (as the event sheet's): left out, none are offered. */
+  suggest?: { client: Pick<Db, 'from' | 'rpc'>; tz: string; tracker: Tracker };
 }
 
 type DateSheet = { for: 'due' | 'ends'; month: string } | null;
@@ -49,7 +53,24 @@ export function useReminderForm(p: ReminderSheetProps) {
   const [tried, setTried] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dateSheet, setDateSheet] = useState<DateSheet>(null);
-  const set = (patch: Partial<ReminderForm>) => setF((prev) => ({ ...prev, ...patch }));
+  const presentation = useSheetPresentation('flow');
+  // What the person changed by hand, which a picked suggestion doesn't overwrite.
+  const touched = useRef(new Set<keyof ReminderForm>());
+  const set = (patch: Partial<ReminderForm>) => {
+    for (const key of Object.keys(patch) as (keyof ReminderForm)[]) touched.current.add(key);
+    setF((prev) => ({ ...prev, ...patch }));
+  };
+
+  const s = p.suggest;
+  const titles = useTitleSuggestions(p.mode === 'new' && !!s, f.title, (text) => (s ? suggestReminderTitles(s.client, text) : Promise.resolve([])));
+  const pickSuggestion = async (picked: ReminderTitleSuggestion, position: number) => {
+    if (!s) return;
+    titles.dismiss();
+    setF((prev) => ({ ...prev, title: picked.title }));
+    s.tracker.track('reminder_title_suggestion_picked', { position, query_length: Math.min(Math.max(f.title.trim().length, 1), 80) });
+    const stored = await loadReminder(s.client, picked.lastReminderId).catch(() => null);
+    if (stored) setF((prev) => reminderFromSuggestion(prev, stored, s.tz, touched.current));
+  };
 
   const hasTitle = f.title.trim().length > 0;
   const badTime = f.hasTime && !isClockTime(f.time);
@@ -79,7 +100,8 @@ export function useReminderForm(p: ReminderSheetProps) {
     dirty: hasTitle && p.mode === 'new',
     title: p.mode === 'new' ? r.sheetNew : r.sheetEdit,
     closeLabel: r.close,
-    headerAction: <Link label={r.cancel} tone="quiet" size={16} onPress={p.onClose} />,
+    // The centred card from 600 has its ✕ (spec 065): no Cancel beside it (Gabriel).
+    headerAction: presentation === 'card' ? undefined : <Link label={r.cancel} tone="quiet" size={16} onPress={p.onClose} />,
     footer: (
       <View className="gap-12">
         <Button variant="olive" label={r.save} busy={saving} busyLabel={r.saving} block inactive={!hasTitle} disabled={!online} onPress={() => void save()} />
@@ -97,7 +119,16 @@ export function useReminderForm(p: ReminderSheetProps) {
           placeholder={r.whatPlaceholder}
           autoFocus={p.mode === 'new' && !p.focusNotes}
           warning={tried && !hasTitle ? r.noTitle : undefined}
+          onFocus={titles.onFocus}
+          onBlur={titles.onBlur}
         />
+        {titles.shown.length ? (
+          <RowScroll keyboardShouldPersistTaps="handled" role="list" aria-label={a.suggestions} className="-mx-20 -mt-8" contentContainerClassName="gap-8 px-20">
+            {titles.shown.map((t, i) => (
+              <SuggestionPill key={t.lastReminderId} title={t.title} detail={s ? suggestionTimeOf(t, s.tz, p.use24h) : undefined} onPress={() => void pickSuggestion(t, i + 1)} />
+            ))}
+          </RowScroll>
+        ) : null}
 
         <Section title={r.due}>
           <View className="flex-row gap-8">

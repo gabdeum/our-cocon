@@ -9,6 +9,7 @@ import { quiche, quicheIds } from '@cocon/schemas/quiche.fixture';
 import type { RecipeDetail } from '../../lib/recipe';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import { defaultCooking } from '../../lib/recipe-view';
+import { SERVINGS_SETTLE_MS } from '../recipes/Servings';
 import { TimersProvider } from '../../lib/timer-store';
 import { forgetVisitUnits } from '../../lib/visit-units';
 import { fakeTracker, gabriel } from '../../test/fakes';
@@ -186,32 +187,39 @@ describe('Cooking mode (spec 012)', () => {
     expect(keepAwake.deactivateKeepAwake).toHaveBeenCalledTimes(1);
   });
 
-  it('US3: "Screen stays on" is a switch in the options sheet; off lets the screen lock', async () => {
-    const { tracker } = await setup();
-    press('Cooking options');
-    const awake = screen.getByRole('switch', { name: 'Screen stays on' });
-    expect(awake.getAttribute('aria-checked')).toBe('true');
-    expect(screen.getByText("Your screen won't lock while you cook")).toBeTruthy();
-    fireEvent.click(awake);
-    await settle();
-    expect(keepAwake.deactivateKeepAwake).toHaveBeenCalled();
-    expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
-    expect(tracker.track).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false, presentation: 'sheet' });
-  });
-
-  it('US3: the switch explains it when this browser cannot keep the screen on; it starts off when the setting is off', async () => {
-    keepAwake.isAvailableAsync.mockResolvedValue(false);
-    const first = await setup();
-    expect(screen.queryByText('This browser may let the screen lock.')).toBeNull();
-    press('Cooking options');
-    expect(screen.getByText('This browser may let the screen lock.')).toBeTruthy();
-    first.unmount();
-
-    keepAwake.isAvailableAsync.mockResolvedValue(true);
+  it('US3: the options have no "Screen stays on" switch; "Keep screen on" (spec 027) decides', async () => {
     await setup({ cooking: { ...defaultCooking, keepAwake: false } });
     expect(keepAwake.activateKeepAwakeAsync).not.toHaveBeenCalled();
     press('Cooking options');
-    expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
+    expect(screen.queryByRole('switch', { name: 'Screen stays on' })).toBeNull();
+  });
+
+  it('Scaling: the servings stepper changes the steps at once, sends servings_changed once settled and tells the cook', async () => {
+    const onCookChoices = vi.fn();
+    const onScaleByIngredient = vi.fn();
+    const { tracker } = await setup({ onCookChoices, onScaleByIngredient });
+    press('Cooking options');
+    expect(screen.getByRole('heading', { name: 'Scaling' })).toBeTruthy();
+    press('More servings');
+    await settle();
+    expect(screen.getByText('Serves 7 · swipe up for next')).toBeTruthy();
+    act(() => vi.advanceTimersByTime(SERVINGS_SETTLE_MS));
+    expect(tracker.track).toHaveBeenCalledWith('servings_changed', { from: 6, to: 7 });
+    expect(onCookChoices).toHaveBeenCalledWith({ servings: 7, variant_id: null });
+    fireEvent.click(screen.getByRole('link', { name: 'Scale by an ingredient' }));
+    expect(onScaleByIngredient).toHaveBeenCalledOnce();
+  });
+
+  it('Scaling: a scale by an ingredient shows with Reset, which goes back to the servings', async () => {
+    const storage = memoryStorage({
+      [`cocon.recipe.${gabriel.user_id}.${detail.id}`]: JSON.stringify({ servings: 6, version: null, options: [], scaledBy: { ingredientId: quicheIds.lardons, amount: 250, unit: 'g' } }),
+    });
+    await setup({ storage });
+    press('Cooking options');
+    expect(screen.getByText(/^Scaled by /)).toBeTruthy();
+    press(/^Reset the scale by/);
+    await settle();
+    expect(screen.getByText('Serves 6 · swipe up for next')).toBeTruthy();
   });
 
   it('the options sheet has the recipe page\'s "…" options: Imperial changes the steps at once, for this visit only (spec 051)', async () => {
@@ -259,8 +267,7 @@ describe('Cooking mode (spec 012)', () => {
       />,
     );
     await settle();
-    press('Cooking options');
-    expect(screen.getByRole('switch', { name: 'Screen stays on' }).getAttribute('aria-checked')).toBe('false');
+    expect(keepAwake.deactivateKeepAwake).toHaveBeenCalled();
   });
 
   it('027 US1: with the thermometer off, the steps have no temperature check', async () => {
@@ -301,6 +308,17 @@ describe('Cooking mode (spec 012)', () => {
     expect(onStep).toHaveBeenLastCalledWith(2);
     press('Next step');
     expect(onStep).toHaveBeenLastCalledWith(3);
+  });
+
+  it('a resumed cook keeps a scale by an ingredient from this device when the cook is at it (7½ → 8)', async () => {
+    const stored = { servings: 6, version: null, options: [], scaledBy: { ingredientId: quicheIds.lardons, amount: 250, unit: 'g' } };
+    const key = `cocon.recipe.${gabriel.user_id}.${detail.id}`;
+    const first = await setup({ storage: memoryStorage({ [key]: JSON.stringify(stored) }), session: { current_step: 0, servings: 8, variant_id: null } });
+    expect(screen.getByText('Serves 7½ · swipe up for next')).toBeTruthy();
+    first.unmount();
+    // Someone changed the cook's servings since: theirs win.
+    await setup({ storage: memoryStorage({ [key]: JSON.stringify(stored) }), session: { current_step: 0, servings: 4, variant_id: null } });
+    expect(screen.getByText('Serves 4 · swipe up for next')).toBeTruthy();
   });
 
   it('Exit closes and sends cooking_exited with the step it was on', async () => {
@@ -453,9 +471,9 @@ describe('Cooking settings on larger screens (spec 065)', () => {
     await act(async () => vi.advanceTimersByTime(10));
     expect(screen.getByRole('dialog', { name: 'Cooking options' }).dataset.testid).toBe('sheet-popover');
     expect(screen.getByRole('button', { name: 'Cooking options', hidden: true }).getAttribute('aria-expanded')).toBe('true');
-    fireEvent.click(screen.getByRole('switch', { name: 'Screen stays on' }));
+    fireEvent.click(screen.getByRole('switch', { name: "I'm using a kitchen scale" }));
     await settle();
-    expect(tracker.track).toHaveBeenCalledWith('cook_screen_awake_toggled', { on: false, presentation: 'popover' });
+    expect(tracker.track).toHaveBeenCalledWith('kitchen_scale_toggled', { on: false, presentation: 'popover' });
     // An outside tap closes it; the button goes back to white.
     press('Close cooking options');
     expect(screen.queryByRole('dialog', { name: 'Cooking options' })).toBeNull();

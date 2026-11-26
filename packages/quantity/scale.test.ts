@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { facts } from './catalog.fixture';
 import { format } from './format';
-import { scale, type ScalableRecipe } from './scale';
+import { scale, wholeAmount, type ScalableRecipe } from './scale';
 import type { QuantityIngredient } from './types';
 
 const quiche: ScalableRecipe = {
@@ -27,11 +27,14 @@ describe('by servings', () => {
     expect(format(at(r.ingredients, 0), metric).phrase).toBe('3 leeks (450 g)');
   });
 
-  it('US1: eggs ×1.25 read 1½, and items without an amount stay as they are', () => {
+  it('US1: eggs stay whole (1 × 1.5 reads 2), and items without an amount stay as they are', () => {
     const one = { serves: 4, ingredients: [{ ...at(quiche.ingredients, 2), quantity: 1 }, at(quiche.ingredients, 5)] };
-    const r = scale(one, { servings: 5 });
-    expect(format(at(r.ingredients, 0), { system: 'metric', scale: false }).phrase).toBe('1½ eggs');
+    const r = scale(one, { servings: 6 });
+    expect(format(at(r.ingredients, 0), { system: 'metric', scale: false }).phrase).toBe('2 eggs');
     expect(r.ingredients[1]).toBe(one.ingredients[1]);
+    // 3 eggs for 6 is 1 for 1, never ½; leeks aren't whole-only and go to ⅓.
+    expect(quantities(scale(quiche, { servings: 1 }))).toMatchObject({ eggs: 1, leek: 2 / 6 });
+    expect(quantities(scale(quiche, { servings: 5 })).eggs).toBe(3);
   });
 
   it('never changes the recipe it was given', () => {
@@ -83,5 +86,18 @@ describe('by an ingredient (spec 013)', () => {
 
   it('needs a recipe that serves someone', () => {
     expect(() => scale({ ...quiche, serves: 0 }, { servings: 2 })).toThrow(expect.objectContaining({ code: 'invalid_quantity' }));
+  });
+});
+
+describe('wholeAmount', () => {
+  const egg = { unit: 'piece' as const, facts: facts('egg') };
+  it('rounds a whole-only piece count to the nearest whole, at least 1', () => {
+    expect([1.5, 1.4, 0.3, 2.5, 3].map((q) => wholeAmount(q, egg))).toEqual([2, 1, 1, 3, 3]);
+    expect(wholeAmount(0.5, { unit: null, facts: facts('egg') })).toBe(1);
+  });
+  it('leaves weights, volumes and other ingredients alone', () => {
+    expect(wholeAmount(75, { unit: 'g', facts: facts('egg') })).toBe(75);
+    expect(wholeAmount(1.5, { unit: 'piece', facts: facts('leek') })).toBe(1.5);
+    expect(wholeAmount(1.5, { unit: 'piece' })).toBe(1.5);
   });
 });

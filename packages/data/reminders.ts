@@ -242,6 +242,27 @@ export async function loadReminder(client: Pick<Db, 'from'>, id: string): Promis
   return { ...Stored.parse(data), completed: data.completed_at !== null };
 }
 
+/** A past reminder title to offer while typing a new one, with its latest reminder to fill from. */
+export interface ReminderTitleSuggestion {
+  title: string;
+  lastReminderId: string;
+  hasTime: boolean;
+  dueAt: string;
+}
+
+/** The family's past reminder titles matching `text`, best first (as `suggestEventTitles`). Empty on any failure: it's only a help. */
+export async function suggestReminderTitles(client: Pick<Db, 'rpc'>, text: string, limit = 8): Promise<ReminderTitleSuggestion[]> {
+  const q = text.trim();
+  if (!q) return [];
+  try {
+    const { data, error } = await client.rpc('suggest_reminder_titles', { p_query: q.slice(0, 80), p_limit: limit });
+    if (error || !data) return [];
+    return data.map((r) => ({ title: r.title, lastReminderId: r.last_reminder_id, hasTime: r.has_time, dueAt: r.due_at }));
+  } catch {
+    return [];
+  }
+}
+
 /** A new reminder (FR-001; the app's sheet and assistants). Returns its id. */
 export async function createReminder(client: Pick<Db, 'from'>, familyId: string, draft: unknown, tz: string): Promise<string> {
   const fields = draftToFields(ReminderDraft.parse(draft), TimeZone.parse(tz));
