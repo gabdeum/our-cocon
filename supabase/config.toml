@@ -445,6 +445,10 @@ verify_jwt = false
 [functions.shared-event]
 verify_jwt = false
 
+# Spec 072: the grocery share endpoint, public the same way; it reads and writes a shared list.
+[functions.shared-groceries]
+verify_jwt = false
+
 # Spec 045 FR-009: Sign in with Apple's refresh token (a member's token, or the service key for the
 # nightly retry) and "Delete my account". Each checks its token itself, as the self-hosted
 # functions do (they don't verify JWTs), so local and server behave the same.

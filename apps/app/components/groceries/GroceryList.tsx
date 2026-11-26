@@ -87,6 +87,8 @@ export interface GroceryListProps {
   /** The grocery settings sheet's changes (where you shop, round up), for the whole family. */
   onChangeSettings: (change: FamilySettingsUpdate, presentation?: SheetPresentation) => Promise<'saved' | 'failed'>;
   onSavePacks: (item: GroceryItem, text: string | null) => Promise<'saved' | 'invalid' | 'failed'>;
+  /** Spec 072: opens Share the grocery list. */
+  onShare?: () => void;
   /** For tests; otherwise the clock, read again every 30 s so "is shopping" goes away. */
   now?: number;
 }
@@ -166,6 +168,7 @@ export function GroceryList(props: GroceryListProps) {
       action={
         <View className="flex-row items-center gap-8">
           {shopping ? <Presence label={g.shopping(shopping)} /> : null}
+          {props.onShare ? <IconButton icon="share" label={g.shareButton} variant="round" onPress={props.onShare} /> : null}
           <IconButton
             ref={settingsButton}
             icon="settings"

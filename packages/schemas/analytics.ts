@@ -164,6 +164,17 @@ export const events = {
   // even when the viewer is signed in (constitution VI).
   shared_recipe_viewed: z.strictObject({}),
   shared_units_toggled: z.strictObject({ system: z.enum(['metric', 'imperial']) }),
+  // Spec 072: the grocery list shared by link. Made, its time or editing changed on a live link,
+  // stopped (whole hours it was shared), and the list copied as text. Never the items.
+  grocery_share_created: z.strictObject({ duration: z.enum(['1h', 'today', 'week', 'none']), can_edit: z.boolean() }),
+  grocery_share_changed: z.strictObject({ duration: z.enum(['1h', 'today', 'week', 'none']).optional(), can_edit: z.boolean().optional() }),
+  grocery_share_stopped: z.strictObject({ hours_active: z.int().min(0) }),
+  grocery_list_copied: z.strictObject({}),
+  // Spec 072: on the public shared list. Anonymous only, like spec 019's.
+  shared_groceries_viewed: z.strictObject({}),
+  shared_grocery_added: z.strictObject({}),
+  shared_grocery_ticked: z.strictObject({}),
+  shared_grocery_removed: z.strictObject({}),
   // Spec 020: the grocery list. An item added (or merged into one already there), and from where:
   // typed in the app, from a recipe (022) or by an assistant (024). Never the item's text.
   grocery_item_added: z.strictObject({ from: z.enum(['app', 'recipe', 'ai']) }),
@@ -392,8 +403,15 @@ export function createTracker(transport: AnalyticsTransport | null): Tracker {
   };
 }
 
-/** Events a shared-recipe page sends (spec 019). Never identified. */
-export const anonymousEvents = ['shared_recipe_viewed', 'shared_units_toggled'] as const satisfies readonly EventName[];
+/** Events a shared page sends (specs 019 and 072). Never identified. */
+export const anonymousEvents = [
+  'shared_recipe_viewed',
+  'shared_units_toggled',
+  'shared_groceries_viewed',
+  'shared_grocery_added',
+  'shared_grocery_ticked',
+  'shared_grocery_removed',
+] as const satisfies readonly EventName[];
 export type AnonymousEventName = (typeof anonymousEvents)[number];
 
 /** Sends events with no person attached: its transport must never identify anyone. */
