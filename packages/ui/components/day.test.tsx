@@ -46,6 +46,17 @@ describe('AllDayRow', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Lyon trip, all day, Day 2 of 3' }));
     expect(onPress).toHaveBeenCalled();
   });
+
+  it('back-to-back trips: one row split in the middle, each half opens its own trip', () => {
+    const onPress = vi.fn();
+    const paris = { key: 'paris', title: 'Paris', tag: 'Day 3 of 3', colors: ['travel' as const], label: 'Paris, all day, Day 3 of 3' };
+    const lyon = { key: 'lyon', title: 'Lyon', tag: 'Day 1 of 3', colors: ['travel' as const], label: 'Lyon, all day, Day 1 of 3' };
+    render(<AllDayRow item={{ ...paris, next: lyon }} onPress={onPress} />);
+    fireEvent.click(screen.getByRole('link', { name: lyon.label }));
+    expect(onPress).toHaveBeenCalledWith('lyon');
+    fireEvent.click(screen.getByRole('link', { name: paris.label }));
+    expect(onPress).toHaveBeenCalledWith('paris');
+  });
 });
 
 describe('MemberCount', () => {

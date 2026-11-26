@@ -5,7 +5,7 @@ Source `screens/OC-CalDay.dc.html` (interactive: swipe it, Undo) · Route `/cale
 ## Layout
 1. CalHeader (Day).
 2. Busy chips (36): avatar dot + "{name} {count}" for each member with events that day, then "Everyone {count}".
-3. "All day" (18/900) when any: full-width 52 rows in the member color, title 17/800, tag right ("Birthday", "Day 2 of 3").
+3. "All day" (18/900) when any: full-width 52 rows in the member color, title 17/800, tag right ("Birthday", "Day 2 of 3"). A Travel event is `event-travel` with the plane before its title; two back-to-back trips for the same people share one row on the day they meet, split in the middle (EventBar README › Back-to-back trips).
 4. Bands: title 18/900 + hours 14/700 muted ("Lunch 12:00–14:00"). Event row (white, radius 20): 6 px color stripe, 36 avatar, title 17/800, time line 14/700 muted, optional driver line (olive-deep, car icon) "Gabriel takes James", "Now" honey tag.
 5. Empty band: dashed row "+ Add in the early morning" / "morning" / "lunch slot" / "afternoon" / "evening".
 6. Toast after saving (ink, radius 18, above the tab bar): "Poker night added for tonight, 18:00–22:00." · honey "Undo". The add button hides while the toast shows.

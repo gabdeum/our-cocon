@@ -2,6 +2,7 @@ import { addDays, dateLabel, placeLine, timeLabel, timeRange, toMinutes, type Sl
 import type { DayReminderItem, EventListItem } from '@cocon/ui';
 import { dayOf, driverLine, hiddenFromLine, inAllDay, isBirthday, isNow } from './calendar-day';
 import { eventLook, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
+import { isTravel } from './calendar-travel';
 import { compareDayRows, reminderOrder, type CalendarReminder } from './calendar-reminders';
 import type { Member } from './session';
 import { strings } from '../strings/en';
@@ -79,7 +80,7 @@ export function layoutAgenda(from: string, to: string, occurrences: readonly Mon
 
 /** One row: its sort order (start in minutes, -1 all day) and what it shows. Home's card reuses it (spec 028). */
 export function agendaRow(o: MonthOccurrence, date: string, ctx: AgendaContext): { order: number; item: EventListItem } {
-  const { initials, colors } = eventLook(o.members, ctx.look);
+  const { initials, colors } = eventLook(o.members, ctx.look, isTravel(o));
   const allDay = inAllDay(o);
   const range = allDay ? null : timeRange(o, ctx.slotTimes);
   const when = allDay || !range ? d.allDay : timeLabel(o, { use24h: ctx.use24h ?? true, slotTimes: ctx.slotTimes });

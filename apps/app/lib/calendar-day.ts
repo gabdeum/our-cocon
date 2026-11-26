@@ -4,6 +4,7 @@ import type { DayAllDayItem, DayBand, DayBandItem, DayEventItem, DayReminderItem
 import { compareDayRows, reminderOrder, type CalendarReminder } from './calendar-reminders';
 import { eventLook, longDate, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import type { Member } from './session';
+import { isTravel, travelJoins } from './calendar-travel';
 import { strings } from '../strings/en';
 import { clock } from './clock';
 
@@ -59,9 +60,22 @@ export const dayName = (date: string) => strings.calendar.week.dayLabel(words.we
 export function layoutDayView(date: string, occurrences: readonly MonthOccurrence[], ctx: DayViewContext, reminders: readonly CalendarReminder[] = []): DayLayout {
   const onDay = occurrences.filter((o) => o.starts_on <= date && o.ends_on >= date);
 
-  const allDayEvents: DayAllDayItem[] = onDay.filter(inAllDay).map((o) => {
+  const allDayItems = onDay.filter(inAllDay).map((o): DayAllDayItem => {
     const tag = dayOf(o, date) ?? (isBirthday(o) ? d.birthday : null);
-    return { key: occurrenceKey(o), title: o.title, tag, colors: eventLook(o.members, ctx.look).colors, label: d.allDayLabel(o.title, whoText(o.members, ctx.look), tag) };
+    return { key: occurrenceKey(o), title: o.title, tag, colors: eventLook(o.members, ctx.look, isTravel(o)).colors, label: d.allDayLabel(o.title, whoText(o.members, ctx.look), tag) };
+  });
+  // Back-to-back trips: the one ending today and the one starting today share a row, split in the middle.
+  const joins = travelJoins(onDay, occurrenceKey);
+  const byKey = new Map(allDayItems.map((item) => [item.key, item]));
+  const nextOf = (key: string) => {
+    const next = joins.get(key)?.next;
+    const o = onDay.find((x) => occurrenceKey(x) === key);
+    return next && o?.ends_on === date ? byKey.get(next) : undefined;
+  };
+  const joined = new Set(allDayItems.flatMap((item) => nextOf(item.key)?.key ?? []));
+  const allDayEvents = allDayItems.filter((item) => !joined.has(item.key)).map((item) => {
+    const next = nextOf(item.key);
+    return next ? { ...item, next } : item;
   });
   const onDayAll = reminders.filter((x) => x.date === date);
   const onDayReminders = onDayAll.filter((x) => !x.doneAt);
@@ -142,7 +156,7 @@ export function layoutDaySheet(date: string, occurrences: readonly MonthOccurren
     .filter(inAllDay)
     .sort((a, b) => a.starts_on.localeCompare(b.starts_on) || a.title.localeCompare(b.title))
     .map((o): DayEventItem => {
-      const { initials, colors } = eventLook(o.members, ctx.look);
+      const { initials, colors } = eventLook(o.members, ctx.look, isTravel(o));
       const span = dayOf(o, date);
       const time = span ? d.at(words.allDay, span.toLowerCase()) : words.allDay;
       return { key: occurrenceKey(o), title: o.title, time, driver: null, nowText: null, initials, colors, label: d.rowLabel([o.title, whoText(o.members, ctx.look), time], false) };
@@ -164,7 +178,7 @@ export function layoutDaySheet(date: string, occurrences: readonly MonthOccurren
 }
 
 function eventRow(o: MonthOccurrence, range: { start: string; end: string }, date: string, ctx: DayViewContext): DayEventItem {
-  const { initials, colors } = eventLook(o.members, ctx.look);
+  const { initials, colors } = eventLook(o.members, ctx.look, isTravel(o));
   const when = timeLabel(o, { use24h: ctx.use24h ?? true, slotTimes: ctx.slotTimes });
   const placed = o.location ? d.at(when, placeLine(o.location)) : when;
   const hidden = hiddenFromLine(o, ctx.members);

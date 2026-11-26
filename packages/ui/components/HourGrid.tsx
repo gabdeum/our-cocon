@@ -11,6 +11,8 @@ import { theme } from "../theme";
 import {
   EventBar,
   Fill,
+  isTravelLook,
+  TravelMark,
   WEEK_BAR_STEP,
   WIDE_WEEK_BAR_STEP,
   type EventBarProps,
@@ -157,6 +159,7 @@ function DayHead({ day, onPress, size }: { day: WeekDayHead; onPress: () => void
 function Block({ block, onPress, size }: { block: WeekBlock; onPress: () => void; size: HourGridSize }) {
   const z = SIZES[size];
   const rounded = z.radius;
+  const travel = isTravelLook(block.colors);
   // The outer box is the lane; its 1 px padding keeps blocks apart (no calc() in React Native).
   return (
     <View
@@ -194,16 +197,20 @@ function Block({ block, onPress, size }: { block: WeekBlock; onPress: () => void
             className="absolute bottom-0 left-0 top-0 w-[3px] bg-ink"
           />
         )}
-        {block.top ? (
-          <Text
-            size={z.top}
-            weight="900"
-            numberOfLines={1}
-            ellipsizeMode="clip"
-            style={[{ lineHeight: z.topLine }, clipOnWeb]}
-          >
-            {block.top}
-          </Text>
+        {block.top || travel ? (
+          <View className="flex-row items-center gap-[2px]">
+            {travel ? <TravelMark size={z.top} /> : null}
+            <Text
+              size={z.top}
+              weight="900"
+              numberOfLines={1}
+              ellipsizeMode="clip"
+              className="min-w-0 shrink"
+              style={[{ lineHeight: z.topLine }, clipOnWeb]}
+            >
+              {block.top}
+            </Text>
+          </View>
         ) : null}
         <Text size={z.title} weight="800" style={{ lineHeight: z.titleLine }}>
           {block.title}

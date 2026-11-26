@@ -169,6 +169,23 @@ describe('layoutDayView', () => {
 });
 
 // Spec 037 FR-009: the month's day sheet.
+describe('travel in the day view', () => {
+  const trip = (title: string, starts_on: string, ends_on: string) => ev({ title, category: 'travel', time_type: 'all_day', slots: [], members: [eva.id], starts_on, ends_on });
+
+  it('the trip ending and the one starting that day share one All day row, split in the middle', () => {
+    const { allDay } = layout([trip('Paris', '2026-10-23', '2026-10-25'), trip('Lyon', '2026-10-25', '2026-10-27')]);
+    expect(allDay).toHaveLength(1);
+    expect(allDay[0]).toMatchObject({ title: 'Paris', tag: 'Day 3 of 3', colors: ['travel'], next: { title: 'Lyon', tag: 'Day 1 of 3', colors: ['travel'] } });
+  });
+
+  it('on the other days each trip has its own row', () => {
+    const { allDay } = layout([trip('Paris', '2026-10-23', '2026-10-25'), trip('Lyon', '2026-10-25', '2026-10-27')], '2026-10-26');
+    expect(allDay).toHaveLength(1);
+    expect(allDay[0]).toMatchObject({ title: 'Lyon', tag: 'Day 2 of 3' });
+    expect(allDay[0]).not.toHaveProperty('next');
+  });
+});
+
 describe('layoutDaySheet', () => {
   const sheet = (events: StoredEvent[], date = TODAY, viewer = gabriel.id) =>
     layoutDaySheet(date, monthOccurrences(events, '2026-10-01', '2026-11-30', viewer, new Set()), ctx);

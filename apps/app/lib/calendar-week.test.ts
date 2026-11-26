@@ -163,3 +163,15 @@ describe('week grid (spec 038)', () => {
     expect(g.nowY).toBeCloseTo((13 + 20 / 60 - 6) * 44);
   });
 });
+
+describe('travel', () => {
+  it('back-to-back trips share a row in All day, meeting at the middle of the day; blocks take the travel color', () => {
+    const trip = (title: string, starts_on: string, ends_on: string) => ev({ title, category: 'travel', time_type: 'all_day', slots: [], members: [eva.id], starts_on, ends_on });
+    const g = grid([trip('Paris', '2026-10-25', '2026-10-27'), trip('Lyon', '2026-10-27', '2026-10-29'), ev({ title: 'Flight', category: 'travel', members: [eva.id] })]);
+    expect(g.bars.map((b) => [b.text, b.column, b.days, b.lane, b.halfStart, b.halfEnd, b.colors])).toEqual([
+      ['E Paris', 0, 3, 0, false, true, ['travel']],
+      ['E Lyon', 2, 3, 0, true, false, ['travel']],
+    ]);
+    expect(g.columns[0]?.blocks.find((b) => b.title === 'Flight')?.colors).toEqual(['travel']);
+  });
+});

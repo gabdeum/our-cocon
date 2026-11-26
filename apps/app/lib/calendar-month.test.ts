@@ -305,3 +305,33 @@ describe('spec 070: one month at a time from 600', () => {
     expect(markFitsBeside('2026-10-14', { today: TODAY, cellWidth: 40, wide: true })).toBe(false);
   });
 });
+
+describe('travel', () => {
+  const travel = (title: string, starts_on: string, ends_on: string, members = [gabriel.id, eva.id]) =>
+    ev({ title, category: 'travel', time_type: 'all_day', slots: [], starts_on, ends_on, members });
+
+  it('a Travel event has its own color, whoever goes', () => {
+    const w = week('2026-10-25', [travel('Lyon', '2026-10-26', '2026-10-28'), ev({ title: 'Flight', category: 'travel', starts_on: '2026-10-29', ends_on: '2026-10-29' })]);
+    expect(w.bars.map((b) => [b.text, b.colors])).toEqual([['G·E Lyon', ['travel']]]);
+    expect(cell(w, '2026-10-29').items[0]).toMatchObject({ text: 'G Flight', colors: ['travel'] });
+  });
+
+  it('back-to-back trips for the same people share a row and meet at the middle of the day they change places', () => {
+    const w = week('2026-10-25', [travel('Paris', '2026-10-25', '2026-10-28'), travel('Lyon', '2026-10-28', '2026-10-31'), ev({ title: 'Swim', starts_on: '2026-10-28', ends_on: '2026-10-28' })]);
+    expect(w.bars.map((b) => [b.text, b.column, b.days, b.lane, b.halfStart, b.halfEnd])).toEqual([
+      ['G·E Paris', 0, 4, 0, false, true],
+      ['G·E Lyon', 3, 4, 0, true, false],
+    ]);
+    // The day they meet uses one row for both, and its chips start below it.
+    expect(texts(cell(w, '2026-10-28').items)).toEqual(['·', 'G Swim']);
+    expect(cell(w, '2026-10-28').more).toBeNull();
+  });
+
+  it('other people’s trips stack as before', () => {
+    const w = week('2026-10-25', [travel('Paris', '2026-10-25', '2026-10-28'), travel('Lyon', '2026-10-28', '2026-10-31', [james.id])]);
+    expect(w.bars.map((b) => [b.lane, b.halfStart, b.halfEnd])).toEqual([
+      [0, false, false],
+      [1, false, false],
+    ]);
+  });
+});

@@ -20,3 +20,7 @@ Reference: `design/screens/OC-CalMonth.dc.html` (inline styles are the exact val
 ## From 600 wide (spec 070)
 
 `size="wide"` in the month page: 20 tall, 12/800 text, radius 6, padding 0 6; "+N" (`MoreCount`) 12/900.
+
+## Travel (2026-11-26)
+
+A Travel event (category `travel`, for those who see the event itself) is filled with `event-travel` and outlined in `event-travel-edge`, whoever goes, so a trip reads apart from the people's own events. The `plane` icon, at the text's size, sits 2 px before its text. The same on bars, week blocks (on the top line), day rows and list rows (16 px, before the title).

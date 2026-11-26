@@ -22,3 +22,7 @@ Reference: `design/screens/OC-CalMonth.dc.html` (inline styles are the exact val
 
 - `month-wide`: 20 tall, 12/800, radius 6, inset 6; first lane at 32 from the row's top, then 22 apart.
 - `week-wide`: the week's All day row, 32 tall, 14/800, 34 apart.
+
+## Back-to-back trips (2026-11-26)
+
+When the same people have two multi-day Travel events where one ends the day the next starts, the two bars share a row: the first stops at the middle of that day (rounded end) and the next starts there (rounded start), so they never stack. In the day view, that day shows one All day row split in the middle (2 px gap), each half opening its own trip.
