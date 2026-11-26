@@ -207,11 +207,11 @@ select pg_temp.login('00000000-0000-0000-0000-00000000035a');
 select lives_ok($$ select public.claim_home_time_zone('America/New_York') $$, 'a second device');
 select is((select home_time_zone from public.family_calendar_settings), 'Europe/Paris', 'doesn''t change it');
 select pg_temp.login('00000000-0000-0000-0000-00000000035b');
-select is(pg_temp.affected($$ update public.family_calendar_settings set home_time_zone = 'UTC' $$), 0, 'Eva can''t change it');
+select throws_ok($$ update public.family_calendar_settings set home_time_zone = 'UTC' $$, '42501', null, 'Eva can''t change it directly (spec 071: only through the RPCs)');
 select pg_temp.login('00000000-0000-0000-0000-00000000035a', 'cocon_assistant', 'c1');
 select is((select home_time_zone from public.family_calendar_settings), 'Europe/Paris', 'assistants read it');
 select pg_temp.login('00000000-0000-0000-0000-00000000035a');
-select is(pg_temp.affected($$ update public.family_calendar_settings set home_time_zone = 'America/New_York' $$), 1, 'the owner can');
+select lives_ok($$ select public.set_home_time_zone('America/New_York') $$, 'the owner can, through set_home_time_zone');
 
 -- Delete and restore (spec 018): exceptions and the repeat come back.
 select pg_temp.login('00000000-0000-0000-0000-00000000035b');
