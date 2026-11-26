@@ -16,6 +16,7 @@ import { anchorFrom, calendarSettingsKey, entryFrom, eventsKey, viewFrom } from 
 import { useCalendarPrefs } from '../../lib/calendar-prefs';
 import { useSession } from '../../lib/session';
 import type { AddPrefill } from '../../components/calendar/CalendarScreen';
+import { useTimeZone } from '../../lib/travel';
 
 /** `reminders_in_range` takes at most 366 days: Agenda's later pages past a year show events only. */
 const REMINDER_DAYS = 366;
@@ -36,7 +37,7 @@ export default function CalendarTab() {
   const { width } = useWindowDimensions();
   const familyId = state.status === 'ready' ? state.family.id : null;
   const settings = useQuery({ queryKey: calendarSettingsKey(familyId ?? ''), queryFn: () => loadCalendarSettings(client), enabled: familyId !== null });
-  const timeZone = settings.data?.homeTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const timeZone = useTimeZone(settings.data);
   const today = todayIn(timeZone);
   const { prefs, loaded, change } = useCalendarPrefs();
   const view = viewFrom(params.view ?? prefs.opens_on);

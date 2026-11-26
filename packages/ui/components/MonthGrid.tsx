@@ -46,6 +46,9 @@ export interface MonthBar {
   lane: number;
   startsHere: boolean;
   endsHere: boolean;
+  /** Back-to-back trips: stops or starts at the middle of the day (EventBar). */
+  halfStart?: boolean;
+  halfEnd?: boolean;
 }
 
 export interface MonthWeek {

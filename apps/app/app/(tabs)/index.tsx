@@ -20,6 +20,7 @@ import { useSession } from '../../lib/session';
 import { config } from '../../lib/tracker';
 import { useNow } from '../../lib/use-now';
 import { MAX_TRACKED_STEPS } from '@cocon/schemas';
+import { useTimeZone } from '../../lib/travel';
 
 /**
  * Home (OC-Home, spec 028). Each block reads the same query as the screen it opens (Calendar,
@@ -32,7 +33,7 @@ export default function HomeTab() {
   const familyId = state.status === 'ready' ? state.family.id : null;
   const enabled = familyId !== null;
   const settings = useQuery({ queryKey: calendarSettingsKey(familyId ?? ''), queryFn: () => loadCalendarSettings(client), enabled });
-  const timeZone = settings.data?.homeTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const timeZone = useTimeZone(settings.data);
   const today = todayIn(timeZone);
   const now = useNow(timeZone);
   const { from, to } = cardWindow(today);

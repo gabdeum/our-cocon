@@ -1,5 +1,5 @@
 import { daysBetween, todayIn } from '@cocon/calendar';
-import { completeReminder, loadCalendarSettings, loadReminder, snoozeReminder } from '@cocon/data';
+import { completeReminder, loadCalendarSettings, loadMemberTravel, loadReminder, snoozeReminder } from '@cocon/data';
 import { PushPayload, TODO_CATEGORY, TodoAction, type Tracker } from '@cocon/schemas';
 import type { Client } from './supabase';
 
@@ -37,11 +37,11 @@ export async function handleTodoAction(response: TodoActionResponse, deps: TodoA
   deps.tracker.track('reminder_notification_action', { action: action.data });
 
   const now = deps.now?.() ?? new Date();
-  const [settings, row] = await Promise.all([loadCalendarSettings(deps.client), loadReminder(deps.client, id).catch(() => null)]);
+  const [settings, travel, row] = await Promise.all([loadCalendarSettings(deps.client), loadMemberTravel(deps.client).catch(() => null), loadReminder(deps.client, id).catch(() => null)]);
   if (!row || row.completed) return true;
   if (todo.due_at && Date.parse(todo.due_at) !== Date.parse(row.due_at)) return true;
-  // The family's home time zone, or the phone's until one is set (as the Reminders screen).
-  const tz = settings.homeTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // The member's own time zone (spec 071), else the family's, or the phone's until one is set (as the Reminders screen).
+  const tz = travel?.awayTimeZone ?? settings.homeTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   if (action.data === 'done') {
     const done = await completeReminder(deps.client, id, tz, now);
     if (done) deps.tracker.track('reminder_completed', { repeating: done.repeating, late_days: Math.max(0, daysBetween(todayIn(tz, new Date(row.due_at)), todayIn(tz, now))), source: 'notification' });

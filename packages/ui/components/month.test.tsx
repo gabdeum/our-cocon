@@ -65,6 +65,12 @@ describe('EventChip and EventBar', () => {
     expect(onPress).toHaveBeenCalled();
     expect(screen.getByText('All Grandma visits (cont.)')).toBeTruthy();
   });
+  it('back-to-back trips: a bar starting at the middle of its first day', () => {
+    render(<EventBar text="E Lyon" label="Lyon, Eva, October 27 to October 29" colors={['travel']} column={2} days={3} lane={0} startsHere endsHere halfStart onPress={vi.fn()} />);
+    const box = screen.getByRole('link', { name: 'Lyon, Eva, October 27 to October 29' }).parentElement;
+    expect(box?.style.left).toBe(`${(2.5 * 100) / 7}%`);
+    expect(box?.style.width).toBe(`${(2.5 * 100) / 7}%`);
+  });
 });
 
 describe('Toast (hint)', () => {

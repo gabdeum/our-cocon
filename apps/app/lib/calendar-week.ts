@@ -1,6 +1,7 @@
-import { addDays, calendarWordsEn, daysBetween, fromMinutes, layoutDay, layoutSpans, parts, sortSlots, textWidth, timeRange, toMinutes, weekRange, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
+import { addDays, calendarWordsEn, daysBetween, fromMinutes, layoutDay, parts, sortSlots, textWidth, timeRange, toMinutes, weekRange, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import { GRID_FIRST_HOUR, GRID_HOURS, HOUR_HEIGHT, WIDE_HOUR_HEIGHT, type HourGridProps, type WeekAllDayBar, type WeekBlock, type WeekColumn, type WeekDayHead } from '@cocon/ui';
-import { chipLook, eventLook, longDate, occurrenceKey, weekdayLetters, weekdayShort, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
+import { chipLook, eventLook, longDate, occurrenceKey, spanLanes, weekdayLetters, weekdayShort, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
+import { isTravel, travelJoins } from './calendar-travel';
 import { strings } from '../strings/en';
 import { clock, hourOnly } from './clock';
 
@@ -97,10 +98,12 @@ export function layoutWeekGrid(anchor: string, occurrences: readonly MonthOccurr
   }));
 
   const spans = inWeek.filter(inAllDayRow).map((o) => ({ o, from: o.starts_on < start ? start : o.starts_on, to: o.ends_on > end ? end : o.ends_on }));
-  const rows = new Map(layoutSpans(spans.map((s) => ({ id: occurrenceKey(s.o), from: s.from, to: s.to }))).map((l) => [l.id, l.lane]));
+  // Back-to-back trips share a row and meet at the middle of the day they change places.
+  const joins = travelJoins(inWeek, occurrenceKey);
+  const rows = spanLanes(spans, joins);
   const bars: WeekAllDayBar[] = spans.map((s) => ({
     key: occurrenceKey(s.o),
-    ...chipLook(s.o.members, s.from === s.o.starts_on ? s.o.title : m.cont(s.o.title), ctx.look),
+    ...chipLook(s.o.members, s.from === s.o.starts_on ? s.o.title : m.cont(s.o.title), ctx.look, true, isTravel(s.o)),
     label:
       s.o.ends_on > s.o.starts_on
         ? m.barLabel(s.o.title, whoText(s.o.members, ctx.look), longDate(s.o.starts_on), longDate(s.o.ends_on))
@@ -110,6 +113,8 @@ export function layoutWeekGrid(anchor: string, occurrences: readonly MonthOccurr
     lane: rows.get(occurrenceKey(s.o)) ?? 0,
     startsHere: s.from === s.o.starts_on,
     endsHere: s.to === s.o.ends_on,
+    halfStart: s.from === s.o.starts_on && Boolean(joins.get(occurrenceKey(s.o))?.halfStart),
+    halfEnd: s.to === s.o.ends_on && Boolean(joins.get(occurrenceKey(s.o))?.halfEnd),
   }));
 
   const columns: WeekColumn[] = dates.map((date) => ({
@@ -143,7 +148,7 @@ function dayBlocks(events: readonly MonthOccurrence[], date: string, ctx: WeekGr
   const drawnEnd = (t: { from: number; to: number }) => Math.min(GRID_END, Math.max(t.to, t.from + Math.ceil((minBlock / hour) * 60)));
   const lanes = new Map(layoutDay(timed.map((t) => ({ id: t.key, start: fromMinutes(t.from), end: fromMinutes(drawnEnd(t)) }))).map((l) => [l.id, l]));
   return timed.map(({ o, key, range, from, to }) => {
-    const { initials, colors } = eventLook(o.members, ctx.look);
+    const { initials, colors } = eventLook(o.members, ctx.look, isTravel(o));
     const slot = o.time_type === 'slot';
     const slotNames = sortSlots(o.slots).map((s) => words.slots[s]);
     const use24h = ctx.use24h ?? true;

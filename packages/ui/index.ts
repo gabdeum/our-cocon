@@ -58,7 +58,7 @@ export { ChecklistAdd, ChecklistRow, type ChecklistRowProps } from './components
 export { MemberPill, ReminderMore, ReminderRow, type ReminderRowProps } from './components/ReminderRow';
 export { WeekdayPicker, type WeekdayPickerProps } from './components/WeekdayPicker';
 export { DateGrid, type DateGridDay, type DateGridProps } from './components/DateGrid';
-export { EventBar, EventChip, Fill, MoreCount, BAR_STEP, BAR_TOP, WEEK_BAR_STEP, WIDE_WEEK_BAR_STEP, type ChipSize, type EventBarProps, type EventChipProps, type EventColor } from './components/EventChip';
+export { EventBar, EventChip, Fill, MoreCount, TravelMark, isTravelLook, BAR_STEP, BAR_TOP, WEEK_BAR_STEP, WIDE_WEEK_BAR_STEP, type ChipSize, type EventBarProps, type EventChipProps, type EventColor } from './components/EventChip';
 export { MonthGrid, MONTH_ROW_HEIGHT, type MonthBar, type MonthCell, type MonthCellItem, type MonthGridProps, type MonthWeek } from './components/MonthGrid';
 export {
   HourGrid,

@@ -531,14 +531,14 @@ isOneToOne: false
                   ]
                 },"member_calendar_settings": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"default_reminder": string,"fade_past": boolean,"family_id": string,"id": string,"month_hint_seen": boolean,"opens_on": string,"quiet_from": string,"quiet_to": string,"show_birthdays": boolean,"source": string,"time_format": string,"updated_at": string,"updated_by": string | null,"user_id": string,"week_start": string
+                    "asked_time_zone": string | null,"away_time_zone": string | null,"created_at": string,"created_by": string | null,"default_reminder": string,"fade_past": boolean,"family_id": string,"id": string,"month_hint_seen": boolean,"opens_on": string,"quiet_from": string,"quiet_to": string,"show_birthdays": boolean,"source": string,"time_format": string,"updated_at": string,"updated_by": string | null,"user_id": string,"week_start": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id": string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"quiet_from"?: string,"quiet_to"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
+                    "asked_time_zone"?: string | null,"away_time_zone"?: string | null,"created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id": string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"quiet_from"?: string,"quiet_to"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id"?: string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"quiet_from"?: string,"quiet_to"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
+                    "asked_time_zone"?: string | null,"away_time_zone"?: string | null,"created_at"?: string,"created_by"?: string | null,"default_reminder"?: string,"fade_past"?: boolean,"family_id"?: string,"id"?: string,"month_hint_seen"?: boolean,"opens_on"?: string,"quiet_from"?: string,"quiet_to"?: string,"show_birthdays"?: boolean,"source"?: string,"time_format"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string,"week_start"?: string
                   }
                   Relationships: [
                     {
@@ -1044,6 +1044,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"_my_away_time_zone":
+{ Args: { "p_family": string }; Returns: string
+                           },
 "_my_member_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -1097,6 +1100,9 @@ isOneToOne: false
                            },
 "_row_fingerprint":
 { Args: { "r": Json }; Returns: string
+                           },
+"_same_clock":
+{ Args: { "a": string,"b": string }; Returns: boolean
                            },
 "_sees_event":
 { Args: { "eid": string }; Returns: boolean
@@ -1289,6 +1295,9 @@ isOneToOne: false
                            },
 "save_recipe_variants":
 { Args: { "p_recipe_id": string,"p_variants": Json }; Returns: undefined
+                           },
+"set_away_time_zone":
+{ Args: { "p_asked": string,"p_away": string,"p_scope"?: string }; Returns: number
                            },
 "set_display_name":
 { Args: { "display_name": string }; Returns: undefined

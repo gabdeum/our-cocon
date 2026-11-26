@@ -111,7 +111,7 @@ export function DayView({ members, myMemberId, events, slotTimes, hidden, date, 
                 a.kind === 'reminder' ? (
                   <DayReminderRow key={a.key} item={a} onToggle={() => toggleReminder(a.key)} onOpen={() => openReminder(a.key)} disabled={reminders?.readOnly} />
                 ) : (
-                  <AllDayRow key={a.key} item={a} onPress={() => openEvent(a.key)} />
+                  <AllDayRow key={a.key} item={a} onPress={(key) => openEvent(key)} />
                 ),
               )}
             </View>

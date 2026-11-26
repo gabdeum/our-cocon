@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
-import { Fill, type EventColor } from './EventChip';
+import { Fill, isTravelLook, TravelMark, type EventColor } from './EventChip';
 import { Icon } from './Icon';
 import { Tag, type TagTone } from './Tag';
 import { Text } from './Text';
@@ -68,6 +68,7 @@ export function EventListRow({ event, onPress, last, size = 'md' }: { event: Eve
         <View className="min-w-0 flex-1">
           <View className="flex-row items-center gap-6">
             {event.bell ? <Icon name="bell" size={16} color="olive" /> : null}
+            {isTravelLook(event.colors) ? <TravelMark size={sm ? 14 : 16} /> : null}
             <Text size={sm ? 16 : 17} weight="800" className="min-w-0 shrink">
               {event.title}
             </Text>

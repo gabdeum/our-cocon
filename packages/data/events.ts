@@ -260,7 +260,7 @@ export async function setChecklistDone(client: Pick<Db, 'from'>, itemId: string,
 
 export interface CalendarSettings {
   slotTimes: SlotTimes;
-  /** Null until the first device sets it (claim_home_time_zone). */
+  /** The family's time zone: where it last moved (spec 071). Null until the first device sets it (claim_home_time_zone). */
   homeTimeZone: string | null;
 }
 

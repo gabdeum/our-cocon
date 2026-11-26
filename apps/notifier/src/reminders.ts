@@ -66,7 +66,7 @@ export function createReminderJob(db: ServiceDb, notifier: Pick<Notifier, 'send'
     if (members.error) throw members.error;
     if (devices.error) throw devices.error;
     const userIds = members.data.flatMap((m) => (m.user_id ? [m.user_id] : []));
-    const formats = await db.from('member_calendar_settings').select('user_id, time_format').in('user_id', userIds);
+    const formats = await db.from('member_calendar_settings').select('user_id, family_id, time_format, away_time_zone').in('user_id', userIds);
     if (formats.error) throw formats.error;
     const families = new Map<string, ReminderFamily>();
     for (const id of familyIds) {
@@ -76,6 +76,13 @@ export function createReminderJob(db: ServiceDb, notifier: Pick<Notifier, 'send'
         timeZone: s?.home_time_zone ?? null,
         slotTimes: slotTimes.success ? slotTimes.data : DEFAULT_SLOT_TIMES,
         members: members.data.filter((m) => m.family_id === id) satisfies ReminderMember[],
+        // Spec 071: who keeps their times on another zone while away.
+        awayTimeZones: new Map(
+          formats.data.flatMap((f) => {
+            const member = members.data.find((m) => m.family_id === id && m.user_id === f.user_id);
+            return member && f.family_id === id && f.away_time_zone ? [[member.id, f.away_time_zone] as const] : [];
+          }),
+        ),
       });
     }
     const timeFormat = new Map(formats.data.map((f) => [f.user_id, TimeFormatSetting.catch('automatic').parse(f.time_format)]));

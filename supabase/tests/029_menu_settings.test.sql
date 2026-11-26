@@ -126,7 +126,7 @@ select is((select home_time_zone from public.family_calendar_settings), 'America
 select throws_ok($$ select public.set_home_time_zone('Mars/Base') $$, '22023', 'unknown_time_zone', 'a real time zone only');
 select pg_temp.login('00000000-0000-0000-0000-00000000029b');
 select throws_ok($$ select public.set_home_time_zone('Europe/Paris') $$, '42501', 'not_owner', 'Eva can''t');
-select is(pg_temp.affected($$ update public.family_calendar_settings set home_time_zone = 'Europe/Paris' $$), 0, 'nor directly');
+select throws_ok($$ update public.family_calendar_settings set home_time_zone = 'Europe/Paris' $$, '42501', null, 'nor directly (spec 071: only through the RPCs)');
 
 -- The leaving flag alone skips nothing: Eva sets it for herself, and her writes are still stamped.
 insert into public.recipes (name) values ('Eva''s tart');

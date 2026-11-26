@@ -34,3 +34,32 @@ export async function setHomeTimeZone(client: Pick<Db, 'rpc'>, timeZone: string)
   const { error } = await client.rpc('set_home_time_zone', { tz: TimeZone.parse(timeZone) });
   if (error) throw error;
 }
+
+/** Spec 071: the time zone the member keeps their times on while away (null: home time), and the last one the app asked about. */
+export interface MemberTravel {
+  awayTimeZone: string | null;
+  askedTimeZone: string | null;
+}
+
+/** The signed-in member's own travel settings (RLS returns only theirs). */
+export async function loadMemberTravel(client: Pick<Db, 'from'>): Promise<MemberTravel> {
+  const { data, error } = await client.from('member_calendar_settings').select('away_time_zone, asked_time_zone').maybeSingle();
+  if (error) throw error;
+  return { awayTimeZone: data?.away_time_zone ?? null, askedTimeZone: data?.asked_time_zone ?? null };
+}
+
+/** Spec 071: whose times move: the member's own ("my time zone"), or the whole family's (the family's time zone). */
+export type TravelScope = 'me' | 'family';
+
+/**
+ * Spec 071 FR-003, FR-005, FR-007: keep times on `away` (null: the family's again), having asked
+ * about `asked`, for the member or the whole family (its time zone moves). Reminders with a time
+ * keep their clock time; returns how many moved.
+ */
+export async function setAwayTimeZone(client: Pick<Db, 'rpc'>, away: string | null, asked: string | null, scope: TravelScope = 'me'): Promise<number> {
+  const args = { p_away: away === null ? null : TimeZone.parse(away), p_asked: asked === null ? null : TimeZone.parse(asked), p_scope: scope };
+  // Both zones may be null; the generated types don't say so.
+  const { data, error } = await client.rpc('set_away_time_zone', args as { p_away: string; p_asked: string; p_scope: TravelScope });
+  if (error) throw error;
+  return data;
+}

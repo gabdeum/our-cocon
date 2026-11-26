@@ -22,6 +22,7 @@ import { memberInitials } from '@cocon/schemas';
 import type { EventMember } from '@cocon/schemas/calendar';
 import type { EventColor, LayoutTier, MonthBar, MonthCell, MonthCellItem, MonthWeek } from '@cocon/ui';
 import type { Member } from './session';
+import { isTravel, travelJoins } from './calendar-travel';
 import { strings } from '../strings/en';
 
 const m = strings.calendar.month;
@@ -166,10 +167,13 @@ function withPeople(o: MonthOccurrence, look: MemberLook): string {
 
 /**
  * FR-003: up to two initials joined by "·" ("G·E"), "All" for Everyone, none for Others, and the
- * fill. Two members split the fill; a member who left is grey. Also the week view's blocks (038).
+ * fill. Two members split the fill; a member who left is grey; a Travel event (`travel`) has its
+ * own color, whoever goes. Also the week view's blocks (038).
  */
-export function eventLook(members: readonly EventMember[], look: MemberLook): { initials: string; colors: EventColor[] } {
-  const colors = members.map((id): EventColor => (id === 'everyone' ? 'everyone' : id === 'others' ? 'others' : (look.colors.get(id) ?? 'removed'))).slice(0, 2);
+export function eventLook(members: readonly EventMember[], look: MemberLook, travel = false): { initials: string; colors: EventColor[] } {
+  const colors = travel
+    ? (['travel'] as EventColor[])
+    : members.map((id): EventColor => (id === 'everyone' ? 'everyone' : id === 'others' ? 'others' : (look.colors.get(id) ?? 'removed'))).slice(0, 2);
   const initials = members
     .filter((id) => id !== 'others')
     .map((id) => (id === 'everyone' ? strings.calendar.header.everyoneInitial : look.initials.get(id)))
@@ -180,8 +184,8 @@ export function eventLook(members: readonly EventMember[], look: MemberLook): { 
 }
 
 /** FR-003: "{initials} {title}" and the fill; the title alone with `initials: false` (narrow screens). */
-export function chipLook(members: readonly EventMember[], title: string, look: MemberLook, withInitials = true): { text: string; colors: EventColor[] } {
-  const { initials, colors } = eventLook(members, look);
+export function chipLook(members: readonly EventMember[], title: string, look: MemberLook, withInitials = true, travel = false): { text: string; colors: EventColor[] } {
+  const { initials, colors } = eventLook(members, look, travel);
   return { text: initials && withInitials ? `${initials} ${title}` : title, colors };
 }
 
@@ -247,6 +251,22 @@ export function markFitsBeside(date: string, ctx: Pick<WeekContext, 'today' | 'c
 }
 
 /**
+ * Rows for the bars (`layoutSpans`), by occurrence key. Back-to-back trips (`travelJoins`) are
+ * placed as one span, so they share a row and meet at the middle of the day they change places.
+ */
+export function spanLanes(spans: readonly { o: MonthOccurrence; from: string; to: string }[], joins: ReadonlyMap<string, { chain: string }>): Map<string, number> {
+  const groupOf = (o: MonthOccurrence) => joins.get(occurrenceKey(o))?.chain ?? occurrenceKey(o);
+  const groups = new Map<string, { id: string; from: string; to: string }>();
+  for (const s of spans) {
+    const id = groupOf(s.o);
+    const g = groups.get(id);
+    groups.set(id, g ? { id, from: g.from < s.from ? g.from : s.from, to: g.to > s.to ? g.to : s.to } : { id, from: s.from, to: s.to });
+  }
+  const lanes = new Map(layoutSpans([...groups.values()]).map((l) => [l.id, l.lane]));
+  return new Map(spans.map((s) => [occurrenceKey(s.o), lanes.get(groupOf(s.o)) ?? 0]));
+}
+
+/**
  * One week row (FR-002–FR-004): each day's chips in order, and every multi-day event as a bar from
  * its first to its last day in the row, stacked in rows. Days under a bar keep that row empty. A day
  * shows five rows when everything fits, else four and "+N" for the rest of the visible events; a
@@ -264,7 +284,8 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
   const below = new Set(
     Array.from({ length: 7 }, (_, d) => addDays(start, d)).filter((date) => (ctx.reminders?.get(date) ?? 0) > 0 && !markFitsBeside(date, ctx)),
   );
-  const lanes = new Map(layoutSpans(spans.map((s) => ({ id: occurrenceKey(s.o), from: s.from, to: s.to }))).map((l) => [l.id, l.lane]));
+  const joins = travelJoins(inWeek, occurrenceKey);
+  const lanes = spanLanes(spans, joins);
   const laneOf = (s: (typeof spans)[number]) => lanes.get(occurrenceKey(s.o)) ?? 0;
 
   const days = Array.from({ length: 7 }, (_, d) => {
@@ -278,7 +299,9 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
     // The alarm clock's row, when it's below the date: no bar or chip in it.
     const reserved = below.has(date) ? 1 : 0;
     // Every row (five on the phone) if each bar's lane and every chip fit in them, else one fewer and "+N".
-    const fits = covering.every((s) => laneOf(s) >= reserved && laneOf(s) < maxRows) && singles.length <= maxRows - covering.length - reserved;
+    // Back-to-back trips share their lane on the day they meet.
+    const barRows = new Set(covering.map(laneOf)).size;
+    const fits = covering.every((s) => laneOf(s) >= reserved && laneOf(s) < maxRows) && singles.length <= maxRows - barRows - reserved;
     return { date, covering, singles, reserved, rows: fits ? maxRows : maxRows - 1 };
   });
 
@@ -295,7 +318,8 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
       }
       if (from === null) continue;
       const to = addDays(start, d - 1);
-      const { text, colors } = chipLook(s.o.members, from === s.o.starts_on ? s.o.title : m.cont(s.o.title), ctx.look, ctx.initials);
+      const { text, colors } = chipLook(s.o.members, from === s.o.starts_on ? s.o.title : m.cont(s.o.title), ctx.look, ctx.initials, isTravel(s.o));
+      const join = joins.get(occurrenceKey(s.o));
       bars.push({
         key: `${occurrenceKey(s.o)}|${from}`,
         text,
@@ -306,6 +330,8 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
         lane,
         startsHere: from === s.o.starts_on,
         endsHere: to === s.o.ends_on,
+        halfStart: from === s.o.starts_on && Boolean(join?.halfStart),
+        halfEnd: to === s.o.ends_on && Boolean(join?.halfEnd),
       });
       from = null;
     }
@@ -320,11 +346,11 @@ export function layoutWeek(index: number, occurrences: readonly MonthOccurrence[
       const o = busyRows.has(row) ? undefined : singles[next];
       if (o) {
         next++;
-        items.push({ kind: 'chip', key: occurrenceKey(o), ...chipLook(o.members, o.title, ctx.look, ctx.initials) });
+        items.push({ kind: 'chip', key: occurrenceKey(o), ...chipLook(o.members, o.title, ctx.look, ctx.initials, isTravel(o)) });
       } else if (row < reserved) items.push({ kind: 'space', key: `space-${row}`, mark: true });
       else if ([...busyRows].some((r) => r >= row)) items.push({ kind: 'space', key: `space-${row}` });
     }
-    const shown = next + busyRows.size - reserved;
+    const shown = next + covering.filter((s) => laneOf(s) >= reserved && laneOf(s) < rows).length;
     const total = singles.length + covering.length;
     return {
       date,

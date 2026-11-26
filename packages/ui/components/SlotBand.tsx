@@ -1,6 +1,6 @@
 import { Pressable, View } from 'react-native';
 import { cn, focusRing } from '../cn';
-import { Fill, type EventColor } from './EventChip';
+import { Fill, isTravelLook, TravelMark, type EventColor } from './EventChip';
 import { ReminderListText, ReminderTick, type ReminderListItem, type ReminderListRowProps } from './EventListRow';
 import { Icon } from './Icon';
 import { Tag } from './Tag';
@@ -47,6 +47,8 @@ export interface DayAllDayItem {
   tag: string | null;
   colors: readonly EventColor[];
   label: string;
+  /** The trip the same people start that day, when this one ends it: the row is split in the middle. */
+  next?: Omit<DayAllDayItem, 'next'>;
 }
 
 export interface SlotBandProps {
@@ -122,9 +124,12 @@ export function DayEventRow({ event, onPress }: { event: DayEventItem; onPress: 
         )}
       </View>
       <View className="min-w-0 flex-1 gap-[2px]">
-        <Text size={17} weight="800">
-          {event.title}
-        </Text>
+        <View className="flex-row items-center gap-6">
+          {isTravelLook(event.colors) ? <TravelMark size={16} /> : null}
+          <Text size={17} weight="800" className="min-w-0 shrink">
+            {event.title}
+          </Text>
+        </View>
         <Text size={14} weight="700" color="ink-muted">
           {event.time}
         </Text>
@@ -152,19 +157,31 @@ export function DayReminderRow({ item, onToggle, onOpen, disabled }: ReminderLis
   );
 }
 
-/** OC-CalDay › All day: a full-width row in the member color, title left and tag right. */
-export function AllDayRow({ item, onPress }: { item: DayAllDayItem; onPress: () => void }) {
+/**
+ * OC-CalDay › All day: a full-width row in the member color, title left and tag right. With
+ * `next` (back-to-back trips), one row split in the middle: the trip that ends, then the one that starts.
+ */
+export function AllDayRow({ item, onPress }: { item: DayAllDayItem; onPress: (key: string) => void }) {
+  if (!item.next) return <AllDayPart item={item} onPress={() => onPress(item.key)} rounded="rounded-[18px]" />;
+  const next = item.next;
   return (
-    <Pressable
-      role="link"
-      aria-label={item.label}
-      onPress={onPress}
-      className={cn('min-h-[52px] flex-row items-center justify-between gap-12 rounded-[18px] px-16', focusRing)}
-    >
-      <Fill colors={item.colors} rounded="rounded-[18px]" />
-      <Text size={17} weight="800" className="min-w-0 flex-1">
-        {item.title}
-      </Text>
+    <View className="flex-row gap-[2px]">
+      <AllDayPart item={item} onPress={() => onPress(item.key)} rounded="rounded-l-[18px]" />
+      <AllDayPart item={next} onPress={() => onPress(next.key)} rounded="rounded-r-[18px]" />
+    </View>
+  );
+}
+
+function AllDayPart({ item, onPress, rounded }: { item: Omit<DayAllDayItem, 'next'>; onPress: () => void; rounded: string }) {
+  return (
+    <Pressable role="link" aria-label={item.label} onPress={onPress} className={cn('min-h-[52px] min-w-0 flex-1 flex-row items-center justify-between gap-12 px-16', rounded, focusRing)}>
+      <Fill colors={item.colors} rounded={rounded} />
+      <View className="min-w-0 flex-1 flex-row items-center gap-6">
+        {isTravelLook(item.colors) ? <TravelMark size={16} /> : null}
+        <Text size={17} weight="800" className="min-w-0 shrink">
+          {item.title}
+        </Text>
+      </View>
       {item.tag ? (
         <Text size={13} weight="800">
           {item.tag}
