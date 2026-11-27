@@ -287,7 +287,7 @@ insert into public.events (id, family_id, title, category, location, notes, star
 select e.id::uuid, 'c0c0f000-0000-4000-8000-000000000001', e.title, e.category, e.location, e.notes, e.day, e.day, e.time_type, e.slots, e.start_time, e.end_time,
   e.recurrence::jsonb, e.responsible::uuid, e.visibility, e.author::uuid, e.author::uuid, e.source
 from (values
-  ('c0c0d000-0000-4000-8000-000000000001', 'Football', 'sport', 'Riverside park', E'Bring:\n- Water bottle\n- Shin pads\n\nFixtures on https://example.com/club/fixtures.',
+  ('c0c0d000-0000-4000-8000-000000000001', 'Football', 'sport', 'Riverside park', E'Bring:\n- Water bottle\n- Shin pads\n\n| Date | Opponent | Kick-off | Meeting point |\n|---|---|:-:|---|\n| Sat 5 | Riverside FC | 10:00 | Car park by the north gate |\n| Sat 12 | **Hill Rovers** | 11:30 | At the club |\n\nFixtures on https://example.com/club/fixtures.',
     current_date + (6 - extract(dow from current_date)::integer), 'slot', array['morning'], null, null,
     '{"freq":"weekly","ends":{"type":"never"}}', 'c0c0b000-0000-4000-8000-00000000000a', 'family', 'c0c0a000-0000-4000-8000-00000000000a', 'claude'),
   ('c0c0d000-0000-4000-8000-000000000002', 'Dentist', 'health', 'Rue Oberkampf 12', 'Ask about the retainer',

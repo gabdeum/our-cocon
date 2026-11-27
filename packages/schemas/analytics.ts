@@ -340,7 +340,7 @@ export const events = {
   reminder_notification_action: z.strictObject({ action: TodoAction }),
   // Spec 073: a formatted note shown (once per event page or reminder drawer), a link in a note
   // tapped (its scheme, never the address), and a note the parser couldn't read (never its text).
-  note_viewed_formatted: z.strictObject({ entity: NoteEntity, has_bold: z.boolean(), has_link: z.boolean(), has_list: z.boolean(), has_checklist: z.boolean() }),
+  note_viewed_formatted: z.strictObject({ entity: NoteEntity, has_bold: z.boolean(), has_link: z.boolean(), has_list: z.boolean(), has_checklist: z.boolean(), has_table: z.boolean() }),
   note_link_opened: z.strictObject({ entity: NoteEntity, scheme: z.enum(['http', 'https', 'mailto']) }),
   note_parse_failed: z.strictObject({ entity: NoteEntity }),
 } as const;

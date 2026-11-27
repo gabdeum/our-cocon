@@ -416,7 +416,18 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
               { kind: 'check', done: false, line: 8, spans: [{ kind: 'text', text: 'Checklist item' }] },
               { kind: 'check', done: true, line: 9, spans: [{ kind: 'text', text: 'Ticked item' }] },
               { kind: 'check', done: false, line: 10, spans: [{ kind: 'text', text: 'Checklist item' }] },
-              { kind: 'paragraph', spans: [{ kind: 'text', text: '| Unsupported | table |\nshows as plain text, like this.' }] },
+              {
+                kind: 'table',
+                align: ['left', 'left', 'right'],
+                header: [[{ kind: 'text', text: 'Day' }], [{ kind: 'text', text: 'Who' }], [{ kind: 'text', text: 'Cost' }]],
+                rows: [[[{ kind: 'text', text: 'Mon' }], [{ kind: 'text', text: 'Eva' }], [{ kind: 'text', text: '12 €' }]], [[{ kind: 'text', text: 'Tue' }], [{ kind: 'text', text: 'James' }], [{ kind: 'text', text: '8 €' }]]],
+              },
+              {
+                kind: 'table',
+                align: ['left', 'left', 'left', 'left'],
+                header: [[{ kind: 'text', text: 'Wide table' }], [{ kind: 'text', text: 'scrolls sideways' }], [{ kind: 'text', text: 'when it is wider' }], [{ kind: 'text', text: 'than the note' }]],
+                rows: [[[{ kind: 'text', text: 'Each column is as wide' }], [{ kind: 'text', text: 'as its longest cell, up to 240' }], [{ kind: 'text', text: 'then the text wraps onto a second line' }], [{ kind: 'text', text: 'like this one does' }]]],
+              },
             ]}
           />
         </NotesSection>

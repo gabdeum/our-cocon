@@ -1,7 +1,7 @@
 // Event and reminder notes with basic formatting (spec 073). Notes stay plain text in the
 // database; this reads a small markdown subset into NoteText's blocks. No library, no HTML:
-// anything it doesn't know (tables, code, quotes) stays as typed.
-import type { NoteBlock, NoteSpan } from '@cocon/ui';
+// anything it doesn't know (code, quotes) stays as typed.
+import type { NoteAlign, NoteBlock, NoteSpan } from '@cocon/ui';
 
 export type NoteLinkScheme = 'http' | 'https' | 'mailto';
 
@@ -26,6 +26,11 @@ const NUMBER = /^\s*\d+\. (.*)$/;
 const HEADING = /^\s*#{1,6} (.*)$/;
 const FENCE = /^\s*```/;
 const TABLE = /^\s*\|/;
+// A table's second line, trimmed first: | --- | :-: | --: |
+const SEPARATOR = /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$/;
+// Bigger tables show as typed: a few characters of pipes would otherwise draw a million cells.
+const MAX_COLUMNS = 12;
+const MAX_CELLS = 600;
 
 const ITALIC_STAR = /\*(?![\s*])([^*\n]*?[^\s*])\*(?!\*)/y;
 const ITALIC_UNDER = /_(?![\s_])([^_\n]*?[^\s_])_(?![\p{L}\p{N}_])/uy;
@@ -99,6 +104,36 @@ function inline(s: string, inLink = false): NoteSpan[] {
   return out;
 }
 
+/** A table row's cells: outer pipes dropped, `\\|` kept as a pipe inside a cell. */
+function cells(line: string): string[] {
+  const row = line.trim().replace(/^\|/, '').replace(/(?<!\\)\|$/, '');
+  return row.split(/(?<!\\)\|/).map((c) => c.replace(/\\\|/g, '|').trim());
+}
+
+const align = (sep: string): NoteAlign => (sep.endsWith(':') ? (sep.startsWith(':') ? 'center' : 'right') : 'left');
+
+/**
+ * A table starting at line i: a header row, a separator with as many columns, then the rows that
+ * start with a pipe (cut or padded to the header's columns). Null when it isn't one, or is over
+ * MAX_COLUMNS or MAX_CELLS: it shows as typed.
+ */
+function table(lines: readonly string[], i: number): { block: NoteBlock; end: number } | null {
+  const sep = (lines[i + 1] ?? '').trim();
+  if (!sep.includes('|') || !SEPARATOR.test(sep)) return null;
+  const header = cells(lines[i] ?? '');
+  const aligns = cells(sep).map(align);
+  if (aligns.length !== header.length || header.length > MAX_COLUMNS) return null;
+  const rows: NoteSpan[][][] = [];
+  let end = i + 1;
+  while (TABLE.test(lines[end + 1] ?? '')) {
+    end += 1;
+    if ((rows.length + 2) * header.length > MAX_CELLS) return null;
+    const row = cells(lines[end] ?? '');
+    rows.push(header.map((_, c) => inline(row[c] ?? '')));
+  }
+  return { block: { kind: 'table', align: aligns, header: header.map((c) => inline(c)), rows }, end };
+}
+
 function parse(notes: string): NoteBlock[] {
   const lines = notes.split(/\r?\n/);
   const blocks: NoteBlock[] = [];
@@ -124,6 +159,15 @@ function parse(notes: string): NoteBlock[] {
       n = 0;
       continue;
     }
+    const t = TABLE.test(line) ? table(lines, i) : null;
+    if (t) {
+      flush();
+      blocks.push(t.block);
+      i = t.end;
+      n = 0;
+      continue;
+    }
+    // Pipe lines with no separator under them stay as typed.
     if (TABLE.test(line)) {
       if (!raw) flush();
       raw = true;
@@ -172,10 +216,10 @@ function spanText(spans: readonly NoteSpan[]): string {
   return spans.map((s) => (s.kind === 'text' ? s.text : spanText(s.children))).join('');
 }
 
-/** The note with every marker gone, for one-line previews (FR-005). */
+/** The note with every marker gone, for one-line previews (FR-005): a table's cells joined by " · ". */
 export function notesToPlainText(notes: string | null | undefined): string {
   return parseNotes(notes)
-    .map((b) => spanText(b.spans))
+    .map((b) => (b.kind === 'table' ? [b.header, ...b.rows].map((r) => r.map(spanText).join(' · ')).join('\n') : spanText(b.spans)))
     .join('\n');
 }
 
@@ -184,6 +228,7 @@ export interface NoteFormats {
   has_link: boolean;
   has_list: boolean;
   has_checklist: boolean;
+  has_table: boolean;
 }
 
 /** What `note_viewed_formatted` reports; null when the note has no formatting at all. */
@@ -196,15 +241,17 @@ export function noteFormats(blocks: readonly NoteBlock[]): NoteFormats | null {
     });
   for (const b of blocks) {
     kinds.add(b.kind);
-    walk(b.spans);
+    if (b.kind === 'table') [b.header, ...b.rows].forEach((r) => r.forEach(walk));
+    else walk(b.spans);
   }
   const f = {
     has_bold: kinds.has('bold') || kinds.has('boldLine'),
     has_link: kinds.has('link'),
     has_list: kinds.has('bullet') || kinds.has('number'),
     has_checklist: kinds.has('check'),
+    has_table: kinds.has('table'),
   };
-  return f.has_bold || f.has_link || f.has_list || f.has_checklist || kinds.has('italic') ? f : null;
+  return f.has_bold || f.has_link || f.has_list || f.has_checklist || f.has_table || kinds.has('italic') ? f : null;
 }
 
 /** Opens a note's link in the system browser; if it can't, the caller's toast says so (FR-004). */

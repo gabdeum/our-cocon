@@ -65,7 +65,7 @@ describe('ReminderDrawer', () => {
     expect(within(region).getAllByRole('checkbox').map((b) => b.getAttribute('aria-checked'))).toEqual(['false', 'true']);
     expect(region.textContent).not.toMatch(/\*\*|- \[|\]\(/);
     expect(p.tracker.track).toHaveBeenCalledTimes(1);
-    expect(p.tracker.track).toHaveBeenCalledWith('note_viewed_formatted', { entity: 'reminder', has_bold: true, has_link: true, has_list: true, has_checklist: true });
+    expect(p.tracker.track).toHaveBeenCalledWith('note_viewed_formatted', { entity: 'reminder', has_bold: true, has_link: true, has_list: true, has_checklist: true, has_table: false });
   });
 
   it('says so when a link in the notes cannot open (spec 073 FR-004)', async () => {

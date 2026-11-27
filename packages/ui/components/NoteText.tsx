@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { cn } from '../cn';
 import { theme } from '../theme';
 import { Icon } from './Icon';
@@ -11,14 +11,18 @@ export type NoteSpan =
   | { kind: 'bold' | 'italic'; children: NoteSpan[] }
   | { kind: 'link'; url: string; children: NoteSpan[] };
 
+export type NoteAlign = 'left' | 'center' | 'right';
+
 /**
  * A line or paragraph of a note, as the app's parser returns it. `n` is the number shown (its
- * position in the list); `line` is the checklist item's line in the note (spec 075).
+ * position in the list); `line` is the checklist item's line in the note (spec 075). A table's
+ * rows have as many cells as its header, each one inline text.
  */
 export type NoteBlock =
   | { kind: 'paragraph' | 'boldLine' | 'bullet'; spans: NoteSpan[] }
   | { kind: 'number'; n: number; spans: NoteSpan[] }
-  | { kind: 'check'; done: boolean; line: number; spans: NoteSpan[] };
+  | { kind: 'check'; done: boolean; line: number; spans: NoteSpan[] }
+  | { kind: 'table'; align: NoteAlign[]; header: NoteSpan[][]; rows: NoteSpan[][][] };
 
 export interface NoteTextProps {
   blocks: readonly NoteBlock[];
@@ -69,16 +73,52 @@ function Spans({ spans, style, onOpenLink }: { spans: readonly NoteSpan[]; style
   });
 }
 
-function Line({ spans, weight, lineHeight, onOpenLink, className, strike }: { spans: readonly NoteSpan[]; weight: Weight; lineHeight: number; onOpenLink: (url: string) => void; className?: string; strike?: boolean }) {
+function Line({ spans, weight, lineHeight, onOpenLink, className, strike, align }: { spans: readonly NoteSpan[]; weight: Weight; lineHeight: number; onOpenLink: (url: string) => void; className?: string; strike?: boolean; align?: NoteAlign }) {
   return (
-    <Text size={15} weight={weight} color={strike ? 'ink-soft' : 'ink'} strike={strike} className={className} style={{ lineHeight: 15 * lineHeight }}>
+    <Text size={15} weight={weight} color={strike ? 'ink-soft' : 'ink'} strike={strike} className={className} style={{ lineHeight: 15 * lineHeight, textAlign: align }}>
       <Spans spans={spans} style={{ weight, bold: weight === '900' }} onOpenLink={onOpenLink} />
     </Text>
   );
 }
 
+const plain = (spans: readonly NoteSpan[]): string => spans.map((s) => (s.kind === 'text' ? s.text : plain(s.children))).join('');
+
+/**
+ * A table: header on `surface-soft`, 1.5 `line-strong` lines, radius 12. Each column is as wide as
+ * its longest cell (64 to 240, longer text wraps), so rows line up on iOS and the web; a table wider
+ * than the note scrolls sideways.
+ */
+function Table({ block, onOpenLink }: { block: Extract<NoteBlock, { kind: 'table' }>; onOpenLink: (url: string) => void }) {
+  const widths = block.header.map((h, c) => {
+    const longest = Math.max(...[h, ...block.rows.map((r) => r[c] ?? [])].map((cell) => plain(cell).length));
+    return Math.min(240, Math.max(64, longest * 8 + 24));
+  });
+  const row = (cells: readonly NoteSpan[][], header: boolean) =>
+    cells.map((spans, c) => (
+      <View key={c} role={header ? 'columnheader' : 'cell'} style={{ width: widths[c] }} className={cn('px-12 py-8', c > 0 && 'border-l-[1.5px] border-line-strong')}>
+        <Line spans={spans} weight={header ? '900' : '600'} lineHeight={1.4} onOpenLink={onOpenLink} align={block.align[c]} />
+      </View>
+    ));
+  return (
+    <ScrollView horizontal>
+      <View role="table" className="overflow-hidden rounded-[12px] border-[1.5px] border-line-strong">
+        <View role="row" className="flex-row bg-surface-soft">
+          {row(block.header, true)}
+        </View>
+        {block.rows.map((r, i) => (
+          <View key={i} role="row" className="flex-row border-t-[1.5px] border-line-strong">
+            {row(r, false)}
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
 function Item({ block, onOpenLink }: { block: NoteBlock; onOpenLink: (url: string) => void }) {
   switch (block.kind) {
+    case 'table':
+      return <Table block={block} onOpenLink={onOpenLink} />;
     case 'bullet':
       return (
         <View role="listitem" className="flex-row gap-10">
@@ -130,7 +170,7 @@ function groups(blocks: readonly NoteBlock[]): Group[] {
 
 /**
  * NoteText README (spec 073): a note's formatted blocks, from native Text and View only. Bold,
- * italic and links inline; bulleted, numbered and checklist items; headings as a bold line.
+ * italic and links inline; bulleted, numbered and checklist items; headings as a bold line; tables.
  */
 export function NoteText({ blocks, onOpenLink }: NoteTextProps) {
   return (

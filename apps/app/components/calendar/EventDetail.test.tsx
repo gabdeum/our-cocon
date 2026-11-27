@@ -106,7 +106,7 @@ describe('Event detail', () => {
     expect(screen.queryByRole('button', { name: 'Show more' })).toBeNull();
     expect(screen.getByText('Toy')).toBeTruthy();
     expect(screen.getByText('7')).toBeTruthy();
-    expect(tracker.track).toHaveBeenCalledWith('note_viewed_formatted', { entity: 'event', has_bold: true, has_link: false, has_list: true, has_checklist: false });
+    expect(tracker.track).toHaveBeenCalledWith('note_viewed_formatted', { entity: 'event', has_bold: true, has_link: false, has_list: true, has_checklist: false, has_table: false });
   });
 
   it('opens a link in the notes outside the app (spec 073 FR-004)', () => {

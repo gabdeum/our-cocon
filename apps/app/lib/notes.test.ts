@@ -50,7 +50,7 @@ describe('parseNotes', () => {
   });
 
   it('reads mailto links', () => {
-    expect(parseNotes('[Write](mailto:eva@example.com)')[0]?.spans).toEqual([{ kind: 'link', url: 'mailto:eva@example.com', children: [t('Write')] }]);
+    expect(parseNotes('[Write](mailto:eva@example.com)')[0]).toMatchObject({ spans: [{ kind: 'link', url: 'mailto:eva@example.com', children: [t('Write')] }] });
   });
 
   it('nests bold inside a list item and a link inside bold', () => {
@@ -69,7 +69,7 @@ describe('parseNotes', () => {
 
   it('shows unsafe links as plain text (SC-003)', () => {
     expect(parseNotes('[x](javascript:alert(1))')).toEqual([{ kind: 'paragraph', spans: [t('[x](javascript:alert(1))')] }]);
-    expect(parseNotes('[x](example.com)')[0]?.spans).toEqual([t('[x](example.com)')]);
+    expect(parseNotes('[x](example.com)')[0]).toMatchObject({ spans: [t('[x](example.com)')] });
   });
 
   it('reads bulleted, numbered and checklist items, numbering by position', () => {
@@ -102,11 +102,43 @@ describe('parseNotes', () => {
     ]);
   });
 
-  it('shows tables and code blocks exactly as typed (SC-002)', () => {
-    const table = '| Day | Who |\n|---|---|\n| Mon | **Eva** |';
+  it('reads a table with its alignment and inline formatting', () => {
+    expect(parseNotes('Rota\n| Day | Who | Cost |\n|:---|:-:|--:|\n| Mon | **Eva** | 12 € |\n|Tue|[James](https://a.fr)|\nAfter')).toEqual([
+      { kind: 'paragraph', spans: [t('Rota')] },
+      {
+        kind: 'table',
+        align: ['left', 'center', 'right'],
+        header: [[t('Day')], [t('Who')], [t('Cost')]],
+        rows: [
+          [[t('Mon')], [{ kind: 'bold', children: [t('Eva')] }], [t('12 €')]],
+          [[t('Tue')], [{ kind: 'link', url: 'https://a.fr', children: [t('James')] }], []],
+        ],
+      },
+      { kind: 'paragraph', spans: [t('After')] },
+    ]);
+  });
+
+  it('shows a table over 12 columns or 600 cells as typed', () => {
+    const bomb = `${'|'.repeat(834)}\n${'|-'.repeat(833)}|\n${'|\n'.repeat(1250)}`;
+    expect(parseNotes(bomb).every((b) => b.kind === 'paragraph')).toBe(true);
+    const wide = `|${' a |'.repeat(13)}\n|${'---|'.repeat(13)}`;
+    expect(parseNotes(wide)[0]?.kind).toBe('paragraph');
+    const long = (rows: number) => `| a | b |\n|---|---|\n${'| x | y |\n'.repeat(rows)}`;
+    expect(parseNotes(long(299))[0]?.kind).toBe('table');
+    expect(parseNotes(long(300))[0]?.kind).toBe('paragraph');
+  });
+
+  it('keeps escaped pipes in a cell and cuts extra cells', () => {
+    expect(parseNotes('| Code |\n| --- |\n| a \\| b | extra |')[0]).toEqual({ kind: 'table', align: ['left'], header: [[t('Code')]], rows: [[[t('a | b')]]] });
+  });
+
+  it('shows pipe lines without a matching separator, and code blocks, exactly as typed (SC-002)', () => {
+    const pipes = '| Day | Who |\n| Mon | **Eva** |';
+    const uneven = '| a | b |\n|---|';
     const code = '```\n- not a list\n**not bold**\n```';
-    expect(parseNotes(`${table}\n${code}\nAfter`)).toEqual([
-      { kind: 'paragraph', spans: [t(table)] },
+    expect(parseNotes(`${pipes}\n\n${uneven}\n${code}\nAfter`)).toEqual([
+      { kind: 'paragraph', spans: [t(pipes)] },
+      { kind: 'paragraph', spans: [t(uneven)] },
       { kind: 'paragraph', spans: [t(code)] },
       { kind: 'paragraph', spans: [t('After')] },
     ]);
@@ -134,13 +166,15 @@ describe('notesToPlainText (SC-005)', () => {
     const plain = notesToPlainText('# Groceries\n- [ ] **Milk**\n1. [Shop](https://shop.fr)\n* _eggs_\nhttps://a.fr');
     expect(plain).toBe('Groceries\nMilk\nShop\neggs\nhttps://a.fr');
     expect(plain).not.toMatch(/\*\*|- \[ \]|\]\(/);
+    expect(notesToPlainText('| Day | Who |\n|---|---|\n| Mon | **Eva** |')).toBe('Day · Who\nMon · Eva');
   });
 });
 
 describe('noteFormats', () => {
   it('says which formats a note uses', () => {
-    expect(noteFormats(parseNotes('**a** [b](https://b.fr)\n- c\n- [ ] d'))).toEqual({ has_bold: true, has_link: true, has_list: true, has_checklist: true });
-    expect(noteFormats(parseNotes('1. a'))).toEqual({ has_bold: false, has_link: false, has_list: true, has_checklist: false });
+    expect(noteFormats(parseNotes('**a** [b](https://b.fr)\n- c\n- [ ] d'))).toEqual({ has_bold: true, has_link: true, has_list: true, has_checklist: true, has_table: false });
+    expect(noteFormats(parseNotes('1. a'))).toEqual({ has_bold: false, has_link: false, has_list: true, has_checklist: false, has_table: false });
+    expect(noteFormats(parseNotes('| a |\n|---|\n| [b](https://b.fr) |'))).toEqual({ has_bold: false, has_link: true, has_list: false, has_checklist: false, has_table: true });
   });
 
   it('is null for a note without formatting', () => {

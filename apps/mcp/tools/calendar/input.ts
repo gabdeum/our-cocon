@@ -16,7 +16,7 @@ const Who = z.string().trim().min(1).max(80);
  */
 export const NOTES_HELP = [
   `Markdown, up to ${NOTES_MAX} characters. The notes are where everything worth knowing about it lives: put every detail, piece of context and knowledge the member gives you or that you find here (addresses, door codes, who to call, prices, links, steps, what to bring), not only in your reply.`,
-  'Structure it with Markdown: **bold** for what matters most; "- [ ] " checklists for things to bring, buy or do, one per line ("- [x] " once done); "1. " for steps in order; "- " for lists; [text](https://…) for links; "# " headings to split sections; tables for schedules or comparisons. Line breaks are kept. The app shows tables, code and diagrams as typed.',
+  'Structure it with Markdown: **bold** for what matters most; "- [ ] " checklists for things to bring, buy or do, one per line ("- [x] " once done); "1. " for steps in order; "- " for lists; [text](https://…) for links; "# " headings to split sections; tables ("| Day | Who |", then "|---|---|", then one row a line) for schedules, rotas or comparisons; wide ones scroll sideways. Line breaks are kept. The app shows code and diagrams as typed.',
   'Changing notes replaces them: start from the current notes, keep what’s still true, and send the whole note.',
 ].join(' ');
 

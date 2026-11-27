@@ -262,7 +262,7 @@ describe('spec 073 events', () => {
   it('says which formats a note uses and the scheme of a link, never the note or the address', () => {
     const t = fakeTransport();
     const tracker = createTracker(t);
-    const viewed = { entity: 'reminder', has_bold: true, has_link: false, has_list: true, has_checklist: true } as const;
+    const viewed = { entity: 'reminder', has_bold: true, has_link: false, has_list: true, has_checklist: true, has_table: false } as const;
     tracker.track('note_viewed_formatted', viewed);
     tracker.track('note_link_opened', { entity: 'event', scheme: 'https' });
     tracker.track('note_parse_failed', { entity: 'event' });

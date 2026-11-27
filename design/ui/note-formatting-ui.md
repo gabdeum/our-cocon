@@ -31,7 +31,8 @@ Canvas with the full drawers in context: https://claude.ai/artifact/7Q4JdAPcQvPF
 | `1. item` | 22px circle `#FFF0C9`, number 12px weight 900; numbers come from position (1, 2, 3…) |
 | `- [ ] item` / `- [x] item` | 24px box, radius 7px: empty = 2.5px `#CDBF95` border on white; ticked = `#5A6820` fill + white tick, text struck through in `#6B5F43`. Whole row is the tap target (min 44px). |
 | `# Heading` (any level) | A bold line (15px, weight 900). No size change. |
-| Anything else (tables, code, quotes, diagrams, HTML) | Plain text, exactly as typed |
+| Table (`\| a \| b \|`, then `\|---\|---\|`, then rows) | A grid: 1.5px `line-strong` border and lines, radius 12; header row on `surface-soft`, 15px weight 900; cells 15px weight 600, padding 8 × 12, aligned as the separator's `:` say. Each column is as wide as its longest cell (64–240px; longer text wraps). Wider than the note: it scrolls sideways, the page doesn't. Over 12 columns or 600 cells: plain text, as typed. (Spec 073, Gabriel; not in the handoff canvas.) |
+| Anything else (code, quotes, diagrams, HTML, pipe lines without a separator) | Plain text, exactly as typed |
 
 One level of lists only. Indented items show as normal items.
 
@@ -60,7 +61,8 @@ The three colours that aren't tokens are drawn with the closest ones (Gabriel, 2
 ## Copy
 
 - A link that can't open: warn toast "Couldn't open that link".
-- Screen readers call the notes "Notes" (the region under the hairline); checklist items are checkboxes, ticked or not.
+- Screen readers call the notes "Notes" (the region under the hairline); checklist items are checkboxes, ticked or not; a table is a table, with column headers.
 
 ## Changelog
 - 2026-11-27 (spec 073): built as `NoteText` and `NotesSection` (design/system/components/NoteText). The event page shows the whole note (no Show more, Gabriel).
+- 2026-11-27 (spec 073): tables render as a grid that scrolls sideways when wide (Gabriel).

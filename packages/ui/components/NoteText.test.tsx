@@ -1,4 +1,4 @@
-// NoteText (spec 073): every block kind renders, links call back, checklist items read as checkboxes.
+// NoteText (spec 073): every block kind renders, links call back, checklist items read as checkboxes, tables as tables.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { NoteText, type NoteBlock } from './NoteText';
@@ -37,5 +37,25 @@ describe('NoteText', () => {
     render(<NoteText blocks={blocks} onOpenLink={vi.fn()} />);
     const boxes = screen.getAllByRole('checkbox');
     expect(boxes.map((b) => b.getAttribute('aria-checked'))).toEqual(['false', 'true']);
+  });
+
+  it('shows a table with its header, rows and links', () => {
+    const onOpenLink = vi.fn();
+    const table: NoteBlock = {
+      kind: 'table',
+      align: ['left', 'right'],
+      header: [[t('Day')], [t('Who')]],
+      rows: [
+        [[t('Mon')], [{ kind: 'bold', children: [t('Eva')] }]],
+        [[t('Tue')], [{ kind: 'link', url: 'https://a.fr', children: [t('James')] }]],
+      ],
+    };
+    render(<NoteText blocks={[table]} onOpenLink={onOpenLink} />);
+    expect(screen.getByRole('table')).toBeTruthy();
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Day', 'Who']);
+    expect(screen.getAllByRole('cell').map((c) => c.textContent)).toEqual(['Mon', 'Eva', 'Tue', 'James']);
+    fireEvent.click(screen.getByRole('link', { name: 'James' }));
+    expect(onOpenLink).toHaveBeenCalledWith('https://a.fr');
   });
 });
