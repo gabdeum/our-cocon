@@ -80,6 +80,8 @@ describe('ReminderSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Every month' }));
     fireEvent.click(screen.getByRole('button', { name: /^Everyone/ }));
     expect(screen.getByText('Notifies everyone at 09:00 on the day.')).toBeTruthy();
+    // Spec 074: the notes come with their formatting toolbar.
+    expect(screen.getByRole('toolbar', { name: 'Formatting' })).toBeTruthy();
     fireEvent.change(screen.getByRole('textbox', { name: /Notes/ }), { target: { value: 'Cash only' } });
     await save();
     expect(p.onSave).toHaveBeenCalledWith({

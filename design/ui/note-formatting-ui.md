@@ -66,3 +66,4 @@ The three colours that aren't tokens are drawn with the closest ones (Gabriel, 2
 ## Changelog
 - 2026-11-27 (spec 073): built as `NoteText` and `NotesSection` (design/system/components/NoteText). The event page shows the whole note (no Show more, Gabriel).
 - 2026-11-27 (spec 073): tables render as a grid that scrolls sideways when wide (Gabriel).
+- 2026-11-27 (spec 074): the toolbar built as `NoteFormattingToolbar` (design/system/components/NoteFormattingToolbar); divider `#DCCB9C` → `line-handle`. On the web it sits between the "Notes" label and the field.

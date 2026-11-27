@@ -1556,6 +1556,19 @@ export const strings = {
     /** What screen readers call the notes, under their hairline. */
     label: 'Notes',
     linkFailed: "Couldn't open that link",
+    // Spec 074: the notes field's toolbar (OC-NoteEditor) and its "Add a link" sheet.
+    toolbar: { toolbar: 'Formatting', bold: 'Bold', link: 'Link', bullet: 'Bulleted list', number: 'Numbered list', check: 'Checklist', hideKeyboard: 'Hide keyboard' },
+    tooLong: 'Notes can be up to 5,000 characters.',
+    linkSheet: {
+      title: 'Add a link',
+      text: 'Text',
+      link: 'Link',
+      placeholder: 'https://',
+      invalid: 'Enter a web or email address',
+      cancel: 'Cancel',
+      add: 'Add link',
+      close: 'Close',
+    },
   },
   sync: {
     offline: "You're offline. You can read, but changes need a connection.",

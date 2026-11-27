@@ -1,5 +1,5 @@
-import { useId, useState } from 'react';
-import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { useId, useState, type Ref } from 'react';
+import { Pressable, TextInput, View, type TextInputInstance, type TextInputProps } from 'react-native';
 import { cn, focusRing } from '../cn';
 import { theme } from '../theme';
 import { useThemeColors } from '../ThemeProvider';
@@ -22,6 +22,8 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style' | 'placehol
   /** Inside a white card (OC-CalAddMore's surprise card): the input takes the page's cream. */
   onCard?: boolean;
   className?: string;
+  /** To focus it again or edit its text in place (the notes toolbar, spec 074). */
+  ref?: Ref<TextInputInstance>;
 }
 
 /** TextField README › Warning: the message under a field or a group of choices (the add sheet's Who). */
@@ -37,7 +39,7 @@ export function FieldWarning({ text, nativeID }: { text: string; nativeID?: stri
 }
 
 /** Labelled input with a hint and a friendly warning (TextField README). `multiline` is the textarea. */
-export function TextField({ label, optionalLabel, hint, counter, warning, size = 'md', labelHidden, multiline, onCard, className, onFocus, onBlur, ...props }: TextFieldProps) {
+export function TextField({ label, optionalLabel, hint, counter, warning, size = 'md', labelHidden, multiline, onCard, className, onFocus, onBlur, ref, ...props }: TextFieldProps) {
   const colors = useThemeColors();
   const [focused, setFocused] = useState(false);
   const hintId = useId();
@@ -62,6 +64,7 @@ export function TextField({ label, optionalLabel, hint, counter, warning, size =
         </Text>
       )}
       <TextInput
+        ref={ref}
         aria-label={label}
         aria-describedby={[warning ? warnId : null, hint ? hintId : null].filter(Boolean).join(' ') || undefined}
         aria-invalid={warning ? true : undefined}

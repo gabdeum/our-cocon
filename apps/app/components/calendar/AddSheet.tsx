@@ -48,7 +48,8 @@ const lostAsEvent = (f: ReminderForm) => f.rollover !== null;
 export function AddSheet({ mode = 'new', initialKind = 'event', switchable = true, event, reminder, slotTimes, tracker }: AddSheetProps) {
   const [kind, setKind] = useState<AddKind>(initialKind);
   const ev = useEventForm(event);
-  const rem = useReminderForm(reminder);
+  // The notes toolbar's `note_format_applied` goes through the sheet's tracker (spec 074).
+  const rem = useReminderForm({ ...reminder, tracker: reminder.tracker ?? tracker });
   // What each form held when it was last left (or filled), so only what changed since goes across.
   const left = useRef<Record<AddKind, Shared | null>>({ event: null, reminder: null });
 

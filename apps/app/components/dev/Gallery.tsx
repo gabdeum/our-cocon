@@ -96,6 +96,7 @@ import {
   DayChip,
   ChecklistAdd,
   ChecklistRow,
+  NoteFormattingToolbar,
   NoteText,
   NotesSection,
   ReminderRow,
@@ -182,6 +183,8 @@ const calendarChips = [
 const samplePhoto = require('../../assets/icon.png') as number;
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const toolbarLabels = { toolbar: 'Formatting', bold: 'Bold', link: 'Link', bullet: 'Bulleted list', number: 'Numbered list', check: 'Checklist', hideKeyboard: 'Hide keyboard' };
 
 export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack: () => void; onOpenSheetRoute: () => void; onOpenModalRoute: () => void }) {
   const [screenOn, setScreenOn] = useState(true);
@@ -431,6 +434,11 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
             ]}
           />
         </NotesSection>
+      </Section>
+
+      <Section group="Calendar" title="NoteFormattingToolbar (spec 074): Numbered list on, then with Hide keyboard">
+        <NoteFormattingToolbar active={{ number: true }} onPress={() => {}} labels={toolbarLabels} />
+        <NoteFormattingToolbar active={{ bold: true }} onPress={() => {}} onHideKeyboard={() => {}} labels={toolbarLabels} />
       </Section>
 
       <Section group="Reminders" title="CalCard, ReminderRow, ActionMenu (dots), DayChip (start), TimeField (spec 057)">

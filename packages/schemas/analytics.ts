@@ -343,6 +343,8 @@ export const events = {
   note_viewed_formatted: z.strictObject({ entity: NoteEntity, has_bold: z.boolean(), has_link: z.boolean(), has_list: z.boolean(), has_checklist: z.boolean(), has_table: z.boolean() }),
   note_link_opened: z.strictObject({ entity: NoteEntity, scheme: z.enum(['http', 'https', 'mailto']) }),
   note_parse_failed: z.strictObject({ entity: NoteEntity }),
+  // Spec 074: a notes toolbar button changed the text (never the text or a link's address).
+  note_format_applied: z.strictObject({ entity: NoteEntity, format: z.enum(['bold', 'link', 'bullet', 'number', 'check']), action: z.enum(['add', 'remove']) }),
 } as const;
 
 export type EventName = keyof typeof events;

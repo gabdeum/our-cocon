@@ -2,7 +2,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { addDays, formatTime, weekday, type WeekStartsOn } from '@cocon/calendar';
 import { loadReminder, suggestReminderTitles, type Db, type ReminderTitleSuggestion } from '@cocon/data';
-import { NOTES_MAX, type ReminderDraft, type Tracker } from '@cocon/schemas';
+import { type ReminderDraft, type Tracker } from '@cocon/schemas';
 import { BottomSheet, type BottomSheetProps, Button, Choice, DateGrid, DayChip, FieldWarning, Icon, Link, MemberPickerChip, PillRow, RowScroll, SuggestionPill, Switch, Text, TextField, TimeField, useSheetPresentation } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import { dateGridMonth, dayTiles, endsProblem, shiftMonth, type RepeatChoice } from '../../lib/event-form';
@@ -13,6 +13,7 @@ import { useToast } from '../../lib/toast';
 import { useTitleSuggestions } from '../../lib/use-title-suggestions';
 import { strings } from '../../strings/en';
 import { RepeatDetails } from '../calendar/RepeatDetails';
+import { NotesField } from '../shared/NotesField';
 
 const r = strings.reminders;
 const a = strings.calendar.add;
@@ -35,6 +36,8 @@ export interface ReminderSheetProps {
   onClose: () => void;
   /** Edit only: "Delete reminder" (the screen confirms a repeating one). */
   onDelete?: () => void;
+  /** For the notes toolbar's `note_format_applied` (spec 074). */
+  tracker?: Tracker;
   /** Past titles while typing a new one (as the event sheet's): left out, none are offered. */
   suggest?: { client: Pick<Db, 'from' | 'rpc'>; tz: string; tracker: Tracker };
 }
@@ -198,14 +201,14 @@ export function useReminderForm(p: ReminderSheetProps) {
           </View>
         </Section>
 
-        <TextField
+        <NotesField
           label={r.notesLabel}
           optionalLabel={r.optional}
           value={f.notes}
-          onChangeText={(notes) => set({ notes })}
-          maxLength={NOTES_MAX}
+          onChange={(notes) => set({ notes })}
           placeholder={r.notesPlaceholder}
-          multiline
+          entity="reminder"
+          tracker={p.tracker}
           autoFocus={p.focusNotes}
         />
 
