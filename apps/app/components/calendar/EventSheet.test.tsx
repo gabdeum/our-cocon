@@ -45,7 +45,6 @@ const movieNight = {
   members: ['everyone'],
   removed_members: [],
   exceptions: [],
-  checklist: [],
   surprise: null,
   created_by: null,
   updated_by: null,
@@ -285,24 +284,11 @@ describe('EventSheet (spec 041)', () => {
     expect(saved(props)).toMatchObject({ category: 'birthday', time_type: 'all_day', recurrence: { freq: 'yearly', ends: { type: 'after', count: 80 } } });
   });
 
-  it('adds and removes checklist items', async () => {
-    const props = await setup({ initial: { ...newDraft({}, TODAY), title: 'Picnic' } });
+  it('has no separate checklist: things to bring go in the notes (spec 075)', async () => {
+    await setup({ initial: { ...newDraft({}, TODAY), title: 'Picnic' } });
     fireEvent.click(button('More options'));
-    fireEvent.click(button('+ Add to checklist'));
-    const field = screen.getByLabelText('Checklist item');
-    fireEvent.change(field, { target: { value: 'Chips and dip' } });
-    act(() => {
-      fireEvent.blur(field);
-    });
-    fireEvent.click(button('+ Add to checklist'));
-    fireEvent.change(screen.getByLabelText('Checklist item'), { target: { value: 'Rug' } });
-    act(() => {
-      fireEvent.blur(screen.getByLabelText('Checklist item'));
-    });
-    fireEvent.click(button('Remove Chips and dip'));
-    fireEvent.click(button('Save'));
-    await flush();
-    expect(saved(props)).toMatchObject({ checklist: [{ label: 'Rug' }] });
+    expect(screen.queryByRole('button', { name: '+ Add to checklist' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Checklist' })).toBeTruthy();
   });
 
   it('an edit opens More options when anything in it is set', async () => {
@@ -311,12 +297,11 @@ describe('EventSheet (spec 041)', () => {
     expect((screen.getByLabelText('Where') as HTMLInputElement).value).toBe('Elm St');
   });
 
-  it('editing one occurrence: no repeat, reminder or checklist to change', async () => {
+  it('editing one occurrence: no repeat or reminder to change', async () => {
     await setup({ mode: 'edit', occurrenceOnly: true, initial: { ...newDraft({ slot: 'morning' }, TODAY), title: 'Swim', repeat: 'weekly' } });
     expect(screen.getByRole('heading', { name: 'Edit event' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Repeat' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Reminder' })).toBeNull();
-    expect(screen.queryByRole('button', { name: '+ Add to checklist' })).toBeNull();
     expect(screen.getByLabelText('Notes')).toBeTruthy();
     // Spec 074: the notes come with their formatting toolbar.
     expect(screen.getByRole('toolbar', { name: 'Formatting' })).toBeTruthy();
@@ -419,7 +404,7 @@ describe('Who can see it? (spec 043)', () => {
 
   // Spec 053 FR-001 to FR-003: past titles, and picking one fills the event like last time.
   it('suggests past titles while typing, and a pick fills it like last time but keeps the day', async () => {
-    const swim = { ...movieNight, title: 'Swim', category: 'sport', location: 'Aquatic centre', starts_on: '2026-10-24', ends_on: '2026-10-24', slots: ['morning'], members: [james.id], responsible_member_id: gabriel.id, reminder: 'hour_before', checklist: [{ id: '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a99', position: 0, label: 'Towel', done: true, done_by: null }] };
+    const swim = { ...movieNight, title: 'Swim', category: 'sport', location: 'Aquatic centre', starts_on: '2026-10-24', ends_on: '2026-10-24', slots: ['morning'], members: [james.id], responsible_member_id: gabriel.id, reminder: 'hour_before' };
     const titles = [
       { title: 'Swim', score: 3, last_event_id: swim.id, category: 'sport', location: 'Aquatic centre', time_type: 'slot', slots: ['morning'], start_time: null, end_time: null },
       { title: 'Swim', score: 1, last_event_id: '7d1e2f3a-4b5c-4d6e-8f70-112233445566', category: 'sport', location: null, time_type: 'custom', slots: [], start_time: '17:30', end_time: '18:30' },
@@ -438,7 +423,6 @@ describe('Who can see it? (spec 043)', () => {
     fireEvent.click(button('Save'));
     await flush();
     expect(saved(props)).toMatchObject({ title: 'Swim', starts_on: TODAY, category: 'sport', location: 'Aquatic centre', slots: ['morning'], members: [james.id], responsible_member_id: gabriel.id, reminder: 'hour_before' });
-    expect(saved(props).checklist).toEqual([{ label: 'Towel' }]);
     expect((props.onSave as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]).toMatchObject({ usedSuggestion: true });
   });
 

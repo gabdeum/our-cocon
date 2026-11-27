@@ -94,8 +94,6 @@ import {
   Toast,
   SlotChip,
   DayChip,
-  ChecklistAdd,
-  ChecklistRow,
   NoteFormattingToolbar,
   NoteText,
   NotesSection,
@@ -364,11 +362,6 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         />
         <DisclosureButton label="More options" sub="Place, repeat, reminder…" expanded={false} onPress={noop} />
         <WeekdayPicker label="On" letters={['S', 'M', 'T', 'W', 'T', 'F', 'S']} names={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} value={[6]} onToggle={noop} />
-        <View className="rounded-lg bg-surface-card px-14 py-4">
-          <ChecklistRow label="Chips and dip" done={false} remove={{ label: 'Remove Chips and dip', onPress: noop }} />
-          <ChecklistRow label="Cake" done onToggle={noop} />
-          <ChecklistAdd label="+ Add to checklist" onPress={noop} />
-        </View>
       </Section>
 
       <Section group="Calendar" title="DateGrid (spec 041)">
@@ -386,7 +379,7 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
         />
       </Section>
 
-      <Section group="Calendar" title="Event page: MemberBadge, IconRow, ChecklistRow (spec 042)">
+      <Section group="Calendar" title="Event page: MemberBadge, IconRow (spec 042)">
         <View className="flex-row gap-8">
           <MemberBadge name="James" initial="J" color="sky" />
           <MemberBadge name="Everyone" initial="All" color="everyone" />
@@ -399,16 +392,13 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <IconRow icon="car" title="Gabriel takes James" />
           <IconRow icon="bell" title="1 hour before" sub="Shows on Home for Gabriel" last />
         </ListGroup>
-        <ListGroup inset>
-          <ChecklistRow label="Diaper bag" done onToggle={noop} />
-          <ChecklistRow label="Bottle (offline)" done={false} onToggle={noop} disabled last />
-        </ListGroup>
       </Section>
 
-      <Section group="Calendar" title="Notes: NoteText, NotesSection (spec 073)">
+      <Section group="Calendar" title="Notes: NoteText, NotesSection (spec 073; checklist ticks, spec 075)">
         <NotesSection label="Notes">
           <NoteText
             onOpenLink={noop}
+            onToggleCheck={noop}
             blocks={[
               { kind: 'paragraph', spans: [{ kind: 'bold', children: [{ kind: 'text', text: '40 nights' }] }, { kind: 'text', text: '. Arriving December 1 at 15:00, ' }, { kind: 'italic', children: [{ kind: 'text', text: 'leaving January 10' }] }, { kind: 'text', text: '. Info on ' }, { kind: 'link', url: 'https://airbnb.com/help', children: [{ kind: 'text', text: 'airbnb.com/help' }] }, { kind: 'text', text: '.' }] },
               { kind: 'boldLine', spans: [{ kind: 'text', text: 'Bold line (also how a # heading shows)' }] },

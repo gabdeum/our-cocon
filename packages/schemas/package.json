@@ -14,6 +14,7 @@
     "./family": "./family.ts",
     "./groceries": "./groceries.ts",
     "./ingredient-text": "./ingredient-text.ts",
+    "./notes": "./notes.ts",
     "./notifications": "./notifications.ts",
     "./recipes": "./recipes.ts",
     "./reminders": "./reminders.ts",

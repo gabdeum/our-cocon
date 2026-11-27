@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { router, type Href } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { loadReminderHistory, type PlacedReminder } from '@cocon/data';
+import { loadReminder, loadReminderHistory, setReminderNotes, type PlacedReminder } from '@cocon/data';
 import type { ReminderActions, ReminderContext } from '../../lib/reminder-actions';
 import { reminderHistoryKey } from '../../lib/reminders';
 import { useOnline } from '../../lib/online';
@@ -33,6 +33,12 @@ export function ReminderDrawerHost({ open, ctx, actions, onClose }: { open: Open
       weekStartsOn={ctx.weekStartsOn}
       readOnly={!online}
       tracker={ctx.tracker}
+      // Spec 075: ticks save the notes; the lists refetch, so the drawer opens on them next time.
+      noteChecklist={{
+        save: (from, to) => setReminderNotes(ctx.client, row.id, from, to),
+        reload: async () => (await loadReminder(ctx.client, row.id)).notes,
+        onSaved: actions.refresh,
+      }}
       onClose={onClose}
       onEdit={(focus) => {
         onClose();

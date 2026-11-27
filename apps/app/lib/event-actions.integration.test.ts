@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { addDays, expand, todayIn } from '@cocon/calendar';
-import { loadEvent, loadEvents, saveEvent, saveException, type StoredEvent } from '@cocon/data';
+import { loadEvent, loadEvents, saveEvent, saveException, setEventNotes, type StoredEvent } from '@cocon/data';
 import type { Database } from '@cocon/schemas';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
 import type { Member } from './session';
@@ -77,7 +77,7 @@ describe.skipIf(!local)('event page actions against local Supabase', () => {
       slots: ['morning'],
       recurrence: { freq: 'weekly', weekdays: [6], ends: { type: 'never' } },
       members: [evaMember],
-      checklist: [{ label: 'Shaker' }],
+      notes: 'Bring:\n- [ ] Shaker',
     });
     await saveException(eva, familyId, id, { occurrence_date: '2026-10-31', override: { slots: ['afternoon'] } });
     return id;
@@ -123,15 +123,14 @@ describe.skipIf(!local)('event page actions against local Supabase', () => {
 
   it('FR-003 Duplicate copies one date as a one-off with its checklist unticked; Undo removes it for good', async () => {
     const id = await music();
+    expect(await setEventNotes(gabriel, { eventId: id, date: '2026-10-03', from: 'Bring:\n- [ ] Shaker', to: 'Bring:\n- [x] Shaker' })).toBe('saved');
     const series = await load(id);
-    const item = series.checklist?.[0]?.id ?? '';
-    await gabriel.from('event_checklist_items').update({ done: true }).eq('id', item);
     const oct31 = expand(await load(id), '2026-10-31', '2026-10-31', series.exceptions)[0];
     if (!oct31) throw new Error('no Oct 31');
     const copy = await duplicateEvent(gabriel, duplicateInput({ ...series, ...oct31, category: null }, '2026-11-05', members));
     const made = await load(copy.id);
     expect(made).toMatchObject({ title: 'Baby music class', starts_on: '2026-11-05', ends_on: '2026-11-05', slots: ['afternoon'], recurrence: null, members: [evaMember] });
-    expect(made.checklist?.map((c) => [c.label, c.done])).toEqual([['Shaker', false]]);
+    expect(made.notes).toBe('Bring:\n- [ ] Shaker');
     await copy.undo();
     expect(await loadEvent(gabriel, copy.id)).toBeNull();
   });

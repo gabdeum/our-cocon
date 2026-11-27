@@ -74,7 +74,6 @@ function stored(over: Record<string, unknown> = {}): StoredEvent {
     members: ['everyone'],
     removed_members: [],
     exceptions: [],
-    checklist: [],
     surprise: null,
     created_by: null,
     updated_by: null,
@@ -257,13 +256,12 @@ describe('what Save sends (FR-005)', () => {
       responsible_member_id: null,
       visibility: 'family',
       surprise: null,
-      checklist: [],
     });
   });
 
   it('US2: weekly on Saturday from the next Saturday, who takes James, the place', () => {
     const input = toInput(
-      draft({ who: [ME, james.id], repeat: 'weekly', weekdays: [6], location: 'Little Notes studio', responsible: ME, time: slots('morning'), checklist: [{ label: ' Shaker ' }, { label: ' ' }] }),
+      draft({ who: [ME, james.id], repeat: 'weekly', weekdays: [6], location: 'Little Notes studio', responsible: ME, time: slots('morning') }),
       members,
     );
     expect(input).toMatchObject({
@@ -273,7 +271,6 @@ describe('what Save sends (FR-005)', () => {
       members: [ME, james.id],
       responsible_member_id: ME,
       location: 'Little Notes studio',
-      checklist: [{ label: 'Shaker' }],
     });
   });
 
@@ -311,7 +308,6 @@ describe('editing (FR-008)', () => {
     recurrence: { freq: 'weekly', weekdays: [3], ends: { type: 'after', count: 10 } },
     members: [ME],
     reminder: 'hour_before',
-    checklist: [{ id: '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a13', position: 0, label: 'Chips', done: true, done_by: null }],
   });
 
   it('fills the sheet from the event', () => {
@@ -325,19 +321,18 @@ describe('editing (FR-008)', () => {
       weekdays: [3],
       ends: { type: 'after', count: '10' },
       reminder: 'hour_before',
-      checklist: [{ id: '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a13', label: 'Chips' }],
     });
     expect(draftFromEvent(stored({ time_type: 'custom', slots: [], start_time: '19:00', end_time: '20:00' })).time).toEqual({ kind: 'custom', start: '19:00', end: '20:00' });
     expect(draftFromEvent(stored({ time_type: 'all_day', slots: [], recurrence: { freq: 'yearly', ends: { type: 'on', date: '2030-10-28' } } }))).toMatchObject({
       time: { kind: 'all_day' },
       ends: { type: 'on', date: '2030-10-28' },
     });
-    expect(draftFromEvent(stored({ reminder: null, checklist: null })).checklist).toEqual([]);
+    expect(draftFromEvent(stored({ reminder: null })).reminder).toBe('none');
   });
 
   it('opens More options when anything in it is set', () => {
     expect(hasMoreOptions(draft())).toBe(false);
-    for (const over of [{ category: 'sport' as const }, { location: 'Gym' }, { responsible: ME }, { repeat: 'daily' as const }, { reminder: 'morning_of' as const }, { notes: 'x' }, { checklist: [{ label: 'x' }] }]) {
+    for (const over of [{ category: 'sport' as const }, { location: 'Gym' }, { responsible: ME }, { repeat: 'daily' as const }, { reminder: 'morning_of' as const }, { notes: 'x' }]) {
       expect(hasMoreOptions(draft(over))).toBe(true);
     }
   });
@@ -345,8 +340,8 @@ describe('editing (FR-008)', () => {
   it('names the fields that changed, never their values', () => {
     const before = toInput(draftFromEvent(event), members);
     expect(changedFields(before, before)).toEqual([]);
-    const after = toInput({ ...draftFromEvent(event), title: 'Film night', time: slots('afternoon', 'evening'), who: ['everyone'], repeat: 'never', checklist: [] }, members);
-    expect(changedFields(before, after)).toEqual(['title', 'time', 'who', 'repeat', 'checklist']);
+    const after = toInput({ ...draftFromEvent(event), title: 'Film night', time: slots('afternoon', 'evening'), who: ['everyone'], repeat: 'never', notes: 'Snacks\n- [ ] Chips' }, members);
+    expect(changedFields(before, after)).toEqual(['title', 'notes', 'time', 'who', 'repeat']);
   });
 
   it('"This event only" replaces only what changed, and what an occurrence can carry', () => {
@@ -381,6 +376,12 @@ describe('editing (FR-008)', () => {
     expect(changedEnd?.input.recurrence?.ends).toEqual({ type: 'never' });
     expect(futureSplit(series, TODAY, toInput({ ...d, repeat: 'never' }, members))?.input.recurrence).toBeNull();
     expect(futureSplit(series, '2026-10-07', toInput(d, members))).toBeNull();
+  });
+
+  it('"All future events" starts the new series with its checklist unticked (spec 075 FR-008)', () => {
+    const series = stored({ starts_on: '2026-10-07', ends_on: '2026-10-07', notes: 'Bring:\n- [x] Towel\n- [ ] Goggles', recurrence: { freq: 'weekly', weekdays: [3], ends: { type: 'never' } } });
+    const split = futureSplit(series, TODAY, toInput(draftFromEvent(series, TODAY), members));
+    expect(split?.input.notes).toBe('Bring:\n- [ ] Towel\n- [ ] Goggles');
   });
 
   it('asks which ones, in the repeat’s words', () => {
@@ -513,7 +514,8 @@ describe('fromSuggestion', () => {
   it('copies like last time, keeping the day, the length and what was touched', () => {
     const filled = fromSuggestion({ ...draft, location: 'Typed place' }, babyMusic({ ends_on: '2026-11-02' }), new Set(['location']));
     expect(filled).toMatchObject({ date: '2026-11-12', span: 0, category: 'social', location: 'Typed place', time: { kind: 'slot', slots: ['morning'] } });
-    expect(filled.checklist.every((c) => c.id === undefined)).toBe(true);
+    // Its notes aren't copied (spec 075: they hold its checklist now).
+    expect(filled.notes).toBe('');
   });
   it('a surprise, or an event no longer seen in full, fills nothing', () => {
     expect(fromSuggestion(draft, babyMusic({ visibility: 'surprise' }), new Set())).toBe(draft);

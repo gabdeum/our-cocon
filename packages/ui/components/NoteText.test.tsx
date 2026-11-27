@@ -1,4 +1,5 @@
-// NoteText (spec 073): every block kind renders, links call back, checklist items read as checkboxes, tables as tables.
+// NoteText (spec 073): every block kind renders, links call back, checklist items read as checkboxes
+// (and tick through the caller, spec 075), tables as tables.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { NoteText, type NoteBlock } from './NoteText';
@@ -37,6 +38,16 @@ describe('NoteText', () => {
     render(<NoteText blocks={blocks} onOpenLink={vi.fn()} />);
     const boxes = screen.getAllByRole('checkbox');
     expect(boxes.map((b) => b.getAttribute('aria-checked'))).toEqual(['false', 'true']);
+  });
+
+  it('ticks a checklist row through the caller with its line, unless it is off (spec 075)', () => {
+    const onToggleCheck = vi.fn();
+    const { rerender } = render(<NoteText blocks={blocks} onOpenLink={vi.fn()} onToggleCheck={onToggleCheck} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Eggs' }));
+    expect(onToggleCheck).toHaveBeenCalledWith(7);
+    rerender(<NoteText blocks={blocks} onOpenLink={vi.fn()} onToggleCheck={onToggleCheck} checksDisabled />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Milk' }));
+    expect(onToggleCheck).toHaveBeenCalledTimes(1);
   });
 
   it('shows a table with its header, rows and links', () => {

@@ -61,9 +61,11 @@ The three colours that aren't tokens are drawn with the closest ones (Gabriel, 2
 ## Copy
 
 - A link that can't open: warn toast "Couldn't open that link".
+- Ticking a checklist item in a drawer (spec 075): the box changes at once. Save failed: it goes back, warn toast "Couldn't save. Try again.". The note changed meanwhile and that line is no longer the same item: the latest note shows, warn toast "This note changed. Showing the latest version.". Offline: the items show but don't tick.
 - Screen readers call the notes "Notes" (the region under the hairline); checklist items are checkboxes, ticked or not; a table is a table, with column headers.
 
 ## Changelog
 - 2026-11-27 (spec 073): built as `NoteText` and `NotesSection` (design/system/components/NoteText). The event page shows the whole note (no Show more, Gabriel).
 - 2026-11-27 (spec 073): tables render as a grid that scrolls sideways when wide (Gabriel).
 - 2026-11-27 (spec 074): the toolbar built as `NoteFormattingToolbar` (design/system/components/NoteFormattingToolbar); divider `#DCCB9C` → `line-handle`. On the web it sits between the "Notes" label and the field.
+- 2026-11-27 (spec 075): checklist items tick in the event page and reminder drawer (`onToggleCheck`); each row is a list item holding its checkbox. The event's "Bring" list became a checklist in its notes.

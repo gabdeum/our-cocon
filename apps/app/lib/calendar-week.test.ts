@@ -36,7 +36,6 @@ function ev(fields: Partial<StoredEvent>): StoredEvent {
     surprise: null,
     removed_members: [],
     exceptions: [],
-    checklist: [],
     created_by: null,
     updated_by: null,
     source: 'app',

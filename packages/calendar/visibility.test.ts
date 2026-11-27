@@ -38,9 +38,9 @@ describe('viewFor (FR-009)', () => {
     });
 
     it('never passes on fields a caller adds', () => {
-      const withChecklist = { ...therapy, checklist: ['Insurance card'], source: 'Claude' };
-      expect(viewFor(withChecklist, GABRIEL)).not.toHaveProperty('checklist');
-      expect(viewFor(withChecklist, GABRIEL)).not.toHaveProperty('source');
+      const withExtra = { ...therapy, label: 'Insurance card', source: 'Claude' };
+      expect(viewFor(withExtra, GABRIEL)).not.toHaveProperty('label');
+      expect(viewFor(withExtra, GABRIEL)).not.toHaveProperty('source');
     });
 
     it('hides an occurrence’s changed title too', () => {

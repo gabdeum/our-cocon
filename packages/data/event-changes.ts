@@ -1,5 +1,5 @@
 import { addDays, daysBetween, occurrenceOn, sortSlots, splitSeries, weekday } from '@cocon/calendar';
-import type { EventField } from '@cocon/schemas';
+import { untickChecklist, type EventField } from '@cocon/schemas';
 import type { EventInput, EventOverride, Recurrence } from '@cocon/schemas/calendar';
 import type { Db } from './client';
 import { deleteEvent, removeException, restoreEvent, saveEvent, saveException, splitEvent, type StoredEvent } from './events';
@@ -11,7 +11,7 @@ import { deleteEvent, removeException, restoreEvent, saveEvent, saveException, s
 
 /**
  * The occurrence on the series date `date` (an event route's `?date=`), merged into the event so it
- * keeps the event's id, checklist and exceptions; null when that date isn't one of the event's,
+ * keeps the event's id and exceptions; null when that date isn't one of the event's,
  * is cancelled, or the event can't be placed. Spec 042 FR-001, spec 041's edit, spec 044's tools.
  */
 export function eventOccurrence(event: StoredEvent, date: string): StoredEvent | null {
@@ -50,7 +50,6 @@ export function inputFromEvent(event: StoredEvent, date: string = event.starts_o
     responsible_member_id: event.responsible_member_id ?? null,
     visibility: event.visibility,
     surprise: event.visibility === 'surprise' ? (event.surprise ?? null) : null,
-    checklist: (event.checklist ?? []).map((c) => ({ id: c.id, label: c.label })),
   };
 }
 
@@ -80,7 +79,6 @@ export function changedFields(before: EventInput, after: EventInput): EventField
     ['responsible', before.responsible_member_id ?? null, after.responsible_member_id ?? null],
     ['repeat', before.recurrence ?? null, after.recurrence ?? null],
     ['reminder', before.reminder ?? 'none', after.reminder ?? 'none'],
-    ['checklist', before.checklist?.map((c) => c.label) ?? [], after.checklist?.map((c) => c.label) ?? []],
   ];
   return fields.filter(([, x, y]) => !same(x, y)).map(([name]) => name);
 }
@@ -102,13 +100,14 @@ export function overrideFor(before: EventInput, after: EventInput): EventOverrid
 
 /**
  * "All future events" from the occurrence `from` (its series date): the old series' new repeat and
- * the new series, which keeps what's left of the end. Null on the series' first date: edit it all.
+ * the new series, which keeps what's left of the end and starts its notes' checklist unticked (spec
+ * 075 FR-008). Null on the series' first date: edit it all.
  */
 export function futureSplit(event: StoredEvent, from: string, after: EventInput): { before: Recurrence; input: EventInput } | null {
   const split = splitSeries(event, from);
   if (!split) return null;
   const recurrence = after.recurrence ? { ...after.recurrence, ends: after.recurrence.ends.type === event.recurrence?.ends.type && same(after.recurrence.ends, event.recurrence.ends) ? split.ends : after.recurrence.ends } : null;
-  return { before: split.before, input: { ...after, recurrence } };
+  return { before: split.before, input: { ...after, recurrence, notes: after.notes ? untickChecklist(after.notes) : after.notes } };
 }
 
 /** Which dates an edit changes: one date of a series, that date and after, or the whole event. */

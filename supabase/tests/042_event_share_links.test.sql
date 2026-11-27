@@ -55,14 +55,14 @@ insert into ids select 'gabriel', id from public.members where user_id = '000000
 insert into ids select 'eva', id from public.members where user_id = '00000000-0000-0000-0000-00000000042b';
 
 -- Eva's weekly music class for James and Eva, starting in a week, with notes, a reminder, a driver
--- and a checklist; a one-off swim that ended last week; a private and a surprise event.
+-- and a checklist in the notes; a one-off swim that ended last week; a private and a surprise event.
 select pg_temp.login('00000000-0000-0000-0000-00000000042b');
 insert into ids select 'music', public.save_event(
-  jsonb_build_object('title', 'Baby music class', 'location', 'Little Notes studio', 'notes', 'Gate code 1234',
+  jsonb_build_object('title', 'Baby music class', 'location', 'Little Notes studio', 'notes', E'Gate code 1234\n\n- [ ] Shaker',
     'starts_on', pg_temp.day(7), 'ends_on', pg_temp.day(7), 'time_type', 'slot', 'slots', jsonb_build_array('morning'),
     'reminder', 'hour_before', 'responsible_member_id', pg_temp.id('gabriel'),
     'recurrence', '{"freq":"weekly","ends":{"type":"never"}}'::jsonb),
-  jsonb_build_array(pg_temp.id('james'), pg_temp.id('eva'), 'others'), null, null, '[{"label":"Shaker"}]');
+  jsonb_build_array(pg_temp.id('james'), pg_temp.id('eva'), 'others'));
 insert into ids select 'swim', public.save_event(
   jsonb_build_object('title', 'Swim', 'starts_on', pg_temp.day(-7), 'ends_on', pg_temp.day(-7), 'time_type', 'all_day'),
   jsonb_build_array('everyone'));

@@ -32,7 +32,6 @@ export function lostAsReminder(d: EventDraft): string[] {
     d.location.trim() ? lost.place : null,
     d.category ? lost.type : null,
     d.responsible ? lost.who_takes : null,
-    d.checklist.length ? lost.checklist : null,
   ];
   return parts.filter((x): x is string => x !== null);
 }

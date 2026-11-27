@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { cn } from '../cn';
 import { theme } from '../theme';
 import { Icon } from './Icon';
@@ -28,6 +28,15 @@ export interface NoteTextProps {
   blocks: readonly NoteBlock[];
   /** A link was tapped: the caller opens it in the system browser. */
   onOpenLink: (url: string) => void;
+  /** Spec 075: a checklist row was tapped (its `line`). Left out: the rows can't be tapped. */
+  onToggleCheck?: (line: number) => void;
+  /** The rows show as they are but can't be tapped (offline). */
+  checksDisabled?: boolean;
+}
+
+interface CheckTap {
+  onToggleCheck?: (line: number) => void;
+  checksDisabled?: boolean;
 }
 
 /** Nunito's italic files: `Nunito_600SemiBold_Italic` (loaded by the app beside the upright ones). */
@@ -115,7 +124,7 @@ function Table({ block, onOpenLink }: { block: Extract<NoteBlock, { kind: 'table
   );
 }
 
-function Item({ block, onOpenLink }: { block: NoteBlock; onOpenLink: (url: string) => void }) {
+function Item({ block, onOpenLink, tap }: { block: NoteBlock; onOpenLink: (url: string) => void; tap?: CheckTap }) {
   switch (block.kind) {
     case 'table':
       return <Table block={block} onOpenLink={onOpenLink} />;
@@ -137,15 +146,40 @@ function Item({ block, onOpenLink }: { block: NoteBlock; onOpenLink: (url: strin
           <Line spans={block.spans} weight="600" lineHeight={1.45} onOpenLink={onOpenLink} className="min-w-0 flex-1" />
         </View>
       );
-    case 'check':
-      return (
-        <View role="checkbox" aria-checked={block.done} className="min-h-[44px] flex-row items-center gap-12">
+    case 'check': {
+      const row = (
+        <>
           <View aria-hidden className={cn('h-[24px] w-[24px] flex-none items-center justify-center rounded-[7px]', block.done ? 'bg-olive' : 'border-[2.5px] border-line-dashed bg-surface-card')}>
             {block.done ? <Icon name="check" size={15} color="onOlive" /> : null}
           </View>
           <Line spans={block.spans} weight="700" lineHeight={1.4} onOpenLink={onOpenLink} strike={block.done} className="min-w-0 flex-1" />
+        </>
+      );
+      const { onToggleCheck } = tap ?? {};
+      // A list item holding the checkbox, so screen readers count the list's items.
+      return (
+        <View role="listitem">
+          {onToggleCheck ? (
+            // The whole row is the tap target (spec 075 FR-001).
+            <Pressable
+              role="checkbox"
+              aria-checked={block.done}
+              aria-label={plain(block.spans)}
+              aria-disabled={tap?.checksDisabled}
+              disabled={tap?.checksDisabled}
+              onPress={() => onToggleCheck(block.line)}
+              className="min-h-[44px] flex-row items-center gap-12"
+            >
+              {row}
+            </Pressable>
+          ) : (
+            <View role="checkbox" aria-checked={block.done} className="min-h-[44px] flex-row items-center gap-12">
+              {row}
+            </View>
+          )}
         </View>
       );
+    }
     case 'boldLine':
       return <Line spans={block.spans} weight="900" lineHeight={1.5} onOpenLink={onOpenLink} className="mt-4" />;
     default:
@@ -171,8 +205,10 @@ function groups(blocks: readonly NoteBlock[]): Group[] {
 /**
  * NoteText README (spec 073): a note's formatted blocks, from native Text and View only. Bold,
  * italic and links inline; bulleted, numbered and checklist items; headings as a bold line; tables.
+ * Checklist rows can be ticked when the caller passes `onToggleCheck` (spec 075).
  */
-export function NoteText({ blocks, onOpenLink }: NoteTextProps) {
+export function NoteText({ blocks, onOpenLink, onToggleCheck, checksDisabled }: NoteTextProps) {
+  const tap = { onToggleCheck, checksDisabled };
   return (
     <View className="gap-12">
       {groups(blocks).map((g, i) =>
@@ -181,7 +217,7 @@ export function NoteText({ blocks, onOpenLink }: NoteTextProps) {
         ) : (
           <View key={i} role="list" className={g.list === 'check' ? undefined : 'gap-8'}>
             {g.items.map((b, j) => (
-              <Item key={j} block={b} onOpenLink={onOpenLink} />
+              <Item key={j} block={b} onOpenLink={onOpenLink} tap={tap} />
             ))}
           </View>
         ),

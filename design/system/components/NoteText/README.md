@@ -15,8 +15,8 @@ Reference: `design/screens/OC-NoteMarkdown.dc.html` and `design/ui/note-formatti
 | Link | olive 15/800, underlined, `role="link"`; the caller opens it |
 | Bulleted item | 7 px `member-honey-edge` dot, 8 from the top, 10 before the text (15/600, 1.45); items 8 apart |
 | Numbered item | 22 px `surface-soft` disc, number 12/900; 10 before the text; items 8 apart |
-| Checklist item | min 44 row, gap 12; box 24, radius 7: off 2.5 px `line-dashed` on `surface-card`, on olive with a white ✓; text 15/700 at 1.4, done = strike-through + `ink-soft`; `role="checkbox"` with its state |
-| Lists | `role="list"` / `listitem`; dots and numbers hidden from screen readers |
+| Checklist item | min 44 row, gap 12; box 24, radius 7: off 2.5 px `line-dashed` on `surface-card`, on olive with a white ✓; text 15/700 at 1.4, done = strike-through + `ink-soft`; `role="checkbox"` with its state; the whole row is the tap target when the caller passes `onToggleCheck`, named by its text |
+| Lists | `role="list"` / `listitem` (a checklist item is a list item holding its checkbox); dots and numbers hidden from screen readers |
 | Table | 1.5 px `line-strong` border and lines, radius 12; header on `surface-soft`, 15/900; cells 15/600 at 1.4, padding 8 × 12, aligned per column; column width = longest cell (64–240, text wraps past it); sideways `ScrollView` when wider than the note; `role="table"`, `row`, `columnheader`, `cell` |
 
 ## Rules
@@ -26,5 +26,6 @@ Reference: `design/screens/OC-NoteMarkdown.dc.html` and `design/ui/note-formatti
 - Anything the parser doesn't know (code, quotes, pipe lines without a separator) arrives as a plain paragraph and shows as typed.
 - The parser sends no table over 12 columns or 600 cells (it shows as typed).
 - Column widths come from the cells' text length, not from measuring, so rows line up the same on iOS and the web.
-- Checklist items are not tappable yet (spec 075 adds ticking).
+- Checklist items tick through `onToggleCheck(line)` (spec 075): the caller rewrites that line of the note and saves it. Without it they only show. `checksDisabled` keeps them as they are (offline).
+- It replaces `ChecklistRow` (the event's old "Bring" list, retired by spec 075).
 - The handoff's `#EADDB8` hairline, `#C99A1E` dot and `#6B5F43` ticked text are drawn with the closest tokens (`line-strong`, `member-honey-edge`, `ink-soft`).

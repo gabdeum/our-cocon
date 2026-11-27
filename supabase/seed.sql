@@ -287,12 +287,12 @@ insert into public.events (id, family_id, title, category, location, notes, star
 select e.id::uuid, 'c0c0f000-0000-4000-8000-000000000001', e.title, e.category, e.location, e.notes, e.day, e.day, e.time_type, e.slots, e.start_time, e.end_time,
   e.recurrence::jsonb, e.responsible::uuid, e.visibility, e.author::uuid, e.author::uuid, e.source
 from (values
-  ('c0c0d000-0000-4000-8000-000000000001', 'Football', 'sport', 'Riverside park', E'Bring:\n- Water bottle\n- Shin pads\n\n| Date | Opponent | Kick-off | Meeting point |\n|---|---|:-:|---|\n| Sat 5 | Riverside FC | 10:00 | Car park by the north gate |\n| Sat 12 | **Hill Rovers** | 11:30 | At the club |\n\nFixtures on https://example.com/club/fixtures.',
+  ('c0c0d000-0000-4000-8000-000000000001', 'Football', 'sport', 'Riverside park', E'Bring:\n- [ ] Water bottle\n- [ ] Shin pads\n\n| Date | Opponent | Kick-off | Meeting point |\n|---|---|:-:|---|\n| Sat 5 | Riverside FC | 10:00 | Car park by the north gate |\n| Sat 12 | **Hill Rovers** | 11:30 | At the club |\n\nFixtures on https://example.com/club/fixtures.',
     current_date + (6 - extract(dow from current_date)::integer), 'slot', array['morning'], null, null,
     '{"freq":"weekly","ends":{"type":"never"}}', 'c0c0b000-0000-4000-8000-00000000000a', 'family', 'c0c0a000-0000-4000-8000-00000000000a', 'claude'),
   ('c0c0d000-0000-4000-8000-000000000002', 'Dentist', 'health', 'Rue Oberkampf 12', 'Ask about the retainer',
     current_date + 2, 'custom', array[]::text[], '14:30', '15:30', null, null, 'private', 'c0c0a000-0000-4000-8000-00000000000c', 'app'),
-  ('c0c0d000-0000-4000-8000-000000000003', 'Alex''s surprise dinner', 'social', 'Café Lalo', 'Window table booked',
+  ('c0c0d000-0000-4000-8000-000000000003', 'Alex''s surprise dinner', 'social', 'Café Lalo', E'Window table booked\n\n- [ ] Cake',
     current_date + 5, 'slot', array['evening'], null, null, null, null, 'surprise', 'c0c0a000-0000-4000-8000-00000000000a', 'app'),
   ('c0c0d000-0000-4000-8000-000000000004', 'Alex''s birthday', 'birthday', null, null,
     current_date + 3, 'all_day', array[]::text[], null, null, '{"freq":"yearly","ends":{"type":"never"}}', null, 'family', 'c0c0a000-0000-4000-8000-00000000000b', 'app'),
@@ -313,12 +313,6 @@ from (values
 insert into public.event_surprise (family_id, event_id, hidden_from, cover_title, cover_note, created_by, updated_by)
 values ('c0c0f000-0000-4000-8000-000000000001', 'c0c0d000-0000-4000-8000-000000000003', array['c0c0b000-0000-4000-8000-00000000000b'::uuid],
   'Dinner out', 'Meet at Café Lalo at 19:30. Dress nice!', 'c0c0a000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a');
-
-insert into public.event_checklist_items (family_id, event_id, position, label, created_by, updated_by)
-values
-  ('c0c0f000-0000-4000-8000-000000000001', 'c0c0d000-0000-4000-8000-000000000001', 0, 'Water bottle', 'c0c0a000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a'),
-  ('c0c0f000-0000-4000-8000-000000000001', 'c0c0d000-0000-4000-8000-000000000001', 1, 'Shin pads', 'c0c0a000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a'),
-  ('c0c0f000-0000-4000-8000-000000000001', 'c0c0d000-0000-4000-8000-000000000003', 0, 'Cake', 'c0c0a000-0000-4000-8000-00000000000a', 'c0c0a000-0000-4000-8000-00000000000a');
 
 -- Spec 056: reminders, placed from today in Paris. Bins every week, last one missed and this
 -- one 2 days late; the daycare today at 15:00; the plants today, any time; the dentist tomorrow;

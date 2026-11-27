@@ -2,7 +2,7 @@
 -- token, live tables (FR-003), soft delete, calendar settings, and removing a member without the
 -- app (032-later L78).
 begin;
-select plan(91);
+select plan(81);
 
 -- As `r` (null: signed out) with the claims an access token carries (`client`: an assistant's).
 create function pg_temp.login(uid uuid, r text default 'authenticated', client text default null) returns void language plpgsql as $$
@@ -35,10 +35,10 @@ create temp table ids (name text primary key, id uuid);
 create temp table tokens (name text primary key, token text);
 grant all on ids, tokens to public;
 -- save_event with the event first, as the tests read best.
-create function pg_temp.save(id uuid, e jsonb, m jsonb, s jsonb default null, c jsonb default null) returns uuid language sql as $$
-  select public.save_event(e, m, id, s, c)
+create function pg_temp.save(id uuid, e jsonb, m jsonb, s jsonb default null) returns uuid language sql as $$
+  select public.save_event(e, m, id, s)
 $$;
-grant execute on function pg_temp.save(uuid, jsonb, jsonb, jsonb, jsonb) to public;
+grant execute on function pg_temp.save(uuid, jsonb, jsonb, jsonb) to public;
 create function pg_temp.id(n text) returns uuid language sql as $$ select id from ids where name = n $$;
 grant execute on function pg_temp.id(text) to public;
 
@@ -65,15 +65,14 @@ insert into ids select 'gabriel', id from public.members where user_id = '000000
 insert into ids select 'eva', id from public.members where user_id = '00000000-0000-0000-0000-00000000035b';
 insert into ids select 'alex', id from public.members where user_id = '00000000-0000-0000-0000-00000000035c';
 
--- Eva's private yoga, with a place, notes, a checklist and one moved occurrence.
+-- Eva's private yoga, with a place, notes and one moved occurrence.
 select pg_temp.login('00000000-0000-0000-0000-00000000035b');
 insert into ids select 'yoga', pg_temp.save(null,
   '{"title":"Yoga","category":"sport","location":"Studio 4","notes":"Mat","starts_on":"2026-11-03","ends_on":"2026-11-03","time_type":"slot","slots":["evening"],"recurrence":{"freq":"weekly","ends":{"type":"never"}},"visibility":"private"}',
-  jsonb_build_array(pg_temp.id('eva')), null, '[{"label":"Towel"}]');
+  jsonb_build_array(pg_temp.id('eva')));
 insert into public.event_exceptions (event_id, occurrence_date, override)
   values (pg_temp.id('yoga'), '2026-11-10', '{"title":"Yoga with Lou","notes":"Bring Lou","starts_on":"2026-11-11","ends_on":"2026-11-11"}');
 select is((select title from public.events_visible where id = pg_temp.id('yoga')), 'Yoga', 'Eva sees her private event in full');
-select is((select jsonb_array_length(checklist) from public.events_visible where id = pg_temp.id('yoga')), 1, 'with its checklist');
 select is((select exceptions -> 0 -> 'override' ->> 'title' from public.events_visible where id = pg_temp.id('yoga')), 'Yoga with Lou', 'and its exceptions');
 select is((select source from public.events where id = pg_temp.id('yoga')), 'app', 'every write records how it came (FR-004)');
 select is((select created_by from public.events where id = pg_temp.id('yoga')), '00000000-0000-0000-0000-00000000035b'::uuid, 'and who made it');
@@ -83,8 +82,7 @@ select pg_temp.login('00000000-0000-0000-0000-00000000035a');
 insert into ids select 'dinner', pg_temp.save(null,
   '{"title":"Eva''s birthday dinner","category":"social","location":"Café Lalo","notes":"Book the window table","starts_on":"2026-11-14","ends_on":"2026-11-14","time_type":"custom","start_time":"19:30","end_time":"22:30","visibility":"surprise"}',
   jsonb_build_array('everyone'),
-  jsonb_build_object('hidden_from', jsonb_build_array(pg_temp.id('eva')), 'cover_title', 'Dinner out', 'cover_note', 'Meet at Café Lalo at 19:30. Dress nice!'),
-  '[{"label":"Cake"}]');
+  jsonb_build_object('hidden_from', jsonb_build_array(pg_temp.id('eva')), 'cover_title', 'Dinner out', 'cover_note', 'Meet at Café Lalo at 19:30. Dress nice!'));
 insert into public.event_exceptions (event_id, occurrence_date, override)
   values (pg_temp.id('dinner'), '2026-11-14', '{"title":"Eva''s 40th","location":"Chez Lou","notes":"Shh"}');
 
@@ -96,44 +94,39 @@ reset role;
 update public.events set recurrence = recurrence || '{"secret":"Lou"}' where id = pg_temp.id('yoga');
 select pg_temp.login('00000000-0000-0000-0000-00000000035a');
 select is((select recurrence from public.events_visible where id = pg_temp.id('yoga')), '{"freq":"weekly","ends":{"type":"never"}}'::jsonb, 'its repeat, and nothing else in it');
-select is((select row(location, notes, category, reminder, responsible_member_id::text, checklist::text, surprise::text)::text
-  from public.events_visible where id = pg_temp.id('yoga')), '(,,,,,,)', 'no place, notes, type, reminder, who takes them or checklist');
+select is((select row(location, notes, category, reminder, responsible_member_id::text, surprise::text)::text
+  from public.events_visible where id = pg_temp.id('yoga')), '(,,,,,)', 'no place, notes, type, reminder or who takes them');
 select is((select members from public.events_visible where id = pg_temp.id('yoga')), jsonb_build_array(pg_temp.id('eva')), 'Eva''s member, for her color');
 select is((select row(starts_on, slots, visibility, creator_member_id)::text from public.events_visible where id = pg_temp.id('yoga')),
   row('2026-11-03'::date, array['evening'], 'private', pg_temp.id('eva'))::text, 'the day, the slot, private, and its creator');
 select is((select exceptions -> 0 -> 'override' from public.events_visible where id = pg_temp.id('yoga')),
   '{"starts_on":"2026-11-11","ends_on":"2026-11-11"}'::jsonb, 'a moved occurrence keeps only its new time');
-select is((select count(*)::int from public.event_checklist_items i where i.event_id = pg_temp.id('yoga')), 0, 'its checklist is hidden');
-select is((select count(*)::int from public.event_exceptions x where x.event_id = pg_temp.id('yoga')), 0, 'and its exceptions');
+select is((select count(*)::int from public.event_exceptions x where x.event_id = pg_temp.id('yoga')), 0, 'its exceptions are hidden');
 select is((select count(*)::int from public.event_members m where m.event_id = pg_temp.id('yoga')), 1, 'who it''s for is not');
 select is(pg_temp.affected($$ update public.events set title = 'Mine' where id = pg_temp.id('yoga') $$), 0, 'Gabriel can''t change it');
 select is(pg_temp.affected($$ delete from public.event_members m where m.event_id = pg_temp.id('yoga') $$), 0, 'or who it''s for');
-select throws_ok($$ insert into public.event_checklist_items (event_id, family_id, position, label) values (pg_temp.id('yoga'), public.my_family_id(), 1, 'X') $$,
-  '42501', null, 'or add to its checklist');
 
 -- The same through an assistant acting for Gabriel (MCP token).
 select pg_temp.login('00000000-0000-0000-0000-00000000035a', 'cocon_assistant', 'c1');
 select is((select title from public.events_visible where id = pg_temp.id('yoga')), 'Busy', 'Gabriel''s assistant gets Busy');
-select is((select row(location, notes, checklist::text)::text from public.events_visible where id = pg_temp.id('yoga')), '(,,)', 'and no details');
+select is((select row(location, notes)::text from public.events_visible where id = pg_temp.id('yoga')), '(,)', 'and no details');
 select is((select title from public.events_visible where id = pg_temp.id('dinner')), 'Eva''s birthday dinner', 'it sees what Gabriel sees in full');
 -- Since spec 044 it saves events, so it reads their tables too, through Gabriel's own policies.
 select is((select count(*)::int from public.events where id = pg_temp.id('yoga')), 0, 'the tables never show it a private event past the view');
-select is((select count(*)::int from public.event_checklist_items c where c.event_id = pg_temp.id('yoga')), 0, 'nor its checklist');
 select throws_ok($$ delete from public.events $$, '42501', null, 'and it never removes an event for good');
 
 -- Surprise: Eva gets the cover, read as a family event, and nothing else.
 select pg_temp.login('00000000-0000-0000-0000-00000000035b');
 select is((select row(title, notes, location, visibility)::text from public.events_visible where id = pg_temp.id('dinner')),
   row('Dinner out', 'Meet at Café Lalo at 19:30. Dress nice!', 'Café Lalo', 'family')::text, 'Eva sees the cover title, note, place, as a family event');
-select is((select row(category, reminder, responsible_member_id::text, checklist::text, surprise::text)::text from public.events_visible where id = pg_temp.id('dinner')),
-  '(,none,,[],)', 'and no type, reminder, checklist or surprise details, shaped like a family event');
+select is((select row(category, reminder, responsible_member_id::text, surprise::text)::text from public.events_visible where id = pg_temp.id('dinner')),
+  '(,none,,)', 'and no type, reminder or surprise details, shaped like a family event');
 select is((select row(start_time, end_time, members::text)::text from public.events_visible where id = pg_temp.id('dinner')),
   '(19:30,22:30,"[""everyone""]")', 'with the time and who it''s for');
 select is((select exceptions -> 0 -> 'override' from public.events_visible where id = pg_temp.id('dinner')),
   '{"location":"Chez Lou"}'::jsonb, 'an exception keeps only what the cover shows');
 select is((select count(*)::int from public.events where id = pg_temp.id('dinner')), 0, 'the events table hides it from her');
 select is((select count(*)::int from public.event_surprise), 0, 'and every surprise');
-select is((select count(*)::int from public.event_checklist_items i where i.event_id = pg_temp.id('dinner')), 0, 'and its checklist');
 select is(pg_temp.affected($$ update public.events set title = 'Hm' where id = pg_temp.id('dinner') $$), 0, 'she can''t change it');
 select is(pg_temp.affected($$ update public.events set deleted_at = now() where id = pg_temp.id('dinner') $$), 0, 'or delete it');
 select pg_temp.login('00000000-0000-0000-0000-00000000035b', 'cocon_assistant', 'c1');
@@ -148,10 +141,6 @@ select is((select count(*)::int from public.event_surprise), 1, 'and its surpris
 select throws_ok($$ update public.events set visibility = 'family' where id = pg_temp.id('dinner') $$,
   '42501', 'only_creator_changes_visibility', 'only the creator changes who can see it');
 select is(pg_temp.affected($$ update public.event_surprise set hidden_from = '{}' $$), 0, 'or the surprise');
-select lives_ok($$ update public.event_checklist_items set done = true where event_id = pg_temp.id('dinner') $$, 'Alex ticks the cake');
-select is((select done_by from public.event_checklist_items where event_id = pg_temp.id('dinner')), pg_temp.id('alex'), 'and the database says he did');
-select lives_ok($$ update public.event_checklist_items set done = false, done_by = pg_temp.id('gabriel') where event_id = pg_temp.id('dinner') $$, 'unticked');
-select is((select done_by from public.event_checklist_items where event_id = pg_temp.id('dinner')), null, 'nobody ticked it');
 select throws_ok($$ insert into public.event_exceptions (event_id, family_id, occurrence_date, override) values (pg_temp.id('dinner'), public.my_family_id(), '2026-11-14', '{"visibility":"family"}') $$,
   '23514', null, 'an exception can''t change who can see it');
 
@@ -173,14 +162,13 @@ select throws_ok($$ select pg_temp.save(null, '{"title":"X","starts_on":"2026-11
 select lives_ok(format($$ select pg_temp.save('%s', '{"title":"Eva''s birthday dinner","starts_on":"2026-11-14","ends_on":"2026-11-14","time_type":"all_day","visibility":"family"}', '["everyone"]') $$, pg_temp.id('dinner')),
   'Gabriel makes it a family event');
 select is((select count(*)::int from public.event_surprise), 0, 'and its surprise goes');
-select is((select jsonb_array_length(checklist) from public.events_visible where id = pg_temp.id('dinner')), 1, 'a null checklist is left as it is');
 
 -- Another family, and signed-out people, see nothing.
 select pg_temp.login('00000000-0000-0000-0000-00000000035f');
 select is((select count(*)::int from public.events_visible), 0, 'Sam sees no Demange event');
 select is(public._sees_event(pg_temp.id('dinner')) or public._created_event(pg_temp.id('dinner')), false, 'and can''t ask about one');
 select is((select count(*)::int from public.events) + (select count(*)::int from public.event_members) + (select count(*)::int from public.event_exceptions)
-  + (select count(*)::int from public.event_checklist_items) + (select count(*)::int from public.event_surprise)
+  + (select count(*)::int from public.event_surprise)
   + (select count(*)::int from public.family_calendar_settings), 0, 'nor any of their rows');
 select throws_ok(format($$ select pg_temp.save('%s', '{"title":"Mine","starts_on":"2026-11-01","ends_on":"2026-11-01","time_type":"all_day"}', '["everyone"]') $$, pg_temp.id('dinner')),
   'P0002', 'event_not_found', 'nor change them');
@@ -192,10 +180,10 @@ select throws_ok($$ select * from public.family_calendar_settings $$, '42501', n
 -- FR-003: exactly these tables are live.
 reset role;
 select is((select array_agg(tgrelid::regclass::text order by tgrelid::regclass::text) from pg_trigger
-  where tgname like '%\_broadcast' and tgrelid::regclass::text in ('events', 'event_members', 'event_exceptions', 'event_checklist_items', 'event_surprise', 'family_calendar_settings')),
-  array['event_checklist_items', 'event_exceptions', 'event_members', 'events', 'family_calendar_settings'],
-  'events, members, exceptions, checklists and (since spec 029) slot times are live');
-select ok(not has_function_privilege('anon', 'public.save_event(jsonb, jsonb, uuid, jsonb, jsonb)', 'execute'), 'signed out: no saving');
+  where tgname like '%\_broadcast' and tgrelid::regclass::text in ('events', 'event_members', 'event_exceptions', 'event_surprise', 'family_calendar_settings')),
+  array['event_exceptions', 'event_members', 'events', 'family_calendar_settings'],
+  'events, members, exceptions and (since spec 029) slot times are live');
+select ok(not has_function_privilege('anon', 'public.save_event(jsonb, jsonb, uuid, jsonb)', 'execute'), 'signed out: no saving');
 select ok(not has_function_privilege('authenticated', 'public.purge_deleted_events()', 'execute'), 'members can''t purge');
 select ok(not has_function_privilege('cocon_assistant', 'public.claim_home_time_zone(text)', 'execute'), 'assistants don''t set the time zone');
 

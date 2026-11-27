@@ -1,6 +1,7 @@
 // Event and reminder notes with basic formatting (spec 073). Notes stay plain text in the
 // database; this reads a small markdown subset into NoteText's blocks. No library, no HTML:
 // anything it doesn't know (code, quotes) stays as typed.
+import { CHECKLIST_LINE } from '@cocon/schemas';
 import type { NoteAlign, NoteBlock, NoteSpan } from '@cocon/ui';
 
 export type NoteLinkScheme = 'http' | 'https' | 'mailto';
@@ -20,7 +21,6 @@ export function linkScheme(url: string): NoteLinkScheme {
   return s === 'http' || s === 'mailto' ? s : 'https';
 }
 
-const CHECK = /^\s*[-*] \[([ xX])\](?: (.*))?$/;
 const BULLET = /^\s*[-*] (.*)$/;
 const NUMBER = /^\s*\d+\. (.*)$/;
 const HEADING = /^\s*#{1,6} (.*)$/;
@@ -181,12 +181,12 @@ function parse(notes: string): NoteBlock[] {
       flush();
       continue;
     }
-    const check = CHECK.exec(line);
+    const check = CHECKLIST_LINE.exec(line);
     const number = check ? null : NUMBER.exec(line);
     const bullet = check || number ? null : BULLET.exec(line);
     const heading = check || number || bullet ? null : HEADING.exec(line);
     if (check || number || bullet || heading) flush();
-    if (check) blocks.push({ kind: 'check', done: check[1] !== ' ', line: i, spans: inline(check[2] ?? '') });
+    if (check) blocks.push({ kind: 'check', done: check[2] !== ' ', line: i, spans: inline(check[3] ?? '') });
     else if (number) blocks.push({ kind: 'number', n: ++n, spans: inline(number[1] ?? '') });
     else if (bullet) blocks.push({ kind: 'bullet', spans: inline(bullet[1] ?? '') });
     else if (heading) blocks.push({ kind: 'boldLine', spans: inline(heading[1] ?? '') });

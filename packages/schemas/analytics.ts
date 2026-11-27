@@ -16,7 +16,7 @@ export type RecipeFormSection = z.infer<typeof RecipeFormSection>;
 /** Spec 073: whose notes. */
 export const NoteEntity = z.enum(['event', 'reminder']);
 /** What an event edit changed (spec 041 `event_updated`): field names only, never their values. */
-export const EventField = z.enum(['title', 'type', 'place', 'notes', 'date', 'time', 'who', 'responsible', 'repeat', 'reminder', 'checklist']);
+export const EventField = z.enum(['title', 'type', 'place', 'notes', 'date', 'time', 'who', 'responsible', 'repeat', 'reminder']);
 export type EventField = z.infer<typeof EventField>;
 const ConverterResultUnitEvent = z.enum([...converterUnits, 'cups_of', 'fan_c', 'fan_f']);
 
@@ -279,11 +279,10 @@ export const events = {
   event_create_undone: z.strictObject({}),
   // Spec 042: an event deleted from its page ("this" date, "future" dates, or "all" of it; a
   // one-off is "all"), by its creator or not, and again when the toast's Undo brings it back; a
-  // copy made with Duplicate; a view-only link made (not reopened); a checklist item ticked.
+  // copy made with Duplicate; a view-only link made (not reopened).
   event_deleted: z.strictObject({ scope: z.enum(['all', 'this', 'future']), own_event: z.boolean(), undone: z.boolean() }),
   event_duplicated: z.strictObject({}),
   event_shared: z.strictObject({}),
-  event_checklist_ticked: z.strictObject({}),
   // Spec 043: who can see an event, sent when a save changes it (a new event: Private or Surprise).
   event_visibility_set: z.strictObject({ visibility: Visibility }),
   // Spec 028: Home. The latest-recipe hero opened, a stat tile tapped, "Add your first recipe";
@@ -345,6 +344,14 @@ export const events = {
   note_parse_failed: z.strictObject({ entity: NoteEntity }),
   // Spec 074: a notes toolbar button changed the text (never the text or a link's address).
   note_format_applied: z.strictObject({ entity: NoteEntity, format: z.enum(['bold', 'link', 'bullet', 'number', 'check']), action: z.enum(['add', 'remove']) }),
+  // Spec 075: a checklist item in a note ticked or unticked from the event page or reminder drawer,
+  // once saved: how many items the note has and how many are ticked now.
+  note_checklist_toggled: z.strictObject({
+    entity: NoteEntity,
+    checked: z.boolean(),
+    items_total: z.number().int().min(1),
+    items_checked: z.number().int().min(0),
+  }),
 } as const;
 
 export type EventName = keyof typeof events;

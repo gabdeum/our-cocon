@@ -127,12 +127,6 @@ export const SurpriseCover = z.strictObject({
 });
 export type SurpriseCover = z.infer<typeof SurpriseCover>;
 
-/** An event's checklist, in order; items with an id are kept (and stay ticked). */
-export const ChecklistInput = z
-  .array(z.strictObject({ id: z.uuid().optional(), label: z.string().trim().min(1).max(80), done: z.boolean().optional() }))
-  .max(50);
-export type ChecklistInput = z.infer<typeof ChecklistInput>;
-
 const eventFields = {
   title: z.string().trim().min(1).max(60),
   category: EventCategory.nullable().optional(),
@@ -152,8 +146,6 @@ const eventFields = {
   visibility: Visibility.optional(),
   /** Null or left out: unchanged (only the creator sets it up). */
   surprise: SurpriseCover.nullable().optional(),
-  /** Left out: unchanged. */
-  checklist: ChecklistInput.optional(),
 };
 
 type EventFields = { [K in keyof typeof eventFields]?: z.infer<(typeof eventFields)[K]> };

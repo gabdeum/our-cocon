@@ -1,5 +1,5 @@
 // Spec 042: the event page. US1 everything in one place, US2 deleting a repeating event someone
-// else added, the one-off Dialog, the live checklist (FR-002), Duplicate and Share (FR-003).
+// else added, the one-off Dialog, Duplicate and Share (FR-003). Spec 075: ticking the notes' checklist.
 // Spec 050 FR-006: ✎ and ⋯ in the top bar, the menu, the compact layout.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
@@ -33,7 +33,7 @@ function setup(event: StoredEvent = babyMusic(), over: Partial<EventDetailProps>
     onShare: vi.fn(),
     onOpenUrl: vi.fn(),
     onCopy: vi.fn(async () => undefined),
-    onTick: vi.fn(async () => undefined),
+    noteChecklist: { save: vi.fn(async () => 'saved' as const), reload: vi.fn(async () => null), onSaved: vi.fn() },
     onDelete: vi.fn(async () => undo),
     onDuplicate: vi.fn(async () => undo),
     onChanged: vi.fn(),
@@ -65,16 +65,16 @@ describe('Event detail', () => {
       'Baby music class',
       'Sat, Oct 31',
       ' · Morning, about 09:00–12:00',
+      // Spec 075: its old "Bring" list is a checklist in the notes.
+      'Bring:',
+      'Diaper bag',
+      'Bottle',
+      'Spare clothes',
       'Gabriel takes James',
       'Little Notes studio, 4 Elm St',
       '1 hour before',
       ' · reminds Gabriel · 08:00',
-      'Bring',
-      '1 of 3',
-      'Diaper bag',
-      'Bottle',
-      'Spare clothes',
-      'Added by Eva · 2 days ago · anyone can tick the list',
+      'Added by Eva · 2 days ago',
     ];
     // The top bar: back, ✎ and ⋯; the page's own buttons are gone (spec 050 FR-006).
     expect(screen.getByRole('button', { name: 'Back to Calendar' })).toBeTruthy();
@@ -90,6 +90,7 @@ describe('Event detail', () => {
     }
     expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Baby music class']);
     expect(screen.getByRole('checkbox', { name: 'Diaper bag' }).getAttribute('aria-checked')).toBe('true');
+    expect(document.body.textContent).not.toContain('anyone can tick');
     // Spec 030 SC-001.
     await expectAccessible();
   });
@@ -117,9 +118,9 @@ describe('Event detail', () => {
   });
 
   it('hides rows without a value, and says an assistant added it (FR-006)', () => {
-    setup(babyMusic({ category: null, recurrence: null, starts_on: '2026-10-31', ends_on: '2026-10-31', location: null, responsible_member_id: null, reminder: 'none', checklist: [], source: 'claude' }));
+    setup(babyMusic({ category: null, recurrence: null, starts_on: '2026-10-31', ends_on: '2026-10-31', location: null, responsible_member_id: null, reminder: 'none', notes: null, source: 'claude' }));
     expect(screen.queryByRole('button', { name: /in Google Maps$/ })).toBeNull();
-    for (const gone of ['Social', 'Every Saturday', 'takes', 'hour before', 'Bring', 'anyone can tick']) expect(document.body.textContent).not.toContain(gone);
+    for (const gone of ['Social', 'Every Saturday', 'takes', 'hour before', 'Bring']) expect(document.body.textContent).not.toContain(gone);
     expect(screen.getByText('Added via Claude · 2 days ago')).toBeTruthy();
   });
 
@@ -138,19 +139,47 @@ describe('Event detail', () => {
     expect(await screen.findByText("Couldn't copy the address.")).toBeTruthy();
   });
 
-  it('FR-002: anyone ticks the checklist; it shows at once and goes back if it fails', async () => {
-    const { onTick, tracker } = setup();
+  it('spec 075: ticking an item in the notes shows at once, then saves that line (FR-001, FR-002)', async () => {
+    const { noteChecklist, tracker } = setup();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Bottle' }));
     expect(screen.getByRole('checkbox', { name: 'Bottle' }).getAttribute('aria-checked')).toBe('true');
     await flush();
-    expect(onTick).toHaveBeenCalledWith('00000000-0000-4000-8000-0000000000c2', true);
-    expect(tracker.track).toHaveBeenCalledWith('event_checklist_ticked', {});
-    cleanup();
-    setup(babyMusic(), { onTick: vi.fn(async () => Promise.reject(new Error('offline'))) });
+    expect(noteChecklist.save).toHaveBeenCalledWith('Bring:\n- [x] Diaper bag\n- [ ] Bottle\n- [ ] Spare clothes', 'Bring:\n- [x] Diaper bag\n- [x] Bottle\n- [ ] Spare clothes');
+    expect(tracker.track).toHaveBeenCalledWith('note_checklist_toggled', { entity: 'event', checked: true, items_total: 3, items_checked: 2 });
+    expect(noteChecklist.onSaved).toHaveBeenCalled();
+    expect(screen.getByRole('checkbox', { name: 'Bottle' }).getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('spec 075: a failed save undoes the tick and says so', async () => {
+    const { tracker } = setup(babyMusic(), { noteChecklist: { save: vi.fn(async () => Promise.reject(new Error('offline'))), reload: vi.fn(async () => null) } });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Diaper bag' }));
+    await flush();
+    expect(screen.getByRole('checkbox', { name: 'Diaper bag' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByText("Couldn't save. Try again.")).toBeTruthy();
+    expect(tracker.track).not.toHaveBeenCalledWith('note_checklist_toggled', expect.anything());
+  });
+
+  it('spec 075 FR-003: someone changed the note meanwhile', async () => {
+    // Eva added a line at the end: the tick goes onto her version.
+    const evas = 'Bring:\n- [x] Diaper bag\n- [ ] Bottle\n- [ ] Spare clothes\n- [ ] Hat';
+    const save = vi.fn(async (from: string) => (from === evas ? ('saved' as const) : ('changed' as const)));
+    setup(babyMusic(), { noteChecklist: { save, reload: vi.fn(async () => evas) } });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Bottle' }));
     await flush();
-    expect(screen.getByRole('checkbox', { name: 'Bottle' }).getAttribute('aria-checked')).toBe('false');
-    expect(screen.getByText("Couldn't change that. Try again.")).toBeTruthy();
+    expect(save).toHaveBeenLastCalledWith(evas, 'Bring:\n- [x] Diaper bag\n- [x] Bottle\n- [ ] Spare clothes\n- [ ] Hat');
+    expect(screen.getByRole('checkbox', { name: 'Hat' })).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Bottle' }).getAttribute('aria-checked')).toBe('true');
+    cleanup();
+    // She rewrote the list: that line is something else now, so the latest note shows and nothing is saved.
+    const rewritten = 'Bring:\n- [ ] Snacks';
+    const once = vi.fn(async () => 'changed' as const);
+    setup(babyMusic(), { noteChecklist: { save: once, reload: vi.fn(async () => rewritten) } });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Bottle' }));
+    await flush();
+    expect(once).toHaveBeenCalledOnce();
+    expect(screen.getByText('This note changed. Showing the latest version.')).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Snacks' })).toBeTruthy();
+    expect(screen.queryByRole('checkbox', { name: 'Bottle' })).toBeNull();
   });
 
   it('US2: deleting a repeating event Eva added asks which ones', async () => {
@@ -263,9 +292,9 @@ describe('Event detail', () => {
   });
 
   it('offline: readable, nothing changes', () => {
-    const { onTick } = setup(babyMusic(), { readOnly: true });
+    const { noteChecklist } = setup(babyMusic(), { readOnly: true });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Bottle' }));
-    expect(onTick).not.toHaveBeenCalled();
+    expect(noteChecklist.save).not.toHaveBeenCalled();
     expect(screen.getByRole('checkbox', { name: 'Bottle' }).getAttribute('aria-disabled')).toBe('true');
     expect(screen.getByRole('button', { name: 'Edit event' }).getAttribute('aria-disabled')).toBe('true');
     expect(screen.getByRole('button', { name: 'More actions' }).getAttribute('aria-disabled')).toBe('true');

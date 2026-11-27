@@ -5,6 +5,7 @@ import {
   EventException as EventExceptionSchema,
   EventInput,
   EventMember,
+  NOTES_MAX,
   Recurrence,
   Reminder,
   SlotKey,
@@ -16,20 +17,10 @@ import {
 import { z } from 'zod';
 import type { Db } from './client';
 
-/** A checklist item, as the people who see the event's details get it. */
-export interface ChecklistItem {
-  id: string;
-  position: number;
-  label: string;
-  done: boolean;
-  /** The member who ticked it. */
-  done_by: string | null;
-}
-
 /**
  * An event as `events_visible` gives it to the caller (spec 035 FR-002): already masked by the
  * database, ready for `@cocon/calendar`'s `expand` (with `exceptions`) and `viewFor`. Private and
- * hidden surprise events come with no details (`checklist` null).
+ * hidden surprise events come with no details (`notes` null).
  */
 export interface StoredEvent extends CalendarEvent {
   category: EventCategory | null;
@@ -39,7 +30,6 @@ export interface StoredEvent extends CalendarEvent {
   /** Names of members who were removed from the family since, shown grey (032-later L78). */
   removed_members: string[];
   exceptions: EventException[];
-  checklist: ChecklistItem[] | null;
   created_by: string | null;
   updated_by: string | null;
   /** 'app' or the assistant's name ("Added via Claude"). */
@@ -72,7 +62,6 @@ const Row = z.object({
   members: z.array(EventMember),
   removed_members: z.array(z.string()),
   exceptions: z.array(EventExceptionSchema),
-  checklist: z.array(z.object({ id: z.uuid(), position: z.int(), label: z.string(), done: z.boolean(), done_by: z.uuid().nullable() })).nullable(),
   surprise: SurpriseCover.nullable(),
   created_by: z.uuid().nullable(),
   updated_by: z.uuid().nullable(),
@@ -147,11 +136,11 @@ export async function suggestEventTitles(client: Pick<Db, 'rpc'>, text: string, 
 /**
  * Saves a whole event (FR-005): a new one without `id`. Checked with the shared schema and the
  * calendar engine first (adjacent slots, a valid repeat), then saved in one go with who it's for,
- * its surprise and its checklist. The database stamps who saved it and through what (FR-004).
+ * and its surprise. The database stamps who saved it and through what (FR-004).
  * Returns the event's id.
  */
 export async function saveEvent(client: Pick<Db, 'rpc'>, input: unknown, id?: string): Promise<string> {
-  const { members, surprise, checklist, ...fields } = EventInput.parse(input);
+  const { members, surprise, ...fields } = EventInput.parse(input);
   const event = { ...fields, slots: fields.slots ?? [], visibility: fields.visibility ?? 'family' };
   assertValidEvent({ ...event, id: id ?? 'new', members, creator_member_id: '' });
   const { data, error } = await client.rpc('save_event', {
@@ -159,7 +148,6 @@ export async function saveEvent(client: Pick<Db, 'rpc'>, input: unknown, id?: st
     p_members: members,
     ...(id ? { p_id: z.uuid().parse(id) } : {}),
     ...(surprise ? { p_surprise: surprise } : {}),
-    ...(checklist ? { p_checklist: checklist } : {}),
   });
   if (error) throw error;
   return data;
@@ -171,7 +159,7 @@ export async function saveEvent(client: Pick<Db, 'rpc'>, input: unknown, id?: st
  * series' exceptions from then on move to it. Checked like `saveEvent`. Returns the new id.
  */
 export async function splitEvent(client: Pick<Db, 'rpc'>, id: string, from: string, before: unknown, input: unknown): Promise<string> {
-  const { members, surprise, checklist, ...fields } = EventInput.parse(input);
+  const { members, surprise, ...fields } = EventInput.parse(input);
   const event = { ...fields, slots: fields.slots ?? [], visibility: fields.visibility ?? 'family' };
   assertValidEvent({ ...event, id: 'new', members, creator_member_id: '' });
   const { data, error } = await client.rpc('split_event', {
@@ -181,7 +169,6 @@ export async function splitEvent(client: Pick<Db, 'rpc'>, id: string, from: stri
     p_event: event,
     p_members: members,
     ...(surprise ? { p_surprise: surprise } : {}),
-    ...(checklist ? { p_checklist: checklist } : {}),
   });
   if (error) throw error;
   return data;
@@ -252,10 +239,23 @@ export async function undoCreateEvent(client: Pick<Db, 'from'>, id: string): Pro
   if (error) throw error;
 }
 
-/** Ticks or unticks a checklist item; the database records who ticked it. */
-export async function setChecklistDone(client: Pick<Db, 'from'>, itemId: string, done: boolean): Promise<void> {
-  const { error } = await client.from('event_checklist_items').update({ done }).eq('id', z.uuid().parse(itemId));
+/**
+ * Spec 075: saves the notes an event shows on `date` after a checklist tick, only if they are still
+ * `from` (FR-003): that date's own notes when it has some, otherwise the series' (FR-008). 'changed'
+ * when someone changed them since, or the event is gone.
+ */
+export async function setEventNotes(
+  client: Pick<Db, 'rpc'>,
+  change: { eventId: string; date: string; from: string; to: string },
+): Promise<'saved' | 'changed'> {
+  const { data, error } = await client.rpc('set_event_notes', {
+    p_event: z.uuid().parse(change.eventId),
+    p_date: CalendarDate.parse(change.date),
+    p_from: change.from,
+    p_to: z.string().min(1).max(NOTES_MAX).parse(change.to),
+  });
   if (error) throw error;
+  return data ? 'saved' : 'changed';
 }
 
 export interface CalendarSettings {

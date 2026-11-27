@@ -1,6 +1,6 @@
 # 075 — Tick checklist items in the drawer, and retire the event checklist
 
-**Status:** Ready to build
+**Status:** Built
 **Depends on:** 073, 074 (toolbar, so checklists are easy to write), 041 (edit event sheet), 042 (event page), 044 (MCP calendar tools), 056 (reminder updates), 057 (reminder drawer)
 **Updates:** 041, 042, 044 (the event's separate "Bring" checklist is removed; add a Changelog line to each)
 
@@ -43,7 +43,15 @@ Removed: `event_checklist_ticked` (replaced by `note_checklist_toggled` with `en
 ## Needs your attention (defaults chosen)
 - Ticking every item does **not** mark the reminder done automatically.
 - Ticked items stay where they are (they don't move to the bottom).
+- FR-006's "existing undo": the app has no Undo for its own event or reminder edits (only an assistant's can be undone), so a tick has none either. History logs it as the member's edit; tapping the item again undoes it.
+- Release order: the migration changes `save_event` and `events_visible`, so iPhones still on today's JS can't load or save events until they get the update. Release the backend to prod, then run `pnpm update:prod` straight away (Gabriel, 2026-11-27).
 
 ## Changelog
 - 2026-11-27 — First version.
 - 2026-11-27 — Gabriel: checklists in notes replace the event's "Bring" checklist (FR-008 to FR-012, SC-003).
+- 2026-11-27 — Built. Checklist items tick in place on the event page and in the reminder drawer (`NoteText` `onToggleCheck`, `useNoteChecklist` in `apps/app/lib/note-checklist.ts`), saved through `set_event_notes` (new RPC: that date's own notes, or the series') and `setReminderNotes`. Migration `retire_event_checklist` moves each event's items into its notes (a date with its own notes gets them too), then drops `event_checklist_items` and `_stamp_checklist_done`, and recreates `save_event`, `split_event`, `events_visible` and the activity functions without it. `ChecklistRow` and `ChecklistAdd` are removed; the seed's checklists are in its notes. New event `note_checklist_toggled`; `event_checklist_ticked` and `EventField` `checklist` removed. Deviations:
+  - `toggleChecklistLine`, `untickChecklist` and the checklist-line regex live in `packages/schemas/notes.ts` (not `lib/notes/`), because `@cocon/data` unticks a split series and the MCP server uses it too. `lib/notes.ts` uses the same regex.
+  - The lock compares the note text as it was seen, not `updated_at`: `event_exceptions` has no `updated_at`, and an edit to another field shouldn't refuse a tick.
+  - No Undo toast after a tick (see Needs your attention).
+  - Duplicate also unticks the copy's checklist, as it did for the old list. A title suggestion no longer fills a checklist (spec 053 did, for the old list).
+  - Each checklist row is a list item holding its checkbox (accessibility check).

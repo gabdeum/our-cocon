@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { expand, viewFor } from '@cocon/calendar';
 import { DEFAULT_SLOT_TIMES } from '@cocon/calendar';
-import { deleteEvent, loadCalendarSettings, loadDeletedEvents, loadEvents, removeException, restoreEvent, saveEvent, saveException, splitEvent, storedEvent, undoCreateEvent } from './events';
+import { deleteEvent, loadCalendarSettings, loadDeletedEvents, loadEvents, removeException, restoreEvent, saveEvent, saveException, setEventNotes, splitEvent, storedEvent, undoCreateEvent } from './events';
 
 const EVA = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a10';
 const GABRIEL = '3f0c1d6e-2b1a-4c8e-9a52-0d7e1f4b6a11';
@@ -29,7 +29,6 @@ const busyRow = {
   members: [EVA],
   removed_members: [],
   exceptions: [{ occurrence_date: '2026-11-10', cancelled: false, override: { starts_on: '2026-11-11', ends_on: '2026-11-11' } }],
-  checklist: null,
   surprise: null,
   created_by: EVA,
   updated_by: EVA,
@@ -98,11 +97,10 @@ describe('events data (spec 035)', () => {
 
   it('saves a whole event in one call', async () => {
     const rpc = vi.fn(async () => ({ data: EVENT, error: null }));
-    await expect(saveEvent({ rpc } as never, { ...yoga, checklist: [{ label: 'Towel' }] })).resolves.toBe(EVENT);
+    await expect(saveEvent({ rpc } as never, yoga)).resolves.toBe(EVENT);
     expect(rpc).toHaveBeenCalledWith('save_event', {
       p_event: { title: 'Yoga', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'slot', slots: ['evening'], visibility: 'family' },
       p_members: [EVA],
-      p_checklist: [{ label: 'Towel' }],
     });
     await saveEvent({ rpc } as never, yoga, EVENT);
     expect(rpc).toHaveBeenLastCalledWith('save_event', expect.objectContaining({ p_id: EVENT }));
@@ -120,14 +118,13 @@ describe('events data (spec 035)', () => {
     const rpc = vi.fn(async () => ({ data: EVENT, error: null }));
     const weekly = { freq: 'weekly', ends: { type: 'never' } };
     const before = { freq: 'weekly', ends: { type: 'on', date: '2026-11-09' } };
-    await expect(splitEvent({ rpc } as never, EVENT, '2026-11-10', before, { ...yoga, recurrence: weekly, checklist: [{ label: 'Towel' }] })).resolves.toBe(EVENT);
+    await expect(splitEvent({ rpc } as never, EVENT, '2026-11-10', before, { ...yoga, recurrence: weekly })).resolves.toBe(EVENT);
     expect(rpc).toHaveBeenCalledWith('split_event', {
       p_id: EVENT,
       p_from: '2026-11-10',
       p_before: before,
       p_event: { title: 'Yoga', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'slot', slots: ['evening'], recurrence: weekly, visibility: 'family' },
       p_members: [EVA],
-      p_checklist: [{ label: 'Towel' }],
     });
     rpc.mockClear();
     await expect(splitEvent({ rpc } as never, EVENT, '2026-11-10', { freq: 'hourly' }, yoga)).rejects.toThrow();
@@ -135,6 +132,17 @@ describe('events data (spec 035)', () => {
     expect(rpc).not.toHaveBeenCalled();
     const failing = vi.fn(async () => ({ data: null, error: new Error('event_not_found') }));
     await expect(splitEvent({ rpc: failing } as never, EVENT, '2026-11-10', before, yoga)).rejects.toThrow('event_not_found');
+  });
+
+  it('saves a tick on the notes only if they are still as seen (spec 075)', async () => {
+    const rpc = vi.fn(async () => ({ data: true, error: null }));
+    const change = { eventId: EVENT, date: '2026-11-10', from: '- [ ] Towel', to: '- [x] Towel' };
+    await expect(setEventNotes({ rpc } as never, change)).resolves.toBe('saved');
+    expect(rpc).toHaveBeenCalledWith('set_event_notes', { p_event: EVENT, p_date: '2026-11-10', p_from: '- [ ] Towel', p_to: '- [x] Towel' });
+    rpc.mockResolvedValueOnce({ data: false, error: null });
+    await expect(setEventNotes({ rpc } as never, change)).resolves.toBe('changed');
+    const failing = vi.fn(async () => ({ data: null, error: new Error('offline') }));
+    await expect(setEventNotes({ rpc: failing } as never, change)).rejects.toThrow('offline');
   });
 
   it('undoes an add: deleted, then removed for good (spec 041 FR-009)', async () => {

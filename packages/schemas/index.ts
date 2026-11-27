@@ -6,6 +6,7 @@ export * from './cook';
 export * from './family';
 export * from './groceries';
 export * from './ingredient-text';
+export * from './notes';
 export * from './notifications';
 export * from './recipe-filters';
 export * from './recipes';

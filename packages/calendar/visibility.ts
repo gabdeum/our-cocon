@@ -43,7 +43,7 @@ function publicFields(event: CalendarEvent): PublicFields {
  * FR-009: the only place that decides what a member sees of an event (the database enforces the
  * same rule, spec 035). Private: others get "Busy" with the members, day and time, and nothing
  * else. Surprise: the people it's hidden from get the cover title, the time, the place and the
- * cover note. Hidden views are built from an allowlist, so no other field (checklist, category,
+ * cover note. Hidden views are built from an allowlist, so no other field (category,
  * who takes them, anything a caller adds) can reach them. A surprise without its cover data is
  * shown to others as "Busy", and so is a hidden event when the viewer or creator is unknown. A row
  * from `events_visible` says how the database masked it (`view`), which this follows.
