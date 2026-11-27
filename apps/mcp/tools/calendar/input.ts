@@ -84,10 +84,11 @@ export const patchFields = {
     .nullable()
     .optional()
     .describe('Who takes the members without the app: someone with the app, or null to clear. Left out, the current one stays; people without the app added with nobody taking them get the member you’re talking to.'),
-  repeat: fields.repeat.unwrap().nullable().optional(),
-  location: fields.location.unwrap().nullable().optional(),
-  notes: fields.notes.unwrap().nullable().optional(),
-  type: fields.type.unwrap().nullable().optional(),
+  // unwrap() drops the description, so each one is set again.
+  repeat: fields.repeat.unwrap().nullable().optional().describe(`${fields.repeat.description} null stops it repeating.`),
+  location: fields.location.unwrap().nullable().optional().describe(`${fields.location.description} null clears it.`),
+  notes: fields.notes.unwrap().nullable().optional().describe(`${NOTES_HELP} null clears them.`),
+  type: fields.type.unwrap().nullable().optional().describe(`${fields.type.description} null clears it.`),
   checklist: z
     .array(z.string().trim().min(1).max(80))
     .max(50)
