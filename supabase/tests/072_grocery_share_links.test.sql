@@ -2,7 +2,7 @@
 -- stopped. The share endpoint (service role) reads and writes only that family's list, and only
 -- while the link is live; writes need "Let people edit it".
 begin;
-select plan(56);
+select plan(58);
 
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
@@ -99,8 +99,9 @@ select is(public.shared_groceries('short'), null, 'nor a malformed one');
 
 -- FR-004: a guest's add is a new row, matched for the family, marked as through the link.
 select ok((public.shared_grocery_add((select token from links where name = 'first'), '  Onions ', 1, null, 'onions', 'onions') ->> 'matched')::boolean, 'a guest adds, matched to the catalog');
-select is((select count(*)::int from public.grocery_items where name = 'Onions' and source = 'link' and created_by is null and share_link_id is not null), 1, 'a new row, from the link, with nobody as its author');
-select is((select aisle::text from public.grocery_items where source = 'link'), 'produce', 'in its aisle');
+select is((select count(*)::int from public.grocery_items where name = 'Onions' and source = 'link' and created_by is null and share_link_id is not null
+  and family_id = (select family_id from public.members where user_id = '00000000-0000-0000-0000-00000000000a')), 1, 'a new row, from the link, with nobody as its author');
+select is((select aisle::text from public.grocery_items where source = 'link' and name = 'Onions' and family_id = (select family_id from public.members where user_id = '00000000-0000-0000-0000-00000000000a')), 'produce', 'in its aisle');
 select throws_ok($$ select public.shared_grocery_add((select token from links where name = 'first'), 'Stuff', 1, 'bucket', 'stuff', 'stuff') $$, '22P02', null, 'an unknown unit is refused');
 select throws_ok($$ select public.shared_grocery_add((select token from links where name = 'first'), '', null, null, '', '') $$, '23514', null, 'so is an empty name');
 
@@ -154,6 +155,19 @@ select ok((select stopped_at > now() - interval '1 minute' and stopped_by = '000
 select throws_ok($$ update public.grocery_share_links set stopped_at = null $$, 'P0001', 'link_stopped', 'a stopped link stays stopped');
 select pg_temp.as_endpoint();
 select is((select public.shared_groceries(token) from links where name = 'second'), null, 'a stopped link reads nothing');
+
+-- A member who stopped a link can still delete their account: their id leaves `stopped_by`.
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000b', 'alex@example.com');
+select pg_temp.login('00000000-0000-0000-0000-00000000000a');
+insert into links select 'invite', public.create_invite();
+select pg_temp.login('00000000-0000-0000-0000-00000000000b');
+select public.accept_invite((select token from links where name = 'invite'), 'Alex');
+insert into links select 'alex', token from public.share_groceries('1h', now() + interval '1 hour', true);
+update public.grocery_share_links set stopped_at = now() where stopped_at is null;
+select lives_ok($$ select public.delete_my_account() $$, 'a member who stopped a link deletes their account');
+reset role;
+select is((select stopped_by from public.grocery_share_links where token = (select token from links where name = 'alex')), null, 'the stopped link stays, without their id');
 
 select * from finish();
 rollback;
