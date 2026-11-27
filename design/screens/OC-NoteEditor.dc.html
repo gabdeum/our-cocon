@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Edit reminder · notes with formatting toolbar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; position: relative; overflow: hidden; display: flex; flex-direction: column">
+  <div style="padding: 54px 20px 12px; display: flex; align-items: center; justify-content: space-between">
+    <a href="#" style="font-size: 16px; font-weight: 800; text-decoration: none; min-height: 44px; display: flex; align-items: center">Cancel</a>
+    <h1 style="margin: 0; font-size: 18px; font-weight: 900">Edit reminder</h1>
+    <a href="#" style="font-size: 16px; font-weight: 900; text-decoration: none; min-height: 44px; display: flex; align-items: center">Save</a>
+  </div>
+
+  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 14px; flex: 1; min-height: 0">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="t" style="font-size: 16px; font-weight: 900">Title</label>
+      <input id="t" value="Feed the sourdough starter" style="height: 52px; box-sizing: border-box; border-radius: 16px; border: 2px solid #EADDB8; background: #FFFFFF; padding: 0 14px; font-family: inherit; font-size: 16px; font-weight: 700; color: #2A2414">
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0">
+      <label for="n" style="font-size: 16px; font-weight: 900">Notes</label>
+      <textarea id="n" style="flex: 1; min-height: 0; box-sizing: border-box; border-radius: 16px; border: 2px solid #5A6820; background: #FFFFFF; padding: 12px 14px; font-family: inherit; font-size: 16px; line-height: 1.5; font-weight: 600; color: #2A2414; resize: none">1. Feed at a **1:1:1 ratio** by weight: starter, water and bread flour.
+2. Leave at room temperature for **4–8 hours**, until it doubles in size.
+3. Put it back in the fridge once it has doubled.
+4. </textarea>
+    </div>
+  </div>
+
+  <div role="toolbar" aria-label="Formatting" style="margin-top: 12px; height: 52px; background: #FFF0C9; border-top: 1.5px solid #EADDB8; display: flex; align-items: center; padding: 0 6px; gap: 2px">
+    <button aria-label="Bold" style="width: 48px; height: 44px; border: none; border-radius: 12px; background: transparent; font-family: inherit; font-size: 19px; font-weight: 900; color: #2A2414; cursor: pointer">B</button>
+    <button aria-label="Link" aria-pressed="{{linkOn}}" onClick="{{toggleLink}}" style="{{linkStyle}}">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></svg>
+    </button>
+    <span aria-hidden="true" style="width: 1.5px; height: 24px; background: #DCCB9C; margin: 0 4px"></span>
+    <button aria-label="Bulleted list" style="width: 48px; height: 44px; border: none; border-radius: 12px; background: transparent; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 6h10M10 12h10M10 18h10"></path><circle cx="5" cy="6" r="1.3" fill="currentColor"></circle><circle cx="5" cy="12" r="1.3" fill="currentColor"></circle><circle cx="5" cy="18" r="1.3" fill="currentColor"></circle></svg>
+    </button>
+    <button aria-label="Numbered list" aria-pressed="true" style="width: 48px; height: 44px; border: none; border-radius: 12px; background: #5A6820; color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h10M10 12h10M10 18h10"></path><path d="M4 4.5l1.5-1V9M3.5 13.5a1.5 1.5 0 1 1 2.6 1L3.5 17h3"></path></svg>
+    </button>
+    <button aria-label="Checklist" style="width: 48px; height: 44px; border: none; border-radius: 12px; background: transparent; color: #2A2414; display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="6" height="6" rx="1.5"></rect><path d="M4.5 16.5l1.5 1.5 3-3M13 7h8M13 17h8"></path></svg>
+    </button>
+    <button aria-label="Hide keyboard" style="margin-left: auto; width: 48px; height: 44px; border: none; border-radius: 12px; background: transparent; color: #5A503A; display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="11" rx="2"></rect><path d="M7 8h.01M11 8h.01M15 8h.01M8 12h8M9 19l3 2 3-2"></path></svg>
+    </button>
+  </div>
+  <div aria-hidden="true" style="height: 290px; background: #D6D2C8; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #5A503A">iOS keyboard</div>
+
+  <sc-if value="{{linkOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(42,36,20,0.35); display: flex; align-items: flex-end">
+      <div role="dialog" aria-label="Add a link" style="width: 100%; box-sizing: border-box; background: #FFF8E3; border-radius: 30px 30px 0 0; padding: 10px 20px 30px; display: flex; flex-direction: column; gap: 14px">
+        <div style="width: 44px; height: 5px; border-radius: 3px; background: #D8CBA4; align-self: center"></div>
+        <h2 style="margin: 0; font-size: 22px; font-weight: 900">Add a link</h2>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="lt" style="font-size: 16px; font-weight: 900">Text</label>
+          <input id="lt" value="bread flour" style="height: 52px; box-sizing: border-box; border-radius: 16px; border: 2px solid #EADDB8; background: #FFFFFF; padding: 0 14px; font-family: inherit; font-size: 16px; font-weight: 700; color: #2A2414">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="lu" style="font-size: 16px; font-weight: 900">Link</label>
+          <input id="lu" placeholder="https://" style="height: 52px; box-sizing: border-box; border-radius: 16px; border: 2px solid #5A6820; background: #FFFFFF; padding: 0 14px; font-family: inherit; font-size: 16px; font-weight: 700; color: #2A2414">
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <button onClick="{{toggleLink}}" style="height: 52px; border-radius: 16px; border: none; background: #FFF0C9; color: #2A2414; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer">Cancel</button>
+          <button onClick="{{toggleLink}}" style="height: 52px; border-radius: 16px; border: none; background: #5A6820; color: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer">Add link</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { link: false }; }
+  renderVals() {
+    var self = this, on = this.state.link;
+    return {
+      linkOpen: on, linkOn: on ? 'true' : 'false',
+      toggleLink: function () { self.setState({ link: !self.state.link }); },
+      linkStyle: 'width: 48px; height: 44px; border: none; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; ' + (on ? 'background: #5A6820; color: #FFFFFF' : 'background: transparent; color: #2A2414')
+    };
+  }
+}
+</script>
+</body>
+</html>

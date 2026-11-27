@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Component · Notes section with basic formatting</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5A6820}a:hover{color:#424D17}
+</style>
+</helmet>
+<section aria-label="Notes" style="width: 350px; box-sizing: border-box; background: #FFF8E3; color: #2A2414; font-family: 'Nunito', sans-serif; display: flex; flex-direction: column; gap: 12px; border-top: 1.5px solid #EADDB8; padding-top: 14px">
+
+  <p style="margin: 0; font-size: 15px; line-height: 1.5; font-weight: 600"><strong style="font-weight: 900">40 nuits</strong>. Arrivée le 1er décembre à 15 h, <em>départ le 10 janvier</em>. Infos sur <a href="#" style="font-weight: 800">airbnb.com/help</a>.</p>
+
+  <p style="margin: 4px 0 0; font-size: 15px; line-height: 1.5; font-weight: 900">Bold line (also how a # heading shows)</p>
+
+  <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.45; font-weight: 600">
+    <li style="display: flex; gap: 10px"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #C99A1E; flex: none; margin-top: 8px"></span><span>Bulleted item</span></li>
+    <li style="display: flex; gap: 10px"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #C99A1E; flex: none; margin-top: 8px"></span><span>Bulleted item with <strong style="font-weight: 900">bold</strong></span></li>
+  </ul>
+
+  <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.45; font-weight: 600">
+    <li style="display: flex; gap: 10px; align-items: flex-start"><span aria-hidden="true" style="width: 22px; height: 22px; flex: none; border-radius: 50%; background: #FFF0C9; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center">1</span><span>Numbered item</span></li>
+    <li style="display: flex; gap: 10px; align-items: flex-start"><span aria-hidden="true" style="width: 22px; height: 22px; flex: none; border-radius: 50%; background: #FFF0C9; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center">2</span><span>Numbered item</span></li>
+  </ol>
+
+  <div role="list" style="display: flex; flex-direction: column">
+    <sc-for list="{{items}}" as="t" hint-placeholder-count="3">
+      <button role="listitem" aria-pressed="{{t.on}}" onClick="{{t.toggle}}" style="min-height: 44px; display: flex; align-items: center; gap: 12px; border: none; background: transparent; padding: 0; font-family: inherit; text-align: left; cursor: pointer; color: #2A2414">
+        <span aria-hidden="true" style="{{t.box}}">
+          <sc-if value="{{t.done}}" hint-placeholder-val="{{false}}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+          </sc-if>
+        </span>
+        <span style="{{t.text}}">{{t.label}}</span>
+      </button>
+    </sc-for>
+  </div>
+
+  <p style="margin: 0; font-size: 15px; line-height: 1.5; font-weight: 600; white-space: pre-line">| Unsupported | table |
+shows as plain text, like this.</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":350,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { done: { 1: true } }; }
+  renderVals() {
+    var self = this, s = this.state;
+    var L = ['Checklist item', 'Ticked item', 'Checklist item'];
+    return {
+      items: L.map(function (label, i) {
+        var d = !!s.done[i];
+        return {
+          label: label, done: d, on: d ? 'true' : 'false',
+          toggle: function () { var n = Object.assign({}, self.state.done); n[i] = !n[i]; self.setState({ done: n }); },
+          box: 'width: 24px; height: 24px; box-sizing: border-box; flex: none; border-radius: 7px; display: flex; align-items: center; justify-content: center; ' + (d ? 'background: #5A6820' : 'border: 2.5px solid #CDBF95; background: #FFFFFF'),
+          text: 'font-size: 15px; line-height: 1.4; font-weight: 700' + (d ? '; text-decoration: line-through; color: #6B5F43' : '')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
