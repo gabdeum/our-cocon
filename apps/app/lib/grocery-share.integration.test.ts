@@ -40,6 +40,9 @@ describe.skipIf(!local)('the shared grocery list against local Supabase', () => 
 
   afterAll(async () => {
     if (channel) await guest.removeChannel(channel);
+    // The family first: its stopped link would refuse the user's deletion (only delete_my_account
+    // may clear `stopped_by`), leaving the list behind for the database tests to count.
+    await admin.from('families').delete().eq('id', familyId);
     for (const id of userIds) await admin.auth.admin.deleteUser(id);
   });
 
@@ -62,7 +65,13 @@ describe.skipIf(!local)('the shared grocery list against local Supabase', () => 
         else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') reject(new Error(status));
       }),
     );
-    expect(await addItem(alex, familyId, alexId, [], '2 lemons')).toMatchObject({ status: 'added' });
+    // Right after Realtime starts (a fresh CI stack), its first broadcast can be lost: add again
+    // until one arrives, a few seconds each.
+    const arrived = (ms: number) => Promise.race([pinged.then(() => true), new Promise<boolean>((r) => setTimeout(() => r(false), ms))]);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      expect(await addItem(alex, familyId, alexId, [], '2 lemons')).toMatchObject({ status: 'added' });
+      if (await arrived(3000)) break;
+    }
     // Content-free: which table, never the row (Realtime adds its own message id).
     const payload = (await pinged) as Record<string, unknown>;
     expect(payload.table).toBe('grocery_items');
