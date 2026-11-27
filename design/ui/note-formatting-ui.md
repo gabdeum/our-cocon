@@ -52,3 +52,15 @@ One level of lists only. Indented items show as normal items.
 ## Previews
 
 Anywhere a note shows as one line (calendar rows, Home cards, search results): strip all markers, show plain text.
+
+## Built with tokens (spec 073)
+
+The three colours that aren't tokens are drawn with the closest ones (Gabriel, 2026-11-27): hairline `#EADDB8` → `line-strong` (`#EEDFB5`), bullet dot `#C99A1E` → `member-honey-edge` (`#BA8300`), ticked text `#6B5F43` → `ink-soft` (`#7A6F55`, 4.7:1 on the page).
+
+## Copy
+
+- A link that can't open: warn toast "Couldn't open that link".
+- Screen readers call the notes "Notes" (the region under the hairline); checklist items are checkboxes, ticked or not.
+
+## Changelog
+- 2026-11-27 (spec 073): built as `NoteText` and `NotesSection` (design/system/components/NoteText). The event page shows the whole note (no Show more, Gabriel).

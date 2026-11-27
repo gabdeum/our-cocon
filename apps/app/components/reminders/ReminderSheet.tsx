@@ -2,7 +2,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { addDays, formatTime, weekday, type WeekStartsOn } from '@cocon/calendar';
 import { loadReminder, suggestReminderTitles, type Db, type ReminderTitleSuggestion } from '@cocon/data';
-import type { ReminderDraft, Tracker } from '@cocon/schemas';
+import { NOTES_MAX, type ReminderDraft, type Tracker } from '@cocon/schemas';
 import { BottomSheet, type BottomSheetProps, Button, Choice, DateGrid, DayChip, FieldWarning, Icon, Link, MemberPickerChip, PillRow, RowScroll, SuggestionPill, Switch, Text, TextField, TimeField, useSheetPresentation } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import { dateGridMonth, dayTiles, endsProblem, shiftMonth, type RepeatChoice } from '../../lib/event-form';
@@ -203,7 +203,7 @@ export function useReminderForm(p: ReminderSheetProps) {
           optionalLabel={r.optional}
           value={f.notes}
           onChangeText={(notes) => set({ notes })}
-          maxLength={1000}
+          maxLength={NOTES_MAX}
           placeholder={r.notesPlaceholder}
           multiline
           autoFocus={p.focusNotes}

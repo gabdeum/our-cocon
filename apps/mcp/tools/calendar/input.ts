@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { addDays, daysBetween } from '@cocon/calendar';
-import { EventCategory, RecurrenceEnds, Reminder, SlotKey, Visibility, Weekday, ClockTime, type EventInput } from '@cocon/schemas/calendar';
+import { EventCategory, NOTES_MAX, RecurrenceEnds, Reminder, SlotKey, Visibility, Weekday, ClockTime, type EventInput } from '@cocon/schemas/calendar';
 import { ToolError } from '../../src/tools.js';
 import { Day, member, memberRef, type Calendar } from './shared.js';
 
@@ -9,6 +9,9 @@ import { Day, member, memberRef, type Calendar } from './shared.js';
  * turned into the app's `EventInput`, which `saveEvent` checks again with the calendar engine.
  */
 const Who = z.string().trim().min(1).max(80);
+
+/** Spec 073 FR-007: the notes of events and reminders, and the formatting the app shows. */
+export const NOTES_HELP = `Details, up to ${NOTES_MAX} characters. Line breaks are kept. The app shows **bold**, *italic*, [links](https://…), "- " bulleted lists, "1. " numbered lists and "- [ ] " checklists; tables, code and diagrams show as plain text.`;
 
 export const fields = {
   title: z.string().trim().min(1).max(60).describe('Short, as the family would write it: "Football", "Pediatrician".'),
@@ -38,7 +41,7 @@ export const fields = {
     .optional()
     .describe('How it repeats. Leave out for a one-off event.'),
   location: z.string().trim().min(1).max(200).optional().describe('The place or full address, as the member would type it. Line breaks are kept.'),
-  notes: z.string().trim().min(1).max(2000).optional(),
+  notes: z.string().trim().min(1).max(NOTES_MAX).optional().describe(NOTES_HELP),
   type: EventCategory.optional().describe('What kind of event it is. A birthday is all day and repeats every year.'),
   reminder: Reminder.optional().describe(
     'When to remind on their phones: none, minutes_15, hour_before, morning_of (07:30, or an hour before an early start) or day_before (18:00 the evening before). Leave out to use the member’s default.',

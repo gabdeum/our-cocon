@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CalendarDate, ClockTime, QuietTime, Recurrence } from './calendar';
+import { CalendarDate, ClockTime, NOTES_MAX, QuietTime, Recurrence } from './calendar';
 
 /**
  * Spec 056: reminders, things to do and tick off (not the event reminders of spec 049, which are
@@ -40,14 +40,13 @@ export const ReminderAssignee = z.union([z.uuid(), z.literal('everyone')]);
 export type ReminderAssignee = z.infer<typeof ReminderAssignee>;
 
 export const REMINDER_TITLE_MAX = 80;
-export const REMINDER_NOTES_MAX = 1000;
 
 const draftFields = {
   title: z.string().trim().min(1, 'Give your reminder a name.').max(REMINDER_TITLE_MAX, `Keep the name under ${REMINDER_TITLE_MAX} characters.`),
   /** Line breaks are kept (FR-009); blank means no notes. */
   notes: z
     .string()
-    .max(REMINDER_NOTES_MAX, `Keep the notes under ${REMINDER_NOTES_MAX} characters.`)
+    .max(NOTES_MAX, `Keep the notes under ${NOTES_MAX} characters.`)
     .transform((n) => (n.trim() === '' ? null : n))
     .nullable()
     .optional(),

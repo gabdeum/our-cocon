@@ -258,6 +258,23 @@ describe('spec 014 events', () => {
   });
 });
 
+describe('spec 073 events', () => {
+  it('says which formats a note uses and the scheme of a link, never the note or the address', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    const viewed = { entity: 'reminder', has_bold: true, has_link: false, has_list: true, has_checklist: true } as const;
+    tracker.track('note_viewed_formatted', viewed);
+    tracker.track('note_link_opened', { entity: 'event', scheme: 'https' });
+    tracker.track('note_parse_failed', { entity: 'event' });
+    expect(t.capture).toHaveBeenCalledWith('note_viewed_formatted', viewed);
+    expect(t.capture).toHaveBeenCalledWith('note_link_opened', { entity: 'event', scheme: 'https' });
+    expect(t.capture).toHaveBeenCalledWith('note_parse_failed', { entity: 'event' });
+    expect(() => tracker.track('note_link_opened', { entity: 'event', scheme: 'https', url: 'https://a.fr' } as never)).toThrow();
+    expect(() => tracker.track('note_link_opened', { entity: 'event', scheme: 'javascript' } as never)).toThrow();
+    expect(() => tracker.track('note_parse_failed', { entity: 'recipe' } as never)).toThrow();
+  });
+});
+
 describe('spec 015 events', () => {
   it('says whether a row came from a paste, and never what it says', () => {
     const t = fakeTransport();

@@ -96,6 +96,8 @@ import {
   DayChip,
   ChecklistAdd,
   ChecklistRow,
+  NoteText,
+  NotesSection,
   ReminderRow,
   TimeField,
   DateGrid,
@@ -398,6 +400,26 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <ChecklistRow label="Diaper bag" done onToggle={noop} />
           <ChecklistRow label="Bottle (offline)" done={false} onToggle={noop} disabled last />
         </ListGroup>
+      </Section>
+
+      <Section group="Calendar" title="Notes: NoteText, NotesSection (spec 073)">
+        <NotesSection label="Notes">
+          <NoteText
+            onOpenLink={noop}
+            blocks={[
+              { kind: 'paragraph', spans: [{ kind: 'bold', children: [{ kind: 'text', text: '40 nights' }] }, { kind: 'text', text: '. Arriving December 1 at 15:00, ' }, { kind: 'italic', children: [{ kind: 'text', text: 'leaving January 10' }] }, { kind: 'text', text: '. Info on ' }, { kind: 'link', url: 'https://airbnb.com/help', children: [{ kind: 'text', text: 'airbnb.com/help' }] }, { kind: 'text', text: '.' }] },
+              { kind: 'boldLine', spans: [{ kind: 'text', text: 'Bold line (also how a # heading shows)' }] },
+              { kind: 'bullet', spans: [{ kind: 'text', text: 'Bulleted item' }] },
+              { kind: 'bullet', spans: [{ kind: 'text', text: 'Bulleted item with ' }, { kind: 'bold', children: [{ kind: 'text', text: 'bold' }] }] },
+              { kind: 'number', n: 1, spans: [{ kind: 'text', text: 'Numbered item' }] },
+              { kind: 'number', n: 2, spans: [{ kind: 'text', text: 'Numbered item' }] },
+              { kind: 'check', done: false, line: 8, spans: [{ kind: 'text', text: 'Checklist item' }] },
+              { kind: 'check', done: true, line: 9, spans: [{ kind: 'text', text: 'Ticked item' }] },
+              { kind: 'check', done: false, line: 10, spans: [{ kind: 'text', text: 'Checklist item' }] },
+              { kind: 'paragraph', spans: [{ kind: 'text', text: '| Unsupported | table |\nshows as plain text, like this.' }] },
+            ]}
+          />
+        </NotesSection>
       </Section>
 
       <Section group="Reminders" title="CalCard, ReminderRow, ActionMenu (dots), DayChip (start), TimeField (spec 057)">

@@ -287,7 +287,7 @@ insert into public.events (id, family_id, title, category, location, notes, star
 select e.id::uuid, 'c0c0f000-0000-4000-8000-000000000001', e.title, e.category, e.location, e.notes, e.day, e.day, e.time_type, e.slots, e.start_time, e.end_time,
   e.recurrence::jsonb, e.responsible::uuid, e.visibility, e.author::uuid, e.author::uuid, e.source
 from (values
-  ('c0c0d000-0000-4000-8000-000000000001', 'Football', 'sport', 'Riverside park', null,
+  ('c0c0d000-0000-4000-8000-000000000001', 'Football', 'sport', 'Riverside park', E'Bring:\n- Water bottle\n- Shin pads\n\nFixtures on https://example.com/club/fixtures.',
     current_date + (6 - extract(dow from current_date)::integer), 'slot', array['morning'], null, null,
     '{"freq":"weekly","ends":{"type":"never"}}', 'c0c0b000-0000-4000-8000-00000000000a', 'family', 'c0c0a000-0000-4000-8000-00000000000a', 'claude'),
   ('c0c0d000-0000-4000-8000-000000000002', 'Dentist', 'health', 'Rue Oberkampf 12', 'Ask about the retainer',
@@ -335,11 +335,11 @@ from (select (now() at time zone 'Europe/Paris')::date as today) d, (values
     '{"freq":"weekly","ends":{"type":"never"}}', -9, 5, 'day', null, 'c0c0a000-0000-4000-8000-00000000000a', 'app'),
   ('c0c0e000-0000-4000-8000-000000000002', 'Pay the daycare', E'Transfer before 18:00.\nReference: November', null, 0, time '15:00', true,
     null, null, null, 'hour', null, 'c0c0a000-0000-4000-8000-00000000000a', 'app'),
-  ('c0c0e000-0000-4000-8000-000000000003', 'Water the plants', null, 'c0c0b000-0000-4000-8000-00000000000c', 0, time '00:00', false,
+  ('c0c0e000-0000-4000-8000-000000000003', 'Water the plants', E'This week:\n- [ ] Big fern by the window\n- [x] Basil in the kitchen\n- [ ] Orchid, **only a splash**', 'c0c0b000-0000-4000-8000-00000000000c', 0, time '00:00', false,
     null, null, null, 'day', null, 'c0c0a000-0000-4000-8000-00000000000c', 'app'),
   ('c0c0e000-0000-4000-8000-000000000004', 'Call the dentist', 'Ask about the retainer', 'c0c0b000-0000-4000-8000-00000000000b', 1, time '09:00', true,
     null, null, null, 'hour', null, 'c0c0a000-0000-4000-8000-00000000000b', 'claude'),
-  ('c0c0e000-0000-4000-8000-000000000005', 'Renew James''s passport', null, 'c0c0b000-0000-4000-8000-00000000000a', -1, time '00:00', false,
+  ('c0c0e000-0000-4000-8000-000000000005', 'Renew James''s passport', E'# Before the appointment\n1. Fill in the form on [the passport site](https://passeport.ants.gouv.fr)\n2. Get **two photos** taken\n3. Bring the old passport\n\nQuestions? [Write to the town hall](mailto:mairie@example.com) or _call them_.', 'c0c0b000-0000-4000-8000-00000000000a', -1, time '00:00', false,
     null, null, null, 'week', 1, 'c0c0a000-0000-4000-8000-00000000000a', 'app'),
   ('c0c0e000-0000-4000-8000-000000000006', 'Pay the rent', null, null, 10, time '00:00', false,
     '{"freq":"monthly","ends":{"type":"never"}}', 10, null, 'day', null, 'c0c0a000-0000-4000-8000-00000000000a', 'app')

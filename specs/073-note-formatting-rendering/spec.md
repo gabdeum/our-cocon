@@ -28,6 +28,7 @@ Event and reminder notes stay plain text in the database (`notes` columns, uncha
 |---|---|---|
 | `note_viewed_formatted` | `entity` (event/reminder), `has_bold`, `has_link`, `has_list`, `has_checklist` | Drawer opens on a note that has any formatting. Once per drawer open. |
 | `note_link_opened` | `entity`, `scheme` | A link in a note is tapped. Never send the URL. |
+| `note_parse_failed` | `entity` | The parser fell back to plain text (Warnings and errors). Never the note. |
 
 ## Warnings and errors
 - The parser must never throw. On any internal error, fall back to showing the whole note as one plain paragraph and log `note_parse_failed` (no note text in the log).
@@ -41,3 +42,5 @@ Event and reminder notes stay plain text in the database (`notes` columns, uncha
 
 ## Changelog
 - 2026-11-27 — First version.
+- 2026-11-27 — Gabriel: notes go to 5,000 characters for events and reminders (one `NOTES_MAX`; the reminder tool took 2,000 while the table took 1,000); the event page shows the whole note (053's Show more is gone); the handoff's three off-token colours use the closest tokens (`line-strong`, `member-honey-edge`, `ink-soft`).
+- 2026-11-27 — Built. `NoteText` and `NotesSection` in `@cocon/ui` (new component, README in design/system/components/NoteText); the parser in `apps/app/lib/notes.ts` (one file: `apps/app/lib` has no folders), with `safeUrl` and `openNoteLink` for 074; `components/shared/Notes.tsx` ties it to tracking and the toast. Nunito italics (600–900) load with the app. Migration `notes_limit`: both tables to 5,000, a one-date change's override to 24 KB. Deviations: no screen shows a note as a one-line preview, so `notesToPlainText` has no caller yet (032-later L170); table lines and fenced code stay raw; a blank line between numbered items keeps the count; `note_parse_failed` is a PostHog event. SC-004 is measured on the phone (L168). Seed: notes on "Water the plants", "Renew James's passport" and "Football".

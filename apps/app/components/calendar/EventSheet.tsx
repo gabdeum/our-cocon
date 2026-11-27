@@ -3,7 +3,7 @@ import { Platform, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { addDays, dateLabel, daysBetween, formatTime, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import { loadEvent, loadEvents, suggestEventTitles, type Db, type StoredEvent, type TitleSuggestion } from '@cocon/data';
-import { EVENT_CATEGORIES, Reminder as ReminderSchema, type EventInput, type Reminder, type Visibility } from '@cocon/schemas/calendar';
+import { EVENT_CATEGORIES, NOTES_MAX, Reminder as ReminderSchema, type EventInput, type Reminder, type Visibility } from '@cocon/schemas/calendar';
 import type { Tracker } from '@cocon/schemas';
 import {
   BottomSheet,
@@ -406,7 +406,7 @@ export function useEventForm(p: EventSheetProps) {
             ) : null}
 
             <View className="gap-8">
-              <TextField label={a.notes} value={d.notes} onChangeText={(notes) => set({ notes })} maxLength={2000} placeholder={a.notesPlaceholder} multiline />
+              <TextField label={a.notes} value={d.notes} onChangeText={(notes) => set({ notes })} maxLength={NOTES_MAX} placeholder={a.notesPlaceholder} multiline />
               {p.occurrenceOnly ? null : (
                 <View className="rounded-lg bg-surface-card px-14 py-4">
                   {d.checklist.map((c, i) => (

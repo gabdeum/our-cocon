@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { daysBetween, todayIn } from '@cocon/calendar';
 import { completeReminder, createReminder, deleteReminder, snoozeReminder, updateReminder, type StoredReminder } from '@cocon/data';
 import { toDraft } from '@cocon/reminders';
-import { ClockTime, ReminderDraft, ReminderRollover, ReminderSnoozeOption, type ParsedReminderDraft } from '@cocon/schemas';
+import { ClockTime, NOTES_MAX, ReminderDraft, ReminderRollover, ReminderSnoozeOption, type ParsedReminderDraft } from '@cocon/schemas';
 import { defineTool, ToolError, type ToolContext } from '../../src/tools.js';
-import { recurrenceOf, fields as eventFields } from '../calendar/input.js';
+import { NOTES_HELP, recurrenceOf, fields as eventFields } from '../calendar/input.js';
 import { Day, loadCalendar } from '../calendar/shared.js';
 import { assigneeRef, localWhen, ReminderId, reminderFailure, reminderLink, storedReminder } from './shared.js';
 
@@ -21,7 +21,7 @@ const fields = {
     'What happens while it’s late: "hour" comes back every hour (needs a time), "day" every morning, "week" a week later, "none" stays in Overdue quietly. Left out: "hour" with a time, "day" without.',
   ),
   assignee: z.string().trim().min(1).max(80).describe('Who it’s for: a name or id from list_members, or "everyone" (the default).'),
-  notes: z.string().max(2000).describe('Details, up to 1000 characters. Line breaks are kept.'),
+  notes: z.string().max(NOTES_MAX).describe(NOTES_HELP),
 };
 
 /** FR-004: the app's rules (ReminderDraft), and "every hour" only with a time, said rather than changed. */

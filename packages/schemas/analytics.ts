@@ -13,6 +13,8 @@ const ConverterUnitEvent = z.enum(converterUnits);
 /** The recipe form's sections (spec 014 FR-001), in order. */
 export const RecipeFormSection = z.enum(['details', 'ingredients', 'steps', 'variants']);
 export type RecipeFormSection = z.infer<typeof RecipeFormSection>;
+/** Spec 073: whose notes. */
+export const NoteEntity = z.enum(['event', 'reminder']);
 /** What an event edit changed (spec 041 `event_updated`): field names only, never their values. */
 export const EventField = z.enum(['title', 'type', 'place', 'notes', 'date', 'time', 'who', 'responsible', 'repeat', 'reminder', 'checklist']);
 export type EventField = z.infer<typeof EventField>;
@@ -336,6 +338,11 @@ export const events = {
   // or a nudge while it's late), and the reminder's rollover; and its Lock Screen actions.
   reminder_notification_sent: z.strictObject({ kind: ReminderNotificationKind, rollover: ReminderRollover }),
   reminder_notification_action: z.strictObject({ action: TodoAction }),
+  // Spec 073: a formatted note shown (once per event page or reminder drawer), a link in a note
+  // tapped (its scheme, never the address), and a note the parser couldn't read (never its text).
+  note_viewed_formatted: z.strictObject({ entity: NoteEntity, has_bold: z.boolean(), has_link: z.boolean(), has_list: z.boolean(), has_checklist: z.boolean() }),
+  note_link_opened: z.strictObject({ entity: NoteEntity, scheme: z.enum(['http', 'https', 'mailto']) }),
+  note_parse_failed: z.strictObject({ entity: NoteEntity }),
 } as const;
 
 export type EventName = keyof typeof events;

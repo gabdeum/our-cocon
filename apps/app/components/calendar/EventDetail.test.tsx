@@ -94,17 +94,26 @@ describe('Event detail', () => {
     await expectAccessible();
   });
 
-  // Spec 053 FR-007: the notes were saved but shown nowhere.
-  it('shows the notes under the date line; long ones are cut with Show more', () => {
+  // Spec 053 FR-007: the notes under the date line; spec 073: formatted, whole, no Show more.
+  it('shows the whole note under the date line, formatted', () => {
     setup(babyMusic({ notes: 'Bring the yellow socks' }));
     const text = document.body.textContent ?? '';
     expect(text.indexOf('Bring the yellow socks')).toBeGreaterThan(text.indexOf('Morning, about 09:00–12:00'));
     expect(text.indexOf('Bring the yellow socks')).toBeLessThan(text.indexOf('Gabriel takes James'));
-    expect(screen.queryByRole('button', { name: 'Show more' })).toBeNull();
+    expect(screen.getByRole('region', { name: 'Notes' })).toBeTruthy();
     cleanup();
-    setup(babyMusic({ notes: ['1', '2', '3', '4', '5', '6', '7'].join('\n') }));
-    fireEvent.click(screen.getByRole('button', { name: 'Show more' }));
-    expect(screen.getByRole('button', { name: 'Show less' })).toBeTruthy();
+    const { tracker } = setup(babyMusic({ notes: '**Bring**\n1. Socks\n2. Water\n3. Snack\n4. Hat\n5. Coat\n6. Book\n7. Toy' }));
+    expect(screen.queryByRole('button', { name: 'Show more' })).toBeNull();
+    expect(screen.getByText('Toy')).toBeTruthy();
+    expect(screen.getByText('7')).toBeTruthy();
+    expect(tracker.track).toHaveBeenCalledWith('note_viewed_formatted', { entity: 'event', has_bold: true, has_link: false, has_list: true, has_checklist: false });
+  });
+
+  it('opens a link in the notes outside the app (spec 073 FR-004)', () => {
+    const { onOpenUrl, tracker } = setup(babyMusic({ notes: 'Parking: [map](https://maps.example.com/a)' }));
+    fireEvent.click(screen.getByRole('link', { name: 'map' }));
+    expect(onOpenUrl).toHaveBeenCalledWith('https://maps.example.com/a');
+    expect(tracker.track).toHaveBeenCalledWith('note_link_opened', { entity: 'event', scheme: 'https' });
   });
 
   it('hides rows without a value, and says an assistant added it (FR-006)', () => {
