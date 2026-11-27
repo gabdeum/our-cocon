@@ -54,7 +54,6 @@ export { Avatar, AvatarStack, type AvatarColor, type MemberColor } from './compo
 export { MemberBadge, MemberChip, MemberCount, MemberFilterChip, MemberPickerChip, MemberStack, type MemberBadgeProps, type MemberChipColor, type MemberChipProps, type MemberCountProps, type MemberPickerChipProps } from './components/MemberChip';
 export { SlotChip, type SlotChipProps } from './components/SlotChip';
 export { DayChip, type DayChipProps } from './components/DayChip';
-export { ChecklistAdd, ChecklistRow, type ChecklistRowProps } from './components/ChecklistRow';
 export { NoteText, NotesSection, type NoteAlign, type NoteBlock, type NoteSpan, type NoteTextProps } from './components/NoteText';
 export { NoteFormattingToolbar, type NoteFormattingToolbarProps, type NoteToolbarFormat } from './components/NoteFormattingToolbar';
 export { MemberPill, ReminderMore, ReminderRow, type ReminderRowProps } from './components/ReminderRow';

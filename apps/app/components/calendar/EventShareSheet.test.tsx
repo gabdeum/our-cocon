@@ -35,7 +35,7 @@ describe('Event share sheet', () => {
   it('says what the link shows, makes it on open and tracks a new one', async () => {
     const { tracker } = await setup();
     expect(screen.getByText('Share this event')).toBeTruthy();
-    expect(screen.getByText('People with the link see the title, day, time and place. No notes or checklist.')).toBeTruthy();
+    expect(screen.getByText('People with the link see the title, day, time and place. No notes.')).toBeTruthy();
     expect(screen.getByText(url)).toBeTruthy();
     for (const name of ['Copy link', 'Message', 'Email', 'More', 'Stop sharing this link']) expect(screen.getByRole('button', { name })).toBeTruthy();
     expect(tracker.track).toHaveBeenCalledWith('event_shared', {});

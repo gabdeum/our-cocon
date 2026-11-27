@@ -123,12 +123,12 @@ describe('AddSheet', () => {
     const props = await setup((p) => ({
       ...p,
       mode: 'edit',
-      event: { ...p.event, mode: 'edit', initial: { ...p.event.initial, title: 'Swim', location: 'Pool', checklist: [{ label: 'Towels' }] } },
+      event: { ...p.event, mode: 'edit', initial: { ...p.event.initial, title: 'Swim', location: 'Pool', category: 'sport' } },
       reminder: { ...p.reminder, mode: 'edit' },
     }));
     const group = screen.getByRole('group', { name: 'Event or reminder' });
     fireEvent.click(within(group).getByRole('button', { name: 'Edit reminder' }));
-    expect(screen.getByText("As a reminder, it won't keep the place and the checklist.")).toBeTruthy();
+    expect(screen.getByText("As a reminder, it won't keep the place and the type.")).toBeTruthy();
     expect(props.tracker.track).toHaveBeenLastCalledWith('add_sheet_switched', { to: 'reminder', mode: 'edit' });
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save' })));
     expect(props.reminder.onSave).toHaveBeenCalledWith(expect.objectContaining({ title: 'Swim' }));

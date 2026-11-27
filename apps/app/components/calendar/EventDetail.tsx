@@ -3,9 +3,10 @@ import { View } from 'react-native';
 import { dateLabel, viewFor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import type { Tracker } from '@cocon/schemas';
-import { ActionMenu, BottomSheet, ChecklistRow, DateGrid, Dialog, Icon, IconButton, IconRow, ListGroup, MemberStack, NotesSection, PushedScreen, Tag, Text, TopBarHeading } from '@cocon/ui';
+import { ActionMenu, BottomSheet, DateGrid, Dialog, Icon, IconButton, IconRow, ListGroup, MemberStack, NotesSection, PushedScreen, Tag, Text, TopBarHeading } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import type { DeleteScope } from '../../lib/event-delete';
+import type { NoteChecklistSave } from '../../lib/note-checklist';
 import { addedLine, deleteBody, memberBadges, placeActions, reminderLines, repeatLine, responsibleLine, whenLine } from '../../lib/event-detail';
 import { dateGridMonth, shiftMonth } from '../../lib/event-form';
 import type { Member } from '../../lib/session';
@@ -40,7 +41,8 @@ export interface EventDetailProps {
   onOpenUrl: (url: string) => void;
   /** Puts the place on the clipboard. */
   onCopy: (text: string) => Promise<unknown>;
-  onTick: (itemId: string, done: boolean) => Promise<void>;
+  /** Spec 075: saves a checklist tick in the notes this date shows. */
+  noteChecklist: Omit<NoteChecklistSave, 'disabled'>;
   /** Deletes for the scope and returns the Undo; the page then closes. */
   onDelete: (scope: DeleteScope) => Promise<() => Promise<void>>;
   /** Copies the occurrence to `date` and returns the Undo. */
@@ -51,7 +53,7 @@ export interface EventDetailProps {
 
 /**
  * OC-CalEvent (spec 042, compact since spec 050 FR-006): everything about one date of an event on one
- * screen, its live "Bring" checklist, ✎ Edit in the top bar and ⋯ for Duplicate, Share and Delete
+ * screen, its notes (their checklist ticks in place, spec 075), ✎ Edit in the top bar and ⋯ for Duplicate, Share and Delete
  * (OC-CalEventDelete). Rows without a value are hidden (042 FR-001).
  */
 export function EventDetail(p: EventDetailProps) {
@@ -60,10 +62,6 @@ export function EventDetail(p: EventDetailProps) {
   const [dialog, setDialog] = useState(false);
   const [picking, setPicking] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // Ticks shown at once, until the next load (a new checklist) brings them back from the database.
-  const [pending, setPending] = useState<{ of: StoredEvent['checklist']; done: Record<string, boolean> }>({ of: event.checklist, done: {} });
-  const ticks = pending.of === event.checklist ? pending.done : {};
-  const setTick = (id: string, done: boolean) => setPending((t) => ({ of: event.checklist, done: { ...(t.of === event.checklist ? t.done : {}), [id]: done } }));
 
   const { use24h } = useCalendarDisplay().prefs;
   const when = whenLine(o, p.slotTimes, use24h);
@@ -71,7 +69,6 @@ export function EventDetail(p: EventDetailProps) {
   const responsible = responsibleLine(o.responsible_member_id, o.members, members);
   const reminder = reminderLines(o, members, p.slotTimes, use24h);
   const badges = memberBadges(o, members);
-  const checklist = event.checklist ?? [];
   const ownEvent = event.creator_member_id === p.myMemberId;
   const shareable = event.visibility === 'family' && o.ends_on >= p.today;
   const surprise = viewFor(o, p.myMemberId).is_surprise;
@@ -85,24 +82,12 @@ export function EventDetail(p: EventDetailProps) {
       : null,
     reminder ? { key: 'reminder', icon: 'bell' as const, ...reminder } : null,
   ].filter((r) => r !== null);
-  const ticked = checklist.filter((c) => ticks[c.id] ?? c.done).length;
   const menu = [
     { label: e.duplicate, onPress: () => setPicking(firstOfMonth(o.starts_on)) },
     ...(shareable ? [{ label: e.share, onPress: p.onShare }] : []),
     // A one-off goes at once, its toast has Undo (2026-11-21); a repeating one asks which dates.
     { label: e.delete, onPress: () => (event.recurrence ? setDialog(true) : void remove('all')), tone: 'danger' as const },
   ];
-
-  const tick = async (id: string, done: boolean) => {
-    setTick(id, done);
-    try {
-      await p.onTick(id, done);
-      if (done) p.tracker.track('event_checklist_ticked', {});
-    } catch {
-      setTick(id, !done);
-      toast.show({ text: e.tickFailed, tone: 'warn' });
-    }
-  };
 
   const remove = async (scope: DeleteScope) => {
     setDialog(false);
@@ -196,7 +181,7 @@ export function EventDetail(p: EventDetailProps) {
         {o.notes ? (
           <View className="mt-4">
             <NotesSection label={strings.notes.label}>
-              <Notes notes={o.notes} entity="event" itemId={event.id} tracker={p.tracker} openUrl={p.onOpenUrl} />
+              <Notes notes={o.notes} entity="event" itemId={event.id} tracker={p.tracker} openUrl={p.onOpenUrl} checklist={{ ...p.noteChecklist, disabled: off }} />
             </NotesSection>
           </View>
         ) : null}
@@ -210,25 +195,8 @@ export function EventDetail(p: EventDetailProps) {
         </ListGroup>
       ) : null}
 
-      {checklist.length ? (
-        <View role="region" aria-label={e.bring} className="rounded-xl bg-surface-card px-14 pb-4 pt-10">
-          <View className="flex-row items-baseline justify-between">
-            <Text size={16} weight="900" role="heading" aria-level={2}>
-              {e.bring}
-            </Text>
-            <Text size={13} weight="700" color="ink-muted">
-              {e.bringCount(ticked, checklist.length)}
-            </Text>
-          </View>
-          {checklist.map((c, i) => {
-            const done = ticks[c.id] ?? c.done;
-            return <ChecklistRow key={c.id} compact label={c.label} done={done} onToggle={() => void tick(c.id, !done)} disabled={off} last={i === checklist.length - 1} />;
-          })}
-        </View>
-      ) : null}
-
       <Text size={13} weight="700" color="ink-muted">
-        {checklist.length ? `${addedLine(event, members, p.now)} · ${e.anyoneCanTick}` : addedLine(event, members, p.now)}
+        {addedLine(event, members, p.now)}
       </Text>
 
       {grid && picking ? (

@@ -114,7 +114,6 @@ export function shownOccurrence(o: StoredEvent & { occurrence_date?: string }, c
   const managed = o.members.flatMap((m) => cal.members.find((x) => x.id === m && x.user_id === null) ?? []);
   const taker = o.responsible_member_id ? cal.members.find((m) => m.id === o.responsible_member_id) : null;
   const hiddenFrom = o.visibility === 'surprise' ? (o.surprise?.hidden_from ?? []).flatMap((id) => nameOf(cal, id) ?? []) : [];
-  const checklist = (o.checklist ?? []).map((c) => ({ label: c.label, done: c.done }));
   return {
     ...base,
     title: o.title,
@@ -124,7 +123,6 @@ export function shownOccurrence(o: StoredEvent & { occurrence_date?: string }, c
     ...(o.category ? { type: o.category } : {}),
     ...(o.recurrence ? { repeats: repeatWords(o.recurrence) } : {}),
     ...(o.reminder && o.reminder !== 'none' ? { reminder: o.reminder } : {}),
-    ...(checklist.length ? { checklist } : {}),
     ...(o.visibility === 'private' ? { private: true } : {}),
     ...(hiddenFrom.length ? { kept_secret_from: hiddenFrom } : {}),
     added_by: addedBy(o.created_by, o.source, cal.members.flatMap((m) => (m.user_id ? [{ user_id: m.user_id, display_name: m.name }] : []))),

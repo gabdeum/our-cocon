@@ -2,13 +2,14 @@
 // Spec 057 against local Supabase. SC-001: with 200 reminders the screen's first pages are one
 // request per section, and "Show more" brings the next 20 without asking for the earlier ones again.
 // FR-007: a tick on one phone reaches the other's open app (the `reminders` live table). 032-later
-// L147: deleted reminders are in Recently deleted, come back, and can be removed for good. Needs
+// L147: deleted reminders are in Recently deleted, come back, and can be removed for good. Spec
+// 075: a tick in the notes saves only on the notes as seen, and never completes the reminder. Needs
 // local Supabase (`pnpm dev` starts it; CI starts it before the tests).
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createClient, type RealtimeChannel } from '@supabase/supabase-js';
 import { addDays, todayIn } from '@cocon/calendar';
-import { catchUpReminders, completeReminder, createReminder, deleteReminder, deleteReminderNow, loadReminderSection, undoCompleteReminder } from '@cocon/data';
+import { catchUpReminders, completeReminder, createReminder, deleteReminder, deleteReminderNow, loadReminder, loadReminderSection, setReminderNotes, undoCompleteReminder } from '@cocon/data';
 import { draftToFields } from '@cocon/reminders';
 import { ChangeEvent, ReminderDraft, familyChannel, type Database } from '@cocon/schemas';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
@@ -102,6 +103,17 @@ describe.skipIf(!local)('reminders screens against local Supabase', () => {
     expect(await undoCompleteReminder(alex, done.undo)).toBe(true);
     const back = await mia.from('reminders').select('completed_at').eq('id', id).single();
     expect(back.data?.completed_at).toBeNull();
+  });
+
+  it('spec 075: a tick in the notes saves on the notes as seen, and the reminder stays to do (FR-003, FR-004)', async () => {
+    const id = await createReminder(alex, familyId, { title: 'Groceries', notes: '- [ ] Onions\n- [ ] Leeks', due_date: today }, tz);
+    expect(await setReminderNotes(mia, id, '- [ ] Onions\n- [ ] Leeks', '- [x] Onions\n- [x] Leeks')).toBe('saved');
+    const after = await loadReminder(alex, id);
+    expect(after).toMatchObject({ notes: '- [x] Onions\n- [x] Leeks', completed: false });
+    expect(await setReminderNotes(alex, id, '- [ ] Onions\n- [ ] Leeks', 'Mine')).toBe('changed');
+    expect((await loadReminder(alex, id)).notes).toBe('- [x] Onions\n- [x] Leeks');
+    await deleteReminder(alex, id);
+    expect(await setReminderNotes(alex, id, '- [x] Onions\n- [x] Leeks', '- [ ] Onions\n- [x] Leeks')).toBe('changed');
   });
 
   it('L147: a deleted reminder is in Recently deleted, comes back, and can be removed for good', async () => {

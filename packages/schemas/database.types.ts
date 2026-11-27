@@ -197,38 +197,6 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"event_checklist_items": {
-                  Row: {
-                    "created_at": string,"created_by": string | null,"done": boolean,"done_by": string | null,"event_id": string,"family_id": string,"id": string,"label": string,"position": number,"source": string,"updated_at": string,"updated_by": string | null
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"done"?: boolean,"done_by"?: string | null,"event_id": string,"family_id": string,"id"?: string,"label": string,"position": number,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
-                  }
-                  Update: {
-                    "created_at"?: string,"created_by"?: string | null,"done"?: boolean,"done_by"?: string | null,"event_id"?: string,"family_id"?: string,"id"?: string,"label"?: string,"position"?: number,"source"?: string,"updated_at"?: string,"updated_by"?: string | null
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "event_checklist_items_done_by_family_id_fkey"
-      columns: ["done_by","family_id"]
-isOneToOne: false
-      referencedRelation: "members"
-      referencedColumns: ["id","family_id"]
-    },{
-      foreignKeyName: "event_checklist_items_event_id_family_id_fkey"
-      columns: ["event_id","family_id"]
-isOneToOne: false
-      referencedRelation: "events"
-      referencedColumns: ["id","family_id"]
-    },{
-      foreignKeyName: "event_checklist_items_family_id_fkey"
-      columns: ["family_id"]
-isOneToOne: false
-      referencedRelation: "families"
-      referencedColumns: ["id"]
-    }
-                  ]
                 },"event_exceptions": {
                   Row: {
                     "cancelled": boolean,"created_at": string,"created_by": string | null,"event_id": string,"family_id": string,"id": string,"occurrence_date": string,"override": Json | null,"source": string,"updated_at": string,"updated_by": string | null
@@ -956,7 +924,7 @@ isOneToOne: false
           Views: {
             "events_visible": {
                   Row: {
-                    "category": string | null,"checklist": Json | null,"created_at": string | null,"created_by": string | null,"creator_member_id": string | null,"deleted_at": string | null,"deleted_by": string | null,"end_time": string | null,"ends_on": string | null,"exceptions": Json | null,"family_id": string | null,"id": string | null,"location": string | null,"members": Json | null,"notes": string | null,"recurrence": Json | null,"reminder": string | null,"removed_members": Json | null,"responsible_member_id": string | null,"slots": (string)[] | null,"source": string | null,"start_time": string | null,"starts_on": string | null,"surprise": Json | null,"time_type": string | null,"title": string | null,"updated_at": string | null,"updated_by": string | null,"view": string | null,"visibility": string | null
+                    "category": string | null,"created_at": string | null,"created_by": string | null,"creator_member_id": string | null,"deleted_at": string | null,"deleted_by": string | null,"end_time": string | null,"ends_on": string | null,"exceptions": Json | null,"family_id": string | null,"id": string | null,"location": string | null,"members": Json | null,"notes": string | null,"recurrence": Json | null,"reminder": string | null,"removed_members": Json | null,"responsible_member_id": string | null,"slots": (string)[] | null,"source": string | null,"start_time": string | null,"starts_on": string | null,"surprise": Json | null,"time_type": string | null,"title": string | null,"updated_at": string | null,"updated_by": string | null,"view": string | null,"visibility": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1001,7 +969,7 @@ isOneToOne: false
                            },
 "_events_visible":
 { Args: Record<PropertyKey, never>; Returns: {
-              "category": string,"checklist": Json,"created_at": string,"created_by": string,"creator_member_id": string,"deleted_at": string,"deleted_by": string,"end_time": string,"ends_on": string,"exceptions": Json,"family_id": string,"id": string,"location": string,"members": Json,"notes": string,"recurrence": Json,"reminder": string,"removed_members": Json,"responsible_member_id": string,"slots": (string)[],"source": string,"start_time": string,"starts_on": string,"surprise": Json,"time_type": string,"title": string,"updated_at": string,"updated_by": string,"view": string,"visibility": string
+              "category": string,"created_at": string,"created_by": string,"creator_member_id": string,"deleted_at": string,"deleted_by": string,"end_time": string,"ends_on": string,"exceptions": Json,"family_id": string,"id": string,"location": string,"members": Json,"notes": string,"recurrence": Json,"reminder": string,"removed_members": Json,"responsible_member_id": string,"slots": (string)[],"source": string,"start_time": string,"starts_on": string,"surprise": Json,"time_type": string,"title": string,"updated_at": string,"updated_by": string,"view": string,"visibility": string
             }[]
                            },
 "_family_table":
@@ -1345,7 +1313,7 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "save_event":
-{ Args: { "p_checklist"?: Json,"p_event": Json,"p_id"?: string,"p_members": Json,"p_surprise"?: Json }; Returns: string
+{ Args: { "p_event": Json,"p_id"?: string,"p_members": Json,"p_surprise"?: Json }; Returns: string
                            },
 "save_recipe_ingredients":
 { Args: { "p_ingredients": Json,"p_recipe_id": string }; Returns: undefined
@@ -1361,6 +1329,9 @@ isOneToOne: false
                            },
 "set_display_name":
 { Args: { "display_name": string }; Returns: undefined
+                           },
+"set_event_notes":
+{ Args: { "p_date": string,"p_event": string,"p_from": string,"p_to": string }; Returns: boolean
                            },
 "set_home_time_zone":
 { Args: { "tz": string }; Returns: undefined
@@ -1411,7 +1382,7 @@ isOneToOne: false
 { Args: { "p_token": string }; Returns: Json
                            },
 "split_event":
-{ Args: { "p_before": Json,"p_checklist"?: Json,"p_event": Json,"p_from": string,"p_id": string,"p_members": Json,"p_surprise"?: Json }; Returns: string
+{ Args: { "p_before": Json,"p_event": Json,"p_from": string,"p_id": string,"p_members": Json,"p_surprise"?: Json }; Returns: string
                            },
 "suggest_event_titles":
 { Args: { "p_limit"?: number,"p_query": string }; Returns: {

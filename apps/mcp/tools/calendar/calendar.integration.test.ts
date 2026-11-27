@@ -8,7 +8,7 @@ import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { loadDeletedEvents, loadEvent, saveEvent, saveMemberCalendarSettings, setAiPermission, setChecklistDone, type Db } from '@cocon/data';
+import { loadDeletedEvents, loadEvent, saveEvent, saveMemberCalendarSettings, setAiPermission, setEventNotes, type Db } from '@cocon/data';
 import { ActivityEntry, createTracker } from '@cocon/schemas';
 import { loadConfig } from '../../src/config.js';
 import { createHttpServer } from '../../src/server.js';
@@ -194,7 +194,7 @@ describe.skipIf(!local)('calendar tools and permission against local Supabase', 
   it('changes one date, or every date from then on', async () => {
     expect((await call('update_event', { id: music, patch: { slots: ['afternoon'] } })).error).toMatch(/^This event repeats\. Ask the member whether to change only that date/);
     expect((await call('update_event', { id: music, date: '2026-11-14', scope: 'this', patch: { repeat: null } })).error).toBe(
-      'How it repeats, its reminder, its checklist and who sees it can’t change for one date. Use scope "future".',
+      'How it repeats, its reminder and who sees it can’t change for one date. Use scope "future".',
     );
 
     const one = await call('update_event', { id: music, date: '2026-11-14', scope: 'this', patch: { slots: ['afternoon'] } });
@@ -214,24 +214,15 @@ describe.skipIf(!local)('calendar tools and permission against local Supabase', 
     ]);
   });
 
-  it('adds a checklist, and changing it keeps what was ticked', async () => {
-    const { data } = await call('create_event', { title: 'Football', date: '2026-11-18', slots: ['afternoon'], members: ['James'], checklist: ['Water bottle', 'Shin pads'] });
+  // Spec 075 FR-011: things to bring are a checklist in the notes; a member's tick shows in them.
+  it('keeps a checklist in the notes, ticks and all, and has no separate checklist', async () => {
+    const notes = 'Bring:\n- [ ] Water bottle\n- [ ] Shin pads';
+    const { data } = await call('create_event', { title: 'Football', date: '2026-11-18', slots: ['afternoon'], members: ['James'], notes });
     const id = data?.id as string;
-    expect((await loadEvent(gabriel, id))?.checklist?.map((c) => [c.label, c.done])).toEqual([
-      ['Water bottle', false],
-      ['Shin pads', false],
-    ]);
-    const shin = (await loadEvent(gabriel, id))?.checklist?.find((c) => c.label === 'Shin pads');
-    await setChecklistDone(eva, shin?.id as string, true);
-
-    const changed = await call('update_event', { id, patch: { checklist: ['Shin pads', 'Snack'] } });
-    expect(changed.data).toMatchObject({ changed: ['checklist'] });
-    expect((await call('get_day', { date: '2026-11-18' })).data?.afternoon).toEqual([
-      expect.objectContaining({ title: 'Football', checklist: [{ label: 'Shin pads', done: true }, { label: 'Snack', done: false }] }),
-    ]);
-
-    expect((await call('update_event', { id, patch: { checklist: null } })).data).toMatchObject({ changed: ['checklist'] });
-    expect((await loadEvent(gabriel, id))?.checklist).toEqual([]);
+    expect(await setEventNotes(eva, { eventId: id, date: '2026-11-18', from: notes, to: 'Bring:\n- [ ] Water bottle\n- [x] Shin pads' })).toBe('saved');
+    const [football] = (await call('get_day', { date: '2026-11-18' })).data?.afternoon as Result[];
+    expect(football).toMatchObject({ title: 'Football', notes: 'Bring:\n- [ ] Water bottle\n- [x] Shin pads' });
+    expect(football).not.toHaveProperty('checklist');
   });
 
   // Spec 073: a 5000-character formatted note, on the event and on one of its dates.

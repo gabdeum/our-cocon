@@ -1,10 +1,10 @@
-// Spec 057 FR-005: the reminder drawer.
+// Spec 057 FR-005: the reminder drawer. Spec 075: ticking its notes' checklist.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import type { ReminderOccurrence } from '@cocon/data';
 import { render } from '../../test/render';
 import { expectAccessible } from '../../test/axe';
-import { gabriel, last, placedReminder } from '../../test/fakes';
+import { flush, gabriel, last, placedReminder } from '../../test/fakes';
 import { ReminderDrawer, type ReminderDrawerProps } from './ReminderDrawer';
 
 afterEach(cleanup);
@@ -66,6 +66,30 @@ describe('ReminderDrawer', () => {
     expect(region.textContent).not.toMatch(/\*\*|- \[|\]\(/);
     expect(p.tracker.track).toHaveBeenCalledTimes(1);
     expect(p.tracker.track).toHaveBeenCalledWith('note_viewed_formatted', { entity: 'reminder', has_bold: true, has_link: true, has_list: true, has_checklist: true, has_table: false });
+  });
+
+  // Spec 075 SC-001, FR-004: an item in the groceries list ticks at once and saves; the reminder stays to do.
+  it('ticks a checklist item in place, saves it, and never marks the reminder done', async () => {
+    const notes = 'Groceries:\n- [ ] Onions\n- [x] Milk';
+    const save = vi.fn(async () => 'saved' as const);
+    const onSaved = vi.fn();
+    const p = setup({ reminder: { ...plants, notes }, noteChecklist: { save, reload: vi.fn(async () => null), onSaved } });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Onions' }));
+    expect(screen.getByRole('checkbox', { name: 'Onions' }).getAttribute('aria-checked')).toBe('true');
+    await flush();
+    expect(save).toHaveBeenCalledWith(notes, 'Groceries:\n- [x] Onions\n- [x] Milk');
+    expect(p.tracker.track).toHaveBeenCalledWith('note_checklist_toggled', { entity: 'reminder', checked: true, items_total: 2, items_checked: 2 });
+    expect(onSaved).toHaveBeenCalled();
+    expect(p.onDone).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Mark as done' })).toBeTruthy();
+  });
+
+  it('offline, the checklist shows but does not tick', () => {
+    const save = vi.fn(async () => 'saved' as const);
+    setup({ reminder: { ...plants, notes: '- [ ] Onions' }, readOnly: true, noteChecklist: { save, reload: vi.fn(async () => null) } });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Onions' }));
+    expect(save).not.toHaveBeenCalled();
+    expect(screen.getByRole('checkbox', { name: 'Onions' }).getAttribute('aria-checked')).toBe('false');
   });
 
   it('says so when a link in the notes cannot open (spec 073 FR-004)', async () => {

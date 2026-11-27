@@ -9,11 +9,10 @@ export type SyncClient = Pick<Client, 'channel' | 'removeChannel' | 'realtime'>;
 
 const SyncContext = createContext<Set<Listener> | null>(null);
 
-/** Calendar screens keep one query per range under `['events', …]`: a change to who an event is for, its exceptions or its checklist refetches them too (spec 035). */
+/** Calendar screens keep one query per range under `['events', …]`: a change to who an event is for or its exceptions refetches them too (spec 035). */
 const alsoRefetches: Partial<Record<ChangeEvent['table'], string>> = {
   event_members: 'events',
   event_exceptions: 'events',
-  event_checklist_items: 'events',
 };
 
 const loadingMore = (q: Query) => q.state.fetchStatus === 'fetching' && (q.state.fetchMeta as { fetchMore?: unknown } | null)?.fetchMore !== undefined;

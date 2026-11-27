@@ -87,7 +87,7 @@ describe('the occurrence shown', () => {
 
   it('follows a date moved to another day and keeps the event', () => {
     const moved = eventOccurrence(babyMusic({ exceptions: [{ occurrence_date: '2026-10-31', override: { starts_on: '2026-11-01', ends_on: '2026-11-01', location: 'Town hall' } }] }), '2026-10-31');
-    expect(moved).toMatchObject({ id: music.id, starts_on: '2026-11-01', location: 'Town hall', checklist: music.checklist });
+    expect(moved).toMatchObject({ id: music.id, starts_on: '2026-11-01', location: 'Town hall', notes: music.notes });
   });
 });
 

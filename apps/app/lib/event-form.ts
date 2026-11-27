@@ -67,7 +67,6 @@ export interface EventDraft {
   ends: EndsChoice;
   reminder: Reminder;
   notes: string;
-  checklist: { id?: string; label: string }[];
   /** "Who can see it?" (spec 043): only the creator changes it. */
   visibility: Visibility;
   /** A surprise's hidden people (the sheet sets them from Who on save), "What {name} sees" and "Note for {name}". */
@@ -124,7 +123,6 @@ export function newDraft(prefill: Prefill, today: string, reminder: Reminder = '
     ends: { type: 'never' },
     reminder,
     notes: '',
-    checklist: [],
     visibility: 'family',
     hiddenFrom: [],
     coverTitle: '',
@@ -153,7 +151,6 @@ export function draftFromEvent(event: StoredEvent, date: string = event.starts_o
     ...repeatDraftOf(r),
     reminder: event.reminder ?? 'none',
     notes: event.notes ?? '',
-    checklist: (event.checklist ?? []).map((c) => ({ id: c.id, label: c.label })),
     visibility: event.visibility,
     hiddenFrom: [...(event.surprise?.hidden_from ?? [])],
     coverTitle: event.surprise?.cover_title ?? '',
@@ -390,7 +387,6 @@ export function toInput(draft: EventDraft, members: readonly Member[], { occurre
     responsible_member_id: responsible,
     visibility: draft.visibility,
     surprise: draft.visibility === 'surprise' ? surpriseOf(draft) : null,
-    checklist: draft.checklist.filter((c) => c.label.trim()).map((c) => ({ ...(c.id ? { id: c.id } : {}), label: c.label.trim() })),
   };
 }
 
@@ -453,7 +449,7 @@ export function reminderHint(draft: EventDraft, members: readonly Member[], crea
 
 /** An edit opens More options when anything in it is set (FR-008: the same sheet, filled in). */
 export function hasMoreOptions(draft: EventDraft): boolean {
-  return draft.category !== null || draft.location !== '' || draft.responsible !== null || draft.repeat !== 'never' || draft.reminder !== 'none' || draft.notes !== '' || draft.checklist.length > 0 || draft.visibility !== 'family';
+  return draft.category !== null || draft.location !== '' || draft.responsible !== null || draft.repeat !== 'never' || draft.reminder !== 'none' || draft.notes !== '' || draft.visibility !== 'family';
 }
 
 /** Spec 053 FR-010: an event lasts at most 367 days (the database's check, `ends_on - starts_on <= 366`). */
@@ -503,7 +499,6 @@ export function fromSuggestion(draft: EventDraft, event: StoredEvent, touched: R
     responsible: like.responsible,
     reminder: like.reminder,
     visibility: like.visibility,
-    checklist: like.checklist.map((c) => ({ label: c.label })),
   };
   const kept = Object.fromEntries(Object.entries(filled).filter(([key]) => !touched.has(key as keyof EventDraft)));
   return { ...draft, ...kept };

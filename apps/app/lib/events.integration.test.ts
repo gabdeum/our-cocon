@@ -1,6 +1,6 @@
 // @vitest-environment node
 // Spec 035 against local Supabase. US1: Eva adds "Yoga" and Gabriel's open app hears about it
-// within a second, as it does for its checklist and a "this event only" change; Sam, in another
+// within a second, as it does for a tick in its notes' checklist (spec 075) and a "this event only" change; Sam, in another
 // family, hears nothing. US2: through the shared data layer Gabriel only ever gets "Busy" for
 // Eva's private event. Edge case: two saves in a row, the last one wins and both are heard.
 // Skipped with a notice when local Supabase isn't running (CI starts it).
@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient, type RealtimeChannel } from '@supabase/supabase-js';
 import { ChangeEvent, familyChannel, type Database } from '@cocon/schemas';
-import { loadEvent, loadEvents, saveEvent, saveException, setChecklistDone } from '@cocon/data';
+import { loadEvent, loadEvents, saveEvent, saveException, setEventNotes } from '@cocon/data';
 import { clientOptions as options, localSupabase, signInPerson, type Client } from '../test/local-supabase';
 
 const local = localSupabase();
@@ -82,17 +82,19 @@ describe.skipIf(!local)('events against local Supabase', () => {
     expect(await listen(sam, (change) => samHeard.push(change))).not.toBe('SUBSCRIBED');
 
     let start = performance.now();
-    const id = await saveEvent(eva, { title: 'Yoga', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'slot', slots: ['evening'], members: [evaMember], checklist: [{ label: 'Mat' }] });
+    const id = await saveEvent(eva, { title: 'Yoga', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'slot', slots: ['evening'], members: [evaMember], notes: '- [ ] Mat' });
     expect((await heardBy('events', (c) => c.id === id && c.op === 'insert', start)) - start).toBeLessThan(1000);
 
     // What Gabriel's refetch returns.
     const [yoga] = await loadEvents(gabriel, '2026-11-01', '2026-11-30');
     expect(yoga).toMatchObject({ id, title: 'Yoga', members: [evaMember], source: 'app' });
 
-    const item = yoga?.checklist?.[0]?.id ?? '';
     start = performance.now();
-    await setChecklistDone(gabriel, item, true);
-    expect((await heardBy('event_checklist_items', (c) => c.id === item, start)) - start).toBeLessThan(1000);
+    expect(await setEventNotes(gabriel, { eventId: id, date: '2026-11-03', from: '- [ ] Mat', to: '- [x] Mat' })).toBe('saved');
+    expect((await heardBy('events', (c) => c.id === id && c.op === 'update', start)) - start).toBeLessThan(1000);
+    // Spec 075 FR-003: a tick made on the note as it was before is refused, and changes nothing.
+    expect(await setEventNotes(eva, { eventId: id, date: '2026-11-03', from: '- [ ] Mat', to: 'Mine' })).toBe('changed');
+    expect((await loadEvent(eva, id))?.notes).toBe('- [x] Mat');
 
     start = performance.now();
     await saveException(eva, familyId, id, { occurrence_date: '2026-11-03', override: { slots: ['afternoon'] } });
@@ -105,10 +107,10 @@ describe.skipIf(!local)('events against local Supabase', () => {
   it('US2: Gabriel only ever gets "Busy" for Eva\'s private event', async () => {
     const id = await saveEvent(eva, {
       title: 'Therapist', location: 'Rue Oberkampf', notes: 'Bring the letter', starts_on: '2026-11-05', ends_on: '2026-11-05',
-      time_type: 'custom', start_time: '14:30', end_time: '15:30', members: [evaMember], visibility: 'private', checklist: [{ label: 'Letter' }],
+      time_type: 'custom', start_time: '14:30', end_time: '15:30', members: [evaMember], visibility: 'private',
     });
     const seen = await loadEvent(gabriel, id);
-    expect(seen).toMatchObject({ title: 'Busy', location: null, notes: null, checklist: null, members: [evaMember], start_time: '14:30', visibility: 'private' });
+    expect(seen).toMatchObject({ title: 'Busy', location: null, notes: null, members: [evaMember], start_time: '14:30', visibility: 'private' });
     expect(JSON.stringify(seen)).not.toMatch(/Therapist|Oberkampf|letter/i);
     const direct = await gabriel.from('events').select('title').eq('id', id);
     expect(direct.data).toEqual([]);

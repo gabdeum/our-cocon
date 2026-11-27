@@ -116,7 +116,7 @@ export function parseSharedRecipe(body: unknown, supabaseUrl: string): { recipe:
 /**
  * Spec 042 FR-005: what the share endpoint returns for a shared event date: the title, the date
  * and time fields, the place and first names ("everyone" and "others" as words). Never the notes,
- * checklist, reminder, who drives or any id. The page works the day out with @cocon/calendar's
+ * reminder, who drives or any id. The page works the day out with @cocon/calendar's
  * `occurrenceOn` from `event`, `occurrence_date` and `exception`.
  */
 export const SharedEventResponse = z.object({

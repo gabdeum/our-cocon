@@ -1,6 +1,6 @@
 # OC-CalEvent — Event detail
 
-Sources `screens/OC-CalEvent.dc.html` (interactive: checklist, Edit, Delete) and `screens/OC-CalEventDelete.dc.html` · Route `/calendar/[id]` (stack) · Spec 042
+Sources `screens/OC-CalEvent.dc.html` (interactive: Edit, Delete; its "Bring" card is retired, see Changelog 2026-11-27) and `screens/OC-CalEventDelete.dc.html` · Route `/calendar/[id]` (stack) · Spec 042
 
 ## Layout
 Compact since spec 050 FR-006: a typical event fits one 390 × 844 screen without scrolling.
@@ -12,8 +12,7 @@ Compact since spec 050 FR-006: a typical event fits one 390 × 844 screen withou
    - Who (spec 053 FR-006: the people moved to the meta row): car icon, "Gabriel takes James": "{name} takes {members without the app}", or "{name} drives" when everyone on it has the app; the row is hidden when nobody is responsible. Names, not pronouns: the app doesn't know anyone's.
    - Place: pin, "Little Notes studio, 4 Elm St", wrapping up to 3 lines as typed (line breaks kept), then cut with "…"; soft round 44 icon buttons copy (read as "Copy {place}") and directions (read as "Open {place} in Google Maps"), 8 apart. Copy puts the place as typed on the clipboard, then the toast "Address copied" ("Couldn't copy the address." in warn if it fails). Directions opens Google Maps (the app on iPhone when installed), searching for the place as typed.
    - Reminder: bell, "1 hour before · reminds Gabriel · 08:00" (spec 049 FR-006): the people the phones remind (spec 049 FR-003) and when, in the home time zone and the member's clock; "1 day before" reads "· reminds Gabriel · 18:00 the day before". No names (a private event of someone without the app): "1 hour before" alone.
-4. "Bring" card: heading 16/900 with "{ticked} of {total}" (13/700 muted) on the right; rows 44 with a 24 checkbox; ticked = olive box + strike-through.
-5. "Added by Eva · 2 days ago · anyone can tick the list" 13/700 muted ("Added via Claude · 1 h ago" for AI; the last part only when there is a list).
+4. "Added by Eva · 2 days ago" 13/700 muted ("Added via Claude · 1 h ago" for AI). Things to bring are a checklist in the notes (spec 075), ticked in place (note-formatting-ui.md).
 
 ## Dialogs
 | Trigger | Copy |
@@ -23,23 +22,23 @@ Compact since spec 050 FR-006: a typical event fits one 390 × 844 screen withou
 | Delete one-off | no Dialog: deleted at once, then the "Event deleted" toast with Undo (2026-11-21; was "Delete “{title}”?" · "This removes it for the whole family." · "Delete" · "Keep it") |
 | Deleted | toast "Event deleted" · "Undo" (also in Recently deleted, 30 days) |
 | Duplicate | date picker, then toast "Copied to {Sat, Nov 7}" · "Undo" |
-| Share | reuses OC-Share layout: title "Share this event", lead "People with the link see the title, day, time and place. No notes or checklist.", "Copy link", "Stop sharing" |
+| Share | reuses OC-Share layout: title "Share this event", lead "People with the link see the title, day, time and place. No notes.", "Copy link", "Stop sharing" |
 
 ## States not drawn (written for spec 042)
 | Case | Copy |
 | --- | --- |
-| Duplicate's date sheet | title "Pick a date" (DateGrid); picking a day copies that date of the event there as a one-off, checklist unticked |
+| Duplicate's date sheet | title "Pick a date" (DateGrid); picking a day copies that date of the event there as a one-off, the checklist in its notes unticked |
 | Share (from ⋯) | the link field, Message / Email / More and "Stop sharing this link" with OC-Share's states (Creating link…, Copied ✓, Not shared, Create a new link, the Stop sharing Dialog). Message, Email and More send "{title} — {link}". Not offered for a private or surprise event, or once that date is over |
 | Can't open (deleted, not one of the event's dates, offline) | TopBar with "Back to Calendar" and no title, then "We couldn't open this event." / "It may have been deleted, or you're offline." |
-| A tick failed | the box goes back; warn toast "Couldn't change that. Try again." with ✕ |
+| A tick in the notes failed | the box goes back; warn toast "Couldn't save. Try again." (note-formatting-ui.md) |
 | Delete failed | warn toast "Couldn't delete. Check your connection and try again." with ✕; the page stays |
 | Duplicate failed | warn toast "Couldn't copy. Check your connection and try again." with ✕ |
 | Undo failed | toast "Couldn't undo. Check your connection and try again." (no button) |
-| Offline | readable; the checklist, ✎ and ⋯ are off (Patterns.md › Offline) |
+| Offline | readable; the notes' checklist, ✎ and ⋯ are off (Patterns.md › Offline) |
 | "This and all future ones" | the dates from then on go to Recently deleted as one entry with the event's title; on the series' first date the whole event does |
 
 ## Shared event page (`/e/[token]`, not drawn)
-Built like OC-SharedView: white header bar (mark, "Our Cocon", sage tag "View only"), then the title 30/900, "With James, Eva and others" ("With the whole family" for Everyone) 16/700 muted, and a white card with the When row (clock) and the place (pin). First names only; no notes, checklist, reminder or who drives.
+Built like OC-SharedView: white header bar (mark, "Our Cocon", sage tag "View only"), then the title 30/900, "With James, Eva and others" ("With the whole family" for Everyone) 16/700 muted, and a white card with the When row (clock) and the place (pin). First names only; no notes, reminder or who drives.
 
 | State | Copy |
 | --- | --- |
@@ -57,3 +56,4 @@ The page is `noindex` and sends no analytics. A link stops working once that dat
 - 2026-11-13 (Gabriel's ask): the place wraps up to 3 lines (line breaks kept), then ends with "…"; it was one line.
 - 2026-11-15 (Gabriel's ask): the place's "Copy" and "Maps" pills become round soft icon buttons, copy and directions (new icons).
 - 2026-11-27 (spec 073): the notes show whole and formatted under a hairline (no more Show more / Show less, `ink` instead of `ink-soft`).
+- 2026-11-27 (spec 075): the "Bring" card and "anyone can tick the list" are gone: an event's things to bring are a checklist in its notes, ticked in place. Its items moved there. A failed tick says "Couldn't save. Try again."; the share lead reads "No notes."

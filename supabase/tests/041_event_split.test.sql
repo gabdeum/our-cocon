@@ -51,11 +51,11 @@ insert into ids select 'eva', id from public.members where user_id = '00000000-0
 grant usage on schema extensions to cocon_assistant;
 grant execute on all functions in schema extensions to cocon_assistant;
 
--- Eva's weekly music class for James, from Oct 3, with Oct 31 cancelled and a checklist.
+-- Eva's weekly music class for James, from Oct 3, with Oct 31 cancelled and a ticked checklist in its notes.
 select pg_temp.login('00000000-0000-0000-0000-00000000041b');
 insert into ids select 'music', public.save_event(
-  '{"title":"Baby music class","starts_on":"2026-10-03","ends_on":"2026-10-03","time_type":"slot","slots":["morning"],"recurrence":{"freq":"weekly","weekdays":[6],"ends":{"type":"never"}}}',
-  jsonb_build_array(pg_temp.id('james')), null, null, '[{"label":"Shaker"}]');
+  '{"title":"Baby music class","starts_on":"2026-10-03","ends_on":"2026-10-03","time_type":"slot","slots":["morning"],"notes":"- [x] Shaker","recurrence":{"freq":"weekly","weekdays":[6],"ends":{"type":"never"}}}',
+  jsonb_build_array(pg_temp.id('james')));
 insert into public.event_exceptions (event_id, occurrence_date, cancelled) values
   (pg_temp.id('music'), '2026-10-10', true), (pg_temp.id('music'), '2026-10-31', true);
 
@@ -90,9 +90,8 @@ select throws_ok($$ select public.split_event(pg_temp.id('music'), '2026-10-24',
 select pg_temp.login('00000000-0000-0000-0000-00000000041a');
 insert into ids select 'music2', public.split_event(pg_temp.id('music'), '2026-10-24',
   '{"freq":"weekly","weekdays":[6],"ends":{"type":"on","date":"2026-10-23"}}',
-  '{"title":"Baby music class","starts_on":"2026-10-24","ends_on":"2026-10-24","time_type":"slot","slots":["afternoon"],"recurrence":{"freq":"weekly","weekdays":[6],"ends":{"type":"never"}}}',
-  jsonb_build_array(pg_temp.id('james'), pg_temp.id('eva')), null,
-  (select jsonb_agg(jsonb_build_object('id', id, 'label', label)) from public.event_checklist_items where event_id = pg_temp.id('music')));
+  '{"title":"Baby music class","starts_on":"2026-10-24","ends_on":"2026-10-24","time_type":"slot","slots":["afternoon"],"notes":"- [ ] Shaker","recurrence":{"freq":"weekly","weekdays":[6],"ends":{"type":"never"}}}',
+  jsonb_build_array(pg_temp.id('james'), pg_temp.id('eva')));
 select isnt(pg_temp.id('music2'), pg_temp.id('music'), 'a family member splits it into a new series');
 select is((select recurrence -> 'ends' from public.events where id = pg_temp.id('music')), '{"type":"on","date":"2026-10-23"}'::jsonb, 'the old one ends the day before');
 select is((select slots from public.events where id = pg_temp.id('music')), array['morning'], 'and keeps its time');
@@ -101,8 +100,9 @@ select is((select count(*)::int from public.event_members where event_id = pg_te
 select is((select created_by from public.events where id = pg_temp.id('music2')), '00000000-0000-0000-0000-00000000041a'::uuid, 'added by whoever split it');
 select is((select array_agg(occurrence_date::text) from public.event_exceptions where event_id = pg_temp.id('music')), array['2026-10-10'], 'earlier cancelled dates stay with the old series');
 select is((select array_agg(occurrence_date::text) from public.event_exceptions where event_id = pg_temp.id('music2')), array['2026-10-31'], 'later ones move, so Oct 31 stays cancelled');
-select is((select array_agg(label) from public.event_checklist_items where event_id = pg_temp.id('music2')), array['Shaker'], 'the checklist is copied');
-select is((select count(*)::int from public.event_checklist_items where event_id = pg_temp.id('music')), 1, 'and stays on the old series');
+-- Spec 075: the app unticks the new series' checklist (FR-008); the old one keeps its ticks.
+select is((select notes from public.events where id = pg_temp.id('music2')), '- [ ] Shaker', 'the new series has the notes it was given');
+select is((select notes from public.events where id = pg_temp.id('music')), '- [x] Shaker', 'and the old series keeps its own');
 select is((select array_agg(occurrence_date::text) from public.event_exceptions where event_id = pg_temp.id('yoga')), array['2026-10-31'], 'other events'' exceptions stay put');
 select throws_ok($$ select public.split_event(pg_temp.id('music'), '2026-10-03', '{"freq":"weekly","ends":{"type":"never"}}',
   '{"title":"X","starts_on":"2026-10-03","ends_on":"2026-10-03","time_type":"all_day"}', '["everyone"]') $$,

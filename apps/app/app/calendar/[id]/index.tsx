@@ -2,7 +2,7 @@ import { Linking, View } from 'react-native';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import { loadEvent, setChecklistDone } from '@cocon/data';
+import { loadEvent, setEventNotes } from '@cocon/data';
 import { CalendarDate } from '@cocon/schemas/calendar';
 import { PushedScreen, Text } from '@cocon/ui';
 import { cachedEvent } from '../../../lib/calendar-header';
@@ -20,7 +20,7 @@ const a = strings.calendar.add;
 
 /**
  * /calendar/[id]?date= (spec 042, OC-CalEvent): one date of an event, from any calendar view. The
- * same query as the edit route, so ticks and edits from others show live (lib/sync.tsx). An event
+ * same query as the edit route, so edits from others show live (lib/sync.tsx). An event
  * this member sees in full opens here; a surprise's cover opens OC-CalSurprise (spec 043); Busy, or
  * a date that isn't one of the event's, says it couldn't open (Busy opens as a sheet over the views).
  * Opened from a view, it shows the copy that view already loaded while the event refetches; from a
@@ -91,9 +91,13 @@ export default function EventRoute() {
       onShare={() => router.push(`/calendar/${ev.id}/share?date=${date}` as Href)}
       onOpenUrl={(url) => void Linking.openURL(url)}
       onCopy={systemShare.copy}
-      onTick={async (itemId, done) => {
-        await setChecklistDone(client, itemId, done);
-        page.refreshEvents();
+      noteChecklist={{
+        save: (from, to) => setEventNotes(client, { eventId: ev.id, date, from, to }),
+        reload: async () => {
+          const fresh = await loadEvent(client, ev.id);
+          return (fresh && eventOccurrence(fresh, date)?.notes) ?? null;
+        },
+        onSaved: page.refreshEvents,
       }}
       onDelete={async (scope) => {
         const undo = await deleteOccurrences(client, { event: ev, date, scope, familyId });

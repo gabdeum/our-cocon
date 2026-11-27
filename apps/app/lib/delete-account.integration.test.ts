@@ -55,17 +55,16 @@ describe.skipIf(!local)('deleting an account, against local Supabase', () => {
     if (invite.error) throw invite.error;
     expect((await alex.rpc('accept_invite', { token: invite.data, display_name: 'Alex' })).error).toBeNull();
     const id = (await alex.auth.getUser()).data.user?.id ?? '';
-    // What a member leaves behind: a recipe, a ticked grocery, an event with a ticked checklist, a changed name.
+    // What a member leaves behind: a recipe, a ticked grocery, an event with a ticked checklist in its notes, a changed name.
     const recipe = await alex.from('recipes').insert({ family_id: fam.data, name: 'Alex soup' }).select('id').single();
     expect(recipe.error).toBeNull();
     expect((await alex.from('grocery_items').insert({ family_id: fam.data, name: 'onion', checked: true })).error).toBeNull();
     const event = await alex.rpc('save_event', {
-      p_event: { title: 'Swim', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'all_day', slots: [], visibility: 'family' },
+      p_event: { title: 'Swim', notes: '- [ ] Towel', starts_on: '2026-11-03', ends_on: '2026-11-03', time_type: 'all_day', slots: [], visibility: 'family' },
       p_members: ['everyone'],
-      p_checklist: [{ label: 'Towel' }],
     });
     expect(event.error).toBeNull();
-    expect((await alex.from('event_checklist_items').update({ done: true }).eq('event_id', event.data ?? '')).error).toBeNull();
+    expect((await alex.rpc('set_event_notes', { p_event: event.data ?? '', p_date: '2026-11-03', p_from: '- [ ] Towel', p_to: '- [x] Towel' })).data).toBe(true);
     expect((await alex.rpc('set_display_name', { display_name: 'Alex D' })).error).toBeNull();
 
     expect(await familyApi(alex).deleteMyAccount()).toEqual({ ok: true, data: undefined });

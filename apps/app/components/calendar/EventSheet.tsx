@@ -10,8 +10,6 @@ import {
   type BottomSheetProps,
   Button,
   Callout,
-  ChecklistAdd,
-  ChecklistRow,
   Choice,
   DateGrid,
   DayChip,
@@ -76,7 +74,6 @@ const a = strings.calendar.add;
 const REPEATS: RepeatChoice[] = ['never', 'daily', 'weekly', 'biweekly', 'monthly', 'yearly'];
 const REMINDERS: readonly Reminder[] = ReminderSchema.options;
 const VISIBILITIES: Visibility[] = ['family', 'private', 'surprise'];
-const MAX_CHECKLIST = 50;
 
 export interface SaveMeta {
   usedMoreOptions: boolean;
@@ -88,7 +85,7 @@ export interface SaveMeta {
 export interface EventSheetProps {
   mode: 'new' | 'edit';
   initial: EventDraft;
-  /** An edit of one occurrence ("This event only"): repeat, reminder and the checklist belong to the series. */
+  /** An edit of one occurrence ("This event only"): repeat and reminder belong to the series. */
   occurrenceOnly?: boolean;
   /** The event being edited, so it doesn't conflict with itself. */
   editingId?: string;
@@ -132,7 +129,6 @@ export function useEventForm(p: EventSheetProps) {
   const [saving, setSaving] = useState(false);
   const toast = useToast();
   const [dateSheet, setDateSheet] = useState<DateSheet>(null);
-  const [adding, setAdding] = useState<string | null>(null);
   const conflictSeen = useRef(false);
   // Spec 053 FR-003: what the person changed by hand, which a picked suggestion doesn't overwrite.
   const touched = useRef(new Set<keyof EventDraft>());
@@ -208,12 +204,6 @@ export function useEventForm(p: EventSheetProps) {
       toast.show({ text: a.saveFailed, tone: 'warn' });
       setSaving(false);
     }
-  };
-
-  const addItem = () => {
-    const label = adding?.trim();
-    if (label && d.checklist.length < MAX_CHECKLIST) set({ checklist: [...d.checklist, { label: label.slice(0, 80) }] });
-    setAdding('');
   };
 
   const pickDay = (choice: 'today' | 'tomorrow' | 'other') => {
@@ -406,40 +396,7 @@ export function useEventForm(p: EventSheetProps) {
               </Section>
             ) : null}
 
-            <View className="gap-8">
-              <NotesField label={a.notes} value={d.notes} onChange={(notes) => set({ notes })} placeholder={a.notesPlaceholder} entity="event" tracker={p.tracker} />
-              {p.occurrenceOnly ? null : (
-                <View className="rounded-lg bg-surface-card px-14 py-4">
-                  {d.checklist.map((c, i) => (
-                    <ChecklistRow
-                      key={c.id ?? `new-${i}`}
-                      label={c.label}
-                      done={false}
-                      remove={{ label: a.removeItem(c.label), onPress: () => set({ checklist: d.checklist.filter((_, j) => j !== i) }) }}
-                    />
-                  ))}
-                  {adding !== null ? (
-                    <TextField
-                      label={a.checklistItem}
-                      labelHidden
-                      size="sm"
-                      className="py-6"
-                      value={adding}
-                      autoFocus
-                      maxLength={80}
-                      onChangeText={setAdding}
-                      onSubmitEditing={addItem}
-                      onBlur={() => {
-                        if (adding.trim()) addItem();
-                        else setAdding(null);
-                      }}
-                      submitBehavior="submit"
-                    />
-                  ) : null}
-                  {d.checklist.length < MAX_CHECKLIST ? <ChecklistAdd label={a.addToChecklist} onPress={() => setAdding('')} /> : null}
-                </View>
-              )}
-            </View>
+            <NotesField label={a.notes} value={d.notes} onChange={(notes) => set({ notes })} placeholder={a.notesPlaceholder} entity="event" tracker={p.tracker} />
           </View>
         ) : null}
 

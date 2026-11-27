@@ -7,7 +7,8 @@ export const members = [gabriel, eva, james];
 
 /**
  * OC-CalEvent's "Baby music class": Eva added it two days before Oct 31; every Saturday morning
- * for James, Gabriel takes him, an hour's reminder and a "Bring" checklist with one item ticked.
+ * for James, Gabriel takes him, an hour's reminder and a checklist in its notes with one item
+ * ticked (its "Bring" list before spec 075).
  */
 export function babyMusic(over: Partial<StoredEvent> = {}): StoredEvent {
   return {
@@ -15,7 +16,7 @@ export function babyMusic(over: Partial<StoredEvent> = {}): StoredEvent {
     title: 'Baby music class',
     category: 'social',
     location: 'Little Notes studio, 4 Elm St',
-    notes: null,
+    notes: 'Bring:\n- [x] Diaper bag\n- [ ] Bottle\n- [ ] Spare clothes',
     reminder: 'hour_before',
     starts_on: '2026-10-03',
     ends_on: '2026-10-03',
@@ -31,11 +32,6 @@ export function babyMusic(over: Partial<StoredEvent> = {}): StoredEvent {
     surprise: null,
     removed_members: [],
     exceptions: [],
-    checklist: [
-      { id: '00000000-0000-4000-8000-0000000000c1', position: 0, label: 'Diaper bag', done: true, done_by: gabriel.id },
-      { id: '00000000-0000-4000-8000-0000000000c2', position: 1, label: 'Bottle', done: false, done_by: null },
-      { id: '00000000-0000-4000-8000-0000000000c3', position: 2, label: 'Spare clothes', done: false, done_by: null },
-    ],
     created_by: eva.user_id,
     updated_by: eva.user_id,
     source: 'app',

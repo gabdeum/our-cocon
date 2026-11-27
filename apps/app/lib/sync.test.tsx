@@ -81,11 +81,11 @@ describe('SyncProvider', () => {
     expect(invalidate).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['grocery_items'] }));
   });
 
-  it("refetches the calendar's events when who they're for, an exception or a checklist changes", async () => {
+  it("refetches the calendar's events when who they're for or an exception changes", async () => {
     const { emit, invalidate } = setup();
     await flush();
-    emit({ table: 'event_checklist_items', op: 'update', id: recipe, by: alexId, source: 'app' });
-    expect(invalidate).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['event_checklist_items'] }));
+    emit({ table: 'event_exceptions', op: 'update', id: recipe, by: alexId, source: 'app' });
+    expect(invalidate).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['event_exceptions'] }));
     expect(invalidate).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['events'] }));
     invalidate.mockClear();
     emit({ table: 'events', op: 'insert', id: recipe, by: alexId, source: 'app' });

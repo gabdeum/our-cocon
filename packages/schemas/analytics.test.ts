@@ -286,6 +286,18 @@ describe('spec 074 events', () => {
   });
 });
 
+describe('spec 075 events', () => {
+  it('counts a note checklist after a tick, never its items', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    const toggled = { entity: 'reminder', checked: true, items_total: 3, items_checked: 2 } as const;
+    tracker.track('note_checklist_toggled', toggled);
+    expect(t.capture).toHaveBeenCalledWith('note_checklist_toggled', toggled);
+    expect(() => tracker.track('note_checklist_toggled', { ...toggled, label: 'Onion' } as never)).toThrow();
+    expect(() => tracker.track('event_checklist_ticked' as never, {} as never)).toThrow();
+  });
+});
+
 describe('spec 015 events', () => {
   it('says whether a row came from a paste, and never what it says', () => {
     const t = fakeTransport();

@@ -27,7 +27,6 @@ const cover = babyMusic({
   creator_member_id: gabriel.id,
   created_by: gabriel.user_id,
   created_at: '2026-10-31T08:00:00Z',
-  checklist: [],
   view: 'cover',
 });
 

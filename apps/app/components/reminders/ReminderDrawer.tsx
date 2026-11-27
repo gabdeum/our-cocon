@@ -6,6 +6,7 @@ import type { ReminderSnoozeOption, Tracker } from '@cocon/schemas';
 import { BottomSheet, Button, Callout, DateGrid, DayChip, Dialog, Link, MemberPill, NotesSection, Text } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import { dateGridMonth, shiftMonth } from '../../lib/event-form';
+import type { NoteChecklistSave } from '../../lib/note-checklist';
 import { lateText, reminderMember, snoozeChoices, snoozedTitle, whenLine } from '../../lib/reminders';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
@@ -28,6 +29,8 @@ export interface ReminderDrawerProps {
   tracker: Tracker;
   /** A link in the notes (spec 073); left out, the system browser. */
   onOpenUrl?: (url: string) => unknown;
+  /** Spec 075: saves a checklist tick in the notes. Left out: the items only show. */
+  noteChecklist?: Omit<NoteChecklistSave, 'disabled'>;
   onClose: () => void;
   /** "Edit", or "+ Add a note" (`notes`). */
   onEdit: (focus?: 'notes') => void;
@@ -138,7 +141,14 @@ export function ReminderDrawer(p: ReminderDrawerProps) {
           {/* Spec 073: no card and no heading, the hairline alone sets the notes apart. */}
           <NotesSection label={r.notes}>
             {x.notes ? (
-              <Notes notes={x.notes} entity="reminder" itemId={x.id} tracker={p.tracker} openUrl={p.onOpenUrl} />
+              <Notes
+                notes={x.notes}
+                entity="reminder"
+                itemId={x.id}
+                tracker={p.tracker}
+                openUrl={p.onOpenUrl}
+                checklist={p.noteChecklist ? { ...p.noteChecklist, disabled: off } : undefined}
+              />
             ) : (
               <Link label={r.addNote} disabled={p.readOnly} onPress={() => p.onEdit('notes')} />
             )}

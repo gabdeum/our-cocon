@@ -2,12 +2,12 @@
 
 **Feature Branch**: `042-event-detail-actions` · **Status**: Ready · **Depends on**: 019, 035, 041
 **Input**: See everything about an event, tick its checklist, copy it to another day, share it, or delete it safely.
-**Design**: canvas `OC-CalEvent`, `OC-CalEventDelete`; components Tag, ListRow (icon rows), ChecklistRow, Button, Dialog, BottomSheet.
+**Design**: canvas `OC-CalEvent`, `OC-CalEventDelete`; components Tag, ListRow (icon rows), ChecklistRow (removed by spec 075), Button, Dialog, BottomSheet.
 
 ## User Scenarios & Testing
 
 ### User Story 1 — Everything in one place (P1)
-**Given** "Baby music class", **Then** I see its type tag, title, member chips, "Saturday, Oct 31 · Morning · about 09:00–12:00", "Every Saturday", place with "Open in Maps", "Gabriel takes James", reminder, the "Bring" checklist and "Added by Eva · 2 days ago".
+**Given** "Baby music class", **Then** I see its type tag, title, member chips, "Saturday, Oct 31 · Morning · about 09:00–12:00", "Every Saturday", place with "Open in Maps", "Gabriel takes James", reminder, its notes with what to bring as a checklist I can tick (spec 075) and "Added by Eva · 2 days ago".
 
 ### User Story 2 — Delete a repeating event (P1)
 **Given** a repeating event Eva added, **When** I tap "Delete event", **Then** a dialog asks "Delete “Baby music class”?" — "Eva added this. Delete only this one, or this and all future ones? It's removed for the whole family." with "Only this one", "This and all future ones", "Keep it".
@@ -15,7 +15,7 @@
 ## Requirements
 
 - **FR-001**: Rows with olive icons: when, repeat summary, where (+ "Open in Maps"), responsible ("{name} drives" or "{name} takes {managed member}"), reminder ("Reminds {names} · {when}", e.g. "Reminds Gabriel · 13:30"; who and when from spec 049 FR-002, FR-003). Rows without a value are hidden.
-- **FR-002 Checklist** "Bring": tickable by any family member, realtime; hint "Anyone in the family can tick these."
+- **FR-002 Checklist** "Bring": retired by spec 075. Things to bring are a checklist in the notes, which any member who sees the event ticks in place, realtime.
 - **FR-003 Actions**: olive "Edit", soft "Duplicate" (date picker, then a toast "Copied to {day}" with Undo), soft "Share a view-only link", danger link "Delete event".
 - **FR-004 Delete**: non-repeating → "Delete “{title}”? This removes it for the whole family." / "Delete" / "Keep it". Repeating → scope dialog above. Someone else's event adds "{Name} added this." Deleted events go to Recently deleted for 30 days (spec 018); toast "Event deleted" with Undo.
 - **FR-005 Share**: reuses spec 019's link infrastructure: the page `/e/[token]` shows title, day, time, place and first names only — no notes, checklist or private/surprise content. The link expires after the event ends or when stopped.
@@ -50,3 +50,4 @@ None.
 - 2026-11-15 (Gabriel's ask): the place row's "Copy" and "Maps" pills are now round soft icon buttons, copy and directions (new icons `copy`, `directions`; `IconRow` actions take an `icon`), on the event page and the surprise page. OC-CalEvent.md, OC-CalSurprise.md, the ListRow and Icons READMEs updated.
 - 2026-11-21 (Gabriel's ask): deleting a one-off event no longer asks; it goes at once, with the "Event deleted" · Undo toast. A repeating event keeps its Dialog, which asks which dates (only this one, or this and all future ones). OC-CalEvent.md updated.
 - 2026-11-27 (spec 073): the notes show whole and formatted (bold, italic, links, lists, checklists) under a hairline; 053's 6-line cut and Show more / Show less are gone. OC-CalEvent.md updated.
+- 2026-11-27 (spec 075): the "Bring" checklist is retired: its items moved into each event's notes as a checklist, ticked in place on the page (`note_checklist_toggled` replaces `event_checklist_ticked`). User Story 1 and FR-002 updated; OC-CalEvent.md updated.

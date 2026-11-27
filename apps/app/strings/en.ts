@@ -1556,6 +1556,9 @@ export const strings = {
     /** What screen readers call the notes, under their hairline. */
     label: 'Notes',
     linkFailed: "Couldn't open that link",
+    // Spec 075: a checklist item ticked in the drawer whose save failed, or whose note changed meanwhile.
+    saveFailed: "Couldn't save. Try again.",
+    changed: 'This note changed. Showing the latest version.',
     // Spec 074: the notes field's toolbar (OC-NoteEditor) and its "Add a link" sheet.
     toolbar: { toolbar: 'Formatting', bold: 'Bold', link: 'Link', bullet: 'Bulleted list', number: 'Numbered list', check: 'Checklist', hideKeyboard: 'Hide keyboard' },
     tooLong: 'Notes can be up to 5,000 characters.',
@@ -1794,7 +1797,7 @@ export const strings = {
       editKind: 'Event or reminder',
       /** What an event has that a reminder can't hold, said before it's saved as one. */
       losesAsReminder: (parts: string[]) => `As a reminder, it won't keep ${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : parts[0]}.`,
-      lostParts: { people: 'several people', place: 'the place', type: 'the type', who_takes: 'who takes them', checklist: 'the checklist' },
+      lostParts: { people: 'several people', place: 'the place', type: 'the type', who_takes: 'who takes them' },
       /** A reminder's "If it's not done", which an event doesn't have. */
       losesAsEvent: "As an event, it won't keep “If it's not done”.",
       movedToReminders: 'Moved to Reminders.',
@@ -1862,9 +1865,6 @@ export const strings = {
       reminderHintYou: 'Reminds you on your phone.',
       notes: 'Notes',
       notesPlaceholder: 'Anything to remember',
-      addToChecklist: '+ Add to checklist',
-      checklistItem: 'Checklist item',
-      removeItem: (label: string) => `Remove ${label}`,
       save: 'Save',
       saving: 'Saving…',
       saveFailed: "Couldn't save. Check your connection and try again.",
@@ -1959,12 +1959,6 @@ export const strings = {
       /** Spec 049 FR-006, after the reminder on its line (spec 050): "1 hour before · reminds Gabriel · 13:30". */
       reminds: (names: string[], when: string) => `reminds ${andList(names)} · ${when}`,
       dayBefore: (time: string) => `${time} the day before`,
-      bring: 'Bring',
-      /** The Bring card's header: "1 of 3" ticked. */
-      bringCount: (done: number, total: number) => `${done} of ${total}`,
-      /** Ends the "Added by" line when there is a checklist (spec 050). */
-      anyoneCanTick: 'anyone can tick the list',
-      tickFailed: "Couldn't change that. Try again.",
       addedBy: (name: string, ago: string) => `Added by ${name} · ${ago}`,
       addedVia: (assistant: string, ago: string) => `Added via ${assistant} · ${ago}`,
       // The top bar (spec 050 FR-006): ✎ and ⋯, whose menu holds Duplicate, Share and Delete.
@@ -1987,7 +1981,7 @@ export const strings = {
       deleteFailed: "Couldn't delete. Check your connection and try again.",
       duplicateFailed: "Couldn't copy. Check your connection and try again.",
       shareTitle: 'Share this event',
-      shareLead: 'People with the link see the title, day, time and place. No notes or checklist.',
+      shareLead: 'People with the link see the title, day, time and place. No notes.',
       /** The shared page (`/e/[token]`): who it's for, first names only. */
       with: (names: string[]) => `With ${andList(names)}`,
       withEveryone: 'the whole family',

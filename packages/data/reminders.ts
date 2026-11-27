@@ -1,6 +1,6 @@
 import { todayIn, zonedInstant } from '@cocon/calendar';
 import { catchUp, complete, draftToFields, nextDueAfter, snoozeUntil, type ReminderRevert, type ReminderTiming } from '@cocon/reminders';
-import { DEFAULT_QUIET_HOURS, QuietHours, Recurrence, ReminderAssignee, ReminderDraft, ReminderOccurrenceStatus, ReminderRollover, ReminderSection, ReminderSnoozeOption, TimeFormatSetting, TimeZone } from '@cocon/schemas';
+import { DEFAULT_QUIET_HOURS, NOTES_MAX, QuietHours, Recurrence, ReminderAssignee, ReminderDraft, ReminderOccurrenceStatus, ReminderRollover, ReminderSection, ReminderSnoozeOption, TimeFormatSetting, TimeZone } from '@cocon/schemas';
 import { z } from 'zod';
 import type { Db } from './client';
 
@@ -276,6 +276,23 @@ export async function updateReminder(client: Pick<Db, 'from'>, id: string, draft
   const fields = draftToFields(ReminderDraft.parse(draft), TimeZone.parse(tz));
   const { error } = await client.from('reminders').update(fields).eq('id', z.uuid().parse(id)).is('deleted_at', null);
   if (error) throw error;
+}
+
+/**
+ * Spec 075: saves a reminder's notes after a checklist tick, only if they are still `from` (FR-003).
+ * Nothing else changes: ticking every item never completes the reminder (FR-004). 'changed' when
+ * someone changed the notes since, or the reminder was deleted.
+ */
+export async function setReminderNotes(client: Pick<Db, 'from'>, id: string, from: string, to: string): Promise<'saved' | 'changed'> {
+  const { data, error } = await client
+    .from('reminders')
+    .update({ notes: z.string().min(1).max(NOTES_MAX).parse(to) })
+    .eq('id', z.uuid().parse(id))
+    .eq('notes', from)
+    .is('deleted_at', null)
+    .select('id');
+  if (error) throw error;
+  return data.length > 0 ? 'saved' : 'changed';
 }
 
 export interface CompletedReminder {

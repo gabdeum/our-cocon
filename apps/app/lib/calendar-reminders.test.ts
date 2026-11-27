@@ -153,7 +153,6 @@ function ev(id: string, title: string, fields: Partial<StoredEvent>): StoredEven
     surprise: null,
     removed_members: [],
     exceptions: [],
-    checklist: [],
     created_by: null,
     updated_by: null,
     source: 'app',

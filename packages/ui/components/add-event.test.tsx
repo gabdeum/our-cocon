@@ -1,8 +1,7 @@
-// Spec 041: the add sheet's pieces: time-of-day and day tiles, the Who picker, the Undo toast,
-// checklist rows and the date grid.
+// Spec 041: the add sheet's pieces: time-of-day and day tiles, the Who picker, the Undo toast
+// and the date grid.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { ChecklistRow } from './ChecklistRow';
 import { DateGrid } from './DateGrid';
 import { DayChip } from './DayChip';
 import { MemberPickerChip } from './MemberChip';
@@ -33,25 +32,6 @@ describe('MemberPickerChip', () => {
     render(<MemberPickerChip name="Others" initial="" color="others" selected onPress={onPress} />);
     fireEvent.click(screen.getByRole('button', { name: 'Others' }));
     expect(screen.getByRole('button', { name: 'Others' }).getAttribute('aria-pressed')).toBe('true');
-    expect(onPress).toHaveBeenCalled();
-  });
-});
-
-describe('ChecklistRow', () => {
-  it('ticks as a checkbox on the event page', () => {
-    const onToggle = vi.fn();
-    render(<ChecklistRow label="Chips and dip" done onToggle={onToggle} />);
-    const box = screen.getByRole('checkbox');
-    expect(box.getAttribute('aria-checked')).toBe('true');
-    fireEvent.click(box);
-    expect(onToggle).toHaveBeenCalled();
-  });
-
-  it('lists an item with a remove button in the add sheet', () => {
-    const onPress = vi.fn();
-    render(<ChecklistRow label="Chips and dip" done={false} remove={{ label: 'Remove Chips and dip', onPress }} last />);
-    expect(screen.queryByRole('checkbox')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Chips and dip' }));
     expect(onPress).toHaveBeenCalled();
   });
 });
