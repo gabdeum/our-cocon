@@ -39,7 +39,7 @@ export const createReminderTool = defineTool({
   description: [
     'Add a reminder for the family, as the member would in the app: "Remind me to water the plants every Sunday".',
     'Call list_members first for names and today’s date. Leave out what the member didn’t say: no time means any time that day, no assignee means Everyone.',
-    'Put everything worth knowing in notes, as Markdown: details, context, links, steps, and a "- [ ] " checklist when there are several things to do or buy.',
+    'Put everything worth knowing in notes, as Markdown: details, context, links, steps, a "- [ ] " checklist when there are several things to do or buy, and a table for schedules or comparisons.',
     'It shows straight away in the app as added via you, and the family can correct or undo it. Reply with its link.',
   ].join('\n'),
   input: z.strictObject({

@@ -22,7 +22,7 @@ export const NOTES_HELP = [
 
 /** For each module's instructions: notes come first for knowledge (spec 073). */
 export const NOTES_RULE =
-  'Notes are Markdown and hold everything worth knowing (details, context, links, steps, checklists, tables): always put that knowledge in the notes, not only in your reply, and keep it there when you change them.';
+  'Notes are Markdown and hold everything worth knowing (details, context, links, steps, checklists, tables): the app shows checklists, lists, links and tables as such. Always put that knowledge in the notes, not only in your reply, and keep it there when you change them.';
 
 export const fields = {
   title: z.string().trim().min(1).max(60).describe('Short, as the family would write it: "Football", "Pediatrician".'),
