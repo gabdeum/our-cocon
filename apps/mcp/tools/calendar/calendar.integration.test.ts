@@ -234,6 +234,19 @@ describe.skipIf(!local)('calendar tools and permission against local Supabase', 
     expect((await loadEvent(gabriel, id))?.checklist).toEqual([]);
   });
 
+  // Spec 073: a 5000-character formatted note, on the event and on one of its dates.
+  it('keeps a long formatted note, on the series and on one date', async () => {
+    const notes = `**Bring**\n${'- [ ] crème brûlée à emporter\n'.repeat(200)}`.slice(0, 5000);
+    const { data, error } = await call('create_event', { title: 'Choir', date: '2027-03-01', slots: ['evening'], members: ['Eva'], repeat: { freq: 'weekly' }, notes });
+    expect(error).toBeNull();
+    const id = data?.id as string;
+    expect((await loadEvent(gabriel, id))?.notes).toBe(notes);
+    const one = await call('update_event', { id, date: '2027-03-08', scope: 'this', patch: { notes: notes.replaceAll('[ ]', '[x]') } });
+    expect(one.error).toBeNull();
+    expect((await loadEvent(gabriel, id))?.exceptions[0]?.override).toEqual({ notes: notes.replaceAll('[ ]', '[x]') });
+    expect((await call('create_event', { title: 'Choir', date: '2027-03-01', slots: ['evening'], notes: 'a'.repeat(5001) })).error).not.toBeNull();
+  });
+
   it('deletes one date, or the whole event to Recently deleted', async () => {
     const one = await call('delete_event', { id: music, date: '2026-11-21', scope: 'this' });
     expect(one.data).toEqual({ deleted: 'Baby music class', dates: 'Saturday, Nov 21', in_recently_deleted: false });

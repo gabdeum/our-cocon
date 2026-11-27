@@ -54,7 +54,7 @@ export const createEvent = defineTool({
     'Add an event to the family calendar, as the member would in the app: "Football every Saturday morning for James".',
     'Use slots (morning, afternoon…) unless the member gave a time: pick them from the kind of event if the member didn’t say. Call list_members first for names, ids and today’s date.',
     'Don’t ask for what you can estimate: save it with your best guess and say what you guessed. A start time without an end gets an estimated end_time; add type, and location when you know it.',
-    'Things to bring or do go in checklist, not in notes.',
+    'Put everything worth knowing about it in notes, as Markdown: details, context, links, steps, a "- [ ] " checklist for things to bring or do (not checklist), and a table for schedules or comparisons.',
     'When a member without the app (has_app false) is on it, the member you’re talking to takes them unless they named someone else (responsible).',
     'It shows straight away in the app as added via you, and the family can correct or undo it. Reply with the event’s link.',
   ].join('\n'),
@@ -97,7 +97,7 @@ export const updateEvent = defineTool({
   access: 'write',
   needs: 'events',
   description: [
-    'Change an event: send only what changes in patch (null clears location, notes, type, repeat, responsible or checklist). checklist is the whole list: send the items to keep with the new ones.',
+    'Change an event: send only what changes in patch (null clears location, notes, type, repeat, responsible or checklist). notes and checklist replace what was there: send the whole note, keeping what’s still true, with what’s new added in Markdown.',
     'For a repeating event, send the date being changed and scope: "this" for that date only, "future" for that date and every one after. Ask the member which if they didn’t say. How it repeats, its reminder, its checklist and who sees it only change with "future".',
     'Only the person who added a private or surprise event can change it.',
   ].join('\n'),

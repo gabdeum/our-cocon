@@ -1551,6 +1551,12 @@ export const strings = {
     other: 'an AI assistant',
   },
   // Spec 004: shared by every screen that shows family data (design/system/Patterns.md › Offline).
+  // design/ui/note-formatting-ui.md (spec 073): event and reminder notes with their formatting.
+  notes: {
+    /** What screen readers call the notes, under their hairline. */
+    label: 'Notes',
+    linkFailed: "Couldn't open that link",
+  },
   sync: {
     offline: "You're offline. You can read, but changes need a connection.",
     recipeChanged: (name: string) => `${name} just changed this recipe`,
@@ -1914,9 +1920,6 @@ export const strings = {
     /** design/ui/OC-CalEvent.md (spec 042): the event page, its dialogs, the share sheet and the shared page. */
     event: {
       back: 'Back to Calendar',
-      // Spec 053 FR-007: long notes are cut at 6 lines.
-      notesMore: 'Show more',
-      notesLess: 'Show less',
       /** "Morning · about 09:00–12:00"; a custom time shows its hours: "14:30–15:30". */
       slotTime: (slot: string, range: string) => `${slot} · about ${range}`,
       /** Spec 050 FR-006, after the date on one line: "Sat, Oct 31 · Morning, about 09:00–12:00". */

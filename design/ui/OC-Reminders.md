@@ -41,13 +41,13 @@ BottomSheet, cream, radius 30 top. In order:
 1. Title 24/900 + "Edit" link.
 2. Member pill (member colour) + when line 15/700: "Every Monday · was due Mon, Nov 9" / "Today at 15:00 · nudges every hour until done" / "Today, any time".
 3. Late callout (`#FFE3C2`, radius 16, info icon): "{n} days late." + " Last week's ({date}) was missed too." / " Missed {n} times since {date}." when > 1.
-4. Notes card (white, radius 18): "Notes" 16/900 (no edit link: notes are edited through "Edit" at the top); text 15/600, line breaks kept. No notes: "+ Add a note" (`#424D17`).
+4. Notes (spec 073): no card and no heading; a 1.5 `line-strong` hairline, 14 below it, then the note with its formatting as `note-formatting-ui.md` says (notes are edited through "Edit" at the top). No notes: "+ Add a note" (`#424D17`) under the hairline. Screen readers get the region "Notes".
 5. "Snooze until" 16/900, 2-column grid of 60 px tiles (label 16/900, date 13/700); selected = olive.
 6. "Mark as done" olive 56 px button with check. "Delete reminder" `#9A3412` text button.
 7. After an action: green card (`#D9E3A8`) "Done. Nice one." + "Next one: Mon, Nov 16. The missed weeks stay in its history." / "Snoozed until {date}" + "It's hidden until then and comes back without a late badge." Then "Undo" (cream) · "Close" (olive).
 
 ## Create / edit sheet
-The calendar's add sheet (OC-CalAdd) on its reminder side: the switch "New reminder" (with "New event") / "Edit reminder" (with "Edit event") in place of the title; "Cancel" on the phone only. Fields in order: "Remind us to…" (placeholder "e.g. Pay the daycare"; new only: up to 8 suggestion pills "{title} · {17:30 | Any time}" from the family's past reminders, as the event's; a pick fills the time, repeat, "If it's not done" and For from the latest one, keeping the day, the notes and anything changed) · "Due" (Today / Tomorrow / Other day) · "Set a time" switch + time field · "If it's not done" pills + hint line · "Repeat" pills · "For" person chips · "Notes · optional" textarea (placeholder "Details, a phone number, what to ask…", 1000 chars) · notification summary (bell, `#FFF0C9`) · "Save".
+The calendar's add sheet (OC-CalAdd) on its reminder side: the switch "New reminder" (with "New event") / "Edit reminder" (with "Edit event") in place of the title; "Cancel" on the phone only. Fields in order: "Remind us to…" (placeholder "e.g. Pay the daycare"; new only: up to 8 suggestion pills "{title} · {17:30 | Any time}" from the family's past reminders, as the event's; a pick fills the time, repeat, "If it's not done" and For from the latest one, keeping the day, the notes and anything changed) · "Due" (Today / Tomorrow / Other day) · "Set a time" switch + time field · "If it's not done" pills + hint line · "Repeat" pills · "For" person chips · "Notes · optional" textarea (placeholder "Details, a phone number, what to ask…", 5000 chars, spec 073) · notification summary (bell, `#FFF0C9`) · "Save".
 
 Hint lines under "If it's not done":
 - Every hour: "Stays on Home and nudges every hour until someone ticks it."
@@ -89,3 +89,4 @@ Written for the build (spec 058, not drawn):
 ## Lock Screen
 Order newest first. Titles: "In 1 hour: {title}", "Now: {title}", "Still to do: {title}". Long-press actions: "Done" · "In 1 hour" · "Tomorrow".
 - 2026-11-25 (Gabriel): the create and edit sheet is the calendar's add sheet on its reminder side (switch to an event, which moves it when editing); title suggestions from past reminders; no "Cancel" beside the card's ✕.
+- 2026-11-27 (spec 073): the drawer's notes lose their white card and "Notes" heading; formatted, under a hairline.

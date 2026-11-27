@@ -144,6 +144,16 @@ describe.skipIf(!local)('reminder tools and permission against local Supabase', 
     expect((await call('list_reminders', { cursor: 'nonsense' })).error).toBe('cursor isn’t one list_reminders gave for these filters. Start again without it.');
   });
 
+  // Spec 073: notes up to 5000 characters, formatting kept as written (the tool took 2000 and the table 1000).
+  it('keeps a long formatted note, and refuses one past 5000 characters', async () => {
+    const notes = `# Groceries\n${'- [ ] onion\n'.repeat(400)}`.slice(0, 5000);
+    const added = await call('create_reminder', { title: 'Shop', due_date: tomorrow, notes });
+    expect(added.error).toBeNull();
+    expect((await loadReminder(eva, added.data?.id as string)).notes).toBe(notes);
+    expect((await call('create_reminder', { title: 'Shop', due_date: tomorrow, notes: 'a'.repeat(5001) })).error).not.toBeNull();
+    expect((await call('delete_reminder', { id: added.data?.id })).error).toBeNull();
+  });
+
   it('changes, snoozes, ticks off and deletes, each with Undo or Restore in the activity', async () => {
     const { data } = await call('create_reminder', { title: 'Pay the nanny', due_date: today, repeat: { freq: 'weekly' } });
     const id = data?.id as string;

@@ -109,6 +109,9 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 68 | 070 Calendar on larger screens: month, week, day | 063, 064, 065, 036, 037, 038, 039, 058 | OC-CalendarResponsive |
 | 69 | 071 Travelling to another time zone | 029, 034, 049, 056, 059 | OC-TravelTimeZone (not drawn) |
 | 70 | 072 Share the grocery list by link | 019, 020, 021, 022 | OC-ShareGroceries, OC-SharedGroceries (not drawn) |
+| 71 | 073 Basic formatting in event and reminder notes | 042, 053, 056, 057 | OC-NoteMarkdown (UI doc: note-formatting-ui.md) |
+| 72 | 074 Formatting toolbar in the notes editor | 073, 041, 057 | OC-NoteEditor |
+| 73 | 075 Tick checklist items in the drawer, and retire the event checklist | 073, 074, 041, 042, 044, 056, 057 | OC-NoteMarkdown, OC-CalEvent, OC-CalAdd |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
 Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order, then the top bar (050) across every pushed screen.
@@ -193,3 +196,4 @@ These have no drawn screen; their UI spec is the source of truth: sign-in, set u
 - 2026-11-15: Build order rows 54–58: Reminders, specs 056–060 (data and rules, screens, calendar, notifications, assistant tools), from the reminders design handoff.
 - 2026-11-19: Build order rows 61–68: larger screens (iPad and wide web), specs 063–070, from the large-screens design handoff. Layouts only; 063 replaces decision 3's centred 720 px web layout when it ships.
 - 2026-11-19: Decision 3 now the layout tiers (spec 063 shipped).
+- 2026-11-27: Build order rows 71–73: note formatting, specs 073–075 (rendering, editor toolbar, ticking checklist items), from the note formatting design handoff.

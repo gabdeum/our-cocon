@@ -1,5 +1,5 @@
 import { weekday, type SlotTimes } from '@cocon/calendar';
-import type { EventMember } from '@cocon/schemas/calendar';
+import { NOTES_MAX, type EventMember } from '@cocon/schemas/calendar';
 import { plusHour, shownTimes, type EventDraft, type RepeatDraft } from './event-form';
 import type { ReminderForm } from './reminders';
 
@@ -77,7 +77,7 @@ function reminderRepeat(r: Repeat, date: string): Pick<ReminderForm, 'repeat'> &
   return plain ? { repeat: r.repeat as 'daily' | 'weekly' | 'monthly' } : { repeat: 'custom', custom: r };
 }
 
-/** Into the reminder: a start turns its time on, none leaves it any time (its notes are at most 1000). */
+/** Into the reminder: a start turns its time on, none leaves it any time (its notes are at most NOTES_MAX). */
 export function reminderPatch(s: Partial<Shared>, date: string): Partial<ReminderForm> {
   return {
     ...(s.title !== undefined ? { title: s.title } : {}),
@@ -85,6 +85,6 @@ export function reminderPatch(s: Partial<Shared>, date: string): Partial<Reminde
     ...(s.time !== undefined ? (s.time ? { hasTime: true, time: s.time } : { hasTime: false }) : {}),
     ...(s.who !== undefined ? { assignee: s.who } : {}),
     ...(s.repeat !== undefined ? reminderRepeat(s.repeat, s.date ?? date) : {}),
-    ...(s.notes !== undefined ? { notes: s.notes.slice(0, 1000) } : {}),
+    ...(s.notes !== undefined ? { notes: s.notes.slice(0, NOTES_MAX) } : {}),
   };
 }

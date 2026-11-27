@@ -32,6 +32,7 @@ export function ReminderDrawerHost({ open, ctx, actions, onClose }: { open: Open
       use24h={ctx.use24h}
       weekStartsOn={ctx.weekStartsOn}
       readOnly={!online}
+      tracker={ctx.tracker}
       onClose={onClose}
       onEdit={(focus) => {
         onClose();

@@ -42,7 +42,7 @@ describe('add switch', () => {
     // Every 2 weeks, or with an end, is the reminder's Custom with the same repeat.
     const biweekly = { repeat: 'biweekly' as const, weekdays: [5], ends: { type: 'after' as const, count: '6' } };
     expect(reminderPatch({ repeat: biweekly }, draft.date)).toEqual({ repeat: 'custom', custom: biweekly });
-    expect(reminderPatch({ notes: 'x'.repeat(1500) }, draft.date).notes).toHaveLength(1000);
+    expect(reminderPatch({ notes: 'x'.repeat(5500) }, draft.date).notes).toHaveLength(5000);
 
     const monthly = sharedFromReminder({ ...newReminderForm('m-gabriel', '2026-10-30'), repeat: 'monthly', notes: 'Card' });
     expect(eventPatch(monthly)).toMatchObject({ repeat: 'monthly', weekdays: [], ends: { type: 'never' }, notes: 'Card' });

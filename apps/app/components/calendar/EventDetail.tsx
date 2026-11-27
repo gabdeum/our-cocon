@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { dateLabel, viewFor, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import type { Tracker } from '@cocon/schemas';
-import { ActionMenu, BottomSheet, ChecklistRow, DateGrid, Dialog, Icon, IconButton, IconRow, Link, ListGroup, MemberStack, PushedScreen, Tag, Text, TopBarHeading } from '@cocon/ui';
+import { ActionMenu, BottomSheet, ChecklistRow, DateGrid, Dialog, Icon, IconButton, IconRow, ListGroup, MemberStack, NotesSection, PushedScreen, Tag, Text, TopBarHeading } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import type { DeleteScope } from '../../lib/event-delete';
 import { addedLine, deleteBody, memberBadges, placeActions, reminderLines, repeatLine, responsibleLine, whenLine } from '../../lib/event-detail';
@@ -13,12 +13,9 @@ import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { useToast } from '../../lib/toast';
 import { strings } from '../../strings/en';
 import { OfflineBanner } from '../sync/OfflineBanner';
+import { Notes } from '../shared/Notes';
 
 const e = strings.calendar.event;
-/** Spec 053 FR-007: notes past 6 lines are cut, with "Show more". */
-const NOTES_LINES = 6;
-// Lines can't be measured the same on every platform; a note this long likely runs past 6.
-const longNotes = (notes: string) => notes.split('\n').length > NOTES_LINES || notes.length > 280;
 const a = strings.calendar.add;
 
 export interface EventDetailProps {
@@ -63,7 +60,6 @@ export function EventDetail(p: EventDetailProps) {
   const [dialog, setDialog] = useState(false);
   const [picking, setPicking] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [notesOpen, setNotesOpen] = useState(false);
   // Ticks shown at once, until the next load (a new checklist) brings them back from the database.
   const [pending, setPending] = useState<{ of: StoredEvent['checklist']; done: Record<string, boolean> }>({ of: event.checklist, done: {} });
   const ticks = pending.of === event.checklist ? pending.done : {};
@@ -196,12 +192,12 @@ export function EventDetail(p: EventDetailProps) {
             {` · ${when.time}`}
           </Text>
         </Text>
+        {/* Spec 073: the whole note, formatted, under a hairline (no Show more since 073). */}
         {o.notes ? (
-          <View className="mt-4 gap-2">
-            <Text size={15} weight="600" color="ink-soft" numberOfLines={notesOpen ? undefined : NOTES_LINES} style={{ lineHeight: 15 * 1.4 }}>
-              {o.notes}
-            </Text>
-            {longNotes(o.notes) ? <Link label={notesOpen ? e.notesLess : e.notesMore} onPress={() => setNotesOpen((v) => !v)} /> : null}
+          <View className="mt-4">
+            <NotesSection label={strings.notes.label}>
+              <Notes notes={o.notes} entity="event" itemId={event.id} tracker={p.tracker} openUrl={p.onOpenUrl} />
+            </NotesSection>
           </View>
         ) : null}
       </View>

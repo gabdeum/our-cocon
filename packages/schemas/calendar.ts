@@ -6,6 +6,9 @@ import { z } from 'zod';
  * calendar tables (supabase/migrations/*_calendar_events.sql).
  */
 
+/** Event and reminder notes (spec 073): the same limit everywhere, matching both tables. */
+export const NOTES_MAX = 5000;
+
 /** A calendar day in the family's home time zone (FR-008). */
 export const CalendarDate = z.iso.date();
 /** A wall-clock time; "24:00" only ends a day. */
@@ -82,7 +85,7 @@ export const EventOverride = z.strictObject({
   title: z.string().trim().min(1).max(60),
   category: EventCategory.nullable(),
   location: z.string().max(200).nullable(),
-  notes: z.string().max(2000).nullable(),
+  notes: z.string().max(NOTES_MAX).nullable(),
   starts_on: CalendarDate,
   ends_on: CalendarDate,
   time_type: TimeType,
@@ -134,7 +137,7 @@ const eventFields = {
   title: z.string().trim().min(1).max(60),
   category: EventCategory.nullable().optional(),
   location: z.string().trim().min(1).max(200).nullable().optional(),
-  notes: z.string().trim().min(1).max(2000).nullable().optional(),
+  notes: z.string().trim().min(1).max(NOTES_MAX).nullable().optional(),
   starts_on: CalendarDate,
   ends_on: CalendarDate,
   time_type: TimeType,

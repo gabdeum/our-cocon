@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { addDays, daysBetween } from '@cocon/calendar';
-import { EventCategory, RecurrenceEnds, Reminder, SlotKey, Visibility, Weekday, ClockTime, type EventInput } from '@cocon/schemas/calendar';
+import { EventCategory, NOTES_MAX, RecurrenceEnds, Reminder, SlotKey, Visibility, Weekday, ClockTime, type EventInput } from '@cocon/schemas/calendar';
 import { ToolError } from '../../src/tools.js';
 import { Day, member, memberRef, type Calendar } from './shared.js';
 
@@ -9,6 +9,20 @@ import { Day, member, memberRef, type Calendar } from './shared.js';
  * turned into the app's `EventInput`, which `saveEvent` checks again with the calendar engine.
  */
 const Who = z.string().trim().min(1).max(80);
+
+/**
+ * Spec 073 FR-007: the notes of events and reminders are Markdown, and where everything worth
+ * knowing about them goes (Gabriel, 2026-11-27).
+ */
+export const NOTES_HELP = [
+  `Markdown, up to ${NOTES_MAX} characters. The notes are where everything worth knowing about it lives: put every detail, piece of context and knowledge the member gives you or that you find here (addresses, door codes, who to call, prices, links, steps, what to bring), not only in your reply.`,
+  'Structure it with Markdown: **bold** for what matters most; "- [ ] " checklists for things to bring, buy or do, one per line ("- [x] " once done); "1. " for steps in order; "- " for lists; [text](https://…) for links; "# " headings to split sections; tables ("| Day | Who |", then "|---|---|", then one row a line) for schedules, rotas or comparisons; wide ones scroll sideways. Line breaks are kept. The app shows code and diagrams as typed.',
+  'Changing notes replaces them: start from the current notes, keep what’s still true, and send the whole note.',
+].join(' ');
+
+/** For each module's instructions: notes come first for knowledge (spec 073). */
+export const NOTES_RULE =
+  'Notes are Markdown and hold everything worth knowing (details, context, links, steps, checklists, tables): the app shows checklists, lists, links and tables as such. Always put that knowledge in the notes, not only in your reply, and keep it there when you change them.';
 
 export const fields = {
   title: z.string().trim().min(1).max(60).describe('Short, as the family would write it: "Football", "Pediatrician".'),
@@ -38,7 +52,7 @@ export const fields = {
     .optional()
     .describe('How it repeats. Leave out for a one-off event.'),
   location: z.string().trim().min(1).max(200).optional().describe('The place or full address, as the member would type it. Line breaks are kept.'),
-  notes: z.string().trim().min(1).max(2000).optional(),
+  notes: z.string().trim().min(1).max(NOTES_MAX).optional().describe(NOTES_HELP),
   type: EventCategory.optional().describe('What kind of event it is. A birthday is all day and repeats every year.'),
   reminder: Reminder.optional().describe(
     'When to remind on their phones: none, minutes_15, hour_before, morning_of (07:30, or an hour before an early start) or day_before (18:00 the evening before). Leave out to use the member’s default.',
@@ -48,7 +62,7 @@ export const fields = {
     .min(1)
     .max(50)
     .optional()
-    .describe('What to bring or do, one short item each: ["Water bottle", "Shin pads"]. Anyone in the family can tick them in the app.'),
+    .describe('Older list of things to bring or do. Leave it out: put them in notes as a "- [ ] " checklist instead (spec 075 retires this list).'),
   visibility: Visibility.optional().describe('family (default: everyone sees it), private (others see "Busy"), or surprise (kept from some members, who see a cover instead).'),
   surprise: z
     .strictObject({
@@ -70,16 +84,17 @@ export const patchFields = {
     .nullable()
     .optional()
     .describe('Who takes the members without the app: someone with the app, or null to clear. Left out, the current one stays; people without the app added with nobody taking them get the member you’re talking to.'),
-  repeat: fields.repeat.unwrap().nullable().optional(),
-  location: fields.location.unwrap().nullable().optional(),
-  notes: fields.notes.unwrap().nullable().optional(),
-  type: fields.type.unwrap().nullable().optional(),
+  // unwrap() drops the description, so each one is set again.
+  repeat: fields.repeat.unwrap().nullable().optional().describe(`${fields.repeat.description} null stops it repeating.`),
+  location: fields.location.unwrap().nullable().optional().describe(`${fields.location.description} null clears it.`),
+  notes: fields.notes.unwrap().nullable().optional().describe(`${NOTES_HELP} null clears them.`),
+  type: fields.type.unwrap().nullable().optional().describe(`${fields.type.description} null clears it.`),
   checklist: z
     .array(z.string().trim().min(1).max(80))
     .max(50)
     .nullable()
     .optional()
-    .describe('The whole checklist as it should be, in order: items already on it stay ticked (a repeating event changed from a date on starts unticked, as in the app). null or [] clears it.'),
+    .describe('Older list of things to bring or do: put new items in notes as "- [ ] " lines instead. The whole list as it should be, in order: items already on it stay ticked (a repeating event changed from a date on starts unticked, as in the app). null or [] clears it.'),
 };
 export type Patch = { [K in keyof typeof patchFields]?: z.output<(typeof patchFields)[K]> };
 

@@ -96,6 +96,8 @@ import {
   DayChip,
   ChecklistAdd,
   ChecklistRow,
+  NoteText,
+  NotesSection,
   ReminderRow,
   TimeField,
   DateGrid,
@@ -398,6 +400,37 @@ export function Gallery({ onBack, onOpenSheetRoute, onOpenModalRoute }: { onBack
           <ChecklistRow label="Diaper bag" done onToggle={noop} />
           <ChecklistRow label="Bottle (offline)" done={false} onToggle={noop} disabled last />
         </ListGroup>
+      </Section>
+
+      <Section group="Calendar" title="Notes: NoteText, NotesSection (spec 073)">
+        <NotesSection label="Notes">
+          <NoteText
+            onOpenLink={noop}
+            blocks={[
+              { kind: 'paragraph', spans: [{ kind: 'bold', children: [{ kind: 'text', text: '40 nights' }] }, { kind: 'text', text: '. Arriving December 1 at 15:00, ' }, { kind: 'italic', children: [{ kind: 'text', text: 'leaving January 10' }] }, { kind: 'text', text: '. Info on ' }, { kind: 'link', url: 'https://airbnb.com/help', children: [{ kind: 'text', text: 'airbnb.com/help' }] }, { kind: 'text', text: '.' }] },
+              { kind: 'boldLine', spans: [{ kind: 'text', text: 'Bold line (also how a # heading shows)' }] },
+              { kind: 'bullet', spans: [{ kind: 'text', text: 'Bulleted item' }] },
+              { kind: 'bullet', spans: [{ kind: 'text', text: 'Bulleted item with ' }, { kind: 'bold', children: [{ kind: 'text', text: 'bold' }] }] },
+              { kind: 'number', n: 1, spans: [{ kind: 'text', text: 'Numbered item' }] },
+              { kind: 'number', n: 2, spans: [{ kind: 'text', text: 'Numbered item' }] },
+              { kind: 'check', done: false, line: 8, spans: [{ kind: 'text', text: 'Checklist item' }] },
+              { kind: 'check', done: true, line: 9, spans: [{ kind: 'text', text: 'Ticked item' }] },
+              { kind: 'check', done: false, line: 10, spans: [{ kind: 'text', text: 'Checklist item' }] },
+              {
+                kind: 'table',
+                align: ['left', 'left', 'right'],
+                header: [[{ kind: 'text', text: 'Day' }], [{ kind: 'text', text: 'Who' }], [{ kind: 'text', text: 'Cost' }]],
+                rows: [[[{ kind: 'text', text: 'Mon' }], [{ kind: 'text', text: 'Eva' }], [{ kind: 'text', text: '12 €' }]], [[{ kind: 'text', text: 'Tue' }], [{ kind: 'text', text: 'James' }], [{ kind: 'text', text: '8 €' }]]],
+              },
+              {
+                kind: 'table',
+                align: ['left', 'left', 'left', 'left'],
+                header: [[{ kind: 'text', text: 'Wide table' }], [{ kind: 'text', text: 'scrolls sideways' }], [{ kind: 'text', text: 'when it is wider' }], [{ kind: 'text', text: 'than the note' }]],
+                rows: [[[{ kind: 'text', text: 'Each column is as wide' }], [{ kind: 'text', text: 'as its longest cell, up to 240' }], [{ kind: 'text', text: 'then the text wraps onto a second line' }], [{ kind: 'text', text: 'like this one does' }]]],
+              },
+            ]}
+          />
+        </NotesSection>
       </Section>
 
       <Section group="Reminders" title="CalCard, ReminderRow, ActionMenu (dots), DayChip (start), TimeField (spec 057)">

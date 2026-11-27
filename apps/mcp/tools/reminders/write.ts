@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { daysBetween, todayIn } from '@cocon/calendar';
 import { completeReminder, createReminder, deleteReminder, snoozeReminder, updateReminder, type StoredReminder } from '@cocon/data';
 import { toDraft } from '@cocon/reminders';
-import { ClockTime, ReminderDraft, ReminderRollover, ReminderSnoozeOption, type ParsedReminderDraft } from '@cocon/schemas';
+import { ClockTime, NOTES_MAX, ReminderDraft, ReminderRollover, ReminderSnoozeOption, type ParsedReminderDraft } from '@cocon/schemas';
 import { defineTool, ToolError, type ToolContext } from '../../src/tools.js';
-import { recurrenceOf, fields as eventFields } from '../calendar/input.js';
+import { NOTES_HELP, recurrenceOf, fields as eventFields } from '../calendar/input.js';
 import { Day, loadCalendar } from '../calendar/shared.js';
 import { assigneeRef, localWhen, ReminderId, reminderFailure, reminderLink, storedReminder } from './shared.js';
 
@@ -21,7 +21,7 @@ const fields = {
     'What happens while it’s late: "hour" comes back every hour (needs a time), "day" every morning, "week" a week later, "none" stays in Overdue quietly. Left out: "hour" with a time, "day" without.',
   ),
   assignee: z.string().trim().min(1).max(80).describe('Who it’s for: a name or id from list_members, or "everyone" (the default).'),
-  notes: z.string().max(2000).describe('Details, up to 1000 characters. Line breaks are kept.'),
+  notes: z.string().max(NOTES_MAX).describe(NOTES_HELP),
 };
 
 /** FR-004: the app's rules (ReminderDraft), and "every hour" only with a time, said rather than changed. */
@@ -39,6 +39,7 @@ export const createReminderTool = defineTool({
   description: [
     'Add a reminder for the family, as the member would in the app: "Remind me to water the plants every Sunday".',
     'Call list_members first for names and today’s date. Leave out what the member didn’t say: no time means any time that day, no assignee means Everyone.',
+    'Put everything worth knowing in notes, as Markdown: details, context, links, steps, a "- [ ] " checklist when there are several things to do or buy, and a table for schedules or comparisons.',
     'It shows straight away in the app as added via you, and the family can correct or undo it. Reply with its link.',
   ].join('\n'),
   input: z.strictObject({
@@ -81,7 +82,7 @@ export const updateReminderTool = defineTool({
   access: 'write',
   needs: 'reminders',
   description: [
-    'Change a reminder: send only what changes (null clears the time, the repeat or the notes). due_date moves it; for a repeating reminder, the repeat then counts from that date.',
+    'Change a reminder: send only what changes (null clears the time, the repeat or the notes). due_date moves it; for a repeating reminder, the repeat then counts from that date. notes replaces what was there: send the whole note, keeping what’s still true, with what’s new added in Markdown.',
     'To put it off for a while without changing when it’s due, use snooze_reminder instead.',
   ].join('\n'),
   input: z.strictObject({

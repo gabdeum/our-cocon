@@ -13,6 +13,10 @@ import {
   Nunito_700Bold,
   Nunito_800ExtraBold,
   Nunito_900Black,
+  Nunito_600SemiBold_Italic,
+  Nunito_700Bold_Italic,
+  Nunito_800ExtraBold_Italic,
+  Nunito_900Black_Italic,
 } from '@expo-google-fonts/nunito';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { AppFrame, ThemeProvider, theme, useLayoutTier } from '@cocon/ui';
@@ -200,6 +204,11 @@ export default function RootLayout() {
     Nunito_700Bold,
     Nunito_800ExtraBold,
     Nunito_900Black,
+    // Italic in notes (spec 073): the weights notes use.
+    Nunito_600SemiBold_Italic,
+    Nunito_700Bold_Italic,
+    Nunito_800ExtraBold_Italic,
+    Nunito_900Black_Italic,
   });
   const ready = fontsLoaded || fontError !== null;
   // Spec 067: from 960 the recipe opens beside the list that's already on screen, without a slide.

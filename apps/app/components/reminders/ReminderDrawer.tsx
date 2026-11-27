@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { addDays, dateLabel, todayIn, type WeekStartsOn } from '@cocon/calendar';
 import type { CompletedReminder, PlacedReminder, ReminderOccurrence } from '@cocon/data';
-import type { ReminderSnoozeOption } from '@cocon/schemas';
-import { BottomSheet, Button, Callout, DateGrid, DayChip, Dialog, Link, MemberPill, Text } from '@cocon/ui';
+import type { ReminderSnoozeOption, Tracker } from '@cocon/schemas';
+import { BottomSheet, Button, Callout, DateGrid, DayChip, Dialog, Link, MemberPill, NotesSection, Text } from '@cocon/ui';
 import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import { dateGridMonth, shiftMonth } from '../../lib/event-form';
 import { lateText, reminderMember, snoozeChoices, snoozedTitle, whenLine } from '../../lib/reminders';
 import type { Member } from '../../lib/session';
 import { strings } from '../../strings/en';
+import { Notes } from '../shared/Notes';
 
 const r = strings.reminders;
 
@@ -24,6 +25,9 @@ export interface ReminderDrawerProps {
   now?: Date;
   /** Offline: nothing can change (decision 11). */
   readOnly?: boolean;
+  tracker: Tracker;
+  /** A link in the notes (spec 073); left out, the system browser. */
+  onOpenUrl?: (url: string) => unknown;
   onClose: () => void;
   /** "Edit", or "+ Add a note" (`notes`). */
   onEdit: (focus?: 'notes') => void;
@@ -131,18 +135,14 @@ export function ReminderDrawer(p: ReminderDrawerProps) {
             </View>
           ) : null}
 
-          <View role="region" aria-label={r.notes} className="gap-6 rounded-lg bg-surface-card px-14 py-12">
-            <Text size={16} weight="900" role="heading" aria-level={3}>
-              {r.notes}
-            </Text>
+          {/* Spec 073: no card and no heading, the hairline alone sets the notes apart. */}
+          <NotesSection label={r.notes}>
             {x.notes ? (
-              <Text size={15} weight="600">
-                {x.notes}
-              </Text>
+              <Notes notes={x.notes} entity="reminder" itemId={x.id} tracker={p.tracker} openUrl={p.onOpenUrl} />
             ) : (
               <Link label={r.addNote} disabled={p.readOnly} onPress={() => p.onEdit('notes')} />
             )}
-          </View>
+          </NotesSection>
 
           <View className="gap-8">
             <Text size={16} weight="900" role="heading" aria-level={3}>
