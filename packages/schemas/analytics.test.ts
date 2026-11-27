@@ -275,6 +275,17 @@ describe('spec 073 events', () => {
   });
 });
 
+describe('spec 074 events', () => {
+  it('says which format a toolbar button added or removed, and nothing typed', () => {
+    const t = fakeTransport();
+    const tracker = createTracker(t);
+    tracker.track('note_format_applied', { entity: 'reminder', format: 'check', action: 'add' });
+    expect(t.capture).toHaveBeenCalledWith('note_format_applied', { entity: 'reminder', format: 'check', action: 'add' });
+    expect(() => tracker.track('note_format_applied', { entity: 'event', format: 'italic', action: 'add' } as never)).toThrow();
+    expect(() => tracker.track('note_format_applied', { entity: 'event', format: 'link', action: 'add', url: 'https://a.fr' } as never)).toThrow();
+  });
+});
+
 describe('spec 015 events', () => {
   it('says whether a row came from a paste, and never what it says', () => {
     const t = fakeTransport();

@@ -318,6 +318,8 @@ describe('EventSheet (spec 041)', () => {
     expect(screen.queryByRole('heading', { name: 'Reminder' })).toBeNull();
     expect(screen.queryByRole('button', { name: '+ Add to checklist' })).toBeNull();
     expect(screen.getByLabelText('Notes')).toBeTruthy();
+    // Spec 074: the notes come with their formatting toolbar.
+    expect(screen.getByRole('toolbar', { name: 'Formatting' })).toBeTruthy();
   });
 });
 

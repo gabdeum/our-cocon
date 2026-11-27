@@ -33,6 +33,9 @@ export const iconShapes = {
   "check": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><Path d="m5 12 5 5 9-10" /></Svg>
   ),
+  "checklist": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Rect x="3" y="4" width="6" height="6" rx="1.5" /><Path d="M4.5 16.5l1.5 1.5 3-3M13 7h8M13 17h8" /></Svg>
+  ),
   "chevron-down": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="m6 9 6 6 6-6" /></Svg>
   ),
@@ -65,6 +68,18 @@ export const iconShapes = {
   ),
   "home": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z" /></Svg>
+  ),
+  "keyboard-hide": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Rect x="3" y="4" width="18" height="11" rx="2" /><Path d="M7 8h.01M11 8h.01M15 8h.01M8 12h8M9 19l3 2 3-2" /></Svg>
+  ),
+  "link": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><Path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></Svg>
+  ),
+  "list-bullet": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="M10 6h10M10 12h10M10 18h10" /><Circle cx="5" cy="6" r="1.3" fill={color} /><Circle cx="5" cy="12" r="1.3" fill={color} /><Circle cx="5" cy="18" r="1.3" fill={color} /></Svg>
+  ),
+  "list-number": ({ size, color }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><Path d="M10 6h10M10 12h10M10 18h10" /><Path d="M4 4.5l1.5-1V9M3.5 13.5a1.5 1.5 0 1 1 2.6 1L3.5 17h3" /></Svg>
   ),
   "lock": ({ size, color }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><Rect x="5" y="11" width="14" height="10" rx="2" /><Path d="M8 11V8a4 4 0 0 1 8 0v3" /></Svg>

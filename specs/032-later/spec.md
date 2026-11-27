@@ -105,6 +105,7 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 | L166 | P3 | **Agenda on larger screens.** From 600 Agenda gets 070's header ("+ Event", segmented views, people chips) but keeps the phone's single list. Not designed yet; the spec suggests each day laid out like the medium Day view. | 070 | none |
 | L168 | P2 | **Time a long note on an iPhone 12.** Spec 073 SC-004: a 5,000-character note should draw in the drawer in under 16 ms. The parser reads one in tests, but drawing time can only be measured on the phone (React DevTools profiler on a development build). | 073 | none |
 | L170 | P3 | **Plain-text previews of notes.** No screen shows a note as one line today (reminder rows show a notes icon). `notesToPlainText` (`apps/app/lib/notes.ts`) is ready for when one does (a search, a row's second line): use it so no `**` or `- [ ]` shows. | 073 | none |
+| L171 | P3 | **Undo a notes toolbar change on the iPhone.** Spec 074 FR-008: on the web a toolbar change or a list going on after Enter is one step of the browser's undo (⌘Z). On the iPhone React Native sets the text from JavaScript, which UIKit's undo (shake, three-finger swipe) doesn't record, and may forget what came before. Check on a development build; if so, it needs a small native module that applies the change through the text view's undo manager. | 074 | none |
 | L167 | P3 | **Month's first-visit hint from 600.** The hint ("Tap a day to see details. Each color is a family member.") sits beside the floating add button, which isn't there from 600, so 070 doesn't show it there (it's still shown, and marked seen, on a phone). Show it near the grid or the panel if Gabriel wants it on iPad too. | 070 | none |
 
 ## Changelog
@@ -187,3 +188,4 @@ This spec is never built in one go. Each task is done by the spec in its **Do wi
 - 2026-11-26 (072): L43 also covers sharing the grocery list from an assistant. No new tasks.
 - 2026-11-27 (073): no tasks were Do with 073. Added L168 (time a long note on an iPhone), L169 (assistants told to use the old checklist until 075) and L170 (plain-text previews when one exists).
 - 2026-11-27 (073, Gabriel's follow-up): did L169 (assistants now put things to bring in a notes checklist; the `checklist` field says to leave it out).
+- 2026-11-27 (074): no tasks were Do with 074. Added L171 (undo of a toolbar change on the iPhone).

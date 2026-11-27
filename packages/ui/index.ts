@@ -56,6 +56,7 @@ export { SlotChip, type SlotChipProps } from './components/SlotChip';
 export { DayChip, type DayChipProps } from './components/DayChip';
 export { ChecklistAdd, ChecklistRow, type ChecklistRowProps } from './components/ChecklistRow';
 export { NoteText, NotesSection, type NoteAlign, type NoteBlock, type NoteSpan, type NoteTextProps } from './components/NoteText';
+export { NoteFormattingToolbar, type NoteFormattingToolbarProps, type NoteToolbarFormat } from './components/NoteFormattingToolbar';
 export { MemberPill, ReminderMore, ReminderRow, type ReminderRowProps } from './components/ReminderRow';
 export { WeekdayPicker, type WeekdayPickerProps } from './components/WeekdayPicker';
 export { DateGrid, type DateGridDay, type DateGridProps } from './components/DateGrid';
