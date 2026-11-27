@@ -39,6 +39,7 @@ export const createReminderTool = defineTool({
   description: [
     'Add a reminder for the family, as the member would in the app: "Remind me to water the plants every Sunday".',
     'Call list_members first for names and today’s date. Leave out what the member didn’t say: no time means any time that day, no assignee means Everyone.',
+    'Put everything worth knowing in notes, as Markdown: details, context, links, steps, and a "- [ ] " checklist when there are several things to do or buy.',
     'It shows straight away in the app as added via you, and the family can correct or undo it. Reply with its link.',
   ].join('\n'),
   input: z.strictObject({
@@ -81,7 +82,7 @@ export const updateReminderTool = defineTool({
   access: 'write',
   needs: 'reminders',
   description: [
-    'Change a reminder: send only what changes (null clears the time, the repeat or the notes). due_date moves it; for a repeating reminder, the repeat then counts from that date.',
+    'Change a reminder: send only what changes (null clears the time, the repeat or the notes). due_date moves it; for a repeating reminder, the repeat then counts from that date. notes replaces what was there: send the whole note, keeping what’s still true, with what’s new added in Markdown.',
     'To put it off for a while without changing when it’s due, use snooze_reminder instead.',
   ].join('\n'),
   input: z.strictObject({

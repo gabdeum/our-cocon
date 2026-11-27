@@ -10,8 +10,19 @@ import { Day, member, memberRef, type Calendar } from './shared.js';
  */
 const Who = z.string().trim().min(1).max(80);
 
-/** Spec 073 FR-007: the notes of events and reminders, and the formatting the app shows. */
-export const NOTES_HELP = `Details, up to ${NOTES_MAX} characters. Line breaks are kept. The app shows **bold**, *italic*, [links](https://…), "- " bulleted lists, "1. " numbered lists and "- [ ] " checklists; tables, code and diagrams show as plain text.`;
+/**
+ * Spec 073 FR-007: the notes of events and reminders are Markdown, and where everything worth
+ * knowing about them goes (Gabriel, 2026-11-27).
+ */
+export const NOTES_HELP = [
+  `Markdown, up to ${NOTES_MAX} characters. The notes are where everything worth knowing about it lives: put every detail, piece of context and knowledge the member gives you or that you find here (addresses, door codes, who to call, prices, links, steps, what to bring), not only in your reply.`,
+  'Structure it with Markdown: **bold** for what matters most; "- [ ] " checklists for things to bring, buy or do, one per line ("- [x] " once done); "1. " for steps in order; "- " for lists; [text](https://…) for links; "# " headings to split sections; tables for schedules or comparisons. Line breaks are kept. The app shows tables, code and diagrams as typed.',
+  'Changing notes replaces them: start from the current notes, keep what’s still true, and send the whole note.',
+].join(' ');
+
+/** For each module's instructions: notes come first for knowledge (spec 073). */
+export const NOTES_RULE =
+  'Notes are Markdown and hold everything worth knowing (details, context, links, steps, checklists, tables): always put that knowledge in the notes, not only in your reply, and keep it there when you change them.';
 
 export const fields = {
   title: z.string().trim().min(1).max(60).describe('Short, as the family would write it: "Football", "Pediatrician".'),
@@ -51,7 +62,7 @@ export const fields = {
     .min(1)
     .max(50)
     .optional()
-    .describe('What to bring or do, one short item each: ["Water bottle", "Shin pads"]. Anyone in the family can tick them in the app.'),
+    .describe('Older list of things to bring or do. Leave it out: put them in notes as a "- [ ] " checklist instead (spec 075 retires this list).'),
   visibility: Visibility.optional().describe('family (default: everyone sees it), private (others see "Busy"), or surprise (kept from some members, who see a cover instead).'),
   surprise: z
     .strictObject({
@@ -82,7 +93,7 @@ export const patchFields = {
     .max(50)
     .nullable()
     .optional()
-    .describe('The whole checklist as it should be, in order: items already on it stay ticked (a repeating event changed from a date on starts unticked, as in the app). null or [] clears it.'),
+    .describe('Older list of things to bring or do: put new items in notes as "- [ ] " lines instead. The whole list as it should be, in order: items already on it stay ticked (a repeating event changed from a date on starts unticked, as in the app). null or [] clears it.'),
 };
 export type Patch = { [K in keyof typeof patchFields]?: z.output<(typeof patchFields)[K]> };
 
