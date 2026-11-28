@@ -2,6 +2,7 @@ import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, u
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, usePathname, type Href } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { calendarWordsByLanguage, setCalendarWords } from '@cocon/calendar';
 import { displayWordsByLanguage, setDisplayWords } from '@cocon/quantity';
 import { LanguageSetting, languageOf, resolveLanguage, type AppLanguage } from '@cocon/schemas';
@@ -57,6 +58,7 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 /** Applies the language and redraws `children` when it changes, so every screen reads the new words. */
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const { state, api, client, refresh } = useSession();
+  const queryClient = useQueryClient();
   const toast = useToast();
   const pathname = usePathname();
   /** Where the person was when they picked: the redraw starts the screens afresh (an iPhone goes back to the first tab). */
@@ -94,7 +96,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (member) void AsyncStorage.setItem(STORAGE_KEY, member).catch(() => undefined);
   }, [member]);
-  // FR-013: the sign-in email is written in the account's last language. Once per change, per person.
+  // FR-013: the sign-in email, and (spec 078) the catalog's names, are in the account's last language.
+  // Once per change, per person.
   const userId = state.status === 'ready' ? state.userId : null;
   useEffect(() => {
     if (!userId) return;
@@ -103,10 +106,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       .then(async (synced) => {
         if (synced === mark) return;
         const { error } = await client.auth.updateUser({ data: { lang: language } });
-        if (!error) await AsyncStorage.setItem(SYNCED_KEY, mark);
+        if (error) return;
+        await AsyncStorage.setItem(SYNCED_KEY, mark);
+        // Spec 078: the catalog's names, piece nouns and pack labels follow the account's language.
+        await queryClient.invalidateQueries();
       })
       .catch(() => undefined);
-  }, [client, userId, language]);
+  }, [client, queryClient, userId, language]);
 
   /** Saves a choice to the account; until it's saved it stays on this device, and wins (spec Warnings). */
   const save = useCallback(

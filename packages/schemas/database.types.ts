@@ -113,14 +113,14 @@ isOneToOne: true
                   ]
                 },"catalog_ingredients": {
                   Row: {
-                    "aisle": Database["public"]['Enums']["aisle"],"default_size": Database["public"]['Enums']["size_word"] | null,"density_g_per_ml": number | null,"diet": (string)[],"key": string,"names": NonNullable<Json>,"noun_plural": string | null,"noun_singular": string | null,"size_large_g": number | null,"size_medium_g": number | null,"size_small_g": number | null,"synonyms": NonNullable<Json>,"updated_at": string,"whole_only": boolean
+                    "aisle": Database["public"]['Enums']["aisle"],"default_size": Database["public"]['Enums']["size_word"] | null,"density_g_per_ml": number | null,"diet": (string)[],"key": string,"names": NonNullable<Json>,"noun_names": Json,"noun_plural": string | null,"noun_singular": string | null,"size_large_g": number | null,"size_medium_g": number | null,"size_small_g": number | null,"synonyms": NonNullable<Json>,"updated_at": string,"whole_only": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "aisle": Database["public"]['Enums']["aisle"],"default_size"?: Database["public"]['Enums']["size_word"] | null,"density_g_per_ml"?: number | null,"diet"?: (string)[],"key": string,"names": NonNullable<Json>,"noun_plural"?: string | null,"noun_singular"?: string | null,"size_large_g"?: number | null,"size_medium_g"?: number | null,"size_small_g"?: number | null,"synonyms"?: NonNullable<Json>,"updated_at"?: string,"whole_only"?: boolean
+                    "aisle": Database["public"]['Enums']["aisle"],"default_size"?: Database["public"]['Enums']["size_word"] | null,"density_g_per_ml"?: number | null,"diet"?: (string)[],"key": string,"names": NonNullable<Json>,"noun_names"?: Json,"noun_plural"?: string | null,"noun_singular"?: string | null,"size_large_g"?: number | null,"size_medium_g"?: number | null,"size_small_g"?: number | null,"synonyms"?: NonNullable<Json>,"updated_at"?: string,"whole_only"?: boolean
                   }
                   Update: {
-                    "aisle"?: Database["public"]['Enums']["aisle"],"default_size"?: Database["public"]['Enums']["size_word"] | null,"density_g_per_ml"?: number | null,"diet"?: (string)[],"key"?: string,"names"?: NonNullable<Json>,"noun_plural"?: string | null,"noun_singular"?: string | null,"size_large_g"?: number | null,"size_medium_g"?: number | null,"size_small_g"?: number | null,"synonyms"?: NonNullable<Json>,"updated_at"?: string,"whole_only"?: boolean
+                    "aisle"?: Database["public"]['Enums']["aisle"],"default_size"?: Database["public"]['Enums']["size_word"] | null,"density_g_per_ml"?: number | null,"diet"?: (string)[],"key"?: string,"names"?: NonNullable<Json>,"noun_names"?: Json,"noun_plural"?: string | null,"noun_singular"?: string | null,"size_large_g"?: number | null,"size_medium_g"?: number | null,"size_small_g"?: number | null,"synonyms"?: NonNullable<Json>,"updated_at"?: string,"whole_only"?: boolean
                   }
                   Relationships: [
                     
@@ -147,14 +147,14 @@ isOneToOne: false
                   ]
                 },"catalog_packs": {
                   Row: {
-                    "ingredient_key": string,"label": string,"loose": boolean,"position": number,"profile": Database["public"]['Enums']["store_profile"],"size": number,"unit": Database["public"]['Enums']["unit"]
+                    "ingredient_key": string,"label": string,"labels": Json,"loose": boolean,"position": number,"profile": Database["public"]['Enums']["store_profile"],"size": number,"unit": Database["public"]['Enums']["unit"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "ingredient_key": string,"label": string,"loose": boolean,"position": number,"profile": Database["public"]['Enums']["store_profile"],"size": number,"unit": Database["public"]['Enums']["unit"]
+                    "ingredient_key": string,"label": string,"labels"?: Json,"loose": boolean,"position": number,"profile": Database["public"]['Enums']["store_profile"],"size": number,"unit": Database["public"]['Enums']["unit"]
                   }
                   Update: {
-                    "ingredient_key"?: string,"label"?: string,"loose"?: boolean,"position"?: number,"profile"?: Database["public"]['Enums']["store_profile"],"size"?: number,"unit"?: Database["public"]['Enums']["unit"]
+                    "ingredient_key"?: string,"label"?: string,"labels"?: Json,"loose"?: boolean,"position"?: number,"profile"?: Database["public"]['Enums']["store_profile"],"size"?: number,"unit"?: Database["public"]['Enums']["unit"]
                   }
                   Relationships: [
                     {

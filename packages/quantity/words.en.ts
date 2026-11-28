@@ -1,8 +1,8 @@
 import type { SizeWord, Unit } from '@cocon/schemas/recipes';
 
 /**
- * Spec 015 FR-003: every English word the paste parser knows, in one place, so French can be added
- * as `words.fr.ts` with the same shape. Words are lower case.
+ * Spec 015 FR-003: every English word the paste parser knows, in one place; French and Spanish in
+ * `words.fr.ts` and `words.es.ts` (spec 078), and `words.ts` reads all of them. Words are lower case.
  */
 export interface ParserWords {
   /** Unit words and their unit ("tablespoons" → tbsp). Checked with a trailing "." removed. */
@@ -16,6 +16,10 @@ export interface ParserWords {
   of: string[];
   /** Preparation words: a comma part made only of these belongs to the line before it. */
   prep: string[];
+  /** Units of several words, turned into one known unit word first ("c. à soupe" → "tbsp"). */
+  phrases?: [RegExp, string][];
+  /** Joined to the name and dropped after an amount ("d’huile" → "huile"). */
+  elided?: string[];
 }
 
 const plural = (pairs: [string, Unit][]): Record<string, Unit> => Object.fromEntries(pairs);

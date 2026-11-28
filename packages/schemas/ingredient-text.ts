@@ -16,7 +16,12 @@ export interface ParsedIngredientText {
   prep: string | null;
 }
 
-const SIZE_WORDS: Record<string, SizeWordText> = { small: 'small', medium: 'medium', large: 'large', big: 'large' };
+const SIZE_WORDS: Record<string, SizeWordText> = {
+  small: 'small', medium: 'medium', large: 'large', big: 'large',
+  // Spec 078: French and Spanish, folded.
+  petit: 'small', petite: 'small', moyen: 'medium', moyenne: 'medium', gros: 'large', grosse: 'large', grand: 'large', grande: 'large',
+  pequeno: 'small', pequena: 'small', mediano: 'medium', mediana: 'medium',
+};
 
 /** Words that describe how an ingredient is prepared or bought, not what it is. */
 const DESCRIPTORS = new Set([
@@ -30,10 +35,23 @@ const DESCRIPTORS = new Set([
   'raw', 'ripe', 'organic', 'unsalted', 'salted', 'divided', 'thawed', 'torn', 'zested', 'juiced', 'cut',
   'into', 'pieces', 'piece', 'chunks', 'wedges', 'rings', 'strips', 'cubes', 'thin', 'thick', 'good',
   'quality', 'store', 'bought', 'homemade', 'storebought', 'a', 'an', 'the', 'of', 'some', 'few',
+  // Spec 078: French, folded.
+  'finement', 'grossierement', 'hache', 'hachee', 'haches', 'hachees', 'emince', 'emincee', 'eminces', 'emincees', 'coupe', 'coupee',
+  'coupes', 'coupees', 'rape', 'rapee', 'rapes', 'rapees', 'pele', 'pelee', 'peles', 'pelees', 'ecrase', 'ecrasee', 'ecrases',
+  'ecrasees', 'fondu', 'fondue', 'ramolli', 'cuit', 'cuite', 'cuits', 'cuites', 'cru', 'crue', 'crus', 'frais', 'fraiche',
+  'fraiches', 'sec', 'seche', 'secs', 'seches', 'surgele', 'surgelee', 'surgeles', 'surgelees', 'moulu', 'moulue',
+  'cubes', 'tranches', 'rondelles', 'lamelles', 'morceaux', 'quartiers', 'bio',
+  'environ', 'pour', 'servir', 'decorer', 'gout', 'facultatif', 'quelques',
+  // Spanish, folded.
+  'finamente', 'picado', 'picada', 'picados', 'picadas', 'rallado', 'rallada', 'rallados', 'ralladas', 'cortado', 'cortada',
+  'cortados', 'cortadas', 'pelado', 'pelada', 'pelados', 'peladas', 'triturado', 'triturada', 'derretido', 'derretida',
+  'cocido', 'cocida', 'cocidos', 'cocidas', 'crudo', 'cruda', 'fresco', 'fresca', 'frescos', 'frescas', 'seco', 'seca', 'secos',
+  'secas', 'congelado', 'congelada', 'congelados', 'congeladas', 'molido', 'molida', 'dados', 'rodajas', 'trozos', 'tiras',
+  'aproximadamente', 'para', 'decorar', 'gusto', 'opcional', 'unos', 'unas',
 ]);
 
 /** Connecting words dropped from the ends of a name ("onion and" after "finely chopped and"). */
-const EDGE_WORDS = new Set(['and', 'or', 'of', 'with', 'a', 'an', 'the']);
+const EDGE_WORDS = new Set(['and', 'or', 'of', 'with', 'a', 'an', 'the', 'et', 'ou', 'de', 'du', 'des', 'avec', 'un', 'une', 'le', 'la', 'les', 'y', 'o', 'con', 'del', 'el', 'los', 'las', 'al']);
 
 const IRREGULAR: Record<string, string> = {
   leaves: 'leaf', loaves: 'loaf', halves: 'half', knives: 'knife', geese: 'goose', mice: 'mouse', feet: 'foot', teeth: 'tooth',
@@ -44,6 +62,10 @@ const AMOUNT = /^[\d.,/½⅓⅔¼¾⅛-]+$/;
 /** Lower case, no accents, letters and digits only ("Za’atar" → "zaatar", "all-purpose" → "all purpose"). */
 export function foldText(text: string): string {
   return text
+    // Spec 078: French elision ("d’huile" is "huile") and ligatures ("œuf" is "oeuf").
+    .replace(/(^|[\s(])(d|l|j|qu)['’‘]/gi, '$1')
+    .replace(/œ/gi, 'oe')
+    .replace(/æ/gi, 'ae')
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
@@ -58,6 +80,8 @@ export function singularWord(word: string): string {
   if (irregular) return irregular;
   if (word.length <= 3) return word;
   if (word.endsWith('ies') && word.length > 4) return `${word.slice(0, -3)}y`;
+  // French: "poireaux", "choux" (spec 078). Spanish plurals only need to agree with themselves.
+  if (/(eaux|oux)$/.test(word)) return word.slice(0, -1);
   if (word.endsWith('oes')) return word.slice(0, -2);
   if (/(sses|shes|ches|xes|zes)$/.test(word)) return word.slice(0, -2);
   if (/(ss|us|is)$/.test(word)) return word;

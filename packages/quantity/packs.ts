@@ -4,7 +4,8 @@ import { readAmount } from './parse-amount';
 import { decimalText, fractionText } from './round';
 import type { IngredientFactsInput } from './types';
 import { GRAMS_PER, kindOf, toBase, type UnitKind } from './units';
-import { en, type ParserWords } from './words.en';
+import { parserWords } from './words';
+import type { ParserWords } from './words.en';
 
 /**
  * Spec 021: what to buy for what recipes need. Pack sizes come from the catalog (spec 031's
@@ -251,7 +252,7 @@ const STORE_UNITS: Record<string, number> = {
  * FR-004: a family's own pack size, typed as "250 g", "20 cl", "1 pint" or "6" (pieces). Null when
  * it isn't one amount and one unit. Spoons and pinches aren't pack sizes.
  */
-export function parsePackSize(text: string, words: ParserWords = en): { size: number; unit: Unit } | null {
+export function parsePackSize(text: string, words: ParserWords = parserWords): { size: number; unit: Unit } | null {
   const trimmed = text.trim();
   const amount = readAmount(trimmed);
   if (!amount || !(amount.value > 0)) return null;

@@ -106,7 +106,7 @@ describe('edge cases', () => {
   });
 
   it('matches close spellings with pg_trgm', async () => {
-    expect((await match(['mozarella', 'brocoli'])).map((r) => [r.catalog_key, r.how])).toEqual([
+    expect((await match(['mozarella', 'brocolli'])).map((r) => [r.catalog_key, r.how])).toEqual([
       ['mozzarella', 'fuzzy'],
       ['broccoli', 'fuzzy'],
     ]);

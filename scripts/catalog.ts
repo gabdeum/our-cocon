@@ -29,6 +29,7 @@ export function catalogSql(json: unknown): string {
         default_size: e.default_size ?? null,
         noun_singular: e.nouns?.singular ?? null,
         noun_plural: e.nouns?.plural ?? null,
+        noun_names: e.noun_names ?? {},
         whole_only: e.whole_only,
         diet: e.diet,
         packs: (['us', 'eu'] as const).flatMap((profile) =>

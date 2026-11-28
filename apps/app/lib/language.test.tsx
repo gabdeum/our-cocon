@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { Text } from 'react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '../test/render';
 import { fakeApi, family, flush, gabriel } from '../test/fakes';
 import { getLanguage, setLanguage, strings } from '../strings';
@@ -50,9 +51,11 @@ function Probe() {
 
 const show = async () => {
   render(
-    <LanguageProvider>
-      <Probe />
-    </LanguageProvider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <LanguageProvider>
+        <Probe />
+      </LanguageProvider>
+    </QueryClientProvider>,
   );
   await flush();
 };

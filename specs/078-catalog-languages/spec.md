@@ -30,3 +30,5 @@ No new events. Existing match events gain no user text.
 
 ## Changelog
 - 2026-11-28 — First version.
+- 2026-11-28 — Built. The language shown comes from the person's account (`lang`, kept by 076), read by `_lang()` in the database, so the app and assistants need no new argument; English for shared pages and anyone without one. Matching looks in all three languages for everyone (no ranking by language: names rarely collide, and the check refuses a name on two items). The parser reads all three languages at once rather than the person's first. Pack labels write decimals with a comma ("2,5 kg"). Catalog version 7.
+- 2026-11-28 — Review: a name now belongs to one item across all languages (the catalog check was per language), so the French grape is « Raisin frais » and "pimiento" left roasted red peppers; assistants read English names (`_lang()` answers English for them); `ingredient_packs` stays the wrapper over `_ingredient_packs` (spec 072), which now translates labels; "cl" isn't read by the parser (no centilitre unit). The fuzzy-match test uses "brocolli", since "brocoli" is now the French name.
