@@ -1,6 +1,6 @@
-import { calendarWordsEn, formatTime } from '@cocon/calendar';
+import { calendarWords, formatTime } from '@cocon/calendar';
 import type { ShareDuration } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { appUrl } from './links';
 import { shareMessage, systemShare, type ShareDeps, type ShareOutcome } from './system-share';
 import type { Client } from './supabase';
@@ -44,7 +44,7 @@ export function endsText(
   const end = new Date(expiresAt);
   const time = formatTime(`${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`, use24h);
   const sameDay = end.getFullYear() === now.getFullYear() && end.getMonth() === now.getMonth() && end.getDate() === now.getDate();
-  return sameDay ? words.endsToday(time) : words.endsOn(calendarWordsEn.weekdays[end.getDay()] ?? '', time);
+  return sameDay ? words.endsToday(time) : words.endsOn(calendarWords.weekdays[end.getDay()] ?? '', time);
 }
 
 const columns = 'token, duration, expires_at, can_edit, created_at';

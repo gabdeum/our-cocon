@@ -1,5 +1,5 @@
 import { Text } from '@cocon/ui';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import type { AppConfig } from '../lib/config';
 
 /** Shows the running commit on local and staging so a deploy can be checked at a glance. Hidden on prod. */

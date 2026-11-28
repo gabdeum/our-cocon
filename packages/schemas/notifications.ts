@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AppLanguage } from './language';
 
 /** Spec 046 FR-003: the switches kept per phone (`push_devices.prefs`, and on the phone itself). */
 export const NotificationPrefs = z.strictObject({
@@ -12,9 +13,10 @@ export const NotificationPrefs = z.strictObject({
 export type NotificationPrefs = z.infer<typeof NotificationPrefs>;
 /**
  * What `push_devices.prefs` holds: the switches, plus whether the phone's clock is 24-hour (spec
- * 049 FR-004: a reminder's time follows an "Automatic" time format). Any key may be missing.
+ * 049 FR-004: a reminder's time follows an "Automatic" time format) and its language (spec 076).
+ * Any key may be missing.
  */
-export const PushDevicePrefs = NotificationPrefs.extend({ clock_24h: z.boolean() }).partial();
+export const PushDevicePrefs = NotificationPrefs.extend({ clock_24h: z.boolean(), lang: AppLanguage }).partial();
 export type PushDevicePrefs = z.infer<typeof PushDevicePrefs>;
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   timers_live: true,

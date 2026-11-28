@@ -11,7 +11,7 @@ import { freshReminders, remindersDoneKey } from '../../lib/reminders';
 import { useOnline } from '../../lib/online';
 import { useReminderActions, useReminderContext } from '../../lib/reminder-actions';
 import { useToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { anchorFrom, calendarSettingsKey, entryFrom, eventsKey, viewFrom } from '../../lib/calendar-header';
 import { useCalendarPrefs } from '../../lib/calendar-prefs';
 import { useSession } from '../../lib/session';

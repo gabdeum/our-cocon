@@ -3,7 +3,7 @@ import { StatusBanner } from '@cocon/ui';
 import type { EventProps, Tracker } from '@cocon/schemas';
 import { onlineManager } from '@tanstack/react-query';
 import { useOnline } from '../../lib/online';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 export type OfflineScreen = EventProps<'offline_banner_shown'>['screen'];
 

@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { ListRow, SegmentedControl, SettingRow } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import type { SheetPresentation } from '@cocon/ui';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { RecipeChoices } from '../../lib/recipe-choices';
 import type { FormatOptions, UnitSystem } from '@cocon/quantity';
 import { formatOf } from '../../lib/recipe-view';

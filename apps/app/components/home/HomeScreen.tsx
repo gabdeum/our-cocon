@@ -16,7 +16,7 @@ import { stepTotal } from '../../lib/cook-sessions';
 import { formatTotalTime } from '../../lib/recipe-format';
 import { HOME_ENTRIES, HOME_ENTRIES_WIDE, type UndoOutcome } from '../../lib/activity';
 import type { AccountMember, Member } from '../../lib/session';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { CalendarCard } from './CalendarCard';
 
 const s = strings.home;

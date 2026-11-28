@@ -1,6 +1,6 @@
 import { ScrollView, View } from 'react-native';
 import { Text } from '@cocon/ui';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useTimers } from '../../lib/timer-store';
 import type { Timer } from '../../lib/timers';
 import { TimerList, useSeenDone, type TimerLink } from '../timers/TimerList';

@@ -3,7 +3,8 @@ import { addDays, parts, weekday } from './dates';
 import { DEFAULT_SLOT_TIMES, slotStartingAt, timeRange, toMinutes } from './slots';
 import type { CalendarEvent, SlotTimes } from './types';
 import { ADVANCE, KERN } from './title-font';
-import { en } from './words.en';
+import { calendarWords } from './words';
+import type { CalendarWords } from './words.en';
 
 /** FR-007: the title font, Nunito 900 at 28 px with −0.5 px tracking (CalHeader.md › Titles). */
 const TITLE_SIZE = 28;
@@ -20,16 +21,18 @@ export function uses24h(setting: TimeFormatSetting, device24h: boolean): boolean
 }
 
 /** "14:30" in 24-hour, "2:30 PM" in 12-hour. "24:00" (the end of the day) is "12:00 AM". */
-export function formatTime(time: string, use24h: boolean): string {
+export function formatTime(time: string, use24h: boolean, words: CalendarWords = calendarWords): string {
   if (use24h) return time;
   const [h, m] = time.split(':').map(Number) as [number, number];
   const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m).padStart(2, '0')} ${h >= 12 && h < 24 ? en.pm : en.am}`;
+  return `${hour}:${String(m).padStart(2, '0')} ${h >= 12 && h < 24 ? words.pm : words.am}`;
 }
 
 export interface LabelOptions {
   use24h: boolean;
   slotTimes?: SlotTimes;
+  /** The app's language when left out (spec 076); the notifier passes the recipient's. */
+  words?: CalendarWords;
 }
 
 type Labelled = Pick<CalendarEvent, 'time_type' | 'slots' | 'start_time' | 'end_time'>;
@@ -38,21 +41,21 @@ type Labelled = Pick<CalendarEvent, 'time_type' | 'slots' | 'start_time' | 'end_
  * FR-003: "All day"; the slot's name when the event starts at a slot's start ("Lunch" for
  * 12:00); otherwise its start time ("14:30").
  */
-export function timeLabel(event: Labelled, { use24h, slotTimes = DEFAULT_SLOT_TIMES }: LabelOptions): string {
+export function timeLabel(event: Labelled, { use24h, slotTimes = DEFAULT_SLOT_TIMES, words = calendarWords }: LabelOptions): string {
   const range = timeRange(event, slotTimes);
-  if (!range) return en.allDay;
+  if (!range) return words.allDay;
   const slot = slotStartingAt(range.start, slotTimes);
-  return slot ? en.slots[slot] : formatTime(range.start, use24h);
+  return slot ? words.slots[slot] : formatTime(range.start, use24h, words);
 }
 
 /** FR-003: "{start}–{end}" for detail views ("14:30–16:00"); null for all-day events. */
-export function rangeLabel(event: Labelled, { use24h, slotTimes = DEFAULT_SLOT_TIMES }: LabelOptions): string | null {
+export function rangeLabel(event: Labelled, { use24h, slotTimes = DEFAULT_SLOT_TIMES, words = calendarWords }: LabelOptions): string | null {
   const range = timeRange(event, slotTimes);
-  return range && `${formatTime(range.start, use24h)}–${formatTime(range.end, use24h)}`;
+  return range && `${formatTime(range.start, use24h, words)}–${formatTime(range.end, use24h, words)}`;
 }
 
 function monthName(month: number, wide: boolean): string {
-  return (wide ? en.months : en.monthsShort)[month - 1] as string;
+  return (wide ? calendarWords.months : calendarWords.monthsShort)[month - 1] as string;
 }
 
 /** Text in Nunito 900, in the font's units (1000 per px of size), with its kerning (`title-font.ts`). */
@@ -85,7 +88,7 @@ export function fitTitle(formats: readonly string[], screenWidth: number): strin
 function yearSuffix(today: string, ...dates: string[]): string {
   const current = parts(today).year;
   const last = parts(dates[dates.length - 1] as string).year;
-  return dates.some((d) => parts(d).year !== current) ? `, ${last}` : '';
+  return dates.some((d) => parts(d).year !== current) ? calendarWords.yearSuffix(last) : '';
 }
 
 /** Longest first, then the same without the year as a last resort. */
@@ -103,7 +106,7 @@ export function monthTitles(year: number, month: number, today: string): string[
 export function weekTitles(start: string, end: string, today: string): string[] {
   const a = parts(start);
   const b = parts(end);
-  const range = (wide: boolean) => `${monthName(a.month, wide)} ${a.day} – ${a.month === b.month ? '' : `${monthName(b.month, wide)} `}${b.day}`;
+  const range = (wide: boolean) => calendarWords.dayRange(monthName(a.month, wide), a.day, a.month === b.month ? null : monthName(b.month, wide), b.day);
   return withYear([range(true), range(false)], yearSuffix(today, start, end));
 }
 
@@ -111,9 +114,10 @@ export function weekTitles(start: string, end: string, today: string): string[] 
 export function dayTitles(date: string, today: string): string[] {
   const { month, day } = parts(date);
   const wd = weekday(date);
-  const long = `${en.weekdays[wd]}, ${monthName(month, true)} ${day}`;
-  const mid = `${en.weekdaysShort[wd]}, ${monthName(month, true)} ${day}`;
-  const short = `${en.weekdaysShort[wd]}, ${monthName(month, false)} ${day}`;
+  const w = calendarWords;
+  const long = w.weekdayDate(w.weekdays[wd] as string, monthName(month, true), day);
+  const mid = w.weekdayDate(w.weekdaysShort[wd] as string, monthName(month, true), day);
+  const short = w.weekdayDate(w.weekdaysShort[wd] as string, monthName(month, false), day);
   return withYear([long, mid, short], yearSuffix(today, date));
 }
 
@@ -122,10 +126,10 @@ export function dayTitles(date: string, today: string): string[] {
  * L82): "Sun, Oct 25" (Agenda's day groups); `long` spells the weekday: "Saturday, Oct 31"
  * (event detail, Busy sheet).
  */
-export function dateLabel(date: string, style: 'short' | 'long' = 'short'): string {
+export function dateLabel(date: string, style: 'short' | 'long' = 'short', words: CalendarWords = calendarWords): string {
   const { month, day } = parts(date);
-  const name = (style === 'long' ? en.weekdays : en.weekdaysShort)[weekday(date)];
-  return `${name}, ${monthName(month, false).replace(/\.$/, '')} ${day}`;
+  const name = (style === 'long' ? words.weekdays : words.weekdaysShort)[weekday(date)] as string;
+  return words.weekdayDate(name, (words.monthsShort[month - 1] as string).replace(/\.$/, ''), day);
 }
 
 /** From this time, an event today is "tonight" (the Evening slot's default start). */

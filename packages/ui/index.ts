@@ -109,3 +109,4 @@ export { FieldPair, StepEditCard, StepNote, StepPreview, type StepEditCardProps 
 export { TokenEditor, type TokenEditorProps, type TokenPart } from './components/TokenEditor';
 export { ShareTile, type ShareTileProps } from './components/ShareTile';
 export { ToggleTile, type ToggleTileProps } from './components/ToggleTile';
+export { setUiLanguage } from './locale';

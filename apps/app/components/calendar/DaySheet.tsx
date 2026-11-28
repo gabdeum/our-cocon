@@ -5,7 +5,7 @@ import type { DayBandItem } from '@cocon/ui';
 import { layoutDaySheet, type DayViewContext } from '../../lib/calendar-day';
 import type { MonthOccurrence } from '../../lib/calendar-month';
 import { placeForScreen, pressReminderBox, type CalendarReminder, type CalendarReminders } from '../../lib/calendar-reminders';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const s = strings.calendar.month.sheet;
 

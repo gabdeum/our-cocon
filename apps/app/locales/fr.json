@@ -1,0 +1,5 @@
+{
+  "ios": {
+    "NSAlarmKitUsageDescription": "Our Cocon sonne quand un minuteur de cuisine se termine, même quand votre iPhone est en mode silencieux."
+  }
+}

@@ -20,7 +20,7 @@ import { useCalendarDisplay } from './calendar-prefs';
 import { deviceStorage, type ChoiceStorage } from './recipe-choices';
 import { useSession } from './session';
 import { useToast } from './toast';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { useTimeZone } from './travel';
 
 const r = strings.reminders;

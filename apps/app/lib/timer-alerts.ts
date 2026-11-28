@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import type { ChoiceStorage } from './recipe-choices';
 import { MINUTE, type Timer } from './timers';
 

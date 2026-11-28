@@ -1,7 +1,7 @@
-import { calendarWordsEn, timeLabel, weekday } from '@cocon/calendar';
+import { calendarWords, timeLabel, weekday } from '@cocon/calendar';
 import { ActivityEntry, KnownAssistant, memberInitials, UndoResult, type ActivityKind, type UndoConflict } from '@cocon/schemas';
 import type { AvatarColor } from '@cocon/ui';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { minutesSince } from './assistants';
 import { assistantName } from './recipe-format';
 import type { Member } from './session';
@@ -130,7 +130,7 @@ const moduleOf = (kind: ActivityKind): keyof typeof strings.activity.module | nu
 
 /** "Wed, 10:00": when the entry's event is, as the reader may see it. */
 function eventWhen(when: NonNullable<ActivityEntry['event_when']>, use24h: boolean): string {
-  return `${calendarWordsEn.weekdaysShort[weekday(when.starts_on)] ?? ''}, ${timeLabel(when, { use24h })}`;
+  return `${calendarWords.weekdaysShort[weekday(when.starts_on)] ?? ''}, ${timeLabel(when, { use24h })}`;
 }
 
 export interface EntryView {

@@ -1,10 +1,10 @@
-import { addDays, calendarWordsEn, monthTitles, parts, weekday, type SlotTimes } from '@cocon/calendar';
+import { addDays, calendarWords, monthTitles, parts, weekday, type SlotTimes } from '@cocon/calendar';
 import type { MiniMonthDay } from '@cocon/ui';
 import { firstOfMonth, isMultiDay, longDate, monthPageWeeks, startMinutes, weekStartAt, type MonthOccurrence, type MonthRange } from './calendar-month';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 const a = strings.calendar.day.aside;
-const words = calendarWordsEn;
+const words = calendarWords;
 
 /** The visible events on a day: multi-day ones first, then by start (the month chips' order). */
 function eventsOn(date: string, occurrences: readonly MonthOccurrence[], slotTimes: SlotTimes): MonthOccurrence[] {

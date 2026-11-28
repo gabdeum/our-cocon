@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyn
 import { AppState } from 'react-native';
 import type { Tracker } from '@cocon/schemas';
 import { announce } from '@cocon/ui';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { applyLiveAction, type LiveActionRecord, type LiveTimerActivity } from './live-activity';
 import type { ChoiceStorage } from './recipe-choices';
 import { alertChanges, setTimerOwner, type TimerAlertScheduler } from './timer-alerts';

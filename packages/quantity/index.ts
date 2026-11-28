@@ -44,3 +44,5 @@ export {
 } from './groceries';
 export { parseGroceryLine, parseIngredientLine, parsePastedList, pieceNouns, splitPastedList, type ParsedLine } from './parse-line';
 export { en as parserWordsEn, type ParserWords } from './words.en';
+export { displayWords, displayWordsByLanguage, setDisplayWords } from './display';
+export type { DisplayWords, ShownUnit } from './display.en';

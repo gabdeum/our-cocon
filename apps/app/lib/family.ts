@@ -1,4 +1,4 @@
-import { InviteAccepted, InviteStatus, TimeZone, familyErrorOf, type FamilyError, type MemberColor } from '@cocon/schemas';
+import { InviteAccepted, InviteStatus, TimeZone, familyErrorOf, type FamilyError, type LanguageSetting, type MemberColor } from '@cocon/schemas';
 import type { Client } from './supabase';
 
 export type Result<T> = { ok: true; data: T } | { ok: false; error: FamilyError | 'failed' };
@@ -41,6 +41,8 @@ export function familyApi(client: Pick<Client, 'rpc' | 'functions'>) {
     removeMember: (userId: string) => call(() => client.rpc('remove_member', { member_id: userId }), nothing),
     makeOwner: (userId: string) => call(() => client.rpc('make_owner', { member_id: userId }), nothing),
     setDisplayName: (name: string) => call(() => client.rpc('set_display_name', { display_name: name }), nothing),
+    /** Spec 076 FR-005. */
+    setLanguage: (language: LanguageSetting) => call(() => client.rpc('set_my_language', { language }), nothing),
     deleteFamily: () => call(() => client.rpc('delete_family'), Number),
     deleteMyAccount: () => call(() => deleteAccount(client), nothing),
     // Spec 033: members without the app (any member) and member colors.

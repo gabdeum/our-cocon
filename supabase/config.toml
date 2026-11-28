@@ -247,14 +247,14 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Spec 003: one friendly sign-in email for new and returning people. Staging and prod load the
+# Spec 003: one friendly sign-in email for new and returning people, in their language (spec 076). Staging and prod load the
 # same file from the web app (infra/supabase/cocon.override.yml).
 [auth.email.template.magic_link]
-subject = "Your Our Cocon sign-in link"
+subject = "{{ if eq (printf \"%v\" .Data.lang) \"fr\" }}Votre lien de connexion à Our Cocon{{ else if eq (printf \"%v\" .Data.lang) \"es\" }}Tu enlace para entrar en Our Cocon{{ else }}Your Our Cocon sign-in link{{ end }}"
 content_path = "./apps/app/public/email/sign-in.html"
 
 [auth.email.template.confirmation]
-subject = "Your Our Cocon sign-in link"
+subject = "{{ if eq (printf \"%v\" .Data.lang) \"fr\" }}Votre lien de connexion à Our Cocon{{ else if eq (printf \"%v\" .Data.lang) \"es\" }}Tu enlace para entrar en Our Cocon{{ else }}Your Our Cocon sign-in link{{ end }}"
 content_path = "./apps/app/public/email/sign-in.html"
 
 # Uncomment to customize notification email template

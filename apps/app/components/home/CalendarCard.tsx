@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import type { HomeCardState } from '@cocon/schemas';
 import { Button, CalCard, CalCardBanner, EventListRow, Link, SegmentedControl, Text, WeekEventGroup, WeekStrip } from '@cocon/ui';
 import type { CardLayout } from '../../lib/home';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const c = strings.calCard;
 

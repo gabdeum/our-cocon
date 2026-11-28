@@ -2,7 +2,7 @@ import { NavRail, TabBar, navFor, useLayoutTier } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RAIL_ITEMS, TABS, type RailKey, type TabKey } from '../lib/navigation';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { AppTimerPill, useHasTimers } from './timers/AppTimerPill';
 
 /** The parts of Expo Router's tab-bar props this uses (its BottomTabBarProps). */

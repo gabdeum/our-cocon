@@ -4,7 +4,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { expect, it } from 'vitest';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 const app = join(__dirname, '..');
 

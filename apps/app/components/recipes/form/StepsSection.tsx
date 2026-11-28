@@ -21,7 +21,7 @@ import {
   type TokenPart,
 } from '@cocon/ui';
 import { useFailureToast } from '../../../lib/toast';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 import {
   editBody,
   insertToken,

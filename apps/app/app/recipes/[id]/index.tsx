@@ -20,7 +20,7 @@ import { deviceStorage } from '../../../lib/recipe-choices';
 import { recipePhotoPaths, useRecipePhotoUrls } from '../../../lib/recipe-photo';
 import { useCookingSettings } from '../../../lib/recipe-settings';
 import { useSession } from '../../../lib/session';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 
 // The recipe's own pages: share, edit, add-to-groceries, cook, scale, convert.
 const recipeRoute = (id: string, page: string) => `/recipes/${id}/${page}` as Href;

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { DEFAULT_NOTIFICATION_PREFS, PushDevicePrefs, type Database, type NotificationPrefs, type PushPayload } from '@cocon/schemas';
+import { DEFAULT_NOTIFICATION_PREFS, PushDevicePrefs, type AppLanguage, type Database, type NotificationPrefs, type PushPayload } from '@cocon/schemas';
 import { getReceipts, sendPushes, type ExpoOptions, type PushMessage, type PushTicket } from './expo';
 
 /** A Supabase client with the service role key: the notifier works for every family (FR-005). */
@@ -9,7 +9,7 @@ export type ServiceDb = SupabaseClient<Database>;
 export type LogKind = 'timer_done' | 'reminder' | 'todo' | 'test';
 
 /** A phone a notification goes to, for wording it the way that phone shows times (spec 049). */
-export type Device = { member_id: string; prefs: NotificationPrefs & { clock_24h?: boolean } };
+export type Device = { member_id: string; prefs: NotificationPrefs & { clock_24h?: boolean; lang?: AppLanguage } };
 
 export type Notification = {
   kind: LogKind;

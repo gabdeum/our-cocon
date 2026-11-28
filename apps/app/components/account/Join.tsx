@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Button, Callout, Dialog, Text, TextField } from '@cocon/ui';
 import { DisplayName, InviteToken, type InviteStatus, type Tracker } from '@cocon/schemas';
 import { useFailureToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { FamilyApi } from '../../lib/family';
 import type { Client } from '../../lib/supabase';
 import { SignIn, type SignInProps } from './SignIn';

@@ -1,3 +1,4 @@
+import { pickerLocale } from '../locale';
 import { Platform, Pressable } from 'react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { cn, focusRing } from '../cn';
@@ -25,7 +26,7 @@ export function TimeField({ label, value, onChange, use24h = true, format = (t) 
         mode="time"
         display="compact"
         minuteInterval={5}
-        locale={use24h ? 'en_GB' : 'en_US'}
+        locale={pickerLocale(use24h)}
         textColor={colors.ink}
         onValueChange={(_, date) => onChange(toTime(date))}
       />

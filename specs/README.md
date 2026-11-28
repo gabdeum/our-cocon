@@ -112,6 +112,9 @@ No MCP servers are configured for Claude Code; add one only when a spec needs it
 | 71 | 073 Basic formatting in event and reminder notes | 042, 053, 056, 057 | OC-NoteMarkdown (UI doc: note-formatting-ui.md) |
 | 72 | 074 Formatting toolbar in the notes editor | 073, 041, 057 | OC-NoteEditor |
 | 73 | 075 Tick checklist items in the drawer, and retire the event checklist | 073, 074, 041, 042, 044, 056, 057 | OC-NoteMarkdown, OC-CalEvent, OC-CalAdd |
+| 74 | 076 The app in French and Spanish | all screen specs, 046–049, 056–060 | All screens (copy translated from en.ts); Language settings page (not drawn) |
+| 75 | 078 The ingredient catalog in French and Spanish | 031, 076 | None |
+| 76 | 077 Translations and catalog editor (`pnpm translations`) | 076, 078 | None (local developer tool) |
 | — | 032 Later: deferred tasks, by priority | — | — |
 
 Specs 001–027 finish recipes and groceries. The calendar (033–044) comes next; Home (028), the Menu (029) and the accessibility pass (030) are built last because they span every module. Phone notifications (046–049) follow, in that order, then the top bar (050) across every pushed screen.
@@ -124,7 +127,7 @@ All 36 open questions are answered. The specs, UI specs and screens already refl
 
 | # | Area | Decision |
 | --- | --- | --- |
-| 1 | Language | English only in V1; all copy in one strings file so French can come later |
+| 1 | Language | English, French and Spanish (spec 076). English is the source copy; each person picks a language or follows the device (was: English only in V1) |
 | 2 | Backend | Self-hosted Supabase on Hetzner to start (staging, prod); portable to Supabase Cloud |
 | 3 | Layout | Layout tiers by window width (spec 063): compact < 600 (phone layout, centred at max 560 on the web), medium 600–959, expanded ≥ 960; iPad supported (was: centred mobile layout on web, max 720 px) |
 | 4 | Hosts | `app.`, `mcp.`, `api.ourcocon.com`; `-staging` suffix (`app-staging.`); development is local |
@@ -197,3 +200,4 @@ These have no drawn screen; their UI spec is the source of truth: sign-in, set u
 - 2026-11-19: Build order rows 61–68: larger screens (iPad and wide web), specs 063–070, from the large-screens design handoff. Layouts only; 063 replaces decision 3's centred 720 px web layout when it ships.
 - 2026-11-19: Decision 3 now the layout tiers (spec 063 shipped).
 - 2026-11-27: Build order rows 71–73: note formatting, specs 073–075 (rendering, editor toolbar, ticking checklist items), from the note formatting design handoff.
+- 2026-11-28: Build order rows 74–76: languages, specs 076, 078, 077 (the app and the catalog in French and Spanish, then the translations editor). Decision 1 updated.

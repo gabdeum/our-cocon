@@ -5,7 +5,7 @@ import { DefaultReminder, QuietHours, type NotificationPrefs, type Tracker } fro
 import { BottomSheet, Button, Card, cn, Lead, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, Text, TimeRange } from '@cocon/ui';
 import type { PermissionStatus } from '../../lib/notifications';
 import { useToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const s = strings.settings.notifications;

@@ -1,6 +1,8 @@
 import { ingredientName } from '@cocon/schemas/ingredient-text';
 import type { SizeWord } from '@cocon/schemas/recipes';
 import { QuantityError, assertAmount } from './errors';
+import { displayWords as w } from './display';
+import type { ShownUnit } from './display.en';
 import { decimalText, fractionText, toStep } from './round';
 import type { FormatOptions, FormattedIngredient, IngredientFactsInput, QuantityIngredient, UnitSystem } from './types';
 import { GRAMS_PER, ML_PER, WATER_G_PER_ML, kindOf, toBase } from './units';
@@ -8,7 +10,12 @@ import { GRAMS_PER, ML_PER, WATER_G_PER_ML, kindOf, toBase } from './units';
 interface Measure {
   amount: string;
   unit: string;
+  /** Which unit it is, whatever the language. */
+  shown?: ShownUnit;
 }
+
+/** `count` of `unit`, in the app's language. */
+const measure = (amount: string, unit: ShownUnit, count: number): Measure => ({ amount, unit: w.unit(unit, count), shown: unit });
 
 const text = (m: Measure) => (m.unit ? `${m.amount} ${m.unit}` : m.amount);
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
@@ -17,19 +24,19 @@ const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 function weight(grams: number, system: UnitSystem): Measure | null {
   if (system === 'metric') {
     const g = Math.round(grams);
-    if (g >= 1000) return { amount: decimalText(grams / 1000), unit: 'kg' };
-    return g === 0 ? null : { amount: String(g), unit: 'g' };
+    if (g >= 1000) return measure(decimalText(grams / 1000), 'kg', grams / 1000);
+    return g === 0 ? null : measure(String(g), 'g', g);
   }
   const oz = toStep(grams / GRAMS_PER.oz, 0.1);
-  if (oz >= 16) return { amount: decimalText(grams / GRAMS_PER.lb), unit: 'lb' };
-  return oz === 0 ? null : { amount: decimalText(oz), unit: 'oz' };
+  if (oz >= 16) return measure(decimalText(grams / GRAMS_PER.lb), 'lb', grams / GRAMS_PER.lb);
+  return oz === 0 ? null : measure(decimalText(oz), 'oz', oz);
 }
 
 /** Whole ml, L from 1000 ml. */
 function metricVolume(ml: number): Measure | null {
   const rounded = Math.round(ml);
-  if (rounded >= 1000) return { amount: decimalText(ml / 1000), unit: 'L' };
-  return rounded === 0 ? null : { amount: String(rounded), unit: 'ml' };
+  if (rounded >= 1000) return measure(decimalText(ml / 1000), 'L', ml / 1000);
+  return rounded === 0 ? null : measure(String(rounded), 'ml', rounded);
 }
 
 /** FR-004: cups from ¼ cup (nearest ¼), then tbsp, then tsp (nearest ½). */
@@ -37,7 +44,7 @@ function usVolume(ml: number): Measure | null {
   const cups = ml / ML_PER.cup;
   if (cups >= 0.25 || toStep(ml / ML_PER.tbsp, 0.5) >= 4) {
     const n = toStep(cups, 0.25);
-    return { amount: fractionText(n), unit: n > 1 ? 'cups' : 'cup' };
+    return measure(fractionText(n), 'cup', n);
   }
   return spoons(ml);
 }
@@ -45,8 +52,8 @@ function usVolume(ml: number): Measure | null {
 /** Decided on the rounded amount, so just under 1 tbsp reads "1 tbsp", not "3 tsp". */
 function spoons(ml: number): Measure | null {
   const tsp = toStep(ml / ML_PER.tsp, 0.5);
-  if (tsp >= 3) return { amount: fractionText(toStep(ml / ML_PER.tbsp, 0.5)), unit: 'tbsp' };
-  return tsp === 0 ? null : { amount: fractionText(tsp), unit: 'tsp' };
+  if (tsp >= 3) return measure(fractionText(toStep(ml / ML_PER.tbsp, 0.5)), 'tbsp', toStep(ml / ML_PER.tbsp, 0.5));
+  return tsp === 0 ? null : measure(fractionText(tsp), 'tsp', tsp);
 }
 
 /** Metric cooks still use spoons: they stay spoons up to ¼ cup, then become ml. */
@@ -55,11 +62,11 @@ function metricSpoons(ml: number): Measure | null {
 }
 
 function aPinch(noun: string): FormattedIngredient {
-  return { amount: 'a pinch', unit: '', sub: null, phrase: `a pinch of ${noun}` };
+  return { amount: w.aPinch, unit: '', sub: null, phrase: w.aPinchOf(noun) };
 }
 
 function measured(m: Measure | null, noun: string): FormattedIngredient {
-  return m ? { amount: m.amount, unit: m.unit, sub: null, phrase: `${text(m)} ${noun}` } : aPinch(noun);
+  return m ? { amount: m.amount, unit: m.unit, sub: null, phrase: w.measured(text(m), noun) } : aPinch(noun);
 }
 
 interface Sizes {
@@ -105,16 +112,16 @@ interface Candidate {
 function pieceFit(grams: number, ing: QuantityIngredient, facts: IngredientFactsInput, sizes: Sizes, options: FormatOptions): FormattedIngredient {
   const { grams: g, fallback } = sizes;
   const def = g[fallback] as number;
-  const w = weight(grams, options.system);
-  const bracket = options.scale && w ? ` (${text(w)})` : '';
-  const sub = options.scale && w ? text(w) : null;
+  const wt = weight(grams, options.system);
+  const bracket = options.scale && wt ? ` (${text(wt)})` : '';
+  const sub = options.scale && wt ? text(wt) : null;
 
   if (grams < Math.min((0.9 * def) / 4, g.small ? 0.9 * g.small : Infinity)) {
     const noun = lowerFirst(facts.plural ?? ing.name);
     const ml = grams / (facts.density_g_per_ml ?? WATER_G_PER_ML);
     const v = options.system === 'metric' ? metricSpoons(ml) : usVolume(ml);
     if (!v) return aPinch(noun);
-    return { amount: v.amount, unit: v.unit, sub, phrase: `${text(v)} of ${noun}${bracket}` };
+    return { amount: v.amount, unit: v.unit, sub, phrase: `${w.of(text(v), noun)}${bracket}` };
   }
 
   const others = (Object.keys(g) as SizeWord[]).filter((s) => s !== fallback);
@@ -145,8 +152,8 @@ function pieceFit(grams: number, ing: QuantityIngredient, facts: IngredientFacts
   const n = nouns(ing, facts);
   const amount = fractionText(best.count);
   // The default size goes unsaid ("2½ leeks"); only another size is named ("1 large onion").
-  const unit = best.word && best.size !== fallback ? best.size : '';
-  return { amount, unit, sub, phrase: `${amount}${unit ? ` ${unit}` : ''} ${best.count > 1 ? n.many : n.one}${bracket}` };
+  const unit = best.word && best.size !== fallback ? w.size[best.size] : '';
+  return { amount, unit, sub, phrase: `${w.pieces(amount, unit, best.count > 1 ? n.many : n.one)}${bracket}` };
 }
 
 /** The weight of one piece: the snapshot saved with the recipe, else the catalog's size for it. */
@@ -173,8 +180,8 @@ export function format(row: QuantityIngredient, options: FormatOptions): Formatt
 
   if (kind === 'pinch') {
     const n = Math.max(1, Math.round(q));
-    const m = { amount: String(n), unit: n === 1 ? 'pinch' : 'pinches' };
-    return { ...m, sub: null, phrase: `${text(m)} of ${noun}` };
+    const m = measure(String(n), 'pinch', n);
+    return { amount: m.amount, unit: m.unit, sub: null, phrase: w.of(text(m), noun) };
   }
 
   if (kind === 'volume') {
@@ -182,25 +189,25 @@ export function format(row: QuantityIngredient, options: FormatOptions): Formatt
     const m = options.system === 'imperial' ? usVolume(ml) : unit === 'tsp' || unit === 'tbsp' ? metricSpoons(ml) : metricVolume(ml);
     // A volume shows its weight as the sub-line when the density is known, like pieces do.
     const density = facts.density_g_per_ml;
-    const w = m && options.scale && density ? weight(ml * density, options.system) : null;
-    return { ...measured(m, noun), sub: w ? text(w) : null };
+    const wt = m && options.scale && density ? weight(ml * density, options.system) : null;
+    return { ...measured(m, noun), sub: wt ? text(wt) : null };
   }
 
   if (kind === 'weight') {
     const grams = toBase(q, unit);
     if (sizes) return pieceFit(grams, ing, facts, sizes, options);
     const density = facts.density_g_per_ml;
-    const w = weight(grams, options.system);
+    const wt = weight(grams, options.system);
     if (density) {
       const v = usVolume(grams / density);
       if (!options.scale) {
-        if (v) return measured({ amount: `about ${v.amount}`, unit: v.unit }, noun);
-      } else if (v && w && v.unit !== 'cup' && v.unit !== 'cups') {
+        if (v) return measured({ amount: w.about(v.amount), unit: v.unit }, noun);
+      } else if (v && wt && v.shown !== 'cup') {
         // FR-010: below ¼ cup, spoons first and the weight after: "1½ tbsp butter (20 g)".
-        return { amount: v.amount, unit: v.unit, sub: text(w), phrase: `${text(v)} ${noun} (${text(w)})` };
+        return { amount: v.amount, unit: v.unit, sub: text(wt), phrase: `${w.measured(text(v), noun)} (${text(wt)})` };
       }
     }
-    return measured(w, noun);
+    return measured(wt, noun);
   }
 
   const perPiece = pieceWeight(ing);
@@ -210,13 +217,13 @@ export function format(row: QuantityIngredient, options: FormatOptions): Formatt
   const n = nouns(ing, facts);
   const amount = fractionText(count);
   // As in pieceFit: the catalog's default size goes unsaid.
-  const size = ing.size_word && ing.size_word !== facts.default_size ? ing.size_word : '';
-  const w = options.scale && perPiece ? weight(q * perPiece, options.system) : null;
-  const sub = w ? text(w) : null;
+  const size = ing.size_word && ing.size_word !== facts.default_size ? w.size[ing.size_word] : '';
+  const wt = options.scale && perPiece ? weight(q * perPiece, options.system) : null;
+  const sub = wt ? text(wt) : null;
   return {
     amount,
     unit: size,
     sub,
-    phrase: `${amount}${size ? ` ${size}` : ''} ${count > 1 ? n.many : n.one}${sub ? ` (${sub})` : ''}`,
+    phrase: `${w.pieces(amount, size, count > 1 ? n.many : n.one)}${sub ? ` (${sub})` : ''}`,
   };
 }

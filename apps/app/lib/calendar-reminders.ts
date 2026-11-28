@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { addDays, calendarWordsEn, dateLabel, daysBetween, formatTime, timeIn, todayIn, toMinutes, weekday } from '@cocon/calendar';
+import { addDays, calendarWords, dateLabel, daysBetween, formatTime, timeIn, todayIn, toMinutes, weekday } from '@cocon/calendar';
 import type { DoneReminder, PlacedReminder } from '@cocon/data';
 import { repeatDatesBetween } from '@cocon/reminders';
 import type { DayReminderItem } from '@cocon/ui';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { deviceStorage, type ChoiceStorage } from './recipe-choices';
 import { lateBadge, reminderMember } from './reminders';
 import type { Member } from './session';
@@ -70,7 +70,7 @@ export function reminderDay(x: PlacedReminder, today: string, tz: string): strin
 function wasDue(dueOn: string, today: string): string {
   const ago = daysBetween(dueOn, today);
   if (ago === 1) return c.wasDueYesterday;
-  return r.wasDueLower(ago < 7 ? (calendarWordsEn.weekdaysShort[weekday(dueOn)] ?? '') : dateLabel(dueOn));
+  return r.wasDueLower(ago < 7 ? (calendarWords.weekdaysShort[weekday(dueOn)] ?? '') : dateLabel(dueOn));
 }
 
 /**

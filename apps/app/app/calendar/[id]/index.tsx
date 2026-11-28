@@ -13,7 +13,7 @@ import { eventOccurrence, isCover, seesInFull } from '../../../lib/event-detail'
 import { useOnline } from '../../../lib/online';
 import { systemShare } from '../../../lib/system-share';
 import { useEventSheet } from '../../../lib/use-event-sheet';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 
 const e = strings.calendar.event;
 const a = strings.calendar.add;

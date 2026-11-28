@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { announce, Button, Callout, ColumnScreen, CookSessionCard, FilterButton, Overline, Pill, PillRow, RecipeItem, RecipeItemSkeleton, RowScroll, SearchField, TabHeader, TabScreen, Text } from '@cocon/ui';
 import { activeFilterKeys, emptyFilters, type RecipeFilters, type Tracker } from '@cocon/schemas';
 import { useFailureToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { PhotoUrls } from '../../lib/recipe-photo';
 import { visibleRecipes, type RecipeListItem } from '../../lib/recipes';
 import { inSeasonOn, toggleInSeason, toggleUnder30, under30On } from '../../lib/recipe-filters';

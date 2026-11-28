@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { ActivityRow, Dialog } from '@cocon/ui';
 import { RestoreKind, UndoKind, type ActivityEntry, type Tracker, type UndoConflict } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useToast } from '../../lib/toast';
 import { conflictText, describeEntry, type UndoOutcome } from '../../lib/activity';
 import type { Member } from '../../lib/session';

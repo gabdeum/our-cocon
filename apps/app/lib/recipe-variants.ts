@@ -12,7 +12,7 @@ import {
   type VariantChange,
   type VariantKind,
 } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { formatTotalTime } from './recipe-format';
 import {
   draftsFromRows,

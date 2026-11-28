@@ -22,6 +22,7 @@ export {
   quietEnd,
   reminderNotificationText,
   reminderSendDue,
+  reminderWordsByLanguage,
   reminderSlots,
   todoRecipients,
   type NotifiedReminder,

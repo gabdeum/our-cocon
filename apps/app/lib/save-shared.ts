@@ -1,6 +1,6 @@
 import { randomUUID } from 'expo-crypto';
 import { cuisineOf, IngredientInput, RecipeInput, StepInput, VariantInput, type SharedRecipe, type VariantChange } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import type { IngredientSaveRow } from './recipe-ingredients';
 import type { StepSaveRow } from './recipe-steps';
 import type { VariantSaveRow } from './recipe-variants';

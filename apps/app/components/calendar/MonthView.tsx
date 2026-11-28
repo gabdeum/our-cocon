@@ -24,7 +24,7 @@ import {
 import type { Member } from '../../lib/session';
 import { useNow } from '../../lib/use-now';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { DayPanel } from './DayPanel';
 import { DaySheet } from './DaySheet';
 

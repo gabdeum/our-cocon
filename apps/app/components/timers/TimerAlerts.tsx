@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useTimerStore } from '../../lib/timer-store';
 import { useToast } from '../../lib/toast';
 

@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { Card, Lead, PushedScreen, SegmentedControl, SettingRow, Text } from '@cocon/ui';
 import type { FamilySettings, FamilySettingsUpdate, StoreProfile, Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useToast } from '../../lib/toast';
 import { OfflineBanner } from '../sync/OfflineBanner';
 

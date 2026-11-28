@@ -12,7 +12,7 @@ import { useNow } from '../../lib/use-now';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
 import type { AddPrefill } from './CalendarScreen';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const w = strings.calendar.week;
 

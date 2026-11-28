@@ -1,7 +1,7 @@
 import { groceryIdentity, type FormatOptions, type GroceryAmount, type IngredientFactsInput, type UnitSystem } from '@cocon/quantity';
 import * as data from '@cocon/data';
 import type { RecipeGroceryLine } from '@cocon/data';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { combinedText, combineRows, type GroceryItem } from './groceries';
 import type { RecipeChoices } from './recipe-choices';
 import type { RecipeDetail } from './recipe';

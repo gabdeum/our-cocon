@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { cookStepPath } from './links';
 import { alertContent, devLog, TimerAlertData, type LiveAlert } from './timer-alerts';
 import * as T from './timers';

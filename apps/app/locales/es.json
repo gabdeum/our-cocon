@@ -1,0 +1,5 @@
+{
+  "ios": {
+    "NSAlarmKitUsageDescription": "Our Cocon suena cuando termina un temporizador de cocina, aunque tu iPhone esté en silencio."
+  }
+}

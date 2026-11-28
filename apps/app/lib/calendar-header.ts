@@ -3,7 +3,7 @@ import { VIEW_STEP, dayTitles, fitTitle, monthTitles, parts, textWidth, weekRang
 import { gutterFor, railInset, type LayoutTier } from '@cocon/ui';
 import type { QueryClient } from '@tanstack/react-query';
 import type { StoredEvent } from '@cocon/data';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 const h = strings.calendar.header;
 

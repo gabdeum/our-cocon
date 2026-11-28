@@ -2,7 +2,7 @@ import { useState, type RefObject } from 'react';
 import type { HostInstance } from 'react-native';
 import { BottomSheet, Button, Link, ListGroup, ListRow, SheetFooter, TextField } from '@cocon/ui';
 import { AISLE_ORDER, type Aisle, type UnitSystem } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { editText, type GroceryItem } from '../../lib/groceries';
 
 const g = strings.groceries;

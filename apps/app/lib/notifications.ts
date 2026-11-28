@@ -1,3 +1,4 @@
+import { getLanguage } from '../strings';
 import * as Crypto from 'expo-crypto';
 import { DEFAULT_NOTIFICATION_PREFS, NotificationPrefs, PushPayload, type NotificationKind, type PushDevicePrefs } from '@cocon/schemas';
 import { device24h } from './calendar-prefs';
@@ -164,9 +165,12 @@ export async function savePushPrefs(client: Pick<Client, 'rpc'>, id: string, pre
   await client.rpc('set_push_prefs', { p_device_id: id, p_prefs: devicePrefs(prefs, clock24h) });
 }
 
-/** Spec 049 FR-004: the server writes a reminder's time the way this phone's clock does. */
+/**
+ * Spec 049 FR-004: the server writes a reminder's time the way this phone's clock does, and (spec
+ * 076 FR-012) in the language the app is in, for people on Automatic.
+ */
 function devicePrefs(prefs: NotificationPrefs, clock24h: boolean): PushDevicePrefs {
-  return { ...prefs, clock_24h: clock24h };
+  return { ...prefs, clock_24h: clock24h, lang: getLanguage() };
 }
 
 /** Signing out stops reminders on this phone. Best effort, and never more than 3 s. */

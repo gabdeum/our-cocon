@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { amountInput, type QuantityIngredient } from '@cocon/quantity';
 import type { IngredientFacts } from '@cocon/schemas';
 import { Button, Card, Dialog, Icon, IngredientEditCard, Link, ListRow, SegmentedControl, Tag, Text, TextField, type IngredientEditField } from '@cocon/ui';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 import {
   applyMatch,
   emptyDraft,

@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { Button, IconRow, ListGroup, PublicScreen, Text } from '@cocon/ui';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { SharedEventLoad } from '../../lib/shared-event';
 
 const v = strings.sharedView;

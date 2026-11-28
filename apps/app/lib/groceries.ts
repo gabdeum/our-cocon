@@ -3,7 +3,7 @@ import { familyIngredientRow, GroceryItemUpdate, type Aisle, type FamilySettings
 import * as data from '@cocon/data';
 import { splitColumns } from '@cocon/ui';
 import type { AddResult, GroceryItem, GroceryRow, GroceryServings, PackData, RowAmounts } from '@cocon/data';
-import { strings } from '../strings/en';
+import { getLanguage, strings } from '../strings';
 import { matchIngredients } from './recipe-ingredients';
 import type { Member } from './session';
 import type { Client } from './supabase';
@@ -164,7 +164,7 @@ export const rowAmounts = (rows: readonly GroceryRow[], packs: Record<string, Pa
 
 /** FR-001 and spec 022: rows in each aisle in alphabetical order of the name shown, ticked or not. */
 export function byName<T>(rows: readonly T[], nameOf: (row: T) => string): T[] {
-  return [...rows].sort((a, b) => nameOf(a).localeCompare(nameOf(b), 'en', { sensitivity: 'base' }));
+  return [...rows].sort((a, b) => nameOf(a).localeCompare(nameOf(b), getLanguage(), { sensitivity: 'base' }));
 }
 
 /**

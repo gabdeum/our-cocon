@@ -13,7 +13,7 @@ import {
   type RecipeOverrides,
   type RecipeVariant,
 } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { loadFacts } from './recipe';
 import type { ChoiceStorage } from './recipe-choices';
 import { formatTotalTime } from './recipe-format';

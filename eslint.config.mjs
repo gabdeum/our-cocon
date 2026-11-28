@@ -41,6 +41,11 @@ export default tseslint.config(
     rules: { 'cocon/no-design-literals': 'error' },
   },
   {
+    // Spec 076: French puts a non-breaking space before ? ! : ; and inside « », in its words.
+    files: ['apps/app/strings/*.ts', 'packages/*/words.*.ts', 'packages/*/display.*.ts'],
+    rules: { 'no-irregular-whitespace': ['error', { skipStrings: true, skipTemplates: true }] },
+  },
+  {
     // Expo, Metro, Babel and Tailwind read CommonJS config files.
     files: ['**/*.config.js', '**/*.cjs'],
     languageOptions: { sourceType: 'commonjs' },

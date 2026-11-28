@@ -12,7 +12,7 @@ import { useOnline } from '../../lib/online';
 import { useFailureToast } from '../../lib/toast';
 import { useReminderActions, useReminderContext, useReminderMine } from '../../lib/reminder-actions';
 import { FETCH_ON_OPEN, LIST_SECTIONS, doneKey, freshReminders, reminderSectionKey, remindersDoneKey } from '../../lib/reminders';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const r = strings.reminders;
 

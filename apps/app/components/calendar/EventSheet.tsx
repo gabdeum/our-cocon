@@ -70,7 +70,7 @@ import type { Member } from '../../lib/session';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { useToast } from '../../lib/toast';
 import { useTitleSuggestions } from '../../lib/use-title-suggestions';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const a = strings.calendar.add;
 const REPEATS: RepeatChoice[] = ['never', 'daily', 'weekly', 'biweekly', 'monthly', 'yearly'];

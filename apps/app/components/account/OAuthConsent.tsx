@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Button, Callout, Text } from '@cocon/ui';
 import { normalizeText } from '@cocon/schemas';
 import { useFailureToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { Client } from '../../lib/supabase';
 import { SignIn } from './SignIn';
 import { WelcomeHeader } from './WelcomeHeader';

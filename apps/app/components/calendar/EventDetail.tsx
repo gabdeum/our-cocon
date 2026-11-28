@@ -11,7 +11,7 @@ import { dateGridMonth, shiftMonth } from '../../lib/event-form';
 import type { Member } from '../../lib/session';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { useToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { OfflineBanner } from '../sync/OfflineBanner';
 import { Notes } from '../shared/Notes';
 

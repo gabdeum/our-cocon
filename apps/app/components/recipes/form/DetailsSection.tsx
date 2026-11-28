@@ -2,7 +2,7 @@ import { View, type LayoutChangeEvent } from 'react-native';
 import { Callout, MonthPicker, PhotoField, PickerField, SettingRow, Text, TextField } from '@cocon/ui';
 import type { ImageSourcePropType } from 'react-native';
 import { useFailureToast } from '../../../lib/toast';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 import type { DetailsField, DetailsForm, DetailsWarnings } from '../../../lib/recipe-form';
 
 const f = strings.recipeForm;

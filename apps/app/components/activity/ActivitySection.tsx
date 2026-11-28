@@ -1,5 +1,5 @@
 import { LatestActivityCard, Link, SegmentedControl, Text } from '@cocon/ui';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { ActivityEntries, type ActivityEntriesProps } from './ActivityEntries';
 
 const a = strings.activity;

@@ -4,7 +4,7 @@ import { NOTES_MAX, type Tracker } from '@cocon/schemas';
 import { FieldWarning, NoteFormattingToolbar, Text, TextField, type NoteToolbarFormat } from '@cocon/ui';
 import { insertLink, type Selection } from '../../lib/note-editing';
 import { useNoteEditing } from '../../lib/use-note-editing';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { AddLinkSheet } from './AddLinkSheet';
 
 const n = strings.notes;

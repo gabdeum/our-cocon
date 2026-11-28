@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Button, ColorSwatch, Dialog, Lead, Link, ListGroup, ListRow, PushedScreen, SheetFooter, Text, TextField, type SwatchOption } from '@cocon/ui';
 import { DisplayName, MEMBER_COLORS, memberInitials, memberKind, nextMemberColor, type MemberColor, type Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useToast } from '../../lib/toast';
 import type { FamilyApi } from '../../lib/family';
 import type { AccountMember, Family, Member } from '../../lib/session';

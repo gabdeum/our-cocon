@@ -10,7 +10,7 @@ import { useReminderContext } from '../../lib/reminder-actions';
 import { createdProps, newReminderForm } from '../../lib/reminders';
 import { useToast } from '../../lib/toast';
 import { useEventSheet } from '../../lib/use-event-sheet';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { AddSheet } from './AddSheet';
 
 /**

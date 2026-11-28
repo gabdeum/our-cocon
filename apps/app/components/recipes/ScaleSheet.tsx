@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { AmountField, BottomSheet, Card, Link, RadioCard, SheetFooter, Text, useSheetPresentation } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import type { Unit } from '@cocon/schemas/recipes';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { RecipeDetail } from '../../lib/recipe';
 import type { RecipeChoices, ScaledBy } from '../../lib/recipe-choices';
 import type { FormatOptions } from '@cocon/quantity';

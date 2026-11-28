@@ -1,3 +1,4 @@
+import { displayWords } from './display';
 /** FR-003 rounding and how rounded numbers read. */
 
 const EPSILON = 1e-9;
@@ -19,7 +20,7 @@ export function fractionText(value: number): string {
   return whole === 0 ? fraction : `${whole}${fraction}`;
 }
 
-/** One decimal, without a trailing ".0" ("0.7", "2.6", "1"). */
+/** One decimal, without a trailing ".0" ("0.7", "2.6", "1"); "0,7" in French and Spanish (spec 076). */
 export function decimalText(value: number): string {
-  return String(toStep(value, 0.1).toFixed(1)).replace(/\.0$/, '');
+  return String(toStep(value, 0.1).toFixed(1)).replace(/\.0$/, '').replace('.', displayWords.decimal);
 }

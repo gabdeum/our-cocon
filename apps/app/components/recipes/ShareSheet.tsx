@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Callout, Card, Dialog, Link, LinkField, RecipeSummary, SettingRow, ShareTile, useSheetPresentation } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useToast, useFailureToast } from '../../lib/toast';
 import { daysActive, shareLinkUrl, type ShareLink } from '../../lib/share';
 

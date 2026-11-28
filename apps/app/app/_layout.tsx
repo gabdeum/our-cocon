@@ -47,7 +47,9 @@ import { clearFollowUps, createTimerAlerts, liveAlert } from '../lib/timer-alert
 import { createLiveActivity, endLiveActivity } from '../lib/live-activity';
 import { liveTimerNative } from '../lib/live-timer-native';
 import { linkOn } from '../lib/links';
-import { strings } from '../strings/en';
+// Spec 076: the device's language before anything renders, then the person's.
+import { LanguageProvider } from '../lib/language';
+import { strings, useLanguageChange } from '../strings';
 import { playChime, vibrateDone } from '../lib/chime';
 import { TimerAlerts } from '../components/timers/TimerAlerts';
 
@@ -218,6 +220,8 @@ export default function RootLayout() {
   const railPage = tier === 'expanded' ? { ...presentation.stack, animation: 'none' as const } : presentation.stack;
   const card = (phone: (typeof presentation)[keyof typeof presentation]) => (tier === 'compact' ? phone : { ...presentation.sheet, animation: 'fade' as const });
 
+  // Spec 076: providers above the screens (toasts, timer banners) read their words again.
+  useLanguageChange();
   useEffect(() => watchConnection(), []);
   // Before app_opened, so it carries them too (spec 063).
   useLayoutAnalytics(tracker);
@@ -250,6 +254,7 @@ export default function RootLayout() {
               <Notifications>
               <Timers>
               <CalendarPrefsProvider>
+              <LanguageProvider>
                 <SessionGate />
                 <TravelHost />
                 <NavigationTheme value={navigationTheme}>
@@ -292,12 +297,14 @@ export default function RootLayout() {
                   <Stack.Screen name="settings/deleted" options={presentation.stack} />
                   <Stack.Screen name="settings/ai" options={presentation.stack} />
                   <Stack.Screen name="settings/notifications" options={presentation.stack} />
+                  <Stack.Screen name="settings/language" options={presentation.stack} />
                   <Stack.Screen name="settings/recipes" options={presentation.stack} />
                   <Stack.Screen name="dev/gallery" options={presentation.stack} />
                   <Stack.Screen name="dev/sheet" options={presentation.sheet} />
                   <Stack.Screen name="dev/modal" options={presentation.fullScreen} />
                 </Stack>
                 </NavigationTheme>
+              </LanguageProvider>
               </CalendarPrefsProvider>
               </Timers>
               </Notifications>

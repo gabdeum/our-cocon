@@ -5,7 +5,7 @@ import { randomUUID } from 'expo-crypto';
 import { parsePastedList } from '@cocon/quantity';
 import { Button, Dialog, FormBar, FormProgress, FormScreen, PhotoCrop, type CropRect } from '@cocon/ui';
 import { DEFAULT_FAMILY_SETTINGS, MAX_VARIANTS, type CookingSetting, type FamilySettings, type IngredientFacts, type RecipeFormSection, type Tracker } from '@cocon/schemas';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 import { useOnline } from '../../../lib/online';
 import type { ChoiceStorage } from '../../../lib/recipe-choices';
 import {

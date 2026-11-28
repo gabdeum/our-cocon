@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { Button, splitColumns, Text } from '@cocon/ui';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { DayRemindersToggle, DayRow, useDayContent, type DayContentProps } from './DaySheet';
 
 const s = strings.calendar.month.sheet;

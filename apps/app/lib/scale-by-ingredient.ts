@@ -1,7 +1,7 @@
-import { groupSameIngredient, kindOf, pieceWeight, QuantityError, scale, sumIngredients, type FormatOptions } from '@cocon/quantity';
+import { displayWords, groupSameIngredient, kindOf, pieceWeight, QuantityError, scale, sumIngredients, type FormatOptions } from '@cocon/quantity';
 import type { VariantChoice } from '@cocon/schemas';
 import type { Unit } from '@cocon/schemas/recipes';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import type { RecipeDetail } from './recipe';
 import type { RecipeChoices, ScaledBy } from './recipe-choices';
 import { appliedIngredients, mergedLine, rowScale, scaleRecipe, servingsText } from './recipe-view';
@@ -86,7 +86,7 @@ export function scalePreview(recipe: Recipe, choice: VariantChoice, by: ScaledBy
     return `${line.name} ${line.amount}${line.sub ? ` (${line.sub})` : ''}`;
   });
   const whole = others.filter((g) => g[0]?.facts?.whole_only).map((g) => mergedLine(g, options).name);
-  const factor = String(Number(scaled.factor.toFixed(2)));
+  const factor = String(Number(scaled.factor.toFixed(2))).replace('.', displayWords.decimal);
   return {
     factor,
     result: s.result(factor, servingsText(scaled.servings)),

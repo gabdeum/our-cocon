@@ -1,8 +1,10 @@
 // Spec 029 US1 and SC-001 (design/ui/OC-Menu.md): the Menu's Apps and Settings, and where each goes.
-// Spec 046 adds Notifications after AI assistants (design/ui/OC-SettingsNotif.md › Menu row).
+// Spec 046 adds Notifications after AI assistants (design/ui/OC-SettingsNotif.md › Menu row), spec 076
+// Language after Notifications.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { fakeTracker } from '../../test/fakes';
+import { setLanguage } from '../../strings';
 import { MenuScreen, type MenuScreenProps } from './MenuScreen';
 import { expectAccessible } from '../../test/axe';
 
@@ -39,6 +41,7 @@ describe('Menu (OC-Menu)', () => {
       'FamilyGabriel, Eva, James · your account',
       'AI assistants2 connected',
       'NotificationsTimers, event reminders',
+      'Language',
       'CalendarYour view, times of day',
       'RecipesCooking defaults, units',
       'GroceriesWhere you shop, store sizes',
@@ -84,5 +87,17 @@ describe('Menu (OC-Menu)', () => {
   it('Spec 046: Notifications reads "Off" when they are off in iPhone Settings', () => {
     setup({ notificationsOff: true });
     expect(screen.getByRole('link', { name: /^Notifications/ }).textContent).toBe('NotificationsOff');
+  });
+});
+
+describe('Menu in French (spec 076)', () => {
+  afterEach(() => setLanguage('en'));
+
+  it('SC-001: every word is French, and the Language row names the language', () => {
+    setLanguage('fr');
+    setup({ languageName: 'Français', details: { calendar: undefined, recipes: undefined, groceries: undefined, timers: 'Aucun en cours', reminders: undefined } });
+    expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual(['Menu', 'Apps', 'Réglages']);
+    expect(screen.getByRole('link', { name: /^Langue/ }).textContent).toBe('LangueFrançais');
+    expect(screen.queryByText('Recently deleted')).toBeNull();
   });
 });

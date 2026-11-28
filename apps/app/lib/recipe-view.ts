@@ -1,6 +1,6 @@
 import { applyVariants, cuisineOf, DEFAULT_FAMILY_SETTINGS, resolveCooking, variantEffect, type CookingSettings, type RecipeVariant, type VariantChoice } from '@cocon/schemas';
 import { groupSameIngredient, renderStep, renderTemperatureCheck, type FormatOptions, type QuantityIngredient } from '@cocon/quantity';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import type { Member } from './session';
 import type { RecipeDetail } from './recipe';
 import { formatTotalTime, memberName, recipeSource } from './recipe-format';

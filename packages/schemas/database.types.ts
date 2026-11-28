@@ -603,14 +603,14 @@ isOneToOne: false
                   ]
                 },"members": {
                   Row: {
-                    "color": Database["public"]['Enums']["member_color"],"created_at": string,"created_by": string | null,"display_name": string,"family_id": string,"id": string,"joined_at": string,"managed_by": string | null,"role": Database["public"]['Enums']["member_role"],"source": string,"updated_at": string,"updated_by": string | null,"user_id": string | null
+                    "color": Database["public"]['Enums']["member_color"],"created_at": string,"created_by": string | null,"display_name": string,"family_id": string,"id": string,"language": string,"joined_at": string,"managed_by": string | null,"role": Database["public"]['Enums']["member_role"],"source": string,"updated_at": string,"updated_by": string | null,"user_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "color": Database["public"]['Enums']["member_color"],"created_at"?: string,"created_by"?: string | null,"display_name": string,"family_id": string,"id"?: string,"joined_at"?: string,"managed_by"?: string | null,"role": Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
+                    "color": Database["public"]['Enums']["member_color"],"created_at"?: string,"created_by"?: string | null,"display_name": string,"family_id": string,"id"?: string,"language"?: string,"joined_at"?: string,"managed_by"?: string | null,"role": Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
                   }
                   Update: {
-                    "color"?: Database["public"]['Enums']["member_color"],"created_at"?: string,"created_by"?: string | null,"display_name"?: string,"family_id"?: string,"id"?: string,"joined_at"?: string,"managed_by"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
+                    "color"?: Database["public"]['Enums']["member_color"],"created_at"?: string,"created_by"?: string | null,"display_name"?: string,"family_id"?: string,"id"?: string,"language"?: string,"joined_at"?: string,"managed_by"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -1361,6 +1361,9 @@ isOneToOne: false
                            },
 "set_display_name":
 { Args: { "display_name": string }; Returns: undefined
+                           },
+"set_my_language":
+{ Args: { "language": string }; Returns: undefined
                            },
 "set_home_time_zone":
 { Args: { "tz": string }; Returns: undefined

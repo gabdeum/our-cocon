@@ -1,9 +1,9 @@
-import { addDays, calendarWordsEn, dateLabel, daysBetween, formatTime, parts, timeIn, todayIn, uses24h, weekday } from '@cocon/calendar';
+import { addDays, calendarWords, dateLabel, daysBetween, formatTime, parts, timeIn, todayIn, uses24h, weekday } from '@cocon/calendar';
 import type { PlacedReminder, ReminderOccurrence, StoredReminder } from '@cocon/data';
 import { MORNING, rolloverFor, snoozeOptions, toDraft } from '@cocon/reminders';
 import { DEFAULT_QUIET_HOURS, memberInitials, type ParsedReminderDraft, type QuietHours, type Recurrence, type ReminderDraft, type ReminderRollover, type ReminderSection, type ReminderSnoozeOption, type TimeFormatSetting } from '@cocon/schemas';
 import type { AvatarColor, MemberChipColor } from '@cocon/ui';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { repeatWords } from './event-detail';
 import { recurrenceOf, repeatDraftOf, type RepeatDraft } from './event-form';
 import type { Member } from './session';
@@ -78,7 +78,7 @@ export function detailLine(x: PlacedReminder, o: { today: string; tz: string; us
   if (x.due_on < o.today) {
     const ago = daysBetween(x.due_on, o.today);
     if (ago === 1) return r.wasDueYesterday;
-    return r.wasDue(ago < 7 ? (calendarWordsEn.weekdaysShort[weekday(x.due_on)] ?? '') : dateLabel(x.due_on));
+    return r.wasDue(ago < 7 ? (calendarWords.weekdaysShort[weekday(x.due_on)] ?? '') : dateLabel(x.due_on));
   }
   if (x.due_on === o.today) {
     if (!shown) return o.where === 'home' ? r.today : r.anyTime;
@@ -162,7 +162,7 @@ export function snoozeChoices(x: Pick<PlacedReminder, 'due_at' | 'has_time'>, o:
         ? formatTime(timeIn(o.tz, new Date(until)), o.use24h)
         : o.style === 'drawer' || option === 'month'
           ? dateLabel(day)
-          : strings.calendar.add.tileDate(calendarWordsEn.weekdaysShort[weekday(day)] ?? '', parts(day).day);
+          : strings.calendar.add.tileDate(calendarWords.weekdaysShort[weekday(day)] ?? '', parts(day).day);
     return { option, label: r.snooze[option], detail, until };
   });
 }

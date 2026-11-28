@@ -26,3 +26,4 @@ export {
 export { viewFor, type FullView, type HiddenView, type Viewed } from './visibility';
 export type { CalendarEvent, EventException, EventOverride, Occurrence, SlotTimes, SurpriseCover } from './types';
 export { en as calendarWordsEn, type CalendarWords } from './words.en';
+export { calendarWords, calendarWordsByLanguage, setCalendarWords } from './words';

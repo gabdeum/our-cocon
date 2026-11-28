@@ -4,7 +4,7 @@ import { Button, Card, Choice, IngredientRow, Link, Meta, Photo, PhotoPlaceholde
 import { noVariants, validChoice, type AnonymousTracker, type SharedRecipe as Shared, type Tracker, type VariantChoice } from '@cocon/schemas';
 import type { UnitSystem } from '@cocon/quantity';
 import { useFailureToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { SharedLoad } from '../../lib/shared-recipe';
 import { optionHint, recipeView, servingsMax, SERVINGS_MIN } from '../../lib/recipe-view';
 import { recipeSource } from '../../lib/recipe-format';

@@ -1,6 +1,6 @@
 import { DEFAULT_SLOT_TIMES, occurrenceOn } from '@cocon/calendar';
 import { SharedEventResponse, ShareToken } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { whenLines } from './event-detail';
 import type { SharedEndpoint } from './shared-recipe';
 

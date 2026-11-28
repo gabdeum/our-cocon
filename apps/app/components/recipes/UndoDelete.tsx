@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useToast } from '../../lib/toast';
 
 export interface UndoDeleteOptions {

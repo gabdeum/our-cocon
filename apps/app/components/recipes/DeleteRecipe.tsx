@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@cocon/ui';
 import { useOnline } from '../../lib/online';
 import { useFailureToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const d = strings.deleteRecipe;
 

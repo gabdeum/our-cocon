@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, type HostInstance, type ScrollViewInstance } from 'react-native';
 import { announce, BottomSheet, Button, Callout, CookLayout, CookProgress, CookSection, CookStepList, CookTimerCard, cookStepHeight, ListRow, Overline, PhotoViewer, PushedScreen, StepPhoto, StepText, Text, useLayoutTier, useReduceMotion, useSheetPresentation, type TopBarConfig } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { RecipeDetail } from '../../lib/recipe';
 import { readChoices, startingChoices, writeChoices, type ChoiceStorage, type RecipeChoices } from '../../lib/recipe-choices';
 import { cookServings, defaultCooking, formatOf, recipeView, servingsMax, servingsText, type CookingSettings } from '../../lib/recipe-view';
@@ -475,7 +475,7 @@ function Cooking({
   );
 }
 
-const actionLabel = { idle: c.startTimer, running: c.pause, paused: c.resume, done: c.done } as const;
+const actionLabel = (state: ReturnType<typeof useStepTimerControl>['state']) => ({ idle: c.startTimer, running: c.pause, paused: c.resume, done: c.done })[state];
 
 function CookTimer(props: StepTimerInput) {
   const t = useStepTimerControl(props);
@@ -484,7 +484,7 @@ function CookTimer(props: StepTimerInput) {
     <CookTimerCard
       label={c.timerLabel(props.timer.label)}
       clock={t.clock}
-      actionLabel={actionLabel[t.state]}
+      actionLabel={actionLabel(t.state)}
       onAction={t.onPress}
       minusLabel={copy.minus}
       plusLabel={copy.plus}

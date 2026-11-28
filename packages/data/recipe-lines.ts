@@ -1,5 +1,6 @@
 import { applyVariants, ingredientName, type Applied, type IngredientRow, type Unit, type VariantChoice } from '@cocon/schemas';
 import {
+  displayWords,
   firstRowShare,
   format,
   fractionText,
@@ -47,8 +48,6 @@ export interface IngredientLine {
   variant: boolean;
 }
 
-const upperFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-const sizeWords = new Set(['small', 'medium', 'large']);
 
 export type LineIngredient = Applied<IngredientRow> & QuantityIngredient;
 
@@ -65,9 +64,10 @@ export function lineDetail(rows: readonly { prep_note?: string | null }[]): stri
  */
 export function ingredientLine(ing: LineIngredient, options: FormatOptions): IngredientLine {
   const f = format(ing, options);
-  const size = sizeWords.has(f.unit) ? f.unit : null;
+  // A size word in the app's language (spec 076) goes with the name: "Large eggs", "Œufs (gros)".
+  const size = Object.values(displayWords.size).includes(f.unit) ? f.unit : null;
   const amount = size ? f.amount : [f.amount, f.unit].filter(Boolean).join(' ');
-  const sized = (name: string) => (size ? `${upperFirst(size)} ${name.charAt(0).toLowerCase()}${name.slice(1)}` : name);
+  const sized = (name: string) => (size ? displayWords.sized(size, name) : name);
   return { id: ing.id, ids: [ing.id], amount, name: sized(ingredientName(ing.name)), fullName: sized(ing.name), detail: lineDetail([ing]), sub: f.sub, variant: ing.fromVariant };
 }
 

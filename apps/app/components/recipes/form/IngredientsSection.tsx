@@ -3,7 +3,7 @@ import { amountInput } from '@cocon/quantity';
 import { View } from 'react-native';
 import type { IngredientFacts } from '@cocon/schemas';
 import { Button, IngredientEditCard, Link, ListRow, ReorderList, Text, type IngredientEditField } from '@cocon/ui';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 import { wholeHint, type IngredientDraft, type IngredientWarning } from '../../../lib/recipe-ingredients';
 import { unitText } from './IngredientSheets';
 

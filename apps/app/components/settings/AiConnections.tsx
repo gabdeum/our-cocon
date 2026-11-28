@@ -4,7 +4,7 @@ import { BottomSheet, Button, Callout, Card, Dialog, Lead, Link, LinkField, List
 import type { AssistantConnection, AssistantConnections } from '@cocon/data';
 import { AiPermission, type AiPermissions, type ConnectionAssistant, type KnownAssistant, type Tracker } from '@cocon/schemas';
 import { useFailureToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { ASSISTANTS, highlightParts, minutesSince, type AssistantEntry } from '../../lib/assistants';
 import { OfflineBanner } from '../sync/OfflineBanner';
 

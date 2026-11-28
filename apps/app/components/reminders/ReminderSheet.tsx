@@ -11,7 +11,7 @@ import { forChips, formRollover, formToDraft, isClockTime, notifySummary, remind
 import type { Member } from '../../lib/session';
 import { useToast } from '../../lib/toast';
 import { useTitleSuggestions } from '../../lib/use-title-suggestions';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { RepeatDetails } from '../calendar/RepeatDetails';
 import { NotesField } from '../shared/NotesField';
 

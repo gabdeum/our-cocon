@@ -1,8 +1,8 @@
-import { uses24h } from '@cocon/calendar';
+import { calendarWordsByLanguage, uses24h } from '@cocon/calendar';
 import { catchUpReminders } from '@cocon/data';
-import { prefsOf, type Notifier, type ServiceDb } from '@cocon/notify';
-import { reminderNotificationText, reminderSendDue, todoRecipients, type NotifiedReminder, type ReminderSend, type TodoMember } from '@cocon/reminders';
-import { DEFAULT_QUIET_HOURS, PushPayload, QuietHours, ReminderRollover, TODO_CATEGORY, TimeFormatSetting, type Tracker } from '@cocon/schemas';
+import { prefsOf, type Device, type Notifier, type ServiceDb } from '@cocon/notify';
+import { reminderNotificationText, reminderSendDue, reminderWordsByLanguage, todoRecipients, type NotifiedReminder, type ReminderSend, type TodoMember } from '@cocon/reminders';
+import { DEFAULT_QUIET_HOURS, LanguageSetting, PushPayload, QuietHours, ReminderRollover, TODO_CATEGORY, TimeFormatSetting, resolveLanguage, type Tracker } from '@cocon/schemas';
 import { z } from 'zod';
 
 /**
@@ -53,7 +53,7 @@ export function createTodoJob(db: ServiceDb, notifier: Pick<Notifier, 'send'>, a
   /** The families' members, who has a phone with reminders on, and each person's quiet hours and clock. */
   async function loadPeople(familyIds: string[]) {
     const [members, devices] = await Promise.all([
-      db.from('members').select('id, family_id, display_name, user_id').in('family_id', familyIds),
+      db.from('members').select('id, family_id, display_name, user_id, language').in('family_id', familyIds),
       db.from('push_devices').select('member_id, prefs').in('family_id', familyIds).is('disabled_at', null).not('expo_push_token', 'is', null),
     ]);
     if (members.error) throw members.error;
@@ -72,6 +72,9 @@ export function createTodoJob(db: ServiceDb, notifier: Pick<Notifier, 'send'>, a
         return QuietHours.catch(DEFAULT_QUIET_HOURS).parse(s && { from: s.quiet_from, to: s.quiet_to });
       },
       timeFormatOf: (memberId: string) => TimeFormatSetting.catch('automatic').parse(byUser.get(userOf.get(memberId) ?? '')?.time_format),
+      /** Spec 076 FR-012: their setting, or on Automatic the phone's language. */
+      languageOf: (device: Device) =>
+        resolveLanguage(LanguageSetting.catch('automatic').parse(members.data.find((m) => m.id === device.member_id)?.language), device.prefs.lang),
     };
   }
 
@@ -102,24 +105,33 @@ export function createTodoJob(db: ServiceDb, notifier: Pick<Notifier, 'send'>, a
       for (const c of candidates) {
         const r: NotifiedReminder = c.reminder;
         // Everyone it's for gets the same send unless their quiet hours differ: grouped by moment and kind.
-        const groups = new Map<string, { send: ReminderSend; forName: string | null; memberIds: string[] }>();
+        const groups = new Map<string, { send: ReminderSend; forName: string | null; forEveryone: boolean; memberIds: string[] }>();
         for (const recipient of todoRecipients(r, people.membersOf(c.family_id))) {
           if (!people.reached(recipient.memberId)) continue;
           const send = reminderSendDue(r, people.quietOf(recipient.memberId), c.time_zone, at);
           if (!send) continue;
           const key = `${send.kind}|${send.slotAt}`;
-          const group = groups.get(key) ?? { send, forName: recipient.forName, memberIds: [] };
+          const group = groups.get(key) ?? { send, forName: recipient.forName, forEveryone: recipient.forEveryone, memberIds: [] };
           group.memberIds.push(recipient.memberId);
           groups.set(key, group);
         }
-        for (const { send, forName, memberIds } of groups.values()) {
+        for (const { send, forName, forEveryone, memberIds } of groups.values()) {
           const claimed = await claim(c, send, memberIds);
           if (claimed.length === 0) continue;
           const result = await notifier.send({
             kind: 'todo',
             memberIds: claimed,
-            text: (device) =>
-              reminderNotificationText(r, send, { use24h: uses24h(people.timeFormatOf(device.member_id), device.prefs.clock_24h ?? true), tz: c.time_zone, forName }),
+            text: (device) => {
+              const language = people.languageOf(device);
+              return reminderNotificationText(r, send, {
+                use24h: uses24h(people.timeFormatOf(device.member_id), device.prefs.clock_24h ?? true),
+                tz: c.time_zone,
+                forName,
+                forEveryone,
+                words: reminderWordsByLanguage[language],
+                calendarWords: calendarWordsByLanguage[language],
+              });
+            },
             payload: PushPayload.parse({ kind: 'todo', route: `/reminders?open=${r.id}`, due_at: c.reminder.due_at }),
             ref: `${r.id}:${send.slotAt}:${send.kind}`,
             interruptionLevel: 'active',

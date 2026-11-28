@@ -1,5 +1,5 @@
 import type { CalendarEvent, Occurrence } from './types';
-import { en } from './words.en';
+import { calendarWords } from './words';
 
 /** Fields anyone in the family may see: who, which day, what time, how it repeats. */
 const PUBLIC_KEYS = [
@@ -62,5 +62,5 @@ export function viewFor<T extends CalendarEvent>(event: T, viewerMemberId: strin
 }
 
 function busy(event: CalendarEvent): HiddenView {
-  return { ...publicFields(event), view: 'busy', title: en.busy, location: null, notes: null, is_surprise: false };
+  return { ...publicFields(event), view: 'busy', title: calendarWords.busy, location: null, notes: null, is_surprise: false };
 }

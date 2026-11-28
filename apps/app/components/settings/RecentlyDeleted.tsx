@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Button, Dialog, Link, ListGroup, ListRow, PushedScreen, RecipeItemSkeleton, Text } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useFailureToast, useToast } from '../../lib/toast';
 import { daysLeft, daysSinceDelete } from '../../lib/recipe-delete';
 import type { DeletedItem } from '../../lib/recently-deleted';

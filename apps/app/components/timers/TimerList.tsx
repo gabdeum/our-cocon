@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { AppState, View } from 'react-native';
 import { Text, TimePresets, TimerCard } from '@cocon/ui';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useTimers, useTimerStore } from '../../lib/timer-store';
 import { clock, MINUTE, progress, remaining, type Timer } from '../../lib/timers';
 
@@ -9,8 +9,8 @@ const copy = strings.timersScreen;
 /** The quick kitchen timers at the bottom (FR-004): 5 · 10 · 15 · 30 min. */
 export const QUICK_MINUTES = [5, 10, 15, 30] as const;
 
-const stateLabel = { running: copy.running, paused: copy.paused, done: copy.done } as const;
-const actionLabel = { running: copy.pause, paused: copy.resume, done: copy.addMinute } as const;
+const stateLabel = (state: Timer['state']) => ({ running: copy.running, paused: copy.paused, done: copy.done })[state];
+const actionLabel = (state: Timer['state']) => ({ running: copy.pause, paused: copy.resume, done: copy.addMinute })[state];
 
 export interface TimerLink {
   label: string;
@@ -39,13 +39,13 @@ export function TimerList({ linkFor, panel }: TimerListProps) {
     <TimerCard
       key={t.id}
       name={t.label}
-      sub={copy.sub(t.recipeName ?? copy.noRecipe, stateLabel[t.state])}
+      sub={copy.sub(t.recipeName ?? copy.noRecipe, stateLabel(t.state))}
       state={t.state}
       clock={clock(remaining(t, now))}
       progress={progress(t, now)}
-      actionLabel={actionLabel[t.state]}
+      actionLabel={actionLabel(t.state)}
       onAction={() => (t.state === 'running' ? store.pause(t.id) : t.state === 'paused' ? store.resume(t.id) : store.add(t.id, MINUTE))}
-      actionA11y={copy.forTimer(actionLabel[t.state], t.label)}
+      actionA11y={copy.forTimer(actionLabel(t.state), t.label)}
       secondaryLabel={t.state === 'done' ? copy.dismiss : copy.stop}
       secondaryA11y={copy.forTimer(t.state === 'done' ? copy.dismiss : copy.stop, t.label)}
       onSecondary={() => (t.state === 'done' ? store.dismiss(t.id) : store.stop(t.id))}

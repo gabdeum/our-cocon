@@ -1,7 +1,7 @@
-import { zonedInstant } from '@cocon/calendar';
+import { calendarWordsByLanguage, zonedInstant } from '@cocon/calendar';
 import type { QuietHours, ReminderRollover } from '@cocon/schemas';
 import { describe, expect, it } from 'vitest';
-import { quietEnd, reminderNotificationText, reminderSendDue, reminderSlots, todoRecipients, type NotifiedReminder } from './notifications';
+import { quietEnd, reminderNotificationText, reminderSendDue, reminderSlots, reminderWordsByLanguage, todoRecipients, type NotifiedReminder } from './notifications';
 
 // Paris: UTC+1 in winter, UTC+2 from 2027-03-28. Wednesday 2026-11-11, as on OC-NotifLockTodo.
 const tz = 'Europe/Paris';
@@ -129,13 +129,13 @@ describe('todoRecipients (FR-003)', () => {
   ];
 
   it('the assignee only, without their name', () => {
-    expect(todoRecipients({ assignee_id: 'eva' }, members)).toEqual([{ memberId: 'eva', forName: null }]);
+    expect(todoRecipients({ assignee_id: 'eva' }, members)).toEqual([{ memberId: 'eva', forName: null, forEveryone: false }]);
   });
 
   it('Everyone: every member with the app, "for everyone"', () => {
     expect(todoRecipients({ assignee_id: null }, members)).toEqual([
-      { memberId: 'gabriel', forName: 'everyone' },
-      { memberId: 'eva', forName: 'everyone' },
+      { memberId: 'gabriel', forName: null, forEveryone: true },
+      { memberId: 'eva', forName: null, forEveryone: true },
     ]);
   });
 
@@ -144,7 +144,7 @@ describe('todoRecipients (FR-003)', () => {
   });
 
   it('Everyone in a family of one: no name', () => {
-    expect(todoRecipients({ assignee_id: null }, members.slice(0, 1))).toEqual([{ memberId: 'gabriel', forName: null }]);
+    expect(todoRecipients({ assignee_id: null }, members.slice(0, 1))).toEqual([{ memberId: 'gabriel', forName: null, forEveryone: false }]);
   });
 });
 
@@ -163,5 +163,20 @@ describe('reminderNotificationText (FR-001)', () => {
     ['a nudge, a week late', reminder('15:00', 'week'), 'nudge', at('2026-11-18', '15:00'), { ...opts, forName: 'James' }, 'Still to do: Book James’s check-up', 'Was due Wed, Nov 11 · for James'],
   ] as const)('%s', (_, r, kind, slotAt, options, title, body) => {
     expect(reminderNotificationText(r, { kind, slotAt }, options)).toEqual({ title, body });
+  });
+});
+
+describe('spec 076: in the recipient’s language', () => {
+  it('writes a late reminder in French, for everyone', () => {
+    const r = { title: 'Sortir les poubelles', has_time: true, rollover: 'day' as const, late_from: '2026-11-28T09:00:00Z' };
+    const text = reminderNotificationText(r, { kind: 'nudge', slotAt: '2026-11-28T11:00:00Z' }, {
+      use24h: true,
+      tz: 'UTC',
+      forName: null,
+      forEveryone: true,
+      words: reminderWordsByLanguage.fr,
+      calendarWords: calendarWordsByLanguage.fr,
+    });
+    expect(text).toEqual({ title: 'Toujours à faire : Sortir les poubelles', body: 'Prévu à 09:00 · 2 heures de retard · pour tout le monde' });
   });
 });

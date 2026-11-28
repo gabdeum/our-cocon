@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Button, Link, MonthPicker, PersonPill, Pill, PillRow, Text } from '@cocon/ui';
 import { activeFilterKeys, cuisineFacets, emptyFilters, memberInitials, type CuisineFilter, type RecipeFilters, type TimeFilter, type Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { visibleRecipes, type RecipeListItem } from '../../lib/recipes';
 import type { Member } from '../../lib/session';
 
@@ -10,7 +10,7 @@ const f = strings.filters;
 /** FR-004: cuisines shown before "Show {n} more". */
 export const CUISINES_SHOWN = 10;
 
-const times: { key: TimeFilter; label: string }[] = [
+const times = (): { key: TimeFilter; label: string }[] => [
   { key: 'under_30', label: f.under30 },
   { key: '30_60', label: f.from30to60 },
   { key: 'over_60', label: f.over60 },
@@ -94,7 +94,7 @@ export function FiltersSheet({ recipes, members, query, filters, tracker, onAppl
       </Group>
       <Group title={f.time}>
         <PillRow>
-          {times.map((t) => (
+          {times().map((t) => (
             <Pill key={t.key} label={t.label} selected={draft.time === t.key} onPress={() => setDraft((d) => ({ ...d, time: d.time === t.key ? null : t.key }))} />
           ))}
         </PillRow>

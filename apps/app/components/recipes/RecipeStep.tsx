@@ -1,6 +1,6 @@
 import { Callout, StepCard, TimerRow } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { StepLine } from '../../lib/recipe-view';
 import { useStepTimerControl, type StepTimerInput } from './step-timer';
 
@@ -38,7 +38,7 @@ export function RecipeStep({
   );
 }
 
-const rowLabel = { idle: stepCopy.startTimer, running: stepCopy.pause, paused: stepCopy.resume, done: stepCopy.done } as const;
+const rowLabel = (state: ReturnType<typeof useStepTimerControl>['state']) => ({ idle: stepCopy.startTimer, running: stepCopy.pause, paused: stepCopy.resume, done: stepCopy.done })[state];
 
 /** A step's timer row (spec 010, 009 US3); the rules are in `useStepTimerControl`. */
 function StepTimer(props: StepTimerInput) {
@@ -46,7 +46,7 @@ function StepTimer(props: StepTimerInput) {
   return (
     <TimerRow
       state={t.state}
-      label={rowLabel[t.state]}
+      label={rowLabel(t.state)}
       clock={t.clock}
       onPress={t.onPress}
       minusLabel={stepCopy.minus}

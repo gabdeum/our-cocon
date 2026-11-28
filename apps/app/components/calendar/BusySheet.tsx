@@ -5,7 +5,7 @@ import { Avatar, BottomSheet, Button, Icon, Text } from '@cocon/ui';
 import { busyLines } from '../../lib/event-detail';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const b = strings.calendar.busy;
 

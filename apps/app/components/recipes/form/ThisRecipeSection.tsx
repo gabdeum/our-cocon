@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { resolveCooking, type FamilySettings, type RecipeOverrides, type RecipeOverridesUpdate } from '@cocon/schemas';
 import { Card, SettingRow, Text } from '@cocon/ui';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 
 const f = strings.recipeForm;
 const r = strings.recipeSettings;

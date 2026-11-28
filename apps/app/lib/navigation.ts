@@ -1,16 +1,16 @@
 import type { IconName } from '@cocon/ui';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 /**
  * The five tab destinations (specs 002, 036; design/ui/TabBar.md), by Expo Router route name.
  * Menu is `/menu` (spec 029).
  */
 export const TABS = [
-  { key: 'home', route: 'index', icon: 'home', label: strings.tabBar.home },
-  { key: 'calendar', route: 'calendar', icon: 'calendar', label: strings.tabBar.calendar },
-  { key: 'recipes', route: 'recipes', icon: 'recipes', label: strings.tabBar.recipes },
-  { key: 'groceries', route: 'groceries', icon: 'groceries', label: strings.tabBar.groceries },
-  { key: 'menu', route: 'menu', icon: 'menu', label: strings.tabBar.menu },
+  { key: 'home', route: 'index', icon: 'home', get label() { return strings.tabBar.home; } },
+  { key: 'calendar', route: 'calendar', icon: 'calendar', get label() { return strings.tabBar.calendar; } },
+  { key: 'recipes', route: 'recipes', icon: 'recipes', get label() { return strings.tabBar.recipes; } },
+  { key: 'groceries', route: 'groceries', icon: 'groceries', get label() { return strings.tabBar.groceries; } },
+  { key: 'menu', route: 'menu', icon: 'menu', get label() { return strings.tabBar.menu; } },
 ] as const satisfies readonly { key: string; route: string; icon: IconName; label: string }[];
 
 export type TabKey = (typeof TABS)[number]['key'];
@@ -22,8 +22,8 @@ export type TabKey = (typeof TABS)[number]['key'];
  */
 export const RAIL_ITEMS = [
   ...TABS.filter((t) => t.key !== 'menu'),
-  { key: 'reminders', route: 'reminders', icon: 'check', label: strings.menu.reminders },
-  { key: 'timers', route: 'timers', icon: 'timer', label: strings.menu.timers },
+  { key: 'reminders', route: 'reminders', icon: 'check', get label() { return strings.menu.reminders; } },
+  { key: 'timers', route: 'timers', icon: 'timer', get label() { return strings.menu.timers; } },
   ...TABS.filter((t) => t.key === 'menu'),
 ] as const satisfies readonly { key: string; route: string; icon: IconName; label: string }[];
 

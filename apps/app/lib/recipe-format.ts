@@ -1,5 +1,5 @@
 import { cuisineOf } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import type { Member } from './session';
 
 /**

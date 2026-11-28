@@ -1,8 +1,8 @@
-import { calendarWordsEn, dateLabel, formatTime, rangeLabel, reminderAt, reminderRecipients, timeLabel, viewFor, weekday, type CalendarEvent, type SlotTimes } from '@cocon/calendar';
+import { calendarWords, dateLabel, formatTime, rangeLabel, reminderAt, reminderRecipients, timeLabel, viewFor, weekday, type CalendarEvent, type SlotTimes } from '@cocon/calendar';
 import type { StoredEvent } from '@cocon/data';
 import { memberInitials, type Recurrence } from '@cocon/schemas';
 import type { MemberChipColor } from '@cocon/ui';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { minutesSince } from './assistants';
 import { assistantName } from './recipe-format';
 import type { Member } from './session';
@@ -44,7 +44,7 @@ export function repeatLine(event: StoredEvent): string | null {
 export function repeatWords(r: Recurrence, starts: string): string {
   if (r.freq !== 'weekly' && r.freq !== 'biweekly') return e.every[r.freq]();
   // A weekly repeat on no particular days falls on the series' first day's weekday.
-  const days = (r.weekdays?.length ? [...r.weekdays].sort((x, y) => x - y) : [weekday(starts)]).map((d) => calendarWordsEn.weekdays[d] ?? '');
+  const days = (r.weekdays?.length ? [...r.weekdays].sort((x, y) => x - y) : [weekday(starts)]).map((d) => calendarWords.weekdays[d] ?? '');
   return e.every[r.freq](days);
 }
 

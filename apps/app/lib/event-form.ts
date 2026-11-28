@@ -1,6 +1,6 @@
 import {
   addDays,
-  calendarWordsEn,
+  calendarWords,
   conflictWho,
   daysBetween,
   findConflict,
@@ -38,7 +38,7 @@ import {
 import type { DateGridDay, MemberChipColor } from '@cocon/ui';
 import { monthOccurrences } from './calendar-month';
 import type { Member } from './session';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { hourOnly } from './clock';
 
 const a = strings.calendar.add;
@@ -307,7 +307,7 @@ function surpriseOf(draft: EventDraft): SurpriseCover {
 
 /** The three "When" tiles' dates (FR-001): "Sun 25", "Mon 26", and the other day once picked. */
 export function dayTiles(today: string, date: string): { today: string; tomorrow: string; other: string; picked: 'today' | 'tomorrow' | 'other' } {
-  const tile = (d: string) => a.tileDate(calendarWordsEn.weekdaysShort[weekday(d)] ?? '', parts(d).day);
+  const tile = (d: string) => a.tileDate(calendarWords.weekdaysShort[weekday(d)] ?? '', parts(d).day);
   const picked = date === today ? 'today' : date === addDays(today, 1) ? 'tomorrow' : 'other';
   return { today: tile(today), tomorrow: tile(addDays(today, 1)), other: picked === 'other' ? dateLabel(date) : a.pickDate, picked };
 }
@@ -316,7 +316,7 @@ export function dayTiles(today: string, date: string): { today: string; tomorrow
 export function slotChips(slotTimes: SlotTimes, use24h = true): { key: SlotKey | 'all_day'; label: string; hours: string }[] {
   return [
     { key: 'all_day', label: a.allDay, hours: a.wholeDay },
-    ...SLOT_KEYS.map((s) => ({ key: s, label: calendarWordsEn.slots[s], hours: a.slotHours(hourOnly(slotTimes[s].start, use24h), hourOnly(slotTimes[s].end, use24h)) })),
+    ...SLOT_KEYS.map((s) => ({ key: s, label: calendarWords.slots[s], hours: a.slotHours(hourOnly(slotTimes[s].start, use24h), hourOnly(slotTimes[s].end, use24h)) })),
   ];
 }
 
@@ -433,7 +433,7 @@ export function toastText(input: EventInput, today: string, slotTimes: SlotTimes
 /** The edit's scope question: "Change only Saturday, Oct 31, or every Saturday from now on?" */
 export function scopeBody(event: StoredEvent, date: string): string {
   const r = event.recurrence;
-  const day = calendarWordsEn.weekdays[weekday(date)] ?? '';
+  const day = calendarWords.weekdays[weekday(date)] ?? '';
   const every = !r ? '' : r.freq === 'weekly' ? a.every.weekly(day) : r.freq === 'biweekly' ? a.every.biweekly(day) : a.every[r.freq]();
   return a.scopeBody(dateLabel(date, 'long'), every);
 }

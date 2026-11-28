@@ -1,13 +1,13 @@
-import { addDays, calendarWordsEn, daysBetween, fromMinutes, layoutDay, parts, sortSlots, textWidth, timeRange, toMinutes, weekRange, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
+import { addDays, calendarWords, daysBetween, fromMinutes, layoutDay, parts, sortSlots, textWidth, timeRange, toMinutes, weekRange, weekday, type SlotTimes, type WeekStartsOn } from '@cocon/calendar';
 import { GRID_FIRST_HOUR, GRID_HOURS, HOUR_HEIGHT, WIDE_HOUR_HEIGHT, type HourGridProps, type WeekAllDayBar, type WeekBlock, type WeekColumn, type WeekDayHead } from '@cocon/ui';
 import { chipLook, eventLook, longDate, occurrenceKey, spanLanes, weekdayLetters, weekdayShort, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import { isTravel, travelJoins } from './calendar-travel';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { clock, hourOnly } from './clock';
 
 const w = strings.calendar.week;
 const m = strings.calendar.month;
-const words = calendarWordsEn;
+const words = calendarWords;
 
 const GRID_START = GRID_FIRST_HOUR * 60;
 const GRID_END = 24 * 60;

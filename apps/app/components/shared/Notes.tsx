@@ -4,7 +4,7 @@ import type { Tracker } from '@cocon/schemas';
 import { NoteText } from '@cocon/ui';
 import { linkScheme, noteFormats, openNoteLink, readNotes } from '../../lib/notes';
 import { useToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 export interface NotesProps {
   notes: string;

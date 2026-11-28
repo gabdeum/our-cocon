@@ -10,7 +10,7 @@ import { placeForScreen, pressReminderBox, type CalendarReminders } from '../../
 import { useNow } from '../../lib/use-now';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 /** Load the next 4 weeks when the end of the list is this close. */
 const LOAD_AHEAD = 600;

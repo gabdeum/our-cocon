@@ -1,3 +1,4 @@
+import { getLanguage } from '../strings';
 import type { User } from '@supabase/supabase-js';
 import { Email, type SignInMethod } from '@cocon/schemas';
 import type { Client } from './supabase';
@@ -27,7 +28,7 @@ export type SendLinkResult = { ok: true; email: string } | { ok: false; reason: 
 export async function sendMagicLink(auth: Pick<Auth, 'signInWithOtp'>, rawEmail: string, next?: string): Promise<SendLinkResult> {
   const email = Email.safeParse(rawEmail);
   if (!email.success) return { ok: false, reason: 'invalid_email' };
-  const { error } = await auth.signInWithOtp({ email: email.data, options: { emailRedirectTo: confirmUrl(next), shouldCreateUser: true } });
+  const { error } = await auth.signInWithOtp({ email: email.data, options: { emailRedirectTo: confirmUrl(next), shouldCreateUser: true, data: { lang: getLanguage() } } });
   if (!error) return { ok: true, email: email.data };
   return { ok: false, reason: error.status === 429 ? 'rate_limited' : 'failed' };
 }

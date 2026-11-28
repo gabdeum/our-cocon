@@ -1,15 +1,15 @@
 import { SLOT_KEYS, type SlotKey } from '@cocon/schemas/calendar';
-import { calendarWordsEn, daysBetween, placeLine, slotAt, sortSlots, timeLabel, timeRange, toMinutes, weekday, type SlotTimes } from '@cocon/calendar';
+import { calendarWords, daysBetween, placeLine, slotAt, sortSlots, timeLabel, timeRange, toMinutes, weekday, type SlotTimes } from '@cocon/calendar';
 import type { DayAllDayItem, DayBand, DayBandItem, DayEventItem, DayReminderItem, MemberChipColor } from '@cocon/ui';
 import { compareDayRows, reminderOrder, type CalendarReminder } from './calendar-reminders';
 import { eventLook, longDate, occurrenceKey, whoText, type MemberLook, type MonthOccurrence } from './calendar-month';
 import type { Member } from './session';
 import { isTravel, travelJoins } from './calendar-travel';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { clock } from './clock';
 
 const d = strings.calendar.day;
-const words = calendarWordsEn;
+const words = calendarWords;
 
 export interface DayViewContext {
   today: string;

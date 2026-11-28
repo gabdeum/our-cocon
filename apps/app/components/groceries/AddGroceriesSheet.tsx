@@ -3,7 +3,7 @@ import { BottomSheet, Link, ListGroup, ListRow, SheetFooter, useSheetPresentatio
 import type { IngredientFactsInput } from '@cocon/quantity';
 import type { Tracker, UnitSystem } from '@cocon/schemas';
 import { useToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { AddedFromRecipe, RecipeGroceryLine } from '../../lib/add-from-recipe';
 import { mergeNotes } from '../../lib/add-from-recipe';
 import type { GroceryItem } from '../../lib/groceries';

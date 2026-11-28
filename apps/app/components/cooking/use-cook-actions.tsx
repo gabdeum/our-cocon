@@ -1,5 +1,5 @@
 import { loadCooked } from '@cocon/data';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { cancelCook, finishCook, undoEndCook, useRefreshCooks, type CookSession } from '../../lib/cook-sessions';
 import { useSession } from '../../lib/session';
 import { useToast } from '../../lib/toast';

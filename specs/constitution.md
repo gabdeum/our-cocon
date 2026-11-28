@@ -25,7 +25,7 @@ These rules apply to every spec in `specs/`. Specs reference them instead of rep
 - New UI that has no component follows the design system's `Extending.md` and is added to the design system.
 - Screen references like `OC-Recipe` are artboards on the design canvas, page "Our Cocon · Recipes & Groceries". Their sources are in `design/screens/` and their behaviour in `design/ui/` (see `design/README.md`).
 - **Screens are binding.** For every screen a spec touches, the structure, the order of elements and every word (labels, hints, buttons, warnings, empty states, success states) must match `design/screens/<Screen>.dc.html` and `design/ui/<Screen>.md` exactly. Sample data is not copy. Routes and navigation follow `design/flows.md`.
-- All user-facing strings live in one strings file (`apps/app/strings/en.ts`), keyed by screen, so copy can be checked against the UI specs in one place.
+- All user-facing strings live in one strings file per language, keyed by screen. `apps/app/strings/en.ts` is the source and matches the UI specs; `fr.ts` and `es.ts` translate it. A new or changed string is added in every language in the same change.
 
 ## IV. Accessibility and clarity (non-negotiable)
 
@@ -60,7 +60,7 @@ These rules apply to every spec in `specs/`. Specs reference them instead of rep
 
 ## Project-wide decisions
 
-- **Language:** English only in V1. Every string lives in the strings file, so French can be added later.
+- **Language:** English, French and Spanish (spec 076). English is the source; typed content is never translated; MCP tool text stays English.
 - **Backend:** self-hosted Supabase on Hetzner, one stack each for staging and prod; move to Supabase Cloud if running it gets too heavy (see spec 001).
 - **Hosts:** `app.`, `mcp.` and `api.ourcocon.com` (Supabase) in prod; `app-staging.`, `mcp-staging.` and `api-staging.ourcocon.com` for staging (one subdomain level, so Cloudflare's free certificate covers them). Development is local.
 - **Layout:** layout tiers by window width, never by device (spec 063): compact < 600 (the phone layout; on the web centred at max 560), medium 600–959, expanded ≥ 960 (content up to 1200, then centred). The iPhone app also runs on iPad, in every orientation and split view.

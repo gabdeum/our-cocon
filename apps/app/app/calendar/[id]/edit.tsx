@@ -14,7 +14,7 @@ import { useReminderContext } from '../../../lib/reminder-actions';
 import { newReminderForm } from '../../../lib/reminders';
 import { useToast } from '../../../lib/toast';
 import { useEventSheet } from '../../../lib/use-event-sheet';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 
 const a = strings.calendar.add;
 type Scope = 'all' | 'this' | 'future';

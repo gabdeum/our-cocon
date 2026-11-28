@@ -1,5 +1,5 @@
 import { CalendarDate } from '@cocon/schemas/calendar';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { appUrl } from './links';
 import { shareMessage, systemShare, type ShareDeps, type ShareOutcome } from './system-share';
 import type { Client } from './supabase';

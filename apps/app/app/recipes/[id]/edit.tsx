@@ -7,7 +7,7 @@ import { useFamilySettings } from '../../../lib/family-settings';
 import { deviceStorage } from '../../../lib/recipe-choices';
 import { loadRecipeForm, recipeFormKey, sectionOf } from '../../../lib/recipe-form';
 import { useSession } from '../../../lib/session';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 
 const f = strings.recipeForm;
 

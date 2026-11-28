@@ -328,6 +328,8 @@ export const strings = {
     notifications: 'Notifications',
     notificationsDetail: 'Timers, event reminders',
     notificationsOff: 'Off',
+    // Spec 076: Menu › Language.
+    language: 'Language',
     calendarDetail: 'Your view, times of day',
     recipesDetail: 'Cooking defaults, units',
     groceriesDetail: 'Where you shop, store sizes',
@@ -336,6 +338,17 @@ export const strings = {
     items: (n: number) => (n === 0 ? 'Empty' : `${n} ${n === 1 ? 'item' : 'items'}`),
   },
   settings: {
+    // Spec 076: Menu › Language (not drawn). Each language is named in its own words.
+    language: {
+      back: 'Back to Menu',
+      title: 'Language',
+      lead: 'Just for you, on all your devices.',
+      automatic: (name: string) => `Automatic (${name})`,
+      automaticHint: 'Follows your phone or browser.',
+      typedContent: 'Recipes, lists and notes stay as they were written.',
+      names: { en: 'English', fr: 'Français', es: 'Español' },
+      saveFailed: "Couldn't save. Try again.",
+    },
     // Spec 046: Menu › Notifications (design/ui/OC-SettingsNotif.md).
     notifications: {
       back: 'Back to Menu',

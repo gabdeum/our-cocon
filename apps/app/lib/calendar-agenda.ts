@@ -5,7 +5,7 @@ import { eventLook, occurrenceKey, whoText, type MemberLook, type MonthOccurrenc
 import { isTravel } from './calendar-travel';
 import { compareDayRows, reminderOrder, type CalendarReminder } from './calendar-reminders';
 import type { Member } from './session';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 const a = strings.calendar.agenda;
 const d = strings.calendar.day;

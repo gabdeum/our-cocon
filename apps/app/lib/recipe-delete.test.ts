@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 vi.mock('expo-image-picker', () => ({}));
 vi.mock('expo-image-manipulator', () => ({ ImageManipulator: {}, SaveFormat: { JPEG: 'jpeg' } }));

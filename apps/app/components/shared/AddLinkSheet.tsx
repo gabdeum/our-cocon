@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Button, TextField } from '@cocon/ui';
 import { normalizeLinkInput } from '../../lib/note-editing';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const s = strings.notes.linkSheet;
 

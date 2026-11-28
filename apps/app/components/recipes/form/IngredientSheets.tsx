@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AISLE_ORDER, type Aisle, type SizeWord, type Unit } from '@cocon/schemas';
 import { BottomSheet, Button, Choice, PillRow, TextField } from '@cocon/ui';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 
 const f = strings.recipeForm;
 const ing = f.ingredients;

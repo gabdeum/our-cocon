@@ -1,6 +1,7 @@
 import {
   DEFAULT_SLOT_TIMES,
   addDays,
+  calendarWordsByLanguage,
   reminderText,
   remindersDue,
   uses24h,
@@ -10,8 +11,23 @@ import {
   type ReminderMember,
   type ReminderRecipient,
 } from '@cocon/calendar';
-import { prefsOf, type Notifier, type ServiceDb } from '@cocon/notify';
-import { CalendarDate, EventException, EventMember, PushPayload, Recurrence, Reminder, SlotKey, SlotTimes, TimeFormatSetting, TimeType, Visibility, type Tracker } from '@cocon/schemas';
+import { prefsOf, type Device, type Notifier, type ServiceDb } from '@cocon/notify';
+import {
+  CalendarDate,
+  EventException,
+  EventMember,
+  LanguageSetting,
+  PushPayload,
+  Recurrence,
+  Reminder,
+  SlotKey,
+  SlotTimes,
+  TimeFormatSetting,
+  TimeType,
+  Visibility,
+  resolveLanguage,
+  type Tracker,
+} from '@cocon/schemas';
 import { z } from 'zod';
 
 /**
@@ -59,7 +75,7 @@ export function createReminderJob(db: ServiceDb, notifier: Pick<Notifier, 'send'
   async function loadFamilies(familyIds: string[]) {
     const [settings, members, devices] = await Promise.all([
       db.from('family_calendar_settings').select('family_id, home_time_zone, slot_times').in('family_id', familyIds),
-      db.from('members').select('id, family_id, display_name, user_id').in('family_id', familyIds),
+      db.from('members').select('id, family_id, display_name, user_id, language').in('family_id', familyIds),
       db.from('push_devices').select('member_id, prefs').in('family_id', familyIds).is('disabled_at', null).not('expo_push_token', 'is', null),
     ]);
     if (settings.error) throw settings.error;
@@ -91,6 +107,9 @@ export function createReminderJob(db: ServiceDb, notifier: Pick<Notifier, 'send'
     return {
       families,
       timeFormatOf: (memberId: string) => timeFormat.get(userOf.get(memberId) ?? '') ?? 'automatic',
+      /** Spec 076 FR-012: their setting, or on Automatic the phone's language. */
+      languageOf: (device: Device) =>
+        resolveLanguage(LanguageSetting.catch('automatic').parse(members.data.find((m) => m.id === device.member_id)?.language), device.prefs.lang),
       /** FR-003: minus anyone with reminders off on all their phones (or not set to "All family events"). */
       reached: (r: ReminderRecipient) => prefs.some((p) => p.member_id === r.memberId && p.reminders_on && (r.via === 'event' || p.reminders_scope === 'all')),
     };
@@ -116,7 +135,7 @@ export function createReminderJob(db: ServiceDb, notifier: Pick<Notifier, 'send'
     if (error) throw error;
     const events = (data ?? []).flatMap((row) => toEvent(row) ?? []).filter((e) => !onlyFamily || e.family_id === onlyFamily);
     if (events.length === 0) return null;
-    const { families, timeFormatOf, reached } = await loadFamilies([...new Set(events.map((e) => e.family_id))]);
+    const { families, timeFormatOf, languageOf, reached } = await loadFamilies([...new Set(events.map((e) => e.family_id))]);
     let sent = 0;
     for (const due of remindersDue(events, families, at)) {
       const recipients = due.recipients.filter(reached);
@@ -134,6 +153,7 @@ export function createReminderJob(db: ServiceDb, notifier: Pick<Notifier, 'send'
             use24h: uses24h(timeFormatOf(device.member_id), device.prefs.clock_24h ?? true),
             slotTimes: family.slotTimes,
             members: family.members,
+            words: calendarWordsByLanguage[languageOf(device)],
           }),
         payload: PushPayload.parse({ kind: 'reminder', route: `/calendar/${o.id}?date=${o.occurrence_date}` }),
         ref: `${o.id}:${o.occurrence_date}:${due.kind}`,

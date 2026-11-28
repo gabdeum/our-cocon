@@ -21,7 +21,7 @@ import {
   type SheetPresentation,
 } from '@cocon/ui';
 import type { Aisle, FamilySettings, FamilySettingsUpdate, Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import {
   aisleColumns,
   byName,

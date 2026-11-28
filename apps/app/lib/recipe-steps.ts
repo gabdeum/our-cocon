@@ -1,6 +1,6 @@
 import { fToC, formatTemperature, ingredientToken, temperatureToken, tokenizeTemperatures } from '@cocon/quantity';
 import { foldText, MAX_STEPS, parseMinutes, StepInput, type EventProps } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { formatTotalTime } from './recipe-format';
 
 const s = strings.recipeForm.steps;

@@ -1,5 +1,5 @@
 import type { IconName } from '@cocon/ui';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 /**
  * Spec 029 FR-002: every part of the app, in the Menu's Apps. The first three open their tab;
@@ -21,6 +21,7 @@ export const SETTINGS_PAGES = {
   family: '/settings/family',
   ai: '/settings/ai',
   notifications: '/settings/notifications',
+  language: '/settings/language',
   calendar: '/settings/calendar',
   recipes: '/settings/recipes',
   groceries: '/settings/groceries',

@@ -18,7 +18,7 @@ Tests run one file at a time locally (3 in CI) with a 20 s limit per screen test
 
 ## Structure
 
-- `apps/app`: Expo Router (web + iOS). Routes per module (`app/(tabs)`, `app/recipes`, `app/groceries`); all copy in `strings/en.ts`
+- `apps/app`: Expo Router (web + iOS). Routes per module (`app/(tabs)`, `app/recipes`, `app/groceries`); all copy in `strings/en.ts`, translated in `strings/fr.ts` and `strings/es.ts`
 - `apps/mcp`: MCP server. Tools in `tools/<module>/`
 - `packages/ui` (design-system components), `packages/schemas` (Zod, types, analytics events), `packages/quantity` (units and amounts), `packages/data` (Supabase reads and writes shared by the app and the MCP server)
 - `supabase/`: migrations, RLS policies and tests, seed
@@ -31,6 +31,7 @@ Tests run one file at a time locally (3 in CI) with a 20 s limit per screen test
 - UI only from `packages/ui` and theme tokens (NativeWind). Missing component: use the `add-component` skill.
 - New table: use the `add-table` skill (family_id, RLS, tests).
 - Screens match `design/screens/` and `design/ui/` exactly, copy included.
+- Languages (spec 076): English is the source. Every new or changed string goes in `strings/en.ts` **and** every other language file in the same change (the `translate` skill; `strings/parity.test.ts` fails otherwise). Words in packages (calendar, quantity, reminders) have one file per language too. Never translate typed content; MCP tool text stays English.
 - Every tracked user action is a typed event in `packages/schemas/analytics.ts`, listed in its spec. Never send user content (names, recipe text, emails) to PostHog.
 - Keep changes small and scoped to the spec. Don't touch unrelated files.
 - Secrets live only in `.env.local` (never read or print it). The committed template is `env.example`.

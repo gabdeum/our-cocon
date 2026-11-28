@@ -8,7 +8,7 @@ import { firstOfMonth, weekdayLetters } from '../../lib/calendar-month';
 import { dateGridMonth, shiftMonth } from '../../lib/event-form';
 import { lateText, reminderMember, snoozeChoices, snoozedTitle, whenLine } from '../../lib/reminders';
 import type { Member } from '../../lib/session';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { Notes } from '../shared/Notes';
 
 const r = strings.reminders;

@@ -6,7 +6,7 @@ import { addedLine, memberBadges, placeActions, whenLines } from '../../lib/even
 import type { Member } from '../../lib/session';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import { useToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const e = strings.calendar.event;
 const a = strings.calendar.add;

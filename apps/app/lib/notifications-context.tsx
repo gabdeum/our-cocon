@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AppState } from 'react-native';
 import { DEFAULT_NOTIFICATION_PREFS, type NotificationAskTrigger, type NotificationPrefs, type Tracker } from '@cocon/schemas';
 import { AskSheet } from '../components/notifications/AskSheet';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import {
   deviceId,
   NO_ASK,

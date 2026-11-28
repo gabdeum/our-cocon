@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { TODO_CATEGORY } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { onLanguageChange, strings } from '../strings';
 import { supabase } from './supabase';
 import { handleTodoAction, isTodoCategory } from './todo-actions';
 import { tracker } from './tracker';
@@ -14,15 +14,19 @@ import { tracker } from './tracker';
 const ignore = () => undefined;
 const t = strings.notifications.todo;
 
-void Notifications.setNotificationCategoryAsync(TODO_CATEGORY.timed, [
-  { identifier: 'done', buttonTitle: t.done, options: { opensAppToForeground: true } },
-  { identifier: 'hour', buttonTitle: t.hour, options: { opensAppToForeground: true } },
-  { identifier: 'tomorrow', buttonTitle: t.tomorrow, options: { opensAppToForeground: true } },
-]).catch(ignore);
-void Notifications.setNotificationCategoryAsync(TODO_CATEGORY.untimed, [
-  { identifier: 'done', buttonTitle: t.done, options: { opensAppToForeground: true } },
-  { identifier: 'tomorrow', buttonTitle: t.tomorrow, options: { opensAppToForeground: true } },
-]).catch(ignore);
+function registerCategories() {
+  void Notifications.setNotificationCategoryAsync(TODO_CATEGORY.timed, [
+    { identifier: 'done', buttonTitle: t.done, options: { opensAppToForeground: true } },
+    { identifier: 'hour', buttonTitle: t.hour, options: { opensAppToForeground: true } },
+    { identifier: 'tomorrow', buttonTitle: t.tomorrow, options: { opensAppToForeground: true } },
+  ]).catch(ignore);
+  void Notifications.setNotificationCategoryAsync(TODO_CATEGORY.untimed, [
+    { identifier: 'done', buttonTitle: t.done, options: { opensAppToForeground: true } },
+    { identifier: 'tomorrow', buttonTitle: t.tomorrow, options: { opensAppToForeground: true } },
+  ]).catch(ignore);
+}
+registerCategories();
+onLanguageChange(registerCategories);
 
 // Listened for as soon as the app's code loads, before any screen exists. Each tap is handled once.
 const handled = new Set<string>();

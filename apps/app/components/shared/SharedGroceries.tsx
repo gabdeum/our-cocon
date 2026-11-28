@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Card, IconButton, ListGroup, ListRow, ListRowSkeleton, Overline, PublicScreen, Text, TextField } from '@cocon/ui';
 import type { AnonymousTracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useToast } from '../../lib/toast';
 import { byName, combineRows, groupByAisle, rowAmounts, rowIds, type GroceryItem, type GroceryRow } from '../../lib/groceries';
 import { endsText } from '../../lib/grocery-share';

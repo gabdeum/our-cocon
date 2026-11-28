@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { BottomSheet, Button } from '@cocon/ui';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const p = strings.recipePage;
 

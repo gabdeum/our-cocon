@@ -3,7 +3,7 @@ import type { Tracker } from '@cocon/schemas';
 import { router, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RAIL_ITEMS, RAIL_PAGES, TABS, type RailKey } from '../lib/navigation';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { AppTimerPill, useHasTimers } from './timers/AppTimerPill';
 
 /** Where each tab's screen is, for a rail drawn outside the tab navigator. */

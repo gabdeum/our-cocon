@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { AmountField, BottomSheet, Card, ResultTile, SegmentedControl, Text, useSheetPresentation } from '@cocon/ui';
 import { CONVERTER_UNITS, type ConverterTab, type ConverterUnit } from '@cocon/quantity';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { RecipeDetail } from '../../lib/recipe';
 import type { RecipeChoices } from '../../lib/recipe-choices';
 import { converterStart, converterView, recipeIngredient, tabStartUnit } from '../../lib/converter-view';

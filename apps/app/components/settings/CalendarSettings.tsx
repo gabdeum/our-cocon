@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { SLOT_KEYS, type CalendarView, type SlotKey, type TimeFormatSetting, type WeekStartSetting } from '@cocon/schemas/calendar';
 import type { MemberCalendarSettingsUpdate, Tracker } from '@cocon/schemas';
-import { calendarWordsEn, checkSlotTimes, moveSlotEdge, slotNeighbour, toMinutes, type SlotTimes } from '@cocon/calendar';
+import { calendarWords, checkSlotTimes, moveSlotEdge, slotNeighbour, toMinutes, type SlotTimes } from '@cocon/calendar';
 import { BottomSheet, Button, Card, Lead, ListGroup, ListRow, PushedScreen, SegmentedSettingRow, SettingRow, SheetFooter, Text, TextField } from '@cocon/ui';
 import type { CalendarPrefs } from '../../lib/calendar-prefs';
 import { clock, zoneLabel } from '../../lib/clock';
 import { cityOf } from '../../lib/travel';
 import { useToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const s = strings.settings.calendar;
-const slotName = (slot: SlotKey) => calendarWordsEn.slots[slot];
+const slotName = (slot: SlotKey) => calendarWords.slots[slot];
 const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export interface CalendarSettingsProps {

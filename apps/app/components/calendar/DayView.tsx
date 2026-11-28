@@ -11,7 +11,7 @@ import { eventWindow, firstOfMonth, memberLook, monthOccurrences, monthRange, pa
 import { useNow } from '../../lib/use-now';
 import { useCalendarDisplay } from '../../lib/calendar-prefs';
 import type { Member } from '../../lib/session';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const d = strings.calendar.day;
 

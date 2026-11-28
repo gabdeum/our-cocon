@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Button, TextField } from '@cocon/ui';
 import { DisplayName, FamilyName, type Tracker } from '@cocon/schemas';
 import { useFailureToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { FamilyApi } from '../../lib/family';
 import { WelcomeHeader } from './WelcomeHeader';
 

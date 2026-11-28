@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { alertId, TIMER_SOUND, type LocalNotifications } from './timer-alerts';
 
 /**

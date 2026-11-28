@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { endCook, loadCooked, loadOpenCooks, reopenCook, startCook, type CookSession } from '@cocon/data';
 import { isOldCook, MAX_TRACKED_STEPS, type CookedSummary, type CookProgress, type Tracker } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 import { clock } from './clock';
 import type { RecipeDetail } from './recipe';
 import type { Member } from './session';

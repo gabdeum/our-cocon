@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { dateLabel } from '@cocon/calendar';
 import { Choice, PickerField, PillRow, Text, TextField, WeekdayPicker } from '@cocon/ui';
 import { endsProblem, type EndsChoice, type RepeatDraft } from '../../lib/event-form';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const a = strings.calendar.add;
 

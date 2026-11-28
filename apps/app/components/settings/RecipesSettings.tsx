@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { Card, Lead, PushedScreen, SegmentedControl, SettingRow, Text } from '@cocon/ui';
 import type { FamilySettings, FamilySettingsUpdate, Tracker, UnitSystem } from '@cocon/schemas';
 import { useToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { OfflineBanner } from '../sync/OfflineBanner';
 
 const s = strings.settings.recipes;

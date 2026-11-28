@@ -3,6 +3,7 @@ import { UndoKind } from './activity';
 import { CalendarView, DefaultReminder, Reminder, SlotKey, TimeType, Visibility } from './calendar';
 import { AiPermission, CookingSetting, MemberColor, SignInMethod } from './family';
 import { NotificationKind, TodoAction } from './notifications';
+import { AppLanguage, LanguageSetting } from './language';
 import { FilterKey } from './recipe-filters';
 import { ReminderActionSource, ReminderNotificationKind, ReminderRollover, ReminderSection, ReminderSnoozeOption } from './reminders';
 import { ConnectionAssistant, KnownAssistant, WriteSource } from './sources';
@@ -70,7 +71,7 @@ export const events = {
   managed_member_linked: z.strictObject({ days_since_added: z.int().min(0) }),
   // Spec 029: the Menu tab. A tile in Apps, a row in Settings, and signing out from Family.
   menu_app_opened: z.strictObject({ app: z.enum(['calendar', 'recipes', 'groceries', 'timers', 'reminders']) }),
-  settings_row_opened: z.strictObject({ row: z.enum(['family', 'ai', 'notifications', 'calendar', 'recipes', 'groceries', 'deleted']) }),
+  settings_row_opened: z.strictObject({ row: z.enum(['family', 'ai', 'notifications', 'language', 'calendar', 'recipes', 'groceries', 'deleted']) }),
   signed_out: z.strictObject({}),
   // Spec 029: a calendar setting changed. Its new value (on/off for switches), the slot changed for
   // times of day, "phone" for the home time zone: never the zone's name or the hours.
@@ -345,6 +346,8 @@ export const events = {
   note_parse_failed: z.strictObject({ entity: NoteEntity }),
   // Spec 074: a notes toolbar button changed the text (never the text or a link's address).
   note_format_applied: z.strictObject({ entity: NoteEntity, format: z.enum(['bold', 'link', 'bullet', 'number', 'check']), action: z.enum(['add', 'remove']) }),
+  // Spec 076: a person picked a language (Menu › Language), or went back to the device's.
+  language_changed: z.strictObject({ language: LanguageSetting }),
 } as const;
 
 export type EventName = keyof typeof events;
@@ -352,12 +355,13 @@ export type EventProps<E extends EventName> = z.infer<(typeof events)[E]>;
 
 /**
  * Spec 063: sent with every app event (PostHog super properties). The window's layout tier and the
- * kind of device, never anything about the person.
+ * kind of device, never anything about the person; spec 076 adds the language the app is in.
  */
 export const superProperties = z.strictObject({
   layout_tier: z.enum(['compact', 'medium', 'expanded']),
   device_class: z.enum(['phone', 'tablet', 'desktop']),
-});
+  language: AppLanguage,
+}).partial();
 export type SuperProperties = z.infer<typeof superProperties>;
 
 /** Where validated events go: PostHog in the app and MCP server, nothing in tests and local dev. */
@@ -376,7 +380,7 @@ export interface Tracker {
   identify(userId: string, familyId: string | null): void;
   /** On sign-out, so the next person on this device starts fresh. */
   reset(): void;
-  /** Sets the super properties; they stay through `reset`. */
+  /** Sets super properties, keeping the others; they stay through `reset`. */
   register(props: SuperProperties): void;
 }
 
@@ -406,7 +410,7 @@ export function createTracker(transport: AnalyticsTransport | null): Tracker {
       if (supers) out.register?.(supers);
     },
     register(props) {
-      supers = superProperties.parse(props);
+      supers = superProperties.parse({ ...supers, ...props });
       out.register?.(supers);
     },
   };

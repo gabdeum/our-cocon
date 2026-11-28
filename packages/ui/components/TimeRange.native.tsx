@@ -1,3 +1,4 @@
+import { pickerLocale } from '../locale';
 import { useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
@@ -78,7 +79,7 @@ export function TimeRange({ startLabel, endLabel, start, end, onChange, startWar
           mode="time"
           display="spinner"
           minuteInterval={5}
-          locale={use24h ? 'en_GB' : 'en_US'}
+          locale={pickerLocale(use24h)}
           textColor={colors.ink}
           onValueChange={(_, date) => onChange(open, toTime(date))}
         />

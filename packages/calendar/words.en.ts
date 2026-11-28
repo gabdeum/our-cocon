@@ -1,10 +1,12 @@
 import type { SlotKey } from '@cocon/schemas/calendar';
 
 /**
- * Every English word the calendar engine shows, in one place, so French can be added as
- * `words.fr.ts` with the same shape. Titles follow design/ui/CalHeader.md.
+ * Every word the calendar engine shows, one file per language (`words.fr.ts`, `words.es.ts`, spec
+ * 076) with the same shape. Titles follow design/ui/CalHeader.md.
  */
 export interface CalendarWords {
+  /** For Intl (time-zone names, sorting): "en-US". */
+  locale: string;
   slots: Record<SlotKey, string>;
   allDay: string;
   /** What others see of a private event (spec 043). */
@@ -16,6 +18,14 @@ export interface CalendarWords {
   weekdaysShort: string[];
   am: string;
   pm: string;
+  /** Word order of dates: "October 25" / "25 octobre". */
+  monthDay: (month: string, day: number) => string;
+  /** "Sunday, October 25" / "dimanche 25 octobre". */
+  weekdayDate: (weekday: string, month: string, day: number) => string;
+  /** "October 25 – 31", "November 29 – December 5" (`endMonth` null in the same month). */
+  dayRange: (month: string, day: number, endMonth: string | null, endDay: number) => string;
+  /** Added after a title outside this year: ", 2027". */
+  yearSuffix: (year: number) => string;
   /** "James, Mia and Lou". */
   list: (names: readonly string[]) => string;
   everyone: string;
@@ -37,6 +47,7 @@ export interface CalendarWords {
 const list = (names: readonly string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : (names[0] ?? ''));
 
 export const en: CalendarWords = {
+  locale: 'en-US',
   slots: { early_morning: 'Early morning', morning: 'Morning', lunch: 'Lunch', afternoon: 'Afternoon', evening: 'Evening' },
   allDay: 'All day',
   busy: 'Busy',
@@ -46,6 +57,10 @@ export const en: CalendarWords = {
   weekdaysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
   am: 'AM',
   pm: 'PM',
+  monthDay: (month, day) => `${month} ${day}`,
+  weekdayDate: (weekday, month, day) => `${weekday}, ${month} ${day}`,
+  dayRange: (month, day, endMonth, endDay) => `${month} ${day} – ${endMonth ? `${endMonth} ` : ''}${endDay}`,
+  yearSuffix: (year) => `, ${year}`,
   list,
   everyone: 'Everyone',
   takes: (driver, names) => `${driver} takes ${list(names)}`,

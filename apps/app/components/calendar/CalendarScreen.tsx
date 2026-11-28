@@ -13,7 +13,7 @@ import { eventOccurrence } from '../../lib/event-detail';
 import { useAgendaReminders, type CalendarReminders } from '../../lib/calendar-reminders';
 import type { ChoiceStorage } from '../../lib/recipe-choices';
 import type { Member } from '../../lib/session';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { OfflineBanner } from '../sync/OfflineBanner';
 import { AgendaView } from './AgendaView';
 import { BusySheet } from './BusySheet';

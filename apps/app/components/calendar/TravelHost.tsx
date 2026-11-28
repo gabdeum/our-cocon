@@ -8,7 +8,7 @@ import { clock, deviceTimeZone } from '../../lib/clock';
 import { useSession } from '../../lib/session';
 import { useToast } from '../../lib/toast';
 import { cityOf, familyTimeHere, memberTravelKey, travelStep, useMemberTravel, zoneDifference } from '../../lib/travel';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { TravelSheet } from './TravelSheet';
 
 const EXAMPLE = '16:00';

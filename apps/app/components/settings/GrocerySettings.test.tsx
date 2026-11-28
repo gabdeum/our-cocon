@@ -6,7 +6,7 @@ import { ToastProvider } from '../../lib/toast';
 import { pickPacks } from '@cocon/quantity';
 import { facts, packsOf } from '@cocon/quantity/catalog.fixture';
 import { DEFAULT_FAMILY_SETTINGS, type FamilySettings } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { buyText } from '../../lib/groceries';
 import { flush } from '../../test/fakes';
 import { GrocerySettings } from './GrocerySettings';

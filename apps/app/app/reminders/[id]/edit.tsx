@@ -10,7 +10,7 @@ import { useEventSheet } from '../../../lib/use-event-sheet';
 import { closeReminderSheet, useReminderContext } from '../../../lib/reminder-actions';
 import { formFromReminder, reminderKey } from '../../../lib/reminders';
 import { useToast } from '../../../lib/toast';
-import { strings } from '../../../strings/en';
+import { strings } from '../../../strings';
 
 const r = strings.reminders;
 

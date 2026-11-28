@@ -1,3 +1,4 @@
+import { displayWords } from './display';
 import { assertAmount } from './errors';
 import { decimalText, fractionText, toStep } from './round';
 import { cToF, fToC, GRAMS_PER, ML_PER } from './units';
@@ -46,7 +47,7 @@ const GAS_MARKS: readonly [mark: number, celsius: number][] = [
 /** A fan oven runs this much hotter, so recipes for it read 20 °C lower. */
 export const FAN_OVEN_DROP_C = 20;
 
-const places = (value: number, n: number) => String(Number(value.toFixed(n)));
+const places = (value: number, n: number) => String(Number(value.toFixed(n))).replace('.', displayWords.decimal);
 
 /** Cups to the nearest ¼; under ¼ cup, two decimals. */
 const cupsText = (cups: number) => (cups >= 0.25 ? fractionText(toStep(cups, 0.25)) : places(cups, 2));

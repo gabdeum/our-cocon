@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Button, Link, StatusBanner, Text, TextField } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
 import { useFailureToast } from '../../lib/toast';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { sendMagicLink, signInNatively, signInWithProvider, type SendLinkResult, type SignInOptions } from '../../lib/auth';
 import { signInOptions } from '../../lib/native-sign-in';
 import type { Client } from '../../lib/supabase';
@@ -11,11 +11,8 @@ import { WelcomeHeader } from './WelcomeHeader';
 
 const t = strings.welcome;
 
-const sendError: Record<Exclude<SendLinkResult, { ok: true }>['reason'], string> = {
-  invalid_email: t.invalidEmail,
-  rate_limited: t.rateLimited,
-  failed: t.sendFailed,
-};
+const sendError = (reason: Exclude<SendLinkResult, { ok: true }>['reason']) =>
+  ({ invalid_email: t.invalidEmail, rate_limited: t.rateLimited, failed: t.sendFailed })[reason];
 
 export interface SignInProps {
   auth: Pick<Client['auth'], 'signInWithOtp' | 'signInWithOAuth'>;
@@ -56,7 +53,7 @@ export function SignIn({ auth, next, title = t.title, lead = t.lead, options = s
     } else if (result.reason === 'invalid_email') {
       setWarning(t.invalidEmail);
     } else {
-      setError(sendError[result.reason]);
+      setError(sendError(result.reason));
     }
   }
 

@@ -7,7 +7,7 @@ import type { EventDraft } from '../../lib/event-form';
 import type { ReminderForm } from '../../lib/reminders';
 import { useReminderForm, type ReminderSheetProps } from '../reminders/ReminderSheet';
 import { useEventForm, type EventSheetProps } from './EventSheet';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const a = strings.calendar.add;
 

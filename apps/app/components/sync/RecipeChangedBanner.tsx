@@ -1,6 +1,6 @@
 import { StatusBanner } from '@cocon/ui';
 import type { Member } from '../../lib/session';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 /** "Alex just changed this recipe" with Reload (spec 004 edge case), from useRecipeChangedBy. */
 export function RecipeChangedBanner({ by, onReload }: { by: Member | null; onReload: () => void }) {

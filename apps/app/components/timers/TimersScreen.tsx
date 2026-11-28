@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { PushedScreen, TabHeader, Text } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useTimers } from '../../lib/timer-store';
 import type { Timer } from '../../lib/timers';
 import { stepStillThere } from '../../lib/cooking';

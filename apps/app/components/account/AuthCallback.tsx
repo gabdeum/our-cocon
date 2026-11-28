@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Callout, Text } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { completeSignIn, type CallbackParams } from '../../lib/auth';
 import type { Client } from '../../lib/supabase';
 import { WelcomeHeader } from './WelcomeHeader';

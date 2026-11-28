@@ -39,8 +39,9 @@ services:
       GOTRUE_EXTERNAL_APPLE_REDIRECT_URI: ${API_EXTERNAL_URL}/callback
       GOTRUE_SESSIONS_INACTIVITY_TIMEOUT: 2160h
       GOTRUE_MAILER_OTP_EXP: "3600"
-      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Our Cocon sign-in link
-      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: Your Our Cocon sign-in link
+      # Spec 076: in the person's language, as supabase/config.toml.
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: '{{ if eq (printf "%v" .Data.lang) "fr" }}Votre lien de connexion à Our Cocon{{ else if eq (printf "%v" .Data.lang) "es" }}Tu enlace para entrar en Our Cocon{{ else }}Your Our Cocon sign-in link{{ end }}'
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: '{{ if eq (printf "%v" .Data.lang) "fr" }}Votre lien de connexion à Our Cocon{{ else if eq (printf "%v" .Data.lang) "es" }}Tu enlace para entrar en Our Cocon{{ else }}Your Our Cocon sign-in link{{ end }}'
       GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${SITE_URL}/email/sign-in.html
       GOTRUE_MAILER_TEMPLATES_CONFIRMATION: ${SITE_URL}/email/sign-in.html
       # Spec 023: AI assistants register themselves and connect as the member; the app's

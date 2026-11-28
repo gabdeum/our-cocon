@@ -1,7 +1,7 @@
 import { useEffect, useEffectEvent, useMemo, type ReactNode } from 'react';
 import { ToastProvider as UiToastProvider, useToast as useUiToast } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 export { TOAST_ACTION_MS, TOAST_MS } from '@cocon/ui';
 

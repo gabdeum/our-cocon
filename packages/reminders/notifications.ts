@@ -1,6 +1,11 @@
-import { addDays, dateLabel, daysBetween, formatTime, timeIn, todayIn, zonedInstant } from '@cocon/calendar';
+import { addDays, calendarWordsEn, dateLabel, daysBetween, formatTime, timeIn, todayIn, zonedInstant, type CalendarWords } from '@cocon/calendar';
 import type { QuietHours, ReminderNotificationKind, ReminderRollover } from '@cocon/schemas';
-import { en } from './words.en';
+import { en, type ReminderWords } from './words.en';
+import { es } from './words.es';
+import { fr } from './words.fr';
+
+/** Spec 076: the words in every language the app speaks. */
+export const reminderWordsByLanguage = { en, fr, es } as const satisfies Record<string, ReminderWords>;
 
 // Spec 059: when a reminder (a thing to do) notifies whom, and with what words. The notifier calls
 // these every minute with each open reminder as the database places it (`_reminder_state`), so a
@@ -38,8 +43,10 @@ export interface TodoMember {
 
 export interface TodoRecipient {
   memberId: string;
-  /** "for {name}" in the body; null when they're the only one it's for. */
+  /** "for {name}" in the body; null when they're the only one it's for, or it's for everyone. */
   forName: string | null;
+  /** "for everyone", in the recipient's language. */
+  forEveryone: boolean;
 }
 
 export interface ReminderSend {
@@ -56,10 +63,10 @@ const RANK: Record<ReminderNotificationKind, number> = { before: 0, due: 1, nudg
  */
 export function todoRecipients(r: Pick<NotifiedReminder, 'assignee_id'>, members: readonly TodoMember[]): TodoRecipient[] {
   const assignee = members.find((m) => m.id === r.assignee_id);
-  if (assignee?.user_id) return [{ memberId: assignee.id, forName: null }];
+  if (assignee?.user_id) return [{ memberId: assignee.id, forName: null, forEveryone: false }];
   const withApp = members.filter((m) => m.user_id !== null);
-  const forName = withApp.length === 1 && !assignee ? null : (assignee?.display_name ?? en.everyone);
-  return withApp.map((m) => ({ memberId: m.id, forName }));
+  const named = !(withApp.length === 1 && !assignee);
+  return withApp.map((m) => ({ memberId: m.id, forName: named ? (assignee?.display_name ?? null) : null, forEveryone: named && !assignee }));
 }
 
 /** FR-002: the end of the quiet hours `at` falls in, or null when it's outside them (or there are none). */
@@ -142,25 +149,30 @@ export interface TodoTextOptions {
   use24h: boolean;
   tz: string;
   forName: string | null;
+  forEveryone?: boolean;
+  /** The recipient's language (spec 076): English when left out. */
+  words?: ReminderWords;
+  calendarWords?: CalendarWords;
 }
 
 /** FR-001: the title and body, in the recipient's clock (12- or 24-hour). */
 export function reminderNotificationText(
   r: Pick<NotifiedReminder, 'title' | 'has_time' | 'rollover' | 'late_from'>,
   send: ReminderSend,
-  { use24h, tz, forName }: TodoTextOptions,
+  { use24h, tz, forName, forEveryone = false, words = en, calendarWords = calendarWordsEn }: TodoTextOptions,
 ): { title: string; body: string } {
   const lateFrom = new Date(r.late_from);
-  const time = formatTime(timeIn(tz, lateFrom), use24h);
-  const withName = (body: string) => (forName ? `${body} · ${en.forName(forName)}` : body);
-  if (send.kind === 'before') return { title: en.before(r.title), body: withName(en.dueAt(time)) };
+  const time = formatTime(timeIn(tz, lateFrom), use24h, calendarWords);
+  const who = forEveryone ? words.everyone : forName;
+  const withName = (body: string) => (who ? `${body} · ${words.forName(who)}` : body);
+  if (send.kind === 'before') return { title: words.before(r.title), body: withName(words.dueAt(time)) };
   if (send.kind === 'due') {
-    if (!r.has_time) return { title: en.dueDay(r.title), body: withName(en.dueToday) };
-    return { title: en.dueTimed(r.title), body: r.rollover === 'hour' ? en.everyHour : withName(en.dueNow) };
+    if (!r.has_time) return { title: words.dueDay(r.title), body: withName(words.dueToday) };
+    return { title: words.dueTimed(r.title), body: r.rollover === 'hour' ? words.everyHour : withName(words.dueNow) };
   }
   const late = new Date(send.slotAt).getTime() - lateFrom.getTime();
-  if (r.has_time && late < 24 * HOUR) return { title: en.nudge(r.title), body: withName(en.hoursLate(time, Math.max(1, Math.floor(late / HOUR)))) };
+  if (r.has_time && late < 24 * HOUR) return { title: words.nudge(r.title), body: withName(words.hoursLate(time, Math.max(1, Math.floor(late / HOUR)))) };
   const dueDay = todayIn(tz, lateFrom);
-  const day = daysBetween(dueDay, todayIn(tz, new Date(send.slotAt))) === 1 ? en.yesterday : dateLabel(dueDay);
-  return { title: en.nudge(r.title), body: withName(en.wasDue(day)) };
+  const day = daysBetween(dueDay, todayIn(tz, new Date(send.slotAt))) === 1 ? words.yesterday : dateLabel(dueDay, 'short', calendarWords);
+  return { title: words.nudge(r.title), body: withName(words.wasDue(day)) };
 }

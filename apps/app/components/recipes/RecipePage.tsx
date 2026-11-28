@@ -23,7 +23,7 @@ import {
   theme,
 } from '@cocon/ui';
 import { MAX_TRACKED_STEPS, type CookedSummary, type Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { RecipeDetail } from '../../lib/recipe';
 import { cookedLine, pageCard, stepTotal, type CookSession } from '../../lib/cook-sessions';
 import { forgetVisitUnits, useVisitUnits } from '../../lib/visit-units';

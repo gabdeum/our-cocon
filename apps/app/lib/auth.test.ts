@@ -17,7 +17,7 @@ describe('sendMagicLink', () => {
     expect(await sendMagicLink({ signInWithOtp }, ' Alex@Example.com ', '/join/abc')).toEqual({ ok: true, email: 'alex@example.com' });
     expect(signInWithOtp).toHaveBeenCalledWith({
       email: 'alex@example.com',
-      options: { emailRedirectTo: `${origin}/auth/confirm?next=%2Fjoin%2Fabc`, shouldCreateUser: true },
+      options: { emailRedirectTo: `${origin}/auth/confirm?next=%2Fjoin%2Fabc`, shouldCreateUser: true, data: { lang: 'en' } },
     });
   });
 

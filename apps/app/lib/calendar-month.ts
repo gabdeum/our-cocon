@@ -1,6 +1,6 @@
 import {
   addDays,
-  calendarWordsEn,
+  calendarWords,
   daysBetween,
   expand,
   layoutSpans,
@@ -23,10 +23,10 @@ import type { EventMember } from '@cocon/schemas/calendar';
 import type { EventColor, LayoutTier, MonthBar, MonthCell, MonthCellItem, MonthWeek } from '@cocon/ui';
 import type { Member } from './session';
 import { isTravel, travelJoins } from './calendar-travel';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 const m = strings.calendar.month;
-const words = calendarWordsEn;
+const words = calendarWords;
 
 /** Spec 037 FR-003: a cell shows up to five rows (chips or the space under a bar), or four and "+N". */
 export const ROWS_PER_CELL = 5;

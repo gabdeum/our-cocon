@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { Button, Overline, PersonPill, Pill, PillRow, PushedScreen, RecipeItemSkeleton, SegmentedControl, Text } from '@cocon/ui';
 import { memberInitials, type ActivityEntry } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import type { ActivityFilter } from '../../lib/activity';
 import { assistantName } from '../../lib/recipe-format';
 import type { Member } from '../../lib/session';

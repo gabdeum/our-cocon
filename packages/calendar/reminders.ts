@@ -5,7 +5,8 @@ import { expand } from './recurrence';
 import { DEFAULT_SLOT_TIMES, fromMinutes, slotStartingAt, timeRange, toMinutes } from './slots';
 import type { CalendarEvent, EventException, Occurrence, SlotTimes } from './types';
 import { viewFor } from './visibility';
-import { en } from './words.en';
+import { calendarWords } from './words';
+import type { CalendarWords } from './words.en';
 
 // Spec 049: event reminders on the phone. When each one goes out (FR-002), to whom (FR-003) and
 // what it says (FR-004). The notifier sends them; the app's event sheet and event page say the
@@ -82,11 +83,16 @@ export function reminderRecipients(o: Peopled, members: readonly ReminderMember[
  * The Responsible line: "Gabriel takes James" when members without the app are on the event,
  * "Gabriel drives" otherwise; null when nobody is responsible.
  */
-export function responsibleLine(responsible: string | null | undefined, eventMembers: readonly EventMember[], members: readonly ReminderMember[]): string | null {
+export function responsibleLine(
+  responsible: string | null | undefined,
+  eventMembers: readonly EventMember[],
+  members: readonly ReminderMember[],
+  words: CalendarWords = calendarWords,
+): string | null {
   const driver = members.find((m) => m.id === responsible);
   if (!driver) return null;
   const taken = members.filter((m) => m.user_id === null && eventMembers.includes(m.id)).map((m) => m.display_name);
-  return taken.length ? en.takes(driver.display_name, taken) : en.drives(driver.display_name);
+  return taken.length ? words.takes(driver.display_name, taken) : words.drives(driver.display_name);
 }
 
 export interface ReminderTextOptions {
@@ -94,6 +100,8 @@ export interface ReminderTextOptions {
   use24h: boolean;
   slotTimes?: SlotTimes;
   members: readonly ReminderMember[];
+  /** The recipient's language (spec 076); the app's when left out. */
+  words?: CalendarWords;
 }
 
 type Told = Placed & Pick<CalendarEvent, 'title' | 'location' | 'members' | 'responsible_member_id'>;
@@ -102,21 +110,21 @@ type Told = Placed & Pick<CalendarEvent, 'title' | 'location' | 'members' | 'res
  * FR-004: the notification's title and body for one recipient (design/ui/OC-Notifications.md).
  * The body drops empty parts; "Morning of" names who it's for, unless it's only the recipient.
  */
-export function reminderText(o: Told, kind: ReminderKind, recipientId: string, { use24h, slotTimes = DEFAULT_SLOT_TIMES, members }: ReminderTextOptions): { title: string; body: string } {
-  const w = en.reminders;
+export function reminderText(o: Told, kind: ReminderKind, recipientId: string, { use24h, slotTimes = DEFAULT_SLOT_TIMES, members, words = calendarWords }: ReminderTextOptions): { title: string; body: string } {
+  const w = words.reminders;
   const start = timeRange(o, slotTimes)?.start ?? null;
-  const when = timeLabel(o, { use24h, slotTimes });
-  const responsible = responsibleLine(o.responsible_member_id, o.members, members);
+  const when = timeLabel(o, { use24h, slotTimes, words });
+  const responsible = responsibleLine(o.responsible_member_id, o.members, members, words);
   const body = (...parts: (string | null | undefined)[]) => parts.filter(Boolean).join(' · ');
   const place = o.location ? placeLine(o.location) : null;
-  if (kind === 'day_before') return { title: w.tomorrow(o.title), body: body(when, en.weekdays[weekday(o.starts_on)], place, responsible) };
+  if (kind === 'day_before') return { title: w.tomorrow(o.title), body: body(when, words.weekdays[weekday(o.starts_on)], place, responsible) };
   if (start && kind !== 'morning_of') return { title: w[kind](o.title), body: body(when, place, responsible) };
   const slot = start ? slotStartingAt(start, slotTimes) : null;
-  const title = !start ? w.today(o.title) : slot ? w.inSlot[slot](o.title) : w.at(o.title, formatTime(start, use24h));
+  const title = !start ? w.today(o.title) : slot ? w.inSlot[slot](o.title) : w.at(o.title, formatTime(start, use24h, words));
   const onlyMe = o.members.length === 1 && o.members[0] === recipientId;
   const names = onlyMe
     ? null
-    : en.list(o.members.flatMap((who) => (who === 'everyone' ? [en.everyone] : who === 'others' ? [] : (members.find((m) => m.id === who)?.display_name ?? []))));
+    : words.list(o.members.flatMap((who) => (who === 'everyone' ? [words.everyone] : who === 'others' ? [] : (members.find((m) => m.id === who)?.display_name ?? []))));
   return { title, body: body(names, place, responsible) };
 }
 

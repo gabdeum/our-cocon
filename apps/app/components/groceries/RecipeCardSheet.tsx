@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Button, Card, SheetFooter, Stepper, Text, Thumb } from '@cocon/ui';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useToast } from '../../lib/toast';
 import type { RecipeCard } from '../../lib/groceries';
 import { servingsMax, SERVINGS_MIN } from '../../lib/recipe-view';

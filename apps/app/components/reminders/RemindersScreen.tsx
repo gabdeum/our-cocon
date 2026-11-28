@@ -3,7 +3,7 @@ import type { PlacedReminder } from '@cocon/data';
 import { Button, IconButton, PushedScreen, ReminderMore, ReminderRow, SegmentedControl, TabHeader, Text } from '@cocon/ui';
 import { LIST_SECTIONS, detailLine, lateBadge, reminderMember } from '../../lib/reminders';
 import type { Member } from '../../lib/session';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 
 const r = strings.reminders;
 

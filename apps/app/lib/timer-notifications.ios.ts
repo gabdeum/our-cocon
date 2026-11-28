@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { strings } from '../strings/en';
+import { onLanguageChange, strings } from '../strings';
 import { readPrefs } from './notifications';
 import { handleTimerAction } from './timer-alert-actions';
 import { alarmNotifications, withAlarmCleanup } from './timer-alarms';
@@ -65,10 +65,13 @@ async function alertsFor(userId: string) {
 // FR-003: the long-press actions. They open the app: expo-notifications tells iOS the tap is handled
 // before the app's code has run, so in the background iOS may pause the app first, and a "+1 min" would
 // only happen whenever it's next opened. Opened, it happens at once (spec 047 Changelog).
-void Notifications.setNotificationCategoryAsync(TIMER_CATEGORY, [
-  { identifier: 'add_minute', buttonTitle: strings.notifications.timerDone.addMinute, options: { opensAppToForeground: true } },
-  { identifier: 'stop', buttonTitle: strings.notifications.timerDone.stop, options: { isDestructive: true, opensAppToForeground: true } },
-]).catch(ignore);
+const registerCategory = () =>
+  void Notifications.setNotificationCategoryAsync(TIMER_CATEGORY, [
+    { identifier: 'add_minute', buttonTitle: strings.notifications.timerDone.addMinute, options: { opensAppToForeground: true } },
+    { identifier: 'stop', buttonTitle: strings.notifications.timerDone.stop, options: { isDestructive: true, opensAppToForeground: true } },
+  ]).catch(ignore);
+registerCategory();
+onLanguageChange(registerCategory);
 
 // Listened for as soon as the app's code loads: iOS wakes the app in the background for the action and
 // hands it over here, before any screen exists. The same notification id comes back after "+1 min",

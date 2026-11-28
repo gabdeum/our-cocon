@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { BottomSheet, Button, Callout, Card, Dialog, Link, LinkField, Overline, Pill, PillRow, SettingRow, ShareTile, Text } from '@cocon/ui';
 import type { ShareDuration, Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useFailureToast, useToast } from '../../lib/toast';
 import { endsText, groceryShareUrl, hoursActive, type GroceryShareLink } from '../../lib/grocery-share';
 import { COPIED_MS } from '../recipes/ShareSheet';

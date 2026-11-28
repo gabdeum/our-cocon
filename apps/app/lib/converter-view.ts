@@ -1,5 +1,5 @@
-import { convertUnits, densityHint, kindOf, type ConverterResultUnit, type ConverterTab, type ConverterUnit } from '@cocon/quantity';
-import { strings } from '../strings/en';
+import { convertUnits, densityHint, displayWords, kindOf, type ConverterResultUnit, type ConverterTab, type ConverterUnit } from '@cocon/quantity';
+import { strings } from '../strings';
 import type { RecipeDetail } from './recipe';
 import type { RecipeChoices } from './recipe-choices';
 import { appliedIngredients } from './recipe-view';
@@ -50,7 +50,7 @@ export function converterView(value: number | null, from: ConverterUnit, ingredi
     label: t.unit === 'cups_of' ? strings.cupsOf(countOf(t.text), name) : strings.unitLong[t.unit](countOf(t.text)),
   }));
   const hint = ingredient ? densityHint(value, from, ingredient.density) : null;
-  const typed = `${String(Number(value.toFixed(2)))} ${strings.unitShort[from]}`;
+  const typed = `${String(Number(value.toFixed(2))).replace('.', displayWords.decimal)} ${strings.unitShort[from]}`;
   const forRecipe = !hint
     ? null
     : hint.unit === 'cup'

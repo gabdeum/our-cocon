@@ -6,13 +6,16 @@
 <!-- Local development only (site http://localhost:8081): the iPhone development build asks for an ourcocon:// redirect,
      which Supabase's templates won't put in an href (it becomes "#ZgotmplZ"), so the link is also shown as text. -->
 <!-- Email clients need inline styles; values are the design tokens written out (design/README.md). -->
-<html lang="en">
+<!-- Spec 076 FR-013: in the person's language, from the account's metadata ("lang", sent by the app). Missing reads
+     as "<nil>", so English. Keep each language's text in step with strings/*.ts › welcome. -->
+{{ $l := printf "%v" .Data.lang }}
+<html lang="{{ if eq $l "fr" }}fr{{ else if eq $l "es" }}es{{ else }}en{{ end }}">
 <body style="margin:0;padding:24px 16px;background:#FFF8E3;font-family:Nunito,Arial,sans-serif;color:#2A2414">
   <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border-radius:22px;padding:28px 24px">
-    <h1 style="margin:0 0 12px;font-size:24px;font-weight:900">Sign in to Our Cocon</h1>
-    <p style="margin:0 0 20px;font-size:16px;line-height:1.45;color:#5A503A">Tap the button to sign in. The link works once, for 1 hour.</p>
-    <a href="{{ if eq .RedirectTo .SiteURL }}{{ .SiteURL }}/auth/confirm?next=%2F&token_hash={{ .TokenHash }}&type=email{{ else }}{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email{{ end }}" style="display:inline-block;background:#2A2414;color:#FFFFFF;text-decoration:none;font-size:17px;font-weight:900;padding:16px 28px;border-radius:999px">Sign in</a>
-    <p style="margin:20px 0 0;font-size:13px;line-height:1.45;color:#5A503A">Open it on the device where you asked for it. If you didn't ask to sign in, you can ignore this email.</p>
+    <h1 style="margin:0 0 12px;font-size:24px;font-weight:900">{{ if eq $l "fr" }}Connexion à Our Cocon{{ else if eq $l "es" }}Entra en Our Cocon{{ else }}Sign in to Our Cocon{{ end }}</h1>
+    <p style="margin:0 0 20px;font-size:16px;line-height:1.45;color:#5A503A">{{ if eq $l "fr" }}Touchez le bouton pour vous connecter. Le lien fonctionne une seule fois, pendant 1 heure.{{ else if eq $l "es" }}Toca el botón para entrar. El enlace funciona una sola vez, durante 1 hora.{{ else }}Tap the button to sign in. The link works once, for 1 hour.{{ end }}</p>
+    <a href="{{ if eq .RedirectTo .SiteURL }}{{ .SiteURL }}/auth/confirm?next=%2F&token_hash={{ .TokenHash }}&type=email{{ else }}{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email{{ end }}" style="display:inline-block;background:#2A2414;color:#FFFFFF;text-decoration:none;font-size:17px;font-weight:900;padding:16px 28px;border-radius:999px">{{ if eq $l "fr" }}Se connecter{{ else if eq $l "es" }}Entrar{{ else }}Sign in{{ end }}</a>
+    <p style="margin:20px 0 0;font-size:13px;line-height:1.45;color:#5A503A">{{ if eq $l "fr" }}Ouvrez-le sur l’appareil où vous l’avez demandé. Si vous n’avez rien demandé, ignorez cet e-mail.{{ else if eq $l "es" }}Ábrelo en el dispositivo donde lo pediste. Si no lo pediste, puedes ignorar este correo.{{ else }}Open it on the device where you asked for it. If you didn't ask to sign in, you can ignore this email.{{ end }}</p>
     {{ if and (eq .SiteURL "http://localhost:8081") (ne .RedirectTo .SiteURL) }}<p style="margin:20px 0 0;font-size:13px;line-height:1.45;color:#5A503A;word-break:break-all">Local development, iPhone app: paste this into Safari on the phone.<br>{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email</p>{{ end }}
   </div>
 </body>

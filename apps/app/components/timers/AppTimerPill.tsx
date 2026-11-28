@@ -1,6 +1,6 @@
 import { TimerPill } from '@cocon/ui';
 import type { Tracker } from '@cocon/schemas';
-import { strings } from '../../strings/en';
+import { strings } from '../../strings';
 import { useMostUrgent, useTimerStore } from '../../lib/timer-store';
 import { clock, pillName } from '../../lib/timers';
 

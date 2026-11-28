@@ -1,4 +1,4 @@
-import { addDays, calendarWordsEn, dateLabel, parts, timeLabel, weekday, type SlotTimes } from '@cocon/calendar';
+import { addDays, calendarWords, dateLabel, parts, timeLabel, weekday, type SlotTimes } from '@cocon/calendar';
 import type { GroceryItem, HomeHero, StoredEvent } from '@cocon/data';
 import { groceryIdentity } from '@cocon/quantity';
 import type { HomeCardState } from '@cocon/schemas';
@@ -8,10 +8,10 @@ import { inAllDay, isBirthday } from './calendar-day';
 import { longDate, monthOccurrences, occurrenceKey, type MemberLook, type MonthOccurrence } from './calendar-month';
 import { remindsMember } from './event-detail';
 import type { Member } from './session';
-import { strings } from '../strings/en';
+import { strings } from '../strings';
 
 const c = strings.calCard;
-const words = calendarWordsEn;
+const words = calendarWords;
 
 /** FR-002: "This week" is today and the next 6 days. */
 export const CARD_DAYS = 7;

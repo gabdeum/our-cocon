@@ -15,6 +15,10 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "locales": {
+      "fr": "./locales/fr.json",
+      "es": "./locales/es.json"
+    },
     "ios": {
       "icon": "./assets/icon.png",
       "bundleIdentifier": "com.ourcocon.app",
@@ -24,6 +28,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "UISupportedInterfaceOrientations~ipad": ["UIInterfaceOrientationPortrait", "UIInterfaceOrientationPortraitUpsideDown", "UIInterfaceOrientationLandscapeLeft", "UIInterfaceOrientationLandscapeRight"],
         "NSSupportsLiveActivities": true,
+        "CFBundleAllowMixedLocalizations": true,
         "NSAlarmKitUsageDescription": "Our Cocon rings when a kitchen timer ends, even when your iPhone is on silent."
       },
       "usesAppleSignIn": true,
