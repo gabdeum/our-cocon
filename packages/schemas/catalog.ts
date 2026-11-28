@@ -14,8 +14,10 @@ export type StoreProfile = z.infer<typeof StoreProfile>;
 export const DietFlag = z.enum(['meat', 'fish', 'dairy', 'gluten']);
 export type DietFlag = z.infer<typeof DietFlag>;
 
-/** Languages the catalog has names in (FR-008: English only in V1). */
-export const CatalogLang = z.enum(['en']);
+/** Languages the catalog has names in (spec 078: every language the app speaks). */
+export const CatalogLang = z.enum(['en', 'fr', 'es']);
+/** The languages besides English, for what the catalog shows in English by default. */
+const OtherLang = z.enum(['fr', 'es']);
 export type CatalogLang = z.infer<typeof CatalogLang>;
 
 const Name = z.string().trim().min(1).max(80);
@@ -26,6 +28,8 @@ export const PackSize = z.strictObject({
   size: Quantity,
   unit: Unit,
   label: z.string().trim().min(1).max(40),
+  /** Spec 078: the label in the other languages (catalog packs only). */
+  labels: z.record(OtherLang, z.string().trim().min(1).max(40)).optional(),
   loose: z.boolean(),
 });
 export type PackSize = z.infer<typeof PackSize>;
@@ -36,7 +40,7 @@ const CatalogEntry = z
   .strictObject({
     key: CatalogKey,
     names: z.record(CatalogLang, z.strictObject({ singular: Name, plural: Name })),
-    synonyms: z.record(CatalogLang, z.array(Name).max(20)).optional(),
+    synonyms: z.partialRecord(CatalogLang, z.array(Name).max(20)).optional(),
     aisle: Aisle,
     density_g_per_ml: z.number().positive().max(25).optional(),
     /** SC-002: anything counted in pieces has at least a medium size. */
@@ -44,6 +48,8 @@ const CatalogEntry = z
     default_size: SizeWord.optional(),
     /** What one piece is called ("clove", "sheet of shortcrust pastry"), when not the name itself. */
     nouns: z.strictObject({ singular: Name, plural: Name }).optional(),
+    /** Spec 078: `nouns` in the other languages ("gousse d’ail"). */
+    noun_names: z.record(OtherLang, z.strictObject({ singular: Name, plural: Name })).optional(),
     whole_only: z.boolean().default(false),
     diet: z.array(DietFlag).default([]),
     packs: z.strictObject({ us: z.array(PackSize).max(10).optional(), eu: z.array(PackSize).max(10).optional() }).optional(),
@@ -51,6 +57,7 @@ const CatalogEntry = z
     source: z.string().trim().min(1).max(300),
   })
   .refine((e) => e.names.en != null, 'Every entry has an English name')
+  .refine((e) => (e.noun_names == null) || e.nouns != null, 'Translated nouns go with English ones')
   .refine((e) => (e.default_size == null) === (e.sizes == null), 'A default size goes with sizes')
   .refine((e) => e.default_size == null || e.sizes?.[e.default_size] != null, 'The default size must be one of the sizes')
   .refine((e) => new Set(e.diet).size === e.diet.length, 'Each diet flag once');
@@ -85,12 +92,13 @@ export const CatalogFile = z
     file.ingredients.forEach((entry, i) => {
       if (keys.has(entry.key)) ctx.addIssue({ code: 'custom', path: ['ingredients', i, 'key'], message: `Duplicate key ${entry.key}` });
       keys.add(entry.key);
-      for (const { lang, name_norm } of matchNames(entry)) {
-        const owner = names.get(`${lang}:${name_norm}`);
+      // Matching looks in every language at once (spec 078), so a name is one item's in all of them.
+      for (const { name_norm } of matchNames(entry)) {
+        const owner = names.get(name_norm);
         if (owner && owner !== entry.key) {
           ctx.addIssue({ code: 'custom', path: ['ingredients', i], message: `"${name_norm}" belongs to both ${owner} and ${entry.key}` });
         }
-        names.set(`${lang}:${name_norm}`, entry.key);
+        names.set(name_norm, entry.key);
       }
     });
   });

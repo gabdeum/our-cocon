@@ -103,3 +103,23 @@ describe('ingredientName and ingredientNote', () => {
     expect(ingredientNote('Onion', '  ')).toBeNull();
   });
 });
+
+describe('spec 078: French and Spanish', () => {
+  it('folds elisions, ligatures and accents', () => {
+    expect(normaliseName('Huile d’olive')).toBe(normaliseName("huile d'olive"));
+    expect(normaliseName('Œufs')).toBe('oeuf');
+    expect(normaliseName('Épinards')).toBe('epinard');
+  });
+
+  it('agrees with itself on plurals', () => {
+    expect(normaliseName('Poireaux')).toBe(normaliseName('Poireau'));
+    expect(normaliseName('choux')).toBe('chou');
+    expect(normaliseName('limones')).toBe(normaliseName('Limones'));
+  });
+
+  it('splits descriptors and size words out', () => {
+    expect(parseIngredientText('1 gros oignon émincé')).toMatchObject({ core: 'oignon', size_word: 'large', prep: 'émincé' });
+    expect(parseIngredientText('cebolla picada pequeña')).toMatchObject({ core: 'cebolla', size_word: 'small', prep: 'picada' });
+    expect(parseIngredientText('pommes de terre')).toMatchObject({ full: 'pomme de terre', prep: null });
+  });
+});

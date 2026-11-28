@@ -1,7 +1,8 @@
 import { foldText, singularWord, splitIngredientDetail } from '@cocon/schemas/ingredient-text';
 import type { SizeWord, Unit } from '@cocon/schemas/recipes';
 import { readAmount } from './parse-amount';
-import { en, type ParserWords } from './words.en';
+import { parserWords } from './words';
+import type { ParserWords } from './words.en';
 
 /** Spec 015 FR-003: one pasted line as a form row. Nothing here is matched against the catalog. */
 export interface ParsedLine {
@@ -49,7 +50,7 @@ function isPrepOnly(part: string, words: ParserWords): boolean {
  * Splits a pasted list on new lines and commas. A part that is only preparation ("finely chopped")
  * stays with the line before it, so "1 onion, finely chopped" is one row.
  */
-export function splitPastedList(text: string, words: ParserWords = en): string[] {
+export function splitPastedList(text: string, words: ParserWords = parserWords): string[] {
   const out: string[] = [];
   for (const line of text.split(/\r?\n|\r/)) {
     // Only a later part of the same line joins: a line of its own is always a row.
@@ -71,7 +72,7 @@ const unitOf = (word: string, words: ParserWords): Unit | undefined => words.uni
  * One recipe line ("200 g lardons", "3 eggs", "1½ cups flour", "2 small onions"), or null when
  * it's empty. "100 g Gruyère, grated": the name is "Gruyère" and the detail "grated".
  */
-export function parseIngredientLine(line: string, words: ParserWords = en): ParsedLine | null {
+export function parseIngredientLine(line: string, words: ParserWords = parserWords): ParsedLine | null {
   const parsed = readLine(line, words, 200);
   if (!parsed) return null;
   const { name, detail } = splitIngredientDetail(parsed.name);
@@ -81,6 +82,7 @@ export function parseIngredientLine(line: string, words: ParserWords = en): Pars
 /** The amount, unit and name of a line, the name as written (a grocery line keeps its comma). */
 function readLine(line: string, words: ParserWords, maxName = 80): ParsedLine | null {
   let rest = line.replace(BULLET, '').trim().replace(/\.$/, '').trim();
+  for (const [phrase, unit] of words.phrases ?? []) rest = rest.replace(phrase, unit);
   if (!rest) return null;
 
   let quantity: number | null = null;
@@ -130,6 +132,8 @@ function readLine(line: string, words: ParserWords, maxName = 80): ParsedLine | 
     }
     const of = /^(\S+)\s+(.*)$/.exec(rest);
     if (of && words.of.includes((of[1] as string).toLowerCase())) rest = (of[2] as string).trim();
+    const elided = words.elided?.find((e) => rest.toLowerCase().startsWith(e));
+    if (elided) rest = rest.slice(elided.length).trim();
   }
 
   const name = upperFirst(rest.trim()).slice(0, maxName).trim();
@@ -138,7 +142,7 @@ function readLine(line: string, words: ParserWords, maxName = 80): ParsedLine | 
 }
 
 /** A pasted list as rows, in order; lines with no name are left out. */
-export function parsePastedList(text: string, words: ParserWords = en): ParsedLine[] {
+export function parsePastedList(text: string, words: ParserWords = parserWords): ParsedLine[] {
   return splitPastedList(text, words).flatMap((line) => {
     const parsed = parseIngredientLine(line, words);
     return parsed ? [parsed] : [];
@@ -173,7 +177,7 @@ export function pieceNouns(name: string): { singular: string; plural: string } {
  * counts only when it's the last word or two and nothing but a known unit follows the number, so
  * "Size 4 nappies" stays a name.
  */
-export function parseGroceryLine(line: string, words: ParserWords = en): ParsedLine | null {
+export function parseGroceryLine(line: string, words: ParserWords = parserWords): ParsedLine | null {
   const parsed = readLine(line, words);
   if (!parsed || parsed.quantity !== null) return parsed;
   const tokens = line.trim().replace(/\.$/, '').split(/\s+/);

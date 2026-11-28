@@ -141,7 +141,7 @@ All 36 open questions are answered. The specs, UI specs and screens already refl
 | 12 | Cups | US cups only |
 | 13 | Recipe sort | Most recently added first |
 | 14 | Photos | Simple crop to the header shape |
-| 15 | Parsing | No French ingredient parsing in V1 |
+| 15 | Parsing | Pasted lines in English, French or Spanish (spec 078; was: no French parsing in V1) |
 | 16 | Variants | Change only ingredients and steps |
 | 17 | Delete | Any family member; 30 days to restore |
 | 18 | Timers | Personal, on your device |
@@ -156,7 +156,7 @@ All 36 open questions are answered. The specs, UI specs and screens already refl
 | 27 | Account section | Built from existing components |
 | 28 | Ticked groceries | Cleared only when "Clear done items" is pressed |
 | 29 | Store profiles | US and EU; no UK in V1 |
-| 30 | Catalog | English |
+| 30 | Catalog | English, French and Spanish names; each person sees their language (spec 078) |
 | 31 | AI permissions | Per person, Allowed or Not allowed |
 | 32 | AI deletes | No approval step; restorable for 30 days |
 | 33 | Activity log | AI actions only |
@@ -201,3 +201,4 @@ These have no drawn screen; their UI spec is the source of truth: sign-in, set u
 - 2026-11-19: Decision 3 now the layout tiers (spec 063 shipped).
 - 2026-11-27: Build order rows 71–73: note formatting, specs 073–075 (rendering, editor toolbar, ticking checklist items), from the note formatting design handoff.
 - 2026-11-28: Build order rows 74–76: languages, specs 076, 078, 077 (the app and the catalog in French and Spanish, then the translations editor). Decision 1 updated.
+- 2026-11-28: Decisions 15 and 30: French and Spanish parsing and catalog names (spec 078).
